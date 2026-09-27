@@ -19,7 +19,8 @@ import {
 import { useTripStore } from '../../store/tripStore';
 import { fetchAppConfig, setAppConfigValue } from '../../services/tripApi';
 import type { ConfirmRequest } from '../ConfirmDialog';
-import { IconCheck, IconAlertCircle, IconRefresh, IconSearch, IconChevronDown, IconChevronUp, IconX } from '../Icons';
+import { IconAlertCircle, IconRefresh, IconSearch, IconChevronDown, IconChevronUp, IconX } from '../Icons';
+import { useOpsToast } from './useOpsToast';
 
 const FLAG_CATEGORY_LABELS: Record<string, string> = {
   core: 'Core',
@@ -73,7 +74,7 @@ function OverridePanel({
     <div className="ops-card">
       <div className="ops-ov-head">
         <span className="ops-ov-title">{title}</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="u-row-8">
           {activeCount > 0 && (
             <button
               type="button"
@@ -153,7 +154,7 @@ function OverridePanel({
                   return (
                     <div key={key} className="ops-ov-row" style={isOverridden ? { background: 'rgba(245, 158, 11, 0.04)', borderRadius: '4px', padding: '7px 6px' } : undefined}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div className="u-row-6">
                           <span className="ops-ov-flag-name" style={{ fontWeight: isOverridden ? 600 : 400, color: isOverridden ? 'var(--text-primary)' : undefined }}>
                             {meta.label}
                           </span>
@@ -264,7 +265,7 @@ export function AdminFlagsPage({ trips, members, onRequestConfirm }: Props) {
 
   const [selectedTripId, setSelectedTripId] = useState('');
   const [selectedUserId, setSelectedUserId] = useState('');
-  const [toastMsg, setToastMsg] = useState('');
+  const { showToast, toastNode } = useOpsToast();
   const [flagSearch, setFlagSearch] = useState('');
   const [flagCategoryFilter, setFlagCategoryFilter] = useState<string>('all');
 
@@ -281,11 +282,6 @@ export function AdminFlagsPage({ trips, members, onRequestConfirm }: Props) {
   const [customPresets, setCustomPresets] = useState<CustomFlagPreset[]>(() => readLocalCustomPresets());
   const [saveOpen, setSaveOpen] = useState(false);
   const [saveName, setSaveName] = useState('');
-
-  const showToast = (msg: string) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(''), 2500);
-  };
 
   const loadConfigAndOverrides = () =>
     Promise.all([
@@ -465,18 +461,14 @@ export function AdminFlagsPage({ trips, members, onRequestConfirm }: Props) {
           <h2>Feature Flags &amp; Consumer Packs</h2>
           <p>Arm who sees what: Core, Trip, Travel, Pro, Labs, Ops. Recipes write a global mix. Packs below still Arm or Safe one group. This is not all flags on.</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="u-flex-gap-8">
           <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void handleRefresh()}>
-            <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            <IconRefresh size={16} className={isRefreshing ? 'ops-spin' : undefined} /> Refresh
           </button>
         </div>
       </div>
 
-      {toastMsg && (
-        <div className="ops-toast">
-          <IconCheck size={14} /> {toastMsg}
-        </div>
-      )}
+      {toastNode}
 
       <div className="ops-card">
         <div className="ops-ov-head">

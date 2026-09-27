@@ -45,7 +45,7 @@ describe('getNotificationDisplay', () => {
     const result = getNotificationDisplay(notif, 'Himachal 2');
     expect(result.headline).toBe('Expense Deleted');
     expect(result.badge).toBe('Himachal 2');
-    expect(result.body).toBe('Hotel Stay — INR 4500.00');
+    expect(result.body).toBe(`Hotel Stay — INR ${(4500).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
   });
 
   it('formats expense_added without trailing "added" suffix', () => {

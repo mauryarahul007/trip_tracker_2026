@@ -3,6 +3,7 @@ import type { Transfer } from '../utils/settlement';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { triggerHaptic } from '../utils/haptics';
+import { formatMoneyNumber } from '../utils/currency';
 
 type Props = {
   tripName: string;
@@ -65,13 +66,13 @@ export function TripCloseoutModal({
               <ul style={{ margin: '0 0 16px', paddingLeft: '18px', fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {transfers.slice(0, 6).map((t) => (
                   <li key={`${t.fromMemberId}-${t.toMemberId}`}>
-                    {t.fromLabel} → {t.toLabel} {currencySymbol}{t.amount.toFixed(2)}
+                    {t.fromLabel} → {t.toLabel} {currencySymbol}{formatMoneyNumber(t.amount, currencySymbol)}
                   </li>
                 ))}
               </ul>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="u-col-8">
               {!isFullySettled && (
                 <button
                   type="button"
@@ -116,7 +117,7 @@ export function TripCloseoutModal({
             <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
               Would you use Trip Tracker for the next trip with this group?
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="u-col-8">
               <button
                 type="button"
                 className="gradient-btn"
@@ -171,7 +172,7 @@ export function TripCloseoutModal({
             <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
               This trip is closed. Reopen it from Settings if you need to add something later.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="u-col-8">
               {onOpenWrapped && (
                 <button
                   type="button"

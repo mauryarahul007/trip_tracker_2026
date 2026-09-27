@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
-import { IconSearch, IconEdit, IconAlertCircle, IconClose, IconCalendar, IconChevronRight, IconFilter } from './Icons';
+import { IconSearch, IconEdit, IconAlertCircle, IconClose, IconCalendar, IconChevronRight, IconFilter, IconCamera, IconFlag, IconClock, IconSync, IconMapPin, IconMic } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { CategoryIcon } from './CategoryIcon';
-import { getCurrencySymbol, formatAmount } from '../utils/currency';
+import { getCurrencySymbol, formatAmount, formatMoneyNumber } from '../utils/currency';
 import { convertCurrency } from '../utils/currencyConverter';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
@@ -354,12 +354,13 @@ export function ExpenseList({
       <div
         key={exp.id}
         aria-hidden={isPending}
-        className="expense-item-cascade"
+        className={`expense-item-cascade${isPending ? ' is-collapsing' : ''}`}
         style={{
           borderBottom: idx < siblingCount - 1 ? '1.5px dashed var(--border-color)' : 'none',
           opacity: isPending ? 0.35 : 1,
           pointerEvents: isPending ? 'none' : undefined,
-          transition: 'opacity 0.25s ease',
+          // grid-template-rows: enableMotionPolish folds a pending-delete row shut (index.css).
+          transition: 'opacity 0.25s ease, grid-template-rows 0.32s cubic-bezier(0.16, 1, 0.3, 1)',
           // Skip layout/paint for off-screen rows -- cheap
           // substitute for list virtualization at this scale.
           contentVisibility: 'auto',
@@ -411,18 +412,18 @@ export function ExpenseList({
               <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px', viewTransitionName: activeTransitionSourceId === exp.id ? 'expense-shared-title' : undefined }}>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</span>
                 {(exp.receiptImage || exp.receiptPath) && (
-                  <span style={{ fontSize: '11px', flexShrink: 0, opacity: 0.85 }} title="Photo receipt attached">📸</span>
+                  <span style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--text-muted)' }} title="Photo receipt attached" aria-label="Receipt attached"><IconCamera size={13} /></span>
                 )}
                 {exp.disputedAt && (
-                  <span style={{ fontSize: '11px', flexShrink: 0 }} title={exp.disputeNote ? `Flagged: ${exp.disputeNote}` : 'Flagged as disputed'} aria-label="Disputed">🚩</span>
+                  <span style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--color-warning)' }} title={exp.disputeNote ? `Flagged: ${exp.disputeNote}` : 'Flagged as disputed'} aria-label="Disputed"><IconFlag size={13} /></span>
                 )}
                 {exp.approvalStatus === 'pending_approval' && (
-                  <span style={{ fontSize: '11px', flexShrink: 0 }} title="Pending approval — excluded from balances until a second member approves it" aria-label="Pending approval">⏳</span>
+                  <span style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--color-warning)' }} title="Pending approval — excluded from balances until a second member approves it" aria-label="Pending approval"><IconClock size={13} /></span>
                 )}
                 {isConflict ? (
-                  <span style={{ fontSize: '10px', flexShrink: 0, opacity: 0.9 }} title="Sync conflict — choose which version to keep" aria-label="Sync conflict">⚠️</span>
+                  <span style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--color-danger)' }} title="Sync conflict — choose which version to keep" aria-label="Sync conflict"><IconAlertCircle size={13} /></span>
                 ) : isDirty ? (
-                  <span style={{ fontSize: '10px', flexShrink: 0, opacity: 0.8 }} title="Pending sync" aria-label="Pending sync">🔄</span>
+                  <span style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--text-muted)' }} title="Pending sync" aria-label="Pending sync"><IconSync size={13} /></span>
                 ) : null}
               </h4>
               {(() => {
@@ -459,7 +460,7 @@ export function ExpenseList({
                             color: isShowingForeign ? '#fff' : 'var(--text-muted)',
                             border: '1px solid var(--border-color)',
                             borderRadius: '8px',
-                            fontSize: '10px',
+                            fontSize: '11px',
                             fontWeight: 700,
                             padding: '1px 5px',
                             cursor: 'pointer',
@@ -489,7 +490,7 @@ export function ExpenseList({
                 : null;
 
               const multiPayersTitle = multiPayersList
-                ? `Paid jointly by: ${multiPayersList.map((p) => `${p.member?.name || 'Removed'}: ${currencySymbol} ${p.amount.toFixed(2)}`).join(', ')}`
+                ? `Paid jointly by: ${multiPayersList.map((p) => `${p.member?.name || 'Removed'}: ${currencySymbol} ${formatMoneyNumber(p.amount, currencySymbol)}`).join(', ')}`
                 : `Paid by ${payerMember?.name || 'a removed member'}`;
 
               return (
@@ -536,7 +537,7 @@ export function ExpenseList({
                 )}
               </div>
               {exp.location?.placeName && (
-                <span style={{ color: '#00BFA5', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
+                <span style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--primary-accent)' }} title={exp.location.placeName} aria-label={`Place: ${exp.location.placeName}`}><IconMapPin size={13} /></span>
               )}
             </div>
           );
@@ -624,7 +625,7 @@ export function ExpenseList({
             {isSticky && (
               <span
                 style={{
-                  fontSize: '10.5px',
+                  fontSize: '11px',
                   fontWeight: 600,
                   color: 'var(--text-muted)',
                   background: 'var(--bg-surface)',
@@ -642,7 +643,7 @@ export function ExpenseList({
             {isHighBurn && (
               <span
                 style={{
-                  fontSize: '10px',
+                  fontSize: '11px',
                   fontWeight: 700,
                   padding: '1px 5px',
                   borderRadius: '4px',
@@ -753,7 +754,7 @@ export function ExpenseList({
                   fontWeight: 600,
                 }}
               >
-                <span aria-hidden="true" style={{ fontSize: '13px' }}>🎙️</span>
+                <IconMic size={14} />
                 <span>Voice</span>
               </button>
             )}
@@ -1179,7 +1180,7 @@ export function ExpenseList({
                     gap: '6px',
                   }}
                 >
-                  <span>🎙️</span>
+                  <IconMic size={16} />
                   <span>Speak Expense</span>
                 </button>
               )}
@@ -1208,7 +1209,7 @@ export function ExpenseList({
         <>
           {dayGroups.length > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 4px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              <span className="u-hint">
                 {dayGroups.length} {dayGroups.length === 1 ? 'day' : 'days'} {avgDailySpend > 0 ? `· Avg ${formatAmount(avgDailySpend, currencySymbol)}/day` : ''}
               </span>
               {dayGroups.length > 1 && (
@@ -1248,7 +1249,7 @@ export function ExpenseList({
                 <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                   Settlements · {settlementsDisplayed.length}
                 </span>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                <span className="u-hint">
                   {formatAmount(settlementsDisplayed.reduce((sum, e) => sum + e.amount, 0), currencySymbol)} settled
                 </span>
               </div>

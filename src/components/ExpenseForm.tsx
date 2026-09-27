@@ -2,12 +2,12 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import type { Category, Group, Member, Trip, Expense, ExpenseLocation, SplitMode, ReceiptItem, ItemizedReceiptConfig } from '../types';
-import { IconCheck, IconAlertCircle, IconClose, IconMapPin, IconMic } from './Icons';
+import { IconCheck, IconAlertCircle, IconClose, IconMapPin, IconMic, IconChevronDown, IconEdit, IconSparkles } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { saveDraft, loadDraft } from '../utils/expenseDraft';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
-import { getCurrencySymbol } from '../utils/currency';
+import { getCurrencySymbol, formatMoneyNumber } from '../utils/currency';
 import { compressImageToDataUrl, compressDataUrlToDataUrl } from '../utils/image';
 import { autoSuggestCategory } from '../utils/categoryHelper';
 import { parseQuickExpense, resolveDefaultExpensePayerId, pickBestQuickExpenseParse } from '../utils/expenseQuickParser';
@@ -337,6 +337,15 @@ export function ExpenseForm({
   };
   const [isDraftRestored, setIsDraftRestored] = useState(false);
   const [location, setLocation] = useState<ExpenseLocation | null>(editingExpense?.location || null);
+  // enableCompactExpenseForm: "More details" starts open when editing an
+  // expense that already has a receipt or place, and opens itself when a
+  // receipt gets attached (upload or scan) so the new image is visible.
+  const [moreDetailsOpen, setMoreDetailsOpen] = useState(
+    () => !!editingExpense && (!!editingExpense.receiptImage || !!editingExpense.location),
+  );
+  useEffect(() => {
+    if (receiptImage) setMoreDetailsOpen(true);
+  }, [receiptImage]);
 
   useEffect(() => {
     if (editingExpense) return;
@@ -1048,6 +1057,282 @@ export function ExpenseForm({
   const isTitleFormError = Boolean(formError) && !isAmountFormError && !title.trim() && numericAmount > 0;
   const isGeneralFormError = Boolean(formError) && !isAmountFormError && !isTitleFormError;
 
+  // enableCompactExpenseForm: amount, title, payer and split stay up top;
+  // category, date, place, receipt and extra photos move under "More details".
+  // Each section is built once here and placed in either layout below.
+  const compactForm = isFeatureEnabled('enableCompactExpenseForm', { tripId: trip?.id });
+  const categoryField = (
+    <>
+      <fieldset className="form-group">
+        <legend className="form-label">Category</legend>
+        <div className="badge-row">
+          {orderedPickerCategories.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={`category-badge${category === c.id ? ' active' : ''}`}
+              onClick={() => setCategory(c.id)}
+              aria-pressed={category === c.id}
+            >
+              <CategoryIcon categoryId={c.id} fallbackEmoji={c.icon} size={15} />
+              {c.name}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+    </>
+  );
+  const dateLocationFields = (
+    <>
+      <div className="form-group">
+        <label className="form-label" htmlFor="expense-date">Date</label>
+        <input
+          id="expense-date"
+          type="date"
+          className="input-field"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
+      </div>
+
+      {/* Hidden entirely when the trip's Geotag Expenses setting is off and
+          there's no pre-existing location to display/remove — this is the
+          only thing that can trigger a location-permission prompt, so
+          keeping it out of the DOM keeps that prompt from ever firing
+          unless the setting is on, advanced search is on, or the user
+          explicitly tagged a location. */}
+      {(enableGeotagging || enableAdvancedLocationSearch || location) && (
+        <div className="form-group">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <span className="form-label" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: '#17B6A6', display: 'flex', alignItems: 'center' }}><IconMapPin size={15} /></span> Location
+            </span>
+            {enableGeotagging && !location && !locationLoading && (
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '2px 8px', fontSize: '11.5px', color: '#17B6A6', borderColor: 'rgba(23,182,166,0.3)' }}
+                onClick={async () => {
+                  setLocationLoading(true);
+                  const loc = await captureCurrentExpenseLocation();
+                  if (loc) setLocation(loc);
+                  setLocationLoading(false);
+                }}
+              >
+                + Tag Location
+              </button>
+            )}
+          </div>
+
+          {locationLoading ? (
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 0' }}>
+              <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', border: '2px solid #17B6A6', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+              Fetching GPS coordinates...
+            </div>
+          ) : location ? (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '6px 12px',
+                borderRadius: 'var(--border-radius-pill)',
+                background: 'rgba(23,182,166,0.08)',
+                border: '1px solid rgba(23,182,166,0.28)',
+                fontSize: '12.5px',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><IconMapPin size={13} /> {location.placeName || `${location.lat.toFixed(3)}, ${location.lng.toFixed(3)}`}</span>
+              <button
+                type="button"
+                className="dismiss-glyph-btn"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  lineHeight: 1,
+                }}
+                onClick={() => setLocation(null)}
+                title="Remove location"
+                aria-label="Remove location"
+              >
+                &times;
+              </button>
+            </div>
+          ) : (
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              No GPS location attached.
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+  const receiptFields = (
+    <>
+      {/* Receipt & Travel Polaroid Attachment */}
+      {(enableReceiptUpload || !!receiptImage) && (
+        <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px dashed var(--border-color)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+              📸 Receipt / Travel Photo
+            </span>
+            {receiptImage && (
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setReceiptImage('');
+                }}
+                style={{ background: 'none', border: 'none', color: 'var(--color-danger)', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Remove Photo
+              </button>
+            )}
+          </div>
+
+          {receiptImage ? (
+            <div
+              style={{
+                position: 'relative',
+                width: '100px',
+                height: '100px',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                border: '2px solid var(--primary-accent)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              }}
+            >
+              <img src={receiptImage} alt="Receipt preview" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            </div>
+          ) : Capacitor.isNativePlatform() ? (
+            // Native apps use the Capacitor camera sheet (take or choose), same
+            // as the old second receipt control this section now replaces.
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{ padding: '8px 14px', fontSize: '13px' }}
+              onClick={handleNativeCameraCapture}
+              disabled={receiptProcessing}
+            >
+              {receiptProcessing ? 'Compressing…' : 'Take or Choose Photo'}
+            </button>
+          ) : (
+            <label
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '10px',
+                border: '1.5px dashed var(--border-color)',
+                background: 'var(--bg-surface-hover)',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                transition: 'background 0.2s ease',
+              }}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleReceiptFileChangeLocal}
+                style={{ display: 'none' }}
+                disabled={receiptProcessing}
+              />
+              <span>{receiptProcessing ? '⏳ Compressing...' : '＋ Attach Photo / Bill'}</span>
+            </label>
+          )}
+        </div>
+      )}
+
+      {/* Extra photos -- only once the expense has a stable id to attach to */}
+      {editingExpense && enableExpensePhotoLinking && (
+        <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px dashed var(--border-color)' }}>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            🖼️ More Photos
+          </span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+            {(editingExpense.photoPaths || []).map((path) => (
+              <div
+                key={path}
+                style={{
+                  position: 'relative',
+                  width: '72px',
+                  height: '72px',
+                  borderRadius: '10px',
+                  overflow: 'hidden',
+                  border: '1px solid var(--border-color)',
+                }}
+              >
+                {extraPhotoUrls[path] ? (
+                  <img src={extraPhotoUrls[path]} alt="Trip photo" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', opacity: 0.5 }}>⏳</div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { triggerHaptic('light'); handleRemoveExtraPhoto(path); }}
+                  aria-label="Remove photo"
+                  style={{
+                    position: 'absolute',
+                    top: '2px',
+                    right: '2px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    border: 'none',
+                    background: 'rgba(0,0,0,0.6)',
+                    color: '#fff',
+                    fontSize: '11px',
+                    lineHeight: 1,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <label
+              style={{
+                width: '72px',
+                height: '72px',
+                borderRadius: '10px',
+                border: '1.5px dashed var(--border-color)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                fontSize: '20px',
+                color: 'var(--text-muted)',
+              }}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                style={{ display: 'none' }}
+                onChange={handleExtraPhotoFileChange}
+                disabled={extraPhotoUploading}
+              />
+              {extraPhotoUploading ? '⏳' : '＋'}
+            </label>
+          </div>
+        </div>
+      )}
+    </>
+  );
+  const moreDetailsPreview = [
+    categories.find((c) => c.id === category)?.name,
+    date === getTodayDateString() ? 'Today' : date,
+    location ? 'Place' : null,
+    receiptImage ? 'Receipt' : null,
+  ].filter(Boolean).join(' · ');
+
   return (
     <div className="modal-backdrop" onClick={isFormEmpty ? onCancel : undefined}>
       <form
@@ -1073,8 +1358,7 @@ export function ExpenseForm({
       </div>
 
       <div className="expense-form-scroll">
-      <div className="sheet-drag-handle" aria-hidden="true" />
-      <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, var(--safe-top, 0px))', viewTransitionName: editingExpense ? 'expense-shared-title' : undefined }}>
+      <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, var(--safe-top, 0px))' }}>
         <div className="app-header-top">
           <div className="app-title-group">
             <span className="app-eyebrow">{trip?.name}</span>
@@ -1109,8 +1393,8 @@ export function ExpenseForm({
             color: 'var(--text-primary)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '14px' }}>📝</span>
+          <div className="u-row-8">
+            <IconEdit size={14} />
             <span>Restored unsaved draft from your last session</span>
           </div>
           <button
@@ -1155,7 +1439,7 @@ export function ExpenseForm({
                 cursor: 'pointer',
               }}
             >
-              <span>⚡ Quick Fill</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}><IconSparkles size={14} /> Quick Fill</span>
               <span style={{ fontSize: '11px', opacity: 0.8, fontWeight: 400 }}>e.g. "Dinner 1450 food" or "Uber 350"</span>
             </button>
           ) : (
@@ -1171,7 +1455,7 @@ export function ExpenseForm({
                 gap: '8px',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="u-between">
                 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--primary-accent)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   ⚡ Smart Quick Fill
                 </span>
@@ -1183,7 +1467,7 @@ export function ExpenseForm({
                   <IconClose size={14} />
                 </button>
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div className="u-flex-gap-8">
                 <input
                   type="text"
                   className="input-field"
@@ -1218,7 +1502,7 @@ export function ExpenseForm({
           <label className="form-label" style={{ margin: 0 }} htmlFor="expense-amount">
             Amount ({selectedCurrency})
           </label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div className="u-row-6">
             {enableCurrencyFx ? (
               <button
                 type="button"
@@ -1432,9 +1716,9 @@ export function ExpenseForm({
         {currencyConversion && (
           <div className="form-fx-ticker fade-in" role="status" aria-live="polite">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div className="u-row-6">
                 <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.75, fontWeight: 600 }}>Trip Base Value</span>
-                <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '4px', background: 'rgba(47, 111, 237, 0.15)', color: 'var(--primary-accent)', fontWeight: 700 }}>
+                <span style={{ fontSize: '11px', padding: '1px 5px', borderRadius: '4px', background: 'rgba(47, 111, 237, 0.15)', color: 'var(--primary-accent)', fontWeight: 700 }}>
                   1 {selectedCurrency} = {currencyConversion.rate} {baseCurrency}
                 </span>
               </div>
@@ -1537,16 +1821,16 @@ export function ExpenseForm({
               </span>
               <button
                 type="button"
-                className="secondary-btn"
-                style={{ padding: '2px 6px', fontSize: '10px', height: '20px', display: 'flex', alignItems: 'center', minWidth: '42px', justifyContent: 'center' }}
+                className="secondary-btn hit-area hit-area-tall"
+                style={{ padding: '2px 6px', fontSize: '11px', height: '20px', display: 'flex', alignItems: 'center', minWidth: '42px', justifyContent: 'center' }}
                 onClick={() => setShowDuplicateDetails(!showDuplicateDetails)}
               >
                 {showDuplicateDetails ? 'Hide' : 'Details'}
               </button>
               <button
                 type="button"
-                className="secondary-btn"
-                style={{ padding: '2px 6px', fontSize: '10px', height: '20px', display: 'flex', alignItems: 'center', background: 'rgba(235,107,86,0.15)', minWidth: '42px', justifyContent: 'center' }}
+                className="secondary-btn hit-area hit-area-tall"
+                style={{ padding: '2px 6px', fontSize: '11px', height: '20px', display: 'flex', alignItems: 'center', background: 'rgba(235,107,86,0.15)', minWidth: '42px', justifyContent: 'center' }}
                 onClick={() => {
                   triggerHaptic('light');
                   setIgnoredDuplicateId(duplicateExpense.id);
@@ -1569,7 +1853,7 @@ export function ExpenseForm({
                 gap: '6px'
               }}>
                 <div>Title: <strong>{duplicateExpense.title}</strong></div>
-                <div>Amount: <strong>{currencySymbol}{duplicateExpense.amount.toFixed(2)}</strong></div>
+                <div>Amount: <strong>{currencySymbol}{formatMoneyNumber(duplicateExpense.amount, currencySymbol)}</strong></div>
                 <div>Date: <strong>{duplicateExpense.date}</strong></div>
                 <div>Paid By: <strong>{visibleMembers.find(m => m.id === duplicateExpense.paidBy)?.name || 'Unknown'}</strong></div>
                 <div style={{ gridColumn: 'span 2' }}>
@@ -1635,6 +1919,7 @@ export function ExpenseForm({
                 <button
                   key={chip.id}
                   type="button"
+                  aria-pressed={isSelected}
                   onClick={() => {
                     triggerHaptic('light');
                     setTitle(chip.title);
@@ -1720,7 +2005,8 @@ export function ExpenseForm({
         </div>
         {autoSelectedCategoryName && (
           <div className="fade-in" style={{ marginTop: '5px', fontSize: '11px', color: 'var(--primary-accent)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span>✨ Auto-selected: <strong>{autoSelectedCategoryName}</strong></span>
+            <IconSparkles size={12} />
+            <span>Auto-selected: <strong>{autoSelectedCategoryName}</strong></span>
           </div>
         )}
         {isTitleFormError && (
@@ -1730,23 +2016,7 @@ export function ExpenseForm({
         )}
       </div>
 
-      <fieldset className="form-group">
-        <legend className="form-label">Category</legend>
-        <div className="badge-row">
-          {orderedPickerCategories.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              className={`category-badge${category === c.id ? ' active' : ''}`}
-              onClick={() => setCategory(c.id)}
-              aria-pressed={category === c.id}
-            >
-              <CategoryIcon categoryId={c.id} fallbackEmoji={c.icon} size={15} />
-              {c.name}
-            </button>
-          ))}
-        </div>
-      </fieldset>
+      {!compactForm && categoryField}
 
       <fieldset className="form-group">
         {(() => {
@@ -1875,7 +2145,7 @@ export function ExpenseForm({
                     return (
                       <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isIncluded ? 'var(--primary-accent)' : avatarColorForName(m.name), color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10.5px', fontWeight: 700, flexShrink: 0 }}>
+                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isIncluded ? 'var(--primary-accent)' : avatarColorForName(m.name), color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, flexShrink: 0 }}>
                             {initial(m.name)}
                           </div>
                           <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1936,91 +2206,7 @@ export function ExpenseForm({
         })()}
       </fieldset>
 
-      <div className="form-group">
-        <label className="form-label" htmlFor="expense-date">Date</label>
-        <input
-          id="expense-date"
-          type="date"
-          className="input-field"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-      </div>
-
-      {/* Hidden entirely when the trip's Geotag Expenses setting is off and
-          there's no pre-existing location to display/remove — this is the
-          only thing that can trigger a location-permission prompt, so
-          keeping it out of the DOM keeps that prompt from ever firing
-          unless the setting is on, advanced search is on, or the user
-          explicitly tagged a location. */}
-      {(enableGeotagging || enableAdvancedLocationSearch || location) && (
-        <div className="form-group">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <span className="form-label" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ color: '#17B6A6', display: 'flex', alignItems: 'center' }}><IconMapPin size={15} /></span> Location
-            </span>
-            {enableGeotagging && !location && !locationLoading && (
-              <button
-                type="button"
-                className="secondary-btn"
-                style={{ padding: '2px 8px', fontSize: '11.5px', color: '#17B6A6', borderColor: 'rgba(23,182,166,0.3)' }}
-                onClick={async () => {
-                  setLocationLoading(true);
-                  const loc = await captureCurrentExpenseLocation();
-                  if (loc) setLocation(loc);
-                  setLocationLoading(false);
-                }}
-              >
-                + Tag Location
-              </button>
-            )}
-          </div>
-
-          {locationLoading ? (
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 0' }}>
-              <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', border: '2px solid #17B6A6', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
-              Fetching GPS coordinates...
-            </div>
-          ) : location ? (
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '6px 12px',
-                borderRadius: 'var(--border-radius-pill)',
-                background: 'rgba(23,182,166,0.08)',
-                border: '1px solid rgba(23,182,166,0.28)',
-                fontSize: '12.5px',
-                color: 'var(--text-primary)',
-              }}
-            >
-              <span>📍 {location.placeName || `${location.lat.toFixed(3)}, ${location.lng.toFixed(3)}`}</span>
-              <button
-                type="button"
-                className="dismiss-glyph-btn"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  lineHeight: 1,
-                }}
-                onClick={() => setLocation(null)}
-                title="Remove location"
-                aria-label="Remove location"
-              >
-                &times;
-              </button>
-            </div>
-          ) : (
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              No GPS location attached.
-            </div>
-          )}
-        </div>
-      )}
+      {!compactForm && dateLocationFields}
 
       <fieldset className="form-group">
         <legend className="form-label">Split Mode</legend>
@@ -2039,7 +2225,9 @@ export function ExpenseForm({
         </div>
       </fieldset>
 
-      {(enableReceiptUpload || !!receiptImage) && (
+      {/* enableCompactExpenseForm: the receipt lives in "More details" (receiptFields
+          attaches the same receiptImage), so this second entry point is hidden there. */}
+      {!compactForm && (enableReceiptUpload || !!receiptImage) && (
         <div className="form-group">
           {!showReceiptSection && !receiptImage ? (
             <button
@@ -2380,9 +2568,9 @@ export function ExpenseForm({
               justifyContent: 'space-between',
             }}>
               <div style={{ fontSize: '12px' }}>
-                <span>Subtotal: <strong>{currencySymbol} {itemizedSubtotal.toFixed(2)}</strong></span>
+                <span>Subtotal: <strong>{currencySymbol} {formatMoneyNumber(itemizedSubtotal, currencySymbol)}</strong></span>
                 <span style={{ margin: '0 6px', color: 'var(--text-muted)' }}>•</span>
-                <span>Calculated: <strong style={{ color: 'var(--primary-accent)' }}>{currencySymbol} {itemizedCalculatedTotal.toFixed(2)}</strong></span>
+                <span>Calculated: <strong style={{ color: 'var(--primary-accent)' }}>{currencySymbol} {formatMoneyNumber(itemizedCalculatedTotal, currencySymbol)}</strong></span>
               </div>
               <button
                 type="button"
@@ -2531,13 +2719,14 @@ export function ExpenseForm({
                 )}
                 {isChecked && (splitMode === 'custom' || splitMode === 'percentage') && splitConfig[m.id] && (
                   <span className="member-config-equiv">
-                    = {currencySymbol}{(
+                    = {currencySymbol}{formatMoneyNumber(
                       splitMode === 'percentage'
                         ? ((parseFloat(splitConfig[m.id]) || 0) / 100) * (parseFloat(amount) || 0)
                         : splitConfigSum > 0
                           ? ((parseFloat(splitConfig[m.id]) || 0) / splitConfigSum) * (parseFloat(amount) || 0)
-                          : 0
-                    ).toFixed(2)}
+                          : 0,
+                      currencySymbol,
+                    )}
                   </span>
                 )}
                 {isChecked && splitMode === 'equal' && splitSelectedIds.length > 0 && (
@@ -2577,146 +2766,24 @@ export function ExpenseForm({
         </div>
       </div>
 
-      {/* Receipt & Travel Polaroid Attachment */}
-      {(enableReceiptUpload || !!receiptImage) && (
-        <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px dashed var(--border-color)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-              📸 Receipt / Travel Photo
-            </span>
-            {receiptImage && (
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setReceiptImage('');
-                }}
-                style={{ background: 'none', border: 'none', color: 'var(--color-danger)', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
-              >
-                Remove Photo
-              </button>
-            )}
+      {compactForm ? (
+        <details
+          className="expense-more-details"
+          open={moreDetailsOpen}
+          onToggle={(e) => setMoreDetailsOpen((e.currentTarget as HTMLDetailsElement).open)}
+        >
+          <summary className="expense-more-summary">
+            <span className="expense-more-title">More details</span>
+            <span className="expense-more-preview">{moreDetailsPreview}</span>
+            <IconChevronDown size={18} className="expense-more-chevron" />
+          </summary>
+          <div className="expense-more-body">
+            {categoryField}
+            {dateLocationFields}
+            {receiptFields}
           </div>
-
-          {receiptImage ? (
-            <div
-              style={{
-                position: 'relative',
-                width: '100px',
-                height: '100px',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                border: '2px solid var(--primary-accent)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              }}
-            >
-              <img src={receiptImage} alt="Receipt preview" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-            </div>
-          ) : (
-            <label
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 14px',
-                borderRadius: '10px',
-                border: '1.5px dashed var(--border-color)',
-                background: 'var(--bg-surface-hover)',
-                fontSize: '12px',
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-                cursor: 'pointer',
-                transition: 'background 0.2s ease',
-              }}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleReceiptFileChangeLocal}
-                style={{ display: 'none' }}
-                disabled={receiptProcessing}
-              />
-              <span>{receiptProcessing ? '⏳ Compressing...' : '＋ Attach Photo / Bill'}</span>
-            </label>
-          )}
-        </div>
-      )}
-
-      {/* Extra photos -- only once the expense has a stable id to attach to */}
-      {editingExpense && enableExpensePhotoLinking && (
-        <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px dashed var(--border-color)' }}>
-          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-            🖼️ More Photos
-          </span>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
-            {(editingExpense.photoPaths || []).map((path) => (
-              <div
-                key={path}
-                style={{
-                  position: 'relative',
-                  width: '72px',
-                  height: '72px',
-                  borderRadius: '10px',
-                  overflow: 'hidden',
-                  border: '1px solid var(--border-color)',
-                }}
-              >
-                {extraPhotoUrls[path] ? (
-                  <img src={extraPhotoUrls[path]} alt="Trip photo" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', opacity: 0.5 }}>⏳</div>
-                )}
-                <button
-                  type="button"
-                  onClick={() => { triggerHaptic('light'); handleRemoveExtraPhoto(path); }}
-                  aria-label="Remove photo"
-                  style={{
-                    position: 'absolute',
-                    top: '2px',
-                    right: '2px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    border: 'none',
-                    background: 'rgba(0,0,0,0.6)',
-                    color: '#fff',
-                    fontSize: '11px',
-                    lineHeight: 1,
-                    cursor: 'pointer',
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-            <label
-              style={{
-                width: '72px',
-                height: '72px',
-                borderRadius: '10px',
-                border: '1.5px dashed var(--border-color)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                fontSize: '20px',
-                color: 'var(--text-muted)',
-              }}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                style={{ display: 'none' }}
-                onChange={handleExtraPhotoFileChange}
-                disabled={extraPhotoUploading}
-              />
-              {extraPhotoUploading ? '⏳' : '＋'}
-            </label>
-          </div>
-        </div>
-      )}
+        </details>
+      ) : receiptFields}
 
       {isGeneralFormError && (
         <p id="expense-form-error" role="alert" aria-live="assertive" style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>

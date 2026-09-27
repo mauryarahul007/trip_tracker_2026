@@ -13,8 +13,9 @@ import {
 import { exportFleetSummaryToCSV } from '../../utils/csvExport';
 import { autoSuggestCategory } from '../../utils/categoryHelper';
 import { CategoryIcon } from '../CategoryIcon';
-import { IconCheck, IconTrash, IconAlertCircle, IconRefresh, IconSparkles, IconShield } from '../Icons';
+import { IconTrash, IconAlertCircle, IconRefresh, IconSparkles, IconShield } from '../Icons';
 import type { ConfirmRequest } from '../ConfirmDialog';
+import { useOpsToast } from './useOpsToast';
 
 export const BACKDROP_PRESETS = [
   {
@@ -82,7 +83,7 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
   const [newCatIcon, setNewCatIcon] = useState('🏷️');
   const [importJsonText, setImportJsonText] = useState('');
   const [showImportArea, setShowImportArea] = useState(false);
-  const [toastMsg, setToastMsg] = useState('');
+  const { showToast, toastNode } = useOpsToast();
 
   // Landing page backdrop customization state -- an ordered list now (was a
   // single URL) so the Boarding Pass login can rotate through several
@@ -265,11 +266,6 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
     } finally {
       setIsTestingWebhook(false);
     }
-  };
-
-  const showToast = (msg: string) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(''), 3000);
   };
 
   // Toggles a preset in/out of the selection; keeps at least one photo selected.
@@ -505,15 +501,11 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
           <p>Manage keyword auto-tagging rules, perform full JSON database backups, seed test datasets, or factory reset.</p>
         </div>
         <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
-          <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          <IconRefresh size={16} className={isRefreshing ? 'ops-spin' : undefined} /> Refresh
         </button>
       </div>
 
-      {toastMsg && (
-        <div className="ops-toast">
-          <IconCheck size={14} /> {toastMsg}
-        </div>
-      )}
+      {toastNode}
 
       <div className="ops-tools-grid">
         <div className="ops-rail-label" style={{ padding: '0' }}>Account</div>
@@ -870,7 +862,7 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
             {simResult && (
               <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'var(--bg-surface)', border: '1px solid var(--line-strong)', borderRadius: '4px' }}>
                 <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Predicted Tag:</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div className="u-row-6">
                   <CategoryIcon categoryId={simResult.catId} fallbackEmoji={simResult.category?.icon} size={16} />
                   <strong style={{ fontSize: '12.5px', color: 'var(--text-primary)' }}>{simResult.category?.name}</strong>
                 </div>

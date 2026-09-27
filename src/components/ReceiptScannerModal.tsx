@@ -128,11 +128,11 @@ export function ReceiptScannerModal({
             background: 'var(--bg-surface-elevated, rgba(15,23,42,0.03))',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="u-row-8">
             <span style={{ fontSize: '20px' }}>📷</span>
             <div>
               <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Receipt OCR Scanner</h3>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              <span className="u-hint">
                 Auto-detect items, tax, tip & total from receipt bill
               </span>
             </div>
@@ -213,9 +213,9 @@ export function ReceiptScannerModal({
                 </button>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="u-row-8">
                 <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>OR</span>
+                <span className="u-hint">OR</span>
                 <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
               </div>
 
@@ -282,7 +282,7 @@ export function ReceiptScannerModal({
                       ? `✓ ${parsedData.items.length} item${parsedData.items.length === 1 ? '' : 's'} detected`
                       : '✓ Total detected'}
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  <div className="u-hint">
                     {parsedData.items.length > 0
                       ? 'Review detected items before applying to split'
                       : 'No line items found — total was read. Add items manually after applying if needed.'}
@@ -292,7 +292,7 @@ export function ReceiptScannerModal({
                   <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--primary-accent)' }}>
                     {formatAmount(parsedData.total, currencySymbol)}
                   </div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Grand Total</div>
+                  <div className="u-hint">Grand Total</div>
                 </div>
               </div>
 
@@ -365,19 +365,19 @@ export function ReceiptScannerModal({
               {/* Tax / Tip / Discount Row */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', background: 'rgba(0,0,0,0.02)', padding: '10px', borderRadius: '10px' }}>
                 <div>
-                  <label className="form-label" style={{ fontSize: '10.5px', margin: 0 }}>Tax / GST</label>
+                  <label className="form-label" style={{ fontSize: '11px', margin: 0 }}>Tax / GST</label>
                   <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-primary)' }}>
                     {formatAmount(parsedData.tax, currencySymbol)}
                   </div>
                 </div>
                 <div>
-                  <label className="form-label" style={{ fontSize: '10.5px', margin: 0 }}>Service Tip</label>
+                  <label className="form-label" style={{ fontSize: '11px', margin: 0 }}>Service Tip</label>
                   <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-primary)' }}>
                     {formatAmount(parsedData.tip, currencySymbol)}
                   </div>
                 </div>
                 <div>
-                  <label className="form-label" style={{ fontSize: '10.5px', margin: 0 }}>Discount</label>
+                  <label className="form-label" style={{ fontSize: '11px', margin: 0 }}>Discount</label>
                   <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--color-danger, #ef4444)' }}>
                     {parsedData.discount > 0 ? `-${formatAmount(parsedData.discount, currencySymbol)}` : '—'}
                   </div>

@@ -63,7 +63,9 @@ export function FlightAddExpenseTooltip({
     return () => window.removeEventListener('tt:reset-coachmarks', handleResetEvent);
   }, []);
 
-  if (isDismissed || activeTab === 'settings') return null;
+  // A trip that already has expenses proves the traveler found the + button;
+  // there the coachmark only covered the Summary content under it.
+  if (isDismissed || activeTab === 'settings' || (activeTab !== 'members' && expenseCount > 0)) return null;
 
   const handleDismiss = (e: React.MouseEvent) => {
     e.stopPropagation();

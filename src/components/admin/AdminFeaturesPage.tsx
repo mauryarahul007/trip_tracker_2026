@@ -5,6 +5,7 @@ import { logSuperadminAction } from '../../services/tripApi';
 import { IconCheck, IconRefresh, IconSearch, IconPlus, IconX } from '../Icons';
 import { useHistoryBack } from '../../utils/useHistoryBack';
 import { useEscapeKey } from '../../utils/useEscapeKey';
+import { useOpsToast } from './useOpsToast';
 
 interface Props {
   features: FeatureRecord[];
@@ -41,7 +42,7 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showWontDo, setShowWontDo] = useState(false);
   const [viewMode, setViewMode] = useState<'board' | 'table'>('table');
-  const [toastMsg, setToastMsg] = useState('');
+  const { showToast, toastNode } = useOpsToast();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
@@ -65,11 +66,6 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
     } finally {
       setIsRefreshing(false);
     }
-  };
-
-  const showToast = (msg: string) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(''), 3000);
   };
 
   // Roadmap Metrics
@@ -175,21 +171,17 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
           <h2>Feature Roadmap &amp; Requests</h2>
           <p>Linear-grade tracking of traveler feature requests, implementation velocity, and development status.</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="u-flex-gap-8">
           <button type="button" className="ops-btn ops-btn-primary" onClick={() => setIsNewModalOpen(true)}>
             <IconPlus size={13} /> Log Request
           </button>
           <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void handleRefresh()}>
-            <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            <IconRefresh size={16} className={isRefreshing ? 'ops-spin' : undefined} /> Refresh
           </button>
         </div>
       </div>
 
-      {toastMsg && (
-        <div className="ops-toast">
-          <IconCheck size={14} /> {toastMsg}
-        </div>
-      )}
+      {toastNode}
 
       {/* Roadmap Velocity Progress Strip */}
       <div className="ops-velocity-strip">
@@ -236,7 +228,7 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
           />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="u-row-10">
           <div className="ops-view-switcher">
             <button
               type="button"
@@ -326,7 +318,7 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
                           {STATUS_LABELS[f.status] || f.status}
                         </span>
                       </td>
-                      <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                      <td className="u-note">
                         {f.requestedBy}
                       </td>
                       <td style={{ textAlign: 'right' }}>
@@ -354,7 +346,7 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
           {/* Floating Bulk Action Dock */}
           {selectedIds.size > 0 && (
             <div className="ops-bulk-dock" style={{ marginTop: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div className="u-row-10">
                 <span className="ops-dot" />
                 <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
                   {selectedIds.size} feature case{selectedIds.size === 1 ? '' : 's'} selected

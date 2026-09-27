@@ -5,6 +5,7 @@ import { triggerHaptic } from '../utils/haptics';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { formatAmount } from '../utils/currency';
+import { IconWallet, IconSparkles, IconLock, IconAnalytics } from './Icons';
 
 interface Props {
   isOpen: boolean;
@@ -131,11 +132,11 @@ export function FxRatesModal({
             background: 'var(--bg-surface-elevated, rgba(15,23,42,0.03))',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '20px' }}>💱</span>
+          <div className="u-row-8">
+            <span style={{ display: 'inline-flex', color: 'var(--primary-accent)' }}><IconWallet size={20} /></span>
             <div>
               <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Multi-Currency FX Engine</h3>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              <span className="u-hint">
                 Base: {trip.baseCurrency || 'INR'} • 30-day offline rate cache & custom rate lock
               </span>
             </div>
@@ -162,7 +163,7 @@ export function FxRatesModal({
             }}
           >
             <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>⚡</span> Quick Currency Converter
+              <IconSparkles size={14} /> Quick Currency Converter
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '8px', alignItems: 'center' }}>
@@ -214,7 +215,7 @@ export function FxRatesModal({
               <div style={{ textAlign: 'right' }}>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>{conversion.formula}</span>
                 {conversion.isCustomRate && (
-                  <span style={{ fontSize: '10px', fontWeight: 700, color: '#d97706', background: 'rgba(217, 119, 6, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#d97706', background: 'rgba(217, 119, 6, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
                     🔒 Rate Locked
                   </span>
                 )}
@@ -226,8 +227,8 @@ export function FxRatesModal({
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: 700 }}>🔒 Trip Rate Lock & Forex Fee</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}><IconLock size={14} /> Trip Rate Lock & Forex Fee</div>
+                <div className="u-hint">
                   Freeze custom rates (e.g. airport cash exchange) or add bank markup %
                 </div>
               </div>
@@ -305,7 +306,7 @@ export function FxRatesModal({
             <div style={{ background: 'rgba(0,0,0,0.02)', padding: '10px 12px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <span style={{ fontSize: '12px', fontWeight: 600, display: 'block' }}>Forex Card / Bank Markup %</span>
-                <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>e.g. +2.0% bank conversion charge</span>
+                <span className="u-hint">e.g. +2.0% bank conversion charge</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <input
@@ -326,8 +327,8 @@ export function FxRatesModal({
           {/* 3. Live FX Rates Matrix Overview */}
           <div>
             <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>📊 Live Travel Currencies ({ratesData?.date || 'Today'})</span>
-              {isLoading && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Updating...</span>}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconAnalytics size={14} /> Live Travel Currencies ({ratesData?.date || 'Today'})</span>
+              {isLoading && <span className="u-hint">Updating...</span>}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '6px' }}>
@@ -344,7 +345,7 @@ export function FxRatesModal({
                       fontSize: '11.5px',
                     }}
                   >
-                    <div style={{ color: 'var(--text-muted)', fontSize: '10.5px' }}>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
                       {c.flag} 1 {c.code}
                     </div>
                     <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>

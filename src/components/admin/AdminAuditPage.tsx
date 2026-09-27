@@ -3,8 +3,9 @@ import type { Trip } from '../../types';
 import type { AdminUserRow, AuditLogEntry } from '../../types/admin';
 import { purgeAuditLogsOlderThan } from '../../services/tripApi';
 import { formatRelativeTime } from '../../utils/relativeTime';
-import { IconCheck, IconSearch, IconRefresh } from '../Icons';
+import { IconSearch, IconRefresh } from '../Icons';
 import type { ConfirmRequest } from '../ConfirmDialog';
+import { useOpsToast } from './useOpsToast';
 
 interface Props {
   logs: AuditLogEntry[];
@@ -202,7 +203,7 @@ export function AdminAuditPage({ logs, trips, users, onLogsChanged, onRefresh, i
   const [actorFilter, setActorFilter] = useState<string>('all');
   const [purgeDays, setPurgeDays] = useState('90');
   const [isPurging, setIsPurging] = useState(false);
-  const [toastMsg, setToastMsg] = useState('');
+  const { showToast, toastNode } = useOpsToast();
   const [expandedLogIds, setExpandedLogIds] = useState<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -221,11 +222,6 @@ export function AdminAuditPage({ logs, trips, users, onLogsChanged, onRefresh, i
     setCopiedId(log.id);
     showToast('Payload copied to clipboard.');
     setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const showToast = (msg: string) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(''), 3000);
   };
 
   const tripNameById = useMemo(() => new Map(trips.map((t) => [t.id, t.name])), [trips]);
@@ -348,21 +344,17 @@ export function AdminAuditPage({ logs, trips, users, onLogsChanged, onRefresh, i
           <h2>Security &amp; Operations Audit Log</h2>
           <p>Real-time chronological telemetry of all administrative and security actions taken across the fleet.</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="u-flex-gap-8">
           <button type="button" className="ops-btn" onClick={handleExportCsv}>
             Export CSV
           </button>
           <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
-            <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            <IconRefresh size={16} className={isRefreshing ? 'ops-spin' : undefined} /> Refresh
           </button>
         </div>
       </div>
 
-      {toastMsg && (
-        <div className="ops-toast">
-          <IconCheck size={14} /> {toastMsg}
-        </div>
-      )}
+      {toastNode}
 
       {/* Executive Telemetry KPI Ribbon */}
       <div className="ops-audit-kpi-grid">

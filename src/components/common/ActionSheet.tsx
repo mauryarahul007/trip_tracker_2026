@@ -1,9 +1,10 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { triggerHaptic } from '../../utils/haptics';
 import { useHistoryBack } from '../../utils/useHistoryBack';
 import { useEscapeKey } from '../../utils/useEscapeKey';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useDragToDismiss } from '../../hooks/useDragToDismiss';
 
 export interface ActionSheetItem {
   id: string;
@@ -37,48 +38,14 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
   showCancel = true,
   cancelLabel = 'Cancel',
 }) => {
-  const dragOffsetRef = useRef(0);
-  const dragStartY = useRef<number | null>(null);
-  const sheetRef = useRef<HTMLDivElement>(null);
+  // Drag down to dismiss (skip if touching buttons)
+  const { ref: sheetRef, handlers: dragHandlers } = useDragToDismiss<HTMLDivElement>(onClose, {
+    ignoreSelector: '.wa-action-sheet-item, .wa-action-sheet-cancel-btn, .wa-action-sheet-reactions',
+  });
 
   useHistoryBack(isOpen, onClose);
   useEscapeKey(isOpen, onClose);
   useFocusTrap(sheetRef, isOpen, false, onClose);
-
-  // Touch / pointer drag down to dismiss (skip if touching buttons)
-  const handlePointerDown = (e: React.PointerEvent) => {
-    if ((e.target as HTMLElement).closest('.wa-action-sheet-item, .wa-action-sheet-cancel-btn, .wa-action-sheet-reactions')) {
-      return;
-    }
-    dragStartY.current = e.clientY;
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (dragStartY.current === null) return;
-    const diff = e.clientY - dragStartY.current;
-    if (diff > 8) {
-      const offset = diff - 8;
-      dragOffsetRef.current = offset;
-      if (sheetRef.current) {
-        sheetRef.current.style.transition = 'none';
-        sheetRef.current.style.transform = `translateY(${offset}px)`;
-      }
-    }
-  };
-
-  const handlePointerUp = () => {
-    if (dragStartY.current === null) return;
-    if (dragOffsetRef.current > 70) {
-      triggerHaptic('light');
-      onClose();
-    }
-    dragStartY.current = null;
-    dragOffsetRef.current = 0;
-    if (sheetRef.current) {
-      sheetRef.current.style.transition = 'transform 0.22s cubic-bezier(0.32, 0.72, 0, 1)';
-      sheetRef.current.style.transform = '';
-    }
-  };
 
   if (!isOpen) return null;
 
@@ -105,10 +72,7 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
           transition: 'transform 0.22s cubic-bezier(0.32, 0.72, 0, 1)',
         }}
         onClick={(e) => e.stopPropagation()}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
+        {...dragHandlers}
       >
         <div className="wa-action-sheet-handle-wrap" aria-hidden="true">
           <span className="wa-action-sheet-drag-pill" />

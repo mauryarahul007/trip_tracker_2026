@@ -4218,4 +4218,106 @@ This document logs all meaningful technical decisions, library choices, design p
   - A multi-place destination shows the first place that has a photo, then the rest, then the full phrase.
   - Trips with no destination still fall back to stops, then the trip name.
 
+## 235. App-wide motion polish behind one flag (v3.41.0)
+* **Context:**
+  - About 38 files mount dialogs as `{open && <Modal />}`, so every dialog appeared with an animation but vanished instantly on close. Only the Settings drawer had an exit animation.
+  - Drag handles on sheets were decorative. The split explainer and @tripbot sheets used class names with no CSS at all, so they had no card background. The ActionSheet drag never visibly followed the finger, because `.wa-sheet-enter`'s `forwards` fill overrode the inline drag transform.
+  - `.app-header { view-transition-name }` matched four headers, so a view transition with the expense form open found duplicate names and was skipped. `.trip-stack-card` (for a card→header morph) matched no element.
+  - The public share pages used a hard-coded slate palette with no dark mode. There were 161 `:hover` rules and only 2 hover guards, so hover styles stuck on touch devices. Seven Ops Deck toast copies each pushed page content down.
+* **Decision & Implementation:**
+  - **Flag `enableMotionPolish` (Core, default ON):** `App.tsx` sets `data-motion` on `<html>`, and every new motion rule is scoped under `:root[data-motion]`.
+  - **Exit animations (`utils/ghostExit.ts`):** A single MutationObserver catches any overlay React removes. It re-inserts an inert clone with `.ghost-exit` in the same parent, carries over its scroll positions, plays a 200ms fade/drop, then removes the clone. Overlays that run their own exit (`.is-exiting`) are skipped. This is used instead of adding a closing state at every call site.
+  - **Drag to dismiss (`hooks/useDragToDismiss.ts`):** Extracted from ActionSheet and reused by the split explainer, @tripbot confirm and UPI pay (UPI drags from its handle only). On dismiss the sheet stays where it was released, so the exit clone continues from there. The dead handle in the full-screen ExpenseForm, which its header covered, was removed.
+  - **View transitions:** Only `.trip-dashboard-header` carries a transition name. When the flag is ON it is `trip-hero`, and `App.tsx` gives the tapped `[data-trip-card]` the same name only for the duration of the transition, so opening a trip morphs the card into the header and back. `.app-main` is `tab-pane`, and `data-tab-dir` picks a left or right slide from the tab order. `withViewTransition` now returns the transition so callers can clean up.
+  - **Tokens:** `--dur-1/2/3` and `--ease-out/--ease-in` were added. `--ease-fluid-out` is now an alias of `--ease-decel`, which was the same curve.
+  - **Unflagged fixes:** 138 cosmetic top-level `:hover` rules in `index.css` are wrapped in `@media (hover: hover)`. Six rules that reveal content on hover were left alone. Inline traveler label sizes below 11px were raised to 11px, except ticket art, Wrapped and the 20px "+N" avatar. The share pages were rebuilt on theme tokens. The Ops Deck uses one `useOpsToast` with a stacked corner toast. Nav codes now run in rail order. Deleting a user uses `ConfirmDialog` with a new `requireText` option instead of `window.prompt`. The bug ledger got a drag lift and a stacked-card layout under 640px.
+* **Trade-offs Accepted:**
+  - The exit clone is a static copy: canvases, iframes and media are removed from it, so a map area inside a closing dialog goes blank for 200ms. A clone of a React-managed parent sits briefly next to React's nodes, which React tolerates because it only works with the nodes it owns.
+  - Morphing back to the trips list targets whichever card is at the front of the stack; if the stack order changed, that may not be the trip just closed.
+  - There is no automated test for the observer, because the suite runs without a DOM and jsdom would be a new dependency. It is covered by the manual steps in FEATURE_TEST_STEPS.md (UX-MOTION).
+
+## 236. Shorter expense form, focused Summary, touch and loading polish (v3.41.0)
+* **Context:**
+  - The add-expense screen showed about 11 sections, although most expenses need only an amount, a title, the payer and an equal split. Summary stacked the charts under the balances, and a trip with no expenses showed a "settled at 0" hero.
+  - 13 lazy dialogs used `Suspense fallback={null}`, so the first tap on one looked ignored. Analytics briefly showed zeros and "No events yet" while loading.
+* **Decision & Implementation:**
+  - **`enableCompactExpenseForm` (Core, ON):** In `ExpenseForm.tsx` the category, date/location and receipt/photos JSX is built once as `categoryField`, `dateLocationFields` and `receiptFields`. With the flag OFF they render in their original places. With it ON they render inside a native `<details>` "More details" section whose summary previews the values (category · date · Place · Receipt). The section starts open when editing an expense that has a receipt or place, and opens when a receipt is attached. No field was removed.
+  - **`enableCompactSummary` (Core, ON):** The charts sit in a `<details>` "Spending breakdown" section, mounted only while open, and the open state is saved per device. A trip with no non-settlement expenses (and not still loading) shows `TripStartCard` (Invite, then Add).
+  - **Under `enableMotionPolish`:** the settle stamp (bounce, confetti and a haptic on the first false→true of `isFullySettled`), ledger pending-delete rows that fold via grid `1fr → 0fr`, the pull-to-refresh plane, and the "Back online · N changes synced" note after an `online` event.
+  - **Unflagged:**
+    - `SheetSkeleton` replaces the 13 null fallbacks. It sets `data-no-ghost` so the exit animation skips it. Five common dialogs are preloaded when the browser is idle after a trip opens.
+    - The Ops Deck shows a skeleton until the current tab's first fetch lands (`firstLoads` counter; forced refreshes don't count), and the telemetry cards show their own skeleton.
+    - The Bug Ledger has J/K/Enter/E keys in list view.
+    - `--transition-smooth` now names its properties instead of `all`. A broken `transform var(--transition-smooth)` rule was fixed.
+    - Focus rings were restored on three buttons that set `outline: none`.
+    - Small icon buttons get a 44px+ invisible hit area on touch screens (a `::before` layer, so layout doesn't change).
+    - About 35 interface emoji on core screens were replaced with SVG icons (`IconCamera`, `IconFlag` and `IconPlane` are new). Content emoji (chat reactions, pass types, Wrapped) were kept.
+    - 155 repeated identical inline style objects became `.u-*` utility classes, but only on elements that had no other class. A check found no descendant-tag rule that could out-rank them.
+* **Trade-offs Accepted:**
+  - Category is now one tap further away on the add form, but the preview line always shows what it's set to, and predictive chips and templates still set it.
+  - The Ops Deck skeleton covers the whole tab during first load rather than each card. That's simpler, and it removes the misleading zeros, which were the actual problem.
+  - About 2,300 inline styles remain. They're being moved to CSS as each file is touched.
+
+## 237. Money formatting, calmer haptics, quick trip create, deferred map (v3.41.0)
+* **Context:**
+  - About 30 display sites used `toFixed(2)` instead of `formatAmount`, so amounts showed without thousands separators, and zero-decimal currencies showed `.00`.
+  - A haptics preference existed in `utils/haptics.ts`, but nothing in the UI set it. It also only used `navigator.vibrate`, which iOS WebViews lack, so iPhones got no feedback. There were 235 light-tap haptics.
+  - Deleting a trip needed a two-tap sealed confirm and then showed an Undo toast as well. Creating a trip asked for the name first. Every trip open loaded maplibre (~1MB) straight away.
+  - The Members tab already showed balances and a Pending badge, but had no way to nudge. The inbox had no grouping or money view.
+  - `--bp-ink-soft/-softer` were 4.44:1 and 3.81:1 on light `--bp-paper`, below WCAG AA.
+* **Decision & Implementation:**
+  - **`formatMoneyNumber(amount, codeOrSymbol)` in `currency.ts`:** device-locale grouping plus `getCurrencyDecimals`. It accepts a code or the symbol `getCurrencySymbol` returned: unmapped codes come back as the code itself, and `¥` only comes from JPY. `formatAmount` now uses it. The display sites, notification bodies and share texts were routed through it; maths, input values and the Ops Deck integrity report were not. Tests are in `currency.test.ts`.
+  - **Confirms:** `ConfirmRequest.undoable` makes the danger button confirm on one tap, with the footnote "You can undo…". It is set for trip delete (the confirm itself is kept, as the existing code comment intends) and for member delete when extended undo is on. Irreversible actions keep the two-tap seal.
+  - **`enableQuickTripCreate` (Core, ON):** the destination comes first. `utils/tripSuggest.ts` suggests "<Place> trip" and a currency from a keyword table, offline and tested; an unknown place suggests nothing. Suggestions stop once the traveler edits the name or currency, and reset each time the form opens. A guessed currency outside the four listed is added as a "(suggested)" option. Dates stay required.
+  - **`DeferredTripMapHero`:** the cached destination photo paints first, and TripMapHero mounts via `requestIdleCallback` (1.2s timeout), fading in over the photo. This is unflagged, since nothing but timing changes.
+  - **`enableCalmHaptics` (Core, ON):** `configureHaptics({ calm })` from App.tsx makes an unset preference mean `important`, which skips 'light' taps. Native builds use `@capacitor/haptics`. Settings → Appearance → Haptics offers All / Important / Off, and the legacy `subtle` value shows as All.
+  - **`enableMemberMoneyRow` (Trip, ON):** a Remind button beside anyone except you who owes money, using the shared `utils/shareText.ts` (share sheet, or copy plus WhatsApp). BalancesSettlements' reminder fallback now uses the same helper.
+  - **`enableNotificationGrouping` (Trip, ON):** `utils/notificationGroups.ts` folds adjacent items with the same trip, type and sender within an hour (chat never folds), and adds an Everything / Money chip filter. Tested.
+  - **Accessibility:** the donut chart is `aria-hidden` because its legend carries the data. The daily trend has a `.sr-only` list. Title chips expose `aria-pressed`. The two light-theme ink alphas were raised to 0.63 and 0.61.
+* **Trade-offs Accepted:**
+  - The currency table is hand-kept and covers common destinations only; anything else falls back to INR as before.
+  - Folding uses sender and type, not content. Five different expenses from one person in an hour show as one row with "+4 more" until expanded.
+  - The admin analytics `₹`-prefixed totals still add different currencies together; that is a separate data issue, not formatting.
+
+## 238. Destination suggestions and "did you mean" (v3.41.0)
+* **Context:** A misspelled destination ("Swtizerland") broke everything keyed off it: cover photos, map geocoding, weather and the currency guess. It also produced dozens of failed lookups per session.
+* **Probe (2026-09-27):**
+  - Open-Meteo geocoding returned nothing for any typo.
+  - Photon, filtered to city/state/country/district/county, put the right place first for Swtizerland, Manaali, Kyotto, Gangtk and Pondicheri. It ranked Darjeeling 2nd and Bali 4th. It had no Munnar for "Munar", and "Udaipr" became Udaipri.
+  - Biasing results toward India made "Manaali" worse (Mangali), so no location bias is used.
+* **Decision & Implementation (`enableDestinationAutocomplete`, Core, ON):**
+  - **`utils/placeGazetteer.ts`:** about 190 popular destinations, plus a country → currency table.
+  - **`services/placeSuggest.ts`:**
+    - Offline suggestions from the gazetteer and the traveler's own past destinations: prefix matches, plus an edit distance that counts a transposition as one edit, allowing 1/2/3 typos for words of ≤4/≤8/longer.
+    - Photon lookups restricted to real places, with a cache, and never throwing.
+    - `didYouMean`: a fix is offered only when the typed place isn't already a known place and is within that typo tolerance, so "Goa Beach" is never "corrected" to Goa.
+    - Tests in `placeSuggest.test.ts`.
+  - **Several typos:** `findPlaceFixes` returns every misspelled place, and each place is looked up online, not just the last one typed. One typo shows "Did you mean X?". Several show one pill per place plus Fix all.
+  - **`components/DestinationInput.tsx`:**
+    - A combobox with a keyboard-navigable list (Enter picks rather than submitting the form).
+    - Local results show instantly; the Photon lookup is debounced 250ms and aborted as you keep typing.
+    - The "Did you mean" chip appears on blur and when an existing trip opens in Edit.
+    - Picking replaces only the place being typed in "Goa, Gokar…".
+    - The currency suggestion comes from the picked place's country code, falling back to the keyword guess.
+  - Past destinations that are themselves likely typos are not offered as suggestions.
+* **Trade-offs Accepted:**
+  - Destination keystrokes (after a 250ms pause, 3+ characters) reach komoot's public Photon server. It already received destination names for weather and maps. It has fair-use limits; self-hosting Photon is the upgrade path.
+  - Only the single-destination field is covered; the multi-stop builder's inputs are not.
+  - Only the saved name is corrected. No coordinates are stored; the map still geocodes the corrected name.
+
+## 239. Dev-server crashes stop filing ledger cases; Ops Deck button system (v3.41.0)
+* **Context:**
+  - All 11 open ledger cases (BUG-237…247) came from `localhost:5173` builds labelled v1.0.0. Ten were "X is not defined": a half-edited file hot-reloaded into an open tab. The typecheck passes today, so none of those names can be undefined in the source. The eleventh, BUG-247 (`removeChild` in `removeChildFromContainer`), happened during the same hot-swapping and did not reproduce in a stress run.
+  - Ops Deck buttons were small 11.5px pills with no `inline-flex` or `nowrap`, so page-head Refresh and Export wrapped into an icon-over-label block about 56px tall. Refresh also swapped its label to "Refreshing...", which changed its width.
+* **Decision & Implementation:**
+  - **`autoBugReporter.ts` → `shouldAutoReport(env)`:** no auto-filing when `import.meta.env.DEV` (the Vite dev server). Tests still exercise the reporter. Dev crashes stay visible in the console and Vite's overlay; built web, Android and iOS apps still file. Regression test added.
+  - **Buttons (`ops-deck.css`), modelled on shadcn/ui and Vercel Geist:**
+    - one-row inline-flex, 36px default and 28px mini, 10px/6px radius, 13px semibold label, 16px icon with an 8px gap;
+    - 1px shadow, a hover tint (no lift), press-shrink, a 3px focus ring, and disabled at 50% opacity;
+    - variants: primary (solid violet with an inner highlight), danger (red outline, filled on hover), and a new ghost.
+    - Refresh keeps its label and spins its icon (Geist's loading guidance).
+    - The traveler-side `.ops-btn` press transform in `index.css` was removed so the two rules don't stack.
+* **Trade-offs Accepted:**
+  - BUG-247 has no reproduction. If it is a real bug rather than a hot-swap artifact, it will now come back from a built app with a real stack.
+  - About 20 inline `padding` overrides on individual `.ops-btn`s remain. They still inherit the new height, radius and states.
 

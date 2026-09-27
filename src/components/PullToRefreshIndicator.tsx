@@ -1,5 +1,6 @@
 import { forwardRef } from 'react';
 import type { PullToRefreshState } from '../utils/usePullToRefresh';
+import { IconPlane } from './Icons';
 
 interface Props {
   state: PullToRefreshState;
@@ -25,6 +26,9 @@ export const PullToRefreshIndicator = forwardRef<HTMLDivElement, Props>(
           >
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
           </svg>
+          {/* enableMotionPolish swaps the arrow for this plane (index.css):
+              level while pulling, climbs when armed, cruises while syncing. */}
+          <IconPlane size={15} className="ptr-plane" />
           <span>
             {refreshing ? 'Syncing…' : armed ? 'Release to sync' : 'Pull to sync'}
           </span>

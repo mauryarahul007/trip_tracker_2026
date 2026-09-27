@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getTripShare, recordTripShareView, type TripShareSummary } from '../services/tripApi';
 import { formatDateRange } from '../utils/dateRange';
 import { fetchPublicGrowthFlags } from '../services/growthApi';
+import { IconLock } from './Icons';
 
 // Public, unauthenticated page -- anyone with the link (no login) lands
 // here. Reads only through the SECURITY DEFINER get_trip_share RPC
@@ -48,64 +49,75 @@ export function TripSharePage() {
     };
   }, [token]);
 
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0F172A', padding: '20px' }}>
-      <div style={{ maxWidth: '420px', width: '100%', background: '#fff', borderRadius: '20px', padding: '24px', textAlign: 'center' }}>
-        <span style={{ fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#64748B' }}>Trip Tracker · Trip Summary</span>
+  const spend = summary ? Object.entries(summary.spendByCurrency) : [];
 
-        {status === 'loading' && <p style={{ marginTop: '16px', color: '#64748B' }}>Loading…</p>}
+  // Styled in index.css (.share-page / .share-pass) from theme tokens, so it
+  // follows the viewer's light/dark setting and matches the app's
+  // boarding-pass look -- this is the first screen a non-user ever sees.
+  return (
+    <div className="share-page">
+      <article className="share-pass" aria-busy={status === 'loading'}>
+        <div className="share-pass-eyebrow">Trip Tracker · Trip summary</div>
+
+        {status === 'loading' && (
+          <div className="share-pass-loading" role="status" aria-label="Loading trip summary">
+            <div className="skeleton" style={{ width: '40%', height: '12px' }} />
+            <div className="skeleton" style={{ width: '75%', height: '26px' }} />
+            <div className="skeleton" style={{ width: '55%', height: '12px' }} />
+            <div className="skeleton" style={{ width: '100%', height: '64px', marginTop: '10px' }} />
+          </div>
+        )}
 
         {status === 'ended' && (
-          <>
-            <div style={{ fontSize: '28px', margin: '16px 0 8px' }}>🔒</div>
-            <p style={{ fontWeight: 600, margin: 0 }}>This link has ended or expired</p>
-            <p style={{ fontSize: '12.5px', color: '#64748B', marginTop: '6px' }}>Ask the trip organizer for a fresh link.</p>
-          </>
+          <div className="share-pass-ended">
+            <span className="share-pass-ended-icon" aria-hidden="true"><IconLock size={22} /></span>
+            <h1 className="share-pass-title">This link has ended</h1>
+            <p className="share-pass-sub">It was turned off or has expired. Ask the trip organizer for a fresh link.</p>
+          </div>
         )}
 
         {status === 'ok' && summary && (
           <>
-            <h1 style={{ fontSize: '22px', margin: '10px 0 4px' }}>{summary.tripName}</h1>
-            <p style={{ fontSize: '13px', color: '#64748B', margin: 0 }}>
-              {formatDateRange(summary.startDate, summary.endDate)}
-              {summary.destination ? ` · ${summary.destination}` : ''}
-            </p>
+            {summary.destination && <div className="share-pass-dest">{summary.destination}</div>}
+            <h1 className="share-pass-title">{summary.tripName}</h1>
+            <p className="share-pass-sub">{formatDateRange(summary.startDate, summary.endDate)}</p>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <div style={{ flex: 1, background: '#F1F5F9', borderRadius: '14px', padding: '12px' }}>
-                <div style={{ fontSize: '20px', fontWeight: 700 }}>{summary.memberCount}</div>
-                <div style={{ fontSize: '11px', color: '#64748B' }}>Travelers</div>
-              </div>
-              <div style={{ flex: 1, background: '#F1F5F9', borderRadius: '14px', padding: '12px' }}>
-                <div style={{ fontSize: '20px', fontWeight: 700 }}>{summary.expenseCount}</div>
-                <div style={{ fontSize: '11px', color: '#64748B' }}>Expenses</div>
-              </div>
-            </div>
+            <div className="share-pass-perf" aria-hidden="true" />
 
-            {Object.keys(summary.spendByCurrency).length > 0 && (
-              <div style={{ marginTop: '14px', fontSize: '13px', color: '#334155' }}>
-                Total spend:{' '}
-                {Object.entries(summary.spendByCurrency)
-                  .map(([currency, amount]) => `${currency} ${amount.toLocaleString()}`)
-                  .join(' · ')}
+            <dl className="share-pass-stats">
+              <div>
+                <dt>Travelers</dt>
+                <dd>{summary.memberCount}</dd>
+              </div>
+              <div>
+                <dt>Expenses</dt>
+                <dd>{summary.expenseCount}</dd>
+              </div>
+            </dl>
+
+            {spend.length > 0 && (
+              <div className="share-pass-spend">
+                <span className="share-pass-spend-label">Total spend</span>
+                {spend.map(([currency, amount]) => (
+                  <span key={currency} className="share-pass-spend-amount">
+                    {currency} {amount.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  </span>
+                ))}
               </div>
             )}
 
             {showSignupCta && (
-              <a
-                href="/login?ref=trip_share&utm_medium=share_page"
-                style={{ display: 'block', marginTop: '18px', padding: '12px', borderRadius: '12px', background: '#0FA98F', color: '#fff', fontWeight: 600, fontSize: '14px', textDecoration: 'none' }}
-              >
+              <a className="share-pass-cta" href="/login?ref=trip_share&utm_medium=share_page">
                 Splitting a trip with friends? Track it free
               </a>
             )}
 
-            <p style={{ fontSize: '11px', color: '#94A3B8', marginTop: '18px' }}>
-              This is a read-only summary shared by a trip organizer. Individual expenses and balances aren't shown here.
+            <p className="share-pass-note">
+              Read-only summary shared by the trip organizer. Individual expenses and balances aren't shown.
             </p>
           </>
         )}
-      </div>
+      </article>
     </div>
   );
 }

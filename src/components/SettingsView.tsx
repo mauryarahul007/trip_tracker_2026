@@ -23,6 +23,7 @@ import {
   IconDatabase,
   IconClipboardList,
   IconQrCode,
+  IconVibrate,
 } from './Icons';
 import { SettingsCell } from './common/SettingsCell';
 import { SettingsSection } from './common/SettingsSection';
@@ -34,7 +35,7 @@ import { useCompactLedgerView, setCompactLedgerView } from '../hooks/useCompactL
 import { useAuthStore } from '../store/authStore';
 import { useNotificationsStore } from '../store/notificationsStore';
 import { getAppVersion, WEB_APP_VERSION } from '../utils/appVersion';
-import { triggerHaptic } from '../utils/haptics';
+import { triggerHaptic, getHapticPreference, setHapticPreference, type HapticPreference } from '../utils/haptics';
 import { getCurrencySymbol, formatAmount } from '../utils/currency';
 import { calculateSettlements, summarizeSettlement, type SettlementCloseoutSummary } from '../utils/settlement';
 import { SuperadminAuthModal } from './SuperadminAuthModal';
@@ -338,6 +339,7 @@ export function SettingsView({
   const isTravelerPreview = useTripStore((s) => s.isTravelerPreview);
   const isSuperadmin = isSuperadminRaw && !isTravelerPreview;
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
+  const [hapticPref, setHapticPref] = useState<HapticPreference>(() => getHapticPreference());
   const refreshTrips = useTripStore((s) => s.refreshTrips);
   const trips = useTripStore((s) => s.trips);
   const activeTripId = useTripStore((s) => s.activeTripId);
@@ -937,6 +939,7 @@ export function SettingsView({
   const showAppearance = matchesSearch('Appearance', 'theme', 'dark', 'light', 'night', 'auto', 'color', 'look');
   const showDataSaver = isFeatureEnabled('enableDataSaverMode') && matchesSearch('Data Saver', 'data', 'saver', 'mobile data', 'low data', 'map', 'battery');
   const showCompactLedger = isFeatureEnabled('enableCompactLedgerView') && matchesSearch('Compact Ledger View', 'compact', 'dense', 'ledger', 'rows', 'density');
+  const showHaptics = isFeatureEnabled('enableCalmHaptics') && matchesSearch('Haptics', 'vibration', 'vibrate', 'buzz', 'feedback');
   const showNotifications = matchesSearch('Notifications', 'alerts', 'unread', 'bell', 'messages');
   const showDigestMode = isFeatureEnabled('enableDigestNotifications') && matchesSearch('Digest Mode', 'digest', 'daily', 'summary', 'notifications', 'batch');
   const showQuietHours = isFeatureEnabled('enableQuietHours') && matchesSearch('Quiet Hours', 'quiet', 'dnd', 'do not disturb', 'mute', 'sleep', 'night', 'notifications');
@@ -1050,7 +1053,7 @@ export function SettingsView({
                 >
                   <span>{userEmail || 'Local Guest Account'}</span>
                   {copyFeedback && (
-                    <span style={{ fontSize: '10px', color: 'var(--color-success)', fontWeight: 700 }}>
+                    <span style={{ fontSize: '11px', color: 'var(--color-success)', fontWeight: 700 }}>
                       · {copyFeedback}
                     </span>
                   )}
@@ -1205,7 +1208,7 @@ export function SettingsView({
               <IconShield size={20} />
                   </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div className="u-row-6">
                 <strong style={{ fontSize: '15px' }}>Superadmin</strong>
                   </div>
               <span style={{ fontSize: '12px', color: '#92A2AE' }}>Feature Flags, Global Analytics &amp; Admin Tools</span>
@@ -1326,7 +1329,7 @@ export function SettingsView({
         </SettingsSection>
       )}
 
-      {(showAppearance || showCompactLedger) && (
+      {(showAppearance || showCompactLedger || showHaptics) && (
         <SettingsSection title="Appearance">
             {showAppearance && (
               <div className="settings-row-item" style={{ cursor: 'default' }}>
@@ -1391,6 +1394,37 @@ export function SettingsView({
                 onChange={(next) => { triggerHaptic('light'); setCompactLedgerView(next); }}
                 label="Compact ledger"
               />
+            )}
+
+            {showHaptics && (
+              <div className="settings-row-item" style={{ cursor: 'default' }}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle"><IconVibrate size={18} /></div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Haptics</span>
+                    <span className="settings-row-subtitle">
+                      {hapticPref === 'off' ? 'No vibration' : hapticPref === 'standard' || hapticPref === 'subtle' ? 'Every tap' : 'Key actions only'}
+                    </span>
+                  </div>
+                </div>
+                <div className="settings-segmented-theme settings-segmented-text" role="group" aria-label="Haptic feedback">
+                  {([['standard', 'All'], ['important', 'Important'], ['off', 'Off']] as const).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className={`settings-seg-btn${(hapticPref === 'subtle' ? 'standard' : hapticPref) === value ? ' active' : ''}`}
+                      aria-pressed={(hapticPref === 'subtle' ? 'standard' : hapticPref) === value}
+                      onClick={() => {
+                        setHapticPreference(value);
+                        setHapticPref(value);
+                        triggerHaptic('medium');
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
         </SettingsSection>
       )}

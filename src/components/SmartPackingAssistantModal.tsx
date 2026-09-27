@@ -452,7 +452,7 @@ export function SmartPackingAssistantModal({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
             {/* Dedicated in-app Back Button to return to previous screen */}
-            <button
+            <button className="hit-area"
               type="button"
               onClick={handleBack}
               aria-label="Back to Notes"
@@ -535,7 +535,7 @@ export function SmartPackingAssistantModal({
               <span>{isFlightCleared ? '✈️ Flight Ready ✓' : `🛂 ${packedEssentialsCount}/${flightEssentials.length} Essentials`}</span>
             </button>
 
-            <button
+            <button className="hit-area"
               type="button"
               onClick={handleBack}
               aria-label="Close"
@@ -573,13 +573,13 @@ export function SmartPackingAssistantModal({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div className="u-row-6">
                 <span style={{ fontSize: '15px' }}>🛃</span>
                 <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#38bdf8' }}>
                   Pre-Flight Security Checkpoint Tray (TSA / ICAO)
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="u-row-8">
                 <button
                   type="button"
                   onClick={handleQuickPackTray}
@@ -589,7 +589,7 @@ export function SmartPackingAssistantModal({
                     color: '#38bdf8',
                     borderRadius: '8px',
                     padding: '2px 8px',
-                    fontSize: '10px',
+                    fontSize: '11px',
                     fontWeight: 700,
                     cursor: 'pointer',
                   }}
@@ -622,12 +622,12 @@ export function SmartPackingAssistantModal({
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: '15px' }}>{item.icon}</span>
-                    <span style={{ fontSize: '9.5px', fontWeight: 700, color: item.isPacked ? '#34d399' : '#f87171' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: item.isPacked ? '#34d399' : '#f87171' }}>
                       {item.isPacked ? '✓ In Tray' : '⚠️ Missing'}
                     </span>
                   </div>
                   <span style={{ fontSize: '11px', fontWeight: 700 }}>{item.title}</span>
-                  <span style={{ fontSize: '9px', color: '#94a3b8' }}>{item.subtitle}</span>
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>{item.subtitle}</span>
                 </div>
               ))}
             </div>
@@ -891,7 +891,7 @@ export function SmartPackingAssistantModal({
                         {isCabin && (
                           <span
                             style={{
-                              fontSize: '9px',
+                              fontSize: '11px',
                               fontWeight: 700,
                               background: 'rgba(14, 165, 233, 0.12)',
                               color: '#0284c7',
@@ -905,7 +905,7 @@ export function SmartPackingAssistantModal({
                         {isCheckin && (
                           <span
                             style={{
-                              fontSize: '9px',
+                              fontSize: '11px',
                               fontWeight: 700,
                               background: 'rgba(217, 119, 6, 0.12)',
                               color: '#d97706',
@@ -919,7 +919,7 @@ export function SmartPackingAssistantModal({
                         {item.isLiquid && (
                           <span
                             style={{
-                              fontSize: '9px',
+                              fontSize: '11px',
                               fontWeight: 700,
                               background: 'rgba(20, 184, 166, 0.12)',
                               color: 'var(--primary-accent)',
@@ -933,7 +933,7 @@ export function SmartPackingAssistantModal({
                         {isShared && (
                           <span
                             style={{
-                              fontSize: '9px',
+                              fontSize: '11px',
                               fontWeight: 700,
                               background: 'rgba(139, 92, 246, 0.12)',
                               color: '#7c3aed',
@@ -947,13 +947,13 @@ export function SmartPackingAssistantModal({
                       </div>
 
                       {item.cabinNote && (
-                        <div style={{ fontSize: '10.5px', color: isCabin ? '#0284c7' : isCheckin ? '#c2410c' : 'var(--text-secondary)', fontWeight: 500, marginTop: '2px', lineHeight: 1.3 }}>
+                        <div style={{ fontSize: '11px', color: isCabin ? '#0284c7' : isCheckin ? '#c2410c' : 'var(--text-secondary)', fontWeight: 500, marginTop: '2px', lineHeight: 1.3 }}>
                           ℹ️ {item.cabinNote}
                         </div>
                       )}
 
                       {item.reason && !item.cabinNote && (
-                        <div style={{ fontSize: '10.5px', color: 'var(--primary-accent)', fontWeight: 500, marginTop: '2px' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--primary-accent)', fontWeight: 500, marginTop: '2px' }}>
                           💡 {item.reason}
                         </div>
                       )}
@@ -964,14 +964,14 @@ export function SmartPackingAssistantModal({
                           style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
                             🎒 Carrier:
                           </span>
                           <select
                             value={carrier?.memberId || ''}
                             onChange={(e) => handleAssignCarrier(item.id, e.target.value)}
                             style={{
-                              fontSize: '10px',
+                              fontSize: '11px',
                               padding: '1px 5px',
                               borderRadius: '6px',
                               border: '1px solid var(--border-color)',
@@ -1008,7 +1008,7 @@ export function SmartPackingAssistantModal({
                     >
                       {item.category}
                     </span>
-                    <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 500 }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>
                       ~{estimateItemWeightKg(item, durationDays)}kg
                     </span>
                   </div>
@@ -1031,7 +1031,7 @@ export function SmartPackingAssistantModal({
             alignItems: 'center',
           }}
         >
-          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10.5px', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}>
             <input
               type="checkbox"
               checked={includeLuggageTag}

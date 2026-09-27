@@ -21,6 +21,11 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-09-27 | v3.41.0 | DEST-SUGGEST | [Destination suggestions & did-you-mean](#dest-suggest--destination-suggestions--did-you-mean) |
+| 2026-09-27 | v3.41.0 | QA-0927 | [QA fixes: map handoff, stale trip URL, ₹0 flash, inbox empty state, photo lookups](#qa-0927--qa-fixes) |
+| 2026-09-27 | v3.41.0 | UX-POLISH3 | [Money format, quick trip, calm haptics, reminders, inbox](#ux-polish3--money-format-quick-trip-calm-haptics-reminders-inbox) |
+| 2026-09-27 | v3.41.0 | UX-POLISH2 | [Short expense form, focused Summary, touch & loading polish](#ux-polish2--short-expense-form-focused-summary-touch--loading-polish) |
+| 2026-09-27 | v3.41.0 | UX-MOTION | [App-wide motion polish, share pages, Ops Deck polish](#ux-motion--app-wide-motion-polish-share-pages-ops-deck-polish) |
 | 2026-09-26 | v3.40.2 | UX-TRIPS-VIEWS | [Trip stack corners, swipe, list glass](#ux-trips-views--stack-corners-smooth-swipe-list-glass) |
 | 2026-09-26 | v3.40.3 | UX-TRIPS-COVER | [Stack destination photo, light list tint](#ux-trips-cover--stack-destination-photo-light-list-tint) |
 | 2026-09-26 | v3.40.1 | SETTINGS-IA | [Settings root screen](#settings-ia--settings-root-screen) |
@@ -1292,6 +1297,177 @@ None new. The trips list is the home screen.
 
 ### Pass
 - Stack and its page blur show the created destination, and light list view is tinted rather than white.
+
+---
+
+## DEST-SUGGEST — Destination suggestions & did-you-mean
+
+**Commit:** v3.41.0. **Migrations:** none. **ADR:** 238.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Suggestion list, "Did you mean" chip, currency from the picked country | `enableDestinationAutocomplete` (Core) | ON |
+
+### Steps
+1. Journeys → Create. In "Where to?", type `Rish`: a list shows "Rishikesh · Uttarakhand, India" straight away. Keep typing `Rishikesh` and online matches may be added under it.
+2. Type `Kyotto`: "Kyoto · Japan" is listed. Tap it: the field reads `Kyoto`, the name becomes "Kyoto trip", and the currency becomes "JPY (suggested)".
+3. Keyboard (desktop): type `Gangtk`, press ↓ then Enter. The field becomes `Gangtok` and the form is **not** submitted.
+4. Type `Swtizerland` and tap the Trip name field. A chip reads "Did you mean **Switzerland** · Europe?". Tap **Use it**: the field becomes `Switzerland`. Repeat, and tap × instead: your spelling stays.
+5. Type `Goa, Gokrana`, then leave the field. The chip offers Gokarna, and Use it changes only that part: `Goa, Gokarna`.
+6. Type `Goa Beach`: no chip appears (it's a real place, not a typo).
+6a. Type `Gangtk, Darjeling & Goa` and leave the field. The box reads "Fix 2 spellings?" with pills ~~Gangtk~~ → **Gangtok** and ~~Darjeling~~ → **Darjeeling**. Tap one pill: only that place changes and the other pill stays. Tap **Fix all**: `Gangtok, Darjeeling & Goa`. Goa is never touched.
+7. Edit an existing trip saved as "Swtizerland" (trip long-press → Edit). The chip appears as soon as the form opens. Use it, then Update Trip: the card's photo, map and weather follow the corrected name.
+8. Go offline (DevTools → Network → Offline) and type `Munar`: "Munnar · Kerala, India" is still suggested, from the built-in list.
+
+### Negative checks
+- `enableDestinationAutocomplete` OFF: a plain text field with no list, no chip, and no Photon requests while typing (check DevTools Network).
+- Past destinations: a place you used before (e.g. "Tirthan Valley") shows as "Used before". A past typo ("Swtizerland") is never suggested.
+
+### Pass
+- Correct destination names are one tap away, typos are caught before saving, and nothing changes without the traveler tapping.
+
+---
+
+## QA-0927 — QA fixes
+
+**Commit:** v3.41.0. **Migrations:** none. **Report:** `.gstack/qa-reports/qa-report-localhost-2026-09-27.md`.
+
+### Flags
+None new. The map handoff rides on the deferred map (always on); the inbox empty state on `enableNotificationGrouping`.
+
+### Steps
+1. Open a trip you haven't opened this session. The destination photo shows, and the real map replaces it without a blank map frame in between.
+2. Open a trip, tap back to Journeys, then reload the page. You stay on Journeys and the URL is `/`. Opening `/?trip=<id>&tab=ledger` still lands on that trip's Expenses tab.
+3. Open any trip with expenses on a slow network. Summary shows the skeleton, then the real outstanding total. It never shows "₹0.00" first.
+4. Inbox → All Trips → Money, with no settlement notifications: you see "No money updates… You have N other notifications. Show everything", and the link brings them back.
+5. DevTools Network: reload Journeys with a trip whose destination has no wiki article. Each lookup URL is requested once, not repeatedly.
+6. Settings → Appearance → Haptics with "Important" selected: the subtitle reads "Key actions only" in full, not cut off.
+7. Add expense (`enableCompactExpenseForm` ON): there's no "+ Add Receipt" under Split Mode. The receipt is only under More details. On the Android or iOS app, More details shows "Take or Choose Photo" (camera or gallery). On mobile web, "Attach Photo / Bill" offers the gallery as well as the camera. With the flag OFF, the old "+ Add Receipt" control is back.
+8. Open a trip that already has expenses: no floating "Add expense" coachmark over Summary. On a new trip with no expenses it still appears until dismissed, and on Members it still says "Add member".
+9. Open the notifications inbox on a phone: the white sheet reaches the bottom of the screen, with no grey band.
+10. Journeys: open two or three trips, go back, and reload. Each card's "Spent" equals that trip's Summary total, not double.
+11. Ops Deck → Audit → Inspect → Copy JSON: the toast appears **below** the top bar (Preview Traveler View and Lock & Logout stay visible), it's opaque, and the page doesn't shift.
+12. Ops Deck → Bugs on a phone (or a window under 640px) with a case expanded: the case is one tinted card, "TRANSITION:" isn't broken mid-word, and there's no sideways scrollbar.
+13. **Ops Deck buttons.** On every page head, Refresh and Export show the icon and label on one line, never the icon stacked above the text. Buttons are 36px tall with a 10px radius. Hover tints the button without lifting it, pressing shrinks it slightly, and Tab shows a violet focus ring. Primary buttons (New case, Save) are solid violet, Delete buttons are outlined in red, and row actions (Inspect, Mark in progress) are 28px with 12px text. Check both light and dark theme.
+14. **Refresh while loading.** Click Refresh on any Ops Deck page: the label stays "Refresh", the icon spins, the button doesn't change width, and a second click does nothing until it finishes.
+15. **Dev crashes no longer reach the ledger.** On `npm run dev`, break a file on purpose (e.g. use an undefined name) and save: the error shows in Vite's overlay, but no new "Critical" case appears in Ops Deck → Bugs. A production build (`npm run build && npm run preview`) still files real crashes.
+
+### Pass
+- No blank map frame, no stale trip URL after leaving, no ₹0 flash, and honest empty states.
+
+---
+
+## UX-POLISH3 — Money format, quick trip, calm haptics, reminders, inbox
+
+**Commit:** v3.41.0. **Migrations:** none. **ADR:** 237.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| "Where to?" first, suggested name + currency | `enableQuickTripCreate` (Core) | ON |
+| Important-only haptics, iPhone haptics, Settings → Haptics | `enableCalmHaptics` (Core) | ON |
+| Remind button on the Members tab | `enableMemberMoneyRow` (Trip) | ON |
+| Folded notification bursts + Money filter | `enableNotificationGrouping` (Trip) | ON |
+| Money formatting, single-tap undoable deletes, deferred map, contrast, chart text | none | — |
+
+### Steps
+1. **Money format.** Add an expense of 12500 in an INR trip. The UPI pay sheet, the settle button ("Settle ₹12,500.00"), the split explainer in chat, the expense review dialog, the recycle bin row and the notification body all show `12,500.00`, not `12500.00`. Amounts of a lakh or more follow the phone's locale (for example `1,25,000.00` on an Indian locale), the same as the rest of the app. In a JPY trip, amounts show no `.00`.
+2. **Undoable delete.** Delete a trip: the confirm button deletes on the first tap, and the note under it reads "You can undo this for a few seconds afterwards". The Undo toast then appears. Clear All Data and Empty Recycle Bin still need two taps.
+3. **Quick trip.** Tap New Trip. The cursor is in "Where to?". Type `Bali, Indonesia`: the name becomes "Bali trip" and the currency "IDR (suggested)". Type your own name, then change the destination: your name stays. Pick USD, then change the destination: USD stays. Type `Manali`: the currency goes back to INR. Leaving the dates empty still shows the date error.
+4. **Deferred map.** Open a trip: the destination photo fills the background straight away, and the map fades in about a second later. Data saver still shows its "Map hidden" button.
+5. **Haptics (Android phone).** Switching tabs or opening menus no longer buzzes. Saving an expense, settling and deleting still do. Settings → Appearance → Haptics: choose All and taps buzz again; choose Off and nothing buzzes; the choice survives a reload. On the iOS app build, saving and settling give a Taptic tap.
+6. **Remind (Members tab).** Anyone who owes money (not you) has an orange Remind button next to "owes ₹X". Tapping it opens the share sheet with "Hey Riya, a quick reminder: you owe ₹450.00 on our trip…". On desktop, the text is copied and WhatsApp opens. People who are settled or owed money have no button.
+7. **Inbox.** Have someone add three expenses within an hour. The inbox shows one row with "+2 more like this" and a count of unread items; tapping it expands the other two. Chat messages never fold. Tap Money: only settlement and reminder notifications remain. Tap Everything: all return.
+8. **Accessibility.** With VoiceOver or TalkBack on Summary → Spending breakdown, the daily trend is read as a list of days and amounts, and the donut is skipped because its legend is read instead. Title quick-chips on the expense form announce as selected or not.
+
+### Negative checks
+- `enableQuickTripCreate` OFF: the old form, name first, with nothing auto-filled.
+- `enableCalmHaptics` OFF: every tap vibrates on Android, iOS has no haptics, and Settings has no Haptics row.
+- `enableMemberMoneyRow` OFF: no Remind buttons on Members.
+- `enableNotificationGrouping` OFF: one row per notification and no Everything / Money chips.
+
+### Pass
+- Every amount reads the same way, new trips take one field to start, trips open to a photo instantly, haptics mean something, and money nudges and notices are one tap away.
+
+---
+
+## UX-POLISH2 — Short expense form, focused Summary, touch & loading polish
+
+**Commit:** v3.41.0. **Migrations:** none. **ADR:** 236.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| "More details" section on the add/edit expense form | `enableCompactExpenseForm` (Core) | ON |
+| Spending breakdown row and new-trip start card on Summary | `enableCompactSummary` (Core) | ON |
+| Settle stamp, folding deleted rows, pull-to-refresh plane, "Back online" note | `enableMotionPolish` (Core) | ON |
+| Dialog loading skeletons, Ops Deck skeletons, Bug Ledger keys, focus rings, touch hit areas, icons, utility classes | none | — |
+
+### Steps
+1. **Short form.** Tap + in a trip. Top to bottom you should see: amount, title, Paid By, then the split section. At the bottom, "More details" shows a preview such as `Food · Today`. Open it: Category, Date, Location (if geotagging is on) and Receipt are all there. Change the category and close it: the preview updates. Save, and the expense has the category you chose.
+2. **Form auto-open.** Edit an expense that has a receipt or place: More details is already open. On a new expense, attach a receipt: More details opens by itself.
+3. **Start card.** Create a new trip. Summary shows "Get this trip rolling" with 1 Invite and 2 Add. Tap Invite: Share opens. Tap Add: the expense form opens. After a friend joins, step 1 shows a green check and "1 joined so far". After the first expense, the normal Summary returns.
+4. **Spending breakdown.** In a trip that has expenses, the charts are gone from under the balances and a "Spending breakdown" row appears instead. Tap it: the charts open with a rise-in, and the chevron flips. Leave the trip and come back: it stays open. Close it and reload: it stays closed.
+5. **Settle stamp.** Record settlements until everyone is settled. The moment the last one is recorded, the stamp on the Summary hero slams in with confetti and a success haptic. Reopening an already-settled trip does not replay it.
+6. **Folding delete.** In Expenses, swipe a row and delete it: it folds shut smoothly. Tap Undo: it unfolds again.
+7. **Plane.** On the Journeys list, pull down: a small plane is level in the pill. Pull past the threshold and it climbs. Release, and it bobs while "Syncing…" shows.
+8. **Back online.** Go offline (DevTools → Network → Offline), add an expense, then go back online. "Back online · 1 change synced" drops in at the top and disappears after about 3 seconds. Reloading while online never shows it.
+9. **Dialog skeletons.** On a slow network (DevTools → Slow 4G), with a fresh reload, open the FX rates or Trip Route dialog. A shimmering card appears right away, then the real dialog replaces it without a double fade.
+10. **Icons.** The trip header shows people and receipt icons, not 👥 🧾. Ledger rows show camera, flag, clock, alert, sync and pin icons. The form shows pencil, sparkles and pin icons. The Summary settle-mode info, the FX dialog and Share → Offline Snapshot all show icons. Member role options read "Organizer", "Contributor" and "Viewer" without emoji.
+11. **Touch targets (phone).** Tap just outside the edge of the notification close X, the note dialog X or a header circle button: it still triggers.
+12. **Keyboard focus (desktop).** Tab to the + button, a filter chip and a settings QR action: each shows a teal focus ring.
+13. **Ops Deck loading.** Reload the Ops Deck on Slow 4G and open Analytics. Skeleton blocks show until the data arrives, with no flash of zeros or "No events yet". Refresh keeps the page and just spins the button.
+14. **Bug Ledger keys (desktop).** In list view, a "J K move · ↵ open · E resolve" hint shows. J and K move a highlighted row, Enter expands it, and E opens the resolve drawer. Typing J into a search box does not move the cursor.
+
+### Negative checks
+- `enableCompactExpenseForm` OFF: the form shows every section in the old order, with no More details.
+- `enableCompactSummary` OFF: the charts are always expanded under the balances, and an empty trip shows the normal Summary.
+- `enableMotionPolish` OFF: no stamp celebration, a deleted row stays dimmed until the undo window ends, pull-to-refresh shows the old arrow, and there's no "Back online" note.
+- Reduce Motion ON: none of the above animate, and everything still works.
+
+### Pass
+- Adding an expense takes one screen of fields, new trips tell you what to do first, nothing shows a blank or zero while loading, and small controls are easy to hit.
+
+---
+
+## UX-MOTION — App-wide motion polish, share pages, Ops Deck polish
+
+**Commit:** v3.41.0. **Migrations:** none. **ADR:** 235.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Exit animations, drag-to-dismiss sheets, press shrink, trip card→header morph, directional tab slide, home card rise-in, hero total bump, springy switches, theme crossfade | `enableMotionPolish` (Core) | ON |
+| Share page redesign, hover fix on touch, 11px label floor, Ops Deck toasts / nav codes / typed delete confirm / ledger phone layout | none (always on) | — |
+
+Test on a phone-sized viewport (DevTools device mode is fine) plus a real Android or iOS device if you have one. Use Chrome or Safari 18 or later for the view transitions.
+
+### Steps
+1. **Exit animations.** Open and close each of these: the expense form (X), expense filters, a confirm dialog (for example, delete an expense), Share trip, the FX rates modal, and a chat long-press action sheet. Each should fade and drop away in about 0.2s instead of disappearing in one frame. Scroll the expense form down before closing it: it should close from where it was scrolled, not jump to the top.
+2. **Drag to dismiss.** In chat, open "Why this split?" on an expense card and drag the sheet down. It follows your finger and closes past about 70px, and a shorter drag springs back. Do the same with the @tripbot confirm sheet (type `@tripbot 200 lunch`) and a chat long-press action sheet. In Summary, open UPI pay and drag down from the grey handle bar. Dragging on the buttons or the QR code must not move the sheet.
+3. **Split explainer and @tripbot sheets** now show a real card: a surface background, rounded top corners and a handle pill. Before this change they were floating text on the dimmed backdrop.
+4. **Trip morph.** From Journeys (stack view), tap the front card. The card should grow into the trip header. Tap back to go to all trips, and the header shrinks back into the card. Repeat in grid/list view.
+5. **Tab slide.** Go Summary → Expenses → Members: content slides in from the right. Go back the other way: it slides in from the left. The bottom nav and header stay still. A finger swipe between tabs still behaves as before.
+6. **Press feedback.** Press and hold any button: it shrinks slightly and springs back on release. Stack cards and grid cards keep their own press behavior.
+7. **Switches and theme.** In Settings, press and hold a switch: the knob stretches, and on release it springs across. Change Appearance between Light and Night: the whole screen crossfades instead of cutting.
+8. **Home and hero.** Reopen the app to Journeys: the cards rise in one after another. In a trip, add an expense that changes the outstanding total: the big Summary total counts to the new value and bumps once.
+9. **Sticky hover (touch device).** Tap a secondary button or a glass card and lift your finger: it must not stay highlighted.
+10. **Share pages.** From Invite & Share, create a view-only link and open it in a private window. You should see a boarding-pass card: mono destination eyebrow, trip name, a perforated divider, Travelers/Expenses tiles, and spend in mono. Switch the OS to dark mode and the page follows. Revoke the link and reload: you get a lock icon with "This link has ended". Open a live-location link: there is a surface header bar with a pulsing green dot, and the map marker is teal.
+11. **Label floor.** Packing assistant, Travel Pass wallet and chat metadata: no label is smaller than 11px, and none of them overflow their chip or button.
+12. **Ops Deck toasts.** In Flags, toggle a flag. The toast slides into the top-right corner, and the page below does not shift. Repeat in Users, Trips, Features, Audit (copy a payload), Tools and Bug Ledger.
+13. **Ops Deck nav.** The rail codes read #00 to #08 from top to bottom. ⌘K search for `#05` finds Bugs.
+14. **Typed delete.** Users → delete a test user. A styled dialog asks you to type DELETE. The red button stays disabled until the text matches exactly, then needs the usual two taps.
+15. **Bug Ledger.** In the kanban view, drag a card: the card you left behind becomes a dashed, shrunken slot, and the target column lifts. In list view on a phone-width screen, each case is a stacked card (id and age, then title, then severity and status) with no sideways scroll. Change a filter: rows fade in. Open and close the case drawer: it slides out to the right.
+16. **Trip filter counts.** Go to Journeys. All, Active, Past and Archived each show a count badge, including `0`. Past counts closed trips plus trips whose end date has passed. Archive a trip: Archived goes up by 1, and All plus Active or Past go down by 1.
+
+### Negative checks
+- `enableMotionPolish` OFF (Ops Deck → Flags) and reload: dialogs close instantly, the explainer, @tripbot and UPI sheets do not drag, there is no press shrink, and opening a trip or switching tabs uses the old plain crossfade. The ActionSheet still drags, as before. Share pages, the hover fix, the 11px labels and Ops Deck changes remain.
+- OS "Reduce motion" ON with the flag ON: nothing animates out, slides or bumps, and every dialog still closes normally.
+- Close a dialog, then tap immediately where its button was: the tap reaches the page underneath, because the fading copy never blocks input.
+
+### Pass
+- Nothing that closes vanishes in a single frame, sheets can be pulled away, trip open and tab changes have a direction, share links look on-brand in both themes, and the Ops Deck toasts no longer shift the page.
 
 ---
 

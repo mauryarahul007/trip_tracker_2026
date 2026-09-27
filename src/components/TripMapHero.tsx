@@ -42,13 +42,17 @@ function getHeaderHeightPx(): number {
 interface Props {
   trip: Trip | null;
   onToneChange?: (tone: 'light' | 'dark') => void;
+  /** Fired once the map has drawn its first full frame (maplibre 'load'). */
+  onReady?: () => void;
 }
 
 // Continuous full-screen map backdrop for the trip dashboard, pinned and
 // fit-to-bounds on the trip's cities. Fixed behind the header and the
 // content sheet (see .trip-map-hero / .trip-sheet in index.css) -- one
 // persistent instance for the whole dashboard, not per-tab.
-export function TripMapHero({ trip, onToneChange }: Props) {
+export function TripMapHero({ trip, onToneChange, onReady }: Props) {
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<MaplibreMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
@@ -76,6 +80,7 @@ export function TripMapHero({ trip, onToneChange }: Props) {
     onToneChange?.('dark');
 
     map.on('load', () => {
+      onReadyRef.current?.();
       const bounds = new LngLatBounds();
       // Fit padding needs real clearance under the floating translucent
       // header, not a flat guess -- otherwise the top of the route/pins

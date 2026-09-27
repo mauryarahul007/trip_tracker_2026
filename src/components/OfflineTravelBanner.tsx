@@ -113,7 +113,7 @@ export const OfflineTravelBanner: React.FC = () => {
           </span>
           <span
             style={{
-              fontSize: '10px',
+              fontSize: '11px',
               padding: '2px 6px',
               background: 'rgba(255, 255, 255, 0.18)',
               borderRadius: '9999px',
@@ -158,7 +158,7 @@ export const OfflineTravelBanner: React.FC = () => {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="u-row-8">
                 <span style={{ fontSize: '20px' }}>✈️</span>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>

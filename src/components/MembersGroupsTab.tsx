@@ -6,7 +6,7 @@ import type { MemberBalance } from '../utils/settlement';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { fetchPreviousTripMembers, searchRemoteMemberSuggestions } from '../services/tripApi';
-import { IconCheck, IconEdit, IconTrash, IconMembers, IconTag } from './Icons';
+import { IconCheck, IconEdit, IconTrash, IconMembers, IconTag, IconBell } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
@@ -15,6 +15,8 @@ import { formatAmount } from '../utils/currency';
 import { formatLastSeen } from '../utils/lastSeen';
 import { useTripStore } from '../store/tripStore';
 import { buildAutoGroupName } from '../utils/groupNaming';
+import { shareTextOrWhatsApp } from '../utils/shareText';
+import { triggerHaptic } from '../utils/haptics';
 
 type Props = {
   showMembersRequiredNotice: boolean;
@@ -81,6 +83,10 @@ export function MembersGroupsTab({
   lastSeenByUserId,
 }: Props) {
   const showLastSeen = useTripStore((s) => s.isFeatureEnabled('enableMemberLastSeen'));
+  // enableMemberMoneyRow: a Remind button beside anyone (other than you) who
+  // owes money, sharing a ready-made nudge through the phone's share sheet.
+  const showMemberRemind = useTripStore((s) => s.isFeatureEnabled('enableMemberMoneyRow'));
+  const tripName = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)?.name);
   const dateRangeMembershipEnabled = useTripStore((s) => s.isFeatureEnabled('enableDateRangeMembership'));
   // Member Form State
   const [newMemberName, setNewMemberName] = React.useState('');
@@ -789,7 +795,7 @@ export function MembersGroupsTab({
                             Linked
                           </span>
                         ) : null}
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Click to add</span>
+                        <span className="u-hint">Click to add</span>
                       </div>
                     </div>
                   );
@@ -963,13 +969,13 @@ export function MembersGroupsTab({
                           if (effectiveRole === 'viewer') {
                             return (
                               <span className="member-badge" style={{ background: 'rgba(148, 163, 184, 0.15)', color: 'var(--text-muted)', border: '1px solid rgba(148, 163, 184, 0.3)' }} title="Viewer (Read-only)">
-                                👁️ Viewer
+                                Viewer
                               </span>
                             );
                           }
                           return (
                             <span className="member-badge member-badge-you" style={{ color: 'var(--text-muted)' }} title="Contributor">
-                              ✍️ Contributor
+                              Contributor
                             </span>
                           );
                         })()}
@@ -985,7 +991,25 @@ export function MembersGroupsTab({
                     </div>
                     <div className="lt-bottom-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
                       <div>
-                        <div className="lt-amt">{amtLabel}</div>
+                        <div className="u-row-8">
+                          <div className="lt-amt">{amtLabel}</div>
+                          {showMemberRemind && owes && member.linkedUserId !== currentUserId && (
+                            <button
+                              type="button"
+                              className="secondary-btn member-remind-btn hit-area"
+                              aria-label={`Remind ${member.name} to settle`}
+                              onClick={() => {
+                                triggerHaptic('light');
+                                void shareTextOrWhatsApp(
+                                  'Trip settlement reminder',
+                                  `Hey ${member.name}, a quick reminder: you owe ${formatAmount(Math.abs(balance), currencySymbol)} on our trip "${tripName || 'Trip'}". Open Trip Tracker to see the split and settle up.`,
+                                );
+                              }}
+                            >
+                              <IconBell size={12} /> Remind
+                            </button>
+                          )}
+                        </div>
                         {showLastSeen && member.linkedUserId && member.linkedUserId !== currentUserId && (
                           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
                             {onlineUserIds?.includes(member.linkedUserId)
@@ -1015,9 +1039,9 @@ export function MembersGroupsTab({
                               value={memberRoles?.[member.id] || (isMemberAdmin(member) ? 'organizer' : 'contributor')}
                               onChange={(e) => onSetMemberRole(member.id, e.target.value as MemberRole)}
                             >
-                              <option value="organizer">👑 Organizer</option>
-                              <option value="contributor">✍️ Contributor</option>
-                              <option value="viewer">👁️ Viewer</option>
+                              <option value="organizer">Organizer</option>
+                              <option value="contributor">Contributor</option>
+                              <option value="viewer">Viewer</option>
                             </select>
                           ) : onSetMemberAdminRole && (
                             !isMemberAdmin(member) ? (
@@ -1263,7 +1287,7 @@ export function MembersGroupsTab({
                     </p>
                   </div>
                   {isAdmin && (
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="u-flex-gap-8">
                       <button
                         className="secondary-btn"
                         style={{ padding: '4px 10px', fontSize: '11px' }}

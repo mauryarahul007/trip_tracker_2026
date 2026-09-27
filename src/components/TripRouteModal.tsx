@@ -234,7 +234,7 @@ export function TripRouteModal({
             background: 'var(--bg-surface-hover)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="u-row-10">
             <button
               type="button"
               className="secondary-btn touch-target-btn"
@@ -350,7 +350,7 @@ export function TripRouteModal({
                 background: 'rgba(15, 23, 42, 0.75)',
                 backdropFilter: 'blur(6px)',
                 color: '#FFFFFF',
-                fontSize: '10.5px',
+                fontSize: '11px',
                 padding: '3px 8px',
                 borderRadius: '8px',
                 fontWeight: 600,
@@ -378,7 +378,7 @@ export function TripRouteModal({
               <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 Header Route Chips Bar
               </span>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              <span className="u-hint">
                 Show itinerary stop pills at top of trip screen
               </span>
             </div>
@@ -402,7 +402,7 @@ export function TripRouteModal({
           </div>
 
           {/* Waypoints Timeline */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="u-col-8">
             <h4
               style={{
                 margin: '0 0 4px',
@@ -469,7 +469,7 @@ export function TripRouteModal({
                     <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
                       {stop.name}
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    <div className="u-hint">
                       {isStart ? 'Starting Point · Origin' : isDest ? 'Final Destination' : 'Intermediate Waypoint'}
                     </div>
                   </div>

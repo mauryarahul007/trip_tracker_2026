@@ -9,6 +9,36 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.41.0',
+    date: '2026-09-27',
+    changes: [
+      'Dialogs, sheets and drawers now slide or fade away when closed instead of vanishing.',
+      'Pull down on the split explainer, @tripbot confirm and UPI pay sheets to close them.',
+      'Opening a trip grows its card into the trip header, and tabs slide in the direction you move.',
+      'Buttons give a small press response, and settings switches have a springier knob.',
+      'Shared trip and live-location links have a new boarding-pass look that follows dark mode.',
+      'Small labels across the app are easier to read.',
+      'Past and Archived trip filters now show their trip count, like All and Active.',
+      'The add-expense screen is shorter: category, date, place and receipt sit under More details.',
+      'A new trip shows a two-step start card, and Summary charts fold into a Spending breakdown row.',
+      'Settling the last balance stamps the trip with a little celebration.',
+      'Pull to sync flies a small plane, deleted expenses fold away, and you get a note when you are back online.',
+      'Cleaner icons replace emoji across the trip header, ledger, expense form and currency tools.',
+      'Small buttons are easier to tap, and dialogs show a placeholder instead of a blank pause while loading.',
+      'Amounts look the same everywhere, with thousands separators and no .00 on yen or won.',
+      'New trips start with "Where to?" and suggest a name and currency from it.',
+      'Trips open faster: the destination photo shows first and the map fades in after.',
+      'Haptics are calmer, iPhones get haptic feedback, and Settings has an All / Important / Off choice.',
+      'Remind anyone who owes money straight from the Members tab.',
+      'The notifications inbox folds bursts together and has a Money filter.',
+      'Deleting a trip or member you can undo needs one tap instead of two.',
+      'Leaving a trip and reloading keeps you on Journeys, and Summary no longer flashes ₹0.00 while loading.',
+      'Destination suggestions while you type, and a one-tap "Did you mean…?" fix for misspelled places.',
+      'Trip cards on Journeys show the right Spent total again (it doubled for trips you had opened).',
+      'Ops Deck buttons are cleaner and consistent, and Refresh keeps its label while it spins.',
+    ],
+  },
+  {
     version: '3.40.3',
     date: '2026-09-26',
     changes: [

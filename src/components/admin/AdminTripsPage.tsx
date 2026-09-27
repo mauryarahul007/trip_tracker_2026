@@ -3,11 +3,12 @@ import type { Trip, Expense, Member } from '../../types';
 import { useTripStore } from '../../store/tripStore';
 import { getCurrencySymbol } from '../../utils/currency';
 import { logSuperadminAction } from '../../services/tripApi';
-import { IconSearch, IconCheck, IconRefresh, IconChevronDown, IconChevronUp, IconX } from '../Icons';
+import { IconSearch, IconRefresh, IconChevronDown, IconChevronUp, IconX } from '../Icons';
 import type { ConfirmRequest } from '../ConfirmDialog';
 import { useTableDensity } from '../../hooks/useTableDensity';
 import { useHistoryBack } from '../../utils/useHistoryBack';
 import { useEscapeKey } from '../../utils/useEscapeKey';
+import { useOpsToast } from './useOpsToast';
 
 interface Props {
   trips: Trip[];
@@ -28,7 +29,7 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'closed' | 'frozen' | 'archived'>('all');
-  const [toastMsg, setToastMsg] = useState('');
+  const { showToast, toastNode } = useOpsToast();
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [inspectingTripId, setInspectingTripId] = useState<string | null>(null);
@@ -37,11 +38,6 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
 
   useHistoryBack(inspectingTripId !== null, () => setInspectingTripId(null));
   useEscapeKey(inspectingTripId !== null, () => setInspectingTripId(null));
-
-  const showToast = (msg: string) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(''), 3000);
-  };
 
   const tripVolume = (tripId: string) =>
     expenses.filter((e) => e.tripId === tripId && !e.title.startsWith('Settlement:')).reduce((sum, e) => sum + e.amount, 0);
@@ -200,7 +196,7 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
           <p>Audit customer trips, inspect group telemetry, or ground rogue activity.</p>
         </div>
         <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
-          <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          <IconRefresh size={16} className={isRefreshing ? 'ops-spin' : undefined} /> Refresh
         </button>
       </div>
 
@@ -208,11 +204,7 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
         <strong>&#128274; Privacy &amp; Group Isolation:</strong> All trips and member rosters are private to their group participants. Superadmins hold emergency controls (Ground / Archive / Remove) to suspend problematic or spammy activity.
       </div>
 
-      {toastMsg && (
-        <div className="ops-toast">
-          <IconCheck size={14} /> {toastMsg}
-        </div>
-      )}
+      {toastNode}
 
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '14px' }}>
         <div className="ops-search-wrap">
@@ -403,7 +395,7 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
           <div className="ops-trip-drawer" onClick={(e) => e.stopPropagation()}>
             <div className="ops-drawer-header">
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="u-row-8">
                   <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
                     {activeInspectedTrip.name}
                   </h3>

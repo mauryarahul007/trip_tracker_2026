@@ -66,6 +66,7 @@ export type AdminTab = 'command' | 'flags' | 'analytics' | 'trips' | 'users' | '
 type Section = { id: AdminTab; label: string; code: string };
 
 // Grouped by what a superadmin is actually doing, not by build order --
+// codes run #00-#08 top to bottom in the order the rail shows them.
 // replaces the previous flat 7-item list where Flags, Analytics and Tools
 // all sat at the same level with no relationship to each other.
 const SECTION_GROUPS: { label: string; items: Section[] }[] = [
@@ -73,26 +74,26 @@ const SECTION_GROUPS: { label: string; items: Section[] }[] = [
     label: 'Overview',
     items: [
       { id: 'command', label: 'Command Center', code: '#00' },
-      { id: 'analytics', label: 'Analytics', code: '#02' },
+      { id: 'analytics', label: 'Analytics', code: '#01' },
     ],
   },
   {
     label: 'Operations',
     items: [
-      { id: 'flags', label: 'Flags', code: '#01' },
+      { id: 'flags', label: 'Flags', code: '#02' },
       { id: 'trips', label: 'Trips', code: '#03' },
-      { id: 'features', label: 'Features', code: '#06' },
-      { id: 'bugs', label: 'Bugs', code: '#08' },
+      { id: 'features', label: 'Features', code: '#04' },
+      { id: 'bugs', label: 'Bugs', code: '#05' },
     ],
   },
   {
     label: 'People',
     items: [
-      { id: 'users', label: 'Users', code: '#04' },
-      { id: 'audit', label: 'Audit', code: '#05' },
+      { id: 'users', label: 'Users', code: '#06' },
+      { id: 'audit', label: 'Audit', code: '#07' },
     ],
   },
-  { label: 'System', items: [{ id: 'tools', label: 'Tools', code: '#07' }] },
+  { label: 'System', items: [{ id: 'tools', label: 'Tools', code: '#08' }] },
 ];
 
 const SECTIONS: Section[] = SECTION_GROUPS.flatMap((g) => g.items);
@@ -200,6 +201,10 @@ export function AdminPortalLayout({
   const clock = useIstClock();
 
   const fetchedRef = useRef(new Set<FleetKey>());
+  // Counts first-time fetches in flight. While the current tab's data has
+  // never arrived, the panel shows a skeleton instead of pages full of zeros
+  // and "nothing yet" states that were really still loading.
+  const [firstLoads, setFirstLoads] = useState(0);
   const tripsRef = useRef(trips);
   tripsRef.current = trips;
 
@@ -231,7 +236,12 @@ export function AdminPortalLayout({
         jobs.push(fetchAllExpensesForTrips(tripIds).then(setExpenses).catch(() => setExpenses([])));
       }
     }
-    return Promise.all(jobs).then(markSynced);
+    if (!force) setFirstLoads((n) => n + 1);
+    return Promise.all(jobs)
+      .then(markSynced)
+      .finally(() => {
+        if (!force) setFirstLoads((n) => n - 1);
+      });
   }, []);
 
   // Load only what the current tab needs. Refresh-all still refetches every
@@ -648,6 +658,7 @@ export function AdminPortalLayout({
 
         <main className="ops-panel" ref={panelRef}>
           <Suspense fallback={<AdminTabLoadingFallback />}>
+          {firstLoads > 0 && activeTab !== 'flags' ? <AdminTabLoadingFallback /> : <>
           {activeTab === 'command' && (
             <AdminCommandCenterPage
               trips={trips}
@@ -737,6 +748,7 @@ export function AdminPortalLayout({
               onRequestConfirm={setConfirmRequest}
             />
           )}
+          </>}
           </Suspense>
         </main>
           </div>

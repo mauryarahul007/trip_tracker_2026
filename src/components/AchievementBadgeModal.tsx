@@ -114,16 +114,16 @@ export function AchievementBadgeModal({
 
               {/* Badge Details */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="u-between">
                   <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
                     {b.title}
                   </span>
                   {b.unlocked ? (
-                    <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--color-success-text)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-success-text)', display: 'flex', alignItems: 'center', gap: '3px' }}>
                       <IconCheck size={12} /> Unlocked
                     </span>
                   ) : (
-                    <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontFamily: 'var(--font-family-mono)' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-family-mono)' }}>
                       {b.progressText}
                     </span>
                   )}

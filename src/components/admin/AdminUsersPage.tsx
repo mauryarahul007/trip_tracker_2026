@@ -2,12 +2,13 @@ import { useRef, useState } from 'react';
 import type { Trip } from '../../types';
 import type { AdminUserRow } from '../../types/admin';
 import { setUserBanned, deleteUserAccount, broadcastNotification } from '../../services/tripApi';
-import { IconSearch, IconCheck, IconAlertCircle, IconRefresh } from '../Icons';
+import { IconSearch, IconAlertCircle, IconRefresh } from '../Icons';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useTableDensity } from '../../hooks/useTableDensity';
 import { useHistoryBack } from '../../utils/useHistoryBack';
 import { useEscapeKey } from '../../utils/useEscapeKey';
 import type { ConfirmRequest } from '../ConfirmDialog';
+import { useOpsToast } from './useOpsToast';
 
 interface Props {
   users: AdminUserRow[];
@@ -24,8 +25,7 @@ const PAGE_SIZE = 25;
 export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, onRefresh, isRefreshing, onRequestConfirm }: Props) {
   const superadminIdSet = new Set(superadminIds);
   const [searchQuery, setSearchQuery] = useState('');
-  const [toastMsg, setToastMsg] = useState('');
-  const [toastIsError, setToastIsError] = useState(false);
+  const { showToast, toastNode } = useOpsToast();
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -41,12 +41,6 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
   const [broadcastBody, setBroadcastBody] = useState('');
   const [broadcastTripId, setBroadcastTripId] = useState('');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
-
-  const showToast = (msg: string, isError = false) => {
-    setToastMsg(msg);
-    setToastIsError(isError);
-    setTimeout(() => setToastMsg(''), 3000);
-  };
 
   const filteredUsers = users.filter(
     (u) =>
@@ -138,11 +132,18 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
     void runToggleBan(user, false);
   };
 
-  const handleDeleteUser = async (user: AdminUserRow) => {
-    const typed = window.prompt(
-      `This permanently deletes ${user.email} and every trip they own. This cannot be undone.\n\nType DELETE to confirm.`
-    );
-    if (typed !== 'DELETE') return;
+  const handleDeleteUser = (user: AdminUserRow) => {
+    onRequestConfirm({
+      title: 'Delete user permanently?',
+      message: `This permanently deletes ${user.email} and every trip they own. This cannot be undone.`,
+      confirmLabel: 'Delete user',
+      danger: true,
+      requireText: 'DELETE',
+      onConfirm: () => void runDeleteUser(user),
+    });
+  };
+
+  const runDeleteUser = async (user: AdminUserRow) => {
     setBusyUserId(user.id);
     try {
       await deleteUserAccount(user.id);
@@ -179,21 +180,17 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
           <h2>User Directory</h2>
           <p>Every account across the fleet. Suspend an account to lock it out of every trip immediately.</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="u-flex-gap-8">
           <button type="button" className="ops-btn" onClick={() => setShowBroadcastDrawer(true)}>
             Broadcast
           </button>
           <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
-            <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            <IconRefresh size={16} className={isRefreshing ? 'ops-spin' : undefined} /> Refresh
           </button>
         </div>
       </div>
 
-      {toastMsg && (
-        <div className={`ops-toast${toastIsError ? ' error' : ''}`} role={toastIsError ? 'alert' : 'status'}>
-          {toastIsError ? <IconAlertCircle size={14} /> : <IconCheck size={14} />} {toastMsg}
-        </div>
-      )}
+      {toastNode}
 
       {showBroadcastDrawer && (
         <div className="ops-drawer-overlay" onClick={() => setShowBroadcastDrawer(false)}>
@@ -367,7 +364,7 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
                             className="ops-mini-btn ground"
                             disabled={busyUserId === u.id || isSuperadmin}
                             title={isSuperadmin ? 'Superadmin accounts cannot be deleted' : undefined}
-                            onClick={() => void handleDeleteUser(u)}
+                            onClick={() => handleDeleteUser(u)}
                           >
                             Delete
                           </button>

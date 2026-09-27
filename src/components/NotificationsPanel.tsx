@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { AppNotification } from '../types';
+import { groupNotificationBursts, isMoneyNotification } from '../utils/notificationGroups';
 import type { ConfirmRequest } from './ConfirmDialog';
 import { useNotificationsStore } from '../store/notificationsStore';
 import { useTripStore } from '../store/tripStore';
@@ -338,6 +339,10 @@ export function NotificationsPanel({
   const activeTrip = trips.find((t) => t.id === activeTripId);
 
   const [tripFilter, setTripFilter] = useState<'current' | 'all'>(activeTripId ? 'current' : 'all');
+  // enableNotificationGrouping: Money-only view and folded bursts.
+  const groupingOn = useTripStore((s) => s.isFeatureEnabled('enableNotificationGrouping'));
+  const [moneyOnly, setMoneyOnly] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Stack navigation: swipe/browser back closes notifications panel
   useHistoryBack(isPanelOpen, closePanel);
@@ -346,10 +351,17 @@ export function NotificationsPanel({
   if (!isPanelOpen) return null;
 
   // Filtered notifications
-  const displayedNotifications =
+  const tripNotifications =
     tripFilter === 'current' && activeTripId
       ? notifications.filter((n) => n.tripId === activeTripId)
       : notifications;
+  const displayedNotifications =
+    groupingOn && moneyOnly ? tripNotifications.filter(isMoneyNotification) : tripNotifications;
+  // The Money chip hid everything, not "there is nothing": say so.
+  const moneyFilteredEmpty = groupingOn && moneyOnly && displayedNotifications.length === 0 && tripNotifications.length > 0;
+  const notificationGroups = groupingOn
+    ? groupNotificationBursts(displayedNotifications)
+    : displayedNotifications.map((n) => [n]);
 
   const currentTripUnreadCount = activeTripId
     ? notifications.filter((n) => n.tripId === activeTripId && !n.read).length
@@ -484,6 +496,17 @@ export function NotificationsPanel({
             <div className="notif-controls-spacer" />
           )}
 
+          {groupingOn && (
+            <div className="notif-kind-filter" role="group" aria-label="Notification kind">
+              <button type="button" className={`notif-kind-chip${!moneyOnly ? ' active' : ''}`} aria-pressed={!moneyOnly} onClick={() => setMoneyOnly(false)}>
+                Everything
+              </button>
+              <button type="button" className={`notif-kind-chip${moneyOnly ? ' active' : ''}`} aria-pressed={moneyOnly} onClick={() => setMoneyOnly(true)}>
+                Money
+              </button>
+            </div>
+          )}
+
           {(displayedUnreadCount > 0 || displayedNotifications.length > 0) && (
             <div className="notif-header-actions">
               {displayedUnreadCount > 0 && (
@@ -597,12 +620,22 @@ export function NotificationsPanel({
                 <IconSparkles size={28} />
               </div>
               <h4 className="notif-empty-title">
-                {tripFilter === 'current' && activeTrip
+                {moneyFilteredEmpty
+                  ? 'No money updates'
+                  : tripFilter === 'current' && activeTrip
                   ? `No Notifications for ${activeTrip.name}`
                   : "You're All Caught Up"}
               </h4>
               <p className="notif-empty-subtitle">
-                {tripFilter === 'current' && activeTrip ? (
+                {moneyFilteredEmpty ? (
+                  <>
+                    Settlements, reminders and payment requests show up here. You have {tripNotifications.length} other
+                    notification{tripNotifications.length > 1 ? 's' : ''}.{' '}
+                    <button type="button" onClick={() => setMoneyOnly(false)} className="notif-empty-switch-link">
+                      Show everything
+                    </button>
+                  </>
+                ) : tripFilter === 'current' && activeTrip ? (
                   notifications.length > 0 ? (
                     <>
                       There are no notifications in this trip. You have {notifications.length} notification
@@ -625,19 +658,43 @@ export function NotificationsPanel({
             </div>
           ) : (
             <div className="notif-list">
-              {displayedNotifications.map((n) => {
-                const tripName = getTripNameForNotification(n);
-                const isCurrentTrip = n.tripId === activeTripId;
-                return (
+              {notificationGroups.map((group) => {
+                const [head, ...rest] = group;
+                const expanded = expandedGroups.has(head.id);
+                const renderCard = (n: AppNotification) => (
                   <NotificationCard
                     key={n.id}
                     notification={n}
-                    tripName={tripName}
-                    isCurrentTrip={isCurrentTrip}
+                    tripName={getTripNameForNotification(n)}
+                    isCurrentTrip={n.tripId === activeTripId}
                     onOpen={() => handleOpenNotification(n)}
                     onToggleRead={() => toggleRead(n.id)}
                     onDelete={() => deleteOne(n.id)}
                   />
+                );
+                if (rest.length === 0) return renderCard(head);
+                const restUnread = rest.filter((n) => !n.read).length;
+                return (
+                  <div key={head.id} className="notif-burst">
+                    {renderCard(head)}
+                    <button
+                      type="button"
+                      className="notif-burst-toggle"
+                      aria-expanded={expanded}
+                      onClick={() =>
+                        setExpandedGroups((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(head.id)) next.delete(head.id);
+                          else next.add(head.id);
+                          return next;
+                        })
+                      }
+                    >
+                      {expanded ? 'Show less' : `+${rest.length} more like this`}
+                      {!expanded && restUnread > 0 && <span className="notif-burst-unread">{restUnread} unread</span>}
+                    </button>
+                    {expanded && <div className="notif-burst-rest">{rest.map(renderCard)}</div>}
+                  </div>
                 );
               })}
             </div>

@@ -20,11 +20,22 @@ let listenersAttached = false;
 // critical bug just burns ledger signal.
 const IGNORED_MESSAGE_PATTERNS = [/^ResizeObserver loop/i, CHUNK_LOAD_FAILURE];
 
+// The Vite dev server hot-swaps half-edited files into open tabs, so every
+// save that briefly references a not-yet-imported name ("X is not defined")
+// or tears down a portal mid-swap filed a Critical case in the shared,
+// production ledger (BUG-237..247 were all this). Dev crashes already show
+// in the console and Vite's error overlay; only built apps file cases.
+// `env` is a parameter so tests can exercise both paths.
+export function shouldAutoReport(env: { DEV: boolean; MODE: string } = import.meta.env): boolean {
+  return !env.DEV || env.MODE === 'test';
+}
+
 export async function autoReportError(
   message: string,
   stack: string | undefined,
   source: 'window-error' | 'unhandled-rejection' | 'react-crash'
 ): Promise<void> {
+  if (!shouldAutoReport()) return;
   if (IGNORED_MESSAGE_PATTERNS.some((p) => p.test(message))) return;
 
   const signature = message.slice(0, 200);

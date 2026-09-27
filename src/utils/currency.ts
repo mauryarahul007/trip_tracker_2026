@@ -41,10 +41,23 @@ export function getCurrencySymbol(code: string): string {
 // below with no locale formatting at all.
 export function formatAmount(amount: number | string, currencySymbol: string): string {
   if (typeof amount === 'number') {
-    return `${currencySymbol}${amount.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
+    return `${currencySymbol}${formatMoneyNumber(amount, currencySymbol)}`;
   }
   return `${currencySymbol}${amount}`;
+}
+
+/**
+ * The number part of a displayed amount: device-locale grouping (1,234.50,
+ * or 1,23,450.00 on an Indian locale) and the currency's own decimals (JPY,
+ * KRW... show none). Takes either an ISO code or the symbol that
+ * getCurrencySymbol returned -- unmapped codes come back as the code itself,
+ * and '¥' is only ever produced for JPY. For display only: never feed the
+ * result back into maths or an <input value>.
+ */
+export function formatMoneyNumber(amount: number, currencyOrSymbol = ''): string {
+  const decimals = currencyOrSymbol === '¥' ? 0 : getCurrencyDecimals(currencyOrSymbol.trim());
+  return (Number.isFinite(amount) ? amount : 0).toLocaleString(undefined, {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
 }

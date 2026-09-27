@@ -135,7 +135,7 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="u-row-10">
             <div
               style={{
                 width: '36px',
@@ -280,7 +280,7 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
             </div>
 
             <div className="form-group" style={{ marginBottom: '18px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="u-between">
                 <label className="form-label" style={{ margin: 0 }} htmlFor="superadmin-password">Superadmin Password</label>
                 <button
                   type="button"

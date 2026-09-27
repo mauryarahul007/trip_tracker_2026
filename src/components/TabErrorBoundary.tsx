@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { diagnosticLogger } from '../utils/diagnosticLogger';
+import { IconAlertCircle } from './Icons';
 
 type Props = {
   children: ReactNode;
@@ -40,7 +41,7 @@ export class TabErrorBoundary extends Component<Props, State> {
             textAlign: 'center',
           }}
         >
-          <div style={{ fontSize: '28px' }}>⚠️</div>
+          <div style={{ display: 'inline-flex', color: 'var(--color-warning)' }}><IconAlertCircle size={28} /></div>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0, lineHeight: 1.5 }}>
             {this.props.label ? `The ${this.props.label} tab` : 'This section'} ran into an error.
           </p>

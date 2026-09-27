@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo, useCallback, lazy, Suspense } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import { useTripStore, getTripNotificationRecipients, collectDirtyExpenseIds } from './store/tripStore';
 import { useAuthStore } from './store/authStore';
@@ -7,7 +7,7 @@ import type { Expense, Trip, Group, Member, TripStop, AppNotification } from './
 import { exportTripToCSV } from './utils/csvExport';
 import { fetchPlaceCoverImage } from './services/placeImageService';
 
-import { getCurrencySymbol } from './utils/currency';
+import { getCurrencySymbol, formatMoneyNumber } from './utils/currency';
 import { syncStatusBarTone, resolveTheme } from './utils/nativeShell';
 import { isMissingSupabaseEnv } from './services/supabaseClient';
 import { sendPushNotification } from './services/pushApi';
@@ -28,12 +28,6 @@ import { useTripChatUnread } from './hooks/useTripChatUnread';
 // the critical path for the active trip view.
 const GlobalSettingsModal = lazy(lazyImport(() =>
   import('./components/GlobalSettingsModal').then((m) => ({ default: m.GlobalSettingsModal }))
-));
-// maplibre-gl is a sizeable dependency (JS + worker + WASM) only needed on
-// the trip dashboard -- code-split so it doesn't load for the trips list
-// or any other screen.
-const TripMapHero = lazy(lazyImport(() =>
-  import('./components/TripMapHero').then((m) => ({ default: m.TripMapHero }))
 ));
 // ExpenseForm is heavy (OCR, geolocation, currency conversion) and only
 // needed when the user taps +/FAB. Lazy-load so the initial bundle skips
@@ -82,10 +76,12 @@ import { NotificationsPanel } from './components/NotificationsPanel';
 import { NotificationsBellButton } from './components/NotificationsBellButton';
 import { InAppNotificationBanner } from './components/InAppNotificationBanner';
 import { FitHeading } from './components/FitHeading';
-import { triggerHaptic } from './utils/haptics';
+import { triggerHaptic, configureHaptics } from './utils/haptics';
 import { getLatestNonSettlementExpense } from './utils/lastExpense';
 import { useEscapeKey } from './utils/useEscapeKey';
-import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers, IconClose, IconShare, IconSettings, IconBell, IconEdit } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers, IconClose, IconShare, IconSettings, IconBell, IconEdit, IconPieChart, IconReceipt, IconTag, IconLock } from './components/Icons';
+import { TripStartCard } from './components/TripStartCard';
+import { DeferredTripMapHero } from './components/DeferredTripMapHero';
 import { ActionSheet } from './components/common/ActionSheet';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
@@ -104,6 +100,9 @@ const TripChatPanel = lazy(lazyImport(() =>
   import('./components/TripChatPanel').then((m) => ({ default: m.TripChatPanel }))
 ));
 import { withViewTransition } from './utils/viewTransition';
+import { installGhostExit } from './utils/ghostExit';
+import { SheetSkeleton } from './components/common/SheetSkeleton';
+import { preloadModule } from './utils/modulePreload';
 import { configureGrowthTelemetry } from './utils/growthTelemetry';
 // CommandPalette (Ctrl+K) is only needed once the user opens it -- code-split
 // like the other secondary modals so it doesn't ship in the initial bundle.
@@ -256,6 +255,35 @@ export default function App() {
   const isChatFirstNav = isFeatureEnabled('enableChatFirstNav', { tripId: activeTripId || undefined, userId: userId || undefined });
   const isTripChatEnabled = isFeatureEnabled('enableTripChat', { tripId: activeTripId || undefined, userId: userId || undefined });
   const isOfflineMapTilesEnabled = isFeatureEnabled('enableOfflineMapTiles', { tripId: activeTripId || undefined, userId: userId || undefined });
+  // Warm the dialogs people open most from a trip while the browser is idle,
+  // so their first open doesn't wait on a chunk download.
+  useEffect(() => {
+    if (!activeTripId) return;
+    preloadModule(() => import('./components/ShareTripModal'));
+    preloadModule(() => import('./components/FxRatesModal'));
+    preloadModule(() => import('./components/TripRouteModal'));
+    preloadModule(() => import('./components/ExpenseReviewModal'));
+    preloadModule(() => import('./components/DocumentVaultModal'));
+  }, [activeTripId]);
+
+  // enableCalmHaptics: important-only default + native haptic engine.
+  const isCalmHaptics = isFeatureEnabled('enableCalmHaptics', { userId: userId || undefined });
+  useEffect(() => {
+    configureHaptics({ calm: isCalmHaptics });
+  }, [isCalmHaptics]);
+
+  // Global, not per-trip: motion should not change as you switch trips.
+  // Every enableMotionPolish CSS rule is scoped under :root[data-motion].
+  const isMotionPolish = isFeatureEnabled('enableMotionPolish', { userId: userId || undefined });
+  useEffect(() => {
+    if (!isMotionPolish) return;
+    document.documentElement.setAttribute('data-motion', '');
+    const uninstall = installGhostExit();
+    return () => {
+      uninstall();
+      document.documentElement.removeAttribute('data-motion');
+    };
+  }, [isMotionPolish]);
   useEffect(() => {
     void syncOfflineMapTilesFlag(isOfflineMapTilesEnabled);
   }, [isOfflineMapTilesEnabled]);
@@ -360,10 +388,21 @@ export default function App() {
   // needs to capture old/new snapshots correctly with React's batching.
   const setActiveTab = useCallback((tab: Tab) => {
     recordTabSwitch(tab);
-    withViewTransition(() => {
+    // data-tab-dir steers the enableMotionPolish slide (index.css): content
+    // enters from the side the nav pill is moving toward. Cleared once the
+    // transition ends so trip open/close transitions don't inherit it.
+    const order = currentTabOrder as readonly Tab[];
+    const root = document.documentElement;
+    root.setAttribute('data-tab-dir', order.indexOf(tab) >= order.indexOf(activeTabRef.current) ? 'next' : 'prev');
+    const transition = withViewTransition(() => {
       flushSync(() => setActiveTabRaw(tab));
     });
-  }, [recordTabSwitch]);
+    const clearDir = () => root.removeAttribute('data-tab-dir');
+    // then(clear, clear), not finally(): `finished` rejects when a newer
+    // transition interrupts this one, and finally() would re-throw that.
+    if (transition) transition.finished.then(clearDir, clearDir);
+    else clearDir();
+  }, [recordTabSwitch, currentTabOrder]);
 
   // Tapping a notification should land the traveler on the screen it's
   // actually about, not just mark it read and leave them wherever they were.
@@ -450,10 +489,22 @@ export default function App() {
   }, [activeTripId, currentTabOrder, setTabTrail, trips, initialized, deepLinkOn]);
   useEffect(() => {
     if (!deepLinkOn || !initialized || pendingDeepLinkRef.current || deepLinkTabRef.current) return;
-    const search = withDeepLink(window.location.search, activeTripId, activeTab);
-    if (search !== window.location.search) {
-      window.history.replaceState(window.history.state, '', window.location.pathname + search + window.location.hash);
-    }
+    const sync = () => {
+      const search = withDeepLink(window.location.search, useTripStore.getState().activeTripId, activeTabRef.current);
+      if (search !== window.location.search) {
+        window.history.replaceState(window.history.state, '', window.location.pathname + search + window.location.hash);
+      }
+    };
+    sync();
+    // Opening a trip rewrites the *home* history entry to ?trip=… before the
+    // back-stack pushes its own entry, so closing the trip (history.back())
+    // lands on that stale URL after this effect already ran, and a reload
+    // then reopened the trip. Re-sync after every back/forward step; the
+    // timeout lets the popstate handlers' state updates settle first.
+    let timer = 0;
+    const onPop = () => { window.clearTimeout(timer); timer = window.setTimeout(sync, 0); };
+    window.addEventListener('popstate', onPop);
+    return () => { window.removeEventListener('popstate', onPop); window.clearTimeout(timer); };
   }, [deepLinkOn, initialized, activeTripId, activeTab]);
 
   // Bumped to tell MembersGroupsTab to open its add-member popup -- the
@@ -473,7 +524,9 @@ export default function App() {
     } catch { return 'system'; }
   });
 
-  useEffect(() => {
+  // Layout effect so data-theme lands inside the same flushSync commit the
+  // theme crossfade below snapshots; a passive effect could land after it.
+  useLayoutEffect(() => {
     const root = document.documentElement;
     if (themePref === 'system') {
       delete root.dataset.theme;
@@ -484,6 +537,34 @@ export default function App() {
     }
     try { localStorage.setItem('theme-pref', themePref); } catch { /* storage blocked or full */ }
   }, [themePref]);
+  // enableMotionPolish: the tapped trip card morphs into the dashboard
+  // header (and back). Only one element may carry a view-transition-name at
+  // a time, so the card is named just for the transition, never in CSS.
+  const nameTripCard = (id: string | null) => {
+    const card = id ? document.querySelector<HTMLElement>(`[data-trip-card="${CSS.escape(id)}"]`) : null;
+    if (card) card.style.viewTransitionName = 'trip-hero';
+    return () => { if (card) card.style.viewTransitionName = ''; };
+  };
+  const openTripAnimated = (id: string) => {
+    if (!isMotionPolish) { withViewTransition(() => selectTrip(id)); return; }
+    nameTripCard(id);
+    withViewTransition(() => { flushSync(() => { void selectTrip(id); }); });
+  };
+  const closeTripAnimated = () => {
+    if (!isMotionPolish) { withViewTransition(() => selectTrip(null)); return; }
+    const id = activeTripId;
+    let clear = () => {};
+    const transition = withViewTransition(() => {
+      flushSync(() => { void selectTrip(null); });
+      clear = nameTripCard(id);
+    });
+    if (transition) transition.finished.then(() => clear(), () => clear());
+    else clear();
+  };
+  const setThemePrefAnimated = useCallback((next: ThemePref) => {
+    if (!isMotionPolish) { setThemePref(next); return; }
+    withViewTransition(() => { flushSync(() => setThemePref(next)); });
+  }, [isMotionPolish]);
 
   // Data Saver: device preference (see useDataSaverEnabled), gated behind
   // enableDataSaverMode. When active, the map backdrop (TripMapHero) stays
@@ -856,7 +937,16 @@ export default function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const handleOnlineSync = useCallback(async () => {
+  // enableMotionPolish: a short "Back online" note after a real reconnect
+  // (the 'online' event), telling the traveler their offline edits went up.
+  const [reconnectNote, setReconnectNote] = useState<string | null>(null);
+  useEffect(() => {
+    if (!reconnectNote) return;
+    const t = window.setTimeout(() => setReconnectNote(null), 2800);
+    return () => window.clearTimeout(t);
+  }, [reconnectNote]);
+
+  const handleOnlineSync = useCallback(async (fromReconnect = false) => {
     setIsOnline(true);
     setIsSyncing(true);
     const queuedCount = useTripStore.getState().syncQueue.length;
@@ -867,16 +957,23 @@ export default function App() {
       if (queuedCount > 0) {
         triggerHaptic('success');
       }
+      if (fromReconnect && isMotionPolish) {
+        setReconnectNote(
+          queuedCount > 0
+            ? `Back online · ${queuedCount} ${queuedCount === 1 ? 'change' : 'changes'} synced`
+            : 'Back online',
+        );
+      }
     } catch (err) {
       console.error('Online auto-sync error:', err);
     } finally {
       setIsSyncing(false);
     }
-  }, [processQueue, refreshActiveTripExpenses]);
+  }, [processQueue, refreshActiveTripExpenses, isMotionPolish]);
 
   useEffect(() => {
     const handleOnline = () => {
-      void handleOnlineSync();
+      void handleOnlineSync(true);
     };
     const handleOffline = () => {
       setIsOnline(false);
@@ -1265,6 +1362,17 @@ export default function App() {
   );
 
   // Filters out settlements to keep expense analytics clean
+  // enableCompactSummary: charts collapse into a "Spending breakdown" row and
+  // an expense-less trip gets a start card. Open/closed is a per-device pref.
+  const compactSummaryOn = !!activeTripId && isFeatureEnabled('enableCompactSummary', { tripId: activeTripId, userId: userId || undefined });
+  const [breakdownOpen, setBreakdownOpen] = useState(() => {
+    try { return localStorage.getItem('tt-summary-breakdown-open') === '1'; } catch { return false; }
+  });
+  const toggleBreakdown = (open: boolean) => {
+    setBreakdownOpen(open);
+    try { localStorage.setItem('tt-summary-breakdown-open', open ? '1' : '0'); } catch { /* storage blocked */ }
+  };
+  const expensesLoadingTripId = useTripStore((s) => s.expensesLoadingTripId);
   const nonSettlementExpenses = useMemo(() => {
     // approvalStatus === 'pending_approval' (enableExpenseApprovalThreshold)
     // stays out of every money total here -- it's still visible in the
@@ -1547,6 +1655,7 @@ export default function App() {
       message,
       confirmLabel: 'Delete',
       danger: true,
+      undoable: extendedUndoOn,
       onConfirm: () => (extendedUndoOn ? stageMemberDelete(member) : deleteMember(member.id)),
     });
   };
@@ -1809,6 +1918,7 @@ export default function App() {
       message: `Delete "${trip.name}" and all of its members and expenses? You'll have a few seconds to undo right after.`,
       confirmLabel: 'Delete',
       danger: true,
+      undoable: true,
       onConfirm: () => {
         if (tripUndoTimer) clearTimeout(tripUndoTimer);
         setPendingDeleteTrip(trip);
@@ -1948,8 +2058,8 @@ export default function App() {
 
     const title = isPartial ? 'Confirm partial settlement' : 'Confirm settlement';
     const message = isPartial
-      ? `You are settling this partially: ${fromLabel} pays ${toLabel} ${currencySymbol}${amount.toFixed(2)} out of ${currencySymbol}${totalDebt.toFixed(2)}${payerNote}${receiverNote}. The remaining ${currencySymbol}${remaining.toFixed(2)} will stay pending to be settled. Do you want to proceed?`
-      : `Mark transfer: ${fromLabel} pays ${toLabel} ${currencySymbol}${amount.toFixed(2)}${payerNote}${receiverNote} as settled?`;
+      ? `You are settling this partially: ${fromLabel} pays ${toLabel} ${currencySymbol}${formatMoneyNumber(amount, currencySymbol)} out of ${currencySymbol}${formatMoneyNumber(totalDebt, currencySymbol)}${payerNote}${receiverNote}. The remaining ${currencySymbol}${remaining.toFixed(2)} will stay pending to be settled. Do you want to proceed?`
+      : `Mark transfer: ${fromLabel} pays ${toLabel} ${currencySymbol}${formatMoneyNumber(amount, currencySymbol)}${payerNote}${receiverNote} as settled?`;
     const confirmLabel = isPartial ? 'Mark Partial Settlement' : 'Mark Settled';
     const today = new Date().toISOString().split('T')[0];
     settleDateRef.current = today;
@@ -2260,6 +2370,33 @@ export default function App() {
     );
   }
 
+  // Summary charts, rendered inline or inside the enableCompactSummary
+  // "Spending breakdown" disclosure.
+  const analyticsNode = (
+    <AnalyticsTab
+      trip={activeTrip}
+      totalSpent={totalSpent}
+      averageCost={averageCost}
+      biggestSpender={biggestSpender}
+      hasExpenses={nonSettlementExpenses.length > 0}
+      categoryData={categoryData}
+      getCatColor={getCatColor}
+      memberSpentList={memberSpentList}
+      dailySpendData={dailySpendData}
+      expenses={activeTripExpenses}
+      onCategoryClick={(catId) => {
+        setExpenseFilterCategory(catId);
+        setShowExpenseFilterDrawer(false);
+        setActiveTab('ledger');
+      }}
+      onMemberClick={(memberId) => {
+        setExpenseFilterMember(memberId);
+        setShowExpenseFilterDrawer(false);
+        setActiveTab('ledger');
+      }}
+    />
+  );
+
   return (
     <div className="app-container">
       <a href="#main-content" className="skip-link">Skip to content</a>
@@ -2298,7 +2435,7 @@ export default function App() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600 }}>
-            <IconShield size={16} /> 👁️ Previewing as Normal Traveler
+            <IconShield size={16} /> Previewing as Normal Traveler
           </div>
           <button
             type="button"
@@ -2359,7 +2496,7 @@ export default function App() {
           onCreateTrip={handleCreateTrip}
           onCancelTripForm={handleCancelTripForm}
           onStartEditTrip={handleStartEditTrip}
-          onSelectTrip={(id) => withViewTransition(() => selectTrip(id))}
+          onSelectTrip={openTripAnimated}
           onQuickAddExpense={(trip) => {
             selectTrip(trip.id);
             setShowAddExpense(true);
@@ -2391,9 +2528,7 @@ export default function App() {
               </button>
             </div>
           ) : (
-            <Suspense fallback={null}>
-              <TripMapHero trip={activeTrip ?? null} onToneChange={setHeaderTone} />
-            </Suspense>
+            <DeferredTripMapHero trip={activeTrip ?? null} onToneChange={setHeaderTone} />
           )}
           <header ref={headerRef} className={`app-header trip-dashboard-header ${isHeaderScrolled || sheetFull ? 'is-scrolled' : ''} ${headerTone === 'dark' ? 'tone-dark' : ''} ${sheetFull ? 'sheet-full' : ''}`} style={{ overflow: 'hidden' }}>
             <div className="app-header-top" style={{ position: 'relative', zIndex: 1 }}>
@@ -2509,7 +2644,7 @@ export default function App() {
                     if (activeTab !== 'expenses') {
                       setActiveTab('expenses');
                     } else {
-                      withViewTransition(() => selectTrip(null));
+                      closeTripAnimated();
                     }
                   }}
                   aria-label={activeTab !== 'expenses' ? 'Back to Trip Summary' : 'Back to All Trips'}
@@ -2522,12 +2657,12 @@ export default function App() {
             <div className="app-header-stats" style={{ position: 'relative', zIndex: 1 }}>
               <div className="header-meta-capsule">
                 <span className="header-meta-item">
-                  <span className="header-meta-icon" aria-hidden="true">👥</span>
+                  <span className="header-meta-icon" aria-hidden="true"><IconMembers size={13} /></span>
                   <span>{visibleMembers.length} {visibleMembers.length === 1 ? 'member' : 'members'}</span>
                 </span>
                 <span className="header-meta-sep" aria-hidden="true">·</span>
                 <span className="header-meta-item">
-                  <span className="header-meta-icon" aria-hidden="true">🧾</span>
+                  <span className="header-meta-icon" aria-hidden="true"><IconReceipt size={13} /></span>
                   <span>{activeTripExpenses.length} {activeTripExpenses.length === 1 ? 'expense' : 'expenses'}</span>
                 </span>
                 {activePeers.length > 0 && (
@@ -2712,6 +2847,17 @@ export default function App() {
                     Trip dates ended — close out remaining balances
                   </button>
                 )}
+                {compactSummaryOn && activeTrip && nonSettlementExpenses.length === 0 && expensesLoadingTripId !== activeTrip.id ? (
+                  <TripStartCard
+                    joinedCount={visibleMembers.filter((m) => m.linkedUserId && m.linkedUserId !== userId).length}
+                    onInvite={() => setShowShareTrip(true)}
+                    onAddExpense={() => handleOpenAddExpense()}
+                  />
+                ) : activeTrip && nonSettlementExpenses.length === 0 && expensesLoadingTripId === activeTrip.id ? (
+                  // Balances computed from a not-yet-loaded expense list read as
+                  // a real "₹0.00 outstanding" for a moment on every trip open.
+                  <LuggageTagSkeleton count={2} />
+                ) : (<>
                 {activeTrip && visibleMembers.length > 0 && (
                   <BalancesSettlements
                     trip={activeTrip}
@@ -2731,28 +2877,24 @@ export default function App() {
                     }}
                   />
                 )}
-                <AnalyticsTab
-                  trip={activeTrip}
-                  totalSpent={totalSpent}
-                  averageCost={averageCost}
-                  biggestSpender={biggestSpender}
-                  hasExpenses={nonSettlementExpenses.length > 0}
-                  categoryData={categoryData}
-                  getCatColor={getCatColor}
-                  memberSpentList={memberSpentList}
-                  dailySpendData={dailySpendData}
-                  expenses={activeTripExpenses}
-                  onCategoryClick={(catId) => {
-                    setExpenseFilterCategory(catId);
-                    setShowExpenseFilterDrawer(false);
-                    setActiveTab('ledger');
-                  }}
-                  onMemberClick={(memberId) => {
-                    setExpenseFilterMember(memberId);
-                    setShowExpenseFilterDrawer(false);
-                    setActiveTab('ledger');
-                  }}
-                />
+                {compactSummaryOn ? (
+                  <details
+                    className="summary-breakdown"
+                    open={breakdownOpen}
+                    onToggle={(e) => toggleBreakdown((e.currentTarget as HTMLDetailsElement).open)}
+                  >
+                    <summary className="summary-breakdown-head">
+                      <span className="summary-breakdown-icon" aria-hidden="true"><IconPieChart size={18} /></span>
+                      <span className="summary-breakdown-text">
+                        <strong>Spending breakdown</strong>
+                        <span>By category, day and traveler</span>
+                      </span>
+                      <IconChevronDown size={18} className="summary-breakdown-chevron" />
+                    </summary>
+                    {breakdownOpen && analyticsNode}
+                  </details>
+                ) : analyticsNode}
+                </>)}
               </div>
               </TabErrorBoundary>
             </div>
@@ -2921,7 +3063,7 @@ export default function App() {
                 onOpenSplitwiseImport={isFeatureEnabled('enableSplitwiseImport', { tripId: activeTrip?.id, userId: userId || undefined }) ? () => setShowSplitwiseImport(true) : undefined}
                 isAdmin={isAdmin}
                 themePref={themePref}
-                setThemePref={setThemePref}
+                setThemePref={setThemePrefAnimated}
                 onExportJson={triggerExport}
                 showImportArea={showImportArea}
                 setShowImportArea={setShowImportArea}
@@ -3038,7 +3180,7 @@ export default function App() {
       )}
 
       {showShareTrip && activeTrip && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<SheetSkeleton />}>
           <ShareTripModal
             trip={activeTrip}
             onClose={() => setShowShareTrip(false)}
@@ -3130,7 +3272,7 @@ export default function App() {
         // reopening the modal.
         const liveExpense = activeTripExpenses.find((e) => e.id === selectedReviewExpense.id) ?? selectedReviewExpense;
         return (
-        <Suspense fallback={null}>
+        <Suspense fallback={<SheetSkeleton />}>
           <ExpenseReviewModal
             expense={liveExpense}
             members={members}
@@ -3199,7 +3341,7 @@ export default function App() {
             onClose={() => setShowGlobalSettings(false)}
             closeRef={globalSettingsCloseRef}
             themePref={themePref}
-            setThemePref={setThemePref}
+            setThemePref={setThemePrefAnimated}
             onExportJson={triggerExport}
             showImportArea={showImportArea}
             setShowImportArea={setShowImportArea}
@@ -3259,6 +3401,12 @@ export default function App() {
         </Suspense>
       )}
 
+      {reconnectNote && (
+        <div className="reconnect-toast" role="status" aria-live="polite">
+          <span className="reconnect-toast-dot" aria-hidden="true" />
+          {reconnectNote}
+        </div>
+      )}
       <UndoToasts
         pendingDeleteExpense={pendingDeleteExpense}
         onUndoDeleteExpense={handleUndoDelete}
@@ -3280,7 +3428,7 @@ export default function App() {
       )}
 
       {showCloseout && activeTrip && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<SheetSkeleton />}>
           <TripCloseoutModal
             tripName={activeTrip.name}
             currencySymbol={getCurrencySymbol(activeTrip.baseCurrency)}
@@ -3304,7 +3452,7 @@ export default function App() {
       )}
 
       {showSplitwiseImport && activeTrip && isFeatureEnabled('enableSplitwiseImport', { tripId: activeTrip.id, userId: userId || undefined }) && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<SheetSkeleton />}>
           <SplitwiseImportModal
             tripId={activeTrip.id}
             members={visibleMembers}
@@ -3315,7 +3463,7 @@ export default function App() {
       )}
 
       {pendingConflicts.length > 0 && activeTrip && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<SheetSkeleton />}>
           <ConflictResolverModal
             localExpense={pendingConflicts[0].local}
             serverExpense={pendingConflicts[0].server}
@@ -3392,14 +3540,14 @@ export default function App() {
             id: 'smart-passes',
             title: 'Digital Travel Pass & Ticket Wallet',
             subtitle: 'Boarding passes, train tickets, hotel vouchers & QR codes',
-            icon: <span style={{ fontSize: '15px' }}>🎫</span>,
+            icon: <IconTag size={16} />,
             action: () => setActiveTab('notes'),
           });
           suggestions.push({
             id: 'smart-fx',
             title: 'Live Multi-Currency FX Rates & Converter',
             subtitle: 'View live forex rates, offline rate lock & markup',
-            icon: <span style={{ fontSize: '15px' }}>💱</span>,
+            icon: <IconWallet size={16} />,
             action: () => setShowFxRates(true),
           });
         }
@@ -3471,7 +3619,7 @@ export default function App() {
 
       {/* Trip Squad Achievements & Milestones Modal */}
       {showAchievements && activeTrip && isFeatureEnabled('enableAchievements') && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<SheetSkeleton />}>
           <AchievementBadgeModal
             trip={activeTrip}
             expenses={activeTripExpenses}
@@ -3485,7 +3633,7 @@ export default function App() {
 
       {/* Trip Route & Stops Modal */}
       {showRouteModal && activeTrip && isFeatureEnabled('enableRouteStops', { tripId: activeTrip.id }) && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<SheetSkeleton />}>
           <TripRouteModal
             isOpen={showRouteModal}
             onClose={() => setShowRouteModal(false)}
@@ -3498,7 +3646,7 @@ export default function App() {
 
       {/* Smart Voice & Natural Language Quick-Add Modal */}
       {showSmartQuickAdd && activeTrip && isFeatureEnabled('enableVoiceInput') && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<SheetSkeleton />}>
           <SmartExpenseQuickAddModal
             isOpen={showSmartQuickAdd}
             autoListen={smartQuickAddAutoListen}
@@ -3528,7 +3676,7 @@ export default function App() {
 
       {/* Offline Snapshot Backup Modal */}
       {showOfflineSnapshot && isFeatureEnabled('enableOfflineSnapshot') && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<SheetSkeleton />}>
           <OfflineSnapshotModal
             isOpen={showOfflineSnapshot}
             onClose={() => setShowOfflineSnapshot(false)}
@@ -3555,14 +3703,14 @@ export default function App() {
 
       {/* Document / ID Vault -- local-only, never uploaded */}
       {showDocumentVault && isFeatureEnabled('enableDocumentVault') && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<SheetSkeleton />}>
           <DocumentVaultModal isOpen={showDocumentVault} onClose={() => setShowDocumentVault(false)} />
         </Suspense>
       )}
 
       {/* Live Location Share -- public link, bounded 12h window */}
       {showLiveLocationShare && activeTrip && myMemberId && userId && isFeatureEnabled('enableLiveLocationShare', { tripId: activeTrip.id, userId }) && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<SheetSkeleton />}>
           <LiveLocationShareModal
             isOpen={showLiveLocationShare}
             onClose={() => setShowLiveLocationShare(false)}
@@ -3575,7 +3723,7 @@ export default function App() {
 
       {/* Receipts & Photo Memories Gallery Modal */}
       {showMediaGallery && activeTrip && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<SheetSkeleton />}>
           <TripMediaGalleryModal
             isOpen={showMediaGallery}
             onClose={() => setShowMediaGallery(false)}
@@ -3590,7 +3738,7 @@ export default function App() {
 
       {/* Multi-Currency FX Rates & Calculator Modal */}
       {showFxRates && activeTrip && isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip.id, userId: userId || undefined }) && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<SheetSkeleton />}>
           <FxRatesModal
             isOpen={showFxRates}
             onClose={() => setShowFxRates(false)}
@@ -3627,7 +3775,7 @@ export default function App() {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="u-row-8">
                 <span style={{ fontSize: '18px' }}>⌨️</span>
                 <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
                   Keyboard Shortcuts
@@ -3645,43 +3793,43 @@ export default function App() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="u-between">
                 <span style={{ color: 'var(--text-secondary)' }}>Universal Search & Switcher</span>
                 <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>⌘K / Ctrl+K</kbd>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="u-between">
                 <span style={{ color: 'var(--text-secondary)' }}>Log New Expense</span>
                 <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>N</kbd>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="u-between">
                 <span style={{ color: 'var(--text-secondary)' }}>Jump to Balances & Settlements</span>
                 <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>S</kbd>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="u-between">
                 <span style={{ color: 'var(--text-secondary)' }}>Focus Search Bar</span>
                 <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>/</kbd>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="u-between">
                 <span style={{ color: 'var(--text-secondary)' }}>Switch to Expenses Tab</span>
                 <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>1</kbd>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="u-between">
                 <span style={{ color: 'var(--text-secondary)' }}>Switch to Balances Tab</span>
                 <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>2</kbd>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="u-between">
                 <span style={{ color: 'var(--text-secondary)' }}>Switch to Members Tab</span>
                 <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>3</kbd>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="u-between">
                 <span style={{ color: 'var(--text-secondary)' }}>Switch to Notes & Checklist Tab</span>
                 <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>4</kbd>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="u-between">
                 <span style={{ color: 'var(--text-secondary)' }}>Close Dialog / Modal</span>
                 <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>Esc</kbd>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="u-between">
                 <span style={{ color: 'var(--text-secondary)' }}>Show this help card</span>
                 <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>?</kbd>
               </div>
@@ -3731,8 +3879,8 @@ export default function App() {
             gap: '12px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '20px' }}>🔐</span>
+          <div className="u-row-10">
+            <span style={{ display: 'inline-flex', color: 'var(--primary-accent)' }}><IconLock size={20} /></span>
             <div>
               <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 Enable Fingerprint / Face ID
@@ -3745,7 +3893,7 @@ export default function App() {
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div className="u-row-6">
             <button
               type="button"
               className="primary-btn"

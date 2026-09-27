@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Trip } from '../types';
+import type { Expense, Trip } from '../types';
 import { useTripStore } from '../store/tripStore';
 import { fetchAllExpensesForTrips } from '../services/tripApi';
 import { calculateSettlements } from '../utils/settlement';
@@ -22,6 +22,26 @@ function getLocalSpending(): Record<string, number> {
   const local = useTripStore.getState().expenses || [];
   const spending: Record<string, number> = {};
   local.forEach((exp) => {
+    if (!exp.isSettlement && !exp.deletedAt) {
+      spending[exp.tripId] = (spending[exp.tripId] || 0) + (Number(exp.amount) || 0);
+    }
+  });
+  return spending;
+}
+
+type SpendRow = Pick<Expense, 'id' | 'tripId' | 'amount' | 'isSettlement' | 'deletedAt'>;
+
+/**
+ * Per-trip spend with each expense counted once: the server copy, plus local
+ * expenses the server doesn't have yet (queued offline). Starting from the
+ * local totals and then adding every server row counted each expense of an
+ * already-opened trip twice ("Spent" doubled on the Journeys cards).
+ */
+export function sumTripSpending(server: SpendRow[], local: SpendRow[]): Record<string, number> {
+  const byId = new Map(server.map((exp) => [exp.id, exp]));
+  for (const exp of local) if (!byId.has(exp.id)) byId.set(exp.id, exp);
+  const spending: Record<string, number> = {};
+  byId.forEach((exp) => {
     if (!exp.isSettlement && !exp.deletedAt) {
       spending[exp.tripId] = (spending[exp.tripId] || 0) + (Number(exp.amount) || 0);
     }
@@ -56,13 +76,7 @@ export function useCrossTripBalances(trips: Trip[], userId: string | null): Cros
         const { members: curMembers, groups: curGroups } = useTripStore.getState();
         const byCurrency: Record<string, number> = {};
         const settledTripIds: Record<string, boolean> = {};
-        const tripSpending: Record<string, number> = { ...localSpending };
-
-        allExpenses.forEach((exp) => {
-          if (!exp.isSettlement && !exp.deletedAt) {
-            tripSpending[exp.tripId] = (tripSpending[exp.tripId] || 0) + (Number(exp.amount) || 0);
-          }
-        });
+        const tripSpending = sumTripSpending(allExpenses, useTripStore.getState().expenses || []);
 
         tripsSnapshot.forEach((trip) => {
           const tripGroups = Object.values(curGroups).filter((g) => trip.groupIds.includes(g.id));

@@ -25,9 +25,9 @@ import {
   IconCopy,
   IconDownload,
   IconAlertCircle,
-  IconCheckCircle,
 } from './Icons';
 import './admin/ops-deck.css';
+import { useOpsToast } from './admin/useOpsToast';
 
 type Props = {
   onBack?: () => void;
@@ -249,13 +249,13 @@ function BugDetailBody({
               {bug.expectedBehavior && (
                 <div>
                   <span className="ops-bug-label">Expected</span>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.expectedBehavior}</div>
+                  <div className="u-note">{bug.expectedBehavior}</div>
                 </div>
               )}
               {bug.actualBehavior && (
                 <div>
                   <span className="ops-bug-label">Actual</span>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.actualBehavior}</div>
+                  <div className="u-note">{bug.actualBehavior}</div>
                 </div>
               )}
             </div>
@@ -286,7 +286,7 @@ function BugDetailBody({
               {bug.diagnostics?.syncQueueLength !== undefined && (
                 <div>
                   <span className="ops-bug-label">Sync queue length</span>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.diagnostics.syncQueueLength}</div>
+                  <div className="u-note">{bug.diagnostics.syncQueueLength}</div>
                 </div>
               )}
               {bug.diagnostics?.screenshot && (
@@ -302,18 +302,18 @@ function BugDetailBody({
 
       {tab === 'history' && (
         <div className="ops-bug-field" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+          <div className="u-note">
             <span className="ops-bug-label" style={{ display: 'inline' }}>Filed</span>{' '}
             {new Date(bug.createdAt).toLocaleString()} by {bug.foundBy}
           </div>
           {bug.updatedAt && bug.updatedAt !== bug.createdAt && (
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            <div className="u-note">
               <span className="ops-bug-label" style={{ display: 'inline' }}>Last updated</span>{' '}
               {new Date(bug.updatedAt).toLocaleString()}
             </div>
           )}
           {bug.resolvedAt && (
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            <div className="u-note">
               <span className="ops-bug-label" style={{ display: 'inline' }}>Resolved</span>{' '}
               {new Date(bug.resolvedAt).toLocaleString()} by {bug.resolvedBy || 'superadmin'}
             </div>
@@ -446,7 +446,7 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm,
   useEscapeKey(Boolean(resolvingBug), () => setResolvingBug(null));
   useEscapeKey(showAddModal, () => setShowAddModal(false));
   useEscapeKey(Boolean(drawerBugId), () => setDrawerBugId(null));
-  const [toasts, setToasts] = useState<{ id: number; text: string; tone: 'success' | 'danger' }[]>([]);
+  const { showToast, toastNode } = useOpsToast();
 
   const [newTitle, setNewTitle] = useState('');
   const [newSeverity, setNewSeverity] = useState<BugRecord['severity']>('medium');
@@ -456,12 +456,6 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm,
   const [newExpected, setNewExpected] = useState('');
   const [newActual, setNewActual] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const showToast = (text: string, tone: 'success' | 'danger' = 'success') => {
-    const id = Date.now() + Math.random();
-    setToasts((prev) => [...prev, { id, text, tone }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
-  };
 
   const loadBugs = async (opts?: { quiet?: boolean }) => {
     if (skipFetch) {
@@ -537,6 +531,36 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm,
   }, [bugs]);
 
   const drawerBug = drawerBugId ? bugs.find((b) => b.id === drawerBugId) || null : null;
+
+  // Keyboard triage in list view: J/K move a row cursor, Enter expands the
+  // row, E starts resolving it. Ignored while typing or with a drawer open.
+  const [cursorId, setCursorId] = useState<string | null>(null);
+  useEffect(() => {
+    if (viewMode !== 'list') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = e.target as HTMLElement | null;
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+      if (drawerBugId || resolvingBug || showAddModal || sortedBugs.length === 0) return;
+      const idx = sortedBugs.findIndex((b) => b.id === cursorId);
+      const key = e.key.toLowerCase();
+      if (key === 'j' || key === 'k') {
+        e.preventDefault();
+        const next = key === 'j' ? Math.min(idx + 1, sortedBugs.length - 1) : Math.max(idx - 1, 0);
+        const id = sortedBugs[next].id;
+        setCursorId(id);
+        document.querySelector(`[data-bug-row="${CSS.escape(id)}"]`)?.scrollIntoView({ block: 'nearest' });
+      } else if (idx >= 0 && key === 'enter') {
+        e.preventDefault();
+        toggleExpandBug(sortedBugs[idx].id);
+      } else if (idx >= 0 && key === 'e') {
+        e.preventDefault();
+        void handleStatusChange(sortedBugs[idx], 'resolved');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
 
   const stats = useMemo(() => {
     const total = bugs.length;
@@ -848,7 +872,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
             </button>
           )}
           <button type="button" className="ops-btn" disabled={loading} onClick={() => void loadBugs({ quiet: true })} title="Sync with the ledger" aria-label="Refresh cases">
-            <IconRefresh size={13} className={loading ? 'icon-sm ops-spin' : 'icon-sm'} /> {loading ? 'Refreshing...' : 'Refresh'}
+            <IconRefresh size={16} className={loading ? 'ops-spin' : undefined} /> Refresh
           </button>
           <button type="button" className="ops-btn ops-btn-primary" onClick={() => setShowAddModal(true)}>
             <IconPlus size={13} /> New case
@@ -861,16 +885,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
         </div>
       </div>
 
-      {toasts.length > 0 && (
-        <div className="ops-toast-stack">
-          {toasts.map((t) => (
-            <div key={t.id} className="ops-toast" data-tone={t.tone}>
-              {t.tone === 'success' ? <IconCheckCircle size={14} /> : <IconAlertCircle size={14} />}
-              {t.text}
-            </div>
-          ))}
-        </div>
-      )}
+      {toastNode}
 
       <div className="ops-velocity-strip">
         <div className="ops-radar-header">
@@ -950,6 +965,11 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
             Board
           </button>
         </div>
+        {viewMode === 'list' && (
+          <span className="ops-kbd-hint" aria-hidden="true">
+            <kbd>J</kbd><kbd>K</kbd> move · <kbd>↵</kbd> open · <kbd>E</kbd> resolve
+          </span>
+        )}
 
         <button type="button" className="ops-btn" onClick={handleExportJson}>
           <IconDownload size={14} className="icon-sm" /> Export
@@ -958,7 +978,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
 
       {selectedIds.size > 0 && (
         <div className="ops-bulk-dock" style={{ marginBottom: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="u-row-10">
             <span className="ops-dot" />
             <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
               {selectedIds.size} case{selectedIds.size === 1 ? '' : 's'} selected
@@ -1111,6 +1131,8 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                   <Fragment key={bug.id}>
                     <tr
                       className="ops-linear-row"
+                      data-bug-row={bug.id}
+                      data-cursor={cursorId === bug.id}
                       data-severity={bug.severity}
                       data-expanded={isExpanded}
                       onClick={() => toggleExpandBug(bug.id)}
@@ -1173,7 +1195,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                           <div className="ops-linear-tray-content">
                             {/* Inline Tray Quick Bar */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div className="u-row-6">
                                 <span style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontFamily: 'var(--mono)' }}>
                                   Transition:
                                 </span>
@@ -1219,7 +1241,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                                 )}
                               </div>
 
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div className="u-row-6">
                                 <button
                                   type="button"
                                   className="ops-btn"
@@ -1251,7 +1273,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                             {/* Inline Tray Content Grid: Reproduction vs Diagnostics */}
                             <div className="ops-linear-tray-grid">
                               {/* Left Column: Narrative & Reproduction */}
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              <div className="u-col-8">
                                 {bug.description && (
                                   <div style={{ fontSize: '12px', color: 'var(--text-primary)', background: 'var(--bg-panel)', padding: '8px 10px', borderRadius: 'var(--r-sm)', border: '1px solid var(--line)' }}>
                                     <strong style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '3px' }}>Description:</strong>
@@ -1296,8 +1318,8 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                               </div>
 
                               {/* Right Column: Diagnostics & Stack Trace */}
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div className="u-col-8">
+                                <div className="u-between">
                                   <strong style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontFamily: 'var(--mono)' }}>
                                     Diagnostics &amp; Telemetry
                                   </strong>

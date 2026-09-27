@@ -1,3 +1,4 @@
+import { formatMoneyNumber } from './currency';
 import type { AppNotification } from '../types';
 
 export const NOTIFICATION_TYPE_HEADLINES: Record<string, string> = {
@@ -58,7 +59,7 @@ export function renderNotificationBody(notification: AppNotification): string {
   switch (type) {
     case 'expense_added':
       if (data?.expenseTitle && data?.currency && data?.amount) {
-        return `${data.expenseTitle} — ${data.currency} ${parseFloat(data.amount).toFixed(2)}`;
+        return `${data.expenseTitle} — ${data.currency} ${formatMoneyNumber(parseFloat(data.amount), data.currency)}`;
       }
       if (data?.expenseTitle) {
         return data.expenseTitle;
@@ -72,7 +73,7 @@ export function renderNotificationBody(notification: AppNotification): string {
     case 'expense_deleted':
       if (data?.expenseTitle) {
         if (data.currency && data.amount) {
-          return `${data.expenseTitle} — ${data.currency} ${parseFloat(data.amount).toFixed(2)}`;
+          return `${data.expenseTitle} — ${data.currency} ${formatMoneyNumber(parseFloat(data.amount), data.currency)}`;
         }
         return data.expenseTitle;
       }
@@ -95,7 +96,7 @@ export function renderNotificationBody(notification: AppNotification): string {
       return notification.body || 'You have a pending settlement reminder';
     case 'settlement_confirmation_requested':
       if (data?.amount && data?.currency) {
-        return `Someone marked ${data.currency} ${parseFloat(data.amount).toFixed(2)} as paid to you — confirm you received it`;
+        return `Someone marked ${data.currency} ${formatMoneyNumber(parseFloat(data.amount), data.currency)} as paid to you — confirm you received it`;
       }
       return notification.body || 'Confirm a settlement paid to you';
     case 'weather_itinerary_nudge':

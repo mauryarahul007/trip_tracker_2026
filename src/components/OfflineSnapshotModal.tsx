@@ -139,7 +139,7 @@ export function OfflineSnapshotModal({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="u-row-8">
             <span style={{ fontSize: '22px' }}>💾</span>
             <div>
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>Offline Snapshot Backup</h3>
@@ -251,7 +251,7 @@ export function OfflineSnapshotModal({
                   ✓ Snapshot imported successfully!
                 </div>
               ) : (
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="u-flex-gap-8">
                   <button
                     type="button"
                     className="primary-btn"

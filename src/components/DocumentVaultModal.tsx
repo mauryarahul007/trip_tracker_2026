@@ -156,11 +156,11 @@ export function DocumentVaultModal({ isOpen, onClose }: Props) {
         style={{ maxWidth: '480px', width: '100%', maxHeight: '86vh', display: 'flex', flexDirection: 'column', padding: '0', overflow: 'hidden', borderRadius: '24px' }}
       >
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="u-row-8">
             <span style={{ fontSize: '20px' }}>🔒</span>
             <div>
               <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Document Vault</h3>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Stored on this device only -- never uploaded</span>
+              <span className="u-hint">Stored on this device only -- never uploaded</span>
             </div>
           </div>
           <button type="button" className="secondary-btn" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={onClose}>Close</button>
@@ -193,14 +193,14 @@ export function DocumentVaultModal({ isOpen, onClose }: Props) {
                   <div key={doc.id} style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.03)' }}>
                     <img src={doc.dataUrl} alt={doc.name} decoding="async" style={{ width: '100%', height: '96px', objectFit: 'cover', display: 'block' }} />
                     <div style={{ padding: '6px 8px' }}>
-                      <div style={{ fontSize: '10.5px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {DOC_TYPE_LABELS[doc.docType]}
                       </div>
-                      <div style={{ fontSize: '10px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {doc.name}
                       </div>
                       {doc.expiryDate && (
-                        <div style={{ fontSize: '9.5px', color: 'var(--text-muted)' }}>Expires {doc.expiryDate}</div>
+                        <div className="u-hint">Expires {doc.expiryDate}</div>
                       )}
                     </div>
                     <button
@@ -246,7 +246,7 @@ export function DocumentVaultModal({ isOpen, onClose }: Props) {
                   />
 
                   {pendingImage ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div className="u-row-10">
                       <img src={pendingImage} alt="Preview" style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-color)' }} />
                       <button type="button" className="secondary-btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => setPendingImage('')}>Remove</button>
                     </div>
@@ -258,7 +258,7 @@ export function DocumentVaultModal({ isOpen, onClose }: Props) {
                     <input type="file" accept="image/*" ref={fileInputRef} className="input-field" onChange={handleFileChange} disabled={isProcessing} />
                   )}
 
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div className="u-flex-gap-8">
                     <button type="button" className="gradient-btn" style={{ flex: 1, padding: '9px', fontSize: '13px' }} disabled={!pendingImage || !name.trim()} onClick={handleSave}>
                       Save to Vault
                     </button>

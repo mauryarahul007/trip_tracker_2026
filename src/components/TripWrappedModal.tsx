@@ -764,7 +764,7 @@ export function TripWrappedModal({
           </div>
 
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="u-row-8">
             {/* Theme Toggle Pills */}
             <div
               style={{
@@ -952,7 +952,7 @@ export function TripWrappedModal({
             <div style={{ fontSize: '11px', color: isDark ? '#FF9800' : '#D95D00', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '10px' }}>
               🎖️ Squad Superlatives
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="u-col-8">
               {superlatives.slice(0, 3).map((item) => (
                 <div
                   key={item.memberName}
@@ -994,7 +994,7 @@ export function TripWrappedModal({
               gap: '8px',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="u-between">
               <div style={{ fontSize: '11px', color: isDark ? '#FF7A00' : '#C74800', fontWeight: 700, textTransform: 'uppercase' }}>
                 ⚡ Peak Adventure Day{rhythm.peakDay.includes('&') || rhythm.peakDay.includes(',') ? 's' : ''}
               </div>

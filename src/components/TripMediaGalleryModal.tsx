@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Expense, Member, Category } from '../types';
-import { formatAmount } from '../utils/currency';
+import { formatAmount, formatMoneyNumber } from '../utils/currency';
 import { triggerHaptic } from '../utils/haptics';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { useHistoryBack } from '../utils/useHistoryBack';
@@ -127,7 +127,7 @@ export function TripMediaGalleryModal({
       try {
         await navigator.share({
           title: `${item.expense.title} - Receipt`,
-          text: `${item.expense.title} (${currencySymbol} ${item.expense.amount.toFixed(2)}) from ${tripName}`,
+          text: `${item.expense.title} (${currencySymbol} ${formatMoneyNumber(item.expense.amount, currencySymbol)}) from ${tripName}`,
           url,
         });
       } catch (err) {
@@ -156,7 +156,7 @@ export function TripMediaGalleryModal({
       >
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="u-row-8">
             <span style={{ fontSize: '22px' }}>📸</span>
             <div>
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>Receipts & Memories Gallery</h3>
@@ -280,8 +280,8 @@ export function TripMediaGalleryModal({
                     <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {item.expense.title}
                     </div>
-                    <div style={{ fontSize: '10px', opacity: 0.9 }}>
-                      {currencySymbol} {item.expense.amount.toFixed(2)} • {payer}
+                    <div style={{ fontSize: '11px', opacity: 0.9 }}>
+                      {currencySymbol} {formatMoneyNumber(item.expense.amount, currencySymbol)} • {payer}
                     </div>
                   </div>
                 </div>
@@ -330,7 +330,7 @@ export function TripMediaGalleryModal({
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="u-row-8">
                 <button
                   type="button"
                   onClick={() => setZoomLevel((z) => (z === 1 ? 2 : 1))}

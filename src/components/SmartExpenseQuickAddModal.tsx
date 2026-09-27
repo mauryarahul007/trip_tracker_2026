@@ -386,7 +386,7 @@ export function SmartExpenseQuickAddModal({
               </p>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="u-row-8">
             {speechSupported && (
               <select
                 value={voiceLang}
@@ -494,7 +494,7 @@ export function SmartExpenseQuickAddModal({
                 <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#059669' }}>
                   Auto-saving in {countdownSeconds}s...
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                <div className="u-hint">
                   Hands-free quick save active
                 </div>
               </div>
@@ -570,7 +570,7 @@ export function SmartExpenseQuickAddModal({
             }}
           />
           {speechSupported && (
-            <button
+            <button className="hit-area"
               type="button"
               onClick={toggleRecording}
               aria-label={isRecording ? 'Stop listening' : 'Start voice recording'}

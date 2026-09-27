@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import type { Trip } from '../types';
-import { IconClose, IconCopy, IconCheck } from './Icons';
+import { IconClose, IconCopy, IconCheck, IconDatabase } from './Icons';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { buildCanonicalJoinLink } from '../utils/joinDeepLink';
 import { useTripStore } from '../store/tripStore';
@@ -156,7 +156,7 @@ export function ShareTripModal({ trip, onClose, onOpenOfflineSnapshot }: Props) 
               </button>
             ) : (
               <>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="u-flex-gap-8">
                   <input id="share-readonly-link" type="text" readOnly className="input-field" value={shareState.token ? buildTripShareUrl(shareState.token) : ''} style={{ flex: 1, fontSize: '13px' }} onFocus={(e) => e.target.select()} />
                   <button type="button" className="gradient-btn" style={{ padding: '0 14px', flexShrink: 0 }} onClick={() => shareState.token && copy(buildTripShareUrl(shareState.token), 'share')}>
                     {copied === 'share' ? <IconCheck size={16} className="icon-sm" /> : <IconCopy size={16} className="icon-sm" />}
@@ -198,7 +198,7 @@ export function ShareTripModal({ trip, onClose, onOpenOfflineSnapshot }: Props) 
           <>
             <div className="form-group" style={isTripShareLinkEnabled ? { borderTop: '1px solid var(--border-color)', paddingTop: '14px' } : undefined}>
               <label className="form-label" htmlFor="share-invite-link">{isTripShareLinkEnabled ? 'Invite to join (they can add expenses)' : 'Invite link'}</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div className="u-flex-gap-8">
                 <input id="share-invite-link" type="text" readOnly className="input-field" value={joinLink} style={{ flex: 1, fontSize: '13px' }} onFocus={(e) => e.target.select()} />
                 <button type="button" className="secondary-btn" style={{ padding: '0 14px', flexShrink: 0 }} onClick={() => copy(joinLink, 'link')}>
                   {copied === 'link' ? <IconCheck size={16} className="icon-sm" /> : <IconCopy size={16} className="icon-sm" />}
@@ -208,7 +208,7 @@ export function ShareTripModal({ trip, onClose, onOpenOfflineSnapshot }: Props) 
 
             <div className="form-group" style={{ marginTop: '12px', marginBottom: '16px' }}>
               <span className="form-label">Or share this code</span>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div className="u-flex-gap-8">
                 <div
                   style={{
                     flex: 1,
@@ -252,7 +252,7 @@ export function ShareTripModal({ trip, onClose, onOpenOfflineSnapshot }: Props) 
               onOpenOfflineSnapshot();
             }}
           >
-            <span>💾</span> Offline Snapshot Backup (.triptracker)
+            <IconDatabase size={15} /> Offline Snapshot Backup (.triptracker)
           </button>
         </div>
         )}

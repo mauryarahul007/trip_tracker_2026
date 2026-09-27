@@ -89,7 +89,7 @@ export function AnalyticsTab({
             background: 'radial-gradient(circle at 10% 50%, rgba(63, 203, 189, 0.12), var(--bg-surface))',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="u-row-10">
             <div
               style={{
                 width: '30px',
@@ -180,7 +180,7 @@ export function AnalyticsTab({
           <strong className="money" style={{ fontSize: '17px', color: 'var(--text-primary)' }}>
             At this pace, ~{formatAmount(burnRate.projectedTotal, currencySymbol)} by trip end
           </strong>
-          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+          <span className="u-note">
             {formatAmount(burnRate.dailyAverage, currencySymbol)}/day average so far
           </span>
         </div>
@@ -205,7 +205,8 @@ export function AnalyticsTab({
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '24px' }}>
               {/* Donut SVG */}
               <div style={{ position: 'relative', width: '140px', height: '140px' }}>
-                <svg width="140" height="140" viewBox="0 0 140 140">
+                {/* Decorative: the legend beside it lists every category and share as text. */}
+                <svg width="140" height="140" viewBox="0 0 140 140" aria-hidden="true">
                   <circle cx="70" cy="70" r="50" fill="transparent" stroke="var(--border-color)" strokeWidth="1" />
                   {(() => {
                     let accumPercent = 0;
@@ -254,7 +255,7 @@ export function AnalyticsTab({
                   textAlign: 'center',
                   pointerEvents: 'none'
                 }}>
-                  <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Total</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Total</span>
                   <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>
                     {currencySymbol}
                     {totalSpent > 1000 ? `${(totalSpent / 1000).toFixed(1)}k` : totalSpent.toFixed(0)}
@@ -283,7 +284,7 @@ export function AnalyticsTab({
                     }
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', cursor: onCategoryClick ? 'pointer' : undefined }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div className="u-row-6">
                       <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: getCatColor(d.id, idx), flexShrink: 0 }} />
                       <span style={{ color: 'var(--primary-accent)', display: 'flex' }}><CategoryIcon categoryId={d.id} fallbackEmoji={d.icon} size={14} /></span>
                       <span>{d.name}</span>
@@ -329,7 +330,7 @@ export function AnalyticsTab({
                     <span>{m.name}</span>
                     <span>
                       {formatAmount(m.amount, currencySymbol)}{' '}
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({m.percentage.toFixed(0)}%)</span>
+                      <span className="u-hint">({m.percentage.toFixed(0)}%)</span>
                     </span>
                   </div>
                   <div style={{ width: '100%', height: '8px', background: 'rgba(15,23,42,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
@@ -352,7 +353,13 @@ export function AnalyticsTab({
           {dailySpendData.length > 0 && (
             <div className="glass-card">
               <h4 style={{ fontSize: '14px', marginBottom: '16px', fontWeight: '600' }}>Daily Spending Trend</h4>
-              <div style={{ width: '100%', overflowX: 'auto' }}>
+              {/* Screen-reader version of the line chart below. */}
+              <ul className="sr-only" aria-label="Daily spending">
+                {dailySpendData.map((d) => (
+                  <li key={d.rawDate}>{d.dateLabel}: {formatAmount(d.amount, currencySymbol)}</li>
+                ))}
+              </ul>
+              <div style={{ width: '100%', overflowX: 'auto' }} aria-hidden="true">
                 <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="none" style={{ minWidth: '350px', opacity: chartFilled ? 1 : 0, transition: 'opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)' }}>
                   <defs>
                     <linearGradient id={trendGradientId} x1="0" y1="0" x2="0" y2="1">

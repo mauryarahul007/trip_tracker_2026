@@ -262,7 +262,7 @@ function NoteContentView({ content, category }: { content: string; category?: st
     let itemsShown = 0;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div className="u-col-8">
         {parsed.meta.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
             {parsed.meta.map((m, idx) => (
@@ -274,7 +274,7 @@ function NoteContentView({ content, category }: { content: string; category?: st
                   background: 'rgba(20, 184, 166, 0.08)',
                   color: 'var(--text-secondary)',
                   fontWeight: 600,
-                  fontSize: '10.5px',
+                  fontSize: '11px',
                 }}
               >
                 {m}
@@ -311,7 +311,7 @@ function NoteContentView({ content, category }: { content: string; category?: st
                 </span>
                 <span
                   style={{
-                    fontSize: '9.5px',
+                    fontSize: '11px',
                     fontWeight: 700,
                     padding: '1px 5px',
                     borderRadius: '4px',
@@ -326,7 +326,7 @@ function NoteContentView({ content, category }: { content: string; category?: st
               {section.quote && (
                 <div
                   style={{
-                    fontSize: '10px',
+                    fontSize: '11px',
                     color: 'var(--text-secondary)',
                     fontStyle: 'italic',
                     padding: '3px 6px',
@@ -355,7 +355,7 @@ function NoteContentView({ content, category }: { content: string; category?: st
                     <span style={{ fontSize: '12px' }}>{item.icon || '•'}</span>
                     <span style={{ fontWeight: 600 }}>{item.text}</span>
                     {item.note && (
-                      <span style={{ fontSize: '9.5px', color: 'var(--text-muted)' }}>
+                      <span className="u-hint">
                         — {item.note}
                       </span>
                     )}

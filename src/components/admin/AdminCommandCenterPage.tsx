@@ -387,9 +387,9 @@ export function AdminCommandCenterPage({
           <h2>Command Center</h2>
           <p>Everything that needs your eyes today, in one screen — before you drop into a section.</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="u-flex-gap-8">
           <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
-            <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            <IconRefresh size={16} className={isRefreshing ? 'ops-spin' : undefined} /> Refresh
           </button>
         </div>
       </div>
@@ -523,7 +523,7 @@ export function AdminCommandCenterPage({
         {/* Bento Card 2: Consumer Packs */}
         <div className="ops-bento-card">
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="u-between">
               <div className="ops-bento-card-title" style={{ margin: 0 }}>
                 <span>Consumer Packs</span>
               </div>
@@ -578,7 +578,7 @@ export function AdminCommandCenterPage({
         {/* Bento Card 3: Real-Time Heartbeat & Telemetry */}
         <div className="ops-bento-card">
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="u-between">
               <div className="ops-bento-card-title" style={{ margin: 0 }}>
                 <span>📡</span> Service Heartbeat
               </div>
@@ -624,7 +624,7 @@ export function AdminCommandCenterPage({
                     fontSize: '11.5px',
                   }}
                 >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="u-row-8">
                     <span className={`ops-radar-dot ${probe?.status ?? 'idle'}`} />
                     <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
                   </span>
@@ -673,7 +673,7 @@ export function AdminCommandCenterPage({
           {needsAttention.length === 0 ? (
             <div className="ops-empty">Nothing needs attention right now.</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="u-col-8">
               {needsAttention.map((item) => (
                 <div
                   className="ops-attn-row"
@@ -729,7 +729,7 @@ export function AdminCommandCenterPage({
           {filteredActivity.length === 0 ? (
             <div className="ops-empty">No {activityFilter === 'all' ? '' : activityFilter} events recorded yet.</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="u-col-8">
               {filteredActivity.map((l) => (
                 <div key={l.id} style={{ fontSize: '11.5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <code className="ops-flag-key" title={new Date(l.createdAt).toLocaleString()} style={{ flexShrink: 0, fontSize: '10px' }}>
@@ -790,7 +790,7 @@ export function AdminCommandCenterPage({
             Export bug ledger
           </button>
           <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
-            {isRefreshing ? 'Refreshing...' : 'Refresh all data'}
+            Refresh all data
           </button>
         </div>
       </div>

@@ -1,6 +1,21 @@
-export type HapticPreference = 'standard' | 'subtle' | 'off';
+import { Capacitor } from '@capacitor/core';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+
+// 'important' (enableCalmHaptics): only commitments buzz -- medium/heavy/
+// success/warning. The 235 'light' taps (tab switches, opening menus) stay
+// silent, so a buzz means something happened.
+export type HapticPreference = 'standard' | 'important' | 'subtle' | 'off';
 
 const HAPTIC_STORAGE_KEY = 'tt_haptic_preference';
+
+// What an unset preference means. App.tsx switches it (and native haptics)
+// on while enableCalmHaptics is ON; OFF keeps the old 'standard' behavior.
+let defaultPreference: HapticPreference = 'standard';
+let useNativeHaptics = false;
+export function configureHaptics(opts: { calm: boolean }): void {
+  defaultPreference = opts.calm ? 'important' : 'standard';
+  useNativeHaptics = opts.calm && Capacitor.isNativePlatform();
+}
 
 /**
  * Get active haptic feedback preference from localStorage.
@@ -12,13 +27,13 @@ export function getHapticPreference(): HapticPreference {
   }
   try {
     const val = localStorage.getItem(HAPTIC_STORAGE_KEY);
-    if (val === 'subtle' || val === 'off' || val === 'standard') {
+    if (val === 'subtle' || val === 'off' || val === 'standard' || val === 'important') {
       return val;
     }
   } catch {
     // LocalStorage access restricted
   }
-  return 'standard';
+  return defaultPreference;
 }
 
 /**
@@ -43,16 +58,29 @@ export function setHapticPreference(pref: HapticPreference): void {
 export function triggerHaptic(
   type: 'light' | 'medium' | 'heavy' | 'success' | 'warning' = 'light'
 ) {
-  if (
-    typeof window === 'undefined' ||
-    !('navigator' in window) ||
-    typeof navigator.vibrate !== 'function'
-  ) {
+  if (typeof window === 'undefined') return;
+
+  const pref = getHapticPreference();
+  if (pref === 'off' || (pref === 'important' && type === 'light')) {
     return;
   }
 
-  const pref = getHapticPreference();
-  if (pref === 'off') {
+  // iOS WebViews have no navigator.vibrate, so native builds go through the
+  // Capacitor plugin (the Taptic engine on iPhone).
+  if (useNativeHaptics) {
+    try {
+      if (type === 'success' || type === 'warning') {
+        void Haptics.notification({ type: type === 'success' ? NotificationType.Success : NotificationType.Warning });
+      } else {
+        void Haptics.impact({ style: type === 'heavy' ? ImpactStyle.Heavy : type === 'medium' ? ImpactStyle.Medium : ImpactStyle.Light });
+      }
+    } catch {
+      // Plugin unavailable -- no feedback, never an error.
+    }
+    return;
+  }
+
+  if (!('navigator' in window) || typeof navigator.vibrate !== 'function') {
     return;
   }
 

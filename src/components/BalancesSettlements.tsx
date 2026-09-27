@@ -2,8 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import type { Expense, Group, Member, Trip } from '../types';
 import type { MemberBalance, Transfer } from '../utils/settlement';
-import { IconEdit, IconShare, IconClose } from './Icons';
-import { formatAmount, getCurrencySymbol } from '../utils/currency';
+import { IconEdit, IconShare, IconClose, IconSparkles, IconMembers } from './Icons';
+import { formatAmount, getCurrencySymbol, formatMoneyNumber } from '../utils/currency';
 import { sendPushNotification } from '../services/pushApi';
 import { useTripStore } from '../store/tripStore';
 import { avatarColorForName } from '../utils/avatarColor';
@@ -22,6 +22,7 @@ import { playTicketTear, playStampThud } from '../utils/soundEffects';
 import { useDataSaverEnabled } from '../hooks/useDataSaverEnabled';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useHistoryBack } from '../utils/useHistoryBack';
+import { shareTextOrWhatsApp } from '../utils/shareText';
 
 
 type Props = {
@@ -224,7 +225,7 @@ function TransferRow({
       [fromLinkedUserId],
       tripName || 'Trip Tracker',
       'settlement_reminder',
-      { toLabel: t.toLabel, amount: t.amount.toFixed(2), currency: currencySymbol, fromMemberId: t.fromMemberId, toMemberId: t.toMemberId },
+      { toLabel: t.toLabel, amount: formatMoneyNumber(t.amount, currencySymbol), currency: currencySymbol, fromMemberId: t.fromMemberId, toMemberId: t.toMemberId },
       tripId
     );
     setReminderStatus(result.ok ? 'sent' : result.rateLimited ? 'rateLimited' : 'idle');
@@ -241,28 +242,9 @@ function TransferRow({
   // button now that "Share Card" covers the same reminder-sharing need.
   const handleShareReminder = async () => {
     triggerHaptic('light');
-    const shareText = `Hey ${t.fromLabel}, just a reminder to settle ${currencySymbol}${settleAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} to ${t.toLabel} for our trip "${tripName || 'Trip'}".`;
+    const shareText = `Hey ${t.fromLabel}, just a reminder to settle ${currencySymbol}${formatMoneyNumber(settleAmount, currencySymbol)} to ${t.toLabel} for our trip "${tripName || 'Trip'}".`;
 
-    const copyToClipboard = () => {
-      void navigator.clipboard.writeText(shareText);
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Trip Settlement Reminder',
-          text: shareText,
-        });
-      } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
-          copyToClipboard();
-        }
-      }
-    } else {
-      copyToClipboard();
-      const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-      window.open(waUrl, '_blank');
-    }
+    await shareTextOrWhatsApp('Trip Settlement Reminder', shareText);
   };
 
   const handleShareCard = async () => {
@@ -446,7 +428,7 @@ function TransferRow({
                   }}
                 >
                   {currencySymbol}
-                  {t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatMoneyNumber(t.amount, currencySymbol)}
                 </strong>
               </>
             ) : isYouReceiver ? (
@@ -462,7 +444,7 @@ function TransferRow({
                   }}
                 >
                   {currencySymbol}
-                  {t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatMoneyNumber(t.amount, currencySymbol)}
                 </strong>
               </>
             ) : (
@@ -478,7 +460,7 @@ function TransferRow({
                   }}
                 >
                   {currencySymbol}
-                  {t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatMoneyNumber(t.amount, currencySymbol)}
                 </strong>
               </>
             )}
@@ -553,7 +535,7 @@ function TransferRow({
           </button>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', paddingTop: '4px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="u-row-8">
               <input
                 type="text"
                 inputMode="decimal"
@@ -580,7 +562,7 @@ function TransferRow({
                   onCustomChange('');
                 }}
               >
-                Settle {currencySymbol}{settleAmount.toFixed(2)}
+                Settle {currencySymbol}{formatMoneyNumber(settleAmount, currencySymbol)}
               </button>
               <button
                 type="button"
@@ -595,7 +577,7 @@ function TransferRow({
 
             {/* Quick Percentage Split Chips */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap', paddingTop: '4px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Quick Split:</span>
+              <span className="u-hint">Quick Split:</span>
               {[25, 50, 75, 100].map((pct) => (
                 <button
                   key={pct}
@@ -683,7 +665,7 @@ function TransferRow({
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div className="u-row-6">
           {members[t.fromMemberId]?.linkedUserId && (
             <button
               type="button"
@@ -764,7 +746,7 @@ function TransferRow({
                   <span>
                     <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{m.name}</span>
                     <span style={{ color: 'var(--text-muted)', marginLeft: '4px' }}>
-                      (Paid: {currencySymbol}{m.totalPaid.toFixed(2)}, Share: {currencySymbol}{m.totalOwed.toFixed(2)})
+                      (Paid: {currencySymbol}{formatMoneyNumber(m.totalPaid, currencySymbol)}, Share: {currencySymbol}{formatMoneyNumber(m.totalOwed, currencySymbol)})
                     </span>
                   </span>
                   <span
@@ -789,7 +771,7 @@ function TransferRow({
                   <span>
                     <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{m.name}</span>
                     <span style={{ color: 'var(--text-muted)', marginLeft: '4px' }}>
-                      (Paid: {currencySymbol}{m.totalPaid.toFixed(2)}, Share: {currencySymbol}{m.totalOwed.toFixed(2)})
+                      (Paid: {currencySymbol}{formatMoneyNumber(m.totalPaid, currencySymbol)}, Share: {currencySymbol}{formatMoneyNumber(m.totalOwed, currencySymbol)})
                     </span>
                   </span>
                   <span
@@ -915,7 +897,7 @@ export function BalancesSettlements({
           [members[t.fromMemberId]!.linkedUserId as string],
           trip.name || 'Trip Tracker',
           'settlement_reminder',
-          { toLabel: t.toLabel, amount: t.amount.toFixed(2), currency: currencySymbol, fromMemberId: t.fromMemberId, toMemberId: t.toMemberId },
+          { toLabel: t.toLabel, amount: formatMoneyNumber(t.amount, currencySymbol), currency: currencySymbol, fromMemberId: t.fromMemberId, toMemberId: t.toMemberId },
           trip.id
         )
       )
@@ -1008,7 +990,7 @@ export function BalancesSettlements({
             padding: '0 4px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="u-row-8">
             <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
               Who owes who
             </h2>
@@ -1026,7 +1008,7 @@ export function BalancesSettlements({
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="u-row-8">
             {isAdmin && remindableCount >= 2 && (
               <button
                 type="button"
@@ -1071,7 +1053,7 @@ export function BalancesSettlements({
                 void updateApprovalThreshold(trip.id, Number.isFinite(parsed) && (parsed as number) > 0 ? parsed : null);
               }}
             />
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{currencySymbol}</span>
+            <span className="u-hint">{currencySymbol}</span>
           </div>
         )}
 
@@ -1181,8 +1163,8 @@ export function BalancesSettlements({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px', lineHeight: 1.5, color: 'var(--text-secondary)' }}>
                 <div style={{ padding: '10px 12px', borderRadius: '10px', background: isSimplified ? 'rgba(15, 111, 99, 0.08)' : 'var(--bg-page)', border: isSimplified ? '1px solid rgba(15, 111, 99, 0.28)' : '1px solid var(--border-color)' }}>
                   <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>⚡ Simplified Debts</span>
-                    {isSimplified && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', background: 'var(--primary-accent)', color: '#fff' }}>Active</span>}
+                    <IconSparkles size={14} /><span>Simplified Debts</span>
+                    {isSimplified && <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '4px', background: 'var(--primary-accent)', color: '#fff' }}>Active</span>}
                   </div>
                   <div>
                     Uses a greedy flow algorithm to minimize the total number of payments across the trip. A member might pay someone they didn't directly split with, but the net group money balances out with fewer total bank transfers.
@@ -1191,8 +1173,8 @@ export function BalancesSettlements({
 
                 <div style={{ padding: '10px 12px', borderRadius: '10px', background: !isSimplified ? 'rgba(15, 111, 99, 0.08)' : 'var(--bg-page)', border: !isSimplified ? '1px solid rgba(15, 111, 99, 0.28)' : '1px solid var(--border-color)' }}>
                   <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>👥 Direct Bilateral Debts</span>
-                    {!isSimplified && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', background: 'var(--primary-accent)', color: '#fff' }}>Active</span>}
+                    <IconMembers size={14} /><span>Direct Bilateral Debts</span>
+                    {!isSimplified && <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '4px', background: 'var(--primary-accent)', color: '#fff' }}>Active</span>}
                   </div>
                   <div>
                     You only reimburse the exact person who fronted the money for your share. No debt routing through third parties. Great if you prefer direct 1-on-1 settlements with the payer.
@@ -1252,8 +1234,8 @@ export function BalancesSettlements({
               gap: '12px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '15px' }}>⚡</span>
+            <div className="u-row-8">
+              <span style={{ display: 'inline-flex', color: 'var(--primary-accent)' }}><IconSparkles size={16} /></span>
               <div>
                 <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
                   {isSimplified ? 'Simplified Settlements' : 'Direct Settlements'}

@@ -1,12 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member, TripStop } from '../types';
-import { IconArchive, IconMapPin, IconSearch, IconPlus, IconEdit, IconTrash, IconCopy, IconRefresh, IconLayers, IconList, IconQrCode, IconX } from './Icons';
+import { IconArchive, IconMapPin, IconSearch, IconPlus, IconEdit, IconTrash, IconCopy, IconRefresh, IconLayers, IconList, IconQrCode, IconX, IconShield, IconPlane, IconSparkles } from './Icons';
 import { ActionSheet } from './common/ActionSheet';
 import { DateRangePicker } from './DateRangePicker';
 import { getCurrencySymbol } from '../utils/currency';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
+import { guessTripCurrency, suggestTripName } from '../utils/tripSuggest';
+import { currencyForCountry, didYouMean, splitDestination } from '../services/placeSuggest';
+import { DestinationInput } from './DestinationInput';
 import { newId } from '../utils/uuid';
 import { useTripStore } from '../store/tripStore';
 import { TripStack, useTripPhoto, useDestinationWeather, getFallbackTravelPhoto, PEEK_COVER_WIDTH } from './TripStack';
@@ -207,6 +210,7 @@ function LuxuryGridTripCard({
   return (
     <div
       className={`concept2-grid-card tone-${tone}`}
+      data-trip-card={trip.id}
       role="button"
       tabIndex={0}
       aria-label={`Open trip ${trip.name}. Long press or right-click for options.`}
@@ -601,6 +605,7 @@ export function TripsListScreen({
   const handleApplyTemplate = (tpl: 'weekend' | 'roadtrip' | 'flatmates' | 'vacation') => {
     triggerHaptic('light');
     setSelectedTemplate(tpl);
+    setNameTouched(true);
     const today = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     const formatYMD = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -652,6 +657,204 @@ export function TripsListScreen({
       setDateError('');
     }
   };
+
+  // enableQuickTripCreate: destination first; typing it suggests the trip
+  // name and currency until the traveler edits those themselves. Dates stay
+  // required (trips.start_date/end_date are NOT NULL).
+  const quickCreate = !editingTripId && isFeatureEnabled('enableQuickTripCreate', { userId: userId || undefined });
+  const [nameTouched, setNameTouched] = useState(false);
+  const [currencyTouched, setCurrencyTouched] = useState(false);
+  useEffect(() => {
+    if (!showAddTrip) return;
+    setNameTouched(false);
+    setCurrencyTouched(false);
+  }, [showAddTrip]);
+  const applyDestinationSuggestions = (destination: string, countryCode?: string) => {
+    if (!nameTouched) setNewTripName(suggestTripName(destination));
+    if (!currencyTouched) {
+      // A picked place knows its country; typed text falls back to keywords.
+      const guessed = (countryCode && currencyForCountry(countryCode)) || guessTripCurrency(destination);
+      setNewTripCurrency(guessed ?? 'INR');
+    }
+  };
+  // enableDestinationAutocomplete: suggestions + "did you mean" on the
+  // destination, in both New and Edit trip. Past destinations are offered
+  // too, except ones that are themselves likely typos (no "Swtizerland").
+  const destinationAutocomplete = isFeatureEnabled('enableDestinationAutocomplete', { userId: userId || undefined });
+  const pastDestinations = useMemo(() => {
+    const names = new Set<string>();
+    for (const t of trips) for (const place of splitDestination(t.destination || '')) {
+      if (!didYouMean(place, [])) names.add(place);
+    }
+    return [...names].slice(0, 40);
+  }, [trips]);
+  const nameBlock = (
+    <>
+      <div className="input-group">
+        <label className="form-label" htmlFor="new_trip_name">{quickCreate ? 'Trip name *' : 'Trip Name *'}</label>
+        <input
+          id="new_trip_name"
+          type="text"
+          className="input-field"
+          placeholder="e.g. Goa Trip 2026"
+          value={newTripName}
+          onChange={(e) => {
+            setNewTripName(e.target.value);
+            setNameTouched(true);
+            setSelectedTemplate(null);
+          }}
+          autoFocus={!quickCreate}
+        />
+      </div>
+    </>
+  );
+  const destinationBlock = (
+    <>
+      {/* Route Stops / Waypoints Builder */}
+      <div className="input-group">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+          <label className="form-label" htmlFor="new_trip_destination" style={{ marginBottom: 0 }}>
+            {quickCreate ? 'Where to?' : isFeatureEnabled('enableRouteStops') ? 'Destinations & Stops (Optional)' : 'Destination (Optional)'}
+          </label>
+          {isFeatureEnabled('enableRouteStops') && (
+            <button
+              type="button"
+              onClick={() => {
+                const nextId = newId();
+                if (newTripStops.length === 0) {
+                  const firstVal = newTripDestination.trim();
+                  setNewTripStops([
+                    { id: newId(), name: firstVal || '' },
+                    { id: nextId, name: '' },
+                  ]);
+                  setNewTripDestination('');
+                } else {
+                  setNewTripStops([...newTripStops, { id: nextId, name: '' }]);
+                }
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--primary-accent)',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              <span>+ Add Stop</span>
+            </button>
+          )}
+        </div>
+
+        {newTripStops.length === 0 || !isFeatureEnabled('enableRouteStops') ? (
+          <div>
+            <DestinationInput
+              id="new_trip_destination"
+              placeholder="e.g. Manali, Himachal or Kyoto, Japan"
+              value={newTripDestination}
+              autoFocus={quickCreate}
+              enabled={destinationAutocomplete}
+              pastDestinations={pastDestinations}
+              onChange={(value, picked) => {
+                setNewTripDestination(value);
+                setSelectedTemplate(null);
+                if (quickCreate) applyDestinationSuggestions(value, picked?.countryCode);
+              }}
+            />
+            <div style={{ marginTop: '4px' }}>
+              <span className="u-hint">
+                Auto-fetches tourism photography & route maps
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="u-col-8">
+            {newTripStops.map((stop: TripStop, sIdx: number) => {
+              const isStart = sIdx === 0;
+              const isLast = sIdx === newTripStops.length - 1;
+              return (
+                <div key={stop.id || sIdx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      color: '#FFFFFF',
+                      background: isStart ? '#0284C7' : isLast ? '#FF7A00' : '#0D5C9E',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {sIdx + 1}
+                  </span>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder={isStart ? 'Start place (e.g. Delhi)' : isLast ? 'Final destination (e.g. Kasol)' : `Stop ${sIdx + 1} (e.g. Manali)`}
+                    value={stop.name}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setNewTripStops(newTripStops.map((s: TripStop, idx: number) => (idx === sIdx ? { ...s, name: val } : s)));
+                    }}
+                    style={{ flex: 1, padding: '10px 12px' }}
+                  />
+                  {newTripStops.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewTripStops(newTripStops.filter((_: TripStop, idx: number) => idx !== sIdx));
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        padding: '6px',
+                        fontSize: '14px',
+                        lineHeight: 1,
+                      }}
+                      title="Remove stop"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+              <span className="u-hint">
+                Connects stops into a route map on the trip dashboard
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const nextId = newId();
+                  setNewTripStops([...newTripStops, { id: nextId, name: '' }]);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--primary-accent)',
+                  fontSize: '11.5px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                + Add another stop
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
 
   return (
     <div
@@ -713,7 +916,7 @@ export function TripsListScreen({
                 aria-label="Superadmin Bug Tracker"
                 title="Superadmin Bug Tracker"
               >
-                <span>🛡️</span>
+                <IconShield size={18} />
               </button>
             )}
             <button
@@ -738,7 +941,7 @@ export function TripsListScreen({
               className={`concept2-filter-btn ${statusFilter === 'all' ? 'active' : ''}`}
               onClick={() => { triggerHaptic('light'); setStatusFilter('all'); }}
             >
-              All {categorizedCounts.all > 0 && <span className="filter-count-badge">{categorizedCounts.all}</span>}
+              All <span className="filter-count-badge">{categorizedCounts.all}</span>
             </button>
             <button
               type="button"
@@ -747,7 +950,7 @@ export function TripsListScreen({
               className={`concept2-filter-btn ${statusFilter === 'active' ? 'active' : ''}`}
               onClick={() => { triggerHaptic('light'); setStatusFilter('active'); }}
             >
-              Active {categorizedCounts.active > 0 && <span className="filter-count-badge">{categorizedCounts.active}</span>}
+              Active <span className="filter-count-badge">{categorizedCounts.active}</span>
             </button>
             <button
               type="button"
@@ -756,7 +959,7 @@ export function TripsListScreen({
               className={`concept2-filter-btn ${statusFilter === 'past' ? 'active' : ''}`}
               onClick={() => { triggerHaptic('light'); setStatusFilter('past'); }}
             >
-              Past
+              Past <span className="filter-count-badge">{categorizedCounts.past}</span>
             </button>
             <button
               type="button"
@@ -765,7 +968,7 @@ export function TripsListScreen({
               className={`concept2-filter-btn ${statusFilter === 'archived' ? 'active' : ''}`}
               onClick={() => { triggerHaptic('light'); setStatusFilter('archived'); }}
             >
-              Archived {categorizedCounts.archived > 0 && <span className="filter-count-badge">{categorizedCounts.archived}</span>}
+              Archived <span className="filter-count-badge">{categorizedCounts.archived}</span>
             </button>
           </div>
         </div>
@@ -836,165 +1039,18 @@ export function TripsListScreen({
                 </div>
               </div>
             )}
-            <div className="input-group">
-              <label className="form-label" htmlFor="new_trip_name">Trip Name *</label>
-              <input
-                id="new_trip_name"
-                type="text"
-                className="input-field"
-                placeholder="e.g. Goa Trip 2026"
-                value={newTripName}
-                onChange={(e) => {
-                  setNewTripName(e.target.value);
-                  setSelectedTemplate(null);
-                }}
-                autoFocus
-              />
-            </div>
-
-            <div className="trip-form-perf" aria-hidden="true" />
-
-            {/* Route Stops / Waypoints Builder */}
-            <div className="input-group">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                <label className="form-label" htmlFor="new_trip_destination" style={{ marginBottom: 0 }}>
-                  {isFeatureEnabled('enableRouteStops') ? 'Destinations & Stops (Optional)' : 'Destination (Optional)'}
-                </label>
-                {isFeatureEnabled('enableRouteStops') && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const nextId = newId();
-                      if (newTripStops.length === 0) {
-                        const firstVal = newTripDestination.trim();
-                        setNewTripStops([
-                          { id: newId(), name: firstVal || '' },
-                          { id: nextId, name: '' },
-                        ]);
-                        setNewTripDestination('');
-                      } else {
-                        setNewTripStops([...newTripStops, { id: nextId, name: '' }]);
-                      }
-                    }}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--primary-accent)',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
-                  >
-                    <span>+ Add Stop</span>
-                  </button>
-                )}
-              </div>
-
-              {newTripStops.length === 0 || !isFeatureEnabled('enableRouteStops') ? (
-                <div>
-                  <input
-                    id="new_trip_destination"
-                    type="text"
-                    className="input-field"
-                    placeholder="e.g. Manali, Himachal or Kyoto, Japan"
-                    value={newTripDestination}
-                    onChange={(e) => {
-                      setNewTripDestination(e.target.value);
-                      setSelectedTemplate(null);
-                    }}
-                  />
-                  <div style={{ marginTop: '4px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      Auto-fetches tourism photography & route maps
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {newTripStops.map((stop: TripStop, sIdx: number) => {
-                    const isStart = sIdx === 0;
-                    const isLast = sIdx === newTripStops.length - 1;
-                    return (
-                      <div key={stop.id || sIdx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span
-                          style={{
-                            width: '24px',
-                            height: '24px',
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '11px',
-                            fontWeight: 800,
-                            color: '#FFFFFF',
-                            background: isStart ? '#0284C7' : isLast ? '#FF7A00' : '#0D5C9E',
-                            flexShrink: 0,
-                          }}
-                        >
-                          {sIdx + 1}
-                        </span>
-                        <input
-                          type="text"
-                          className="input-field"
-                          placeholder={isStart ? 'Start place (e.g. Delhi)' : isLast ? 'Final destination (e.g. Kasol)' : `Stop ${sIdx + 1} (e.g. Manali)`}
-                          value={stop.name}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setNewTripStops(newTripStops.map((s: TripStop, idx: number) => (idx === sIdx ? { ...s, name: val } : s)));
-                          }}
-                          style={{ flex: 1, padding: '10px 12px' }}
-                        />
-                        {newTripStops.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setNewTripStops(newTripStops.filter((_: TripStop, idx: number) => idx !== sIdx));
-                            }}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: 'var(--text-muted)',
-                              cursor: 'pointer',
-                              padding: '6px',
-                              fontSize: '14px',
-                              lineHeight: 1,
-                            }}
-                            title="Remove stop"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      Connects stops into a route map on the trip dashboard
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const nextId = newId();
-                        setNewTripStops([...newTripStops, { id: nextId, name: '' }]);
-                      }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--primary-accent)',
-                        fontSize: '11.5px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      + Add another stop
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            {quickCreate ? (
+              <>
+                {destinationBlock}
+                {nameBlock}
+              </>
+            ) : (
+              <>
+                {nameBlock}
+                <div className="trip-form-perf" aria-hidden="true" />
+                {destinationBlock}
+              </>
+            )}
 
             <div className="trip-form-perf" aria-hidden="true" />
 
@@ -1020,8 +1076,11 @@ export function TripsListScreen({
                   id="new-trip-currency"
                   className="input-field select-field"
                   value={newTripCurrency}
-                  onChange={(e) => setNewTripCurrency(e.target.value)}
+                  onChange={(e) => { setNewTripCurrency(e.target.value); setCurrencyTouched(true); }}
                 >
+                  {!['INR', 'USD', 'EUR', 'GBP'].includes(newTripCurrency) && (
+                    <option value={newTripCurrency}>{newTripCurrency} (suggested)</option>
+                  )}
                   <option value="INR">INR (₹)</option>
                   <option value="USD">USD ($)</option>
                   <option value="EUR">EUR (€)</option>
@@ -1044,7 +1103,7 @@ export function TripsListScreen({
           <div className="luxury-boarding-empty">
             <div className="luxury-boarding-glow" aria-hidden="true" />
             <div className="luxury-boarding-badge">
-              <span>✈️</span> READY FOR DEPARTURE
+              <IconPlane size={13} /> READY FOR DEPARTURE
             </div>
             <h2 className="luxury-boarding-title">Where will your next journey begin?</h2>
             <p className="luxury-boarding-subtitle">
@@ -1104,7 +1163,7 @@ export function TripsListScreen({
                   className="luxury-boarding-demo-btn"
                   onClick={onLoadDemoTrip}
                 >
-                  <span>✨</span>
+                  <IconSparkles size={16} />
                   <span>Explore Demo Trip</span>
                 </button>
               )}

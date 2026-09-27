@@ -21,6 +21,7 @@ if (typeof globalThis.navigator === 'undefined') {
 }
 
 import {
+  configureHaptics,
   getHapticPreference,
   setHapticPreference,
   triggerHaptic,
@@ -107,5 +108,23 @@ describe('haptics utility', () => {
     triggerHaptic('success');
 
     expect(vibrateMock).not.toHaveBeenCalled();
+  });
+
+  it('important-only skips light taps but keeps commitments, and becomes the default under calm haptics', () => {
+    const vibrateMock = vi.fn();
+    Object.defineProperty(navigator, 'vibrate', { value: vibrateMock, configurable: true, writable: true });
+    configureHaptics({ calm: true });
+    try {
+      expect(getHapticPreference()).toBe('important');
+      triggerHaptic('light');
+      expect(vibrateMock).not.toHaveBeenCalled();
+      triggerHaptic('success');
+      expect(vibrateMock).toHaveBeenCalledWith([10, 35, 15]);
+      setHapticPreference('standard');
+      triggerHaptic('light');
+      expect(vibrateMock).toHaveBeenCalledWith(8);
+    } finally {
+      configureHaptics({ calm: false });
+    }
   });
 });

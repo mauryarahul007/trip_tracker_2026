@@ -3,6 +3,7 @@ import type { Expense } from '../../types';
 import type { ConfirmRequest } from '../ConfirmDialog';
 import { IconArchive, IconTrash } from '../Icons';
 import { SettingsSubscreenFrame } from './SettingsNavHeader';
+import { formatMoneyNumber } from '../../utils/currency';
 
 const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -87,7 +88,7 @@ export function SettingsRecycleBinScreen({
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: '14px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</div>
                   <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
-                    <span>{exp.currency} {exp.amount.toFixed(2)}</span> &middot; {exp.deletedAt ? formatTimeLeft(exp.deletedAt) : ''}
+                    <span>{exp.currency} {formatMoneyNumber(exp.amount, exp.currency)}</span> &middot; {exp.deletedAt ? formatTimeLeft(exp.deletedAt) : ''}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>

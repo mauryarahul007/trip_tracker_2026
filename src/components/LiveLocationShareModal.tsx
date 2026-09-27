@@ -114,11 +114,11 @@ export function LiveLocationShareModal({ isOpen, onClose, tripId, memberId, user
         style={{ maxWidth: '420px', width: '100%', padding: '0', overflow: 'hidden', borderRadius: '24px' }}
       >
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="u-row-8">
             <span style={{ fontSize: '20px' }}>📍</span>
             <div>
               <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Live Location Share</h3>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Public link -- no login needed to view</span>
+              <span className="u-hint">Public link -- no login needed to view</span>
             </div>
           </div>
           <button type="button" className="secondary-btn" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={onClose}>Close</button>
@@ -145,7 +145,7 @@ export function LiveLocationShareModal({ isOpen, onClose, tripId, memberId, user
               <div style={{ padding: '10px 12px', borderRadius: '12px', background: 'rgba(23,182,166,0.08)', border: '1px solid rgba(23,182,166,0.25)', fontSize: '12.5px' }}>
                 Sharing your location{expiresAt ? ` -- expires ${formatRelativeTime(expiresAt)}` : ''}. Keep the app open to keep updating.
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div className="u-flex-gap-8">
                 <button type="button" className="secondary-btn" style={{ flex: 1, padding: '9px', fontSize: '12.5px' }} onClick={handleCopy}>
                   {copied ? '✓ Copied' : 'Copy Link'}
                 </button>

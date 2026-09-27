@@ -8,7 +8,7 @@ type ViewTransition = {
   finished: Promise<void>;
 };
 
-export function withViewTransition(update: () => void | Promise<void>): void {
+export function withViewTransition(update: () => void | Promise<void>): ViewTransition | undefined {
   const doc = document as Document & {
     startViewTransition?: (callback: () => void | Promise<void>) => ViewTransition;
   };
@@ -24,7 +24,8 @@ export function withViewTransition(update: () => void | Promise<void>): void {
     // a real crash ("Transition was skipped" / "...aborted...").
     transition.ready.catch(() => {});
     transition.finished.catch(() => {});
-  } else {
-    update();
+    return transition;
   }
+  update();
+  return undefined;
 }

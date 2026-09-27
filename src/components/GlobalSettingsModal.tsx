@@ -218,7 +218,7 @@ export function GlobalSettingsModal({
           <div className="app-header-top">
             <div className="app-title-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <h2 id="global-settings-title" className="app-logo" style={{ fontSize: '20px', color: '#FFFFFF' }}>Settings</h2>
-              <span style={{ fontSize: '10.5px', fontFamily: 'var(--font-family-mono)', background: 'rgba(23, 182, 166, 0.2)', color: '#38BDF8', border: '1px solid rgba(56, 189, 248, 0.35)', padding: '1px 7px', borderRadius: '10px', fontWeight: 700 }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-family-mono)', background: 'rgba(23, 182, 166, 0.2)', color: '#38BDF8', border: '1px solid rgba(56, 189, 248, 0.35)', padding: '1px 7px', borderRadius: '10px', fontWeight: 700 }}>
                 v{appVersion}
               </span>
             </div>

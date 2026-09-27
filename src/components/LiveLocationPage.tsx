@@ -4,6 +4,7 @@ import { Map as MaplibreMap, Marker, setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { getSharedLocation, type SharedLocation } from '../services/locationShareApi';
 import { formatRelativeTime } from '../utils/relativeTime';
+import { IconMapPin } from './Icons';
 
 setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.js`);
 
@@ -66,7 +67,7 @@ export function LiveLocationPage() {
     if (markerRef.current) {
       markerRef.current.setLngLat([location.lng, location.lat]);
     } else {
-      markerRef.current = new Marker({ color: '#2F6FED' }).setLngLat([location.lng, location.lat]).addTo(mapRef.current);
+      markerRef.current = new Marker({ color: '#0F6F63' }).setLngLat([location.lng, location.lat]).addTo(mapRef.current);
     }
     mapRef.current.panTo([location.lng, location.lat]);
 
@@ -83,27 +84,35 @@ export function LiveLocationPage() {
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0F172A' }}>
-      <div style={{ padding: '16px 20px', color: '#fff', background: 'rgba(15,23,42,0.9)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <span style={{ fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.7 }}>Trip Tracker · Live Location</span>
+    <div className="share-page share-page-live">
+      <header className="share-live-bar">
+        <div className="share-pass-eyebrow">Trip Tracker · Live location</div>
         {status === 'ok' && location && (
           <>
-            <span style={{ fontSize: '18px', fontWeight: 700 }}>{location.memberName} · {location.tripName}</span>
-            <span style={{ fontSize: '12.5px', opacity: 0.75 }}>Updated {formatRelativeTime(location.updatedAt)}</span>
+            <div className="share-live-name">{location.memberName} · {location.tripName}</div>
+            <div className="share-live-meta">
+              <span className="share-live-dot" aria-hidden="true" />
+              Updated {formatRelativeTime(location.updatedAt)}
+            </div>
           </>
         )}
-        {status === 'loading' && <span style={{ fontSize: '14px', opacity: 0.8 }}>Loading…</span>}
-        {status === 'ended' && <span style={{ fontSize: '14px', opacity: 0.8 }}>This share has ended or expired.</span>}
-      </div>
+        {status === 'loading' && (
+          <div role="status" aria-label="Loading location" style={{ display: 'grid', gap: '6px', marginTop: '4px' }}>
+            <div className="skeleton" style={{ width: '60%', height: '18px' }} />
+            <div className="skeleton" style={{ width: '35%', height: '12px' }} />
+          </div>
+        )}
+        {status === 'ended' && <div className="share-live-meta">This share has ended or expired.</div>}
+      </header>
 
-      <div ref={mapContainerRef} style={{ flex: 1, minHeight: '300px' }} />
+      <div ref={mapContainerRef} className="share-live-map" />
 
       {status === 'ended' && (
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <div style={{ background: 'rgba(15,23,42,0.85)', color: '#fff', padding: '16px 24px', borderRadius: '16px', textAlign: 'center', maxWidth: '280px' }}>
-            <div style={{ fontSize: '28px', marginBottom: '8px' }}>📍</div>
-            <div style={{ fontSize: '14px', fontWeight: 600 }}>This location share has ended</div>
-            <div style={{ fontSize: '12px', opacity: 0.7, marginTop: '4px' }}>Links expire automatically after 12 hours, or when the traveler stops sharing.</div>
+        <div className="share-live-ended">
+          <div className="share-pass share-pass-ended">
+            <span className="share-pass-ended-icon" aria-hidden="true"><IconMapPin size={22} /></span>
+            <h1 className="share-pass-title">This location share has ended</h1>
+            <p className="share-pass-sub">Links expire automatically after 12 hours, or when the traveler stops sharing.</p>
           </div>
         </div>
       )}

@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { getReceiptSignedUrl } from '../services/tripApi';
 import { IconEdit, IconTrash, IconCopy, IconAlertCircle, IconClose } from './Icons';
-import { getCurrencySymbol } from '../utils/currency';
+import { getCurrencySymbol, formatMoneyNumber } from '../utils/currency';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
 
@@ -83,7 +83,7 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
           <button
             type="button"
             aria-label="Close"
-            className="secondary-btn"
+            className="secondary-btn hit-area"
             style={{ padding: '6px', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
             onClick={onClose}
           >
@@ -235,7 +235,7 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
               Total Expense
             </span>
             <span className="money" style={{ fontSize: '30px', fontWeight: '700', color: 'var(--primary-accent)' }}>
-              {currencySymbol} {expense.amount.toFixed(2)}
+              {currencySymbol} {formatMoneyNumber(expense.amount, currencySymbol)}
             </span>
           </div>
 
@@ -335,21 +335,21 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
                       {item.name || `Item #${idx + 1}`} ({item.assignedMemberIds.map(id => members[id]?.name || 'Unknown').join(', ') || 'Shared'})
                     </span>
                     <span className="money" style={{ fontWeight: 500, color: 'var(--text-primary)' }}>
-                      {currencySymbol} {item.amount.toFixed(2)}
+                      {currencySymbol} {formatMoneyNumber(item.amount, currencySymbol)}
                     </span>
                   </div>
                 ))}
                 {(Boolean(expense.itemizedConfig.tax) || Boolean(expense.itemizedConfig.tip) || Boolean(expense.itemizedConfig.discount)) && (
                   <div style={{ paddingTop: '6px', borderTop: '1px dashed var(--border-color)', display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '11px', color: 'var(--text-muted)' }}>
-                    {Boolean(expense.itemizedConfig.tax) && <span>Tax: {currencySymbol}{expense.itemizedConfig.tax?.toFixed(2)}</span>}
-                    {Boolean(expense.itemizedConfig.tip) && <span>Tip: {currencySymbol}{expense.itemizedConfig.tip?.toFixed(2)}</span>}
-                    {Boolean(expense.itemizedConfig.discount) && <span>Discount: -{currencySymbol}{expense.itemizedConfig.discount?.toFixed(2)}</span>}
+                    {Boolean(expense.itemizedConfig.tax) && <span>Tax: {currencySymbol}{formatMoneyNumber(expense.itemizedConfig.tax ?? 0, currencySymbol)}</span>}
+                    {Boolean(expense.itemizedConfig.tip) && <span>Tip: {currencySymbol}{formatMoneyNumber(expense.itemizedConfig.tip ?? 0, currencySymbol)}</span>}
+                    {Boolean(expense.itemizedConfig.discount) && <span>Discount: -{currencySymbol}{formatMoneyNumber(expense.itemizedConfig.discount ?? 0, currencySymbol)}</span>}
                   </div>
                 )}
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="u-col-8">
               {expense.splitMemberIds.map((memId: string) => {
                 const mem = members[memId];
                 const share = expense.resolvedShares[memId] || 0;
@@ -382,7 +382,7 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
                       <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{detailLabel}</span>
                     </span>
                     <strong className="money" style={{ color: 'var(--text-primary)' }}>
-                      {currencySymbol} {share.toFixed(2)}
+                      {currencySymbol} {formatMoneyNumber(share, currencySymbol)}
                     </strong>
                   </div>
                 );

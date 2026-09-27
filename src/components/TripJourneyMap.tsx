@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { Category, Expense } from '../types';
 import { IconMapPin } from './Icons';
-import { getCurrencySymbol } from '../utils/currency';
+import { getCurrencySymbol, formatMoneyNumber } from '../utils/currency';
 import { Map as MaplibreMap, Marker, Popup, NavigationControl, LngLatBounds, setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -120,7 +120,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
             <div style="font-weight: 700; color: #0F172A; margin-bottom: 2px;">#${idx + 1} ${safeTitle}</div>
             ${safePlaceName ? `<div style="font-size: 11px; color: #64748B; margin-bottom: 4px;">📍 ${safePlaceName}</div>` : ''}
             <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 4px; margin-top: 4px;">
-              <span style="font-weight: 600; color: #2F6FED;">${safeCurrency} ${exp.amount.toFixed(2)}</span>
+              <span style="font-weight: 600; color: #2F6FED;">${safeCurrency} ${formatMoneyNumber(exp.amount, safeCurrency)}</span>
               <span style="font-size: 10px; color: #94A3B8;">${safeDate}</span>
             </div>
           </div>
@@ -300,7 +300,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
           borderBottom: '1px solid var(--border-color)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="u-row-8">
           <span style={{ color: '#17B6A6', display: 'flex', alignItems: 'center' }}>
             <IconMapPin size={18} />
           </span>

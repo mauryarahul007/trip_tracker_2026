@@ -2,6 +2,9 @@ import { createPortal } from 'react-dom';
 import type { ParsedQuickExpense } from '../utils/expenseQuickParser';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { useHistoryBack } from '../utils/useHistoryBack';
+import { useDragToDismiss } from '../hooks/useDragToDismiss';
+import { useTripStore } from '../store/tripStore';
+import { formatMoneyNumber } from '../utils/currency';
 
 interface Props {
   isOpen: boolean;
@@ -22,24 +25,30 @@ export function TripbotConfirmSheet({
 }: Props) {
   useHistoryBack(isOpen, onClose);
   useEscapeKey(isOpen, onClose);
+  const motionPolish = useTripStore((s) => s.isFeatureEnabled('enableMotionPolish'));
+  const { ref: sheetRef, handlers: dragHandlers } = useDragToDismiss<HTMLDivElement>(onClose, { enabled: motionPolish });
 
   if (!isOpen || !parsed) return null;
 
   const amountLabel =
     parsed.amount != null
-      ? `${parsed.currency || baseCurrency} ${parsed.amount.toFixed(2)}`
+      ? `${parsed.currency || baseCurrency} ${formatMoneyNumber(parsed.amount, parsed.currency || baseCurrency)}`
       : 'Amount missing';
 
   return createPortal(
     <div className="wa-action-sheet-backdrop" onClick={onClose} role="presentation">
       <div
-        className="wa-action-sheet tripbot-confirm-sheet"
+        ref={sheetRef}
+        className="wa-action-sheet-card wa-sheet-enter tripbot-confirm-sheet"
         role="dialog"
         aria-modal="true"
         aria-label="Confirm tripbot expense"
         onClick={(e) => e.stopPropagation()}
+        {...dragHandlers}
       >
-        <div className="wa-action-sheet-handle" aria-hidden="true" />
+        <div className="wa-action-sheet-handle-wrap" aria-hidden="true">
+          <span className="wa-action-sheet-drag-pill" />
+        </div>
         <h3 className="trip-chat-sheet-title">Add via @tripbot?</h3>
         <p className="trip-chat-sheet-subtitle">Confirm the parsed expense before posting.</p>
         <dl className="tripbot-confirm-fields">

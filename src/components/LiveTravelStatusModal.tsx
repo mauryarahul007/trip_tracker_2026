@@ -79,7 +79,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
       >
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="u-row-8">
             <span style={{ fontSize: '24px' }}>{isFlight ? '✈️' : '🚆'}</span>
             <div>
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>
@@ -117,17 +117,17 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div className="u-row-6">
                   <span style={{ fontSize: '13px', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {displayFlight.airlineName}
                   </span>
                   {displayFlight.icaoCode && (
-                    <span style={{ fontSize: '10.5px', padding: '1px 6px', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.15)', color: '#2563eb', fontWeight: 600, fontFamily: 'monospace' }}>
+                    <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.15)', color: '#2563eb', fontWeight: 600, fontFamily: 'monospace' }}>
                       ICAO: {displayFlight.icaoCode}{displayFlight.flightNumber}
                     </span>
                   )}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="u-row-8">
                   <button
                     type="button"
                     onClick={() => setIsEditingFlight((prev) => !prev)}
@@ -325,7 +325,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                   boxShadow: '0 4px 12px rgba(15, 169, 143, 0.25)',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="u-row-8">
                   <span style={{ fontSize: '18px' }}>🛫</span>
                   <div>
                     <div>Google Live Gate & Flight Status</div>
@@ -358,7 +358,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                   fontSize: '14px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="u-row-8">
                   <span style={{ fontSize: '18px' }}>🗺️</span>
                   <div>
                     <div>FlightAware Live Flight Tracker</div>
@@ -389,7 +389,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                   fontSize: '14px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="u-row-8">
                   <span style={{ fontSize: '18px' }}>📡</span>
                   <div>
                     <div>Flightradar24 Live Radar Track</div>
@@ -421,7 +421,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                     fontSize: '14px',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="u-row-8">
                     <span style={{ fontSize: '18px' }}>⏱️</span>
                     <div>
                       <div>FlightStats Global Status</div>
@@ -458,7 +458,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                     boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="u-row-8">
                     <span style={{ fontSize: '18px' }}>🎫</span>
                     <div>
                       <div>Check Live PNR Berth Status</div>
@@ -491,7 +491,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                     fontSize: '14px',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="u-row-8">
                     <span style={{ fontSize: '18px' }}>📍</span>
                     <div>
                       <div>Live Train Running Status (NTES)</div>
@@ -524,7 +524,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                     fontSize: '14px',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="u-row-8">
                     <span style={{ fontSize: '18px' }}>🚆</span>
                     <div>
                       <div>RailYatri PNR Confirmation Check</div>

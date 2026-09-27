@@ -85,7 +85,7 @@ export const PassScannerModal: React.FC<Props> = ({ isOpen, onClose, pass }) => 
       >
         {/* Top Header Controls */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div className="u-row-6">
             <span style={{ fontSize: '18px' }}>{isFlight ? '✈️' : isTrain ? '🚆' : '🎫'}</span>
             <span style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#64748B' }}>
               {isFlight ? 'Boarding Pass Scanner' : isTrain ? 'Railway Ticket Scanner' : 'Entry Voucher Scanner'}
@@ -139,7 +139,7 @@ export const PassScannerModal: React.FC<Props> = ({ isOpen, onClose, pass }) => 
         <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
           {pass.seatOrRoom && (
             <div style={{ background: '#F8FAFC', border: '1.5px solid #E2E8F0', borderRadius: '12px', padding: '6px 14px', textAlign: 'center' }}>
-              <div style={{ fontSize: '10px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase' }}>
                 {isFlight ? 'Seat' : isTrain ? 'Berth' : 'Room'}
               </div>
               <div style={{ fontSize: '16px', fontWeight: 900, color: '#0F172A', fontFamily: 'monospace' }}>
@@ -150,7 +150,7 @@ export const PassScannerModal: React.FC<Props> = ({ isOpen, onClose, pass }) => 
 
           {pass.startDateTime && (
             <div style={{ background: '#F8FAFC', border: '1.5px solid #E2E8F0', borderRadius: '12px', padding: '6px 14px', textAlign: 'center' }}>
-              <div style={{ fontSize: '10px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase' }}>
                 Departure
               </div>
               <div style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>

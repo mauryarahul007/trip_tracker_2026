@@ -18,6 +18,12 @@ export type ConfirmRequest = {
   // dialogs everywhere else.
   tertiaryLabel?: string;
   onTertiary?: () => void;
+  /** Extra friction for irreversible admin actions: the confirm button stays
+   *  disabled until this exact text is typed (e.g. "DELETE"). */
+  requireText?: string;
+  /** The action shows an Undo toast right after, so a single tap confirms.
+   *  The arm-then-seal double tap is kept for truly permanent actions. */
+  undoable?: boolean;
 };
 
 type Props = {
@@ -35,6 +41,8 @@ const ARM_MS = 3000;
 
 export function ConfirmDialog({ request, onCancel }: Props) {
   const [armed, setArmed] = useState(false);
+  const [typed, setTyped] = useState('');
+  const textLocked = !!request.requireText && typed !== request.requireText;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
 
@@ -57,6 +65,10 @@ export function ConfirmDialog({ request, onCancel }: Props) {
   };
 
   const handleDangerClick = () => {
+    if (request.undoable) {
+      handleConfirm();
+      return;
+    }
     if (armed) {
       clearTimer();
       setArmed(false);
@@ -94,6 +106,20 @@ export function ConfirmDialog({ request, onCancel }: Props) {
         <h3 id="confirm-dialog-title" style={{ fontSize: '17px', marginBottom: '10px' }}>{request.title || 'Please confirm'}</h3>
         <p id="confirm-dialog-desc" style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: request.body ? '12px' : '20px' }}>{request.message}</p>
         {request.body ? <div style={{ marginBottom: '20px' }}>{request.body}</div> : null}
+        {request.requireText && (
+          <label style={{ display: 'block', marginBottom: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+            Type <strong style={{ fontFamily: 'var(--font-family-mono)', color: 'var(--text-primary)' }}>{request.requireText}</strong> to confirm
+            <input
+              type="text"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              style={{ display: 'block', width: '100%', marginTop: '6px', fontFamily: 'var(--font-family-mono)' }}
+            />
+          </label>
+        )}
         <div style={{ display: 'flex', gap: '12px' }}>
           <button
             type="button"
@@ -109,6 +135,7 @@ export function ConfirmDialog({ request, onCancel }: Props) {
               className={`gradient-btn wax-seal-btn${armed ? ' sealing' : ''}`}
               style={{ flex: 1, background: 'var(--color-danger)' }}
               onClick={handleDangerClick}
+              disabled={textLocked}
               aria-label={armed ? 'Tap again to confirm permanent action' : (request.confirmLabel || 'Confirm')}
             >
               <span className="seal-fill" aria-hidden="true" />
@@ -127,7 +154,9 @@ export function ConfirmDialog({ request, onCancel }: Props) {
         </div>
         {request.danger && (
           <p style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '10px' }}>
-            {armed ? 'Tap once more to seal it — this can\'t be undone.' : 'Tap once to arm, tap again to confirm.'}
+            {request.undoable
+              ? 'You can undo this for a few seconds afterwards.'
+              : armed ? 'Tap once more to seal it — this can\'t be undone.' : 'Tap once to arm, tap again to confirm.'}
           </p>
         )}
         {request.tertiaryLabel && request.onTertiary && (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Trip, Member } from '../types';
 import type { Transfer } from '../utils/settlement';
 import { IconCheckCircle, IconCopy } from './Icons';
@@ -10,6 +10,8 @@ import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import { parseTripRoute } from '../utils/routeHelper';
 import { tripDayNumber } from '../utils/dateRange';
 import { PassportStamp } from './common/PassportStamp';
+import { ConfettiBurst } from './ConfettiBurst';
+import { useTripStore } from '../store/tripStore';
 
 interface BoardingPassHeroCardProps {
   trip: Trip;
@@ -229,6 +231,22 @@ export function BoardingPassHeroCard({
 
   const animatedTotalOutstanding = useAnimatedNumber(totalOutstanding, 280);
 
+  // enableMotionPolish: the moment the last balance clears (not on first
+  // render of an already-settled trip), the stamp slams down with confetti
+  // and a success haptic.
+  const motionPolish = useTripStore((s) => s.isFeatureEnabled('enableMotionPolish'));
+  const [justSettled, setJustSettled] = useState(false);
+  const wasSettledRef = useRef(isFullySettled);
+  useEffect(() => {
+    const was = wasSettledRef.current;
+    wasSettledRef.current = isFullySettled;
+    if (!motionPolish || was || !isFullySettled) return;
+    triggerHaptic('success');
+    setJustSettled(true);
+    const t = window.setTimeout(() => setJustSettled(false), 1400);
+    return () => window.clearTimeout(t);
+  }, [isFullySettled, motionPolish]);
+
   const weatherCandidates = [
     ...(trip.stops?.map((s) => s.name) || []),
     trip.destination || '',
@@ -320,7 +338,8 @@ export function BoardingPassHeroCard({
           <div className="bp-body">
             <div className="bp-who">{isFullySettled ? 'Outstanding' : 'Outstanding to settle'}</div>
             <div
-              className="bp-amount"
+              key={Math.round(totalOutstanding * 100)}
+              className="bp-amount value-bump"
               style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}
             >
               {formatAmount(animatedTotalOutstanding, currencySymbol)}
@@ -336,6 +355,7 @@ export function BoardingPassHeroCard({
                 pointerEvents: 'none',
               }}
               aria-hidden="true"
+              className={justSettled ? 'stamp-settle-bounce' : undefined}
             >
               <PassportStamp
                 destination={parsedRoute.destination || trip.name}
@@ -348,8 +368,11 @@ export function BoardingPassHeroCard({
                 size={52}
               />
             </div>
+            <ConfettiBurst active={justSettled} />
           </div>
 
+          {/* Perforated Lower Line */}
+          <div className="bp-perf" />
           {/* Perforated Lower Line */}
           <div className="bp-perf" />
 

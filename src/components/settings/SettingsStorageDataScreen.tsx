@@ -85,8 +85,8 @@ export function SettingsStorageDataScreen({
                 <span className="settings-storage-color-dot media" />
                 <span>Receipt Photos &amp; Attachments</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              <div className="u-row-8">
+                <span className="u-hint">
                   {storageBreakdown.receiptCount} {storageBreakdown.receiptCount === 1 ? 'receipt' : 'receipts'}
                 </span>
                 <span className="settings-storage-val-badge">
@@ -100,8 +100,8 @@ export function SettingsStorageDataScreen({
                 <span className="settings-storage-color-dot database" />
                 <span>Trip Ledgers &amp; Categories</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              <div className="u-row-8">
+                <span className="u-hint">
                   {tripCount} {tripCount === 1 ? 'trip' : 'trips'}
                 </span>
                 <span className="settings-storage-val-badge">

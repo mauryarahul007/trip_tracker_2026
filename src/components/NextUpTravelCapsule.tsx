@@ -158,11 +158,11 @@ export const NextUpTravelCapsule: React.FC<Props> = ({ trip, passes, onOpenWalle
             setIsMinimized((prev) => !prev);
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="u-row-8">
             <span style={{ fontSize: '15px' }}>{isFlight ? '✈️' : isTrain ? '🚆' : '🏨'}</span>
             <span
               style={{
-                fontSize: '10.5px',
+                fontSize: '11px',
                 fontWeight: 800,
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
@@ -186,8 +186,8 @@ export const NextUpTravelCapsule: React.FC<Props> = ({ trip, passes, onOpenWalle
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+          <div className="u-row-6">
+            <span className="u-hint">
               {isMinimized ? 'Expand ▾' : 'Collapse ▴'}
             </span>
           </div>
@@ -212,7 +212,7 @@ export const NextUpTravelCapsule: React.FC<Props> = ({ trip, passes, onOpenWalle
 
               {pass.seatOrRoom && (
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700 }}>
+                  <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700 }}>
                     {isFlight ? 'Seat' : isTrain ? 'Berth' : 'Room'}
                   </div>
                   <div style={{ fontSize: '15px', fontWeight: 900, color: 'var(--primary-accent)', fontFamily: 'monospace' }}>

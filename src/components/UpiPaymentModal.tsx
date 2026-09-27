@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import type { Member } from '../types';
-import { getCurrencySymbol } from '../utils/currency';
+import { getCurrencySymbol, formatMoneyNumber } from '../utils/currency';
 import { generateUpiUri, isValidUpiId, POPULAR_UPI_APPS } from '../utils/upiLinks';
 import { IconClose } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useDragToDismiss } from '../hooks/useDragToDismiss';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { ConfettiBurst } from './ConfettiBurst';
@@ -43,7 +44,8 @@ export function UpiPaymentModal({
   const dataSaverPref = useDataSaverEnabled();
   const dataSaverActive = isDataSaverFlagEnabled && dataSaverPref;
 
-  const modalRef = useRef<HTMLDivElement>(null);
+  const motionPolish = useTripStore((s) => s.isFeatureEnabled('enableMotionPolish'));
+  const { ref: modalRef, handlers: dragHandlers } = useDragToDismiss<HTMLDivElement>(onClose, { enabled: motionPolish });
   useFocusTrap(modalRef, true, false, onClose);
 
   // Dismiss QR code view first on back/escape; dismiss entire modal if QR is not open
@@ -92,7 +94,7 @@ export function UpiPaymentModal({
         style={{ maxWidth: '440px', width: '100%', padding: '22px' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sheet-drag-handle" aria-hidden="true" />
+        <div className="sheet-drag-handle" aria-hidden="true" {...dragHandlers} />
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>
@@ -123,11 +125,11 @@ export function UpiPaymentModal({
           textAlign: 'center',
           marginBottom: '16px',
         }}>
-          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Amount to Transfer</span>
+          <span className="u-note">Amount to Transfer</span>
           <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--color-success)', marginTop: '2px' }}>
-            {currencySymbol}{amount.toFixed(2)}
+            {currencySymbol}{formatMoneyNumber(amount, currencySymbol)}
           </div>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+          <span className="u-hint">
             From <strong>{payerName}</strong> to <strong>{payeeName}</strong>
           </span>
         </div>

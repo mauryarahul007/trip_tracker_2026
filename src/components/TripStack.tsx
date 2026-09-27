@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { Member, Trip } from '../types';
-import { IconArchive, IconEdit, IconTrash } from './Icons';
+import { IconArchive, IconEdit, IconTrash, IconMapPin } from './Icons';
 import { formatDateRange, tripDayNumber } from '../utils/dateRange';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
@@ -416,7 +416,7 @@ const CardContent = memo(function CardContent({
 
           {routeInfo.stopsCount > 1 && (
             <div className="concept1-route-row" title={routeInfo.full}>
-              <span className="concept1-route-pin" aria-hidden="true">📍</span>
+              <span className="concept1-route-pin" aria-hidden="true"><IconMapPin size={12} /></span>
               <span className="concept1-route-text">{routeInfo.routeSummary}</span>
             </div>
           )}
@@ -802,6 +802,7 @@ function StackCardItem({
     <div
       ref={setCardEl}
       className={`stack-card depth-${idx}${isFront && exit ? ' exiting' : ''}`}
+      data-trip-card={isFront ? trip.id : undefined}
       style={isFront ? { touchAction: 'none' } : undefined}
       onPointerDown={isFront ? handlePointerDown : undefined}
       onPointerMove={isFront ? handlePointerMove : undefined}

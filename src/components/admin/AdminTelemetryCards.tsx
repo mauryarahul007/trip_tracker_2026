@@ -19,6 +19,7 @@ export function GrowthTelemetryCards() {
   const [repeat, setRepeat] = useState<{ eligible: number; repeat: number } | null>(null);
   const [reliability, setReliability] = useState<ReliabilityRow[]>([]);
   const [error, setError] = useState('');
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,6 +29,7 @@ export function GrowthTelemetryCards() {
         setCohorts(c);
         setRepeat(r);
         setReliability(rel);
+        setLoaded(true);
       })
       .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Could not load telemetry. Apply migration 0108.');
@@ -38,6 +40,16 @@ export function GrowthTelemetryCards() {
   }, []);
 
   const groups = groupReliability(reliability);
+
+  // Without this the cards briefly said "No events yet." while still loading.
+  if (!loaded && !error) {
+    return (
+      <div className="ops-split-row" aria-hidden="true">
+        <div className="ops-skeleton-block" style={{ height: 180 }} />
+        <div className="ops-skeleton-block" style={{ height: 180 }} />
+      </div>
+    );
+  }
 
   return (
     <>

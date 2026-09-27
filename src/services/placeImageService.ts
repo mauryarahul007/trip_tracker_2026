@@ -7,6 +7,7 @@
  */
 
 const imageCache = new Map<string, string | null>();
+const inFlight = new Map<string, Promise<string | null>>();
 
 // Cards display these around 300-450 CSS px wide; 960px covers 2x retina
 // with headroom, while staying well under an uncapped original (commons
@@ -237,7 +238,18 @@ export async function fetchPlaceCoverImage(placeInput: string | string[]): Promi
   if (imageCache.has(mainKey)) {
     return imageCache.get(mainKey) ?? null;
   }
+  // The trip card, its peeks, the blurred home backdrop and the trip
+  // dashboard backdrop all ask for the same place at once; share one lookup
+  // instead of each running the full 4-8 request chain (a misspelled
+  // destination produced 40+ 404s per session).
+  const pending = inFlight.get(mainKey);
+  if (pending) return pending;
+  const lookup = lookupPlaceCoverImage(candidates, mainKey).finally(() => inFlight.delete(mainKey));
+  inFlight.set(mainKey, lookup);
+  return lookup;
+}
 
+async function lookupPlaceCoverImage(candidates: string[], mainKey: string): Promise<string | null> {
   for (const query of candidates) {
     const cleaned = query.replace(/[^\w\s,-]/g, '').trim();
     if (!cleaned) continue;

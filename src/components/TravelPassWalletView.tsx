@@ -511,10 +511,10 @@ export function TravelPassWalletView({
               justifyContent: 'space-between',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="u-row-8">
               <span style={{ fontSize: '22px' }}>{theme.icon}</span>
               <div>
-                <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.8px', opacity: 0.85, fontWeight: 700 }}>
+                <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.8px', opacity: 0.85, fontWeight: 700 }}>
                   {pass.provider || theme.label}
                 </span>
                 <h4 style={{ margin: 0, fontSize: '14.5px', fontWeight: 700, color: '#ffffff' }}>
@@ -546,7 +546,7 @@ export function TravelPassWalletView({
           {/* Passenger Info (in standalone or leg group) */}
           {!isMemberContext && (pass.passengerName || isInsideGroup) && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div className="u-row-6">
                 <span style={{ fontSize: '15px' }}>👤</span>
                 <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
                   {pass.passengerName || 'Individual Passenger'}
@@ -582,14 +582,14 @@ export function TravelPassWalletView({
                 paddingBottom: '8px',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div className="u-row-6">
                 <span style={{ fontSize: '16px' }}>{theme.icon}</span>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
                     {pass.title}
                   </div>
                   {pass.provider && (
-                    <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                    <div className="u-hint">
                       {pass.provider}
                     </div>
                   )}
@@ -620,7 +620,7 @@ export function TravelPassWalletView({
                   {pass.origin || '---'}
                 </div>
                 {pass.startDateTime && (
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pass.startDateTime}</div>
+                  <div className="u-hint">{pass.startDateTime}</div>
                 )}
               </div>
 
@@ -633,7 +633,7 @@ export function TravelPassWalletView({
                   {pass.destination || '---'}
                 </div>
                 {pass.endDateTime && (
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pass.endDateTime}</div>
+                  <div className="u-hint">{pass.endDateTime}</div>
                 )}
               </div>
             </div>
@@ -695,12 +695,12 @@ export function TravelPassWalletView({
           {/* Assigned Member Avatars */}
           {assignedMembers.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginRight: '2px' }}>Traveler:</span>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginRight: '2px' }}>Traveler:</span>
               {assignedMembers.map((m) => (
                 <span
                   key={m.id}
                   style={{
-                    fontSize: '10.5px',
+                    fontSize: '11px',
                     padding: '2px 8px',
                     borderRadius: '12px',
                     background: 'rgba(15, 169, 143, 0.1)',
@@ -858,7 +858,7 @@ export function TravelPassWalletView({
           gap: '10px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="u-row-8">
           <span style={{ fontSize: '20px' }}>🎫</span>
           <div>
             <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Ticket &amp; Pass Wallet</h3>
@@ -868,7 +868,7 @@ export function TravelPassWalletView({
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="u-row-8">
           {!isAdding && passes.length > 0 && isFeatureEnabled('enableIcsExport', { tripId: trip.id }) && (
             <button
               type="button"
@@ -937,7 +937,7 @@ export function TravelPassWalletView({
             border: '1px solid var(--border-color)',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="u-between">
             <h4 style={{ fontSize: '15px', fontWeight: 700, margin: 0 }}>
               {editingPassId ? 'Edit Travel Pass' : 'New Travel Pass'}
             </h4>
@@ -1012,7 +1012,7 @@ export function TravelPassWalletView({
 
           {/* Paste tab */}
           {inputTab === 'paste' && !editingPassId && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="u-col-8">
               <textarea
                 rows={4}
                 className="input-field"
@@ -1085,7 +1085,7 @@ export function TravelPassWalletView({
                     gap: '8px',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div className="u-row-6">
                     <span>✨</span>
                     <span>{extractionMessage}</span>
                   </div>
@@ -1168,7 +1168,7 @@ export function TravelPassWalletView({
                       ⚡ Save All {detectedPasses.length} Passes
                     </button>
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  <div className="u-hint">
                     Select a pass to review or edit details, or save all passes to your wallet at once:
                   </div>
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -1216,7 +1216,7 @@ export function TravelPassWalletView({
                     fontSize: '12px',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div className="u-row-6">
                     <span>{(formAttachmentUrl.startsWith('data:application/pdf') || formAttachmentUrl.startsWith('idb:pdf')) ? '📄' : '🖼️'}</span>
                     <span style={{ fontWeight: 600 }}>
                       {(formAttachmentUrl.startsWith('data:application/pdf') || formAttachmentUrl.startsWith('idb:pdf')) ? 'PDF Ticket Document Attached' : 'Ticket Image Attached'}
@@ -1577,7 +1577,7 @@ export function TravelPassWalletView({
 
           {/* Right: Expand All / Collapse All Controls */}
           {hasCollapsibleGroups && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div className="u-row-6">
               <button
                 type="button"
                 className="secondary-btn"
@@ -1769,7 +1769,7 @@ export function TravelPassWalletView({
                           }));
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className="u-row-10">
                           <span style={{ fontSize: '22px' }}>{isMemberGroup ? '👤' : theme.icon}</span>
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -1825,7 +1825,7 @@ export function TravelPassWalletView({
                               title="Click to copy PNR"
                             >
                               <span>PNR: {group.referenceCode}</span>
-                              <span style={{ fontSize: '10px', opacity: 0.8 }}>
+                              <span style={{ fontSize: '11px', opacity: 0.8 }}>
                                 {copiedId === group.key ? '✓' : '📋'}
                               </span>
                             </button>
@@ -1886,7 +1886,7 @@ export function TravelPassWalletView({
                             }}
                           >
                             <span>{isMemberGroup ? '🎫' : '👥'} {group.passes.length} {group.passes.length === 1 ? 'Pass' : 'Passes'}</span>
-                            <span style={{ fontSize: '10px' }}>{isExpanded ? '▲' : '▼'}</span>
+                            <span style={{ fontSize: '11px' }}>{isExpanded ? '▲' : '▼'}</span>
                           </button>
                         </div>
                       </div>

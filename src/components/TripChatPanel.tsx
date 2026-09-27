@@ -56,6 +56,7 @@ import {
   type QueuedChatMessage,
 } from '../services/offlineChatStore';
 import { newId } from '../utils/uuid';
+import { formatMoneyNumber } from '../utils/currency';
 
 const CHAT_PUSH_PREVIEW_LENGTH = 80;
 const EDIT_WINDOW_MS = 15 * 60 * 1000;
@@ -119,7 +120,7 @@ function isLinkPayload(p: TripMessage['payload']): p is TripMessageExpenseLinkPa
 function formatExpenseAmount(currency: string | undefined, amount: unknown): string {
   const n = typeof amount === 'number' ? amount : Number(amount);
   const safe = Number.isFinite(n) ? n : 0;
-  return `${currency || ''} ${safe.toFixed(2)}`.trim();
+  return `${currency || ''} ${formatMoneyNumber(safe, currency || '')}`.trim();
 }
 
 function ChatMediaImage({ path, alt }: { path: string; alt: string }) {
@@ -1177,7 +1178,16 @@ export function TripChatPanel({
         }}
       >
         {isLoading ? (
-          <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '12.5px', padding: '20px' }}>Loading chat...</div>
+          <div role="status" aria-label="Loading chat" style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '8px 4px' }}>
+            {/* Bubble-shaped shimmer (.skeleton) so the list doesn't jump when messages land. */}
+            {[62, 44, 70].map((width, i) => (
+              <div
+                key={i}
+                className="skeleton"
+                style={{ width: `${width}%`, height: '38px', borderRadius: '16px', alignSelf: i % 2 ? 'flex-end' : 'flex-start' }}
+              />
+            ))}
+          </div>
         ) : messages.length === 0 ? (
           <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '12.5px', padding: '20px' }}>
             No messages yet. Say hi to the squad 👋
@@ -1241,7 +1251,7 @@ export function TripChatPanel({
                 }}
               >
                 {!isMine && (
-                  <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--primary-accent)', paddingLeft: '10px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary-accent)', paddingLeft: '10px' }}>
                     {sender?.name || 'Traveler'}
                   </span>
                 )}
@@ -1280,7 +1290,7 @@ export function TripChatPanel({
                         lineHeight: 1.3,
                       }}
                     >
-                      <span style={{ fontWeight: 700, display: 'block', fontSize: '10px', color: isMine ? '#fff' : 'var(--primary-accent)' }}>
+                      <span style={{ fontWeight: 700, display: 'block', fontSize: '11px', color: isMine ? '#fff' : 'var(--primary-accent)' }}>
                         {memberById.get(parentMsg.memberId)?.name || 'Traveler'}
                       </span>
                       <span style={{ opacity: 0.9, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
@@ -1290,7 +1300,7 @@ export function TripChatPanel({
                   )}
 
                   {message.isPinned && (
-                    <span style={{ fontSize: '10px', marginRight: '4px', opacity: 0.8 }} title="Pinned message">
+                    <span style={{ fontSize: '11px', marginRight: '4px', opacity: 0.8 }} title="Pinned message">
                       📌
                     </span>
                   )}
@@ -1336,7 +1346,7 @@ export function TripChatPanel({
                           }}
                         >
                           <span>{emoji}</span>
-                          {memberIds.length > 1 && <span style={{ fontSize: '10px', fontWeight: 600 }}>{memberIds.length}</span>}
+                          {memberIds.length > 1 && <span style={{ fontSize: '11px', fontWeight: 600 }}>{memberIds.length}</span>}
                         </button>
                       );
                     })}
@@ -1345,7 +1355,7 @@ export function TripChatPanel({
 
                 <span
                   style={{
-                    fontSize: '9.5px',
+                    fontSize: '11px',
                     color: 'var(--text-muted)',
                     alignSelf: isMine ? 'flex-end' : 'flex-start',
                     padding: '0 4px',
@@ -1358,7 +1368,7 @@ export function TripChatPanel({
                   {!isDeleted && message.editedAt ? ' · edited' : ''}
 
                   {isMine && isOutboxEnabled && !readReceiptsEnabled && (
-                    <span style={{ fontSize: '10.5px' }}>
+                    <span style={{ fontSize: '11px' }}>
                       {message.status === 'sending' ? (
                         <span title="Queued offline">🕒</span>
                       ) : message.status === 'sent' ? (

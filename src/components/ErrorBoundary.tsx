@@ -108,7 +108,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="u-col-8">
               <button
                 type="button"
                 className="gradient-btn"

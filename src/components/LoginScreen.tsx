@@ -518,7 +518,7 @@ export function LoginScreen() {
           /* Superadmin Mode */
           <main className="landing-glass-card">
             <div className="landing-admin-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="u-row-8">
                 <div className="login-admin-banner-icon">
                   <IconShield size={16} />
                 </div>

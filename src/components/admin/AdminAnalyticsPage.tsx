@@ -398,7 +398,7 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
           <p>Loop health and activation first. Spend and 30-day login stay on Overview / Health.</p>
         </div>
         <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
-          <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          <IconRefresh size={16} className={isRefreshing ? 'ops-spin' : undefined} /> Refresh
         </button>
       </div>
 
@@ -849,15 +849,15 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
           </div>
 
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span className="u-row-6">
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }} />
               <strong>{totalReceiptsUploaded}</strong> Receipt Photos (~{((totalReceiptsUploaded * 0.42)).toFixed(1)} MB)
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span className="u-row-6">
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
               <strong>{totalUniqueMembers}</strong> Traveler Avatars (~{((totalUniqueMembers * 0.08)).toFixed(1)} MB)
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span className="u-row-6">
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F59E0B' }} />
               <strong>{trips.length}</strong> Trip Covers &amp; Journey Maps (~{((trips.length * 0.12)).toFixed(1)} MB)
             </span>
