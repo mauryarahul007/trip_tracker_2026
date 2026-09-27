@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.42.0',
+    date: '2026-09-28',
+    changes: [
+      'The flipped boarding pass in the Summary tab has a new flight vector banner showing your full route without truncation.',
+      'Group and couple node balances are now cleanly separated from solo out-of-pocket fronted expenses on the pass flip side.',
+      'The boarding pass login screen gate-code input has a balanced pill layout.',
+    ],
+  },
+  {
     version: '3.41.0',
     date: '2026-09-27',
     changes: [
