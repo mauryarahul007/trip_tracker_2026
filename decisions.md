@@ -4321,3 +4321,25 @@ This document logs all meaningful technical decisions, library choices, design p
   - BUG-247 has no reproduction. If it is a real bug rather than a hot-swap artifact, it will now come back from a built app with a real stack.
   - About 20 inline `padding` overrides on individual `.ops-btn`s remain. They still inherit the new height, radius and states.
 
+## 240. Boarding Pass Flip Redesign & Group Settlement Breakdown (v3.42.0)
+* **Context:**
+  - On the Summary tab, the 3D flipped back face of the Boarding Pass Hero Card previously displayed excessive telemetry data (stops, duration pills, multiple sub-metrics) in a narrow two-column layout that felt clumsy and crammed on mobile devices.
+  - Places along the route (e.g. `Meghalaya → Arunachal Pradesh`) and solo out-of-pocket metrics (e.g. `Solo out-of-pocket: +₹27,147.37`) were truncated with ellipsis (`...`).
+  - Travelers in coupled groups (such as couple/family nodes) saw discrepancies between the front outstanding card (which reflected their couple/group's combined settlement balance, e.g. `₹12,668.00`) and the flipped card back (which previously showed only their raw solo out-of-pocket stake, e.g. `+₹27,147.37`).
+  - Additionally, on the boarding pass login screen, the gate code input had left a large visual void on the right side of the container.
+* **Decision & Implementation:**
+  - **Boarding Pass Hero Card Back Redesign (`BoardingPassHeroCard.tsx`)**:
+    - **Upper Row (Full-Width Route Vector Banner)**: Replaces the cramped column with a full-width flight path spanning across the card: Departure city/state on the left, an airline-style vector path (`── ✈ ──` + duration) in the center, and Destination on the right, with line-clamp wrapping preventing truncation of long destination names.
+    - **Inner Perforated Divider**: A subtle 1px dashed separator between the route vector and finances.
+    - **Lower Row (Side-by-Side Financial Columns)**:
+      - **Left Column (Group Share / Your Share)**: Displays the group's net settlement balance (e.g. `+₹12,668.00` with `To receive · rahul & upama`), matching the front card's outstanding figure.
+      - **Right Column (Solo Out-of-Pocket / Traveler Profile)**: For group members, explicitly displays their individual fronted out-of-pocket amount (`+₹27,147.37` with `Fronted · rahul maurya`), giving immediate transparency without any text truncation. For solo travelers, displays their profile name and squad role.
+  - **Group Balance Aggregation (`BalancesSettlements.tsx`)**:
+    - Computes `myGroup` balance by summing net balances of all members sharing the current traveler's group node and threads it down to `BoardingPassHeroCard`.
+  - **Gate Code Input Symmetry (`LoginScreen.tsx`, `index.css`)**:
+    - Upgraded `.login-gate-input-pill` into a balanced three-part capsule with `GATE CODE` prefix tag, centered dot-masked code input, and `6 DIGITS` badge.
+  - **Feature Flag Control (`types/admin.ts`, `featureFlags.ts`)**:
+    - Registered `enableTravelerPassBack` flag under the Core Pack with default ON and Ops Deck meta explanations.
+* **Trade-offs Accepted:**
+  - When in a group, solo out-of-pocket takes priority in the right column over squad telemetry to immediately explain settlement math discrepancies to travelers. Weather and stops telemetry remain accessible in dedicated modal views.
+

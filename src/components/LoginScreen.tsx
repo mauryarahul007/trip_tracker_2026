@@ -341,14 +341,21 @@ export function LoginScreen() {
                     autoComplete="off"
                   />
                 </div>
-                <input
-                  type="text"
-                  placeholder="GATE CODE · 6 digits"
-                  value={quickJoinCode}
-                  onChange={(e) => setQuickJoinCode(e.target.value)}
-                  className="login-inline-join-input"
-                  aria-label="Enter 6-digit trip code"
-                />
+                <div className="login-gate-input-pill">
+                  <span className="login-gate-prefix">GATE CODE</span>
+                  <input
+                    type="text"
+                    placeholder="• • • • • •"
+                    value={quickJoinCode}
+                    onChange={(e) => setQuickJoinCode(e.target.value.toUpperCase())}
+                    className="login-gate-field"
+                    aria-label="Enter 6-digit trip code"
+                    maxLength={10}
+                    autoComplete="off"
+                    spellCheck="false"
+                  />
+                  <span className="login-gate-suffix">6 DIGITS</span>
+                </div>
                 <button
                   type="submit"
                   disabled={!quickJoinCode.trim()}

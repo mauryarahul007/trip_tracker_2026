@@ -943,6 +943,16 @@ export function BalancesSettlements({
   const myBalanceObj = myMemberId ? balances.find((b) => b.memberId === myMemberId) : null;
   const myNetBalance = myBalanceObj ? myBalanceObj.balance : 0;
 
+  const myGroupObj = myMemberId ? groups.find((g) => g.memberIds.includes(myMemberId)) : undefined;
+  const myGroup = myGroupObj ? {
+    id: myGroupObj.id,
+    name: myGroupObj.name,
+    balance: Number(myGroupObj.memberIds.reduce((sum, mid) => {
+      const b = balances.find((bal) => bal.memberId === mid);
+      return sum + (b ? b.balance : 0);
+    }, 0).toFixed(2)),
+  } : undefined;
+
   const settledMemberCount = balances.filter((b) => Math.abs(b.balance) < 0.01).length;
   const settledPct = balances.length > 0 ? Math.round((settledMemberCount / balances.length) * 100) : 100;
 
@@ -976,6 +986,8 @@ export function BalancesSettlements({
           balancesCount={balances.length}
           currentMember={myMemberId ? members[myMemberId] : undefined}
           onOpenSquadBadges={onOpenSquadBadges}
+          myNetBalance={myNetBalance}
+          myGroup={myGroup}
         />
       </div>
 

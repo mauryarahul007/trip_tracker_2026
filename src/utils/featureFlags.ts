@@ -35,6 +35,7 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
       'enableCalmHaptics',
       'enableQuickTripCreate',
       'enableDestinationAutocomplete',
+      'enableTravelerPassBack',
     ],
   },
   {
@@ -240,6 +241,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     key: 'enableDestinationAutocomplete',
     label: 'Destination Suggestions & Spell-Fix',
     description: 'ON: typing a destination in New Trip or Edit Trip shows up to 6 matching places under the field (popular destinations and the traveler\'s own past ones first, then real cities/states/countries from the free Photon map search), and picking one fills the correct spelling and suggests that country\'s currency. If the typed place looks misspelled (e.g. "Swtizerland"), a "Did you mean Switzerland?" chip offers a one-tap fix; nothing is ever changed without that tap. Editing an existing trip with a misspelled destination shows the same chip. OFF: a plain text field, no suggestions, no network lookups while typing. Does not change saved trips unless the traveler accepts a fix and saves.',
+    category: 'core',
+    pack: 'core',
+    defaultEnabledForUsers: true,
+  },
+  enableTravelerPassBack: {
+    key: 'enableTravelerPassBack',
+    label: 'Traveler Pass Back (Route + Your Balance)',
+    description: 'ON: flipping the Summary boarding pass shows a redesigned back -- the route as airport-style codes, trip length/stops/travelers/payments-left, and the traveler\'s own net balance ("You\'re owed", "You owe", or "You\'re all square"), all pulled from data the app already tracks. OFF: today\'s back (trip name, status pill, departure/return dates, traveler name and role, live destination weather, and the join-code barcode). The front of the pass is unchanged either way. Does not change any balance, only what the back displays.',
     category: 'core',
     pack: 'core',
     defaultEnabledForUsers: true,
@@ -997,6 +1006,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableCalmHaptics: true,
   enableQuickTripCreate: true,
   enableDestinationAutocomplete: true,
+  enableTravelerPassBack: true,
   enableMemberMoneyRow: true,
   enableNotificationGrouping: true,
   // Core — first and last minutes (default ON)

@@ -3049,6 +3049,35 @@ input:checked + .toggle-slider:before {
 .boarding-pass-flipper.flipped {
   transform: rotateY(180deg);
 }
+/* Reduce Motion: the back face already sits absolutely over the front
+   face's box (see .bp-back-face's own inline styles), so a plain opacity
+   crossfade needs no layout change -- just cancel the 3D rotation on both
+   the flipper and the back face's own resting rotateY(180deg) (an
+   !important rule in a stylesheet is one of the few things that can
+   override an inline style), then let .flipped toggle visibility. */
+@media (prefers-reduced-motion: reduce) {
+  .boarding-pass-flipper {
+    transition: none;
+    transform: none !important;
+  }
+  .boarding-pass-flipper .bp-back-face {
+    transform: none !important;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+  .boarding-pass-flipper.flipped .bp-back-face {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .boarding-pass-flipper .bp-front-face {
+    transition: opacity 0.15s ease;
+  }
+  .boarding-pass-flipper.flipped .bp-front-face {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
 
 /* Boarding-pass balance summary — the app's signature element. Its own
    paper-stock palette (--bp-*), not the app's surface/text tokens -- it
@@ -12842,6 +12871,68 @@ textarea.input-field {
   border: 1px dashed var(--bp-line);
   border-radius: 9px;
   padding: 5px;
+}
+.login-gate-input-pill {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  padding: 0 10px;
+  gap: 6px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.login-gate-input-pill:focus-within {
+  border-color: #22D3EE;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.login-gate-prefix {
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94A3B8;
+  white-space: nowrap;
+  text-transform: uppercase;
+  user-select: none;
+  flex-shrink: 0;
+}
+.login-gate-field {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: #FFFFFF;
+  font-family: var(--font-family-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-align: center;
+  padding: 10px 4px;
+  outline: none;
+  text-transform: uppercase;
+}
+.login-gate-field::placeholder {
+  color: rgba(148, 163, 184, 0.45);
+  letter-spacing: 0.22em;
+  font-weight: 500;
+}
+.login-gate-suffix {
+  font-family: var(--font-family-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #64748B;
+  white-space: nowrap;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 5px;
+  border-radius: 4px;
+  user-select: none;
+  flex-shrink: 0;
 }
 .bp-stub-foot {
   display: flex;
