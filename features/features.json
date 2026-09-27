@@ -1516,5 +1516,21 @@
     "shippedAt": "2026-09-25T21:53:55.242Z",
     "shippedBy": "rahul",
     "shippedNote": "Shipped in commit 6c802ed (v3.40.1). ADR 232. Root groups are profile, this trip, notifications, appearance, data, help, and account. No new flag."
+  },
+  {
+    "id": "FEAT-096",
+    "title": "App-wide UI/UX revamp and motion polish (v3.41.0)",
+    "description": "Exit animations and drag-to-dismiss sheets, trip morph and tab slides, a focused Summary with a start card, a shorter expense form, destination-first trip creation with place suggestions and 'Did you mean' fixes, calmer native haptics, a Members Remind button, grouped notifications with a Money filter, rebuilt share pages, consistent money formatting, accessibility and touch-target fixes, and an Ops Deck button, toast and skeleton overhaul.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-28T00:10:00.000Z",
+    "updatedAt": "2026-09-28T00:10:00.000Z",
+    "shippedAt": "2026-09-28T00:10:00.000Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped in commit 94071b0 (v3.41.0). ADRs 235-239. Flags (default ON): enableMotionPolish, enableCompactSummary, enableCompactExpenseForm, enableQuickTripCreate, enableDestinationAutocomplete, enableCalmHaptics (Core); enableMemberMoneyRow, enableNotificationGrouping (Trip). QA steps in FEATURE_TEST_STEPS.md: UX-MOTION, UX-POLISH2, UX-POLISH3, DEST-SUGGEST, QA-0927."
   }
 ]

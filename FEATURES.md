@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **95** |
+| **Total Tracked** | **96** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **93** |
+| **✅ Shipped** | **94** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -145,6 +145,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-093** | Flag recipes and saved mixes on Ops Deck Flags | `admin` | `rahul` | `rahul` | Shipped in commit 2a704e0 (v3.36.0). ADR 217. |
 | **FEAT-094** | Growth: invite conversion, telemetry, traveler passport, lifecycle nudges | `analytics` | `rahul` | `rahul` | Shipped in commit 09e8785 (v3.37.0). ADR 218. Migration 0108 applied to the live project on 2026-09-22 (after the code push). Edge function send-lifecycle-nudge not yet deployed. |
 | **FEAT-095** | Shorter Settings list | `ui-ux` | `rahul` | `rahul` | Shipped in commit 6c802ed (v3.40.1). ADR 232. Root groups are profile, this trip, notifications, appearance, data, help, and account. No new flag. |
+| **FEAT-096** | App-wide UI/UX revamp and motion polish (v3.41.0) | `ui-ux` | `rahul` | `claude-cli` | Shipped in commit 94071b0 (v3.41.0). ADRs 235-239. Flags (default ON): enableMotionPolish, enableCompactSummary, enableCompactExpenseForm, enableQuickTripCreate, enableDestinationAutocomplete, enableCalmHaptics (Core); enableMemberMoneyRow, enableNotificationGrouping (Trip). QA steps in FEATURE_TEST_STEPS.md: UX-MOTION, UX-POLISH2, UX-POLISH3, DEST-SUGGEST, QA-0927. |
 
 ---
 

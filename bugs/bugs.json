@@ -7386,5 +7386,289 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-26T08:09:11.775Z",
     "resolutionNote": "Fixed in commit d78ce3a (v3.40.3). Destination is the only cover query when one was typed. Light list uses a tinted page and dark header type. ADR 234."
+  },
+  {
+    "id": "BUG-250",
+    "title": "Journeys Spent total doubled for trips that had been opened",
+    "description": "Each trip card's Spent summed the locally cached expenses and then added the server copies of the same expenses, so every opened trip showed twice its real spend.",
+    "severity": "high",
+    "category": "splits-math",
+    "status": "resolved",
+    "foundBy": "claude-qa",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.40.3"
+    },
+    "reproSteps": [
+      "Open a trip with expenses",
+      "Go back to Journeys and reload"
+    ],
+    "expectedBehavior": "Spent equals the trip's real total.",
+    "actualBehavior": "Spent is exactly double (e.g. North East ₹355,835 instead of ₹177,917).",
+    "diagnostics": {},
+    "createdAt": "2026-09-28T00:10:00.000Z",
+    "updatedAt": "2026-09-28T00:10:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-28T00:10:00.000Z",
+    "resolutionNote": "Fixed in commit 94071b0 (v3.41.0). useCrossTripBalances merges server and local expenses by id (sumTripSpending). Regression test added. Display only; no data was affected."
+  },
+  {
+    "id": "BUG-251",
+    "title": "Reloading after leaving a trip reopens the trip",
+    "description": "Opening a trip rewrote the home history entry to ?trip=…, so history.back() on close landed on that stale URL and a reload reopened the trip.",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "claude-qa",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.40.3"
+    },
+    "reproSteps": [
+      "Open a trip",
+      "Tap back to Journeys",
+      "Reload the page"
+    ],
+    "expectedBehavior": "The app stays on Journeys and the URL is /.",
+    "actualBehavior": "The trip reopens because the URL still has ?trip=…&tab=….",
+    "diagnostics": {},
+    "createdAt": "2026-09-28T00:10:00.000Z",
+    "updatedAt": "2026-09-28T00:10:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-28T00:10:00.000Z",
+    "resolutionNote": "Fixed in commit 94071b0 (v3.41.0). The deep-link URL sync also runs after popstate. Deep links still open the right trip and tab."
+  },
+  {
+    "id": "BUG-252",
+    "title": "Summary flashes ₹0.00 outstanding while a trip loads",
+    "description": "Balances were computed from a not-yet-loaded expense list, so every trip open briefly showed a red ₹0.00 outstanding.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-qa",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.40.3"
+    },
+    "reproSteps": [
+      "Open any trip with expenses on a slow network"
+    ],
+    "expectedBehavior": "A loading placeholder, then the real total.",
+    "actualBehavior": "₹0.00 outstanding for a moment, then the real total.",
+    "diagnostics": {},
+    "createdAt": "2026-09-28T00:10:00.000Z",
+    "updatedAt": "2026-09-28T00:10:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-28T00:10:00.000Z",
+    "resolutionNote": "Fixed in commit 94071b0 (v3.41.0). Summary shows the luggage-tag skeleton while that trip's expenses load."
+  },
+  {
+    "id": "BUG-253",
+    "title": "Cover-photo lookups repeated dozens of times per session",
+    "description": "The trip card, its peeks, the home backdrop and the trip backdrop each ran the full Wikivoyage/Wikipedia lookup chain in parallel for the same place; a misspelled destination produced 40+ 404s per session.",
+    "severity": "medium",
+    "category": "performance",
+    "status": "resolved",
+    "foundBy": "claude-qa",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.40.3"
+    },
+    "reproSteps": [
+      "Create a trip with a misspelled destination",
+      "Open Journeys and watch the network"
+    ],
+    "expectedBehavior": "One lookup per place.",
+    "actualBehavior": "The same failed lookups repeat many times.",
+    "diagnostics": {},
+    "createdAt": "2026-09-28T00:10:00.000Z",
+    "updatedAt": "2026-09-28T00:10:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-28T00:10:00.000Z",
+    "resolutionNote": "Fixed in commit 94071b0 (v3.41.0). Concurrent callers share one in-flight lookup. Regression test added."
+  },
+  {
+    "id": "BUG-254",
+    "title": "Split explainer and @tripbot confirm sheets are unstyled; action-sheet drag doesn't follow the finger",
+    "description": "Both sheets used .wa-action-sheet / .wa-action-sheet-handle classes with no CSS, so they rendered as bare text on the backdrop. The ActionSheet entry animation's forwards fill overrode the inline drag transform.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-qa",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.40.3"
+    },
+    "reproSteps": [
+      "In chat, open 'Why this split?' on an expense card",
+      "Long-press a message and drag the action sheet down"
+    ],
+    "expectedBehavior": "A styled bottom card that follows the finger when dragged.",
+    "actualBehavior": "No card background, and the dragged sheet doesn't move.",
+    "diagnostics": {},
+    "createdAt": "2026-09-28T00:10:00.000Z",
+    "updatedAt": "2026-09-28T00:10:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-28T00:10:00.000Z",
+    "resolutionNote": "Fixed in commit 94071b0 (v3.41.0). Sheets use the styled .wa-action-sheet-card markup; the entry animation uses a backwards fill. Drag-to-dismiss is shared via useDragToDismiss."
+  },
+  {
+    "id": "BUG-255",
+    "title": "View transitions skipped while the expense form or filters were open",
+    "description": ".app-header carried view-transition-name app-header on four headers (plus a duplicate expense-shared-title on the expense form), so any transition with two of them mounted was aborted.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-qa",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.40.3"
+    },
+    "reproSteps": [
+      "Open the expense form over a trip",
+      "Trigger a tab or trip transition"
+    ],
+    "expectedBehavior": "Transitions animate.",
+    "actualBehavior": "The browser skips the transition (duplicate view-transition-name).",
+    "diagnostics": {},
+    "createdAt": "2026-09-28T00:10:00.000Z",
+    "updatedAt": "2026-09-28T00:10:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-28T00:10:00.000Z",
+    "resolutionNote": "Fixed in commit 94071b0 (v3.41.0). Only .trip-dashboard-header is named; the duplicate name on the expense form header was removed."
+  },
+  {
+    "id": "BUG-256",
+    "title": "Dev-server hot-reload crashes filed as Critical ledger cases",
+    "description": "The auto crash reporter filed 'X is not defined' and removeChild errors caused by half-edited files hot-reloading into open dev tabs (BUG-237…247 in the live ledger).",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-qa",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.40.3"
+    },
+    "reproSteps": [
+      "Run npm run dev",
+      "Save a file that briefly references an unimported name"
+    ],
+    "expectedBehavior": "Dev errors show in the console and Vite overlay only.",
+    "actualBehavior": "A Critical case is filed in the shared ledger.",
+    "diagnostics": {},
+    "createdAt": "2026-09-28T00:10:00.000Z",
+    "updatedAt": "2026-09-28T00:10:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-28T00:10:00.000Z",
+    "resolutionNote": "Fixed in commit 94071b0 (v3.41.0). autoBugReporter.shouldAutoReport skips the Vite dev server; built web and native apps still report. Regression test added. The 11 live cases were intentionally left open."
+  },
+  {
+    "id": "BUG-257",
+    "title": "iPhones get no haptic feedback",
+    "description": "triggerHaptic used navigator.vibrate only, which iOS WebViews lack, so the iOS app had no haptics apart from the content sheet.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-qa",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.40.3"
+    },
+    "reproSteps": [
+      "On the iOS app, save an expense or settle"
+    ],
+    "expectedBehavior": "A Taptic response.",
+    "actualBehavior": "No haptic feedback.",
+    "diagnostics": {},
+    "createdAt": "2026-09-28T00:10:00.000Z",
+    "updatedAt": "2026-09-28T00:10:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-28T00:10:00.000Z",
+    "resolutionNote": "Fixed in commit 94071b0 (v3.41.0). Native builds use @capacitor/haptics when enableCalmHaptics is on."
+  },
+  {
+    "id": "BUG-258",
+    "title": "Ops Deck Refresh and Export buttons stack icon over label",
+    "description": ".ops-btn had no inline-flex or nowrap, so in tight page headers the label wrapped below the icon into a ~56px block, and 'Refreshing...' changed the button width.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-qa",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.40.3"
+    },
+    "reproSteps": [
+      "Open any Ops Deck page with a Refresh button"
+    ],
+    "expectedBehavior": "Icon and label on one line; stable width while refreshing.",
+    "actualBehavior": "Icon above label; the width jumps while refreshing.",
+    "diagnostics": {},
+    "createdAt": "2026-09-28T00:10:00.000Z",
+    "updatedAt": "2026-09-28T00:10:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-28T00:10:00.000Z",
+    "resolutionNote": "Fixed in commit 94071b0 (v3.41.0). Rebuilt the Ops Deck button system (one-row, 36px, focus ring, variants). Refresh keeps its label and spins its icon."
+  },
+  {
+    "id": "BUG-259",
+    "title": "Past and Archived trip filters show no count",
+    "description": "Journeys filter chips showed counts only for All and Active; Past never rendered its count and Archived hid it when zero.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-qa",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.40.3"
+    },
+    "reproSteps": [
+      "Open Journeys",
+      "Look at the Past and Archived chips"
+    ],
+    "expectedBehavior": "Every chip shows its count, including 0.",
+    "actualBehavior": "Past and Archived show no count.",
+    "diagnostics": {},
+    "createdAt": "2026-09-28T00:10:00.000Z",
+    "updatedAt": "2026-09-28T00:10:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-28T00:10:00.000Z",
+    "resolutionNote": "Fixed in commit 94071b0 (v3.41.0). All four chips always show a count badge."
+  },
+  {
+    "id": "BUG-260",
+    "title": "Boarding-pass secondary text below WCAG AA contrast in light theme",
+    "description": "--bp-ink-soft (4.44:1) and --bp-ink-softer (3.81:1) on --bp-paper were below the 4.5:1 minimum for small text.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-qa",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.40.3"
+    },
+    "reproSteps": [
+      "Open Summary in the light theme",
+      "Check small labels on the boarding-pass card"
+    ],
+    "expectedBehavior": "Small text at ≥ 4.5:1.",
+    "actualBehavior": "4.44:1 and 3.81:1.",
+    "diagnostics": {},
+    "createdAt": "2026-09-28T00:10:00.000Z",
+    "updatedAt": "2026-09-28T00:10:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-28T00:10:00.000Z",
+    "resolutionNote": "Fixed in commit 94071b0 (v3.41.0). Alphas raised to 0.63 and 0.61."
   }
 ]

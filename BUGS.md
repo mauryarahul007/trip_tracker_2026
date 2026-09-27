@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **249** | All recorded bugs across sessions |
+| **Total Tracked** | **260** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **222** | Verified & closed |
+| **✅ Resolved** | **233** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -253,6 +253,17 @@
 | **BUG-247** | Left and right swipe between trip tabs does nothing | `navigation` | `medium` | `rahul` | `cursor-agent` | Fixed in commit 6c802ed (v3.40.1). Swipe binds when the trip main mounts, and vertical tab panes no longer cancel the gesture. ADR 232. |
 | **BUG-248** | Trip stack cards show square corners and warp on a slow swipe | `ui-ux` | `medium` | `rahul` | `cursor-agent` | Fixed in commit d744520 (v3.40.2). Flat drag with the clip on an inner shell. List footer is frosted over each tile photo. Stack view blurs the front photo behind the page. ADR 233. |
 | **BUG-249** | Trip stack shows the wrong photo, and light list view is solid white | `ui-ux` | `medium` | `rahul` | `cursor-agent` | Fixed in commit d78ce3a (v3.40.3). Destination is the only cover query when one was typed. Light list uses a tinted page and dark header type. ADR 234. |
+| **BUG-250** | Journeys Spent total doubled for trips that had been opened | `splits-math` | `high` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). useCrossTripBalances merges server and local expenses by id (sumTripSpending). Regression test added. Display only; no data was affected. |
+| **BUG-251** | Reloading after leaving a trip reopens the trip | `navigation` | `medium` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). The deep-link URL sync also runs after popstate. Deep links still open the right trip and tab. |
+| **BUG-252** | Summary flashes ₹0.00 outstanding while a trip loads | `ui-ux` | `medium` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). Summary shows the luggage-tag skeleton while that trip's expenses load. |
+| **BUG-253** | Cover-photo lookups repeated dozens of times per session | `performance` | `medium` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). Concurrent callers share one in-flight lookup. Regression test added. |
+| **BUG-254** | Split explainer and @tripbot confirm sheets are unstyled; action-sheet drag doesn't follow the finger | `ui-ux` | `medium` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). Sheets use the styled .wa-action-sheet-card markup; the entry animation uses a backwards fill. Drag-to-dismiss is shared via useDragToDismiss. |
+| **BUG-255** | View transitions skipped while the expense form or filters were open | `ui-ux` | `low` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). Only .trip-dashboard-header is named; the duplicate name on the expense form header was removed. |
+| **BUG-256** | Dev-server hot-reload crashes filed as Critical ledger cases | `general` | `medium` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). autoBugReporter.shouldAutoReport skips the Vite dev server; built web and native apps still report. Regression test added. The 11 live cases were intentionally left open. |
+| **BUG-257** | iPhones get no haptic feedback | `ui-ux` | `low` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). Native builds use @capacitor/haptics when enableCalmHaptics is on. |
+| **BUG-258** | Ops Deck Refresh and Export buttons stack icon over label | `ui-ux` | `low` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). Rebuilt the Ops Deck button system (one-row, 36px, focus ring, variants). Refresh keeps its label and spins its icon. |
+| **BUG-259** | Past and Archived trip filters show no count | `ui-ux` | `low` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). All four chips always show a count badge. |
+| **BUG-260** | Boarding-pass secondary text below WCAG AA contrast in light theme | `ui-ux` | `low` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). Alphas raised to 0.63 and 0.61. |
 
 ---
 
