@@ -1532,5 +1532,21 @@
     "shippedAt": "2026-09-28T00:10:00.000Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped in commit 94071b0 (v3.41.0). ADRs 235-239. Flags (default ON): enableMotionPolish, enableCompactSummary, enableCompactExpenseForm, enableQuickTripCreate, enableDestinationAutocomplete, enableCalmHaptics (Core); enableMemberMoneyRow, enableNotificationGrouping (Trip). QA steps in FEATURE_TEST_STEPS.md: UX-MOTION, UX-POLISH2, UX-POLISH3, DEST-SUGGEST, QA-0927."
+  },
+  {
+    "id": "FEAT-097",
+    "title": "Pass back seat-and-gate balances",
+    "description": "Flipping the Summary boarding pass shows inside-group and outside-group positions that add up to your personal net, or cash laid out when the trip has no groups. Weather sits under the departure and the destination when the route has two ends. The front of the pass is unchanged. Flag: enableTravelerPassBack.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-28T05:37:37.669Z",
+    "updatedAt": "2026-09-28T05:37:37.669Z",
+    "shippedAt": "2026-09-28T05:37:37.669Z",
+    "shippedBy": "rahul",
+    "shippedNote": "Shipped in dc59c9d (v3.42.1)."
   }
 ]
