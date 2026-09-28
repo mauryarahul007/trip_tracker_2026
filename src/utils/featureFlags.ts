@@ -247,8 +247,8 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
   },
   enableTravelerPassBack: {
     key: 'enableTravelerPassBack',
-    label: 'Traveler Pass Back (Route + Your Balance)',
-    description: 'ON: flipping the Summary boarding pass shows a redesigned back -- the route as airport-style codes, trip length/stops/travelers/payments-left, and the traveler\'s own net balance ("You\'re owed", "You owe", or "You\'re all square"), all pulled from data the app already tracks. OFF: today\'s back (trip name, status pill, departure/return dates, traveler name and role, live destination weather, and the join-code barcode). The front of the pass is unchanged either way. Does not change any balance, only what the back displays.',
+    label: 'Traveler Pass Back (Seat and Gate)',
+    description: 'ON: flipping the Summary boarding pass shows a seat-and-gate stub under the route. Weather sits under the destination city, and also under the departure city when the trip has more than one stop; the refresh control on the destination reloads both. In a couple or group, the left cell is what the rest of your group owes you and the right cell is what your group still settles with everyone else, plus a line for your personal net. With no groups, the left cell is what you receive or owe and the right cell is the cash you laid out, with your share underneath. OFF: the itinerary back (dates, traveler, a weather strip, join code). The front of the pass is unchanged. Does not change any balance, only the back.',
     category: 'core',
     pack: 'core',
     defaultEnabledForUsers: true,

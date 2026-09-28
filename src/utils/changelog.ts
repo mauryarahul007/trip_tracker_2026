@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.42.1',
+    date: '2026-09-28',
+    changes: [
+      'The flipped Summary pass shows what your group still settles outside the couple, and what is still inside it, and those two figures add up to your own position.',
+      'On a trip with no groups, the pass back shows what you receive or owe next to the cash you laid out and your share.',
+      'Weather sits under the destination, and also under the departure when the trip has more than one stop. Refresh reloads both and keeps the pass flipped.',
+    ],
+  },
+  {
     version: '3.42.0',
     date: '2026-09-28',
     changes: [

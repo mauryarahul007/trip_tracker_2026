@@ -4343,3 +4343,14 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - When in a group, solo out-of-pocket takes priority in the right column over squad telemetry to immediately explain settlement math discrepancies to travelers. Weather and stops telemetry remain accessible in dedicated modal views.
 
+## 241. Pass back seat-and-gate stub (v3.42.1)
+* **Context:** The v3.42.0 flip side showed group share and solo out-of-pocket as two green plus amounts. Travelers read the second figure as cash that left their pocket. It is their personal net (paid minus share). In a couple, that net and the group net are different counterparties, and they add up.
+* **Decision:**
+  - Grouped travelers see two signed cells: inside the group (partner's first name) and outside the group. A quiet line states the personal net, which is the sum of the two cells.
+  - Ungrouped travelers see one signed cell (you get / you owe) and an unsigned cash-laid-out cell with their share underneath. Cash and share use the same expenses as the balance engine, including settlements and excluding pending and deleted expenses.
+  - Weather for the last stop sits under the destination. When the route has a distinct departure, that city's weather sits under it too. One refresh control, on the destination, reloads both forecasts. Middle stops stay in the stop count on the route.
+  - The front of the pass is unchanged. The existing Core flag `enableTravelerPassBack` still gates the back.
+* **Trade-offs Accepted:**
+  - Middle stops do not get their own forecast on the pass. The card carries the two ends of the route.
+  - The inside-group line names one partner. A group of three or more says "the rest of {group}" because the figure is their combined nets.
+

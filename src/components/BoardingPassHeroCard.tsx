@@ -12,11 +12,19 @@ import { tripDayNumber } from '../utils/dateRange';
 import { PassportStamp } from './common/PassportStamp';
 import { ConfettiBurst } from './ConfettiBurst';
 import { useTripStore } from '../store/tripStore';
+import { buildPassStub, type PassStubCell, type PassStubTone } from '../utils/passBackStub';
 
 export interface TravelerGroupInfo {
   id: string;
   name: string;
   balance: number;
+  /** Names of the other people in this group, used on the inside-cell caption. */
+  otherMemberNames: string[];
+}
+
+export interface TravelerWallet {
+  paid: number;
+  share: number;
 }
 
 interface BoardingPassHeroCardProps {
@@ -30,6 +38,8 @@ interface BoardingPassHeroCardProps {
   onOpenSquadBadges?: () => void;
   /** The signed-in traveler's own net balance on this trip (positive = owed to them). */
   myNetBalance: number;
+  /** Cash laid out and own share, same expense set as the balance engine. */
+  myWallet: TravelerWallet;
   /** Group information if the current traveler is part of a couple/group node */
   myGroup?: TravelerGroupInfo;
 }
@@ -224,6 +234,35 @@ const S_D3_ROUTE_SUB: React.CSSProperties = {
   color: 'var(--bp-ink-softer)',
   fontWeight: 600,
 };
+const S_D3_WEATHER_ROW: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '2px',
+  marginTop: '1px',
+  minWidth: 0,
+  maxWidth: '100%',
+};
+const S_D3_WEATHER_TEXT: React.CSSProperties = {
+  fontFamily: 'var(--font-family-mono)',
+  fontSize: '10px',
+  fontWeight: 700,
+  color: 'var(--primary-accent)',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  minWidth: 0,
+};
+const S_D3_WEATHER_REFRESH: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  padding: '8px',
+  margin: '-8px -6px -8px -2px',
+  cursor: 'pointer',
+  color: 'var(--primary-accent)',
+  fontSize: '13px',
+  lineHeight: 1,
+  flexShrink: 0,
+};
 const S_D3_ROUTE_CITY_NAME: React.CSSProperties = {
   fontFamily: 'var(--font-family-title)',
   fontSize: '13.5px',
@@ -287,6 +326,17 @@ const S_D3_SECTION_LABEL: React.CSSProperties = {
   textTransform: 'uppercase',
   letterSpacing: '0.06em',
   fontWeight: 600,
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+};
+const S_D3_SUMMARY: React.CSSProperties = {
+  fontFamily: 'var(--font-family-mono)',
+  fontSize: '11px',
+  fontWeight: 600,
+  color: 'var(--bp-ink-mid)',
+  textAlign: 'center',
+  marginTop: '2px',
 };
 const S_D3_AMOUNT: React.CSSProperties = {
   fontFamily: 'var(--font-family-mono)',
@@ -365,6 +415,86 @@ interface BoardingStatus {
   glowColor: string;
 }
 
+function RouteWeatherLine({
+  weather,
+  refreshing,
+  onRefresh,
+  align,
+  showRefresh = true,
+}: {
+  weather: WeatherData | null;
+  refreshing: boolean;
+  onRefresh: (e: React.MouseEvent) => void;
+  align: 'left' | 'right';
+  showRefresh?: boolean;
+}) {
+  const label = weather ? `${weather.weatherEmoji} ${weather.tempC}°C · ${weather.condition}` : 'Loading weather…';
+  return (
+    <div style={{ ...S_D3_WEATHER_ROW, justifyContent: align === 'right' ? 'flex-end' : 'flex-start' }}>
+      <span style={S_D3_WEATHER_TEXT} title={weather ? `${weather.city} · ${label}` : label}>{label}</span>
+      {showRefresh ? (
+        <button
+          type="button"
+          onClick={onRefresh}
+          aria-label="Refresh weather"
+          title="Refresh weather"
+          style={S_D3_WEATHER_REFRESH}
+        >
+          <span
+            style={{
+              display: 'inline-block',
+              transition: 'transform 0.5s ease',
+              transform: refreshing ? 'rotate(360deg)' : 'none',
+            }}
+          >
+            ↻
+          </span>
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+/** First and last stop on the pass. Origin is set only when it differs from the destination. */
+function routeWeatherPlaces(trip: { name?: string; destination?: string; stops?: { name: string }[] }): { origin: string | null; destination: string } {
+  const route = parseTripRoute(trip);
+  const destination = route.destination && route.destination !== 'Origin' ? route.destination : (trip.name || '');
+  const distinct = Boolean(route.origin && route.origin !== 'Origin' && route.origin !== destination);
+  return { origin: distinct ? route.origin : null, destination };
+}
+
+function stubAmountColor(tone: PassStubTone): string {
+  if (tone === 'receive') return 'var(--color-success)';
+  if (tone === 'pay') return 'var(--color-danger)';
+  if (tone === 'ink') return 'var(--bp-ink)';
+  return 'var(--bp-ink-mid)';
+}
+
+function stubAmountText(cell: PassStubCell, currencySymbol: string): string {
+  const figure = formatAmount(Math.abs(cell.amount), currencySymbol);
+  if (!cell.signed || cell.tone === 'even') return figure;
+  return cell.tone === 'receive' ? `+${figure}` : `-${figure}`;
+}
+
+function PassStubCellView({
+  cell,
+  currencySymbol,
+  align,
+}: {
+  cell: PassStubCell;
+  currencySymbol: string;
+  align: 'left' | 'right';
+}) {
+  const amount = stubAmountText(cell, currencySymbol);
+  return (
+    <div style={{ ...S_D3_COL, textAlign: align }}>
+      <div style={S_D3_SECTION_LABEL} title={cell.label}>{cell.label}</div>
+      <div style={{ ...S_D3_AMOUNT, color: stubAmountColor(cell.tone) }} title={amount}>{amount}</div>
+      <div style={S_D3_SUB} title={cell.caption}>{cell.caption}</div>
+    </div>
+  );
+}
+
 function getBoardingStatus(startDate?: string, endDate?: string): BoardingStatus {
   const todayStr = new Date().toLocaleDateString('en-CA');
   if (!startDate) {
@@ -420,12 +550,14 @@ export function BoardingPassHeroCard({
   balancesCount,
   currentMember,
   myNetBalance,
+  myWallet,
   myGroup,
 }: BoardingPassHeroCardProps) {
   const isNewBack = useTripStore((s) => s.isFeatureEnabled('enableTravelerPassBack'));
   const [isFlipped, setIsFlipped] = useState(false);
   const [copied, setCopied] = useState(false);
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [originWeather, setOriginWeather] = useState<WeatherData | null>(null);
   const [isWeatherRefreshing, setIsWeatherRefreshing] = useState(false);
 
   const animatedTotalOutstanding = useAnimatedNumber(totalOutstanding, 280);
@@ -446,19 +578,20 @@ export function BoardingPassHeroCard({
     return () => window.clearTimeout(t);
   }, [isFullySettled, motionPolish]);
 
-  const weatherCandidates = [
-    ...(trip.stops?.map((s) => s.name) || []),
-    trip.destination || '',
-    trip.name || '',
-  ].filter(Boolean);
-
-  // Fetch weather for trip destination, stops, or trip name
   useEffect(() => {
     let active = true;
-    if (weatherCandidates.length > 0) {
-      getDestinationWeather(weatherCandidates).then((data) => {
+    const { origin, destination } = routeWeatherPlaces(trip);
+    if (destination) {
+      getDestinationWeather(destination).then((data) => {
         if (active && data) setWeather(data);
       });
+    }
+    if (origin) {
+      getDestinationWeather(origin).then((data) => {
+        if (active && data) setOriginWeather(data);
+      });
+    } else {
+      setOriginWeather(null);
     }
     return () => {
       active = false;
@@ -469,11 +602,19 @@ export function BoardingPassHeroCard({
     e.stopPropagation();
     triggerHaptic('light');
     setIsWeatherRefreshing(true);
-    if (weatherCandidates.length > 0) {
-      const data = await getDestinationWeather(weatherCandidates, true);
-      if (data) setWeather(data);
+    try {
+      const { origin, destination } = routeWeatherPlaces(trip);
+      await Promise.all([
+        destination
+          ? getDestinationWeather(destination, true).then((data) => { if (data) setWeather(data); })
+          : null,
+        origin
+          ? getDestinationWeather(origin, true).then((data) => { if (data) setOriginWeather(data); })
+          : null,
+      ]);
+    } finally {
+      setIsWeatherRefreshing(false);
     }
-    setTimeout(() => setIsWeatherRefreshing(false), 600);
   };
 
   const handleFlip = () => {
@@ -496,10 +637,6 @@ export function BoardingPassHeroCard({
   const parsedRoute = parseTripRoute(trip);
   const durationLabel = calculateTripDuration(trip.startDate, trip.endDate, parsedRoute.allStops.length > 1 ? parsedRoute.allStops.length : undefined);
   const boardingStatus = getBoardingStatus(trip.startDate, trip.endDate);
-  const hasGroup = !!myGroup;
-  const effectiveBalance = hasGroup ? myGroup.balance : myNetBalance;
-  const backIsSettled = isFullySettled || Math.abs(effectiveBalance) < 0.01;
-
   const dateRangeLabel = trip.startDate && trip.endDate
     ? `${formatBoardingDate(trip.startDate)} – ${formatBoardingDate(trip.endDate)}`
     : trip.startDate
@@ -512,20 +649,14 @@ export function BoardingPassHeroCard({
     parsedRoute.origin !== parsedRoute.destination
   );
 
-  const groupLabel = hasGroup ? ` · ${myGroup.name}` : '';
-  const personalStakeSubtext = backIsSettled
-    ? (isFullySettled
-        ? `Trip fully settled${groupLabel}`
-        : `Zero dues${groupLabel}`)
-    : effectiveBalance > 0
-      ? `To receive${groupLabel}`
-      : `To pay${groupLabel}`;
-
-  const soloSubtext = Math.abs(myNetBalance) < 0.01
-    ? `Settled · ${passengerName}`
-    : myNetBalance > 0
-      ? `Fronted · ${passengerName}`
-      : `Share due · ${passengerName}`;
+  const passStub = buildPassStub({
+    myNet: myNetBalance,
+    group: myGroup
+      ? { name: myGroup.name, balance: myGroup.balance, otherMemberNames: myGroup.otherMemberNames }
+      : null,
+    paid: myWallet.paid,
+    share: myWallet.share,
+  }, (amount) => formatAmount(amount, currencySymbol));
 
   return (
     <div className="boarding-pass-flip-container" style={S_FLIP_CONTAINER}>
@@ -664,6 +795,13 @@ export function BoardingPassHeroCard({
                         <div style={S_D3_ROUTE_CITY_NAME} title={parsedRoute.origin}>
                           {parsedRoute.origin}
                         </div>
+                        <RouteWeatherLine
+                          weather={originWeather}
+                          refreshing={isWeatherRefreshing}
+                          onRefresh={handleRefreshWeather}
+                          align="left"
+                          showRefresh={false}
+                        />
                       </div>
 
                       <div style={S_D3_ROUTE_PLANE_WRAP}>
@@ -682,6 +820,12 @@ export function BoardingPassHeroCard({
                         <div style={S_D3_ROUTE_CITY_NAME} title={parsedRoute.destination}>
                           {parsedRoute.destination}
                         </div>
+                        <RouteWeatherLine
+                          weather={weather}
+                          refreshing={isWeatherRefreshing}
+                          onRefresh={handleRefreshWeather}
+                          align="right"
+                        />
                       </div>
                     </>
                   ) : (
@@ -691,6 +835,12 @@ export function BoardingPassHeroCard({
                         <div style={S_D3_ROUTE_CITY_NAME} title={parsedRoute.destination || trip.name}>
                           {parsedRoute.destination || trip.name}
                         </div>
+                        <RouteWeatherLine
+                          weather={weather}
+                          refreshing={isWeatherRefreshing}
+                          onRefresh={handleRefreshWeather}
+                          align="left"
+                        />
                       </div>
 
                       <div style={S_D3_ROUTE_PLANE_WRAP}>
@@ -712,84 +862,13 @@ export function BoardingPassHeroCard({
                 {/* Inner Horizontal Divider */}
                 <div style={S_D3_INNER_DIVIDER} aria-hidden="true" />
 
-                {/* Lower Row: Financial Grid */}
+                {/* Seat / gate stub: inside vs outside the group, or you vs cash laid out */}
                 <div style={S_D3_FINANCE_GRID}>
-                  {/* Left Column: Group Share / Your Share */}
-                  <div style={S_D3_COL}>
-                    <div style={S_D3_SECTION_LABEL}>
-                      {hasGroup ? 'GROUP SHARE' : 'YOUR SHARE'}
-                    </div>
-                    <div
-                      style={{
-                        ...S_D3_AMOUNT,
-                        color: backIsSettled || effectiveBalance > 0 ? 'var(--color-success)' : 'var(--color-danger)',
-                      }}
-                    >
-                      {backIsSettled ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          All Square <IconCheckCircle size={14} />
-                        </span>
-                      ) : effectiveBalance > 0 ? (
-                        `+${formatAmount(effectiveBalance, currencySymbol)}`
-                      ) : (
-                        `-${formatAmount(Math.abs(effectiveBalance), currencySymbol)}`
-                      )}
-                    </div>
-                    <div style={S_D3_SUB} title={personalStakeSubtext}>
-                      {personalStakeSubtext}
-                    </div>
-                  </div>
-
-                  {/* Vertical Divider */}
+                  <PassStubCellView cell={passStub.left} currencySymbol={currencySymbol} align="left" />
                   <div style={S_D3_DIVIDER} aria-hidden="true" />
-
-                  {/* Right Column: Solo Out-of-Pocket (if grouped) or Traveler Profile (if solo) */}
-                  <div style={S_D3_COL}>
-                    {hasGroup ? (
-                      <>
-                        <div style={S_D3_SECTION_LABEL}>SOLO OUT-OF-POCKET</div>
-                        <div
-                          style={{
-                            ...S_D3_AMOUNT,
-                            color: myNetBalance > 0 ? 'var(--color-success)' : myNetBalance < 0 ? 'var(--color-danger)' : 'var(--bp-ink-mid)',
-                          }}
-                        >
-                          {Math.abs(myNetBalance) < 0.01
-                            ? formatAmount(0, currencySymbol)
-                            : myNetBalance > 0
-                              ? `+${formatAmount(myNetBalance, currencySymbol)}`
-                              : `-${formatAmount(Math.abs(myNetBalance), currencySymbol)}`}
-                        </div>
-                        <div style={S_D3_SUB} title={soloSubtext}>
-                          {soloSubtext}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div style={S_D3_SECTION_LABEL}>TRAVELER</div>
-                        <div
-                          style={{
-                            fontFamily: 'var(--font-family-title)',
-                            fontSize: '14.5px',
-                            fontWeight: 700,
-                            color: 'var(--bp-ink)',
-                            lineHeight: 1.2,
-                            marginTop: '2px',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                          title={passengerName}
-                        >
-                          {passengerName}
-                        </div>
-                        <div style={S_D3_SUB}>
-                          {isSquadLeader ? 'Squad Leader' : 'Squad Traveler'}
-                        </div>
-                      </>
-                    )}
-                  </div>
+                  <PassStubCellView cell={passStub.right} currencySymbol={currencySymbol} align="right" />
                 </div>
+                {passStub.summary ? <div style={S_D3_SUMMARY}>{passStub.summary}</div> : null}
               </div>
 
               {/* Perforated Separator Line */}

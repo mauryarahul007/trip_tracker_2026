@@ -16,6 +16,7 @@ import {
   getSettlementShareCardLayout,
 } from '../utils/settlementShareCard';
 import { BoardingPassHeroCard } from './BoardingPassHeroCard';
+import { memberCashAndShare } from '../utils/passBackStub';
 import { StickyBalanceBar } from './StickyBalanceBar';
 import { ConfettiBurst } from './ConfettiBurst';
 import { playTicketTear, playStampThud } from '../utils/soundEffects';
@@ -951,7 +952,13 @@ export function BalancesSettlements({
       const b = balances.find((bal) => bal.memberId === mid);
       return sum + (b ? b.balance : 0);
     }, 0).toFixed(2)),
+    otherMemberNames: myGroupObj.memberIds
+      .filter((id) => id !== myMemberId)
+      .map((id) => members[id]?.name || 'Traveler'),
   } : undefined;
+  const myWallet = myMemberId
+    ? memberCashAndShare(activeTripExpenses, myMemberId)
+    : { paid: 0, share: 0 };
 
   const settledMemberCount = balances.filter((b) => Math.abs(b.balance) < 0.01).length;
   const settledPct = balances.length > 0 ? Math.round((settledMemberCount / balances.length) * 100) : 100;
@@ -987,6 +994,7 @@ export function BalancesSettlements({
           currentMember={myMemberId ? members[myMemberId] : undefined}
           onOpenSquadBadges={onOpenSquadBadges}
           myNetBalance={myNetBalance}
+          myWallet={myWallet}
           myGroup={myGroup}
         />
       </div>

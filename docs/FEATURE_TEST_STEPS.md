@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-09-28 | v3.42.1 | PASS-STUB | [Pass back seat and gate](#pass-stub--pass-back-seat-and-gate) |
 | 2026-09-27 | v3.41.0 | DEST-SUGGEST | [Destination suggestions & did-you-mean](#dest-suggest--destination-suggestions--did-you-mean) |
 | 2026-09-27 | v3.41.0 | QA-0927 | [QA fixes: map handoff, stale trip URL, ₹0 flash, inbox empty state, photo lookups](#qa-0927--qa-fixes) |
 | 2026-09-27 | v3.41.0 | UX-POLISH3 | [Money format, quick trip, calm haptics, reminders, inbox](#ux-polish3--money-format-quick-trip-calm-haptics-reminders-inbox) |
@@ -1468,6 +1469,34 @@ Test on a phone-sized viewport (DevTools device mode is fine) plus a real Androi
 
 ### Pass
 - Nothing that closes vanishes in a single frame, sheets can be pulled away, trip open and tab changes have a direction, share links look on-brand in both themes, and the Ops Deck toasts no longer shift the page.
+
+---
+
+## PASS-STUB — Pass back seat and gate
+
+**Version:** v3.42.1. **Flags:** existing `enableTravelerPassBack` (Core, default ON). The front of the pass is unchanged.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Seat-and-gate figures on the pass back | `enableTravelerPassBack` | ON |
+
+### Steps
+1. Open a trip where you belong to a couple or group (Sikkim / 2B). Go to Summary and flip the boarding pass.
+2. Confirm the route row is still there. With one destination, the temperature sits under that city with a refresh icon. With several stops, the first stop’s weather sits under Departure and the last stop’s weather sits under Destination. Refresh is only on the destination line and reloads both. Tapping refresh leaves the pass on this side. Under the route, the left cell is **Inside {group}** and the right cell is **Outside {group}**.
+3. Inside uses your partner's first name ("Ananya owes you" or "You owe Ananya"). Outside says "{group} receives" or "{group} pays". Green means that side owes you. Red means you or the group still pay. Cash you laid out does not appear as a green plus.
+4. The line under the two cells is your personal net ("You are ahead …" or "You are short …"). Inside amount + outside amount equals that line.
+5. Open a trip with individual members and no groups. Flip the pass. Left cell is **You get** or **You owe**. Right cell is **You paid**, in the ink color with no plus, and the caption is your share.
+6. On the no-group trip, cash laid out minus your share equals the left cell.
+
+### Negative checks
+- Turn `enableTravelerPassBack` off. The back returns to the itinerary (dates, traveler, weather, join code). No Inside / Outside cells and no You paid cell.
+- The front stays "Balance summary" and the outstanding total in both flag states.
+
+### Pass
+- A grouped traveler can see what is inside the couple and what the couple still settles with everyone else, and those two figures add up to the personal line.
+- An ungrouped traveler sees one signed position and an unsigned cash-laid-out figure with their share.
+- The front of the pass is the same as before.
 
 ---
 
