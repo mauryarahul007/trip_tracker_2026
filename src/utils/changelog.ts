@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.43.0',
+    date: '2026-09-30',
+    changes: [
+      'Superadmin Ops Deck redesigned with Liquid Velvet OLED glassmorphic theme, warm ambient lighting, and high-density floating telemetry cards.',
+      'Dynamic Fleet Financial Velocity waveform engine with Catmull-Rom cubic spline transitions and interactive time-interval filters (7D, 30D, 90D, YTD).',
+      'Persistent floating glass dock across all Superadmin pages with live incident badges and quick telemetry sync.',
+      'Adaptive navigation architecture: widescreen desktop rail transitions to a thumb-zone floating glass dock on mobile screens.',
+      'Sleek single-row mobile glass header with live status dot, 1-tap telemetry sync, and an avatar profile drawer reclaiming 130px of vertical workspace.',
+    ],
+  },
+  {
     version: '3.42.1',
     date: '2026-09-28',
     changes: [

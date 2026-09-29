@@ -15,7 +15,7 @@ import {
 } from '../../services/tripApi';
 import { fetchBugs } from '../../services/bugApi';
 import { fetchFeatures, type FeatureRecord } from '../../services/featureApi';
-import { IconChevronRight, IconSearch } from '../Icons';
+import { IconRefresh, IconSearch } from '../Icons';
 import { ConfirmDialog, type ConfirmRequest } from '../ConfirmDialog';
 import { formatRelativeTime } from '../../utils/relativeTime';
 import { initialsFrom } from '../../utils/initials';
@@ -194,6 +194,20 @@ export function AdminPortalLayout({
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   const [justSynced, setJustSynced] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
+  const activeDockPillRef = useRef<HTMLButtonElement | null>(null);
+  const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!mobileProfileOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setMobileProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [mobileProfileOpen]);
   const lockSuperadmin = useTripStore((s) => s.lockSuperadmin);
   const signOut = useAuthStore((s) => s.signOut);
   const userDisplayName = useTripStore((s) => s.userDisplayName) || 'Superadmin';
@@ -302,6 +316,7 @@ export function AdminPortalLayout({
   // scrollable) panel.
   useEffect(() => {
     panelRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+    activeDockPillRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }, [activeTab]);
 
   // Real fleet-state signal for the top bar lamp, replacing a lamp that
@@ -548,46 +563,102 @@ export function AdminPortalLayout({
             </div>
           </nav>
 
-          <button
-            type="button"
-            className="ops-section-trigger"
-            aria-haspopup="listbox"
-            aria-expanded={showSectionSwitcher}
-            onClick={() => setShowSectionSwitcher(true)}
-          >
-            <span className="ops-section-trigger-left">
-              <span className="ops-lamp" />
-              <span className="ops-section-trigger-code">{currentSection.code}</span>
-              <span className="ops-section-trigger-label">{currentSection.label}</span>
-            </span>
-            <IconChevronRight size={16} className="ops-section-trigger-chevron" />
-          </button>
-
           <div className="ops-vitals-main">
-            {/* Mobile Horizontal Navigation Ribbon */}
-            <div className="ops-mobile-nav-ribbon" role="tablist" aria-label="Ops Deck Navigation">
-              {SECTIONS.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === s.id}
-                  className={`ops-mobile-ribbon-btn${activeTab === s.id ? ' active' : ''}`}
-                  onClick={() => onActiveTabChange(s.id)}
-                >
-                  <span className="ops-ribbon-glyph">{SECTION_GLYPHS[s.id] || '•'}</span>
-                  <span className="ops-ribbon-text">{s.label}</span>
-                  {s.id === 'bugs' && criticalBugCount > 0 && (
-                    <span className="ops-ribbon-pip">{criticalBugCount}</span>
-                  )}
-                  {s.id === 'tools' && recycledCount > 0 && (
-                    <span className="ops-ribbon-dot" />
-                  )}
-                </button>
-              ))}
-            </div>
-
             <div className="ops-vitals-topbar">
+              {/* Mobile Single-Row Brand & Section Title (<= 760px) */}
+              <div className="ops-mobile-top-brand">
+                <div className="ops-glyph" style={{ width: '28px', height: '28px', fontSize: '11px' }}>TT</div>
+                <div className="ops-mobile-title-wrap">
+                  <span className="ops-mobile-section-name">{currentSection.label}</span>
+                  <span className="ops-mobile-section-code">{currentSection.code}</span>
+                </div>
+              </div>
+
+              {/* Mobile Right Action Cluster: Status dot + Sync + Avatar Menu */}
+              <div className="ops-mobile-top-actions">
+                <span
+                  className={`ops-health-dot ${health.ok ? 'ok' : 'warn'}`}
+                  title={health.label}
+                  style={{ width: '8px', height: '8px', borderRadius: '50%', background: health.ok ? '#10B981' : '#F59E0B', boxShadow: health.ok ? '0 0 8px #10B981' : '0 0 8px #F59E0B', flexShrink: 0 }}
+                />
+                <button
+                  type="button"
+                  className="ops-btn"
+                  style={{ padding: '6px 8px', borderRadius: '9999px', minWidth: '32px', height: '32px' }}
+                  disabled={isRefreshing}
+                  onClick={() => void handleRefreshAll()}
+                  title="Sync fleet telemetry"
+                >
+                  <IconRefresh size={14} className={isRefreshing ? 'ops-spin' : undefined} />
+                </button>
+                <button
+                  type="button"
+                  className={`ops-mobile-avatar-btn ${mobileProfileOpen ? 'active' : ''}`}
+                  onClick={() => setMobileProfileOpen((v) => !v)}
+                  aria-expanded={mobileProfileOpen}
+                  aria-haspopup="menu"
+                  title={`${userDisplayName} (${superadminEmail}) - Tap for options`}
+                >
+                  {initialsFrom(userDisplayName)}
+                </button>
+
+                {mobileProfileOpen && (
+                  <div className="ops-mobile-profile-menu fade-in" ref={profileMenuRef}>
+                    <div className="ops-mobile-profile-user">
+                      <div className="ops-vitals-who-avatar">{initialsFrom(userDisplayName)}</div>
+                      <div>
+                        <div className="ops-mobile-user-name">{userDisplayName}</div>
+                        <div className="ops-mobile-user-email">{superadminEmail}</div>
+                      </div>
+                    </div>
+                    <div className="ops-mobile-profile-divider" />
+                    <div className="ops-mobile-profile-meta">
+                      <span className={`ops-health-pill ${health.ok ? 'ok' : 'warn'}`}>
+                        <span className="dot" /> <span className="label">{health.label}</span>
+                      </span>
+                      <span className="ops-mobile-ist-time">{clock}</span>
+                    </div>
+                    <div className="ops-mobile-profile-divider" />
+                    {onExitToTravelerApp && (
+                      <button
+                        type="button"
+                        className="ops-btn"
+                        style={{ width: '100%', justifyContent: 'center', marginBottom: '8px' }}
+                        onClick={() => {
+                          setMobileProfileOpen(false);
+                          onExitToTravelerApp();
+                        }}
+                      >
+                        <span>✈️</span> Preview Traveler View
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="ops-btn ops-btn-ghost"
+                      style={{ width: '100%', justifyContent: 'center', marginBottom: '8px', fontSize: '11.5px' }}
+                      onClick={() => {
+                        setMobileProfileOpen(false);
+                        setShowSectionSwitcher(true);
+                      }}
+                    >
+                      <span>📜</span> Full Section Index
+                    </button>
+                    <button
+                      type="button"
+                      className="ops-btn ops-btn-danger"
+                      style={{ width: '100%', justifyContent: 'center' }}
+                      onClick={() => {
+                        setMobileProfileOpen(false);
+                        void handleAdminLogout();
+                      }}
+                    >
+                      <span>🔒</span> Lock &amp; Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop Command Palette (Shown on desktop) */}
               <div className="ops-cmdk-wrap">
                 <div className="ops-cmdk" onClick={() => cmdkInputRef.current?.focus()}>
                   <IconSearch size={15} className="icon-sm" style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
@@ -673,6 +744,7 @@ export function AdminPortalLayout({
               onNavigate={onActiveTabChange}
               onRefresh={handleRefreshAll}
               isRefreshing={isRefreshing}
+              onExitToTravelerApp={onExitToTravelerApp}
             />
           )}
           {activeTab === 'flags' && (
@@ -751,6 +823,62 @@ export function AdminPortalLayout({
           </>}
           </Suspense>
         </main>
+
+        {/* Concept 4: Liquid Velvet OLED Floating Dock - Persistent Across All Admin Pages */}
+        <nav className="ops-floating-action-rail" role="toolbar" aria-label="Quick Section Navigation Dock">
+          {SECTIONS.map((s) => {
+            const isActive = activeTab === s.id;
+            const isBugWithCritical = s.id === 'bugs' && criticalBugCount > 0;
+            const isToolsWithRecycled = s.id === 'tools' && recycledCount > 0;
+            const displayLabel = s.id === 'command' ? 'Command' : s.label;
+            return (
+              <button
+                key={s.id}
+                ref={isActive ? activeDockPillRef : undefined}
+                type="button"
+                className={`ops-action-rail-pill ${isActive ? 'active' : ''}`}
+                onClick={() => onActiveTabChange(s.id)}
+                title={`${s.code} ${s.label}`}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <span className="ops-action-rail-glyph">{SECTION_GLYPHS[s.id] || '•'}</span>
+                <span className="ops-action-rail-label">{displayLabel}</span>
+                {isBugWithCritical && (
+                  <span className="ops-action-rail-badge danger" title={`${criticalBugCount} critical case(s) open`}>
+                    {criticalBugCount}
+                  </span>
+                )}
+                {isToolsWithRecycled && (
+                  <span className="ops-action-rail-badge warn" title={`${recycledCount} item(s) in recycle bin`}>
+                    {recycledCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+          <div className="ops-action-rail-sep" />
+          <button
+            type="button"
+            className="ops-action-rail-pill ops-action-rail-pill-aux"
+            disabled={isRefreshing}
+            onClick={() => void handleRefreshAll()}
+            title="Sync fleet metrics & telemetry"
+          >
+            <IconRefresh size={13} className={isRefreshing ? 'ops-spin' : undefined} />
+            <span className="ops-action-rail-label">Sync</span>
+          </button>
+          {onExitToTravelerApp && (
+            <button
+              type="button"
+              className="ops-action-rail-pill ops-action-rail-pill-aux"
+              onClick={onExitToTravelerApp}
+              title="Return to Traveler App view"
+            >
+              <span className="ops-action-rail-glyph">✈️</span>
+              <span className="ops-action-rail-label">Traveler</span>
+            </button>
+          )}
+        </nav>
           </div>
         </div>
       </div>

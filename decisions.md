@@ -4354,3 +4354,65 @@ This document logs all meaningful technical decisions, library choices, design p
   - Middle stops do not get their own forecast on the pass. The card carries the two ends of the route.
   - The inside-group line names one partner. A group of three or more says "the rest of {group}" because the figure is their combined nets.
 
+## 242. Glassmorphism UI Redesign for Superadmin Ops Deck — Concept 4: Liquid Velvet OLED
+* **Context:** The Superadmin Ops Deck dashboard previously had a standard violet-indigo theme. The user provided an inspirational reference featuring a modern dark-mode glassmorphic dashboard with smoked translucent acrylic panels, warm peach/amber ambient backlights, specular edge highlights, and high-impact data visualization widgets. Four design directions were explored in `superadmin_glassmorphism_designs.md`, and Concept 4 ("Liquid Velvet OLED") was selected for implementation and local verification.
+* **Decision:** Implemented Concept 4 ("Liquid Velvet OLED") across `ops-deck.css`, `AdminPortalLayout.tsx`, and `AdminCommandCenterPage.tsx`:
+  - **OLED Dark Canvas & Ambient Radiance**: Pure OLED black canvas (`#07060A`) illuminated with organic warm peach/tangerine (`rgba(255, 122, 0, 0.16)`) and soft violet (`rgba(109, 94, 246, 0.10)`) radial backlights that glow softly behind floating frosted glass panels.
+  - **Frosted Glass Panels & Specular Highlights**: Multi-layered glassmorphic surfaces with `backdrop-filter: blur(28px) saturate(190%)`, 1px borders (`rgba(255, 255, 255, 0.08)`), top specular inset reflection (`0 1px 0 rgba(255, 255, 255, 0.14) inset`), and deep ambient drop shadows (`0 16px 40px -10px rgba(0, 0, 0, 0.70)`).
+  - **Detached Left Floating Rail Dock**: Translucent glass dock (`border-radius: 28px`) with rounded pill items and warm liquid amber glow on active tabs.
+  - **Fleet Financial Velocity Waveform Hero**: Dynamic spend volume header with an interactive timeframe controller (`[ 7D | 30D | 90D | YTD ]`) and an illuminated curved spline SVG waveform with gradient stroke (`#FF7A00` to `#FFA24A`), soft gradient under-fill, and an animated pulsating peak node.
+  - **4-Up High-Density Floating Metric Islands**: Live metrics for Active Fleet, Avg Transaction Ticket, Settlement Overhang, and Incident Triage Queue.
+  - **Expense Categories Concentric Donut Chart**: Dual/triple concentric glowing SVG rings with center total and interactive category legend pills.
+  - **Fleet Health & Triage Stack**: Layered diagnostic pods covering Core Services, Settlement Liquidity, Consumer Packs, and live latency probes (Auth, Postgres, Storage) with ping actions.
+  - **Velocity Telemetry 7-Day Sparkline**: Vertical capsule bars with peak Saturday highlighted in an illuminated glowing capsule pill.
+  - **Floating Bottom Action Rail**: Detached sticky glass capsule providing instant triggers for Admin, Manages, Quick tasks, Audit, Triage, and Traveler View preview.
+* **Trade-offs Accepted:**
+
+## 243. Multi-Interval Dynamic Waveform Animation & Persistent Global Navigation Dock (v3.43.0)
+* **Context:** In the Superadmin Command Center, the "Fleet Financial Velocity" waveform was initially using a scaled 7-day coordinate set, which resulted in minimal visual distinction across timeframe selections (`7D`, `30D`, `90D`, `YTD`) and lacked animated transitions. Additionally, the bottom action rail was localized strictly to the Command Center with hardcoded quick actions ("Admin", "Manages") rather than mirroring the primary left-rail navigation across all Superadmin sections.
+* **Decision:**
+  - **Dynamic Multi-Interval Waveform Engine (`AdminCommandCenterPage.tsx`, `ops-deck.css`):**
+    - Built discrete timeframe aggregators calculating distinct node counts, coordinates, and curve trajectories:
+      - `7D`: 7 daily nodes (`Mon`–`Sun` / `Today`) with real daily transaction spikes and volatility.
+      - `30D`: 10 rolling 3-day buckets (`D-27`–`Today`) showing cyclical weekend surges.
+      - `90D`: 12 weekly buckets (`W1`–`W12`) showing tri-modal quarterly settlement arcs.
+      - `YTD`: 9 monthly progression nodes (`Jan`–`Sep` 2026) demonstrating cumulative growth slope.
+    - Implemented a smooth Catmull-Rom cubic Bézier spline generator preventing clipping or kinks.
+    - Added fluid SVG stroke drawing animation (`@keyframes ops-wave-stroke-anim`), fill revelation (`@keyframes ops-wave-fill-anim`), and node entry pop (`@keyframes ops-node-pop`).
+    - Added an interactive floating glass tooltip (`.ops-wave-tooltip`) displaying the date interval, formatted currency volume, and transaction count on node hover.
+    - Added dynamic X-axis milestone markers along the bottom aligned with each node.
+  - **Persistent Global Action Dock (`AdminPortalLayout.tsx`, `ops-deck.css`):**
+    - Promoted the floating bottom rail out of `AdminCommandCenterPage` and into `AdminPortalLayout` so it is persistently mounted across **all** Superadmin pages (`Command`, `Analytics`, `Flags`, `Trips`, `Features`, `Bugs`, `Users`, `Audit`, `Tools`).
+    - Mirrored the left rail menu items directly with their corresponding glyphs, codes, active glowing amber states, and live incident/recycled badge counters (`criticalBugCount`, `recycledCount`).
+    - Added quick auxiliary triggers for Sync and Traveler View preview.
+
+## 244. Adaptive Responsive Navigation Architecture: Desktop Left Rail vs. Handheld Floating Bottom Dock (v3.43.0)
+* **Context:** Market research and usability guidelines (Nielsen Norman Group, Apple HIG, Google Material Design 3) establish that widescreen desktop devices (16:9/16:10) naturally favor vertical left-side navigation aligned with F-pattern visual reading habits and high information hierarchy capacity. Conversely, handheld touch viewports favor thumb-zone bottom navigation (30% lower screen reach). Having all 9 navigation items simultaneously rendered on both the left sidebar and a floating bottom dock on desktop caused visual redundancy, split affordances, and sacrificed ~70px of vertical workspace height.
+* **Decision:** Implemented **Option 1 (Adaptive Responsive Navigation)** across `ops-deck.css` and `AdminPortalLayout.tsx`:
+  - **Desktop (`> 760px`)**:
+    - Left sidebar (`aside.ops-rail`) serves as the single primary navigation axis for all 9 sections (`#00`–`#08`), supporting collapsible mode (`Ctrl+\`), grouped operational hierarchies, and unread incident pips.
+    - Floating bottom dock (`.ops-floating-action-rail`) is hidden (`display: none;`), eliminating redundant navigational affordances.
+    - Reset `.ops-panel` desktop padding to standard `padding-bottom: 28px;`, reclaiming ~68px of vertical screen real estate for charts, waveforms, and audit tables.
+  - **Mobile & Handheld (`≤ 760px`)**:
+    - Bulky left sidebar is hidden (`display: none !important;`) and top horizontal navigation ribbon is deprecated to prevent screen clutter.
+    - Persistent Liquid Velvet OLED Floating Glass Dock (`.ops-floating-action-rail`) activates in the natural thumb zone with frosted blur (`backdrop-filter: blur(32px)`), amber active state pill, smooth horizontal swipe scroll, and automatic scroll-centering (`activeDockPillRef.current.scrollIntoView`).
+    - Main panel reserves `padding-bottom: calc(88px + var(--safe-bottom, 0px))` so all content comfortably scrolls above the floating dock.
+* **Trade-offs Accepted:**
+  - On desktop, bottom-dock access is omitted in favor of the structured left sidebar to maintain a clean single source of truth. Power users can navigate on desktop via left rail clicks or the keyboard command palette (`⌘K`).
+
+## 245. Mobile Header Streamlining & Single-Row Glass App Bar with Avatar Profile Menu (v3.43.0)
+* **Context:** In mobile view (viewport width ≤ 760px), the dashboard suffered from redundant dual navigation: users were presented with both a top dropdown trigger (`#03 Trips ▾`) and the floating bottom action rail, creating cognitive hesitation and split affordances. Furthermore, the top status row wrapped haphazardly into multiple lines with the live clock, sync text, "Preview Traveler View", and "Lock & Logout" buttons, squishing primary content cards down by ~180px.
+* **Decision:** Streamlined the handheld interface into a clean single-row glass app bar and anchored section navigation exclusively to the bottom thumb zone:
+  - **Eliminated Redundant Top Navigation:** Removed `.ops-section-trigger` and `.ops-mobile-nav-ribbon` from mobile rendering. The persistent Liquid Velvet OLED floating bottom dock remains the sole, 1-tap navigation axis.
+  - **Sleek Single-Row Mobile Header (48px):**
+    - Left brand cluster: Compact `TT` brand glyph with current section label and section code (`[TT] Trips #03`).
+    - Right action cluster: Real-time system health dot (`🟢`/`🟡`), 1-tap telemetry sync button with spin state (`🔄`), and user avatar initials badge (`👤`).
+  - **Glassmorphic Avatar Profile Menu:**
+    - Tapping the avatar badge smoothly opens a popover drawer (`.ops-mobile-profile-menu`) with `backdrop-filter: blur(28px)`, organic amber glow border, and outside-click dismissal.
+    - Consolidates secondary utilities: Superadmin name and email, system health pill, IST clock, full section index sheet trigger, "Preview Traveler View", and "Lock & Logout".
+  - **Vertical Space Reclaimed:** Reduced top header footprint from ~180px to a fixed 48px, reclaiming ~130px of vertical viewport height so trips and metric cards display immediately without scrolling.
+* **Trade-offs Accepted:**
+  - Secondary administrative actions (Traveler preview, logout, clock) now require a tap on the profile avatar rather than being permanently exposed in the top status row, which adheres to mobile application design standards (Apple HIG / MD3 app bar conventions).
+
+
+

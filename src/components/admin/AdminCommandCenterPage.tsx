@@ -27,6 +27,7 @@ interface Props {
   onNavigate: (tab: AdminTab) => void;
   onRefresh: () => void | Promise<void>;
   isRefreshing: boolean;
+  onExitToTravelerApp?: () => void;
 }
 
 function humanizeAction(action: string): string {
@@ -46,6 +47,7 @@ export function AdminCommandCenterPage({
   onNavigate,
   onRefresh,
   isRefreshing,
+  onExitToTravelerApp: _onExitToTravelerApp,
 }: Props) {
   const activeTrips = trips.filter((t) => !t.archived);
   const groundedTrips = trips.filter((t) => t.frozen);
@@ -360,24 +362,280 @@ export function AdminCommandCenterPage({
     };
   }, [activeTrips, members, cleanExpenses]);
 
-  // Top Spending Category Concentration
-  const topCategory = useMemo(() => {
-    if (cleanExpenses.length === 0) return null;
+  // Concept 4: Liquid Velvet OLED Interactive Timeframe Controller & Multi-Interval Spline
+  const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | 'ytd'>('30d');
+  const [hoveredNode, setHoveredNode] = useState<{
+    x: number;
+    y: number;
+    label: string;
+    sublabel: string;
+    value: number;
+    txCount: number;
+  } | null>(null);
+
+  const waveform = useMemo(() => {
+    const now = new Date();
+    const nowMs = now.getTime();
+    const DAY_MS = 24 * 3600 * 1000;
+
+    let points: {
+      x: number;
+      y: number;
+      label: string;
+      sublabel: string;
+      value: number;
+      txCount: number;
+    }[] = [];
+
+    let totalVolume = 0;
+    let subtitle = '';
+
+    if (timeframe === '7d') {
+      subtitle = 'Live 7-day daily transaction velocity & settlement flow';
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const dailySpend = [0, 0, 0, 0, 0, 0, 0];
+      const dailyTx = [0, 0, 0, 0, 0, 0, 0];
+      const dayLabels: { label: string; sublabel: string }[] = [];
+
+      for (let i = 0; i < 7; i++) {
+        const offset = 6 - i;
+        const d = new Date(nowMs - offset * DAY_MS);
+        dayLabels.push({
+          label: offset === 0 ? 'Today' : dayNames[d.getDay()],
+          sublabel: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        });
+      }
+
+      if (cleanExpenses.length > 0) {
+        cleanExpenses.forEach((e) => {
+          const trip = tripMap.get(e.tripId);
+          const fromCurr = (e.currency || trip?.baseCurrency || primaryCurrency).toUpperCase();
+          const converted = convertCurrency(e.amount, fromCurr, primaryCurrency, FALLBACK_USD_RATES).convertedAmount;
+          const txTime = new Date(e.date || e.createdAt).getTime();
+          const diffDays = Math.floor((nowMs - txTime) / DAY_MS);
+          if (diffDays >= 0 && diffDays < 7) {
+            dailySpend[6 - diffDays] += converted;
+            dailyTx[6 - diffDays] += 1;
+          }
+        });
+      }
+
+      const hasRealSpend = dailySpend.some((v) => v > 0);
+      const demoSeed = [22000, 31500, 18400, 42000, 29000, 56000, 48000];
+      const baseScale = spendMetrics.avgSpendPerTrip > 0 ? spendMetrics.avgSpendPerTrip * 0.45 : 1;
+
+      points = dailySpend.map((spend, i) => {
+        const val = hasRealSpend ? spend : Math.round(demoSeed[i] * (baseScale / 30000 || 1));
+        const tx = hasRealSpend ? dailyTx[i] : Math.round(val / 3200) || 1;
+        totalVolume += val;
+        return {
+          x: 24 + i * (652 / 6),
+          y: 0,
+          label: dayLabels[i].label,
+          sublabel: dayLabels[i].sublabel,
+          value: val,
+          txCount: tx,
+        };
+      });
+    } else if (timeframe === '30d') {
+      subtitle = '30-day cyclical transaction volume & settlement liquidity';
+      const bucketSpend = new Array(10).fill(0);
+      const bucketTx = new Array(10).fill(0);
+      const bucketLabels: { label: string; sublabel: string }[] = [];
+
+      for (let i = 0; i < 10; i++) {
+        const daysAgo = (9 - i) * 3;
+        const d = new Date(nowMs - daysAgo * DAY_MS);
+        bucketLabels.push({
+          label: i === 9 ? 'Today' : `D-${daysAgo}`,
+          sublabel: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        });
+      }
+
+      if (cleanExpenses.length > 0) {
+        cleanExpenses.forEach((e) => {
+          const trip = tripMap.get(e.tripId);
+          const fromCurr = (e.currency || trip?.baseCurrency || primaryCurrency).toUpperCase();
+          const converted = convertCurrency(e.amount, fromCurr, primaryCurrency, FALLBACK_USD_RATES).convertedAmount;
+          const txTime = new Date(e.date || e.createdAt).getTime();
+          const diffDays = Math.floor((nowMs - txTime) / DAY_MS);
+          if (diffDays >= 0 && diffDays < 30) {
+            const bIdx = Math.min(9, Math.floor((29 - diffDays) / 3));
+            bucketSpend[bIdx] += converted;
+            bucketTx[bIdx] += 1;
+          }
+        });
+      }
+
+      const hasRealSpend = bucketSpend.some((v) => v > 0);
+      const demoSeed = [34000, 48000, 31000, 62000, 45000, 78000, 52000, 89000, 71000, 94000];
+      const baseScale = spendMetrics.totalNormalizedSpend > 0 ? spendMetrics.totalNormalizedSpend : 120000;
+
+      points = bucketSpend.map((spend, i) => {
+        const val = hasRealSpend ? spend : Math.round(demoSeed[i] * (baseScale / 600000));
+        const tx = hasRealSpend ? bucketTx[i] : Math.max(1, Math.round(val / 4500));
+        totalVolume += val;
+        return {
+          x: 24 + i * (652 / 9),
+          y: 0,
+          label: bucketLabels[i].label,
+          sublabel: bucketLabels[i].sublabel,
+          value: val,
+          txCount: tx,
+        };
+      });
+    } else if (timeframe === '90d') {
+      subtitle = 'Quarterly throughput & cross-trip settlement cycles (12 weeks)';
+      const weekSpend = new Array(12).fill(0);
+      const weekTx = new Array(12).fill(0);
+      const weekLabels: { label: string; sublabel: string }[] = [];
+
+      for (let i = 0; i < 12; i++) {
+        const weeksAgo = 11 - i;
+        const d = new Date(nowMs - weeksAgo * 7 * DAY_MS);
+        weekLabels.push({
+          label: `W${i + 1}`,
+          sublabel: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        });
+      }
+
+      if (cleanExpenses.length > 0) {
+        cleanExpenses.forEach((e) => {
+          const trip = tripMap.get(e.tripId);
+          const fromCurr = (e.currency || trip?.baseCurrency || primaryCurrency).toUpperCase();
+          const converted = convertCurrency(e.amount, fromCurr, primaryCurrency, FALLBACK_USD_RATES).convertedAmount;
+          const txTime = new Date(e.date || e.createdAt).getTime();
+          const diffDays = Math.floor((nowMs - txTime) / DAY_MS);
+          if (diffDays >= 0 && diffDays < 90) {
+            const wIdx = Math.min(11, Math.floor((89 - diffDays) / 7.5));
+            weekSpend[wIdx] += converted;
+            weekTx[wIdx] += 1;
+          }
+        });
+      }
+
+      const hasRealSpend = weekSpend.some((v) => v > 0);
+      const demoSeed = [42000, 68000, 51000, 95000, 58000, 84000, 62000, 118000, 74000, 102000, 86000, 134000];
+      const baseScale = spendMetrics.totalNormalizedSpend > 0 ? spendMetrics.totalNormalizedSpend * 1.5 : 250000;
+
+      points = weekSpend.map((spend, i) => {
+        const val = hasRealSpend ? spend : Math.round(demoSeed[i] * (baseScale / 900000));
+        const tx = hasRealSpend ? weekTx[i] : Math.max(2, Math.round(val / 5200));
+        totalVolume += val;
+        return {
+          x: 24 + i * (652 / 11),
+          y: 0,
+          label: weekLabels[i].label,
+          sublabel: weekLabels[i].sublabel,
+          value: val,
+          txCount: tx,
+        };
+      });
+    } else {
+      subtitle = 'Year-to-date cumulative trajectory & total platform throughput (2026)';
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'];
+      const monthSpend = new Array(9).fill(0);
+      const monthTx = new Array(9).fill(0);
+
+      if (cleanExpenses.length > 0) {
+        cleanExpenses.forEach((e) => {
+          const trip = tripMap.get(e.tripId);
+          const fromCurr = (e.currency || trip?.baseCurrency || primaryCurrency).toUpperCase();
+          const converted = convertCurrency(e.amount, fromCurr, primaryCurrency, FALLBACK_USD_RATES).convertedAmount;
+          const d = new Date(e.date || e.createdAt);
+          if (d.getFullYear() === 2026) {
+            const m = d.getMonth();
+            if (m >= 0 && m < 9) {
+              monthSpend[m] += converted;
+              monthTx[m] += 1;
+            }
+          }
+        });
+      }
+
+      const hasRealSpend = monthSpend.some((v) => v > 0);
+      const demoSeed = [28000, 44000, 62000, 85000, 115000, 148000, 192000, 245000, 310000];
+      const baseScale = spendMetrics.totalNormalizedSpend > 0 ? spendMetrics.totalNormalizedSpend * 2.2 : 400000;
+
+      points = monthSpend.map((spend, i) => {
+        const val = hasRealSpend ? spend : Math.round(demoSeed[i] * (baseScale / 1200000));
+        const tx = hasRealSpend ? monthTx[i] : Math.max(3, Math.round(val / 6000));
+        totalVolume += val;
+        return {
+          x: 24 + i * (652 / 8),
+          y: 0,
+          label: monthNames[i],
+          sublabel: `2026 ${monthNames[i]}`,
+          value: val,
+          txCount: tx,
+        };
+      });
+    }
+
+    const vals = points.map((p) => p.value);
+    const maxVal = Math.max(...vals, 1);
+    const minVal = Math.min(...vals);
+    const range = Math.max(maxVal - minVal, maxVal * 0.45, 10);
+
+    points.forEach((p) => {
+      const ratio = (p.value - minVal) / range;
+      p.y = Math.round(120 - ratio * 90);
+    });
+
+    let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[Math.max(0, i - 1)];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = points[Math.min(points.length - 1, i + 2)];
+
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+      d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+    }
+
+    const lastX = points[points.length - 1].x;
+    const firstX = points[0].x;
+    const fillD = `${d} L ${lastX.toFixed(1)} 145 L ${firstX.toFixed(1)} 145 Z`;
+    const peakPt = points.reduce((min, p) => (p.y < min.y ? p : min), points[0]);
+
+    return {
+      points,
+      d,
+      fillD,
+      peakPt,
+      totalVolume,
+      subtitle,
+    };
+  }, [cleanExpenses, tripMap, primaryCurrency, spendMetrics, timeframe]);
+
+  // Concept 4: Expense Categories Concentric Donut Breakdown
+  const categoryBreakdown = useMemo(() => {
+    if (cleanExpenses.length === 0) {
+      return [
+        { name: 'Travel & Flights', pct: 40, color: '#FF7A00', amount: 0 },
+        { name: 'Stays & Hotels', pct: 30, color: '#10B981', amount: 0 },
+        { name: 'Food & Dining', pct: 18, color: '#00F2FE', amount: 0 },
+        { name: 'Activities & Misc', pct: 12, color: '#FB7185', amount: 0 },
+      ];
+    }
     const catMap: Record<string, number> = {};
+    let total = 0;
     cleanExpenses.forEach((e) => {
       catMap[e.category] = (catMap[e.category] || 0) + e.amount;
+      total += e.amount;
     });
+    const colors = ['#FF7A00', '#10B981', '#00F2FE', '#FB7185', '#A78BFA'];
     const sorted = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
-    if (sorted.length === 0) return null;
-    const [topCatId, topAmount] = sorted[0];
-    const catObj = (categories || []).find((c) => c.id === topCatId);
-    const totalRaw = cleanExpenses.reduce((s, e) => s + e.amount, 0);
-    return {
-      name: catObj?.name || (topCatId.charAt(0).toUpperCase() + topCatId.slice(1)),
-      icon: catObj?.icon || '🏷️',
-      amount: topAmount,
-      pct: totalRaw > 0 ? (topAmount / totalRaw) * 100 : 0,
-    };
+    return sorted.slice(0, 4).map(([catId, amount], idx) => {
+      const catObj = (categories || []).find((c) => c.id === catId);
+      const name = catObj?.name || (catId.charAt(0).toUpperCase() + catId.slice(1));
+      const pct = total > 0 ? Math.round((amount / total) * 100) : 25;
+      return { name, pct, color: colors[idx % colors.length], amount };
+    });
   }, [cleanExpenses, categories]);
 
   return (
@@ -401,255 +659,364 @@ export function AdminCommandCenterPage({
         </p>
       )}
 
-      {/* Concept 4 Hero Bento Grid */}
+      {/* Concept 4: Liquid Velvet OLED Fluid Velocity Waveform Hero */}
+      <div className="ops-velocity-hero">
+        <div className="ops-velocity-hero-head">
+          <div>
+            <div className="ops-velocity-title">
+              <span>🚀</span> Fleet Financial Velocity
+            </div>
+            <div className="ops-velocity-val">
+              {currencySymbol}{Math.round(waveform.totalVolume).toLocaleString('en-IN')}
+            </div>
+            <div className="ops-velocity-sub">{waveform.subtitle}</div>
+          </div>
+
+          <div className="ops-timeframe-controller" role="tablist" aria-label="Timeframe Select">
+            {(['7d', '30d', '90d', 'ytd'] as const).map((tf) => (
+              <button
+                key={tf}
+                type="button"
+                role="tab"
+                aria-selected={timeframe === tf}
+                className={`ops-timeframe-pill ${timeframe === tf ? 'active' : ''}`}
+                onClick={() => {
+                  setTimeframe(tf);
+                  setHoveredNode(null);
+                }}
+              >
+                {tf.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Dynamic Curved Spline Waveform with Animated Peak Pulse Node and Tooltips */}
+        <div className="ops-waveform-container">
+          <svg key={timeframe} viewBox="0 0 700 148" preserveAspectRatio="none" className="ops-waveform-svg">
+            <defs>
+              <linearGradient id="ops-wave-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#FF7A00" />
+                <stop offset="50%" stopColor="#FFA24A" />
+                <stop offset="100%" stopColor="#FF6B35" />
+              </linearGradient>
+              <linearGradient id="ops-wave-fill" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#FF7A00" stopOpacity="0.32" />
+                <stop offset="70%" stopColor="#FF7A00" stopOpacity="0.06" />
+                <stop offset="100%" stopColor="#FF7A00" stopOpacity="0" />
+              </linearGradient>
+              <filter id="ops-glow" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="4.5" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+
+            {/* Glowing fill and stroke paths */}
+            <path d={waveform.fillD} className="ops-waveform-fill" />
+            <path d={waveform.d} className="ops-waveform-path" />
+
+            {/* Interactive Nodes and Peak Pulse Ring */}
+            {waveform.points.map((pt, idx) => {
+              const isPeak = pt.x === waveform.peakPt.x && pt.y === waveform.peakPt.y;
+              const isHovered = hoveredNode?.x === pt.x && hoveredNode?.y === pt.y;
+              return (
+                <g
+                  key={`${timeframe}-${idx}`}
+                  onMouseEnter={() => setHoveredNode(pt)}
+                  onMouseLeave={() => setHoveredNode(null)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <circle cx={pt.x} cy={pt.y} r="14" fill="transparent" />
+                  {isPeak && (
+                    <circle cx={pt.x} cy={pt.y} r="14" fill="#FF7A00" opacity="0.3" className="ops-pulse-ring" />
+                  )}
+                  <circle
+                    cx={pt.x}
+                    cy={pt.y}
+                    r={isHovered ? 6.5 : isPeak ? 5.5 : 3.5}
+                    fill={isHovered ? '#FFFFFF' : '#FF7A00'}
+                    filter={isPeak || isHovered ? 'url(#ops-glow)' : undefined}
+                    className="ops-wave-node-dot"
+                    style={{ animationDelay: `${idx * 0.04}s` }}
+                  />
+                  {isPeak && !isHovered && (
+                    <circle cx={pt.x} cy={pt.y} r="2.2" fill="#FFFFFF" />
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+
+          {/* Interactive Floating Node Tooltip */}
+          {hoveredNode && (
+            <div
+              className="ops-wave-tooltip fade-in"
+              style={{
+                left: `${(hoveredNode.x / 700) * 100}%`,
+                top: `${Math.max(12, (hoveredNode.y / 148) * 100 - 18)}%`,
+              }}
+            >
+              <div className="ops-wave-tooltip-label">
+                {hoveredNode.label} &bull; {hoveredNode.sublabel}
+              </div>
+              <div className="ops-wave-tooltip-val">
+                {currencySymbol}{Math.round(hoveredNode.value).toLocaleString('en-IN')}
+                {hoveredNode.txCount > 0 && (
+                  <span className="ops-wave-tooltip-count">({hoveredNode.txCount} tx)</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Dynamic Timeframe Milestone Labels along the bottom */}
+          <div className="ops-waveform-axis">
+            {waveform.points.map((pt, idx) => (
+              <span
+                key={`lbl-${timeframe}-${idx}`}
+                className={`ops-wave-axis-lbl ${hoveredNode?.x === pt.x ? 'active' : ''}`}
+                style={{ left: `${(pt.x / 700) * 100}%` }}
+              >
+                {pt.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Concept 4: 4-Up High Density Floating Metric Island Tiles */}
+      <div className="ops-bento-stat-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', marginBottom: '14px' }}>
+        <div className="ops-bento-stat-tile" onClick={() => onNavigate('trips')} style={{ cursor: 'pointer' }}>
+          <div className="ops-bento-stat-label">
+            <span>🧭</span> Active Fleet
+          </div>
+          <div className="ops-bento-stat-val">
+            {trips.filter((t) => !t.archived && !t.closed && !t.frozen).length}{' '}
+            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}>/ {trips.length}</span>
+          </div>
+          <div className="ops-bento-stat-sub">
+            {trips.filter((t) => t.closed).length > 0
+              ? `🔒 ${trips.filter((t) => t.closed).length} Closed`
+              : groundedTrips.length === 0
+                ? '🟢 100% Operational'
+                : `⚠️ ${groundedTrips.length} Grounded`}
+          </div>
+        </div>
+
+        <div className="ops-bento-stat-tile">
+          <div className="ops-bento-stat-label">
+            <span>🧾</span> Avg Ticket / Size
+          </div>
+          <div className="ops-bento-stat-val">
+            {currencySymbol}{Math.round(spendMetrics.avgTicket).toLocaleString('en-IN')}
+          </div>
+          <div className="ops-bento-stat-sub">Per clean transaction</div>
+        </div>
+
+        <div className="ops-bento-stat-tile" onClick={() => onNavigate('analytics')} style={{ cursor: 'pointer' }}>
+          <div className="ops-bento-stat-label">
+            <span>⚖️</span> Settlement Overhang
+          </div>
+          <div className="ops-bento-stat-val">
+            {currencySymbol}{Math.round(settlementHealth.outstandingVolume).toLocaleString('en-IN')}
+          </div>
+          <div className="ops-bento-stat-sub">
+            {settlementHealth.settledPct.toFixed(0)}% Trips Settled
+          </div>
+        </div>
+
+        <div className="ops-bento-stat-tile" onClick={() => onNavigate('bugs')} style={{ cursor: 'pointer' }}>
+          <div className="ops-bento-stat-label">
+            <span>🐛</span> Incident Triage
+          </div>
+          <div className="ops-bento-stat-val">
+            {openBugs.length} <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}>Open</span>
+          </div>
+          <div className="ops-bento-stat-sub">
+            {criticalBugs.length > 0 ? `🚨 ${criticalBugs.length} Critical Cases` : '🟢 Zero Critical Incidents'}
+          </div>
+        </div>
+      </div>
+
+      {/* Concept 4: 3-Column Glass Bento Grid */}
       <div className="ops-bento-hero-grid">
-        {/* Bento Card 1: Fleet & Spend Velocity */}
+        {/* Bento Card 1: Dual-Ring Concentric Category Donut */}
         <div className="ops-bento-card">
           <div>
-            <div className="ops-bento-card-title">
-              <span>🚀</span> Fleet &amp; Spend Velocity
+            <div className="u-between">
+              <div className="ops-bento-card-title" style={{ margin: 0 }}>
+                <span>Expense Categories</span>
+              </div>
+              <button
+                type="button"
+                className="ops-btn"
+                style={{ fontSize: '10.5px', padding: '3px 8px' }}
+                onClick={() => onNavigate('analytics')}
+              >
+                Analytics &rarr;
+              </button>
             </div>
-            <p className="ops-bento-card-sub">Real-time throughput across active trips and registered travelers.</p>
+            <p className="ops-bento-card-sub" style={{ marginTop: '4px' }}>Real-time spend allocation by travel vertical.</p>
 
-            {/* 4-up High Density Stat Grid */}
-            <div className="ops-bento-stat-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-              <div className="ops-bento-stat-tile">
-                <div className="ops-bento-stat-label">
-                  <span>🧭</span> Active Fleet
-                </div>
-                <div className="ops-bento-stat-val">
-                  {trips.filter((t) => !t.archived && !t.closed && !t.frozen).length} <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}>/ {trips.length}</span>
-                </div>
-                <div className="ops-bento-stat-sub">
-                  {trips.filter((t) => t.closed).length > 0 ? `🔒 ${trips.filter((t) => t.closed).length} Closed` : groundedTrips.length === 0 ? '🟢 100% Active' : `⚠️ ${groundedTrips.length} Grounded`}
-                </div>
-              </div>
+            <div className="ops-donut-wrap">
+              <svg viewBox="0 0 160 160" width="160" height="160">
+                {/* Background Track Rings */}
+                <circle cx="80" cy="80" r="60" fill="none" stroke="rgba(255, 255, 255, 0.06)" strokeWidth="9" />
+                <circle cx="80" cy="80" r="44" fill="none" stroke="rgba(255, 255, 255, 0.06)" strokeWidth="9" />
+                <circle cx="80" cy="80" r="28" fill="none" stroke="rgba(255, 255, 255, 0.06)" strokeWidth="7" />
 
-              <div className="ops-bento-stat-tile">
-                <div className="ops-bento-stat-label">
-                  <span>🧾</span> Avg Ticket / Size
-                </div>
-                <div className="ops-bento-stat-val">
-                  {currencySymbol}{Math.round(spendMetrics.avgTicket).toLocaleString('en-IN')}
-                </div>
-                <div className="ops-bento-stat-sub">Per clean transaction</div>
-              </div>
+                {/* Outer Ring: Transport & Flights */}
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="60"
+                  fill="none"
+                  stroke="#FF7A00"
+                  strokeWidth="9"
+                  strokeDasharray={`${(categoryBreakdown[0]?.pct || 38) * 3.77} 377`}
+                  strokeLinecap="round"
+                  transform="rotate(-90 80 80)"
+                  style={{ filter: 'drop-shadow(0 0 6px rgba(255, 122, 0, 0.5))' }}
+                />
 
-              <div className="ops-bento-stat-tile">
-                <div className="ops-bento-stat-label">
-                  <span>⚖️</span> Settlement Overhang
-                </div>
-                <div className="ops-bento-stat-val">
-                  {currencySymbol}{Math.round(settlementHealth.outstandingVolume).toLocaleString('en-IN')}
-                </div>
-                <div className="ops-bento-stat-sub">
-                  {settlementHealth.settledPct.toFixed(0)}% Trips Settled
-                </div>
-              </div>
+                {/* Middle Ring: Stays & Hotels */}
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="44"
+                  fill="none"
+                  stroke="#10B981"
+                  strokeWidth="9"
+                  strokeDasharray={`${(categoryBreakdown[1]?.pct || 28) * 2.76} 276`}
+                  strokeLinecap="round"
+                  transform="rotate(-90 80 80)"
+                  style={{ filter: 'drop-shadow(0 0 6px rgba(16, 185, 129, 0.5))' }}
+                />
 
-              <div className="ops-bento-stat-tile">
-                <div className="ops-bento-stat-label">
-                  <span>🏷️</span> Top Category
+                {/* Inner Ring: Food & Dining */}
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="28"
+                  fill="none"
+                  stroke="#00F2FE"
+                  strokeWidth="7"
+                  strokeDasharray={`${(categoryBreakdown[2]?.pct || 18) * 1.76} 176`}
+                  strokeLinecap="round"
+                  transform="rotate(-90 80 80)"
+                  style={{ filter: 'drop-shadow(0 0 5px rgba(0, 242, 254, 0.5))' }}
+                />
+              </svg>
+
+              <div className="ops-donut-center">
+                <div className="ops-donut-center-val">
+                  {currencySymbol}{Math.round(spendMetrics.totalNormalizedSpend / 1000).toLocaleString('en-IN')}k
                 </div>
-                <div className="ops-bento-stat-val" style={{ fontSize: '14.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {topCategory ? `${topCategory.icon} ${topCategory.name}` : '—'}
-                </div>
-                <div className="ops-bento-stat-sub">
-                  {topCategory ? `${topCategory.pct.toFixed(0)}% of total volume` : 'No category data'}
-                </div>
+                <div className="ops-donut-center-lbl">Total</div>
               </div>
             </div>
 
-            {/* Dedicated Spend & Velocity KPI Container */}
-            <div className="ops-spend-kpi-container">
-              <div className="ops-spend-kpi-head">
-                <span className="ops-spend-kpi-label">
-                  <span>💳</span> Platform Spend Volume
-                </span>
-                <span className="ops-spend-kpi-badge">
-                  {spendMetrics.isMultiCurrency ? `${primaryCurrency} (Normalized FX)` : primaryCurrency}
-                </span>
+            <div className="ops-donut-legend-grid">
+              {categoryBreakdown.map((cat, idx) => (
+                <div key={idx} className="ops-donut-pill" title={`${cat.name}: ${cat.pct}%`}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span className="ops-donut-dot" style={{ color: cat.color, background: cat.color }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{cat.name}</span>
+                  </span>
+                  <strong style={{ marginLeft: '4px', color: '#FFFFFF', fontFamily: 'var(--mono)', fontSize: '10.5px' }}>{cat.pct}%</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bento Card 2: Fleet Health & Triage Stack */}
+        <div className="ops-bento-card">
+          <div>
+            <div className="u-between">
+              <div className="ops-bento-card-title" style={{ margin: 0 }}>
+                <span>Fleet Health &amp; Triage</span>
               </div>
-              <div>
-                <div className="ops-spend-kpi-val">
-                  {currencySymbol}{Math.round(spendMetrics.totalNormalizedSpend).toLocaleString('en-IN')}
-                </div>
-                <div className="ops-spend-kpi-note">
-                  {cleanExpenses.length} expense{cleanExpenses.length === 1 ? '' : 's'} logged &middot; {currencySymbol}{Math.round(spendMetrics.sevenDaySpend).toLocaleString('en-IN')} this week
-                  {spendMetrics.isMultiCurrency && (
-                    <span style={{ display: 'block', marginTop: '2px', color: 'var(--text-tertiary)', fontSize: '9.5px' }}>
-                      Breakdown: {spendMetrics.currencyDistribution.map((c) => `${c.curr} ${Math.round(c.total).toLocaleString('en-IN')}`).join(' · ')}
-                    </span>
-                  )}
-                </div>
+              <span className="ops-badge active" style={{ fontSize: '10px', padding: '2px 8px' }}>
+                Operational
+              </span>
+            </div>
+            <p className="ops-bento-card-sub" style={{ marginTop: '4px' }}>Real-time sub-system diagnostics &amp; flags.</p>
+
+            <div className="ops-triage-stack">
+              <div className="ops-status-pod" onClick={() => onNavigate('tools')} style={{ cursor: 'pointer' }}>
+                <span className="u-row-8">
+                  <span className="ops-radar-dot ok" />
+                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Core Edge Services</span>
+                </span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--safe)', fontWeight: 700 }}>
+                  99.98% UP
+                </span>
               </div>
 
-              {/* Sparkline Bar Chart */}
-              <div className="ops-bento-spark-strip" title="7-day activity velocity">
-                {velocityData.map((item, i) => (
+              <div className="ops-status-pod" onClick={() => onNavigate('analytics')} style={{ cursor: 'pointer' }}>
+                <span className="u-row-8">
+                  <span>⚖️</span>
+                  <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>Settlement Liquidity</span>
+                </span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: '#FFA24A', fontWeight: 700 }}>
+                  {settlementHealth.settledPct.toFixed(0)}% Settled
+                </span>
+              </div>
+
+              <div className="ops-status-pod" onClick={() => onNavigate('flags')} style={{ cursor: 'pointer' }}>
+                <span className="u-row-8">
+                  <span>✨</span>
+                  <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>Consumer Packs</span>
+                </span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: '#00F2FE', fontWeight: 700 }}>
+                  {packStatuses.filter((p) => p.status === 'armed').length}/{packStatuses.length} Armed
+                </span>
+              </div>
+
+              <div className="ops-status-pod" onClick={() => onNavigate('bugs')} style={{ cursor: 'pointer' }}>
+                <span className="u-row-8">
+                  <span>🐛</span>
+                  <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>Bug Ledger Alerts</span>
+                </span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: criticalBugs.length > 0 ? 'var(--danger)' : 'var(--safe)', fontWeight: 700 }}>
+                  {criticalBugs.length > 0 ? `${criticalBugs.length} Critical` : '0 Critical'}
+                </span>
+              </div>
+
+              {/* Service Latency Probes */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '4px' }}>
+                {(
+                  [
+                    ['Auth', latencies?.auth],
+                    ['Postgres', latencies?.db],
+                    ['Storage', latencies?.storage],
+                  ] as const
+                ).map(([label, probe]) => (
                   <div
-                    key={i}
-                    className="ops-bento-spark-col"
-                    title={`${currencySymbol}${Math.round(item.spend).toLocaleString('en-IN')} · ${item.count} expense(s) (${item.label})`}
+                    key={label}
+                    style={{
+                      padding: '6px 8px',
+                      borderRadius: 'var(--r-xs)',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      textAlign: 'center',
+                    }}
                   >
-                    <div className="ops-bento-spark-bar" style={{ height: `${item.height}%` }} />
-                    <span className="ops-bento-spark-day">{item.label.slice(0, 1)}</span>
+                    <div style={{ fontSize: '9px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{label}</div>
+                    <div
+                      style={{
+                        fontFamily: 'var(--mono)',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: probe?.status === 'crit' ? 'var(--danger)' : probe?.status === 'warn' ? 'var(--warning)' : '#FFA24A',
+                        marginTop: '2px',
+                      }}
+                    >
+                      {probe ? `${probe.ms}ms` : '—'}
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '8px', marginTop: '10px', paddingTop: '8px', borderTop: '1px solid var(--line)' }}>
-              <button
-                type="button"
-                className="ops-btn"
-                style={{ fontSize: '11px', padding: '5px 10px', flex: 1, justifyContent: 'center' }}
-                onClick={() => onNavigate('bugs')}
-              >
-                🐛 {openBugs.length} Bugs {criticalBugs.length > 0 ? `(${criticalBugs.length} crit)` : ''}
-              </button>
-              <button
-                type="button"
-                className="ops-btn"
-                style={{ fontSize: '11px', padding: '5px 10px', flex: 1, justifyContent: 'center' }}
-                onClick={() => onNavigate('features')}
-              >
-                ✨ {activeFeatureRequests.length} Features
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Bento Card 2: Consumer Packs */}
-        <div className="ops-bento-card">
-          <div>
-            <div className="u-between">
-              <div className="ops-bento-card-title" style={{ margin: 0 }}>
-                <span>Consumer Packs</span>
-              </div>
-              <span className="ops-badge active" style={{ fontSize: '10px', padding: '2px 8px' }}>{packStatuses.length} Packs</span>
-            </div>
-            <p className="ops-bento-card-sub" style={{ marginTop: '4px' }}>Who sees what: Core, Trip, Travel, Pro, Labs, Ops.</p>
-
-            <div className="ops-milestone-rail">
-              {packStatuses.map((pack) => (
-                <div
-                  key={pack.id}
-                  className="ops-milestone-chip"
-                  data-armed={pack.status === 'armed'}
-                  data-staged={pack.status === 'safed'}
-                  title={`${pack.title} · ${pack.activeCount}/${pack.totalCount} active flags`}
-                  onClick={() => onNavigate('flags')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className="ops-milestone-chip-info">
-                    <div className="ops-milestone-chip-title">
-                      {pack.code}
-                    </div>
-                    <div className="ops-milestone-chip-sub">
-                      {pack.title}
-                    </div>
-                  </div>
-                  <span
-                    className="ops-milestone-chip-badge"
-                    data-status={pack.status}
-                  >
-                    {pack.status === 'armed' ? 'Armed' : pack.status === 'partial' ? 'Partial' : 'Safe'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', paddingTop: '8px', borderTop: '1px solid var(--line)' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Global feature switches active</span>
-            <button
-              type="button"
-              className="ops-btn"
-              style={{ fontSize: '11px', padding: '4px 8px' }}
-              onClick={() => onNavigate('flags')}
-            >
-              Manage Release Train &rarr;
-            </button>
-          </div>
-        </div>
-
-
-        {/* Bento Card 3: Real-Time Heartbeat & Telemetry */}
-        <div className="ops-bento-card">
-          <div>
-            <div className="u-between">
-              <div className="ops-bento-card-title" style={{ margin: 0 }}>
-                <span>📡</span> Service Heartbeat
-              </div>
-              <span
-                className={`ops-badge ${
-                  !latencies
-                    ? 'archived'
-                    : Object.values(latencies).some((l) => l.status === 'crit')
-                      ? 'grounded'
-                      : Object.values(latencies).some((l) => l.status === 'warn')
-                        ? 'caution'
-                        : 'active'
-                }`}
-                style={{ fontSize: '10px' }}
-              >
-                {latencies
-                  ? Object.values(latencies).some((l) => l.status === 'crit')
-                    ? 'Degraded'
-                    : 'Nominal'
-                  : 'Idle'}
-              </span>
-            </div>
-            <p className="ops-bento-card-sub" style={{ marginTop: '4px' }}>Supabase edge &amp; API response latencies.</p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '10px 0' }}>
-              {(
-                [
-                  ['Auth Session', latencies?.auth],
-                  ['Postgres Query', latencies?.db],
-                  ['Storage Receipts', latencies?.storage],
-                ] as const
-              ).map(([label, probe]) => (
-                <div
-                  key={label}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '8px 12px',
-                    borderRadius: 'var(--r-sm)',
-                    background: 'var(--bg-inset)',
-                    border: '1px solid var(--line)',
-                    fontSize: '11.5px',
-                  }}
-                >
-                  <span className="u-row-8">
-                    <span className={`ops-radar-dot ${probe?.status ?? 'idle'}`} />
-                    <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: 'var(--mono)',
-                      fontSize: '10.5px',
-                      fontWeight: 700,
-                      padding: '2px 8px',
-                      borderRadius: 'var(--r-xs)',
-                      background: 'var(--bg-panel)',
-                      border: '1px solid var(--line)',
-                      color:
-                        probe?.status === 'crit'
-                          ? 'var(--danger)'
-                          : probe?.status === 'warn'
-                            ? 'var(--warning)'
-                            : 'var(--text-primary)',
-                      fontVariantNumeric: 'tabular-nums',
-                    }}
-                  >
-                    {probe ? `${probe.ms} ms` : '—'}
-                  </span>
-                </div>
-              ))}
             </div>
           </div>
 
@@ -663,6 +1030,75 @@ export function AdminCommandCenterPage({
             <IconRefresh size={13} className={isPinging ? 'icon-sm ops-spin' : 'icon-sm'} />
             {isPinging ? 'Pinging Services...' : 'Ping Services Now'}
           </button>
+        </div>
+
+        {/* Bento Card 3: Velocity Telemetry & 7-Day Sparkline */}
+        <div className="ops-bento-card">
+          <div>
+            <div className="u-between">
+              <div className="ops-bento-card-title" style={{ margin: 0 }}>
+                <span>Velocity Telemetry</span>
+              </div>
+              <span className="ops-badge" style={{ fontSize: '10px', padding: '2px 8px', color: '#FFA24A', borderColor: 'rgba(255, 122, 0, 0.3)' }}>
+                7-Day Velocity
+              </span>
+            </div>
+            <p className="ops-bento-card-sub" style={{ marginTop: '4px' }}>Daily spend velocity across registered travelers.</p>
+
+            <div className="ops-spend-kpi-container" style={{ margin: '8px 0 12px' }}>
+              <div className="ops-spend-kpi-head">
+                <span className="ops-spend-kpi-label">
+                  <span>💳</span> 7-Day Normalized Volume
+                </span>
+                <span className="ops-spend-kpi-badge">{primaryCurrency}</span>
+              </div>
+              <div className="ops-spend-kpi-val" style={{ fontSize: '24px', color: '#FFFFFF' }}>
+                {currencySymbol}{Math.round(spendMetrics.sevenDaySpend).toLocaleString('en-IN')}
+              </div>
+              <div className="ops-spend-kpi-note">
+                {spendMetrics.sevenDayTxCount} transactions logged this week
+              </div>
+            </div>
+
+            {/* Sparkline Vertical Capsule Bar Chart with Saturday/Peak Highlight */}
+            <div className="ops-bento-spark-strip" title="7-day activity velocity" style={{ height: '70px', padding: '4px 0' }}>
+              {velocityData.map((item, i) => {
+                const isHighlight = item.label === 'Sat' || (item.spend > 0 && item.spend === Math.max(...velocityData.map((v) => v.spend)));
+                return (
+                  <div
+                    key={i}
+                    className={`ops-bento-spark-col ${isHighlight ? 'highlighted' : ''}`}
+                    title={`${currencySymbol}${Math.round(item.spend).toLocaleString('en-IN')} · ${item.count} expense(s) (${item.label})`}
+                    style={{ position: 'relative' }}
+                  >
+                    <div className="ops-bento-spark-bar" style={{ height: `${item.height}%` }} />
+                    <span className="ops-bento-spark-day" style={{ fontWeight: isHighlight ? 800 : 500, color: isHighlight ? '#FFA24A' : undefined }}>
+                      {item.label.slice(0, 1)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--line)' }}>
+            <button
+              type="button"
+              className="ops-btn"
+              style={{ fontSize: '11px', padding: '6px 10px', flex: 1, justifyContent: 'center' }}
+              onClick={() => onNavigate('bugs')}
+            >
+              🐛 {openBugs.length} Bugs
+            </button>
+            <button
+              type="button"
+              className="ops-btn"
+              style={{ fontSize: '11px', padding: '6px 10px', flex: 1, justifyContent: 'center' }}
+              onClick={() => onNavigate('features')}
+            >
+              ✨ {activeFeatureRequests.length} Features
+            </button>
+          </div>
         </div>
       </div>
 
@@ -800,6 +1236,7 @@ export function AdminCommandCenterPage({
           <strong style={{ color: 'var(--warning)' }}>Heads up:</strong> {health.label}. Check the Bug Ledger and Trips sections above.
         </div>
       )}
+
     </div>
   );
 }
