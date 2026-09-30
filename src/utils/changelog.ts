@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.43.2',
+    date: '2026-10-01',
+    changes: [
+      'On trip tiles, Upcoming, Past, or Active and the Spent amount stay on the photo while the cover changes.',
+    ],
+  },
+  {
     version: '3.43.1',
     date: '2026-10-01',
     changes: [

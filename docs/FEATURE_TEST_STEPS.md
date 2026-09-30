@@ -1514,7 +1514,7 @@ Test on a phone-sized viewport (DevTools device mode is fine) plus a real Androi
 1. In Ops Deck → Flags, confirm **Cycling Destination Photos** is on.
 2. Create or edit a trip named like “Sikkim Backpacking” and set the destination to `Gangtok, Pelling, Lachung` (or add those as stops).
 3. On the home stack, watch the front card. The photo should change about every 5–6 seconds. The picture that is leaving stays visible while the next one dissolves over it for about a second — no blank flash. The blurred page behind the stack should follow with the same dissolve.
-4. Open list view. The same trip’s card should rotate through those places.
+4. Open list view. The same trip’s card should rotate through those places. The bottom bar (Upcoming, Active, or Past, and Spent) stays on the photo the whole time, transparent, and does not disappear while the photo changes.
 5. Swipe another multi-destination trip to the front. Its card should rotate through its own places.
 6. Open a trip with one destination (for example Goa). The stack card and the list card stay on one photo.
 7. Open the Sikkim trip. The photo behind the map stays a single cover and does not rotate.

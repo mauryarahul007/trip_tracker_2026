@@ -4421,5 +4421,11 @@ This document logs all meaningful technical decisions, library choices, design p
   - Peek cards cycle on their own timers, so they are not locked to the front card's frame.
   - A place with no tourism photo falls back to a stock travel image, and identical URLs are not shown twice.
 
+## 247. Tile status bar stays on the cycling cover (v3.43.2, BUG-261)
+* **Context:** In tiles view the cycling cover used a raised layer. That layer painted over the bottom bar, so Upcoming, Past, or Active and Spent disappeared until the next paint.
+* **Decision:** The bar lives on the photo, above the crossfade, as a transparent strip. Photo layers are isolated inside the image so they cannot cover it.
+* **Trade-offs Accepted:**
+  - The strip is a light gradient so the photo still shows through. It is not a solid footer.
+
 
 

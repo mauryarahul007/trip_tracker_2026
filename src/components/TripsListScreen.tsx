@@ -244,19 +244,19 @@ function LuxuryGridTripCard({
             <span>{displayCity}</span>
           </div>
         )}
-      </div>
 
-      <div className="concept2-card-footer">
-        <div className={`concept2-card-status-label status-${statusLabel.toLowerCase()}`}>
-          <span className="concept2-status-dot" aria-hidden="true" />
-          <span>{statusLabel}</span>
-        </div>
-        <div
-          className="concept2-card-spend-text"
-          title={isBudgetSet ? `Budget: ${currencySymbol}${Math.round(tripBudget).toLocaleString()}` : `Total logged expenses: ${currencySymbol}${Math.round(totalSpent).toLocaleString()}`}
-        >
-          <span className="concept2-spend-label">{isBudgetSet ? 'Budget: ' : 'Spent: '}</span>
-          <span className="concept2-spend-amount">{currencySymbol}{Math.round(isBudgetSet ? tripBudget : totalSpent).toLocaleString()}</span>
+        <div className="concept2-card-footer">
+          <div className={`concept2-card-status-label status-${statusLabel.toLowerCase()}`}>
+            <span className="concept2-status-dot" aria-hidden="true" />
+            <span>{statusLabel}</span>
+          </div>
+          <div
+            className="concept2-card-spend-text"
+            title={isBudgetSet ? `Budget: ${currencySymbol}${Math.round(tripBudget).toLocaleString()}` : `Total logged expenses: ${currencySymbol}${Math.round(totalSpent).toLocaleString()}`}
+          >
+            <span className="concept2-spend-label">{isBudgetSet ? 'Budget: ' : 'Spent: '}</span>
+            <span className="concept2-spend-amount">{currencySymbol}{Math.round(isBudgetSet ? tripBudget : totalSpent).toLocaleString()}</span>
+          </div>
         </div>
       </div>
     </div>

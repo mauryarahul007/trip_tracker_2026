@@ -4873,6 +4873,7 @@ input:checked + .toggle-slider:before {
   overflow: hidden;
   background-color: transparent;
   flex-shrink: 0;
+  isolation: isolate;
 }
 
 .concept2-card-image {
@@ -5061,15 +5062,14 @@ input:checked + .toggle-slider:before {
   left: 0;
   right: 0;
   bottom: 0;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 6px;
   padding: 8px 10px;
-  background: rgba(12, 16, 24, 0.34);
-  backdrop-filter: blur(18px) saturate(1.15);
-  -webkit-backdrop-filter: blur(18px) saturate(1.15);
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(8, 12, 18, 0) 0%, rgba(8, 12, 18, 0.42) 42%, rgba(8, 12, 18, 0.55) 100%);
+  border-top: none;
 }
 
 .concept2-card-status-label {

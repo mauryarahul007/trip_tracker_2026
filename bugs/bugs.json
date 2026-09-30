@@ -7670,5 +7670,32 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-28T00:10:00.000Z",
     "resolutionNote": "Fixed in commit 94071b0 (v3.41.0). Alphas raised to 0.63 and 0.61."
+  },
+  {
+    "id": "BUG-261",
+    "title": "Tile status and spent bar disappears when the cover photo cycles",
+    "description": "In tiles view, cycling the destination photo painted over the bottom bar, so Upcoming/Past and Spent vanished.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open Journeys in tiles view",
+      "open a trip with several destinations such as Sikkim Bagpacking",
+      "wait for the cover to change"
+    ],
+    "expectedBehavior": "The spent and status bar stays on the photo, transparent, through every photo change.",
+    "actualBehavior": "The bar disappeared as soon as the next photo faded in.",
+    "diagnostics": {},
+    "createdAt": "2026-09-30T21:52:05.382Z",
+    "updatedAt": "2026-09-30T21:52:08.890Z",
+    "resolvedBy": "rahul",
+    "resolvedAt": "2026-09-30T21:52:08.890Z",
+    "resolutionNote": "v3.43.2: the tile status and spent bar stays above the cycling photo as a transparent strip. The photo layers no longer paint over it."
   }
 ]

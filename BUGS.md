@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **260** | All recorded bugs across sessions |
+| **Total Tracked** | **261** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **233** | Verified & closed |
+| **✅ Resolved** | **234** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -264,6 +264,7 @@
 | **BUG-258** | Ops Deck Refresh and Export buttons stack icon over label | `ui-ux` | `low` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). Rebuilt the Ops Deck button system (one-row, 36px, focus ring, variants). Refresh keeps its label and spins its icon. |
 | **BUG-259** | Past and Archived trip filters show no count | `ui-ux` | `low` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). All four chips always show a count badge. |
 | **BUG-260** | Boarding-pass secondary text below WCAG AA contrast in light theme | `ui-ux` | `low` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). Alphas raised to 0.63 and 0.61. |
+| **BUG-261** | Tile status and spent bar disappears when the cover photo cycles | `ui-ux` | `medium` | `rahul` | `rahul` | v3.43.2: the tile status and spent bar stays above the cycling photo as a transparent strip. The photo layers no longer paint over it. |
 
 ---
 
