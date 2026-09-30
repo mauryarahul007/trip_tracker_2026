@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **97** |
+| **Total Tracked** | **98** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **95** |
+| **✅ Shipped** | **96** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -147,6 +147,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-095** | Shorter Settings list | `ui-ux` | `rahul` | `rahul` | Shipped in commit 6c802ed (v3.40.1). ADR 232. Root groups are profile, this trip, notifications, appearance, data, help, and account. No new flag. |
 | **FEAT-096** | App-wide UI/UX revamp and motion polish (v3.41.0) | `ui-ux` | `rahul` | `claude-cli` | Shipped in commit 94071b0 (v3.41.0). ADRs 235-239. Flags (default ON): enableMotionPolish, enableCompactSummary, enableCompactExpenseForm, enableQuickTripCreate, enableDestinationAutocomplete, enableCalmHaptics (Core); enableMemberMoneyRow, enableNotificationGrouping (Trip). QA steps in FEATURE_TEST_STEPS.md: UX-MOTION, UX-POLISH2, UX-POLISH3, DEST-SUGGEST, QA-0927. |
 | **FEAT-097** | Pass back seat-and-gate balances | `ui-ux` | `rahul` | `rahul` | Shipped in dc59c9d (v3.42.1). |
+| **FEAT-098** | Cycling destination photos on the home stack and list | `ui-ux` | `rahul` | `rahul` | Shipped in v3.43.1. ADR 246. Flag cycleDestinationCovers (Core, default ON). |
 
 ---
 

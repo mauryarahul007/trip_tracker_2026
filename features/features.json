@@ -1548,5 +1548,21 @@
     "shippedAt": "2026-09-28T05:37:37.669Z",
     "shippedBy": "rahul",
     "shippedNote": "Shipped in dc59c9d (v3.42.1)."
+  },
+  {
+    "id": "FEAT-098",
+    "title": "Cycling destination photos on the home stack and list",
+    "description": "Trips with more than one destination rotate the cover on the home stack and list cards, one photo per place, crossfading about every 5.5 seconds. Core flag cycleDestinationCovers, default ON. Shipped in v3.43.1. ADR 246.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-30T21:43:11.800Z",
+    "updatedAt": "2026-09-30T21:43:11.800Z",
+    "shippedAt": "2026-09-30T21:43:11.800Z",
+    "shippedBy": "rahul",
+    "shippedNote": "Shipped in v3.43.1. ADR 246. Flag cycleDestinationCovers (Core, default ON)."
   }
 ]

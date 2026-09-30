@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Trip } from '../types';
-import { useTripPhoto } from './TripStack';
+import { useCyclingTripPhoto, COVER_WIDTH } from './TripStack';
 
 interface Props {
   trip: Trip | null;
@@ -15,7 +15,8 @@ const VISIBLE_OPACITY = 1;
 // place to paint the same image. Two stacked layers crossfade on swipe
 // instead of snapping, since background-image itself isn't animatable.
 export function HomeAmbientBackdrop({ trip }: Props) {
-  const photoUrl = useTripPhoto(trip?.destination, trip?.coverImageUrl, trip?.name);
+  const stopNames = trip?.stops?.map((s) => s.name).filter(Boolean);
+  const photoUrl = useCyclingTripPhoto(trip?.destination, trip?.coverImageUrl, trip?.name, COVER_WIDTH, stopNames);
   const [layers, setLayers] = useState<{ url: string; key: number }[]>([]);
   const nextKey = useRef(0);
 

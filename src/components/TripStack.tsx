@@ -13,6 +13,7 @@ import { sortTrips, type TripSortMode } from '../utils/tripSort';
 import { getCurrencySymbol } from '../utils/currency';
 import { useTripStore } from '../store/tripStore';
 import { getItineraryRouteInfo } from '../utils/tripDestination';
+import { collectTripPhotoPlaces } from '../utils/tripPhotoPlaces';
 import {
   EXIT_TRANSITION_MS,
   SWIPE_THRESHOLD,
@@ -282,6 +283,92 @@ export function useTripPhoto(
   return url;
 }
 
+// Home stack and list cards rotate one photo per destination. Inside an
+// open trip the hero stays on useTripPhoto (a single cover).
+export const DESTINATION_PHOTO_CYCLE_MS = 5500;
+
+export function useCyclingTripPhoto(
+  destination?: string,
+  coverImageUrl?: string,
+  tripName?: string,
+  width: number = COVER_WIDTH,
+  stops?: string[]
+): string | null {
+  const cycleOn = useTripStore((s) => s.isFeatureEnabled('cycleDestinationCovers'));
+  const single = useTripPhoto(destination, coverImageUrl, tripName, width, stops);
+  const stopsKey = (stops || []).join('\u0001');
+  const places = useMemo(
+    () => (cycleOn ? collectTripPhotoPlaces(destination, stopsKey ? stopsKey.split('\u0001') : []) : []),
+    [cycleOn, destination, stopsKey]
+  );
+  const [urls, setUrls] = useState<string[]>([]);
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    setIndex(0);
+    if (places.length < 2 || prefersReducedMotion) {
+      setUrls([]);
+      return;
+    }
+    let cancelled = false;
+    Promise.all(places.map(async (place) => {
+      const result = await fetchPlaceCoverImage(place);
+      return result
+        ? coverImageUrlAtWidth(result, width)
+        : getFallbackTravelPhoto(place, width);
+    })).then((list) => {
+      if (cancelled) return;
+      const unique: string[] = [];
+      for (const url of list) {
+        if (url && !unique.includes(url)) unique.push(url);
+      }
+      setUrls(unique);
+    });
+    return () => { cancelled = true; };
+  }, [places, width]);
+
+  useEffect(() => {
+    if (urls.length < 2) return;
+    const id = window.setInterval(() => {
+      setIndex((i) => (i + 1) % urls.length);
+    }, DESTINATION_PHOTO_CYCLE_MS);
+    return () => window.clearInterval(id);
+  }, [urls]);
+
+  if (!cycleOn || urls.length < 2 || prefersReducedMotion) return single;
+  return urls[index % urls.length] || single;
+}
+
+// Two layers: the photo that is leaving stays fully visible while the next
+// one dissolves over it. The first photo paints immediately.
+export function CrossfadePhoto({ url, className }: { url: string | null; className: string }) {
+  const [layers, setLayers] = useState<{ url: string; key: number }[]>([]);
+  const nextKey = useRef(0);
+
+  useEffect(() => {
+    if (!url) return;
+    setLayers((prev) => {
+      if (prev[prev.length - 1]?.url === url) return prev;
+      nextKey.current += 1;
+      return [...prev.slice(-1), { url, key: nextKey.current }];
+    });
+  }, [url]);
+
+  if (layers.length === 0) return null;
+
+  return (
+    <>
+      {layers.map((layer, idx) => (
+        <div
+          key={layer.key}
+          className={`${className}${layers.length > 1 && idx === layers.length - 1 ? ' is-incoming' : ''}`}
+          style={{ backgroundImage: `url("${layer.url}")` }}
+        />
+      ))}
+    </>
+  );
+}
+
 // Text sits at the top of the card (stamp/destination/name/meta) -- only
 // the avatar row lives at the bottom -- so the scrim darkens the top, and
 // Re-export usePhotoTextTone for backwards compatibility and cross-component use
@@ -309,7 +396,7 @@ const CardContent = memo(function CardContent({
   const overflow = tripMembers.length - shown.length;
   const expenseCount = trip.expenseCount || 0;
   const stopNames = useMemo(() => trip.stops?.map((s) => s.name).filter(Boolean), [trip.stops]);
-  const photoUrl = useTripPhoto(trip.destination, trip.coverImageUrl, trip.name, isFront ? COVER_WIDTH : PEEK_COVER_WIDTH, stopNames);
+  const photoUrl = useCyclingTripPhoto(trip.destination, trip.coverImageUrl, trip.name, isFront ? COVER_WIDTH : PEEK_COVER_WIDTH, stopNames);
   const fallbackPhoto = useMemo(
     () => getFallbackTravelPhoto(trip.destination || (stopNames && stopNames[0]) || trip.name || trip.id, isFront ? COVER_WIDTH : PEEK_COVER_WIDTH),
     [trip.destination, stopNames, trip.name, trip.id, isFront]
@@ -358,15 +445,8 @@ const CardContent = memo(function CardContent({
 
   return (
     <div className={`stack-card-face has-photo tone-${tone}`}>
-      {effectivePhotoUrl && (
-        <div
-          key={effectivePhotoUrl}
-          className="stack-card-photo"
-          style={{
-            backgroundImage: `linear-gradient(180deg, rgba(8,12,20,0.55) 0%, rgba(8,12,20,0.06) 30%, rgba(8,12,20,0.85) 75%, rgba(8,12,20,0.98) 100%), url("${effectivePhotoUrl}")`
-          }}
-        />
-      )}
+      <CrossfadePhoto url={effectivePhotoUrl} className="stack-card-photo" />
+      {effectivePhotoUrl && <div className="stack-card-photo-scrim" />}
       <div className="stack-card-content">
         <div className="concept1-card-top-bar">
           {statusBadge ? (
@@ -1001,7 +1081,8 @@ export function TripStack({
     });
   }, [sortedIds]);
 
-  const frontPhotoUrl = useTripPhoto(front?.destination, front?.coverImageUrl, front?.name);
+  const frontStopNames = front?.stops?.map((s) => s.name).filter(Boolean);
+  const frontPhotoUrl = useCyclingTripPhoto(front?.destination, front?.coverImageUrl, front?.name, COVER_WIDTH, frontStopNames);
   const frontGlowColor = useAmbientGlowColor(frontPhotoUrl);
 
   if (!front) return null;

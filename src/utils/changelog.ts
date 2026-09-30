@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.43.1',
+    date: '2026-10-01',
+    changes: [
+      'A trip with several destinations rotates its cover on the home stack and the list, one photo per place, dissolving into the next about every 5–6 seconds.',
+      'A trip with one destination stays on a single photo. The photo inside an open trip does not rotate.',
+    ],
+  },
+  {
     version: '3.43.0',
     date: '2026-09-30',
     changes: [

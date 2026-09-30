@@ -15,6 +15,7 @@ export type FeatureFlagKey =
   | 'enableCalmHaptics'
   | 'enableQuickTripCreate'
   | 'enableDestinationAutocomplete'
+  | 'cycleDestinationCovers'
   | 'enableTravelerPassBack'
   | 'enableMemberMoneyRow'
   | 'enableNotificationGrouping'

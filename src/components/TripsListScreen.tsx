@@ -12,7 +12,7 @@ import { currencyForCountry, didYouMean, splitDestination } from '../services/pl
 import { DestinationInput } from './DestinationInput';
 import { newId } from '../utils/uuid';
 import { useTripStore } from '../store/tripStore';
-import { TripStack, useTripPhoto, useDestinationWeather, getFallbackTravelPhoto, PEEK_COVER_WIDTH } from './TripStack';
+import { TripStack, CrossfadePhoto, useCyclingTripPhoto, useDestinationWeather, getFallbackTravelPhoto, PEEK_COVER_WIDTH } from './TripStack';
 import { sortTrips, type TripSortMode } from '../utils/tripSort';
 import { HomeAmbientBackdrop } from './HomeAmbientBackdrop';
 import { OnboardingSwipe } from './OnboardingSwipe';
@@ -76,7 +76,7 @@ function LuxuryGridTripCard({
   onOpenActionSheet: (trip: Trip) => void;
 }) {
   const stopNames = useMemo(() => trip.stops?.map((s) => s.name).filter(Boolean), [trip.stops]);
-  const photoUrl = useTripPhoto(trip.destination, trip.coverImageUrl, trip.name, PEEK_COVER_WIDTH, stopNames);
+  const photoUrl = useCyclingTripPhoto(trip.destination, trip.coverImageUrl, trip.name, PEEK_COVER_WIDTH, stopNames);
   const fallbackPhoto = useMemo(
     () => getFallbackTravelPhoto(trip.destination || (stopNames && stopNames[0]) || trip.name || trip.id, PEEK_COVER_WIDTH),
     [trip.destination, stopNames, trip.name, trip.id]
@@ -223,12 +223,7 @@ function LuxuryGridTripCard({
       onKeyDown={handleKeyDown}
     >
       <div className="concept2-card-image-wrap">
-        <div
-          className="concept2-card-image"
-          style={{
-            backgroundImage: `url("${effectivePhotoUrl}")`,
-          }}
-        />
+        <CrossfadePhoto url={effectivePhotoUrl} className="concept2-card-image" />
         <div className="concept2-card-image-overlay" />
         <div className="concept2-card-image-content">
           <div className="concept2-card-top-row">

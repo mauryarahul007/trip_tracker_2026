@@ -4414,5 +4414,12 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Secondary administrative actions (Traveler preview, logout, clock) now require a tap on the profile avatar rather than being permanently exposed in the top status row, which adheres to mobile application design standards (Apple HIG / MD3 app bar conventions).
 
+## 246. Cycling destination covers on the home stack and list (v3.43.1)
+* **Context:** A multi-destination trip such as Sikkim Backpacking (Gangtok, Lachung, Pelling) showed one cover on the home stack and the list cards. The photo lookup treated the whole destination string as a single query and kept the first hit.
+* **Decision:** Core flag `cycleDestinationCovers` (default ON) rotates one photo per place on the home stack, the list cards, and the blurred page behind the stack, about every 5.5 seconds. The outgoing photo stays visible while the next dissolves over it for 1.25 seconds. Places come from the destination text and from route stops, without repeats. One place, reduced motion, or the flag off keeps today's single cover. The open-trip map hero does not rotate.
+* **Trade-offs Accepted:**
+  - Peek cards cycle on their own timers, so they are not locked to the front card's frame.
+  - A place with no tourism photo falls back to a stock travel image, and identical URLs are not shown twice.
+
 
 

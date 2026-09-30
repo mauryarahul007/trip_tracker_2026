@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-01 | v3.43.1 | FEAT-COVER-CYCLE | [Cycling destination photos](#feat-cover-cycle--cycling-destination-photos) |
 | 2026-09-28 | v3.42.1 | PASS-STUB | [Pass back seat and gate](#pass-stub--pass-back-seat-and-gate) |
 | 2026-09-27 | v3.41.0 | DEST-SUGGEST | [Destination suggestions & did-you-mean](#dest-suggest--destination-suggestions--did-you-mean) |
 | 2026-09-27 | v3.41.0 | QA-0927 | [QA fixes: map handoff, stale trip URL, ₹0 flash, inbox empty state, photo lookups](#qa-0927--qa-fixes) |
@@ -1497,6 +1498,35 @@ Test on a phone-sized viewport (DevTools device mode is fine) plus a real Androi
 - A grouped traveler can see what is inside the couple and what the couple still settles with everyone else, and those two figures add up to the personal line.
 - An ungrouped traveler sees one signed position and an unsigned cash-laid-out figure with their share.
 - The front of the pass is the same as before.
+
+---
+
+## FEAT-COVER-CYCLE — Cycling destination photos
+
+**Point:** A trip with several destinations rotates its cover on the home stack and the list cards, one photo per place, about every 5–6 seconds. A single destination stays on one photo. The open-trip map hero does not rotate.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Rotate stack and list covers through each destination | `cycleDestinationCovers` | ON (Core) |
+
+### Steps
+1. In Ops Deck → Flags, confirm **Cycling Destination Photos** is on.
+2. Create or edit a trip named like “Sikkim Backpacking” and set the destination to `Gangtok, Pelling, Lachung` (or add those as stops).
+3. On the home stack, watch the front card. The photo should change about every 5–6 seconds. The picture that is leaving stays visible while the next one dissolves over it for about a second — no blank flash. The blurred page behind the stack should follow with the same dissolve.
+4. Open list view. The same trip’s card should rotate through those places.
+5. Swipe another multi-destination trip to the front. Its card should rotate through its own places.
+6. Open a trip with one destination (for example Goa). The stack card and the list card stay on one photo.
+7. Open the Sikkim trip. The photo behind the map stays a single cover and does not rotate.
+
+### Negative checks
+- Turn `cycleDestinationCovers` off and return home. The stack and list cards each show one photo and do not change after 6 seconds.
+- With the flag on, a one-destination trip still does not rotate.
+
+### Pass
+- Multi-destination trips cycle a distinct photo per place on the stack and on list cards, including the backdrop behind the stack.
+- One-destination trips and the open-trip hero stay on a single photo.
+- Flag off restores the single cover.
 
 ---
 
