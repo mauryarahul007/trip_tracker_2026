@@ -4437,3 +4437,10 @@ This document logs all meaningful technical decisions, library choices, design p
 
 
 
+
+## 249. Pass back no longer clipped; both faces share one height (v3.43.4, BUG-262)
+* **Context:** The back face of the Summary boarding pass was absolutely positioned over the front face, so it could never be taller than the front. The back's content (header, balance hero, progress bar, link, footer) was taller, so the bottom row and the "Who owes who" link were cut off.
+* **Decision:** Both faces now share one grid cell, so the card takes the height of the taller face. The front's body is centered to absorb the extra height. The back was tidied: a smaller amount, a full-width progress bar with count and percent, a full-width "See who owes who" row, and a footer with the join-code chip, last-updated line, and avatars. The duplicate dashed line on the front was removed. The reduced-motion crossfade still works because the faces still overlap. Same `enableTravelerPassBack` flag, no new flag.
+* **Trade-offs Accepted:**
+  - The front is now as tall as the back, which leaves more space around its amount and stamp than before.
+  - The amount no longer scrolls to "Who owes who" on tap; only the new row does, so a stray tap on the number flips the card instead.

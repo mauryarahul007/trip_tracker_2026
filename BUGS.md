@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **261** | All recorded bugs across sessions |
+| **Total Tracked** | **262** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **234** | Verified & closed |
+| **✅ Resolved** | **235** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -265,6 +265,7 @@
 | **BUG-259** | Past and Archived trip filters show no count | `ui-ux` | `low` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). All four chips always show a count badge. |
 | **BUG-260** | Boarding-pass secondary text below WCAG AA contrast in light theme | `ui-ux` | `low` | `claude-qa` | `claude-cli` | Fixed in commit 94071b0 (v3.41.0). Alphas raised to 0.63 and 0.61. |
 | **BUG-261** | Tile status and spent bar disappears when the cover photo cycles | `ui-ux` | `medium` | `rahul` | `rahul` | v3.43.2: the tile status and spent bar stays above the cycling photo as a transparent strip. The photo layers no longer paint over it. |
+| **BUG-262** | Summary pass back cuts off its bottom row | `ui-ux` | `medium` | `rahul` | `rahul` | Fixed in commit edbaccf (v3.43.4). Both pass faces share one grid cell so the card takes the taller height. The back layout was tidied. |
 
 ---
 
