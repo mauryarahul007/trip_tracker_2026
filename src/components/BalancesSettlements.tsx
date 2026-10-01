@@ -867,6 +867,8 @@ export function BalancesSettlements({
 
   const isUpiEnabled = useTripStore((s) => s.isFeatureEnabled('enableUpiPayments', { tripId: trip.id }));
   const isShareCardEnabled = useTripStore((s) => s.isFeatureEnabled('enableWhatsAppSettlementShare', { tripId: trip.id }));
+  // The flipped pass already shows a settled-travelers bar, so this section drops its copy.
+  const passBackHasProgress = useTripStore((s) => s.isFeatureEnabled('enableTravelerPassBack'));
   const isSimplifyToggleActive = useTripStore((s) => s.isFeatureEnabled('enableSimplifyDebtsToggle', { tripId: trip.id }));
   const setTripSimplifyDebts = useTripStore((s) => s.setTripSimplifyDebts);
   const [showSimplifyInfo, setShowSimplifyInfo] = useState(false);
@@ -1226,7 +1228,7 @@ export function BalancesSettlements({
           document.body,
         )}
 
-        {!isFullySettled && balances.length > 0 && (
+        {!isFullySettled && balances.length > 0 && !passBackHasProgress && (
           <div style={{ padding: '0 4px', marginBottom: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
               <span>{settledMemberCount} of {balances.length} settled up</span>

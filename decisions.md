@@ -4444,3 +4444,10 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - The front is now as tall as the back, which leaves more space around its amount and stamp than before.
   - The amount no longer scrolls to "Who owes who" on tap; only the new row does, so a stray tap on the number flips the card instead.
+
+## 250. Shorter pass and one progress bar (v3.43.5, BUG-263)
+* **Context:** After v3.43.4 the pass was 325px tall at phone width, and the settled-travelers progress bar showed twice: on the pass back and again under "Who owes who".
+* **Decision:** Tightened the back face's padding, amount size, and footer so the card is about 268px at 380px wide. The footer puts the join-code chip, updated line, and avatars on one row, which needed 2 avatars plus a "+N" bubble instead of 3. The back's flip hint was shortened to "Summary". The "Who owes who" section hides its own progress bar when `enableTravelerPassBack` is ON; with the flag OFF, it still shows, since the legacy pass has no bar. No new flag.
+* **Trade-offs Accepted:**
+  - While the pass is flipped to the front, no progress bar is visible anywhere. It appears only on the back.
+  - Only 2 traveler avatars show on the back, down from 3.

@@ -173,19 +173,20 @@ const S_D3_DATES: React.CSSProperties = {
   marginTop: '2px',
   letterSpacing: '0.02em',
 };
+const S_BACK_HEADER: React.CSSProperties = { padding: '12px 20px 10px' };
 const S_FLIP_HINT: React.CSSProperties = { ...S_LINK_HINT, flexShrink: 0, whiteSpace: 'nowrap' };
 const S_HERO_BODY: React.CSSProperties = {
-  padding: '18px 20px 16px',
+  padding: '12px 20px 12px',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   textAlign: 'center',
-  gap: '4px',
+  gap: '2px',
   flex: 1,
   justifyContent: 'center',
 };
-const S_HERO_AMOUNT: React.CSSProperties = { fontSize: '32px' };
-const S_PROGRESS_WRAP: React.CSSProperties = { width: '100%', maxWidth: '260px', marginTop: '12px' };
+const S_HERO_AMOUNT: React.CSSProperties = { fontSize: '28px' };
+const S_PROGRESS_WRAP: React.CSSProperties = { width: '100%', maxWidth: '260px', marginTop: '8px' };
 const S_PROGRESS_META: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
@@ -212,7 +213,7 @@ const S_SETTLE_LINK: React.CSSProperties = {
   alignItems: 'center',
   justifyContent: 'space-between',
   width: '100%',
-  padding: '12px 20px',
+  padding: '9px 20px',
   background: 'var(--bp-paper-soft)',
   border: 'none',
   borderTop: '1px solid var(--bp-line)',
@@ -229,23 +230,22 @@ const S_SIMPLE_FOOT: React.CSSProperties = {
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: '12px',
-  padding: '12px 20px 14px',
+  padding: '10px 20px 12px',
 };
-const S_FOOT_LEFT: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 };
+const S_FOOT_LEFT: React.CSSProperties = { display: 'flex', flex: 1, flexWrap: 'wrap', alignItems: 'center', columnGap: '6px', rowGap: '4px', minWidth: 0 };
 const S_COPY_CHIP: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   gap: '6px',
-  alignSelf: 'flex-start',
   fontFamily: 'var(--font-family-mono)',
   fontSize: '11px',
   fontWeight: 700,
-  letterSpacing: '0.04em',
+  letterSpacing: '0.02em',
   color: 'var(--bp-ink)',
   background: 'transparent',
   border: '1px dashed var(--bp-line-strong)',
   borderRadius: '6px',
-  padding: '4px 8px',
+  padding: '4px 7px',
   cursor: 'pointer',
 };
 const S_SYNC_ROW: React.CSSProperties = {
@@ -253,7 +253,7 @@ const S_SYNC_ROW: React.CSSProperties = {
   alignItems: 'center',
   gap: '5px',
   fontFamily: 'var(--font-family-mono)',
-  fontSize: '9.5px',
+  fontSize: '9px',
   color: 'var(--bp-ink-softer)',
   whiteSpace: 'nowrap',
 };
@@ -266,8 +266,8 @@ const S_SYNC_DOT: React.CSSProperties = {
 };
 const S_AVATAR_STACK: React.CSSProperties = { display: 'flex', alignItems: 'center', paddingLeft: '7px', flexShrink: 0 };
 const S_AVATAR: React.CSSProperties = {
-  width: '26px',
-  height: '26px',
+  width: '24px',
+  height: '24px',
   borderRadius: '50%',
   display: 'flex',
   alignItems: 'center',
@@ -490,7 +490,7 @@ export function BoardingPassHeroCard({
   const heroColor = heroTone === 'pay' ? 'var(--color-danger)' : heroTone === 'receive' ? 'var(--color-success)' : 'var(--bp-ink)';
 
   const settledPct = balancesCount > 0 ? Math.round((settledMemberCount / balancesCount) * 100) : 100;
-  const avatarNames = travelerNames.slice(0, 3);
+  const avatarNames = travelerNames.slice(0, 2);
   const avatarOverflow = travelerNames.length - avatarNames.length;
 
   const handleScrollToSettlements = (e: React.MouseEvent) => {
@@ -595,13 +595,13 @@ export function BoardingPassHeroCard({
         >
           {isNewBack ? (
             <>
-              <div className="bp-top">
+              <div className="bp-top" style={S_BACK_HEADER}>
                 <div style={{ minWidth: 0 }}>
                   <div className="bp-eyebrow">{trip.name}</div>
                   <div className="bp-title">Balance details</div>
                   <div style={S_D3_DATES}>{dateRangeLabel}</div>
                 </div>
-                <span style={S_FLIP_HINT}>↺ Balance summary</span>
+                <span style={S_FLIP_HINT}>↺ Summary</span>
               </div>
 
               <div className="bp-perf" />
