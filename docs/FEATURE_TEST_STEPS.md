@@ -22,6 +22,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
 | 2026-10-02 | unreleased | PASS-STUB-SIMPLIFY | [Simplified pass back (balance hero)](#pass-stub-simplify--simplified-pass-back-balance-hero) |
+| 2026-10-02 | 3.43.4 | PASS-BACK-POLISH | [Pass back layout polish (no clipping)](#pass-back-polish--pass-back-layout-polish-no-clipping) |
 | 2026-10-01 | v3.43.1 | FEAT-COVER-CYCLE | [Cycling destination photos](#feat-cover-cycle--cycling-destination-photos) |
 | 2026-09-28 | v3.42.1 | PASS-STUB | [Pass back seat and gate](#pass-stub--pass-back-seat-and-gate) |
 | 2026-09-27 | v3.41.0 | DEST-SUGGEST | [Destination suggestions & did-you-mean](#dest-suggest--destination-suggestions--did-you-mean) |
@@ -1561,6 +1562,35 @@ Test on a phone-sized viewport (DevTools device mode is fine) plus a real Androi
 - The back shows one legible, action-oriented number instead of the old seven competing elements (weather ×2, route diagram, status pill, finance grid, decorative barcode, mismatched hint).
 - Tapping the amount reaches the real "Who owes who" section — no second settle flow was built on the card.
 - The join-code chip actually copies, and the flip-hint text on both faces now matches what's actually on the other side.
+
+---
+
+## PASS-BACK-POLISH — Pass back layout polish (no clipping)
+
+**Version:** 3.43.4. **Flags:** existing `enableTravelerPassBack` (Core, default ON) — same surface, no new flag.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Polished, unclipped balance-hero back face | `enableTravelerPassBack` | ON |
+
+### Steps
+1. On a phone-width screen (~360–390px), open a trip with 4+ travelers. Go to Summary.
+2. Flip the boarding pass. Confirm nothing is cut off at the bottom: the join-code chip, "Updated …" line, and traveler avatars are all fully visible inside the card.
+3. Confirm the header shows trip name, "Balance details", the date range, and a "↺ Balance summary" hint top right.
+4. Confirm the hero shows the direction label and the amount, then a full-width progress bar with "{N} of {M} settled" on the left and "{pct}%" on the right.
+5. Tap the "See who owes who ↓" row. The page scrolls to "Who owes who"; the card stays on the back.
+6. Tap the join-code chip. It copies the code and shows "✓ Copied"; the card stays on the back.
+7. Tap anywhere else on the card. It flips to the front. Confirm the front is the same height as the back, with the amount vertically centered and no doubled dashed line above the footer.
+8. Repeat 2–7 in dark mode, and with the OS "Reduce motion" setting on (faces crossfade instead of rotating).
+
+### Negative checks
+- Turn `enableTravelerPassBack` off. The legacy itinerary back still renders fully and flips both ways.
+- The card's height does not jump when flipping in either direction.
+
+### Pass
+- No back-face content is ever clipped, at any phone width.
+- Buttons on the back act without flipping the card; every other tap flips it.
 
 ---
 

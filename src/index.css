@@ -3049,9 +3049,9 @@ input:checked + .toggle-slider:before {
 .boarding-pass-flipper.flipped {
   transform: rotateY(180deg);
 }
-/* Reduce Motion: the back face already sits absolutely over the front
-   face's box (see .bp-back-face's own inline styles), so a plain opacity
-   crossfade needs no layout change -- just cancel the 3D rotation on both
+/* Reduce Motion: both faces share one grid cell (see the flipper's and
+   faces' inline styles), so a plain opacity crossfade needs no layout
+   change -- just cancel the 3D rotation on both
    the flipper and the back face's own resting rotateY(180deg) (an
    !important rule in a stylesheet is one of the few things that can
    override an inline style), then let .flipped toggle visibility. */
