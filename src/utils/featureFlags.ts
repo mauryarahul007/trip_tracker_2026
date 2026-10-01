@@ -256,8 +256,8 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
   },
   enableTravelerPassBack: {
     key: 'enableTravelerPassBack',
-    label: 'Traveler Pass Back (Seat and Gate)',
-    description: 'ON: flipping the Summary boarding pass shows a seat-and-gate stub under the route. Weather sits under the destination city, and also under the departure city when the trip has more than one stop; the refresh control on the destination reloads both. In a couple or group, the left cell is what the rest of your group owes you and the right cell is what your group still settles with everyone else, plus a line for your personal net. With no groups, the left cell is what you receive or owe and the right cell is the cash you laid out, with your share underneath. OFF: the itinerary back (dates, traveler, a weather strip, join code). The front of the pass is unchanged. Does not change any balance, only the back.',
+    label: 'Traveler Pass Back (Balance Details)',
+    description: 'ON: flipping the Summary boarding pass shows a single personal-balance hero ("You owe Rohan ₹2,300" or the generic "You owe"/"You’re owed" when more than one person is involved), a settled-travelers progress bar, a working join-code copy chip, a traveler-initials row, and a last-updated timestamp. Tapping the amount smooth-scrolls down to the existing "Who owes who" section instead of opening a second settle flow. No weather, route map, or trip-status pill on this face. OFF: the older itinerary back (dates, traveler, a weather strip, join code). The front of the pass is unchanged either way. Does not change any balance, only how the back is laid out.',
     category: 'core',
     pack: 'core',
     defaultEnabledForUsers: true,

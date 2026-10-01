@@ -963,6 +963,12 @@ export function BalancesSettlements({
   const settledMemberCount = balances.filter((b) => Math.abs(b.balance) < 0.01).length;
   const settledPct = balances.length > 0 ? Math.round((settledMemberCount / balances.length) * 100) : 100;
 
+  const travelerNames = balances
+    .filter((b) => b.memberId !== myMemberId)
+    .map((b) => members[b.memberId]?.name)
+    .filter((name): name is string => Boolean(name));
+  const lastUpdatedAt = Math.max(trip.updatedAt, ...activeTripExpenses.map((e) => e.updatedAt));
+
   const handleScrollToTop = () => {
     const pane = document.querySelector('.tab-pane');
     if (pane) {
@@ -996,6 +1002,9 @@ export function BalancesSettlements({
           myNetBalance={myNetBalance}
           myWallet={myWallet}
           myGroup={myGroup}
+          settledMemberCount={settledMemberCount}
+          travelerNames={travelerNames}
+          lastUpdatedAt={lastUpdatedAt}
         />
       </div>
 

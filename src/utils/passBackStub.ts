@@ -45,7 +45,7 @@ export interface WalletExpense {
   resolvedShares: Record<string, number>;
 }
 
-function toneFor(amount: number): PassStubTone {
+export function toneFor(amount: number): PassStubTone {
   if (Math.abs(amount) < EVEN) return 'even';
   return amount > 0 ? 'receive' : 'pay';
 }

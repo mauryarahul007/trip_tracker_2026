@@ -12,7 +12,9 @@ import { tripDayNumber } from '../utils/dateRange';
 import { PassportStamp } from './common/PassportStamp';
 import { ConfettiBurst } from './ConfettiBurst';
 import { useTripStore } from '../store/tripStore';
-import { buildPassStub, type PassStubCell, type PassStubTone } from '../utils/passBackStub';
+import { buildPassStub, toneFor } from '../utils/passBackStub';
+import { formatRelativeTime } from '../utils/relativeTime';
+import { initial } from '../utils/initials';
 
 export interface TravelerGroupInfo {
   id: string;
@@ -42,6 +44,12 @@ interface BoardingPassHeroCardProps {
   myWallet: TravelerWallet;
   /** Group information if the current traveler is part of a couple/group node */
   myGroup?: TravelerGroupInfo;
+  /** How many of the trip's travelers are currently settled (balance ~0). */
+  settledMemberCount: number;
+  /** Other travelers' names, for the back-face avatar row (any order). */
+  travelerNames: string[];
+  /** Most recent write across this trip's expenses/settlements, epoch ms. */
+  lastUpdatedAt: number;
 }
 
 // Style objects that don't depend on props/state -- hoisted to module scope
@@ -152,25 +160,7 @@ const S_BARCODE_CONTAINER: React.CSSProperties = { display: 'flex', alignItems: 
 const S_BARCODE_CHARS: React.CSSProperties = { fontFamily: 'monospace', fontSize: '14px', letterSpacing: '2px', color: 'var(--bp-ink-mid)' };
 const S_JOINCODE_SPAN: React.CSSProperties = { fontFamily: 'var(--font-family-mono)', fontSize: '10px', color: 'var(--bp-ink-strong)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' };
 
-// ===== Design 3 (Fix 1): Full-width route + Side-by-side finances =====
-const S_D3_TOP: React.CSSProperties = {
-  padding: '12px 18px 8px',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'flex-start',
-  gap: '12px',
-};
-const S_D3_TITLE: React.CSSProperties = {
-  fontFamily: 'var(--font-family-title)',
-  fontSize: '15px',
-  fontWeight: 700,
-  color: 'var(--bp-ink)',
-  lineHeight: 1.2,
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  maxWidth: '220px',
-};
+// ===== Simplified back face: personal balance hero, no route/weather/status =====
 const S_D3_DATES: React.CSSProperties = {
   fontFamily: 'var(--font-family-mono)',
   fontSize: '10.5px',
@@ -178,205 +168,86 @@ const S_D3_DATES: React.CSSProperties = {
   marginTop: '2px',
   letterSpacing: '0.02em',
 };
-const S_D3_STATUS_PILL: React.CSSProperties = {
-  display: 'inline-flex',
+const S_HERO_BODY: React.CSSProperties = {
+  padding: '20px 20px 16px',
+  display: 'flex',
+  flexDirection: 'column',
   alignItems: 'center',
-  gap: '5px',
-  padding: '3px 8px',
+  textAlign: 'center',
+  gap: '10px',
+  flex: 1,
+  justifyContent: 'center',
+  cursor: 'pointer',
+};
+const S_SCROLL_HINT: React.CSSProperties = { ...S_LINK_HINT, marginTop: '2px' };
+const S_PROGRESS_WRAP: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' };
+const S_PROGRESS_TRACK: React.CSSProperties = {
+  width: '130px',
+  height: '4px',
   borderRadius: '9999px',
-  background: 'var(--bp-paper-soft)',
-  border: '1px solid var(--bp-line-strong)',
+  background: 'var(--bp-line-strong)',
+  overflow: 'hidden',
+};
+const S_PROGRESS_LABEL: React.CSSProperties = {
+  fontFamily: 'var(--font-family-mono)',
+  fontSize: '10px',
+  color: 'var(--bp-ink-soft)',
+};
+const S_SYNC_ROW: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '5px',
   fontFamily: 'var(--font-family-mono)',
   fontSize: '9.5px',
-  fontWeight: 700,
-  letterSpacing: '0.04em',
-  color: 'var(--bp-ink)',
-  whiteSpace: 'nowrap',
-  flexShrink: 0,
+  color: 'var(--bp-ink-softer)',
+  padding: '10px 18px 0',
 };
-const S_D3_STATUS_DOT: React.CSSProperties = {
-  width: '6px',
-  height: '6px',
+const S_SYNC_DOT: React.CSSProperties = {
+  width: '5px',
+  height: '5px',
   borderRadius: '50%',
+  background: 'var(--color-success)',
+  boxShadow: '0 0 4px var(--color-success)',
   flexShrink: 0,
 };
-const S_D3_BODY: React.CSSProperties = {
-  padding: '8px 18px',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'space-around',
-  gap: '6px',
-  flex: 1,
-  minHeight: 0,
-};
-const S_D3_ROUTE_ROW: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: '8px',
-  width: '100%',
-};
-const S_D3_ROUTE_CITY_LEFT: React.CSSProperties = {
-  textAlign: 'left',
-  flex: 1,
-  minWidth: 0,
-};
-const S_D3_ROUTE_CITY_RIGHT: React.CSSProperties = {
-  textAlign: 'right',
-  flex: 1,
-  minWidth: 0,
-};
-const S_D3_ROUTE_SUB: React.CSSProperties = {
-  fontFamily: 'var(--font-family-mono)',
-  fontSize: '8.5px',
-  letterSpacing: '0.06em',
-  textTransform: 'uppercase',
-  color: 'var(--bp-ink-softer)',
-  fontWeight: 600,
-};
-const S_D3_WEATHER_ROW: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '2px',
-  marginTop: '1px',
-  minWidth: 0,
-  maxWidth: '100%',
-};
-const S_D3_WEATHER_TEXT: React.CSSProperties = {
-  fontFamily: 'var(--font-family-mono)',
-  fontSize: '10px',
-  fontWeight: 700,
-  color: 'var(--primary-accent)',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  minWidth: 0,
-};
-const S_D3_WEATHER_REFRESH: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  padding: '8px',
-  margin: '-8px -6px -8px -2px',
-  cursor: 'pointer',
-  color: 'var(--primary-accent)',
-  fontSize: '13px',
-  lineHeight: 1,
-  flexShrink: 0,
-};
-const S_D3_ROUTE_CITY_NAME: React.CSSProperties = {
-  fontFamily: 'var(--font-family-title)',
-  fontSize: '13.5px',
-  fontWeight: 800,
-  color: 'var(--bp-ink)',
-  lineHeight: 1.15,
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  marginTop: '1px',
-};
-const S_D3_ROUTE_PLANE_WRAP: React.CSSProperties = {
-  display: 'flex',
+const S_COPY_CHIP: React.CSSProperties = {
+  display: 'inline-flex',
   alignItems: 'center',
   gap: '6px',
-  flexShrink: 0,
-  padding: '0 4px',
-  color: 'var(--bp-ink-softer)',
-};
-const S_D3_ROUTE_LINE: React.CSSProperties = {
-  width: '26px',
-  height: '1px',
-  borderTop: '1.5px dashed var(--bp-ink-faint)',
-};
-const S_D3_PLANE_ICON: React.CSSProperties = {
-  fontSize: '12px',
-  color: 'var(--primary-accent)',
-  display: 'inline-block',
-  lineHeight: 1,
-};
-const S_D3_INNER_DIVIDER: React.CSSProperties = {
-  width: '100%',
-  height: '1px',
-  borderTop: '1px dashed var(--bp-ink-faint)',
-  margin: '2px 0',
-  opacity: 0.6,
-};
-const S_D3_FINANCE_GRID: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1px 1fr',
-  alignItems: 'center',
-  gap: '12px',
-  width: '100%',
-};
-const S_D3_COL: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-  minWidth: 0,
-};
-const S_D3_DIVIDER: React.CSSProperties = {
-  width: '1px',
-  height: '80%',
-  borderLeft: '1px dashed var(--bp-ink-faint)',
-  margin: 'auto 0',
-};
-const S_D3_SECTION_LABEL: React.CSSProperties = {
-  fontSize: '9px',
-  fontFamily: 'var(--font-family-mono)',
-  color: 'var(--bp-ink-softer)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.06em',
-  fontWeight: 600,
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-};
-const S_D3_SUMMARY: React.CSSProperties = {
   fontFamily: 'var(--font-family-mono)',
   fontSize: '11px',
-  fontWeight: 600,
-  color: 'var(--bp-ink-mid)',
-  textAlign: 'center',
-  marginTop: '2px',
-};
-const S_D3_AMOUNT: React.CSSProperties = {
-  fontFamily: 'var(--font-family-mono)',
-  fontSize: '16px',
-  fontWeight: 800,
-  letterSpacing: '-0.02em',
-  lineHeight: 1.15,
-  marginTop: '2px',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-};
-const S_D3_SUB: React.CSSProperties = {
-  fontSize: '10px',
-  color: 'var(--bp-ink-mid)',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  marginTop: '2px',
-};
-const S_D3_FOOT: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  padding: '8px 18px',
+  fontWeight: 700,
+  color: 'var(--bp-ink)',
   background: 'var(--bp-paper-soft)',
-  borderTop: '1px solid var(--bp-line-strong)',
+  border: '1px dashed var(--bp-line-strong)',
+  borderRadius: '8px',
+  padding: '5px 10px',
+  cursor: 'pointer',
 };
-const S_D3_BARCODE: React.CSSProperties = {
+const S_AVATAR_STACK: React.CSSProperties = { display: 'flex', alignItems: 'center' };
+const S_AVATAR: React.CSSProperties = {
+  width: '22px',
+  height: '22px',
+  borderRadius: '50%',
   display: 'flex',
   alignItems: 'center',
-  gap: '8px',
+  justifyContent: 'center',
+  fontFamily: 'var(--font-family-mono)',
+  fontSize: '9px',
+  fontWeight: 700,
+  color: 'var(--bp-ink)',
+  background: 'var(--bp-paper-soft)',
+  border: '1.5px solid var(--bp-paper)',
+  marginLeft: '-7px',
 };
-const S_D3_BARCODE_BARS: React.CSSProperties = {
+const S_AVATAR_MORE: React.CSSProperties = { background: 'var(--bp-line)', color: 'var(--bp-ink-soft)' };
+const S_SIMPLE_FOOT: React.CSSProperties = {
   display: 'flex',
-  alignItems: 'flex-end',
-  gap: '1.5px',
-  height: '16px',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '10px 18px 14px',
 };
-const BARCODE_HEIGHT_PATTERN = [50, 100, 40, 85, 60, 95, 30, 75, 100, 45, 70, 90, 55, 100, 65, 40];
 
 function formatBoardingDate(dateStr?: string): string {
   if (!dateStr) return '';
@@ -415,84 +286,10 @@ interface BoardingStatus {
   glowColor: string;
 }
 
-function RouteWeatherLine({
-  weather,
-  refreshing,
-  onRefresh,
-  align,
-  showRefresh = true,
-}: {
-  weather: WeatherData | null;
-  refreshing: boolean;
-  onRefresh: (e: React.MouseEvent) => void;
-  align: 'left' | 'right';
-  showRefresh?: boolean;
-}) {
-  const label = weather ? `${weather.weatherEmoji} ${weather.tempC}°C · ${weather.condition}` : 'Loading weather…';
-  return (
-    <div style={{ ...S_D3_WEATHER_ROW, justifyContent: align === 'right' ? 'flex-end' : 'flex-start' }}>
-      <span style={S_D3_WEATHER_TEXT} title={weather ? `${weather.city} · ${label}` : label}>{label}</span>
-      {showRefresh ? (
-        <button
-          type="button"
-          onClick={onRefresh}
-          aria-label="Refresh weather"
-          title="Refresh weather"
-          style={S_D3_WEATHER_REFRESH}
-        >
-          <span
-            style={{
-              display: 'inline-block',
-              transition: 'transform 0.5s ease',
-              transform: refreshing ? 'rotate(360deg)' : 'none',
-            }}
-          >
-            ↻
-          </span>
-        </button>
-      ) : null}
-    </div>
-  );
-}
-
-/** First and last stop on the pass. Origin is set only when it differs from the destination. */
-function routeWeatherPlaces(trip: { name?: string; destination?: string; stops?: { name: string }[] }): { origin: string | null; destination: string } {
+/** Destination used for the back face's weather lookup. */
+function weatherDestination(trip: { name?: string; destination?: string; stops?: { name: string }[] }): string {
   const route = parseTripRoute(trip);
-  const destination = route.destination && route.destination !== 'Origin' ? route.destination : (trip.name || '');
-  const distinct = Boolean(route.origin && route.origin !== 'Origin' && route.origin !== destination);
-  return { origin: distinct ? route.origin : null, destination };
-}
-
-function stubAmountColor(tone: PassStubTone): string {
-  if (tone === 'receive') return 'var(--color-success)';
-  if (tone === 'pay') return 'var(--color-danger)';
-  if (tone === 'ink') return 'var(--bp-ink)';
-  return 'var(--bp-ink-mid)';
-}
-
-function stubAmountText(cell: PassStubCell, currencySymbol: string): string {
-  const figure = formatAmount(Math.abs(cell.amount), currencySymbol);
-  if (!cell.signed || cell.tone === 'even') return figure;
-  return cell.tone === 'receive' ? `+${figure}` : `-${figure}`;
-}
-
-function PassStubCellView({
-  cell,
-  currencySymbol,
-  align,
-}: {
-  cell: PassStubCell;
-  currencySymbol: string;
-  align: 'left' | 'right';
-}) {
-  const amount = stubAmountText(cell, currencySymbol);
-  return (
-    <div style={{ ...S_D3_COL, textAlign: align }}>
-      <div style={S_D3_SECTION_LABEL} title={cell.label}>{cell.label}</div>
-      <div style={{ ...S_D3_AMOUNT, color: stubAmountColor(cell.tone) }} title={amount}>{amount}</div>
-      <div style={S_D3_SUB} title={cell.caption}>{cell.caption}</div>
-    </div>
-  );
+  return route.destination && route.destination !== 'Origin' ? route.destination : (trip.name || '');
 }
 
 function getBoardingStatus(startDate?: string, endDate?: string): BoardingStatus {
@@ -552,12 +349,14 @@ export function BoardingPassHeroCard({
   myNetBalance,
   myWallet,
   myGroup,
+  settledMemberCount,
+  travelerNames,
+  lastUpdatedAt,
 }: BoardingPassHeroCardProps) {
   const isNewBack = useTripStore((s) => s.isFeatureEnabled('enableTravelerPassBack'));
   const [isFlipped, setIsFlipped] = useState(false);
   const [copied, setCopied] = useState(false);
   const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [originWeather, setOriginWeather] = useState<WeatherData | null>(null);
   const [isWeatherRefreshing, setIsWeatherRefreshing] = useState(false);
 
   const animatedTotalOutstanding = useAnimatedNumber(totalOutstanding, 280);
@@ -580,18 +379,11 @@ export function BoardingPassHeroCard({
 
   useEffect(() => {
     let active = true;
-    const { origin, destination } = routeWeatherPlaces(trip);
+    const destination = weatherDestination(trip);
     if (destination) {
       getDestinationWeather(destination).then((data) => {
         if (active && data) setWeather(data);
       });
-    }
-    if (origin) {
-      getDestinationWeather(origin).then((data) => {
-        if (active && data) setOriginWeather(data);
-      });
-    } else {
-      setOriginWeather(null);
     }
     return () => {
       active = false;
@@ -603,15 +395,11 @@ export function BoardingPassHeroCard({
     triggerHaptic('light');
     setIsWeatherRefreshing(true);
     try {
-      const { origin, destination } = routeWeatherPlaces(trip);
-      await Promise.all([
-        destination
-          ? getDestinationWeather(destination, true).then((data) => { if (data) setWeather(data); })
-          : null,
-        origin
-          ? getDestinationWeather(origin, true).then((data) => { if (data) setOriginWeather(data); })
-          : null,
-      ]);
+      const destination = weatherDestination(trip);
+      if (destination) {
+        const data = await getDestinationWeather(destination, true);
+        if (data) setWeather(data);
+      }
     } finally {
       setIsWeatherRefreshing(false);
     }
@@ -643,12 +431,6 @@ export function BoardingPassHeroCard({
       ? `From ${formatBoardingDate(trip.startDate)}`
       : 'Flexible Dates';
 
-  const hasDistinctOrigin = Boolean(
-    parsedRoute.origin &&
-    parsedRoute.origin !== 'Origin' &&
-    parsedRoute.origin !== parsedRoute.destination
-  );
-
   const passStub = buildPassStub({
     myNet: myNetBalance,
     group: myGroup
@@ -657,6 +439,31 @@ export function BoardingPassHeroCard({
     paid: myWallet.paid,
     share: myWallet.share,
   }, (amount) => formatAmount(amount, currencySymbol));
+
+  // Back-face hero: named ("You owe Rohan") only when the whole story is one
+  // counterparty -- a single other group member and nothing owed outside the
+  // group. Otherwise fall back to the generic personal net so the hero never
+  // names just one of several people you're settled up with.
+  const heroOutside = myGroup ? Number((myNetBalance - passStub.left.amount).toFixed(2)) : 0;
+  const heroIsSingleCounterparty = Boolean(
+    myGroup && myGroup.otherMemberNames.length === 1 && Math.abs(heroOutside) < 0.01
+  );
+  const heroTone = heroIsSingleCounterparty ? passStub.left.tone : toneFor(myNetBalance);
+  const heroAmount = Math.abs(heroIsSingleCounterparty ? passStub.left.amount : myNetBalance);
+  const heroWho = heroIsSingleCounterparty
+    ? passStub.left.caption
+    : heroTone === 'pay' ? 'You owe' : heroTone === 'receive' ? "You're owed" : "You're square";
+  const heroColor = heroTone === 'pay' ? 'var(--color-danger)' : heroTone === 'receive' ? 'var(--color-success)' : 'var(--bp-ink)';
+
+  const settledPct = balancesCount > 0 ? Math.round((settledMemberCount / balancesCount) * 100) : 100;
+  const avatarNames = travelerNames.slice(0, 3);
+  const avatarOverflow = travelerNames.length - avatarNames.length;
+
+  const handleScrollToSettlements = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    triggerHaptic('light');
+    document.querySelector('.settlements-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
     <div className="boarding-pass-flip-container" style={S_FLIP_CONTAINER}>
@@ -743,7 +550,7 @@ export function BoardingPassHeroCard({
               {transfers.length} transfer{transfers.length === 1 ? '' : 's'} left
             </span>
             <span style={S_LINK_HINT}>
-              ↻ Itinerary
+              ↻ Balance details
             </span>
           </div>
         </div>
@@ -757,155 +564,65 @@ export function BoardingPassHeroCard({
           {isNewBack ? (
             <>
               {/* Top Section */}
-              <div style={S_D3_TOP}>
+              <div className="bp-top" style={{ paddingBottom: '6px' }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={S_D3_TITLE} title={trip.name}>
-                    {trip.name}
-                  </div>
-                  <div style={S_D3_DATES}>
-                    {dateRangeLabel}
-                  </div>
+                  <div className="bp-eyebrow">{trip.name}</div>
+                  <div className="bp-title" style={{ fontSize: '15px' }}>Balance details</div>
+                  <div style={S_D3_DATES}>{dateRangeLabel}</div>
                 </div>
-                <div
-                  style={S_D3_STATUS_PILL}
-                  title={`Trip Status: ${boardingStatus.statusText}`}
-                >
-                  <span
-                    style={{
-                      ...S_D3_STATUS_DOT,
-                      background: boardingStatus.dotColor,
-                      boxShadow: `0 0 6px ${boardingStatus.glowColor}`,
-                    }}
-                  />
-                  <span>{boardingStatus.statusText}</span>
-                </div>
+                <span style={S_LINK_HINT}>↺ Balance summary</span>
               </div>
 
               {/* Perforated Separator Line */}
               <div className="bp-perf" />
 
-              {/* Center Fix 1 Body: Full-Width Route Vector Banner + Side-by-Side Financial Columns */}
-              <div style={S_D3_BODY}>
-                {/* Upper Row: Full-width Route Vector */}
-                <div style={S_D3_ROUTE_ROW}>
-                  {hasDistinctOrigin ? (
-                    <>
-                      <div style={S_D3_ROUTE_CITY_LEFT}>
-                        <div style={S_D3_ROUTE_SUB}>DEPARTURE</div>
-                        <div style={S_D3_ROUTE_CITY_NAME} title={parsedRoute.origin}>
-                          {parsedRoute.origin}
-                        </div>
-                        <RouteWeatherLine
-                          weather={originWeather}
-                          refreshing={isWeatherRefreshing}
-                          onRefresh={handleRefreshWeather}
-                          align="left"
-                          showRefresh={false}
-                        />
-                      </div>
-
-                      <div style={S_D3_ROUTE_PLANE_WRAP}>
-                        <div style={S_D3_ROUTE_LINE} />
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
-                          <span style={S_D3_PLANE_ICON} aria-hidden="true">✈</span>
-                          <span style={{ fontSize: '8.5px', fontFamily: 'var(--font-family-mono)', color: 'var(--bp-ink-soft)', whiteSpace: 'nowrap' }}>
-                            {durationLabel || 'Direct'}
-                          </span>
-                        </div>
-                        <div style={S_D3_ROUTE_LINE} />
-                      </div>
-
-                      <div style={S_D3_ROUTE_CITY_RIGHT}>
-                        <div style={S_D3_ROUTE_SUB}>DESTINATION</div>
-                        <div style={S_D3_ROUTE_CITY_NAME} title={parsedRoute.destination}>
-                          {parsedRoute.destination}
-                        </div>
-                        <RouteWeatherLine
-                          weather={weather}
-                          refreshing={isWeatherRefreshing}
-                          onRefresh={handleRefreshWeather}
-                          align="right"
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div style={S_D3_ROUTE_CITY_LEFT}>
-                        <div style={S_D3_ROUTE_SUB}>DESTINATION</div>
-                        <div style={S_D3_ROUTE_CITY_NAME} title={parsedRoute.destination || trip.name}>
-                          {parsedRoute.destination || trip.name}
-                        </div>
-                        <RouteWeatherLine
-                          weather={weather}
-                          refreshing={isWeatherRefreshing}
-                          onRefresh={handleRefreshWeather}
-                          align="left"
-                        />
-                      </div>
-
-                      <div style={S_D3_ROUTE_PLANE_WRAP}>
-                        <div style={S_D3_ROUTE_LINE} />
-                        <span style={S_D3_PLANE_ICON} aria-hidden="true">✈</span>
-                        <div style={S_D3_ROUTE_LINE} />
-                      </div>
-
-                      <div style={S_D3_ROUTE_CITY_RIGHT}>
-                        <div style={S_D3_ROUTE_SUB}>DURATION & TRAVELERS</div>
-                        <div style={S_D3_ROUTE_CITY_NAME}>
-                          {durationLabel ? `${durationLabel} · ${balancesCount}P` : `${balancesCount} Traveler${balancesCount === 1 ? '' : 's'}`}
-                        </div>
-                      </div>
-                    </>
-                  )}
+              {/* Personal balance hero -- tap scrolls to "Who owes who" below.
+                  No settle button here: that section already does the job,
+                  this just jumps to it instead of building a second one. */}
+              <div style={S_HERO_BODY} onClick={handleScrollToSettlements}>
+                <div className="bp-who">{heroWho}</div>
+                <div className="bp-amount" style={{ color: heroColor }}>
+                  {formatAmount(heroAmount, currencySymbol)}
                 </div>
-
-                {/* Inner Horizontal Divider */}
-                <div style={S_D3_INNER_DIVIDER} aria-hidden="true" />
-
-                {/* Seat / gate stub: inside vs outside the group, or you vs cash laid out */}
-                <div style={S_D3_FINANCE_GRID}>
-                  <PassStubCellView cell={passStub.left} currencySymbol={currencySymbol} align="left" />
-                  <div style={S_D3_DIVIDER} aria-hidden="true" />
-                  <PassStubCellView cell={passStub.right} currencySymbol={currencySymbol} align="right" />
+                <div style={S_PROGRESS_WRAP}>
+                  <div style={S_PROGRESS_TRACK}>
+                    <div style={{ height: '100%', borderRadius: 'inherit', background: 'var(--color-success)', width: `${settledPct}%` }} />
+                  </div>
+                  <span style={S_PROGRESS_LABEL}>{settledMemberCount} of {balancesCount} travelers settled</span>
                 </div>
-                {passStub.summary ? <div style={S_D3_SUMMARY}>{passStub.summary}</div> : null}
+                <span style={S_SCROLL_HINT}>View in &ldquo;Who owes who&rdquo; ↓</span>
               </div>
 
               {/* Perforated Separator Line */}
               <div className="bp-perf" />
+
+              {lastUpdatedAt > 0 ? (
+                <div style={S_SYNC_ROW}>
+                  <span style={S_SYNC_DOT} aria-hidden="true" />
+                  Updated {formatRelativeTime(new Date(lastUpdatedAt).toISOString())}
+                </div>
+              ) : null}
 
               {/* Bottom Footer Stub */}
-              <div style={S_D3_FOOT}>
-                <div style={S_D3_BARCODE} aria-hidden="true">
-                  <div style={S_D3_BARCODE_BARS}>
-                    {BARCODE_HEIGHT_PATTERN.map((h, i) => (
-                      <span
-                        key={i}
-                        style={{
-                          display: 'block',
-                          width: '2px',
-                          height: `${h}%`,
-                          background: 'var(--bp-ink)',
-                          opacity: 0.45,
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-family-mono)',
-                      fontSize: '10px',
-                      color: 'var(--bp-ink-soft)',
-                      letterSpacing: '1px',
-                    }}
-                  >
-                    {trip.joinCode || 'PASS-2026'}
-                  </span>
-                </div>
-
-                <span style={S_LINK_HINT}>
-                  ↺ Group Summary
+              <div style={S_SIMPLE_FOOT}>
+                <span
+                  style={S_COPY_CHIP}
+                  onClick={handleCopyJoinCode}
+                  title="Click to copy Join Code"
+                >
+                  {trip.joinCode || 'PASS-2026'} {copied ? '✓ Copied' : <IconCopy size={11} />}
                 </span>
+                {travelerNames.length > 0 ? (
+                  <div
+                    style={S_AVATAR_STACK}
+                    title={`${travelerNames.length} other traveler${travelerNames.length === 1 ? '' : 's'}`}
+                  >
+                    {avatarNames.map((name, i) => (
+                      <span key={i} style={S_AVATAR}>{initial(name)}</span>
+                    ))}
+                    {avatarOverflow > 0 ? <span style={{ ...S_AVATAR, ...S_AVATAR_MORE }}>+{avatarOverflow}</span> : null}
+                  </div>
+                ) : null}
               </div>
             </>
           ) : (

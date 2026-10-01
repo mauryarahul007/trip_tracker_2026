@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-02 | unreleased | PASS-STUB-SIMPLIFY | [Simplified pass back (balance hero)](#pass-stub-simplify--simplified-pass-back-balance-hero) |
 | 2026-10-01 | v3.43.1 | FEAT-COVER-CYCLE | [Cycling destination photos](#feat-cover-cycle--cycling-destination-photos) |
 | 2026-09-28 | v3.42.1 | PASS-STUB | [Pass back seat and gate](#pass-stub--pass-back-seat-and-gate) |
 | 2026-09-27 | v3.41.0 | DEST-SUGGEST | [Destination suggestions & did-you-mean](#dest-suggest--destination-suggestions--did-you-mean) |
@@ -1527,6 +1528,39 @@ Test on a phone-sized viewport (DevTools device mode is fine) plus a real Androi
 - Multi-destination trips cycle a distinct photo per place on the stack and on list cards, including the backdrop behind the stack.
 - One-destination trips and the open-trip hero stay on a single photo.
 - Flag off restores the single cover.
+
+---
+
+## PASS-STUB-SIMPLIFY — Simplified pass back (balance hero)
+
+**Version:** unreleased. **Flags:** existing `enableTravelerPassBack` (Core, default ON) — reuses the PASS-STUB flag, same surface, no new flag added. The front of the pass is unchanged except its flip-hint text (see steps).
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Simplified balance-hero back face | `enableTravelerPassBack` | ON |
+
+### Steps
+1. Open a trip with a single other traveler (1:1, no group). Go to Summary and flip the boarding pass.
+2. Confirm the back shows: trip name, a "Balance details" title, the date range, and a flip hint reading "↺ Balance summary" top right. No weather, no route/plane diagram, no status pill anywhere on the back.
+3. Confirm the hero shows one amount with a clear direction ("You owe {name}" / "{name} owes you" / "You owe" / "You're owed"), colored red when you owe and green when you're owed.
+4. Below the amount, confirm a thin progress bar and a "{N} of {M} travelers settled" label.
+5. Tap the hero amount. The page should smooth-scroll down to the "Who owes who" section below it — confirm no modal or new screen opens, and the card does not flip back to front.
+6. Confirm an "Updated {relative time}" line appears above the footer (skip this check on a trip with zero expenses — the line is hidden when there's nothing to date).
+7. Tap the join-code chip in the footer. It should copy the code to the clipboard and show "✓ Copied" briefly.
+8. Confirm up to 3 other travelers' initials (+N overflow for more) appear next to the join-code chip.
+9. Flip back to the front. Confirm the front's flip hint now reads "↻ Balance details" (it previously said "Itinerary," which the back no longer resembles at all after this change).
+10. Open a trip where you're in a group/couple with exactly one other member and no balance outside the group. Confirm the hero names that person directly, e.g. "You owe Priya".
+11. Open a trip where you're in a group **and** also carry a balance outside the group (or a group with 2+ other members). Confirm the hero falls back to the generic "You owe" / "You're owed" with no name, rather than naming only one of several people.
+
+### Negative checks
+- Turn `enableTravelerPassBack` off. The back returns to the old itinerary face (dates, traveler, weather strip, join code) unchanged — this change doesn't touch that branch.
+- Front face amount, settled stamp, and member/transfer counts are identical in both flag states.
+
+### Pass
+- The back shows one legible, action-oriented number instead of the old seven competing elements (weather ×2, route diagram, status pill, finance grid, decorative barcode, mismatched hint).
+- Tapping the amount reaches the real "Who owes who" section — no second settle flow was built on the card.
+- The join-code chip actually copies, and the flip-hint text on both faces now matches what's actually on the other side.
 
 ---
 

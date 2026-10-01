@@ -4427,5 +4427,13 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - The strip is a light gradient so the photo still shows through. It is not a solid footer.
 
+## 248. Simplified pass back: one balance hero instead of seven elements (v3.43.3, FEAT-099)
+* **Context:** The Summary boarding pass's back face (`enableTravelerPassBack`, shipped as FEAT-097) had grown into seven competing elements at once — origin and destination weather, a route/plane diagram, a trip-status pill duplicating the front's settled stamp, a two-column inside/outside finance grid, and a decorative barcode that looked tappable but did nothing. The front's flip hint still said "Itinerary," which the back hadn't actually been for a while.
+* **Decision:** The back now shows one personal-balance hero — a named line ("You owe Rohan") when the whole story is a single counterparty, falling back to a generic "You owe"/"You're owed" when the traveler is also settled with people outside their group — plus a settled-travelers progress bar, a working join-code copy chip (replacing the decorative barcode), up to three traveler-initials avatars, and a last-updated line. Tapping the amount smooth-scrolls to the existing "Who owes who" section instead of opening a second settle flow. Both flip hints were corrected to name what's actually on the other face ("Balance details" / "Balance summary"). Weather, the route diagram, and the status pill were removed from this face entirely (not relocated); the flag-OFF itinerary back is untouched. `enableTravelerPassBack` was reused rather than cut over to a new flag, since the surface is the same.
+* **Trade-offs Accepted:**
+  - A traveler who's grouped *and* separately owes/is owed outside the group sees a generic line instead of a name — correct over a possibly-misleading single name, but less personal for that case.
+  - "Updated {time}" reflects the latest `Expense.updatedAt`/`Trip.updatedAt`, a last-write timestamp, not a confirmed round-trip to the server — labeled "Updated," not "Synced," to avoid overclaiming.
+  - Dead code from the removed branch (`RouteWeatherLine`, `PassStubCellView`, ~230 lines of now-unused style constants, the origin-weather fetch path) was deleted rather than left in place; the flag-OFF legacy back face's own weather/route code was left untouched since it still uses it.
+
 
 
