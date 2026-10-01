@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.43.5',
+    date: '2026-10-02',
+    changes: [
+      'The Summary pass is shorter. The flipped side fits its join code, last-updated time, and travelers on one row.',
+      'With the new pass back on, the duplicate settled-up bar under Who owes who is gone. The pass shows it once.',
+    ],
+  },
+  {
     version: '3.43.4',
     date: '2026-10-02',
     changes: [

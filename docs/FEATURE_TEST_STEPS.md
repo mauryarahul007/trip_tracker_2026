@@ -1549,7 +1549,7 @@ Test on a phone-sized viewport (DevTools device mode is fine) plus a real Androi
 5. Tap the hero amount. The page should smooth-scroll down to the "Who owes who" section below it — confirm no modal or new screen opens, and the card does not flip back to front.
 6. Confirm an "Updated {relative time}" line appears above the footer (skip this check on a trip with zero expenses — the line is hidden when there's nothing to date).
 7. Tap the join-code chip in the footer. It should copy the code to the clipboard and show "✓ Copied" briefly.
-8. Confirm up to 3 other travelers' initials (+N overflow for more) appear next to the join-code chip.
+8. Confirm up to 2 other travelers' initials (+N overflow for more) appear next to the join-code chip.
 9. Flip back to the front. Confirm the front's flip hint now reads "↻ Balance details" (it previously said "Itinerary," which the back no longer resembles at all after this change).
 10. Open a trip where you're in a group/couple with exactly one other member and no balance outside the group. Confirm the hero names that person directly, e.g. "You owe Priya".
 11. Open a trip where you're in a group **and** also carry a balance outside the group (or a group with 2+ other members). Confirm the hero falls back to the generic "You owe" / "You're owed" with no name, rather than naming only one of several people.
@@ -1577,16 +1577,18 @@ Test on a phone-sized viewport (DevTools device mode is fine) plus a real Androi
 ### Steps
 1. On a phone-width screen (~360–390px), open a trip with 4+ travelers. Go to Summary.
 2. Flip the boarding pass. Confirm nothing is cut off at the bottom: the join-code chip, "Updated …" line, and traveler avatars are all fully visible inside the card.
-3. Confirm the header shows trip name, "Balance details", the date range, and a "↺ Balance summary" hint top right.
+3. Confirm the header shows trip name, "Balance details", the date range, and a "↺ Summary" hint top right.
 4. Confirm the hero shows the direction label and the amount, then a full-width progress bar with "{N} of {M} settled" on the left and "{pct}%" on the right.
 5. Tap the "See who owes who ↓" row. The page scrolls to "Who owes who"; the card stays on the back.
 6. Tap the join-code chip. It copies the code and shows "✓ Copied"; the card stays on the back.
 7. Tap anywhere else on the card. It flips to the front. Confirm the front is the same height as the back, with the amount vertically centered and no doubled dashed line above the footer.
-8. Repeat 2–7 in dark mode, and with the OS "Reduce motion" setting on (faces crossfade instead of rotating).
+8. Scroll to "Who owes who" on an unsettled trip. Confirm there is no "{N} of {M} settled up · {pct}%" bar under the Simplified/Direct Debts toggle. The only progress bar is on the pass back.
+9. Repeat 2–7 in dark mode, and with the OS "Reduce motion" setting on (faces crossfade instead of rotating).
 
 ### Negative checks
 - Turn `enableTravelerPassBack` off. The legacy itinerary back still renders fully and flips both ways.
 - The card's height does not jump when flipping in either direction.
+- With the flag off, the "settled up" bar is back under "Who owes who".
 
 ### Pass
 - No back-face content is ever clipped, at any phone width.
