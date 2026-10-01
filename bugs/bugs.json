@@ -7697,5 +7697,31 @@
     "resolvedBy": "rahul",
     "resolvedAt": "2026-09-30T21:52:08.890Z",
     "resolutionNote": "v3.43.2: the tile status and spent bar stays above the cycling photo as a transparent strip. The photo layers no longer paint over it."
+  },
+  {
+    "id": "BUG-262",
+    "title": "Summary pass back cuts off its bottom row",
+    "description": "The flipped boarding pass was pinned to the front face's height, so the footer row and the Who owes who link were clipped.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-01T20:36:12.092Z",
+    "updatedAt": "2026-10-01T20:36:14.851Z",
+    "resolvedBy": "rahul",
+    "resolvedAt": "2026-10-01T20:36:14.851Z",
+    "resolutionNote": "Fixed in commit edbaccf (v3.43.4). Both pass faces share one grid cell so the card takes the taller height. The back layout was tidied."
   }
 ]
