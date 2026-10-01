@@ -1564,5 +1564,21 @@
     "shippedAt": "2026-09-30T21:43:11.800Z",
     "shippedBy": "rahul",
     "shippedNote": "Shipped in v3.43.1. ADR 246. Flag cycleDestinationCovers (Core, default ON)."
+  },
+  {
+    "id": "FEAT-099",
+    "title": "Simplified pass back: one balance hero",
+    "description": "Flipping the Summary boarding pass now shows one personal-balance line (a named 'You owe Rohan' when it's one counterparty, a generic 'You owe'/'You're owed' otherwise), a settled-travelers progress bar, a working join-code copy chip, up to three traveler-initials avatars, and a last-updated time -- replacing the old back's dual weather widgets, route diagram, status pill, two-column finance grid, and decorative barcode. Tapping the amount scrolls to the existing Who-owes-who section instead of opening a second settle flow. Flag: enableTravelerPassBack (reused, unchanged).",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-01T20:05:27.395Z",
+    "updatedAt": "2026-10-01T20:05:30.238Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-01T20:05:30.238Z",
+    "shippedNote": "Shipped in commit 1cf0b67 (v3.43.3). decisions.md #248. QA steps in FEATURE_TEST_STEPS.md: PASS-STUB-SIMPLIFY."
   }
 ]
