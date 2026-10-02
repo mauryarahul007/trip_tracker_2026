@@ -27,7 +27,6 @@ interface Props {
 export function FlightAddExpenseTooltip({
   activeTab = 'expenses',
   onAddExpense,
-  onAddMember,
   expenseCount = 0,
   tripDestination,
 }: Props) {
@@ -88,11 +87,7 @@ export function FlightAddExpenseTooltip({
   const handleTooltipClick = () => {
     triggerHaptic('medium');
     handleDismiss({ stopPropagation: () => {} } as React.MouseEvent);
-    if (activeTab === 'members' && onAddMember) {
-      onAddMember();
-    } else {
-      onAddExpense();
-    }
+    onAddExpense();
   };
 
   const message = getFlightTooltipMessage(expenseCount, tripDestination, activeTab);

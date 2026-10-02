@@ -4481,3 +4481,9 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Edit and delete stay on swipe for touch, and as icons for a mouse.
   - The role menu is 13px, so iOS may zoom the page when an organizer opens it.
+
+## 255. Members coach no longer handles a tab it does not render (v3.43.10)
+* **Context:** v3.43.9 hid the airplane coach on Members, then the click handler still compared the tab to `"members"`. TypeScript rejected that comparison, so CI, Pages, and the EC2 deploy all failed on `npm run build`.
+* **Decision:** The coach only calls add-expense. It never mounts on Members, where the + button already adds a member.
+* **Trade-offs Accepted:**
+  - None for travelers. The failed 3.43.9 build never shipped.
