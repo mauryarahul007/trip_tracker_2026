@@ -1693,7 +1693,7 @@ No new flag. Talk already uses its own live chat channel.
 
 ## MEMBERS-ROSTER — Members roster (v3.43.9)
 
-**Commit:** pending stamp. **Migrations:** none. **ADR:** 254. **Bug:** BUG-267.
+**Commit:** `c303812`. **Migrations:** none. **ADR:** 254. **Bug:** BUG-267.
 
 No new flag. Role changes, reminders, and group create stay on the existing Members tab.
 
