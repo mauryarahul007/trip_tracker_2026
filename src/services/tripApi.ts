@@ -305,26 +305,78 @@ export async function updateTripRow(id: string, patch: { name: string; startDate
   if (error) throw error;
 }
 
-export async function updateTripChecklist(id: string, checklist: ChecklistItem[]): Promise<void> {
-  const { error } = await supabase
+function isMissingCollabRpc(error: { message?: string; code?: string }): boolean {
+  const msg = error.message || '';
+  return error.code === 'PGRST202' || /schema cache|Could not find the function/i.test(msg);
+}
+
+// Participants write checklist / notes / passes / FX through a definer RPC
+// (migration 0109). A direct trips UPDATE is owner-only, so a member's edit
+// used to fail RLS and never leave their phone. If the RPC is not deployed
+// yet, fall back to the owner update so organizers do not regress.
+async function writeTripCollabField(
+  id: string,
+  field: 'checklist' | 'notes' | 'passes' | 'fx_config',
+  value: unknown
+): Promise<void> {
+  const { error } = await supabase.rpc('set_trip_collab_field', {
+    p_trip_id: id,
+    p_field: field,
+    p_value: value as never,
+  });
+  if (!error) return;
+  if (!isMissingCollabRpc(error)) throw error;
+  const { error: fallbackError } = await supabase
     .from('trips')
-    .update({
-      checklist,
-      updated_at: new Date().toISOString(),
-    } as any)
+    .update({ [field]: value, updated_at: new Date().toISOString() } as never)
     .eq('id', id);
-  if (error) throw error;
+  if (fallbackError) throw fallbackError;
+}
+
+export async function updateTripChecklist(id: string, checklist: ChecklistItem[]): Promise<void> {
+  await writeTripCollabField(id, 'checklist', checklist);
 }
 
 export async function updateTripNotes(id: string, notes: TripNote[]): Promise<void> {
-  const { error } = await supabase
-    .from('trips')
-    .update({
-      notes,
-      updated_at: new Date().toISOString(),
-    } as any)
-    .eq('id', id);
+  await writeTripCollabField(id, 'notes', notes);
+}
+
+export async function fetchTripRoster(tripId: string): Promise<{ trip: Trip; members: Record<string, Member>; groups: Record<string, Group> } | null> {
+  const { data: row, error } = await supabase.from('trips').select('*').eq('id', tripId).maybeSingle();
   if (error) throw error;
+  if (!row) return null;
+
+  const [membersRes, groupsRes] = await Promise.all([
+    supabase.from('members').select('*, profile:linked_user_id(avatar_url)').eq('trip_id', tripId),
+    supabase.from('groups').select('*').eq('trip_id', tripId),
+  ]);
+  if (membersRes.error) throw membersRes.error;
+  if (groupsRes.error) throw groupsRes.error;
+
+  const groupIds = (groupsRes.data ?? []).map((g) => g.id);
+  const groupMembersRes = groupIds.length
+    ? await supabase.from('group_members').select('*').in('group_id', groupIds)
+    : { data: [] as { group_id: string; member_id: string }[], error: null };
+  if (groupMembersRes.error) throw groupMembersRes.error;
+
+  const members: Record<string, Member> = {};
+  (membersRes.data ?? []).forEach((memberRow) => {
+    members[memberRow.id] = mapMember(memberRow);
+  });
+
+  const memberIdsByGroup: Record<string, string[]> = {};
+  (groupMembersRes.data ?? []).forEach((link) => {
+    (memberIdsByGroup[link.group_id] ??= []).push(link.member_id);
+  });
+
+  const groups: Record<string, Group> = {};
+  (groupsRes.data ?? []).forEach((groupRow) => {
+    groups[groupRow.id] = mapGroup(groupRow, memberIdsByGroup[groupRow.id] ?? []);
+  });
+
+  const memberIds = (membersRes.data ?? []).map((memberRow) => memberRow.id);
+  const gIds = (groupsRes.data ?? []).map((groupRow) => groupRow.id);
+  return { trip: mapTrip(row, memberIds, gIds), members, groups };
 }
 
 export async function updateTripMemberRoles(id: string, memberRoles: Record<string, import('../types').MemberRole>): Promise<void> {
@@ -374,25 +426,11 @@ export async function updateTripSimplifyDebts(id: string, simplifyDebts: boolean
 }
 
 export async function updateTripPasses(id: string, passes: import('../types').TravelPass[]): Promise<void> {
-  const { error } = await supabase
-    .from('trips')
-    .update({
-      passes,
-      updated_at: new Date().toISOString(),
-    } as any)
-    .eq('id', id);
-  if (error) throw error;
+  await writeTripCollabField(id, 'passes', passes);
 }
 
 export async function updateTripFxConfig(id: string, fxConfig: import('../types').TripFxConfig): Promise<void> {
-  const { error } = await supabase
-    .from('trips')
-    .update({
-      fx_config: fxConfig,
-      updated_at: new Date().toISOString(),
-    } as any)
-    .eq('id', id);
-  if (error) throw error;
+  await writeTripCollabField(id, 'fx_config', fxConfig);
 }
 
 export async function archiveTripRow(id: string, archived: boolean): Promise<void> {

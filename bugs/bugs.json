@@ -7801,5 +7801,32 @@
     "resolvedBy": "rahul",
     "resolvedAt": "2026-10-02T06:10:09.439Z",
     "resolutionNote": "Fixed in commit 9eb5391 (v3.43.7). Text floor of 11px, 44px hit areas, dialog roles on six modals, a compact settle confirm card and a one-time flip cue."
+  },
+  {
+    "id": "BUG-266",
+    "title": "Trip members cannot see each other's packing, notes, or passes",
+    "description": "A member's add, edit, or delete of packing items, notes, or passes stayed on their phone. The other member, already on the trip, never saw it.",
+    "severity": "high",
+    "category": "p2p-sync",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open the same trip as two members",
+      "On Notes, Pack, add an item as the non-owner",
+      "Confirm the other member's list does not update"
+    ],
+    "expectedBehavior": "Any member's add, edit, or delete shows up for the other members without a reload.",
+    "actualBehavior": "Only the person who made the change saw it. The trips update was owner-only, and an open trip did not refetch those fields.",
+    "diagnostics": {},
+    "createdAt": "2026-10-02T17:56:39.307Z",
+    "updatedAt": "2026-10-02T17:56:45.779Z",
+    "resolvedBy": "rahul",
+    "resolvedAt": "2026-10-02T17:56:45.778Z",
+    "resolutionNote": "Members can save packing, notes, and passes, and an open trip refetches them (v3.43.8, migration 0109)."
   }
 ]

@@ -122,6 +122,23 @@ export interface Database {
         }>;
         Relationships: [];
       };
+      trip_collab_signals: {
+        Row: {
+          trip_id: string;
+          revision: number;
+          updated_at: string;
+        };
+        Insert: {
+          trip_id: string;
+          revision?: number;
+          updated_at?: string;
+        };
+        Update: Partial<{
+          revision: number;
+          updated_at: string;
+        }>;
+        Relationships: [];
+      };
       notification_digest_prefs: {
         Row: {
           user_id: string;
@@ -860,6 +877,10 @@ export interface Database {
       approve_expense: {
         Args: { p_expense_id: string };
         Returns: Database['public']['Tables']['expenses']['Row'];
+      };
+      set_trip_collab_field: {
+        Args: { p_trip_id: string; p_field: string; p_value: unknown };
+        Returns: undefined;
       };
       get_trip_share: {
         Args: { p_token: string };

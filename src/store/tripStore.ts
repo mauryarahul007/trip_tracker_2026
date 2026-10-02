@@ -9,10 +9,12 @@ import { buildAutoGroupName } from '../utils/groupNaming';
 import { copyDefaultSplit } from '../utils/defaultSplit';
 import { getCurrencyDecimals } from '../utils/currency';
 import { newId } from '../utils/uuid';
+import { mergeTripRoster } from '../utils/tripCollabMerge';
 import { fetchResolvedFeatureFlags, fetchAllFeatureFlagOverrides, setFeatureFlagOverride } from '../services/featureFlagApi';
 import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
 import {
   fetchMyTripGraph,
+  fetchTripRoster,
   fetchExpensesForTrip,
   fetchCategoriesForTrip,
   insertTrip,
@@ -181,6 +183,9 @@ interface TripStore extends TripState {
   initialize: () => Promise<void>;
   refreshTrips: (force?: boolean) => Promise<void>;
   refreshActiveTripExpenses: () => Promise<void>;
+  // Re-pulls the open trip's packing, notes, passes, members, and expenses
+  // when someone else changes them. See migration 0109.
+  refreshActiveTripShared: () => Promise<void>;
   clearStorageError: () => void;
   processQueue: () => Promise<void>;
   retrySyncItem: (id: string) => Promise<void>;
@@ -669,6 +674,11 @@ export function detectExpenseConflicts(
 }
 
 let userDismissedStorageError = false;
+let collabWritesInFlight = 0;
+let sharedRefreshInFlight = false;
+let sharedRefreshQueued = false;
+let watchActiveTrip: (tripId: string | null) => void = () => {};
+let scheduleActiveTripRefresh: () => void = () => {};
 
 export function sanitizeTripsPasses(trips: Trip[]): { sanitizedTrips: Trip[]; hadDataUrls: boolean } {
   if (!trips || !Array.isArray(trips)) return { sanitizedTrips: [], hadDataUrls: false };
@@ -853,6 +863,18 @@ export const useTripStore = create<TripStore>()(
     }
     console.error('Trip store sync error:', e);
     set({ storageError: e instanceof Error ? e.message : 'Failed to sync with the server.' });
+  };
+
+  const syncCollab = async (write: () => Promise<void>) => {
+    collabWritesInFlight += 1;
+    try {
+      await write();
+    } catch (e) {
+      setError(e);
+    } finally {
+      collabWritesInFlight = Math.max(0, collabWritesInFlight - 1);
+      scheduleActiveTripRefresh();
+    }
   };
 
   const toExpenseInput = (
@@ -1215,6 +1237,7 @@ export const useTripStore = create<TripStore>()(
         if (get().syncQueue.length > 0) {
           get().processQueue();
         }
+        watchActiveTrip(get().activeTripId);
       } catch (e) {
         console.warn('Initial trip load failed or offline:', e);
         set({
@@ -1275,6 +1298,53 @@ export const useTripStore = create<TripStore>()(
         setError(e);
       } finally {
         set((state) => (state.expensesLoadingTripId === tripId ? { expensesLoadingTripId: null } : {}));
+      }
+    },
+
+    refreshActiveTripShared: async () => {
+      const tripId = get().activeTripId;
+      if (!tripId || !navigator.onLine || isMissingSupabaseEnv) return;
+      if (sharedRefreshInFlight) {
+        sharedRefreshQueued = true;
+        return;
+      }
+      sharedRefreshInFlight = true;
+      const keepLocalCollab = collabWritesInFlight > 0;
+      set({ expensesLoadingTripId: tripId });
+      try {
+        const [roster, serverExpenses, customCategories] = await Promise.all([
+          fetchTripRoster(tripId),
+          fetchExpensesForTrip(tripId),
+          fetchCategoriesForTrip(tripId),
+        ]);
+        if (get().activeTripId !== tripId) return;
+        const dirtyIds = collectDirtyExpenseIds(get().syncQueue);
+        set((state) => {
+          const rosterPatch = roster
+            ? mergeTripRoster(state.trips, state.members, state.groups, tripId, roster, keepLocalCollab)
+            : { trips: state.trips, members: state.members, groups: state.groups };
+          return {
+            ...rosterPatch,
+            expenses: mergeServerExpenses(state.expenses, serverExpenses, tripId, dirtyIds),
+            pendingConflicts: detectExpenseConflicts(
+              state.expenses.filter((e) => e.tripId === tripId),
+              serverExpenses,
+              dirtyIds,
+              state.syncQueue
+            ),
+            categories: [...DEFAULT_CATEGORIES, ...customCategories],
+            storageError: null,
+          };
+        });
+      } catch (e) {
+        setError(e);
+      } finally {
+        sharedRefreshInFlight = false;
+        set((state) => (state.expensesLoadingTripId === tripId ? { expensesLoadingTripId: null } : {}));
+        if (sharedRefreshQueued) {
+          sharedRefreshQueued = false;
+          void get().refreshActiveTripShared();
+        }
       }
     },
 
@@ -1719,6 +1789,7 @@ export const useTripStore = create<TripStore>()(
     selectTrip: async (id) => {
       if (id === null) {
         set({ activeTripId: null });
+        watchActiveTrip(null);
         return;
       }
       // Switch instantly using whatever's cached locally for this trip —
@@ -1727,34 +1798,16 @@ export const useTripStore = create<TripStore>()(
       // cached data yet just renders empty rather than losing data for a
       // trip we DO have cached (e.g. switching back to it later).
       set({ activeTripId: id });
+      watchActiveTrip(id);
       if (!navigator.onLine) {
         const trip = get().trips.find((t) => t.id === id);
         if (trip) void rescheduleTripPassReminders(trip.passes, trip.name);
         return;
       }
       void get().loadFeatureFlags(id);
-      set({ expensesLoadingTripId: id });
-      try {
-        const [serverExpenses, customCategories] = await Promise.all([fetchExpensesForTrip(id), fetchCategoriesForTrip(id)]);
-        const dirtyIds = collectDirtyExpenseIds(get().syncQueue);
-        set((state) => ({
-          expenses: mergeServerExpenses(state.expenses, serverExpenses, id, dirtyIds),
-          pendingConflicts: detectExpenseConflicts(
-            state.expenses.filter((e) => e.tripId === id),
-            serverExpenses,
-            dirtyIds,
-            state.syncQueue
-          ),
-          categories: [...DEFAULT_CATEGORIES, ...customCategories],
-          storageError: null,
-        }));
-        const trip = get().trips.find((t) => t.id === id);
-        if (trip) void rescheduleTripPassReminders(trip.passes, trip.name);
-      } catch (e) {
-        setError(e);
-      } finally {
-        set((state) => (state.expensesLoadingTripId === id ? { expensesLoadingTripId: null } : {}));
-      }
+      await get().refreshActiveTripShared();
+      const trip = get().trips.find((t) => t.id === id);
+      if (trip) void rescheduleTripPassReminders(trip.passes, trip.name);
     },
 
     archiveTrip: async (id, archived) => {
@@ -2073,11 +2126,7 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripChecklist(tripId, updatedList);
-        } catch (e) {
-          console.warn('Failed to sync checklist item to backend:', e);
-        }
+        await syncCollab(() => updateTripChecklist(tripId, updatedList));
       }
     },
 
@@ -2100,11 +2149,7 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripChecklist(tripId, updatedList);
-        } catch (e) {
-          console.warn('Failed to sync batch checklist items to backend:', e);
-        }
+        await syncCollab(() => updateTripChecklist(tripId, updatedList));
       }
     },
 
@@ -2135,11 +2180,7 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripChecklist(tripId, updatedList);
-        } catch (e) {
-          console.warn('Failed to sync checklist toggle to backend:', e);
-        }
+        await syncCollab(() => updateTripChecklist(tripId, updatedList));
       }
     },
 
@@ -2156,11 +2197,7 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripChecklist(tripId, updatedList);
-        } catch (e) {
-          console.warn('Failed to sync checklist update to backend:', e);
-        }
+        await syncCollab(() => updateTripChecklist(tripId, updatedList));
       }
     },
 
@@ -2177,11 +2214,7 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripChecklist(tripId, updatedList);
-        } catch (e) {
-          console.warn('Failed to sync checklist deletion to backend:', e);
-        }
+        await syncCollab(() => updateTripChecklist(tripId, updatedList));
       }
     },
 
@@ -2199,11 +2232,7 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripChecklist(tripId, updatedList);
-        } catch (e) {
-          console.warn('Failed to sync batch checklist deletion to backend:', e);
-        }
+        await syncCollab(() => updateTripChecklist(tripId, updatedList));
       }
     },
 
@@ -2232,11 +2261,7 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripChecklist(tripId, updatedList);
-        } catch (e) {
-          console.warn('Failed to sync batch checklist completion to backend:', e);
-        }
+        await syncCollab(() => updateTripChecklist(tripId, updatedList));
       }
     },
 
@@ -2247,11 +2272,7 @@ export const useTripStore = create<TripStore>()(
         lastModifiedAt: now,
       }));
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripChecklist(tripId, orderedItems);
-        } catch (e) {
-          console.warn('Failed to sync checklist reorder to backend:', e);
-        }
+        await syncCollab(() => updateTripChecklist(tripId, orderedItems));
       }
     },
 
@@ -2275,11 +2296,7 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripNotes(tripId, updatedNotes);
-        } catch (e) {
-          console.warn('Failed to sync trip note to backend:', e);
-        }
+        await syncCollab(() => updateTripNotes(tripId, updatedNotes));
       }
     },
 
@@ -2296,11 +2313,7 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripNotes(tripId, updatedNotes);
-        } catch (e) {
-          console.warn('Failed to sync trip note update to backend:', e);
-        }
+        await syncCollab(() => updateTripNotes(tripId, updatedNotes));
       }
     },
 
@@ -2317,11 +2330,7 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripNotes(tripId, updatedNotes);
-        } catch (e) {
-          console.warn('Failed to sync trip note deletion to backend:', e);
-        }
+        await syncCollab(() => updateTripNotes(tripId, updatedNotes));
       }
     },
 
@@ -2339,11 +2348,7 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripNotes(tripId, updatedNotes);
-        } catch (e) {
-          console.warn('Failed to sync batch note deletion to backend:', e);
-        }
+        await syncCollab(() => updateTripNotes(tripId, updatedNotes));
       }
     },
 
@@ -2371,11 +2376,7 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripPasses(tripId, updatedPasses);
-        } catch (e) {
-          console.warn('Failed to sync travel pass to backend:', e);
-        }
+        await syncCollab(() => updateTripPasses(tripId, updatedPasses));
       }
 
       const tripName = get().trips.find((t) => t.id === tripId)?.name || 'Trip';
@@ -2404,11 +2405,7 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripPasses(tripId, updatedPasses);
-        } catch (e) {
-          console.warn('Failed to sync travel pass deletion to backend:', e);
-        }
+        await syncCollab(() => updateTripPasses(tripId, updatedPasses));
       }
 
       void cancelPassReminders(passId);
@@ -2422,11 +2419,7 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!isMissingSupabaseEnv) {
-        try {
-          await updateTripFxConfig(tripId, fxConfig);
-        } catch (e) {
-          console.warn('Failed to sync trip fx config to backend:', e);
-        }
+        await syncCollab(() => updateTripFxConfig(tripId, fxConfig));
       }
     },
 
@@ -3637,4 +3630,43 @@ export const useTripStore = create<TripStore>()(
     }
   )
 );
+
+let watchedTripId: string | null = null;
+let collabChannel: ReturnType<typeof supabase.channel> | null = null;
+let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+let visibilityBound = false;
+
+scheduleActiveTripRefresh = () => {
+  if (refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => {
+    refreshTimer = null;
+    void useTripStore.getState().refreshActiveTripShared();
+  }, 400);
+};
+
+watchActiveTrip = (tripId) => {
+  if (typeof document !== 'undefined' && !visibilityBound) {
+    visibilityBound = true;
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && watchedTripId) scheduleActiveTripRefresh();
+    });
+  }
+
+  if (watchedTripId === tripId && (tripId === null || collabChannel)) return;
+  if (collabChannel) {
+    void supabase.removeChannel(collabChannel);
+    collabChannel = null;
+  }
+  watchedTripId = tripId;
+  if (!tripId || isMissingSupabaseEnv) return;
+
+  collabChannel = supabase
+    .channel(`trip_collab:${tripId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'trip_collab_signals', filter: `trip_id=eq.${tripId}` },
+      () => scheduleActiveTripRefresh()
+    )
+    .subscribe();
+};
 

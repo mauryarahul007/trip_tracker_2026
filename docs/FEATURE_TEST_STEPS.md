@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-02 | 3.43.8 | COLLAB-SYNC | [Shared packing, notes, and passes](#collab-sync--shared-packing-notes-and-passes) |
 | 2026-10-02 | unreleased | PASS-STUB-SIMPLIFY | [Simplified pass back (balance hero)](#pass-stub-simplify--simplified-pass-back-balance-hero) |
 | 2026-10-02 | 3.43.4 | PASS-BACK-POLISH | [Pass back layout polish (no clipping)](#pass-back-polish--pass-back-layout-polish-no-clipping) |
 | 2026-10-02 | unreleased | SUMMARY-CLARITY | [Summary clarity: labeled totals, solid nav, honest chip](#summary-clarity--summary-clarity-labeled-totals-solid-nav-honest-chip) |
@@ -1657,6 +1658,35 @@ Test on a phone-sized viewport (DevTools device mode is fine) plus a real Androi
 - Screen readers announce the six modals as dialogs.
 - The settle confirm can be read at a glance.
 - New users learn the pass flips; returning users never see the cue.
+
+---
+
+## COLLAB-SYNC — Shared packing, notes, and passes
+
+**Migrations:** `0109_participant_trip_collab.sql`. Needs to be applied before this works on the live site.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Notes tab (Talk, Pack, Notes) | `enableNotesAndChecklist` | ON (Trip pack) |
+| Pass | `enableTravelPasses` | ON when a pass exists (Travel pack) |
+
+No new flag. Talk already uses its own live chat channel.
+
+### Steps
+1. Apply migration 0109. Sign in as Person A and Person B on two browsers. Both are members of the same trip. B is not the owner.
+2. A opens Notes → Pack and adds an item. Within a few seconds, B's Pack list shows it without a reload. B checks it off, edits the text, then deletes it. A's list follows each change.
+3. Repeat for Notes (add, edit, delete) and Pass (save a pass, then delete it).
+4. A adds an expense. B's Expenses and Summary update without a reload. A adds or renames a member. B's Members tab shows it.
+5. Put B's phone to sleep, have A add a packing item, then bring B back. The new item is there.
+
+### Negative checks
+- A viewer who is not a member of the trip still cannot read or write the list.
+- Trip rename, archive, and delete stay owner-only.
+- Talk messages still appear live on the Talk sub-tab.
+
+### Pass
+- An add, edit, or delete by either member shows up for the other member on Pack, Notes, and Pass, and on Expenses, Summary, and Members, without reloading the app.
 
 ---
 

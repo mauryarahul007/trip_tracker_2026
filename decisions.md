@@ -4466,3 +4466,11 @@ This document logs all meaningful technical decisions, library choices, design p
   - Raising 9–10.5px text to 11px makes some tight rows denser. The pass was checked at 320px and 380px wide; other screens were reviewed in code only.
   - Text still uses `px`, not `rem`. Android WebView applies the system font scale to both, so a `rem` migration was left out.
   - The 44px hit areas of neighbouring small buttons can overlap by a few pixels; the visible button on top wins.
+
+## 253. Members can save and see packing, notes, and passes (v3.43.8, BUG-266)
+* **Context:** Packing, notes, and passes are JSON columns on `trips`. The trips UPDATE policy allows only the owner. A member's add, edit, or delete updated local state and the RLS error was swallowed, so it never reached anyone else. Even an owner's successful write stayed invisible to someone already inside the trip, because nothing refetched that row. Expenses already refreshed from push notifications. Talk already uses `trip_messages` realtime.
+* **Decision:** `set_trip_collab_field` (migration 0109) lets any participant write only `checklist`, `notes`, `passes`, and `fx_config`. Rename, archive, and delete stay owner-only. A `trip_collab_signals` row, maintained by triggers on trips, members, groups, expenses, and categories, is in the realtime publication. The open trip refetches those fields, the roster, and expenses. A local write in flight is not overwritten by that refresh. Applied to the live project with `supabase db push --linked` before this commit.
+* **Trade-offs Accepted:**
+  - Two people editing the same list at the same moment still last-write-wins on the whole JSON array. Item-level rows were not introduced.
+  - Checkbox toggles do not create a notification bell. The signal is silent.
+  - If the RPC is missing, the client falls back to a direct trips update, which still works only for the owner.

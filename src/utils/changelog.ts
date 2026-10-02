@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.43.8',
+    date: '2026-10-02',
+    changes: [
+      'Packing lists, notes, and passes now stay in sync for everyone on the trip. An add, edit, or delete by one member shows up for the others without a reload.',
+      'Expenses, members, and the summary refresh the same way while the trip is open.',
+    ],
+  },
+  {
     version: '3.43.7',
     date: '2026-10-02',
     changes: [
