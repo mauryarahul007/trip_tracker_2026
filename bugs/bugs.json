@@ -7824,9 +7824,9 @@
     "actualBehavior": "Only the person who made the change saw it. The trips update was owner-only, and an open trip did not refetch those fields.",
     "diagnostics": {},
     "createdAt": "2026-10-02T17:56:39.307Z",
-    "updatedAt": "2026-10-02T17:56:45.779Z",
+    "updatedAt": "2026-10-02T17:57:23.962Z",
     "resolvedBy": "rahul",
-    "resolvedAt": "2026-10-02T17:56:45.778Z",
-    "resolutionNote": "Members can save packing, notes, and passes, and an open trip refetches them (v3.43.8, migration 0109)."
+    "resolvedAt": "2026-10-02T17:57:23.962Z",
+    "resolutionNote": "Fixed in commit 01f7333 (v3.43.8, migration 0109). Members can save packing, notes, and passes, and an open trip refetches them."
   }
 ]
