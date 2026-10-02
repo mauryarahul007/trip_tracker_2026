@@ -7879,6 +7879,6 @@
     "updatedAt": "2026-10-02T18:24:36.706Z",
     "resolvedBy": "rahul",
     "resolvedAt": "2026-10-02T18:24:36.705Z",
-    "resolutionNote": "Fixed in v3.43.10. The coach click only adds an expense, because it no longer renders on Members."
+    "resolutionNote": "Fixed in commit 112d02e (v3.43.10). The coach click only adds an expense, because it no longer renders on Members."
   }
 ]
