@@ -6401,14 +6401,13 @@ input:checked + .toggle-slider:before {
   text-align: center;
 }
 
-/* Trip members list — luggage tags. Each roster entry hangs like a
-   string-tied baggage label; the thread colour is the settle status,
-   so who owes whom reads before the number does. */
+/* Trip members roster. One solid row per person: name and role on the
+   left, the balance on the right. */
 .luggage-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-bottom: 32px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 .luggage-tag {
   display: flex;
@@ -6444,21 +6443,14 @@ input:checked + .toggle-slider:before {
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1.5px dashed var(--border-color);
-  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
   background: var(--bg-surface);
-  padding: 10px 14px;
+  padding: 12px 14px;
   position: relative;
 }
 .luggage-tag .lt-status {
-  width: 4px;
-  align-self: stretch;
-  border-radius: 2px;
-  background: var(--color-success);
-  flex-shrink: 0;
-}
-.luggage-tag.lt-owe .lt-status {
-  background: var(--color-danger);
+  display: none;
 }
 .luggage-tag .lt-initials {
   width: 34px;
@@ -6535,14 +6527,179 @@ input:checked + .toggle-slider:before {
 }
 .luggage-tag .lt-amt {
   font-family: var(--font-family-mono);
-  font-size: 11.5px;
-  color: var(--color-success);
-  margin-top: 1px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 0;
   white-space: nowrap;
   flex-shrink: 0;
+  letter-spacing: -0.02em;
 }
 .luggage-tag.lt-owe .lt-amt {
   color: var(--color-danger);
+}
+.luggage-tag.lt-owed .lt-amt {
+  color: var(--color-success);
+}
+.member-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.member-section-title {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+.member-section-action {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-accent);
+  cursor: pointer;
+}
+.member-roster-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.member-roster-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.luggage-tag .member-roster-top .lt-name {
+  flex: 1;
+  min-width: 0;
+}
+.member-roster-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin-top: 1px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--text-muted);
+}
+.member-role-select {
+  appearance: none;
+  border: none;
+  background: transparent;
+  margin: 0;
+  padding: 0 14px 0 0;
+  height: auto;
+  min-height: 0;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: 10px 10px;
+}
+.member-roster-chip {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.member-roster-chip-pending {
+  color: var(--color-warning);
+}
+.member-roster-seen {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.member-roster-money {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  gap: 1px;
+}
+.member-roster-dir {
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--text-muted);
+}
+.member-inline-action {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.member-inline-action-danger {
+  color: var(--color-danger);
+}
+.member-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.member-groups-section {
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+  margin-top: 20px;
+}
+.member-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.member-group-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-surface);
+}
+.member-group-copy {
+  min-width: 0;
+}
+.member-group-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.member-group-members {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.member-group-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
 .luggage-tag .lt-actions {
   display: flex;
@@ -15847,17 +16004,20 @@ textarea.input-field {
   min-height: 32px;
 }
 
-/* Members tab Remind button (enableMemberMoneyRow). */
+/* Members tab Remind button (enableMemberMoneyRow). Icon only. */
 .member-remind-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  font-size: 11.5px;
-  font-weight: 600;
-  min-height: 26px;
-  color: var(--accent-orange);
-  border-color: color-mix(in srgb, var(--accent-orange) 40%, var(--border-color));
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
 }
 
 /* Notifications inbox (enableNotificationGrouping): Everything / Money

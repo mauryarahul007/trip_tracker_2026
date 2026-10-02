@@ -7828,5 +7828,31 @@
     "resolvedBy": "rahul",
     "resolvedAt": "2026-10-02T17:57:23.962Z",
     "resolutionNote": "Fixed in commit 01f7333 (v3.43.8, migration 0109). Members can save packing, notes, and passes, and an open trip refetches them."
+  },
+  {
+    "id": "BUG-267",
+    "title": "Members tab looks like luggage tags",
+    "description": "Each member was a dashed card with the role shown twice, a loud Create Group button, and a coach covering the list.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open a trip",
+      "Go to Members"
+    ],
+    "expectedBehavior": "A simple list: one role, the balance on the right, quiet groups.",
+    "actualBehavior": "Dashed luggage-tag cards, duplicate role badge and dropdown, orange Create Group, airplane coach over the rows.",
+    "diagnostics": {},
+    "createdAt": "2026-10-02T18:18:29.790Z",
+    "updatedAt": "2026-10-02T18:18:30.081Z",
+    "resolvedBy": "rahul",
+    "resolvedAt": "2026-10-02T18:18:30.080Z",
+    "resolutionNote": "Fixed in v3.43.9. One solid row per person, a single role control, and no airplane coach on Members."
   }
 ]

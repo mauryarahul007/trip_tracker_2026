@@ -4469,8 +4469,15 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ## 253. Members can save and see packing, notes, and passes (v3.43.8, BUG-266)
 * **Context:** Packing, notes, and passes are JSON columns on `trips`. The trips UPDATE policy allows only the owner. A member's add, edit, or delete updated local state and the RLS error was swallowed, so it never reached anyone else. Even an owner's successful write stayed invisible to someone already inside the trip, because nothing refetched that row. Expenses already refreshed from push notifications. Talk already uses `trip_messages` realtime.
-* **Decision:** `set_trip_collab_field` (migration 0109) lets any participant write only `checklist`, `notes`, `passes`, and `fx_config`. Rename, archive, and delete stay owner-only. A `trip_collab_signals` row, maintained by triggers on trips, members, groups, expenses, and categories, is in the realtime publication. The open trip refetches those fields, the roster, and expenses. A local write in flight is not overwritten by that refresh. Applied to the live project with `supabase db push --linked` before this commit.
+* **Decision:** `set_trip_collab_field` (migration 0109) lets any participant write only `checklist`, `notes`, `passes`, and `fx_config`. Rename, archive, and delete stay owner-only. The open client listens the same way Talk does: a `trips` UPDATE (migration 0110, replica identity full) paints the new packing list, notes, and passes from the event payload, with no reload. `trip_collab_signals` still prompts a silent refetch of members and expenses. A local write in flight is not overwritten. 0109 was applied before the v3.43.8 commit.
 * **Trade-offs Accepted:**
   - Two people editing the same list at the same moment still last-write-wins on the whole JSON array. Item-level rows were not introduced.
   - Checkbox toggles do not create a notification bell. The signal is silent.
   - If the RPC is missing, the client falls back to a direct trips update, which still works only for the owner.
+
+## 254. Members tab is a roster, not luggage tags (v3.43.9, BUG-267)
+* **Context:** Each member was a dashed luggage-tag card. The role appeared twice (a badge and a dropdown), Remind sat in the amount row, and Create Group was a loud orange button. An airplane coach also covered the list.
+* **Decision:** One solid row per person. Name and balance on the first line, a single role control under the name. Remind is a bell. Groups use the same card, with a text "Create group" action. The airplane coach does not show on Members; the + button still adds a member. No new flag.
+* **Trade-offs Accepted:**
+  - Edit and delete stay on swipe for touch, and as icons for a mouse.
+  - The role menu is 13px, so iOS may zoom the page when an organizer opens it.

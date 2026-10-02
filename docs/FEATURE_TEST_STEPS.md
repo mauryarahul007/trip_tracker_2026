@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-02 | 3.43.9 | MEMBERS-ROSTER | [Members roster](#members-roster--members-roster) |
 | 2026-10-02 | 3.43.8 | COLLAB-SYNC | [Shared packing, notes, and passes](#collab-sync--shared-packing-notes-and-passes) |
 | 2026-10-02 | unreleased | PASS-STUB-SIMPLIFY | [Simplified pass back (balance hero)](#pass-stub-simplify--simplified-pass-back-balance-hero) |
 | 2026-10-02 | 3.43.4 | PASS-BACK-POLISH | [Pass back layout polish (no clipping)](#pass-back-polish--pass-back-layout-polish-no-clipping) |
@@ -1663,7 +1664,7 @@ Test on a phone-sized viewport (DevTools device mode is fine) plus a real Androi
 
 ## COLLAB-SYNC — Shared packing, notes, and passes
 
-**Migrations:** `0109_participant_trip_collab.sql`. Needs to be applied before this works on the live site.
+**Migrations:** `0109_participant_trip_collab.sql` (v3.43.8) and `0110_trip_row_realtime.sql` (v3.43.9, paints the list from the trip row the way Talk paints a message).
 
 ### Flags
 | Behavior | Flag | Default |
@@ -1675,7 +1676,7 @@ No new flag. Talk already uses its own live chat channel.
 
 ### Steps
 1. Apply migration 0109. Sign in as Person A and Person B on two browsers. Both are members of the same trip. B is not the owner.
-2. A opens Notes → Pack and adds an item. Within a few seconds, B's Pack list shows it without a reload. B checks it off, edits the text, then deletes it. A's list follows each change.
+2. A and B both stay on Notes → Pack. A adds an item. B's list shows it immediately, the same way a Talk message appears, without leaving the screen or reloading. B checks it off, edits the text, then deletes it. A's list follows each change.
 3. Repeat for Notes (add, edit, delete) and Pass (save a pass, then delete it).
 4. A adds an expense. B's Expenses and Summary update without a reload. A adds or renames a member. B's Members tab shows it.
 5. Put B's phone to sleep, have A add a packing item, then bring B back. The new item is there.
@@ -1687,6 +1688,34 @@ No new flag. Talk already uses its own live chat channel.
 
 ### Pass
 - An add, edit, or delete by either member shows up for the other member on Pack, Notes, and Pass, and on Expenses, Summary, and Members, without reloading the app.
+
+---
+
+## MEMBERS-ROSTER — Members roster (v3.43.9)
+
+**Commit:** pending stamp. **Migrations:** none. **ADR:** 254. **Bug:** BUG-267.
+
+No new flag. Role changes, reminders, and group create stay on the existing Members tab.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Remind bell on someone who owes | `enableMemberMoneyRow` | as already set |
+| Last seen under the name | `showLastSeen` | as already set |
+
+### Steps
+1. Open a trip with several members and at least one group. Go to Members.
+2. Each person is one solid row: name and balance on the first line, role underneath (a quiet menu for the organizer, plain text otherwise). “You” and “Pending” sit on that role line. There is no second role badge, no dashed card, and no airplane coach sitting on the list.
+3. As the organizer, change someone’s role from the menu on their row. The menu is the only role control.
+4. With `enableMemberMoneyRow` on, a person who owes shows a bell. Tap it. The reminder share sheet opens. With the flag off, the bell is absent.
+5. Groups is a short heading with a text “Create group” action. Each group is a name, the people in it, and Edit / Delete as text.
+
+### Negative checks
+- A non-organizer does not see the role menu, Create group, or Edit / Delete.
+- Swipe still edits or deletes a member on a phone. Edit and delete icons appear for a mouse.
+
+### Pass
+- The Members tab reads as a list: one role per person, the balance on the right, and groups in the same quiet card style.
 
 ---
 

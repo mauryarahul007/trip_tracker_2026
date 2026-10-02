@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Trip } from '../types';
-import { applyRemoteTrip, mergeTripRoster } from './tripCollabMerge';
+import { applyLiveCollabRow, applyRemoteTrip, mergeTripRoster } from './tripCollabMerge';
 
 function trip(partial: Partial<Trip> & Pick<Trip, 'id'>): Trip {
   return {
@@ -55,6 +55,31 @@ describe('applyRemoteTrip', () => {
 
     const merged = applyRemoteTrip(local, remote, true);
     expect(merged.name).toBe('Renamed');
+    expect(merged.checklist?.map((item) => item.id)).toEqual(['mine']);
+  });
+});
+
+describe('applyLiveCollabRow', () => {
+  it('replaces packing and notes from the realtime row', () => {
+    const local = trip({
+      id: 't1',
+      checklist: [{ id: 'old', text: 'Passport', completed: false, createdAt: 1, updatedAt: 1 }],
+    });
+    const merged = applyLiveCollabRow(local, {
+      checklist: [{ id: 'new', text: 'Raincoat', completed: false, createdAt: 2, updatedAt: 2 }],
+      notes: [{ id: 'n1', title: 'Wi-Fi', content: 'lobby', createdAt: 2, updatedAt: 2 }],
+      updated_at: '2026-10-02T12:00:00.000Z',
+    }, false);
+    expect(merged.checklist?.map((item) => item.text)).toEqual(['Raincoat']);
+    expect(merged.notes?.[0].title).toBe('Wi-Fi');
+  });
+
+  it('keeps the local list when the payload has no checklist', () => {
+    const local = trip({
+      id: 't1',
+      checklist: [{ id: 'mine', text: 'Power bank', completed: false, createdAt: 1, updatedAt: 1 }],
+    });
+    const merged = applyLiveCollabRow(local, { id: 't1' }, false);
     expect(merged.checklist?.map((item) => item.id)).toEqual(['mine']);
   });
 });

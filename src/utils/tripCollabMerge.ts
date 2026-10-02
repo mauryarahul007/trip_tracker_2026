@@ -1,4 +1,4 @@
-import type { Group, Member, Trip } from '../types';
+import type { ChecklistItem, Group, Member, Trip, TripFxConfig, TripNote, TravelPass } from '../types';
 
 export interface TripRoster {
   trip: Trip;
@@ -38,6 +38,28 @@ export function applyRemoteTrip(local: Trip, remote: Trip, keepLocalCollab: bool
     updatedAt: remote.updatedAt,
     expenseCount: local.expenseCount,
   };
+}
+
+/**
+ * Paint a realtime trips UPDATE the way chat paints a new message: the
+ * payload is the new list. A partial payload (replica identity not full)
+ * leaves the local lists alone so a later refetch can fill them in.
+ */
+export function applyLiveCollabRow(local: Trip, row: Record<string, unknown>, keepLocalCollab: boolean): Trip {
+  const next: Trip = { ...local };
+  if (typeof row.name === 'string') next.name = row.name;
+  if (typeof row.updated_at === 'string') {
+    const updatedAt = new Date(row.updated_at).getTime();
+    if (!Number.isNaN(updatedAt)) next.updatedAt = updatedAt;
+  }
+  if (keepLocalCollab) return next;
+  if (Array.isArray(row.checklist)) next.checklist = row.checklist as ChecklistItem[];
+  if (Array.isArray(row.notes)) next.notes = row.notes as TripNote[];
+  if (Array.isArray(row.passes)) next.passes = row.passes as TravelPass[];
+  if (row.fx_config && typeof row.fx_config === 'object' && !Array.isArray(row.fx_config)) {
+    next.fxConfig = row.fx_config as TripFxConfig;
+  }
+  return next;
 }
 
 export function mergeTripRoster(

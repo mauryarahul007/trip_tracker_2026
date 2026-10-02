@@ -65,7 +65,9 @@ export function FlightAddExpenseTooltip({
 
   // A trip that already has expenses proves the traveler found the + button;
   // there the coachmark only covered the Summary content under it.
-  if (isDismissed || activeTab === 'settings' || (activeTab !== 'members' && expenseCount > 0)) return null;
+  // On Members the FAB already carries an "Add member" label, and the
+  // airplane sat on top of the roster.
+  if (isDismissed || activeTab === 'settings' || activeTab === 'members' || expenseCount > 0) return null;
 
   const handleDismiss = (e: React.MouseEvent) => {
     e.stopPropagation();

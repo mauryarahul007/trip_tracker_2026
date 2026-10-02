@@ -633,8 +633,8 @@ export function MembersGroupsTab({
       )}
       {/* 1. Add Members Section -- the bottom-nav FAB is the only entry
           point for adding a member, so no in-page trigger here. */}
-      <div style={{ marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '18px' }}>Trip Members</h3>
+      <div className="member-section-head">
+        <h3 className="member-section-title">Trip Members</h3>
       </div>
 
       {isAdmin && showAddForm && createPortal(
@@ -925,93 +925,122 @@ export function MembersGroupsTab({
           {visibleMembers.map((member) => {
             const balance = balances.find((b) => b.memberId === member.id)?.balance ?? 0;
             const owes = balance < -0.01;
-            const amtLabel =
+            const effectiveRole = memberRoles?.[member.id] || (isMemberAdmin(member) ? 'organizer' : 'contributor');
+            const roleLabel = effectiveRole === 'organizer' ? 'Organizer' : effectiveRole === 'viewer' ? 'Viewer' : 'Contributor';
+            const moneyAmount =
               balance > 0.01
-                ? `gets back ${formatAmount(balance, currencySymbol)}`
+                ? formatAmount(balance, currencySymbol)
                 : owes
-                ? `owes ${formatAmount(Math.abs(balance), currencySymbol)}`
-                : 'settled';
+                ? formatAmount(Math.abs(balance), currencySymbol)
+                : 'Settled';
+            const moneyDir = balance > 0.01 ? 'gets back' : owes ? 'owes' : '';
+            const canPickRole = Boolean(isAdmin && onSetMemberRole && !isOriginalTripOwner(member));
             const delCheck = isAdmin ? checkCanDeleteMember(member) : null;
             const row = (
-              <div key={member.id} className={`luggage-tag${owes ? ' lt-owe' : ''}`}>
+              <div key={member.id} className={`luggage-tag member-roster${owes ? ' lt-owe' : ''}${balance > 0.01 ? ' lt-owed' : ''}`}>
                 <div className="lt-card">
-                  <div className="lt-status" />
                   {member.avatarUrl ? (
                     <img src={member.avatarUrl} alt="" className="lt-initials" referrerPolicy="no-referrer" loading="lazy" decoding="async" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   ) : (
                     <div className="lt-initials" style={{ background: avatarColorForName(member.name) }}>{initial(member.name)}</div>
                   )}
                   <div className="lt-body">
-                    {/* Top row: name gets the full row width (ellipsis if
-                        needed) with badges pinned to the top-right corner
-                        instead of sitting inline right after it — freeing
-                        up the row for the name rather than squeezing both
-                        into shared space. Actions move to their own row
-                        below (with the amount) rather than sharing this
-                        row too, for the same reason. */}
-                    <div className="lt-top-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                      <span className="lt-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
-                        {member.name}
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                        {(() => {
-                          const effectiveRole = memberRoles?.[member.id] || (isMemberAdmin(member) ? 'organizer' : 'contributor');
-                          if (effectiveRole === 'organizer') {
-                            return (
-                              <span className="member-badge member-badge-admin" title="Trip Organizer (Admin)">
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
-                                  <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
-                                </svg>
-                                Organizer
-                              </span>
-                            );
-                          }
-                          if (effectiveRole === 'viewer') {
-                            return (
-                              <span className="member-badge" style={{ background: 'rgba(148, 163, 184, 0.15)', color: 'var(--text-muted)', border: '1px solid rgba(148, 163, 184, 0.3)' }} title="Viewer (Read-only)">
-                                Viewer
-                              </span>
-                            );
-                          }
-                          return (
-                            <span className="member-badge member-badge-you" style={{ color: 'var(--text-muted)' }} title="Contributor">
-                              Contributor
-                            </span>
-                          );
-                        })()}
-                        {currentUserId && member.linkedUserId === currentUserId && (
-                          <span className="member-badge member-badge-you">You</span>
+                    <div className="member-roster-main">
+                      <div className="member-roster-top">
+                        <span className="lt-name">{member.name}</span>
+                        <div className="member-roster-money">
+                          <span className="lt-amt">{moneyAmount}</span>
+                          {moneyDir ? <span className="member-roster-dir">{moneyDir}</span> : null}
+                        </div>
+                        {showMemberRemind && owes && member.linkedUserId !== currentUserId && (
+                          <button
+                            type="button"
+                            className="member-remind-btn hit-area"
+                            aria-label={`Remind ${member.name} to settle`}
+                            onClick={() => {
+                              triggerHaptic('light');
+                              void shareTextOrWhatsApp(
+                                'Trip settlement reminder',
+                                `Hey ${member.name}, a quick reminder: you owe ${formatAmount(Math.abs(balance), currencySymbol)} on our trip "${tripName || 'Trip'}". Open Trip Tracker to see the split and settle up.`,
+                              );
+                            }}
+                          >
+                            <IconBell size={16} />
+                          </button>
                         )}
-                        {!member.linkedUserId && (
-                          <span className="member-badge member-badge-pending" title="Invited, hasn't joined via the trip code yet">
-                            Pending
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="lt-bottom-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
-                      <div>
-                        <div className="u-row-8">
-                          <div className="lt-amt">{amtLabel}</div>
-                          {showMemberRemind && owes && member.linkedUserId !== currentUserId && (
+                        {isAdmin && (
+                          <div className="member-row-desktop-actions">
                             <button
                               type="button"
-                              className="secondary-btn member-remind-btn hit-area"
-                              aria-label={`Remind ${member.name} to settle`}
-                              onClick={() => {
-                                triggerHaptic('light');
-                                void shareTextOrWhatsApp(
-                                  'Trip settlement reminder',
-                                  `Hey ${member.name}, a quick reminder: you owe ${formatAmount(Math.abs(balance), currencySymbol)} on our trip "${tripName || 'Trip'}". Open Trip Tracker to see the split and settle up.`,
-                                );
-                              }}
+                              className="member-icon-btn"
+                              aria-label="Edit member"
+                              title="Edit member"
+                              onClick={() => handleStartEditMemberLocal(member)}
                             >
-                              <IconBell size={12} /> Remind
+                              <IconEdit size={15} />
                             </button>
+                            <button
+                              type="button"
+                              className="member-icon-btn"
+                              style={{
+                                color: delCheck?.allowed ? 'var(--color-danger)' : 'var(--text-muted)',
+                                opacity: delCheck?.allowed ? 1 : 0.5,
+                              }}
+                              aria-label="Delete member"
+                              title={delCheck?.allowed ? 'Delete member' : delCheck?.reason}
+                              onClick={() => onDeleteMember(member)}
+                            >
+                              <IconTrash size={15} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="member-roster-meta">
+                          {canPickRole ? (
+                            <select
+                              className="member-role-select"
+                              aria-label={`Set role for ${member.name}`}
+                              value={effectiveRole}
+                              onChange={(e) => onSetMemberRole!(member.id, e.target.value as MemberRole)}
+                            >
+                              <option value="organizer">Organizer</option>
+                              <option value="contributor">Contributor</option>
+                              <option value="viewer">Viewer</option>
+                            </select>
+                          ) : (
+                            <span>{roleLabel}</span>
+                          )}
+                          {isAdmin && onSetMemberAdminRole && !onSetMemberRole && !isMemberAdmin(member) && (
+                            <button
+                              type="button"
+                              className="member-inline-action"
+                              title="Make this member a Trip Admin"
+                              onClick={() => onSetMemberAdminRole(member.id, true)}
+                            >
+                              Make admin
+                            </button>
+                          )}
+                          {isAdmin && onSetMemberAdminRole && !onSetMemberRole && isMemberAdmin(member) && !isOriginalTripOwner(member) && tripAdminCount > 1 && (
+                            <button
+                              type="button"
+                              className="member-inline-action"
+                              title="Demote to Member"
+                              onClick={() => onSetMemberAdminRole(member.id, false)}
+                            >
+                              Demote
+                            </button>
+                          )}
+                          {currentUserId && member.linkedUserId === currentUserId && (
+                            <span className="member-roster-chip">You</span>
+                          )}
+                          {!member.linkedUserId && (
+                            <span className="member-roster-chip member-roster-chip-pending" title="Invited, hasn't joined via the trip code yet">
+                              Pending
+                            </span>
                           )}
                         </div>
                         {showLastSeen && member.linkedUserId && member.linkedUserId !== currentUserId && (
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          <div className="member-roster-seen">
                             {onlineUserIds?.includes(member.linkedUserId)
                               ? 'Online now'
                               : lastSeenByUserId?.[member.linkedUserId]
@@ -1019,101 +1048,6 @@ export function MembersGroupsTab({
                                 : null}
                           </div>
                         )}
-                      </div>
-                      {isAdmin && (
-                        <div className="lt-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                          {onSetMemberRole && !isOriginalTripOwner(member) ? (
-                            <select
-                              className="secondary-btn"
-                              aria-label={`Set role for ${member.name}`}
-                              style={{
-                                padding: '3px 6px',
-                                fontSize: '11px',
-                                height: '26px',
-                                borderRadius: '6px',
-                                borderColor: 'var(--border-color)',
-                                background: 'var(--card-bg, var(--bg-surface))',
-                                color: 'var(--text-primary)',
-                                cursor: 'pointer',
-                              }}
-                              value={memberRoles?.[member.id] || (isMemberAdmin(member) ? 'organizer' : 'contributor')}
-                              onChange={(e) => onSetMemberRole(member.id, e.target.value as MemberRole)}
-                            >
-                              <option value="organizer">Organizer</option>
-                              <option value="contributor">Contributor</option>
-                              <option value="viewer">Viewer</option>
-                            </select>
-                          ) : onSetMemberAdminRole && (
-                            !isMemberAdmin(member) ? (
-                              <button
-                                type="button"
-                                className="secondary-btn"
-                                style={{
-                                  padding: '4px 8px',
-                                  fontSize: '11px',
-                                  color: 'var(--primary-accent)',
-                                  borderColor: 'rgba(47, 111, 237, 0.3)',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                }}
-                                title="Make this member a Trip Admin"
-                                onClick={() => onSetMemberAdminRole(member.id, true)}
-                              >
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                                  <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
-                                </svg>
-                                Make Admin
-                              </button>
-                            ) : !isOriginalTripOwner(member) && tripAdminCount > 1 ? (
-                              <button
-                                type="button"
-                                className="secondary-btn"
-                                style={{
-                                  padding: '4px 8px',
-                                  fontSize: '11px',
-                                  color: 'var(--text-muted)',
-                                  borderColor: 'var(--border-color)',
-                                }}
-                                title="Demote to Member"
-                                onClick={() => onSetMemberAdminRole(member.id, false)}
-                              >
-                                Demote
-                              </button>
-                            ) : null
-                          )}
-                          {/* Swipe (below) is the edit/delete entry point on
-                              touch. Mouse/trackpad users have no swipe gesture,
-                              so these stay as their fallback -- hidden on touch
-                              via CSS, same (hover: hover) and (pointer: fine)
-                              pattern as .cmd-k-hint. */}
-                          <div className="member-row-desktop-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <button
-                              className="secondary-btn"
-                              style={{ padding: '6px' }}
-                              aria-label="Edit member"
-                              title="Edit member"
-                              onClick={() => handleStartEditMemberLocal(member)}
-                            >
-                              <IconEdit size={14} className="icon-sm" />
-                            </button>
-                            <button
-                              className="secondary-btn"
-                              style={{
-                                padding: '6px',
-                                color: delCheck?.allowed ? 'var(--color-danger)' : 'var(--text-muted)',
-                                borderColor: delCheck?.allowed ? 'rgba(184,69,46,0.2)' : 'var(--border-color)',
-                                opacity: delCheck?.allowed ? 1 : 0.5,
-                              }}
-                              aria-label="Delete member"
-                              title={delCheck?.allowed ? 'Delete member' : delCheck?.reason}
-                              onClick={() => onDeleteMember(member)}
-                            >
-                              <IconTrash size={14} className="icon-sm" />
-                            </button>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -1161,12 +1095,12 @@ export function MembersGroupsTab({
       )}
 
       {/* 2. Group Management Section */}
-      <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '24px', marginTop: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '18px' }}>Member Groups</h3>
+      <div className="member-groups-section">
+        <div className="member-section-head">
+          <h3 className="member-section-title">Groups</h3>
           {isAdmin && !showAddGroup && visibleMembers.length > 0 && (
-            <button className="gradient-btn" style={{ padding: '6px 12px', fontSize: '13px' }} onClick={() => setShowAddGroup(true)}>
-              + Create Group
+            <button type="button" className="member-section-action" onClick={() => setShowAddGroup(true)}>
+              Create group
             </button>
           )}
         </div>
@@ -1264,40 +1198,38 @@ export function MembersGroupsTab({
               </span>
               <p>No groups yet. Create one to split expenses across a few people in a single tap.</p>
               {isAdmin && visibleMembers.length > 0 && (
-                <button type="button" className="gradient-btn" style={{ marginTop: '12px' }} onClick={() => setShowAddGroup(true)}>
-                  Create First Group
+                <button type="button" className="member-section-action" style={{ marginTop: '8px' }} onClick={() => setShowAddGroup(true)}>
+                  Create group
                 </button>
               )}
             </div>
             <div className="ledger-rule" />
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="member-group-list">
             {visibleTripGroups.map((grp) => {
               const grpMemberNames = grp.memberIds
                 .map((id) => members[id]?.name)
                 .filter(Boolean)
                 .join(', ');
               return (
-                <div key={grp.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px' }}>
-                  <div>
-                    <h4 style={{ fontSize: '15px', fontWeight: '600' }}>{grp.name}</h4>
-                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                      Members: {grpMemberNames || 'None'}
-                    </p>
+                <div key={grp.id} className="member-group-card">
+                  <div className="member-group-copy">
+                    <h4 className="member-group-name">{grp.name}</h4>
+                    <p className="member-group-members">{grpMemberNames || 'No members'}</p>
                   </div>
                   {isAdmin && (
-                    <div className="u-flex-gap-8">
+                    <div className="member-group-actions">
                       <button
-                        className="secondary-btn"
-                        style={{ padding: '4px 10px', fontSize: '11px' }}
+                        type="button"
+                        className="member-inline-action"
                         onClick={() => handleStartEditGroupLocal(grp)}
                       >
                         Edit
                       </button>
                       <button
-                        className="secondary-btn"
-                        style={{ padding: '4px 10px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
+                        type="button"
+                        className="member-inline-action member-inline-action-danger"
                         onClick={() => onDeleteGroup(grp)}
                       >
                         Delete

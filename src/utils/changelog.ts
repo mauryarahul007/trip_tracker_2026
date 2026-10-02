@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.43.9',
+    date: '2026-10-02',
+    changes: [
+      'Packing, notes, and passes now show up for everyone immediately, the same way a Talk message does.',
+      'The Members tab is a simple list: one role per person, the balance on the right, and groups in the same quiet style.',
+    ],
+  },
+  {
     version: '3.43.8',
     date: '2026-10-02',
     changes: [

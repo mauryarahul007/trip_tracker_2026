@@ -9,7 +9,7 @@ import { buildAutoGroupName } from '../utils/groupNaming';
 import { copyDefaultSplit } from '../utils/defaultSplit';
 import { getCurrencyDecimals } from '../utils/currency';
 import { newId } from '../utils/uuid';
-import { mergeTripRoster } from '../utils/tripCollabMerge';
+import { applyLiveCollabRow, mergeTripRoster } from '../utils/tripCollabMerge';
 import { fetchResolvedFeatureFlags, fetchAllFeatureFlagOverrides, setFeatureFlagOverride } from '../services/featureFlagApi';
 import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
 import {
@@ -185,7 +185,10 @@ interface TripStore extends TripState {
   refreshActiveTripExpenses: () => Promise<void>;
   // Re-pulls the open trip's packing, notes, passes, members, and expenses
   // when someone else changes them. See migration 0109.
-  refreshActiveTripShared: () => Promise<void>;
+  // silent: a live update, same as a chat message arriving. Do not flash
+  // the expenses loading state.
+  refreshActiveTripShared: (opts?: { silent?: boolean }) => Promise<void>;
+  applyLiveTripRow: (tripId: string, row: Record<string, unknown>) => void;
   clearStorageError: () => void;
   processQueue: () => Promise<void>;
   retrySyncItem: (id: string) => Promise<void>;
@@ -1301,7 +1304,15 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
-    refreshActiveTripShared: async () => {
+    applyLiveTripRow: (tripId, row) => {
+      if (get().activeTripId !== tripId) return;
+      const keepLocalCollab = collabWritesInFlight > 0;
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? applyLiveCollabRow(t, row, keepLocalCollab) : t)),
+      }));
+    },
+
+    refreshActiveTripShared: async (opts) => {
       const tripId = get().activeTripId;
       if (!tripId || !navigator.onLine || isMissingSupabaseEnv) return;
       if (sharedRefreshInFlight) {
@@ -1310,7 +1321,7 @@ export const useTripStore = create<TripStore>()(
       }
       sharedRefreshInFlight = true;
       const keepLocalCollab = collabWritesInFlight > 0;
-      set({ expensesLoadingTripId: tripId });
+      if (!opts?.silent) set({ expensesLoadingTripId: tripId });
       try {
         const [roster, serverExpenses, customCategories] = await Promise.all([
           fetchTripRoster(tripId),
@@ -1340,10 +1351,12 @@ export const useTripStore = create<TripStore>()(
         setError(e);
       } finally {
         sharedRefreshInFlight = false;
-        set((state) => (state.expensesLoadingTripId === tripId ? { expensesLoadingTripId: null } : {}));
+        if (!opts?.silent) {
+          set((state) => (state.expensesLoadingTripId === tripId ? { expensesLoadingTripId: null } : {}));
+        }
         if (sharedRefreshQueued) {
           sharedRefreshQueued = false;
-          void get().refreshActiveTripShared();
+          void get().refreshActiveTripShared({ silent: true });
         }
       }
     },
@@ -3633,15 +3646,10 @@ export const useTripStore = create<TripStore>()(
 
 let watchedTripId: string | null = null;
 let collabChannel: ReturnType<typeof supabase.channel> | null = null;
-let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 let visibilityBound = false;
 
 scheduleActiveTripRefresh = () => {
-  if (refreshTimer) clearTimeout(refreshTimer);
-  refreshTimer = setTimeout(() => {
-    refreshTimer = null;
-    void useTripStore.getState().refreshActiveTripShared();
-  }, 400);
+  void useTripStore.getState().refreshActiveTripShared({ silent: true });
 };
 
 watchActiveTrip = (tripId) => {
@@ -3660,13 +3668,30 @@ watchActiveTrip = (tripId) => {
   watchedTripId = tripId;
   if (!tripId || isMissingSupabaseEnv) return;
 
+  // Same shape as subscribeToTripMessages: one channel, INSERT and UPDATE
+  // listed separately. The trips UPDATE paints packing/notes/passes from
+  // the payload. The signal refetches members and expenses.
   collabChannel = supabase
     .channel(`trip_collab:${tripId}`)
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'trip_collab_signals', filter: `trip_id=eq.${tripId}` },
+      { event: 'INSERT', schema: 'public', table: 'trip_collab_signals', filter: `trip_id=eq.${tripId}` },
       () => scheduleActiveTripRefresh()
     )
-    .subscribe();
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'trip_collab_signals', filter: `trip_id=eq.${tripId}` },
+      () => scheduleActiveTripRefresh()
+    )
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'trips', filter: `id=eq.${tripId}` },
+      (payload) => {
+        useTripStore.getState().applyLiveTripRow(tripId, payload.new as Record<string, unknown>);
+      }
+    )
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') scheduleActiveTripRefresh();
+    });
 };
 
