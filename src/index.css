@@ -802,7 +802,7 @@ button, [role="button"], input, select, a {
   border-radius: 4px;
   border: 1px solid var(--header-fg-border);
   font-family: var(--font-family-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
   opacity: 0.75;
@@ -955,7 +955,7 @@ button, [role="button"], input, select, a {
 }
 .trip-form-eyebrow {
   font-family: var(--font-family-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -1242,7 +1242,7 @@ input[type="date"].input-field {
 }
 
 .expense-stat-label {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -2156,7 +2156,7 @@ html.capacitor-ios .tab-pane {
 
 .app-eyebrow {
   font-family: var(--font-family-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #92A2AE;
@@ -2226,7 +2226,7 @@ html.capacitor-ios .tab-pane {
 }
 
 .nav-tabs.has-chat-nav .nav-tab-item {
-  font-size: 10px;
+  font-size: 11px;
   padding: 6px 2px 5px;
 }
 
@@ -2357,7 +2357,7 @@ html.capacitor-ios .nav-tabs {
   border-radius: 9999px;
   color: var(--text-secondary);
   font-family: var(--font-family-body);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.01em;
   white-space: nowrap;
@@ -2516,7 +2516,7 @@ html.capacitor-ios .nav-tabs {
   border-radius: 999px;
   padding: 3px 9px;
   font-family: var(--font-family-mono);
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.02em;
   pointer-events: none;
@@ -3104,7 +3104,7 @@ input:checked + .toggle-slider:before {
 }
 .bp-eyebrow {
   font-family: var(--font-family-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--bp-ink-soft);
@@ -3147,9 +3147,28 @@ input:checked + .toggle-slider:before {
   gap: 4px;
   position: relative;
 }
+.bp-flip-cue {
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  border: 1px solid var(--bp-line-strong);
+  background: var(--bp-paper-soft);
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary-accent);
+  animation: bp-flip-cue-pulse 2.4s ease-in-out infinite;
+}
+@keyframes bp-flip-cue-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bp-flip-cue { animation: none; }
+}
 .bp-who {
   font-family: var(--font-family-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--bp-ink-soft);
@@ -3620,7 +3639,7 @@ input:checked + .toggle-slider:before {
   align-items: center;
   gap: 5px;
   font-family: var(--font-family-mono);
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -3759,7 +3778,7 @@ input:checked + .toggle-slider:before {
   font-family: var(--font-family-mono);
   font-weight: 700;
   color: #FDE047;
-  font-size: 10.5px;
+  font-size: 11px;
   flex: 0 0 auto;
 }
 
@@ -3792,7 +3811,7 @@ input:checked + .toggle-slider:before {
   border-radius: 9999px;
   padding: 3px 9px;
   font-family: var(--font-family-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #FDE047;
   display: inline-flex;
@@ -4042,7 +4061,7 @@ input:checked + .toggle-slider:before {
   padding: 3.5px 9px;
   border-radius: 8px;
   font-family: var(--font-family-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.03em;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -4050,7 +4069,7 @@ input:checked + .toggle-slider:before {
 
 .stack-status-pill {
   font-family: var(--font-family-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -4085,7 +4104,7 @@ input:checked + .toggle-slider:before {
   padding: 4px 10px;
   border-radius: 8px;
   font-family: var(--font-family-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.03em;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
@@ -4339,7 +4358,7 @@ input:checked + .toggle-slider:before {
   padding: 5px 12px;
   border-radius: 9999px;
   font-family: var(--font-family-mono, monospace);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -5011,7 +5030,7 @@ input:checked + .toggle-slider:before {
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: #FFFFFF;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 500;
   flex-shrink: 0;
   white-space: nowrap;
@@ -5042,7 +5061,7 @@ input:checked + .toggle-slider:before {
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: #FFFFFF;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -5417,7 +5436,7 @@ input:checked + .toggle-slider:before {
 .luxury-boarding-chips-label {
   display: block;
   font-family: var(--font-family-mono, monospace);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.45);
@@ -5601,7 +5620,7 @@ input:checked + .toggle-slider:before {
 
 .join-trip-eyebrow {
   display: inline-block;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -6244,7 +6263,7 @@ input:checked + .toggle-slider:before {
 }
 .pp-dest {
   font-family: var(--font-family-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -6288,7 +6307,7 @@ input:checked + .toggle-slider:before {
   color: #FFFDF6;
   font-family: var(--font-family-title);
   font-weight: 600;
-  font-size: 10px;
+  font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6737,7 +6756,7 @@ input:checked + .toggle-slider:before {
 
 .member-config-equiv {
   font-family: var(--font-family-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
@@ -6788,7 +6807,7 @@ input:checked + .toggle-slider:before {
 }
 .date-picker-weekdays span {
   font-family: var(--font-family-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
   text-align: center;
   padding-bottom: 6px;
@@ -6907,7 +6926,7 @@ input:checked + .toggle-slider:before {
   font-size: 12px;
 }
 .cr-caption {
-  font-size: 9.5px;
+  font-size: 11px;
   letter-spacing: 0.02em;
   color: var(--text-muted);
 }
@@ -7087,7 +7106,7 @@ input:checked + .toggle-slider:before {
   color: #FFFDF6;
   font-family: var(--font-family-title);
   font-weight: 700;
-  font-size: 10.5px;
+  font-size: 11px;
 }
 
 .settlement-chip-name {
@@ -7318,7 +7337,7 @@ input:checked + .toggle-slider:before {
 }
 .ft-date {
   font-family: var(--font-family-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   white-space: nowrap;
 }
 .ft-route {
@@ -8015,7 +8034,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
 
 .mini-bp-stub-tag {
   font-family: var(--font-family-mono);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 800;
   padding: 1.5px 5px;
   border-radius: 4px;
@@ -8044,7 +8063,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-family: var(--font-family-mono);
   color: var(--text-secondary);
   line-height: 1;
@@ -8070,7 +8089,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
 
 .mini-bp-label {
   font-family: var(--font-family-mono);
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--text-muted);
@@ -8444,6 +8463,29 @@ html.capacitor-ios .trip-sheet .tab-pane {
   justify-content: center;
 }
 
+
+/* Small icon buttons keep their compact look but get a 44px hit area: an
+   invisible ::after centered on the button catches the tap. :where() keeps
+   the position fallback at zero specificity, so buttons that are already
+   absolutely positioned elsewhere stay that way. */
+:where(.mini-bp-top-btn, .notif-close-btn, .notif-row-action-btn, .traveler-settlement-audit-btn, .member-remind-btn) {
+  position: relative;
+}
+.search-clear-btn::after,
+.settings-search-clear-btn::after,
+.mini-bp-top-btn::after,
+.notif-close-btn::after,
+.notif-row-action-btn::after,
+.traveler-settlement-audit-btn::after,
+.member-remind-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
 
 /* ==========================================================================
    WhatsApp-Style Settings Design System
@@ -8983,7 +9025,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
 }
 
 .settings-trip-hero-status {
-  font-size: 9.5px;
+  font-size: 11px;
   font-family: var(--font-family-mono);
   font-weight: 700;
   padding: 3px 9px;
@@ -9027,7 +9069,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
 .settings-trip-hero-stat-label {
   display: block;
   font-family: var(--font-family-mono);
-  font-size: 9px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
@@ -10023,7 +10065,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
 }
 
 .trip-chat-expense-card-who {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--text-muted);
   font-weight: 600;
 }
@@ -10043,7 +10085,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
 }
 
 .trip-chat-expense-card-hint {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
   flex-shrink: 0;
 }
@@ -10204,7 +10246,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
 
 .trip-chat-voice-sender {
   display: block;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--primary-accent);
   margin-bottom: 4px;
@@ -10223,7 +10265,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
 }
 
 .trip-chat-voice-duration {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--text-muted);
   font-weight: 600;
 }
@@ -10237,7 +10279,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
 }
 
 .trip-chat-read-ticks {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--text-muted);
   letter-spacing: -1px;
 }
@@ -12916,7 +12958,7 @@ textarea.input-field {
 }
 .login-gate-prefix {
   font-family: var(--font-family-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #94A3B8;
@@ -12947,7 +12989,7 @@ textarea.input-field {
 }
 .login-gate-suffix {
   font-family: var(--font-family-mono);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.05em;
   color: #64748B;
@@ -13225,7 +13267,7 @@ textarea.input-field {
 }
 
 .login-divider span {
-  font-size: 10.5px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 600;
@@ -13441,7 +13483,7 @@ textarea.input-field {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   font-family: var(--font-family-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   color: #94A3B8;
   letter-spacing: 0.04em;
@@ -14522,7 +14564,7 @@ textarea.input-field {
 
 .note-modal-eyebrow {
   font-family: var(--font-family-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 800;
   color: var(--primary-accent);
   letter-spacing: 0.08em;

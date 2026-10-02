@@ -92,6 +92,9 @@ export function UpiPaymentModal({
         ref={modalRef}
         className="modal-card fade-in"
         style={{ maxWidth: '440px', width: '100%', padding: '22px' }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="upi-pay-title"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sheet-drag-handle" aria-hidden="true" {...dragHandlers} />
@@ -101,7 +104,7 @@ export function UpiPaymentModal({
             <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary-accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               1-Tap UPI Settlement
             </span>
-            <h3 style={{ fontSize: '18px', margin: '2px 0 0', color: 'var(--text-primary)' }}>
+            <h3 id="upi-pay-title" style={{ fontSize: '18px', margin: '2px 0 0', color: 'var(--text-primary)' }}>
               Pay {payeeName}
             </h3>
           </div>

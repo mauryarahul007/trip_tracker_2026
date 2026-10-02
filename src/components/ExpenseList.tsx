@@ -528,7 +528,7 @@ export function ExpenseList({
                       marginLeft: '-8px', width: '20px', height: '20px', borderRadius: '50%',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)',
-                      fontSize: '9.5px', fontWeight: 700, fontFamily: 'var(--font-family-mono)',
+                      fontSize: '11px', fontWeight: 700, fontFamily: 'var(--font-family-mono)',
                       border: '1.5px solid var(--bg-surface)', flexShrink: 0,
                     }}
                   >

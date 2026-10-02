@@ -4458,3 +4458,11 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - The split line adds about 14px to the back face for grouped travelers with money on both sides. Ungrouped travelers see no change.
   - The labels follow `enableTravelerPassBack`; the front label changes in both flag states because the front is shared.
+
+## 252. UX polish: text floor, hit areas, dialog roles, settle confirm, flip cue (v3.43.7, BUG-265)
+* **Context:** An audit found about 110 declarations of text at 10.5px or smaller on traveler screens, small icon buttons (20–30px tall) with no larger hit area, six modals with no `role="dialog"`, a settle confirm that was one long sentence, and no cue that the Summary pass flips.
+* **Decision:** Text on traveler screens now has an 11px floor (admin/Ops Deck screens, badges, dots, stamps and icons were left alone). Seven small icon buttons keep their look but get a 44px hit area through an invisible `::after`; `:where()` keeps the `position: relative` fallback from overriding buttons that are already absolutely positioned. Six modals gained `role="dialog"`, `aria-modal` and a label (trip chat and the trip content sheet are panels, not modals, so they were skipped). The settle confirm shows a short question plus a `SettlementSummaryRow` card (who pays whom, amount, partial remainder, and the paid-by/received-by caption); the date and note fields stay under it. The pass front shows a one-time "Tap to see your balance" cue through the existing `useFeatureNudge`, under `enableTravelerPassBack`.
+* **Trade-offs Accepted:**
+  - Raising 9–10.5px text to 11px makes some tight rows denser. The pass was checked at 320px and 380px wide; other screens were reviewed in code only.
+  - Text still uses `px`, not `rem`. Android WebView applies the system font scale to both, so a `rem` migration was left out.
+  - The 44px hit areas of neighbouring small buttons can overlap by a few pixels; the visible button on top wins.

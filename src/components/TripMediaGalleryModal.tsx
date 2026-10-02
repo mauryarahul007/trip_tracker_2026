@@ -141,6 +141,9 @@ export function TripMediaGalleryModal({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="media-gallery-title"
         onClick={(e) => e.stopPropagation()}
         style={{
           maxWidth: '720px',
@@ -159,7 +162,7 @@ export function TripMediaGalleryModal({
           <div className="u-row-8">
             <span style={{ fontSize: '22px' }}>📸</span>
             <div>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>Receipts & Memories Gallery</h3>
+              <h3 id="media-gallery-title" style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>Receipts & Memories Gallery</h3>
               <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>
                 {filteredItems.length} receipt{filteredItems.length === 1 ? '' : 's'} & photo{filteredItems.length === 1 ? '' : 's'} in {tripName}
               </p>

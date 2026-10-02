@@ -338,6 +338,9 @@ export function SmartExpenseQuickAddModal({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quick-add-title"
         onClick={(e) => e.stopPropagation()}
         style={{
           maxWidth: '480px',
@@ -378,7 +381,7 @@ export function SmartExpenseQuickAddModal({
             </button>
             <span style={{ fontSize: '20px', flexShrink: 0 }}>🎙️</span>
             <div style={{ minWidth: 0 }}>
-              <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <h3 id="quick-add-title" style={{ margin: 0, fontSize: '17px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 Voice Quick-Add
               </h3>
               <p style={{ margin: 0, fontSize: '11.5px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

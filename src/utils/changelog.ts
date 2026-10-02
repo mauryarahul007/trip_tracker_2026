@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.43.7',
+    date: '2026-10-02',
+    changes: [
+      'Small labels and captions across the app are now at least 11px, so they are easier to read.',
+      'Small icon buttons are easier to tap, and screen readers now announce more pop-ups as dialogs.',
+      'Marking a payment as settled now shows a clear card with who pays whom and how much.',
+      'New: the Summary pass shows a one-time hint that it flips to your own balance.',
+    ],
+  },
+  {
     version: '3.43.6',
     date: '2026-10-02',
     changes: [

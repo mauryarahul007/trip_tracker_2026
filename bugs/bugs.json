@@ -7775,5 +7775,31 @@
     "resolvedBy": "rahul",
     "resolvedAt": "2026-10-02T06:00:40.074Z",
     "resolutionNote": "Fixed in commit 6851686 (v3.43.6). Balance and group total are labeled separately, and grouped travelers see the inside/outside split. The bottom bar is more opaque."
+  },
+  {
+    "id": "BUG-265",
+    "title": "Tiny text, small tap targets and unlabeled dialogs across traveler screens",
+    "description": "About 110 text declarations at 10.5px or smaller, seven icon buttons under 32px with no larger hit area, six modals without a dialog role, a long one-sentence settle confirm, and no cue that the Summary pass flips.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-02T06:10:09.290Z",
+    "updatedAt": "2026-10-02T06:10:09.439Z",
+    "resolvedBy": "rahul",
+    "resolvedAt": "2026-10-02T06:10:09.439Z",
+    "resolutionNote": "Fixed in commit 9eb5391 (v3.43.7). Text floor of 11px, 44px hit areas, dialog roles on six modals, a compact settle confirm card and a one-time flip cue."
   }
 ]
