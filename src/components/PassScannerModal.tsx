@@ -69,6 +69,9 @@ export const PassScannerModal: React.FC<Props> = ({ isOpen, onClose, pass }) => 
     >
       <div
         className="modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Scan a pass"
         onClick={(e) => e.stopPropagation()}
         style={{
           width: '100%',

@@ -1063,7 +1063,7 @@ export function BalancesSettlements({
                 {isFullySettled ? formatAmount(0, currencySymbol) : formatAmount(totalOutstanding, currencySymbol)}
               </span>
               {passBackOn && !isFullySettled ? (
-                <span style={{ fontSize: '9.5px', fontFamily: 'var(--font-family-mono)', color: 'var(--text-muted)' }}>group to settle</span>
+                <span style={{ fontSize: '11px', fontFamily: 'var(--font-family-mono)', color: 'var(--text-muted)' }}>group to settle</span>
               ) : null}
             </span>
           </div>

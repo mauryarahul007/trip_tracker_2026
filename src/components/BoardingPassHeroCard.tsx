@@ -15,6 +15,7 @@ import { useTripStore } from '../store/tripStore';
 import { buildPassStub, groupSplitLine, toneFor } from '../utils/passBackStub';
 import { formatRelativeTime } from '../utils/relativeTime';
 import { initial } from '../utils/initials';
+import { useFeatureNudge } from '../hooks/useFeatureNudge';
 
 export interface TravelerGroupInfo {
   id: string;
@@ -117,7 +118,7 @@ const S_ROUTE_SIDE_LEFT: React.CSSProperties = { textAlign: 'left', minWidth: 0 
 const S_ROUTE_SIDE_RIGHT: React.CSSProperties = { textAlign: 'right', minWidth: 0 };
 // Reused by DEPARTURE, RETURN, and TRAVELER & ROLE labels -- identical style.
 const S_MICRO_LABEL: React.CSSProperties = {
-  fontSize: '9px',
+  fontSize: '11px',
   fontFamily: 'var(--font-family-mono)',
   color: 'var(--bp-ink-softer)',
   textTransform: 'uppercase',
@@ -135,7 +136,7 @@ const S_ORIGIN_TEXT: React.CSSProperties = {
 const S_DEST_TEXT: React.CSSProperties = { ...S_ORIGIN_TEXT, marginLeft: 'auto' };
 const S_DURATION_WRAP: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', padding: '0 6px', flexShrink: 0 };
 const S_DURATION_PILL: React.CSSProperties = {
-  fontSize: '10px',
+  fontSize: '11px',
   fontWeight: 700,
   fontFamily: 'var(--font-family-mono)',
   color: 'var(--primary-accent)',
@@ -145,12 +146,12 @@ const S_DURATION_PILL: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 const S_DURATION_DASH: React.CSSProperties = { width: '50px', height: '1.5px', borderTop: '1.5px dashed var(--bp-ink-faint)', margin: '3px 0' };
-const S_DURATION_SUBLABEL: React.CSSProperties = { fontSize: '9px', color: 'var(--bp-ink-softer)', fontFamily: 'var(--font-family-mono)', whiteSpace: 'nowrap' };
+const S_DURATION_SUBLABEL: React.CSSProperties = { fontSize: '11px', color: 'var(--bp-ink-softer)', fontFamily: 'var(--font-family-mono)', whiteSpace: 'nowrap' };
 const S_PASSENGER_WEATHER_ROW: React.CSSProperties = { padding: '8px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
 const S_PASSENGER_NAME_ROW: React.CSSProperties = { fontSize: '12.5px', fontWeight: 700, color: 'var(--bp-ink)' };
 const S_ROLE_HIGHLIGHT: React.CSSProperties = { color: 'var(--primary-accent)', fontWeight: 600 };
 const S_WEATHER_COL: React.CSSProperties = { textAlign: 'right', minWidth: '150px' };
-const S_WEATHER_LABEL_ROW: React.CSSProperties = { fontSize: '9px', fontFamily: 'var(--font-family-mono)', color: 'var(--bp-ink-softer)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' };
+const S_WEATHER_LABEL_ROW: React.CSSProperties = { fontSize: '11px', fontFamily: 'var(--font-family-mono)', color: 'var(--bp-ink-softer)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' };
 const S_WEATHER_REFRESH_BTN: React.CSSProperties = { background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: 'var(--primary-accent)', fontSize: '12px', lineHeight: 1 };
 const S_WEATHER_VALUE_ROW: React.CSSProperties = { fontSize: '12px', fontWeight: 800, color: 'var(--primary-accent)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' };
 const S_BACK_FOOT: React.CSSProperties = {
@@ -163,12 +164,12 @@ const S_BACK_FOOT: React.CSSProperties = {
 };
 const S_BARCODE_CONTAINER: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' };
 const S_BARCODE_CHARS: React.CSSProperties = { fontFamily: 'monospace', fontSize: '14px', letterSpacing: '2px', color: 'var(--bp-ink-mid)' };
-const S_JOINCODE_SPAN: React.CSSProperties = { fontFamily: 'var(--font-family-mono)', fontSize: '10px', color: 'var(--bp-ink-strong)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' };
+const S_JOINCODE_SPAN: React.CSSProperties = { fontFamily: 'var(--font-family-mono)', fontSize: '11px', color: 'var(--bp-ink-strong)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' };
 
 // ===== Simplified back face: personal balance hero, no route/weather/status =====
 const S_D3_DATES: React.CSSProperties = {
   fontFamily: 'var(--font-family-mono)',
-  fontSize: '10.5px',
+  fontSize: '11px',
   color: 'var(--bp-ink-mid)',
   marginTop: '2px',
   letterSpacing: '0.02em',
@@ -188,7 +189,7 @@ const S_HERO_BODY: React.CSSProperties = {
 const S_HERO_AMOUNT: React.CSSProperties = { fontSize: '28px' };
 const S_HERO_SPLIT: React.CSSProperties = {
   fontFamily: 'var(--font-family-mono)',
-  fontSize: '10.5px',
+  fontSize: '11px',
   color: 'var(--bp-ink-mid)',
   marginTop: '2px',
 };
@@ -197,7 +198,7 @@ const S_PROGRESS_META: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   fontFamily: 'var(--font-family-mono)',
-  fontSize: '10.5px',
+  fontSize: '11px',
   color: 'var(--bp-ink-soft)',
   marginBottom: '6px',
 };
@@ -259,7 +260,7 @@ const S_SYNC_ROW: React.CSSProperties = {
   alignItems: 'center',
   gap: '5px',
   fontFamily: 'var(--font-family-mono)',
-  fontSize: '9px',
+  fontSize: '11px',
   color: 'var(--bp-ink-softer)',
   whiteSpace: 'nowrap',
 };
@@ -279,7 +280,7 @@ const S_AVATAR: React.CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   fontFamily: 'var(--font-family-mono)',
-  fontSize: '10px',
+  fontSize: '11px',
   fontWeight: 700,
   color: 'var(--bp-ink)',
   background: 'var(--bp-paper-soft)',
@@ -395,6 +396,8 @@ export function BoardingPassHeroCard({
 }: BoardingPassHeroCardProps) {
   const isNewBack = useTripStore((s) => s.isFeatureEnabled('enableTravelerPassBack'));
   const [isFlipped, setIsFlipped] = useState(false);
+  // One-time cue on the front: the pass flips, and the back has your own balance.
+  const [showFlipCue, dismissFlipCue] = useFeatureNudge('pass-flip-cue');
   const [copied, setCopied] = useState(false);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isWeatherRefreshing, setIsWeatherRefreshing] = useState(false);
@@ -447,6 +450,7 @@ export function BoardingPassHeroCard({
 
   const handleFlip = () => {
     triggerHaptic('light');
+    if (showFlipCue) dismissFlipCue();
     setIsFlipped(!isFlipped);
   };
 
@@ -498,7 +502,7 @@ export function BoardingPassHeroCard({
   // A grouped traveler's personal net mixes two settlements (inside the group,
   // outside it). Name both so the hero never looks bigger than the one
   // transfer "Who owes who" lists.
-  const heroSplit = heroIsSingleCounterparty ? null : groupSplitLine(passStub, (amount) => formatAmount(amount, currencySymbol));
+  const heroSplit = heroIsSingleCounterparty ? null : groupSplitLine(passStub, (amount) => formatAmount(amount, currencySymbol).replace(/\.00$/, ''));
 
   const settledPct = balancesCount > 0 ? Math.round((settledMemberCount / balancesCount) * 100) : 100;
   const avatarNames = travelerNames.slice(0, 2);
@@ -556,6 +560,9 @@ export function BoardingPassHeroCard({
             >
               {formatAmount(animatedTotalOutstanding, currencySymbol)}
             </div>
+            {isNewBack && showFlipCue ? (
+              <span className="bp-flip-cue" aria-hidden="true">Tap to see your balance ↻</span>
+            ) : null}
 
             {/* Passport Ink Stamp Watermark: on the left side above the lower perforated line */}
             <div
@@ -720,7 +727,7 @@ export function BoardingPassHeroCard({
                     <span
                       style={{
                         fontFamily: 'var(--font-family-mono)',
-                        fontSize: '10px',
+                        fontSize: '11px',
                         fontWeight: 700,
                         letterSpacing: '0.04em',
                         color: 'var(--bp-ink)',

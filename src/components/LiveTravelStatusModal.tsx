@@ -67,6 +67,9 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="live-status-title"
         onClick={(e) => e.stopPropagation()}
         style={{
           maxWidth: '460px',
@@ -82,7 +85,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
           <div className="u-row-8">
             <span style={{ fontSize: '24px' }}>{isFlight ? '✈️' : '🚆'}</span>
             <div>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>
+              <h3 id="live-status-title" style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>
                 {isFlight ? 'Live Flight Status' : 'Live Train & PNR Tracker'}
               </h3>
               <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>

@@ -128,6 +128,9 @@ export function OfflineSnapshotModal({
     <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 9999 }}>
       <div
         className="modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="offline-snapshot-title"
         onClick={(e) => e.stopPropagation()}
         style={{
           maxWidth: '520px',
@@ -142,7 +145,7 @@ export function OfflineSnapshotModal({
           <div className="u-row-8">
             <span style={{ fontSize: '22px' }}>💾</span>
             <div>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>Offline Snapshot Backup</h3>
+              <h3 id="offline-snapshot-title" style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>Offline Snapshot Backup</h3>
               <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>Export & import offline .triptracker files</p>
             </div>
           </div>

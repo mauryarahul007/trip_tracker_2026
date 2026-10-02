@@ -916,12 +916,12 @@ export function TripWrappedModal({
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.05em', color: isDark ? '#3FCBBD' : '#0F6F63', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.05em', color: isDark ? '#3FCBBD' : '#0F6F63', textTransform: 'uppercase' }}>
                 Trip Vibe Identity
               </span>
               <span
                 style={{
-                  fontSize: '9.5px',
+                  fontSize: '11px',
                   fontWeight: 700,
                   background: isDark ? '#3FCBBD' : '#0F6F63',
                   color: isDark ? '#060E12' : '#FFFFFF',

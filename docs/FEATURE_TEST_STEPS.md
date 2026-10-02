@@ -24,6 +24,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-02 | unreleased | PASS-STUB-SIMPLIFY | [Simplified pass back (balance hero)](#pass-stub-simplify--simplified-pass-back-balance-hero) |
 | 2026-10-02 | 3.43.4 | PASS-BACK-POLISH | [Pass back layout polish (no clipping)](#pass-back-polish--pass-back-layout-polish-no-clipping) |
 | 2026-10-02 | unreleased | SUMMARY-CLARITY | [Summary clarity: labeled totals, solid nav, honest chip](#summary-clarity--summary-clarity-labeled-totals-solid-nav-honest-chip) |
+| 2026-10-02 | 3.43.7 | UX-POLISH-2 | [UX polish: readable text, tap targets, dialog roles, settle confirm, flip cue](#ux-polish-2--ux-polish-readable-text-tap-targets-dialog-roles-settle-confirm-flip-cue) |
 | 2026-10-01 | v3.43.1 | FEAT-COVER-CYCLE | [Cycling destination photos](#feat-cover-cycle--cycling-destination-photos) |
 | 2026-09-28 | v3.42.1 | PASS-STUB | [Pass back seat and gate](#pass-stub--pass-back-seat-and-gate) |
 | 2026-09-27 | v3.41.0 | DEST-SUGGEST | [Destination suggestions & did-you-mean](#dest-suggest--destination-suggestions--did-you-mean) |
@@ -1625,6 +1626,37 @@ Test on a phone-sized viewport (DevTools device mode is fine) plus a real Androi
 - The two totals can no longer be mistaken for each other, and a grouped traveler can see why their balance is larger than the one transfer listed.
 - Nothing shows through the bottom bar.
 - The chip no longer promises a reminder it does not send.
+
+---
+
+## UX-POLISH-2 — UX polish: readable text, tap targets, dialog roles, settle confirm, flip cue
+
+**Version:** 3.43.7. **Flags:** the flip cue reuses `enableTravelerPassBack` (Core, default ON). The other changes are fixes to existing screens with no flag.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| One-time "Tap to see your balance" cue on the pass front | `enableTravelerPassBack` | ON |
+
+### Steps
+1. **Text size.** On a phone, open Summary, Expenses, Members, Notes and Settings. Confirm no small caption, label or hint is below 11px (use browser dev tools to spot-check a few). Confirm nothing wraps badly or overlaps. Nav badges and counters were left alone on purpose.
+2. **Tap targets.** In dev tools, hover the notification close button, notification row action buttons, the search "clear" (×) buttons, the settlement audit button, the member remind button and the mini pass top buttons. Each should show a 44×44px clickable area while looking the same size as before. Tap just outside the visible icon and confirm it still fires.
+3. **Dialog roles.** With a screen reader (TalkBack or VoiceOver), open UPI pay, voice quick-add, the pass scanner, live flight/train status, the offline snapshot backup and the receipts gallery. Each should announce as a dialog with its title.
+4. **Settle confirm.** On Who owes who, tap Settle on a transfer. Confirm the dialog shows a short question ("Record this payment as settled?"), then a card with "{from} → {to}" and the amount. Choose a partial amount: the card adds "Partial payment. {amount} stays pending." If a payer or receiver is a member of a group, the card adds a "paid by … · received by …" caption. With `enableSettlementDateNote` on, the date and note fields still appear under the card. Confirm and check the settlement is recorded with the right amount.
+5. **Flip cue.** Clear site data (or use a fresh install). Open Summary on an unsettled trip. Confirm a pill reads "Tap to see your balance ↻" under the front amount. Tap the card. After flipping, flip back: the pill is gone and stays gone on reload.
+6. Repeat 5 with the OS "Reduce motion" setting on: the pill shows but does not pulse.
+
+### Negative checks
+- Turn `enableTravelerPassBack` off. The flip cue never shows.
+- A fully settled trip shows no settle dialog; other dialogs keep their old text.
+- Ops Deck / admin screens keep their original small text.
+
+### Pass
+- Nothing readable is below 11px on traveler screens, and layouts still fit at 320px wide.
+- Small icon buttons are easy to hit without looking bigger.
+- Screen readers announce the six modals as dialogs.
+- The settle confirm can be read at a glance.
+- New users learn the pass flips; returning users never see the cue.
 
 ---
 

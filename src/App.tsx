@@ -16,6 +16,7 @@ import { getMyLocationShare } from './services/locationShareApi';
 import { startLiveLocationHeartbeat, stopLiveLocationHeartbeat } from './services/liveLocationHeartbeat';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
 import { SettlementDateNoteFields } from './components/SettlementDateNoteFields';
+import { SettlementSummaryRow } from './components/SettlementSummaryRow';
 import type { ExpenseFormTemplate } from './components/ExpenseForm';
 import { TabErrorBoundary } from './components/TabErrorBoundary';
 import { TripsListScreen } from './components/TripsListScreen';
@@ -2058,8 +2059,12 @@ export default function App() {
 
     const title = isPartial ? 'Confirm partial settlement' : 'Confirm settlement';
     const message = isPartial
-      ? `You are settling this partially: ${fromLabel} pays ${toLabel} ${currencySymbol}${formatMoneyNumber(amount, currencySymbol)} out of ${currencySymbol}${formatMoneyNumber(totalDebt, currencySymbol)}${payerNote}${receiverNote}. The remaining ${currencySymbol}${remaining.toFixed(2)} will stay pending to be settled. Do you want to proceed?`
-      : `Mark transfer: ${fromLabel} pays ${toLabel} ${currencySymbol}${formatMoneyNumber(amount, currencySymbol)}${payerNote}${receiverNote} as settled?`;
+      ? 'Record part of this payment? The rest stays pending.'
+      : 'Record this payment as settled?';
+    const roleCaption = [
+      payerNote ? payerNote.trim().replace(/^\(|\)$/g, '') : '',
+      receiverNote ? receiverNote.trim().replace(/^\(|\)$/g, '') : '',
+    ].filter(Boolean).join(' · ');
     const confirmLabel = isPartial ? 'Mark Partial Settlement' : 'Mark Settled';
     const today = new Date().toISOString().split('T')[0];
     settleDateRef.current = today;
@@ -2073,15 +2078,24 @@ export default function App() {
       title,
       message,
       confirmLabel,
-      body: dateNoteEnabled
-        ? (
-          <SettlementDateNoteFields
-            dateRef={settleDateRef}
-            noteRef={settleNoteRef}
-            defaultDate={today}
+      body: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <SettlementSummaryRow
+            fromLabel={fromLabel}
+            toLabel={toLabel}
+            amountText={`${currencySymbol}${formatMoneyNumber(amount, currencySymbol)}`}
+            remainingText={isPartial ? `${currencySymbol}${formatMoneyNumber(remaining, currencySymbol)}` : undefined}
+            caption={roleCaption || undefined}
           />
-        )
-        : undefined,
+          {dateNoteEnabled ? (
+            <SettlementDateNoteFields
+              dateRef={settleDateRef}
+              noteRef={settleNoteRef}
+              defaultDate={today}
+            />
+          ) : null}
+        </div>
+      ),
       onConfirm: () => {
         const note = dateNoteEnabled ? settleNoteRef.current.trim() : '';
         const date = dateNoteEnabled && settleDateRef.current ? settleDateRef.current : today;
