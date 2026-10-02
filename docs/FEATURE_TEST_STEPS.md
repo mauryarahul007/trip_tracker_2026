@@ -23,6 +23,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 |--------|---------|-----|---------|
 | 2026-10-02 | unreleased | PASS-STUB-SIMPLIFY | [Simplified pass back (balance hero)](#pass-stub-simplify--simplified-pass-back-balance-hero) |
 | 2026-10-02 | 3.43.4 | PASS-BACK-POLISH | [Pass back layout polish (no clipping)](#pass-back-polish--pass-back-layout-polish-no-clipping) |
+| 2026-10-02 | unreleased | SUMMARY-CLARITY | [Summary clarity: labeled totals, solid nav, honest chip](#summary-clarity--summary-clarity-labeled-totals-solid-nav-honest-chip) |
 | 2026-10-01 | v3.43.1 | FEAT-COVER-CYCLE | [Cycling destination photos](#feat-cover-cycle--cycling-destination-photos) |
 | 2026-09-28 | v3.42.1 | PASS-STUB | [Pass back seat and gate](#pass-stub--pass-back-seat-and-gate) |
 | 2026-09-27 | v3.41.0 | DEST-SUGGEST | [Destination suggestions & did-you-mean](#dest-suggest--destination-suggestions--did-you-mean) |
@@ -1544,7 +1545,7 @@ Test on a phone-sized viewport (DevTools device mode is fine) plus a real Androi
 ### Steps
 1. Open a trip with a single other traveler (1:1, no group). Go to Summary and flip the boarding pass.
 2. Confirm the back shows: trip name, a "Balance details" title, the date range, and a flip hint reading "↺ Balance summary" top right. No weather, no route/plane diagram, no status pill anywhere on the back.
-3. Confirm the hero shows one amount with a clear direction ("You owe {name}" / "{name} owes you" / "You owe" / "You're owed"), colored red when you owe and green when you're owed.
+3. Confirm the hero shows one amount with a clear direction ("You owe {name}" / "{name} owes you" / "Your balance · you owe" / "Your balance · you're owed"), colored red when you owe and green when you're owed.
 4. Below the amount, confirm a thin progress bar and a "{N} of {M} travelers settled" label.
 5. Tap the hero amount. The page should smooth-scroll down to the "Who owes who" section below it — confirm no modal or new screen opens, and the card does not flip back to front.
 6. Confirm an "Updated {relative time}" line appears above the footer (skip this check on a trip with zero expenses — the line is hidden when there's nothing to date).
@@ -1552,7 +1553,7 @@ Test on a phone-sized viewport (DevTools device mode is fine) plus a real Androi
 8. Confirm up to 2 other travelers' initials (+N overflow for more) appear next to the join-code chip.
 9. Flip back to the front. Confirm the front's flip hint now reads "↻ Balance details" (it previously said "Itinerary," which the back no longer resembles at all after this change).
 10. Open a trip where you're in a group/couple with exactly one other member and no balance outside the group. Confirm the hero names that person directly, e.g. "You owe Priya".
-11. Open a trip where you're in a group **and** also carry a balance outside the group (or a group with 2+ other members). Confirm the hero falls back to the generic "You owe" / "You're owed" with no name, rather than naming only one of several people.
+11. Open a trip where you're in a group **and** also carry a balance outside the group (or a group with 2+ other members). Confirm the hero falls back to the generic "Your balance · you owe" / "Your balance · you're owed" with no name, rather than naming only one of several people.
 
 ### Negative checks
 - Turn `enableTravelerPassBack` off. The back returns to the old itinerary face (dates, traveler, weather strip, join code) unchanged — this change doesn't touch that branch.
@@ -1593,6 +1594,37 @@ Test on a phone-sized viewport (DevTools device mode is fine) plus a real Androi
 ### Pass
 - No back-face content is ever clipped, at any phone width.
 - Buttons on the back act without flipping the card; every other tap flips it.
+
+---
+
+## SUMMARY-CLARITY — Summary clarity: labeled totals, solid nav, honest chip
+
+**Version:** unreleased. **Flags:** existing `enableTravelerPassBack` (Core, default ON) for the labels. The nav opacity and chip changes are bug fixes with no flag.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| "Your balance" vs "Group still to settle" labels | `enableTravelerPassBack` | ON |
+
+### Steps
+1. Open an unsettled trip, Summary. On the pass front, confirm the label reads "Group still to settle" (settled: "Group outstanding").
+2. Flip the pass. Confirm the label reads "Your balance · you're owed" or "Your balance · you owe" (named counterparty lines like "You owe Priya" are unchanged).
+3. Scroll to "Who owes who". Confirm the orange total has a small "group to settle" caption under it.
+4. Confirm the chip that used to read "You're owed · remind" now reads "You're owed · see who", and tapping it scrolls to Who owes who.
+5. Scroll Summary so a card sits behind the floating bottom bar. Confirm no card text shows through the bar in light and dark mode.
+6. Measure the top chips: each is at least 36px tall.
+7. As a traveler inside a couple/group with money both inside and outside the group (for example you are +₹48,732: partner owes you ₹34,232, group receives ₹14,500), flip the pass. Confirm a line under the amount reads "Inside +₹34,232.00 · Outside +₹14,500.00", and that Who owes who lists only the outside ₹14,500 transfer.
+8. Long-press or hover the split line. The tooltip names both sides (for example "Ananya owes you · 2B receives").
+9. As a traveler with no group, or in a group where one side is square, confirm the split line is absent.
+
+### Negative checks
+- Turn `enableTravelerPassBack` off. The front label still reads "Group still to settle" (the front is shared by both states). The "group to settle" caption under the Who owes who total is hidden, and the legacy itinerary back is unchanged.
+- The bottom bar change and the chip copy apply in both flag states.
+
+### Pass
+- The two totals can no longer be mistaken for each other, and a grouped traveler can see why their balance is larger than the one transfer listed.
+- Nothing shows through the bottom bar.
+- The chip no longer promises a reminder it does not send.
 
 ---
 

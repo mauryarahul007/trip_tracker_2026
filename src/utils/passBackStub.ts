@@ -80,6 +80,18 @@ function summaryLine(myNet: number, format: (amount: number) => string): string 
   return myNet > 0 ? `You are ahead ${amount}` : `You are short ${amount}`;
 }
 
+/**
+ * One-line split of a grouped traveler's personal net, e.g.
+ * "Inside +₹34,232 · Outside +₹14,500". Null when there is no group or one
+ * side is square, since the hero amount already equals the other side.
+ */
+export function groupSplitLine(stub: PassStub, format: (amount: number) => string): string | null {
+  if (stub.summary === null) return null;
+  if (Math.abs(stub.left.amount) < EVEN || Math.abs(stub.right.amount) < EVEN) return null;
+  const signed = (amount: number) => `${amount > 0 ? '+' : '−'}${format(Math.abs(amount))}`;
+  return `Inside ${signed(stub.left.amount)} · Outside ${signed(stub.right.amount)}`;
+}
+
 export function memberCashAndShare(expenses: WalletExpense[], memberId: string): { paid: number; share: number } {
   let paid = 0;
   let share = 0;

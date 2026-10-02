@@ -12,7 +12,7 @@ import { tripDayNumber } from '../utils/dateRange';
 import { PassportStamp } from './common/PassportStamp';
 import { ConfettiBurst } from './ConfettiBurst';
 import { useTripStore } from '../store/tripStore';
-import { buildPassStub, toneFor } from '../utils/passBackStub';
+import { buildPassStub, groupSplitLine, toneFor } from '../utils/passBackStub';
 import { formatRelativeTime } from '../utils/relativeTime';
 import { initial } from '../utils/initials';
 
@@ -186,6 +186,12 @@ const S_HERO_BODY: React.CSSProperties = {
   justifyContent: 'center',
 };
 const S_HERO_AMOUNT: React.CSSProperties = { fontSize: '28px' };
+const S_HERO_SPLIT: React.CSSProperties = {
+  fontFamily: 'var(--font-family-mono)',
+  fontSize: '10.5px',
+  color: 'var(--bp-ink-mid)',
+  marginTop: '2px',
+};
 const S_PROGRESS_WRAP: React.CSSProperties = { width: '100%', maxWidth: '260px', marginTop: '8px' };
 const S_PROGRESS_META: React.CSSProperties = {
   display: 'flex',
@@ -486,8 +492,13 @@ export function BoardingPassHeroCard({
   const heroAmount = Math.abs(heroIsSingleCounterparty ? passStub.left.amount : myNetBalance);
   const heroWho = heroIsSingleCounterparty
     ? passStub.left.caption
-    : heroTone === 'pay' ? 'You owe' : heroTone === 'receive' ? "You're owed" : "You're square";
+    : heroTone === 'pay' ? 'Your balance · you owe' : heroTone === 'receive' ? "Your balance · you're owed" : "Your balance · you're square";
   const heroColor = heroTone === 'pay' ? 'var(--color-danger)' : heroTone === 'receive' ? 'var(--color-success)' : 'var(--bp-ink)';
+
+  // A grouped traveler's personal net mixes two settlements (inside the group,
+  // outside it). Name both so the hero never looks bigger than the one
+  // transfer "Who owes who" lists.
+  const heroSplit = heroIsSingleCounterparty ? null : groupSplitLine(passStub, (amount) => formatAmount(amount, currencySymbol));
 
   const settledPct = balancesCount > 0 ? Math.round((settledMemberCount / balancesCount) * 100) : 100;
   const avatarNames = travelerNames.slice(0, 2);
@@ -537,7 +548,7 @@ export function BoardingPassHeroCard({
 
           {/* Center Hero Metric */}
           <div className="bp-body" style={S_FRONT_BODY}>
-            <div className="bp-who">{isFullySettled ? 'Outstanding' : 'Outstanding to settle'}</div>
+            <div className="bp-who">{isFullySettled ? 'Group outstanding' : 'Group still to settle'}</div>
             <div
               key={Math.round(totalOutstanding * 100)}
               className="bp-amount value-bump"
@@ -611,6 +622,9 @@ export function BoardingPassHeroCard({
                 <div className="bp-amount" style={{ ...S_HERO_AMOUNT, color: heroColor }}>
                   {formatAmount(heroAmount, currencySymbol)}
                 </div>
+                {heroSplit ? (
+                  <div style={S_HERO_SPLIT} title={`${passStub.left.caption} · ${passStub.right.caption}`}>{heroSplit}</div>
+                ) : null}
                 <div style={S_PROGRESS_WRAP}>
                   <div style={S_PROGRESS_META}>
                     <span>{settledMemberCount} of {balancesCount} settled</span>

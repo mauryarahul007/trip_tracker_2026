@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.43.6',
+    date: '2026-10-02',
+    changes: [
+      'Summary now labels your own balance and the group total separately, so the two numbers are no longer confused.',
+      'If you are in a couple or group, the flipped pass shows how your balance splits inside and outside the group.',
+      'The bottom bar is more solid, so cards no longer show through it, and the top chips are easier to tap.',
+      'The "You\u2019re owed" chip says "see who" instead of promising a reminder it did not send.',
+    ],
+  },
+  {
     version: '3.43.5',
     date: '2026-10-02',
     changes: [

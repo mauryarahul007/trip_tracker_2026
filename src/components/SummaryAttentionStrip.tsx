@@ -64,7 +64,7 @@ export function SummaryAttentionStrip({
       } else if (mine && mine.balance > 0.009) {
         next.push({
           id: 'owed',
-          label: "You're owed · remind",
+          label: "You're owed · see who",
           onClick: () => onGoToBalances?.(),
         });
       }

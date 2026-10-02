@@ -4451,3 +4451,10 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - While the pass is flipped to the front, no progress bar is visible anywhere. It appears only on the back.
   - Only 2 traveler avatars show on the back, down from 3.
+
+## 251. Label balance vs group total; show the inside/outside split (v3.43.6, BUG-264)
+* **Context:** A grouped traveler saw "You're owed ₹48,732" on the pass back and ₹14,500 in Who owes who. The math was right: a personal net splits into what the rest of the group owes you (₹34,232, settled privately) and what the group receives from other travelers (₹14,500, the one listed transfer). The pass only showed the sum, and the front called the group total "Outstanding to settle", so the two looked like a contradiction.
+* **Decision:** The front reads "Group still to settle", the back generic hero reads "Your balance · you're owed/you owe", and Who owes who captions its total "group to settle". For a grouped traveler whose hero is not a single named counterparty, a line under the amount shows "Inside +₹34,232 · Outside +₹14,500" (`groupSplitLine` in `passBackStub.ts`). Also: the floating bottom bar is more opaque (text showed through at 88%/82%), top chips are at least 36px tall, and the "You're owed · remind" chip became "You're owed · see who" because it only scrolled and never sent a reminder.
+* **Trade-offs Accepted:**
+  - The split line adds about 14px to the back face for grouped travelers with money on both sides. Ungrouped travelers see no change.
+  - The labels follow `enableTravelerPassBack`; the front label changes in both flag states because the front is shared.

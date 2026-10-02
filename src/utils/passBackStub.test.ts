@@ -1,7 +1,34 @@
 import { describe, expect, it } from 'vitest';
-import { buildPassStub, memberCashAndShare, type WalletExpense } from './passBackStub';
+import { buildPassStub, groupSplitLine, memberCashAndShare, type WalletExpense } from './passBackStub';
 
 const rupee = (amount: number) => `₹${amount.toFixed(2)}`;
+
+describe('groupSplitLine', () => {
+  it('shows both sides when a couple has money inside and outside the group', () => {
+    const stub = buildPassStub({
+      myNet: 48732, paid: 62000, share: 13268,
+      group: { name: '2B', balance: 14500, otherMemberNames: ['Ananya Sharma'] },
+    }, rupee);
+    expect(groupSplitLine(stub, rupee)).toBe('Inside +₹34232.00 · Outside +₹14500.00');
+  });
+
+  it('uses a minus sign for the side the traveler owes', () => {
+    const stub = buildPassStub({
+      myNet: 1000, paid: 0, share: 0,
+      group: { name: '2B', balance: 4000, otherMemberNames: ['Ananya'] },
+    }, rupee);
+    expect(groupSplitLine(stub, rupee)).toBe('Inside −₹3000.00 · Outside +₹4000.00');
+  });
+
+  it('is null without a group or when one side is square', () => {
+    expect(groupSplitLine(buildPassStub({ myNet: 500, paid: 0, share: 0 }, rupee), rupee)).toBeNull();
+    const square = buildPassStub({
+      myNet: 4000, paid: 0, share: 0,
+      group: { name: '2B', balance: 4000, otherMemberNames: ['Ananya'] },
+    }, rupee);
+    expect(groupSplitLine(square, rupee)).toBeNull();
+  });
+});
 
 describe('buildPassStub', () => {
   it('splits a couple into inside and outside cells that add up to the personal net', () => {

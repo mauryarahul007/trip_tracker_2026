@@ -867,8 +867,8 @@ export function BalancesSettlements({
 
   const isUpiEnabled = useTripStore((s) => s.isFeatureEnabled('enableUpiPayments', { tripId: trip.id }));
   const isShareCardEnabled = useTripStore((s) => s.isFeatureEnabled('enableWhatsAppSettlementShare', { tripId: trip.id }));
-  // The flipped pass already shows a settled-travelers bar, so this section drops its copy.
-  const passBackHasProgress = useTripStore((s) => s.isFeatureEnabled('enableTravelerPassBack'));
+  // With the new pass back on, it owns the settled-travelers bar (so this section drops its copy) and the labels that separate your balance from the group total.
+  const passBackOn = useTripStore((s) => s.isFeatureEnabled('enableTravelerPassBack'));
   const isSimplifyToggleActive = useTripStore((s) => s.isFeatureEnabled('enableSimplifyDebtsToggle', { tripId: trip.id }));
   const setTripSimplifyDebts = useTripStore((s) => s.setTripSimplifyDebts);
   const [showSimplifyInfo, setShowSimplifyInfo] = useState(false);
@@ -1051,15 +1051,20 @@ export function BalancesSettlements({
                 {remindAllStatus === 'sending' ? 'Sending…' : remindAllStatus === 'done' ? '✓ Reminded' : `🔔 Remind all (${remindableCount})`}
               </button>
             )}
-            <span
-              style={{
-                fontSize: '13px',
-                fontWeight: 700,
-                fontFamily: 'var(--font-family-mono)',
-                color: isFullySettled ? 'var(--color-success)' : 'var(--accent-orange, #FF7A00)',
-              }}
-            >
-              {isFullySettled ? formatAmount(0, currencySymbol) : formatAmount(totalOutstanding, currencySymbol)}
+            <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.15 }}>
+              <span
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  fontFamily: 'var(--font-family-mono)',
+                  color: isFullySettled ? 'var(--color-success)' : 'var(--accent-orange, #FF7A00)',
+                }}
+              >
+                {isFullySettled ? formatAmount(0, currencySymbol) : formatAmount(totalOutstanding, currencySymbol)}
+              </span>
+              {passBackOn && !isFullySettled ? (
+                <span style={{ fontSize: '9.5px', fontFamily: 'var(--font-family-mono)', color: 'var(--text-muted)' }}>group to settle</span>
+              ) : null}
             </span>
           </div>
         </div>
@@ -1228,7 +1233,7 @@ export function BalancesSettlements({
           document.body,
         )}
 
-        {!isFullySettled && balances.length > 0 && !passBackHasProgress && (
+        {!isFullySettled && balances.length > 0 && !passBackOn && (
           <div style={{ padding: '0 4px', marginBottom: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
               <span>{settledMemberCount} of {balances.length} settled up</span>
