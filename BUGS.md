@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **263** | All recorded bugs across sessions |
+| **Total Tracked** | **264** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **236** | Verified & closed |
+| **✅ Resolved** | **237** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -267,6 +267,7 @@
 | **BUG-261** | Tile status and spent bar disappears when the cover photo cycles | `ui-ux` | `medium` | `rahul` | `rahul` | v3.43.2: the tile status and spent bar stays above the cycling photo as a transparent strip. The photo layers no longer paint over it. |
 | **BUG-262** | Summary pass back cuts off its bottom row | `ui-ux` | `medium` | `rahul` | `rahul` | Fixed in commit edbaccf (v3.43.4). Both pass faces share one grid cell so the card takes the taller height. The back layout was tidied. |
 | **BUG-263** | Pass is too tall and the settled bar shows twice on Summary | `ui-ux` | `low` | `rahul` | `rahul` | Fixed in commit 467fb6a (v3.43.5). The pass is about 268px tall at phone width. Who owes who hides its duplicate bar when the pass back is on. |
+| **BUG-264** | Summary shows a balance larger than the one transfer, with no explanation | `ui-ux` | `medium` | `rahul` | `rahul` | Fixed in commit 6851686 (v3.43.6). Balance and group total are labeled separately, and grouped travelers see the inside/outside split. The bottom bar is more opaque. |
 
 ---
 
