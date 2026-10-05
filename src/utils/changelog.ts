@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.43.11',
+    date: '2026-10-05',
+    changes: [
+      'The Amount box in Add Expense now sits immediately below its label for faster entry, with currency suggestions underneath.',
+      'Split presets, quick amount additions, stepper dots, and currency toggles now have enlarged 44px tap targets for easier mobile tapping.',
+      'Restored draft notices are calmer, and the bottom save bar has subtle elevation above scrolling form content.',
+    ],
+  },
+  {
     version: '3.43.10',
     date: '2026-10-02',
     changes: [

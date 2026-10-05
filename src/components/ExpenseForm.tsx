@@ -1384,17 +1384,17 @@ export function ExpenseForm({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: 'rgba(59, 130, 246, 0.12)',
-            border: '1px solid rgba(59, 130, 246, 0.3)',
-            borderRadius: '10px',
-            padding: '8px 12px',
-            marginBottom: '14px',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '8px',
+            padding: '6px 10px',
+            marginBottom: '12px',
             fontSize: '12px',
-            color: 'var(--text-primary)',
+            color: 'var(--text-secondary)',
           }}
         >
-          <div className="u-row-8">
-            <IconEdit size={14} />
+          <div className="u-row-6">
+            <IconEdit size={13} style={{ color: 'var(--text-muted)' }} />
             <span>Restored unsaved draft from your last session</span>
           </div>
           <button
@@ -1403,10 +1403,10 @@ export function ExpenseForm({
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#ef4444',
+              color: 'var(--color-danger)',
               cursor: 'pointer',
               fontWeight: 600,
-              fontSize: '12px',
+              fontSize: '11.5px',
               padding: '2px 6px',
             }}
           >
@@ -1548,85 +1548,6 @@ export function ExpenseForm({
           </div>
         </div>
 
-        {detectedCurrency && !currencyChipDismissed && detectedCurrency !== selectedCurrency && (
-          <div
-            className="fade-in"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '8px',
-              padding: '6px 10px',
-              marginBottom: '10px',
-              borderRadius: 'var(--border-radius-sm)',
-              background: 'rgba(15, 111, 99, 0.08)',
-              border: '1px solid rgba(15, 111, 99, 0.25)',
-              fontSize: '12px',
-            }}
-          >
-            <span style={{ color: 'var(--text-secondary)' }}>
-              You're near a {detectedCurrency} location &mdash; use it instead?
-            </span>
-            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-              <button
-                type="button"
-                className="pill-chip"
-                style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '10px', border: 'none', background: 'var(--primary-accent)', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
-                onClick={() => {
-                  setSelectedCurrency(detectedCurrency);
-                  setCurrencyChipDismissed(true);
-                }}
-              >
-                Use {detectedCurrency}
-              </button>
-              <button
-                type="button"
-                style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer' }}
-                onClick={() => setCurrencyChipDismissed(true)}
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
-        )}
-
-        {enableCurrencyFx && showCurrencyPicker && (
-          <div className="fade-in" style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '6px',
-            marginBottom: '10px',
-            padding: '8px',
-            background: 'var(--bg-secondary)',
-            borderRadius: 'var(--border-radius-sm)',
-            border: '1px solid var(--border-color)'
-          }}>
-            {POPULAR_CURRENCIES.map((c) => (
-              <button
-                key={c.code}
-                type="button"
-                className={`pill-chip ${selectedCurrency === c.code ? 'active' : ''}`}
-                style={{
-                  fontSize: '11px',
-                  padding: '4px 8px',
-                  borderRadius: '10px',
-                  border: '1px solid var(--border-color)',
-                  background: selectedCurrency === c.code ? 'var(--primary-accent)' : 'var(--bg-primary)',
-                  color: selectedCurrency === c.code ? '#fff' : 'var(--text-primary)',
-                  cursor: 'pointer',
-                  fontWeight: selectedCurrency === c.code ? 700 : 500
-                }}
-                onClick={() => {
-                  setSelectedCurrency(c.code);
-                  setShowCurrencyPicker(false);
-                }}
-              >
-                {c.symbol} {c.code}
-              </button>
-            ))}
-          </div>
-        )}
-
         <div className={`amount-hero ${formError && (!amount || numericAmount <= 0) ? 'amount-hero-error' : ''}`}>
           <span className="amount-hero-symbol">{getCurrencySymbol(selectedCurrency)}</span>
           <input
@@ -1662,6 +1583,87 @@ export function ExpenseForm({
             }}
           />
         </div>
+
+        {detectedCurrency && !currencyChipDismissed && detectedCurrency !== selectedCurrency && (
+          <div
+            className="fade-in"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '8px',
+              padding: '6px 10px',
+              marginTop: '8px',
+              marginBottom: '4px',
+              borderRadius: 'var(--border-radius-sm)',
+              background: 'rgba(15, 111, 99, 0.08)',
+              border: '1px solid rgba(15, 111, 99, 0.25)',
+              fontSize: '12px',
+            }}
+          >
+            <span style={{ color: 'var(--text-secondary)' }}>
+              Near a {detectedCurrency} location &mdash; use it instead?
+            </span>
+            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+              <button
+                type="button"
+                className="pill-chip"
+                style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '10px', border: 'none', background: 'var(--primary-accent)', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
+                onClick={() => {
+                  setSelectedCurrency(detectedCurrency);
+                  setCurrencyChipDismissed(true);
+                }}
+              >
+                Use {detectedCurrency}
+              </button>
+              <button
+                type="button"
+                style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                onClick={() => setCurrencyChipDismissed(true)}
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
+        {enableCurrencyFx && showCurrencyPicker && (
+          <div className="fade-in" style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '6px',
+            marginTop: '8px',
+            marginBottom: '4px',
+            padding: '8px',
+            background: 'var(--bg-secondary)',
+            borderRadius: 'var(--border-radius-sm)',
+            border: '1px solid var(--border-color)'
+          }}>
+            {POPULAR_CURRENCIES.map((c) => (
+              <button
+                key={c.code}
+                type="button"
+                className={`pill-chip ${selectedCurrency === c.code ? 'active' : ''}`}
+                style={{
+                  fontSize: '11px',
+                  padding: '4px 8px',
+                  borderRadius: '10px',
+                  border: '1px solid var(--border-color)',
+                  background: selectedCurrency === c.code ? 'var(--primary-accent)' : 'var(--bg-primary)',
+                  color: selectedCurrency === c.code ? '#fff' : 'var(--text-primary)',
+                  cursor: 'pointer',
+                  fontWeight: selectedCurrency === c.code ? 700 : 500
+                }}
+                onClick={() => {
+                  setSelectedCurrency(c.code);
+                  setShowCurrencyPicker(false);
+                }}
+              >
+                {c.symbol} {c.code}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Live Calculation Preview when user types math expression */}
         {/[+\-*/x()]/.test(amount) && (

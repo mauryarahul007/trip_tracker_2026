@@ -4487,3 +4487,15 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** The coach only calls add-expense. It never mounts on Members, where the + button already adds a member.
 * **Trade-offs Accepted:**
   - None for travelers. The failed 3.43.9 build never shipped.
+
+## 256. UX Laws Hardening: Touch targets, proximity grouping, and visual isolation (Fitts, Hick, Proximity, Von Restorff) (v3.43.11)
+* **Context:** An audit against foundational UX laws revealed: (1) small touch targets (<28px) on quick preset split chips, quick amount chips, currency toggles, stepper dots, and auxiliary settlement chips causing tap errors on touch devices (Fitts's Law); (2) the Amount Hero input in `ExpenseForm.tsx` was separated from its label by location detection banners and currency dropdown lists (Law of Proximity); (3) noisy draft alerts competed with primary inputs and actions (Von Restorff Effect); (4) the fixed bottom actions bar in the expense form lacked visual elevation and spatial grounding.
+* **Decision:**
+  - **Fitts's Law:** Expanded the 44px hit-target `:where()` and `::after` touch envelope to cover `.split-preset-chip`, `.quick-amount-chip`, `.traveler-settlement-action-chip`, `.trip-stepper-dot`, `.trip-stepper-pill`, and `.currency-toggle-btn`. All interactive chips now meet the 44px accessible touch floor without altering visual compactness.
+  - **Law of Proximity:** Re-anchored the Amount Hero input in `ExpenseForm.tsx` immediately adjacent to its label row ($0\text{px}$ intervening gap), moving location currency alerts and currency pickers directly beneath the amount hero box.
+  - **Von Restorff Effect:** De-escalated the "Restored unsaved draft" banner in `ExpenseForm.tsx` from an overwhelming high-saturation blue box to a subtle, calm secondary status pill, preserving visual salience strictly for the Amount input and primary submit CTA.
+  - **Fitts's Law (Anchoring):** Added top elevation shadow and elevation z-index to `.expense-form-actions` so the primary action is visually grounded and readily reachable.
+* **Trade-offs Accepted:**
+  - Invisible 44px tap envelopes can slightly overlap if elements are positioned closer than 12px together; standard CSS stacking context ensures the directly clicked target takes precedence.
+  - Subtler draft alerts reduce banner blindness but may be slightly less conspicuous to inattentive users.
+

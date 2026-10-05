@@ -452,6 +452,7 @@ export function ExpenseList({
                       {isForeign && (
                         <button
                           type="button"
+                          className="currency-toggle-btn"
                           onClick={(e) => handleToggleExpenseCurrency(e, exp.id)}
                           aria-label={`Switch between ${trip?.baseCurrency} and ${exp.currency}`}
                           title={`Logged in ${exp.currency}. Tap to toggle between ${trip?.baseCurrency} and ${exp.currency}`}

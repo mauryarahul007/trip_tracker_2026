@@ -7815,6 +7815,8 @@ input:checked + .toggle-slider:before {
   padding: 12px max(20px, var(--safe-right, 20px)) calc(12px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
   background: var(--bg-surface);
   border-top: 1px solid var(--border-color);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+  z-index: 10;
   /* Sits outside the scrollable form content, so it doesn't get pushed up
      by the padding applied there when the keyboard shows — shift it up
      directly by the keyboard's own height instead. */
@@ -8625,7 +8627,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
    invisible ::after centered on the button catches the tap. :where() keeps
    the position fallback at zero specificity, so buttons that are already
    absolutely positioned elsewhere stay that way. */
-:where(.mini-bp-top-btn, .notif-close-btn, .notif-row-action-btn, .traveler-settlement-audit-btn, .member-remind-btn) {
+:where(.mini-bp-top-btn, .notif-close-btn, .notif-row-action-btn, .traveler-settlement-audit-btn, .member-remind-btn, .split-preset-chip, .quick-amount-chip, .traveler-settlement-action-chip, .trip-stepper-dot, .trip-stepper-pill, .currency-toggle-btn) {
   position: relative;
 }
 .search-clear-btn::after,
@@ -8634,7 +8636,13 @@ html.capacitor-ios .trip-sheet .tab-pane {
 .notif-close-btn::after,
 .notif-row-action-btn::after,
 .traveler-settlement-audit-btn::after,
-.member-remind-btn::after {
+.member-remind-btn::after,
+.split-preset-chip::after,
+.quick-amount-chip::after,
+.traveler-settlement-action-chip::after,
+.trip-stepper-dot::after,
+.trip-stepper-pill::after,
+.currency-toggle-btn::after {
   content: '';
   position: absolute;
   top: 50%;
