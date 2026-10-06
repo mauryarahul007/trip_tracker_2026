@@ -5,7 +5,19 @@ const String canonicalAppOrigin = 'https://trip-tracker.blackmaroon.in';
 // ponytail: folds Latin letters only; non-Latin scripts compare by code unit
 // (ICU collation differs). Add a collation package if such trip names matter.
 const _accentFrom = 'àáâãäåāçćčďèéêëēěìíîïīñňòóôõöøōřšśťùúûüūůýÿžźż';
-const _accentTo = 'aaaaaaa' 'ccc' 'd' 'eeeeee' 'iiiii' 'nn' 'ooooooo' 'rss' 't' 'uuuuuu' 'yy' 'zzz';
+const _accentTo =
+    'aaaaaaa'
+    'ccc'
+    'd'
+    'eeeeee'
+    'iiiii'
+    'nn'
+    'ooooooo'
+    'rss'
+    't'
+    'uuuuuu'
+    'yy'
+    'zzz';
 
 String _fold(String s) {
   final b = StringBuffer();
@@ -71,10 +83,40 @@ const List<MapEntry<List<String>, String>> placeCurrencies = [
   MapEntry(['united kingdom', 'uk', 'england', 'london', 'scotland', 'edinburgh', 'manchester'], 'GBP'),
   MapEntry(['switzerland', 'zurich', 'geneva', 'interlaken', 'lucerne', 'zermatt'], 'CHF'),
   MapEntry([
-    'france', 'paris', 'nice', 'germany', 'berlin', 'munich', 'italy', 'rome', 'venice', 'florence', 'milan',
-    'spain', 'barcelona', 'madrid', 'portugal', 'lisbon', 'porto', 'netherlands', 'amsterdam', 'greece',
-    'athens', 'santorini', 'mykonos', 'austria', 'vienna', 'belgium', 'brussels', 'ireland', 'dublin',
-    'finland', 'helsinki', 'croatia', 'dubrovnik', 'europe'
+    'france',
+    'paris',
+    'nice',
+    'germany',
+    'berlin',
+    'munich',
+    'italy',
+    'rome',
+    'venice',
+    'florence',
+    'milan',
+    'spain',
+    'barcelona',
+    'madrid',
+    'portugal',
+    'lisbon',
+    'porto',
+    'netherlands',
+    'amsterdam',
+    'greece',
+    'athens',
+    'santorini',
+    'mykonos',
+    'austria',
+    'vienna',
+    'belgium',
+    'brussels',
+    'ireland',
+    'dublin',
+    'finland',
+    'helsinki',
+    'croatia',
+    'dubrovnik',
+    'europe',
   ], 'EUR'),
   MapEntry(['czech', 'prague'], 'CZK'),
   MapEntry(['hungary', 'budapest'], 'HUF'),
@@ -82,7 +124,18 @@ const List<MapEntry<List<String>, String>> placeCurrencies = [
   MapEntry(['norway', 'oslo'], 'NOK'),
   MapEntry(['sweden', 'stockholm'], 'SEK'),
   MapEntry(['denmark', 'copenhagen'], 'DKK'),
-  MapEntry(['usa', 'united states', 'america', 'new york', 'las vegas', 'san francisco', 'los angeles', 'miami', 'hawaii', 'chicago'], 'USD'),
+  MapEntry([
+    'usa',
+    'united states',
+    'america',
+    'new york',
+    'las vegas',
+    'san francisco',
+    'los angeles',
+    'miami',
+    'hawaii',
+    'chicago',
+  ], 'USD'),
   MapEntry(['canada', 'toronto', 'vancouver', 'banff', 'montreal'], 'CAD'),
   MapEntry(['mexico', 'cancun', 'tulum'], 'MXN'),
   MapEntry(['australia', 'sydney', 'melbourne', 'brisbane', 'perth', 'gold coast'], 'AUD'),
@@ -105,7 +158,11 @@ String? guessTripCurrency(String destination) {
 String suggestTripName(String destination, [String? startDate, String? endDate]) {
   final first = destination.split(RegExp(r',|&|/|\band\b|→|->', caseSensitive: false))[0].trim();
   if (first.isEmpty) return '';
-  final titled = first.replaceAll(RegExp(r'\s+'), ' ').split(' ').map((p) => p.isNotEmpty ? p[0].toUpperCase() + p.substring(1) : '').join(' ');
+  final titled = first
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .split(' ')
+      .map((p) => p.isNotEmpty ? p[0].toUpperCase() + p.substring(1) : '')
+      .join(' ');
   return '$titled trip';
 }
 
@@ -122,8 +179,18 @@ Map<String, String> extractPrimaryCity(String destination, [List<dynamic>? stops
 }
 
 const List<String> monthNamesShort = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
 
 String formatDateRange(String start, String end) {
@@ -273,11 +340,11 @@ class TravelerPassport {
   });
 
   Map<String, dynamic> toJson() => {
-        'trips': trips,
-        'destinations': destinations,
-        'tripsSettled': tripsSettled,
-        'daysOnTheRoad': daysOnTheRoad,
-      };
+    'trips': trips,
+    'destinations': destinations,
+    'tripsSettled': tripsSettled,
+    'daysOnTheRoad': daysOnTheRoad,
+  };
 }
 
 TravelerPassport computeTravelerPassport(List<dynamic> trips, [int? nowMs]) {
@@ -337,14 +404,14 @@ class AchievementBadge {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'subtitle': subtitle,
-        'icon': icon,
-        'unlocked': unlocked,
-        'progressText': progressText,
-        'rarity': rarity,
-      };
+    'id': id,
+    'title': title,
+    'subtitle': subtitle,
+    'icon': icon,
+    'unlocked': unlocked,
+    'progressText': progressText,
+    'rarity': rarity,
+  };
 }
 
 List<AchievementBadge> calculateTripAchievements(
@@ -365,12 +432,22 @@ List<AchievementBadge> calculateTripAchievements(
     final catId = (e is Map ? e['category'] : e.category) as String? ?? '';
     final cat = categories.where((c) => (c is Map ? c['id'] : c.id) == catId).firstOrNull;
     final c = ((cat is Map ? cat['name'] : cat?.name) as String? ?? '').toLowerCase();
-    return t.contains('coffee') || t.contains('cafe') || t.contains('tea') || t.contains('chai') || t.contains('breakfast') || c.contains('cafe');
+    return t.contains('coffee') ||
+        t.contains('cafe') ||
+        t.contains('tea') ||
+        t.contains('chai') ||
+        t.contains('breakfast') ||
+        c.contains('cafe');
   }).length;
 
   final nightCount = activeExpenses.where((e) {
     final t = ((e is Map ? e['title'] : e.title) as String? ?? '').toLowerCase();
-    return t.contains('night') || t.contains('midnight') || t.contains('bar') || t.contains('pub') || t.contains('party') || t.contains('dinner');
+    return t.contains('night') ||
+        t.contains('midnight') ||
+        t.contains('bar') ||
+        t.contains('pub') ||
+        t.contains('party') ||
+        t.contains('dinner');
   }).length;
 
   final settlementUnlocked = isFullySettled && activeExpenses.isNotEmpty;
@@ -380,7 +457,12 @@ List<AchievementBadge> calculateTripAchievements(
     final cat = categories.where((c) => (c is Map ? c['id'] : c.id) == catId).firstOrNull;
     final catName = ((cat is Map ? cat['name'] : cat?.name) as String? ?? '').toLowerCase();
     final catIcon = (cat is Map ? cat['icon'] : cat?.icon) as String? ?? '';
-    return catName.contains('travel') || catName.contains('transit') || catName.contains('cab') || catName.contains('flight') || catIcon == '✈️' || catIcon == '🚗';
+    return catName.contains('travel') ||
+        catName.contains('transit') ||
+        catName.contains('cab') ||
+        catName.contains('flight') ||
+        catIcon == '✈️' ||
+        catIcon == '🚗';
   }).length;
   final stops = (trip is Map ? trip['stops'] : trip.stops) as List<dynamic>?;
   final transitUnlocked = transitCount >= 3 || (stops != null && stops.length >= 3);
@@ -484,7 +566,8 @@ Map<String, dynamic> inferSeasonalClimate(String destination, [String? startDate
     }
   }
 
-  final isHighAltitudeOrAlpine = destLower.contains('mountain') ||
+  final isHighAltitudeOrAlpine =
+      destLower.contains('mountain') ||
       destLower.contains('trek') ||
       destLower.contains('manali') ||
       destLower.contains('ladakh') ||
@@ -498,7 +581,8 @@ Map<String, dynamic> inferSeasonalClimate(String destination, [String? startDate
       destLower.contains('iceland') ||
       destLower.contains('norway');
 
-  final isSouthernHemisphere = destLower.contains('australia') ||
+  final isSouthernHemisphere =
+      destLower.contains('australia') ||
       destLower.contains('sydney') ||
       destLower.contains('melbourne') ||
       destLower.contains('new zealand') ||
@@ -509,7 +593,8 @@ Map<String, dynamic> inferSeasonalClimate(String destination, [String? startDate
   final effectiveMonth = isSouthernHemisphere ? (month + 6) % 12 : month;
   final isWinterMonths = effectiveMonth == 11 || effectiveMonth == 0 || effectiveMonth == 1;
   final isSummerMonths = effectiveMonth == 4 || effectiveMonth == 5 || effectiveMonth == 6;
-  final isMonsoonMonths = (effectiveMonth >= 5 && effectiveMonth <= 8) &&
+  final isMonsoonMonths =
+      (effectiveMonth >= 5 && effectiveMonth <= 8) &&
       (destLower.contains('india') ||
           destLower.contains('goa') ||
           destLower.contains('mumbai') ||
@@ -518,9 +603,11 @@ Map<String, dynamic> inferSeasonalClimate(String destination, [String? startDate
           destLower.contains('vietnam') ||
           destLower.contains('bali'));
 
-  final isCold = isHighAltitudeOrAlpine || (isWinterMonths && !destLower.contains('beach') && !destLower.contains('dubai'));
+  final isCold =
+      isHighAltitudeOrAlpine || (isWinterMonths && !destLower.contains('beach') && !destLower.contains('dubai'));
   final isRainy = isMonsoonMonths;
-  final isHot = isSummerMonths || destLower.contains('dubai') || destLower.contains('cairo') || destLower.contains('rajasthan');
+  final isHot =
+      isSummerMonths || destLower.contains('dubai') || destLower.contains('cairo') || destLower.contains('rajasthan');
 
   int estimatedTempC = 24;
   String seasonName = 'Mild / Moderate';
@@ -604,7 +691,7 @@ List<Map<String, dynamic>> generateSmartPackingSuggestions(Map<String, dynamic> 
       'cabinNote': 'Must be carried in cabin only. Prohibited in check-in baggage!',
       'defaultChecked': true,
       'icon': '🔋',
-    }
+    },
   ];
   return suggestions;
 }

@@ -31,7 +31,9 @@ class SupabaseJoinRepository implements JoinRepository {
         startDate: row['start_date'] as String? ?? '',
         endDate: row['end_date'] as String? ?? '',
         // Strip last names again client-side, like the web.
-        memberFirstNames: [for (final n in (row['member_first_names'] as List? ?? const [])) _firstName('$n')].where((n) => n.isNotEmpty).toList(),
+        memberFirstNames: [for (final n in (row['member_first_names'] as List? ?? const [])) _firstName('$n')]
+            .where((n) => n.isNotEmpty)
+            .toList(),
       );
     } on PostgrestException catch (e) {
       throw _invite(e);
@@ -61,7 +63,8 @@ class SupabaseJoinRepository implements JoinRepository {
         myMemberId: first['my_member_id'] as String?,
         unclaimedMembers: [
           for (final r in rows)
-            if (r['member_id'] != null && r['member_name'] != null) UnclaimedMember(id: r['member_id'] as String, name: r['member_name'] as String),
+            if (r['member_id'] != null && r['member_name'] != null)
+              UnclaimedMember(id: r['member_id'] as String, name: r['member_name'] as String),
         ],
       );
     } on PostgrestException catch (e) {
@@ -95,7 +98,8 @@ class SupabaseShareRepository implements ShareRepository {
       memberCount: (row['member_count'] as num?)?.toInt() ?? 0,
       expenseCount: (row['expense_count'] as num?)?.toInt() ?? 0,
       spendByCurrency: {
-        for (final e in ((row['spend_by_currency'] as Map?) ?? const {}).entries) '${e.key}': (e.value as num).toDouble(),
+        for (final e in ((row['spend_by_currency'] as Map?) ?? const {}).entries)
+          '${e.key}': (e.value as num).toDouble(),
       },
     );
   }

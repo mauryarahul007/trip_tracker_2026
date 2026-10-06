@@ -55,10 +55,8 @@ class _PassScannerModalState extends State<PassScannerModal> {
     final qrData = pass.qrData?.trim().isNotEmpty == true
         ? pass.qrData!
         : (pass.bookingId?.trim().isNotEmpty == true
-            ? pass.bookingId!
-            : (pass.referenceCode?.trim().isNotEmpty == true
-                ? pass.referenceCode!
-                : pass.title));
+              ? pass.bookingId!
+              : (pass.referenceCode?.trim().isNotEmpty == true ? pass.referenceCode! : pass.title));
 
     final refCode = pass.referenceCode ?? pass.bookingId;
 
@@ -74,13 +72,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.45),
-                  blurRadius: 30,
-                  spreadRadius: 4,
-                ),
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 30, spreadRadius: 4)],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -92,14 +84,21 @@ class _PassScannerModalState extends State<PassScannerModal> {
                   children: [
                     Row(
                       children: [
-                        Text(isFlight ? '✈️' : isTrain ? '🚆' : '🎫', style: const TextStyle(fontSize: 20)),
+                        Text(
+                          isFlight
+                              ? '✈️'
+                              : isTrain
+                              ? '🚆'
+                              : '🎫',
+                          style: const TextStyle(fontSize: 20),
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           isFlight
                               ? 'BOARDING PASS SCANNER'
                               : isTrain
-                                  ? 'RAILWAY TICKET SCANNER'
-                                  : 'ENTRY PASS SCANNER',
+                              ? 'RAILWAY TICKET SCANNER'
+                              : 'ENTRY PASS SCANNER',
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
@@ -110,6 +109,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                       ],
                     ),
                     IconButton(
+                      tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                       key: const Key('scanner-close'),
                       icon: const Icon(Icons.close, color: Color(0xFF1E293B), size: 20),
                       onPressed: () => Navigator.of(context).pop(),
@@ -122,11 +122,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                 Text(
                   pass.title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
-                  ),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
                 ),
 
                 if (pass.origin != null || pass.destination != null) ...[
@@ -134,11 +130,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                   Text(
                     [pass.origin, pass.destination].whereType<String>().join(' → '),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF2563EB),
-                    ),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF2563EB)),
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -152,11 +144,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: const Color(0xFFE2E8F0), width: 2),
                       boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
-                          blurRadius: 16,
-                          spreadRadius: 2,
-                        ),
+                        BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 16, spreadRadius: 2),
                       ],
                     ),
                     child: QrImageView(
@@ -164,10 +152,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                       version: QrVersions.auto,
                       size: 200,
                       backgroundColor: Colors.white,
-                      eyeStyle: const QrEyeStyle(
-                        eyeShape: QrEyeShape.square,
-                        color: Color(0xFF0F172A),
-                      ),
+                      eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF0F172A)),
                       dataModuleStyle: const QrDataModuleStyle(
                         dataModuleShape: QrDataModuleShape.square,
                         color: Color(0xFF0F172A),
@@ -182,20 +167,17 @@ class _PassScannerModalState extends State<PassScannerModal> {
                   Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12)),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          isFlight ? 'SEAT: ' : isTrain ? 'BERTH: ' : 'ROOM: ',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF64748B),
-                          ),
+                          isFlight
+                              ? 'SEAT: '
+                              : isTrain
+                              ? 'BERTH: '
+                              : 'ROOM: ',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
                         ),
                         Text(
                           pass.seatOrRoom!,
@@ -228,11 +210,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                           children: [
                             const Text(
                               'BOOKING / PNR CODE',
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF64748B),
-                              ),
+                              style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Color(0xFF64748B)),
                             ),
                             Text(
                               refCode,
@@ -266,11 +244,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                     ),
                   ),
 
-                AppButton(
-                  key: const Key('scanner-done'),
-                  label: 'Done',
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
+                AppButton(key: const Key('scanner-done'), label: 'Done', onPressed: () => Navigator.of(context).pop()),
               ],
             ),
           ),

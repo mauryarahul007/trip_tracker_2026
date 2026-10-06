@@ -177,8 +177,13 @@ void main() {
     });
 
     testApp('failed biometrics keep the overlay with an error; retry unlocks', (tester) async {
-      final app = await pumpApp(tester,
-          user: asha, flagsOn: {'enableBiometricAuth'}, prefsExtra: lockPrefs, biometricPasses: false);
+      final app = await pumpApp(
+        tester,
+        user: asha,
+        flagsOn: {'enableBiometricAuth'},
+        prefsExtra: lockPrefs,
+        biometricPasses: false,
+      );
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
       expect(find.text('Trip Tracker is Locked'), findsOneWidget);
@@ -192,8 +197,13 @@ void main() {
     });
 
     testApp('signing out from the lock screen clears it', (tester) async {
-      final app = await pumpApp(tester,
-          user: asha, flagsOn: {'enableBiometricAuth'}, prefsExtra: lockPrefs, biometricPasses: false);
+      final app = await pumpApp(
+        tester,
+        user: asha,
+        flagsOn: {'enableBiometricAuth'},
+        prefsExtra: lockPrefs,
+        biometricPasses: false,
+      );
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Sign Out'));
@@ -218,10 +228,10 @@ void main() {
     test('policy: only locks after the timeout, only when enabled', () {
       final t0 = DateTime(2026, 1, 1, 12);
       bool at(int s, {bool enabled = true, DateTime? bg}) => shouldLockOnResume(
-            enabled: enabled,
-            backgroundedAt: bg ?? t0,
-            now: t0.add(Duration(seconds: s)),
-          );
+        enabled: enabled,
+        backgroundedAt: bg ?? t0,
+        now: t0.add(Duration(seconds: s)),
+      );
       expect(at(5), isFalse);
       expect(at(29), isFalse);
       expect(at(30), isTrue);

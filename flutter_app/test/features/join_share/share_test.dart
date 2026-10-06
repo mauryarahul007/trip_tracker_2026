@@ -13,7 +13,8 @@ import '../../support/pump_app.dart';
 
 Finder button(String label) => find.widgetWithText(AppButton, label);
 String where(WidgetTester t) => GoRouterState.of(t.element(find.byType(Scaffold).last)).uri.path;
-ProviderContainer containerOf(WidgetTester tester) => ProviderScope.containerOf(tester.element(find.byType(MaterialApp)));
+ProviderContainer containerOf(WidgetTester tester) =>
+    ProviderScope.containerOf(tester.element(find.byType(MaterialApp)));
 
 void main() {
   group('/share/:token (public, read-only)', () {
@@ -31,13 +32,21 @@ void main() {
     });
 
     testApp('revoked or expired link: shows the ended state and records no view', (tester) async {
-      final app = await pumpApp(tester, setup: (a) => a.share.summaryResult = null, launchLink: Uri.parse('com.triptracker.app://share/dead-token'));
+      final app = await pumpApp(
+        tester,
+        setup: (a) => a.share.summaryResult = null,
+        launchLink: Uri.parse('com.triptracker.app://share/dead-token'),
+      );
       expect(find.text('This link has ended'), findsOneWidget);
       expect(app.share.calls, ['summary:dead-token']);
     });
 
     testApp('network failure: retry button loads it', (tester) async {
-      final app = await pumpApp(tester, setup: (a) => a.share.summaryError = Exception('offline'), launchLink: Uri.parse('com.triptracker.app://share/tok-1'));
+      final app = await pumpApp(
+        tester,
+        setup: (a) => a.share.summaryError = Exception('offline'),
+        launchLink: Uri.parse('com.triptracker.app://share/tok-1'),
+      );
       expect(find.text("Couldn't load this trip summary."), findsOneWidget);
       app.share.summaryError = null;
       await tester.tap(button('Retry'));
@@ -51,14 +60,25 @@ void main() {
       final c = containerOf(tester);
       final id = await real(
         tester,
-        () => c.read(tripRepositoryProvider).createTrip(
-            name: 'Goa Weekend', startDate: '2026-12-01', endDate: '2026-12-05', baseCurrency: 'INR', ownerId: owner, creatorName: 'Asha'),
+        () => c
+            .read(tripRepositoryProvider)
+            .createTrip(
+              name: 'Goa Weekend',
+              startDate: '2026-12-01',
+              endDate: '2026-12-05',
+              baseCurrency: 'INR',
+              ownerId: owner,
+              creatorName: 'Asha',
+            ),
       );
       if (joinCode.isNotEmpty) {
         // The server assigns the code; simulate the pulled row.
         await real(tester, () async {
           final db = c.read(appDatabaseProvider);
-          await db.customStatement("UPDATE trips SET domain_json = json_set(domain_json, '\$.joinCode', ?) WHERE id = ?", [joinCode, id]);
+          await db.customStatement(
+            "UPDATE trips SET domain_json = json_set(domain_json, '\$.joinCode', ?) WHERE id = ?",
+            [joinCode, id],
+          );
         });
       }
       await settle(tester);
@@ -161,7 +181,9 @@ void main() {
   group('deep links while running', () {
     testApp('a link arriving mid-session opens the invite, and attribution is kept (first touch only)', (tester) async {
       final app = await pumpApp(tester, user: asha);
-      app.links.controller.add(Uri.parse('https://trip-tracker.blackmaroon.in/join/zzz999?utm_source=whatsapp&utm_medium=invite'));
+      app.links.controller.add(
+        Uri.parse('https://trip-tracker.blackmaroon.in/join/zzz999?utm_source=whatsapp&utm_medium=invite'),
+      );
       await settle(tester, rounds: 10);
       expect(app.join.calls, contains('lookup:ZZZ999'));
       final store = containerOf(tester).read(signupAttributionStoreProvider);

@@ -109,131 +109,169 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
 
     Widget section(String key, String title, List<Widget> children) {
       final open = _open.contains(key);
-      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        InkWell(
-          key: Key('section-$key'),
-          onTap: () => _toggle(key),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(children: [
-              Expanded(child: Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700))),
-              Icon(open ? Icons.expand_less : Icons.expand_more, color: tokens.textMuted),
-            ]),
-          ),
-        ),
-        if (open) ...children,
-      ]);
-    }
-
-    return Column(children: [
-      if (myBalance != null)
-        Material(
-          color: tokens.bgSurface,
-          child: ListTile(
-            key: const Key('sticky-balance'),
-            dense: compact,
-            title: Text(l10n.ledYou),
-            trailing: Text(
-              myBalance.balance.abs() < 0.01
-                  ? l10n.ledEven
-                  : myBalance.balance > 0
-                      ? l10n.ledOwed(formatMoney(context, myBalance.balance, cur))
-                      : l10n.ledOwes(formatMoney(context, -myBalance.balance, cur)),
-              style: TextStyle(color: myBalance.balance > 0.01 ? tokens.colorSuccess : tokens.colorDanger, fontWeight: FontWeight.w700),
-            ),
-          ),
-        ),
-      Expanded(
-        child: ListView(
-          key: const Key('ledger-list'),
-          padding: EdgeInsets.all(pad),
-          children: [
-            if (conflicts.isNotEmpty)
-              AppButton(
-                key: const Key('open-conflicts'),
-                label: l10n.conflictTitle,
-                variant: AppButtonVariant.secondary,
-                onPressed: () => AppSheet.show<void>(context: context, builder: (_) => ConflictSheet(tripId: id)),
-              ),
-            section('balances', l10n.ledBalances, [
-              for (final b in result.balances)
-                ListTile(
-                  key: Key('balance-${b.memberId}'),
-                  contentPadding: EdgeInsets.zero,
-                  dense: compact,
-                  title: Text(b.name),
-                  trailing: Text(
-                    b.balance.abs() < 0.01
-                        ? l10n.ledEven
-                        : b.balance > 0
-                            ? l10n.ledOwed(formatMoney(context, b.balance, cur))
-                            : l10n.ledOwes(formatMoney(context, -b.balance, cur)),
-                    style: TextStyle(
-                      color: b.balance.abs() < 0.01 ? tokens.textSecondary : (b.balance > 0 ? tokens.colorSuccess : tokens.colorDanger),
-                      fontWeight: FontWeight.w600,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            key: Key('section-$key'),
+            onTap: () => _toggle(key),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                     ),
                   ),
+                  Icon(open ? Icons.expand_less : Icons.expand_more, color: tokens.textMuted),
+                ],
+              ),
+            ),
+          ),
+          if (open) ...children,
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        if (myBalance != null)
+          Material(
+            color: tokens.bgSurface,
+            child: ListTile(
+              key: const Key('sticky-balance'),
+              dense: compact,
+              title: Text(l10n.ledYou),
+              trailing: Text(
+                myBalance.balance.abs() < 0.01
+                    ? l10n.ledEven
+                    : myBalance.balance > 0
+                    ? l10n.ledOwed(formatMoney(context, myBalance.balance, cur))
+                    : l10n.ledOwes(formatMoney(context, -myBalance.balance, cur)),
+                style: TextStyle(
+                  color: myBalance.balance > 0.01 ? tokens.colorSuccess : tokens.colorDanger,
+                  fontWeight: FontWeight.w700,
                 ),
-              if (canToggle)
-                SwitchListTile(
-                  key: const Key('simplify-toggle'),
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.ledSimplify),
-                  subtitle: Text(l10n.ledSimplifyHint),
-                  value: trip.simplifyDebts,
-                  onChanged: (v) => ref.read(tripRepositoryProvider).setSimplifyDebts(id, v),
+              ),
+            ),
+          ),
+        Expanded(
+          child: ListView(
+            key: const Key('ledger-list'),
+            padding: EdgeInsets.all(pad),
+            children: [
+              if (conflicts.isNotEmpty)
+                AppButton(
+                  key: const Key('open-conflicts'),
+                  label: l10n.conflictTitle,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () => AppSheet.show<void>(
+                    context: context,
+                    builder: (_) => ConflictSheet(tripId: id),
+                  ),
                 ),
-            ]),
-            section('transfers', l10n.ledWhoPays, [
-              if (allEven)
-                EmptyState(key: const Key('all-settled'), icon: Icons.check_circle_outline, title: l10n.ledAllSettled, subtitle: l10n.ledAllSettledHint)
-              else
-                for (final (i, t) in result.transfers.indexed)
+              section('balances', l10n.ledBalances, [
+                for (final b in result.balances)
                   ListTile(
-                    key: Key('transfer-$i'),
+                    key: Key('balance-${b.memberId}'),
                     contentPadding: EdgeInsets.zero,
                     dense: compact,
-                    title: Text(l10n.ledTransfer(t.fromLabel, t.toLabel)),
-                    subtitle: Text(formatMoney(context, t.amount, cur)),
-                    trailing: AppButton(key: Key('settle-$i'), label: l10n.ledSettle, onPressed: () => _settle(context, t)),
-                  ),
-            ]),
-            if (history)
-              section('history', l10n.ledHistory, [
-                if (settlements.isEmpty) Text(l10n.ledNoHistory, key: const Key('history-empty'), style: TextStyle(color: tokens.textSecondary)),
-                for (final e in settlements)
-                  ListTile(
-                    key: Key('history-${e.id}'),
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(e.title.replaceFirst('Settlement: ', '')),
-                    subtitle: Text('${e.date} · ${formatMoney(context, e.amount, e.currency)}'),
-                    trailing: Text(e.settlementConfirmedAt != null ? l10n.ledConfirmed : l10n.ledAwaiting,
-                        style: TextStyle(color: e.settlementConfirmedAt != null ? tokens.colorSuccess : tokens.textSecondary)),
-                    onTap: () => AppSheet.show<void>(
-                      context: context,
-                      builder: (sheetCtx) => ExpenseDetailSheet(
-                        tripId: id,
-                        expenseId: e.id,
-                        onEdit: () => Navigator.of(sheetCtx).pop(),
-                        onDelete: () => Navigator.of(sheetCtx).pop(),
+                    title: Text(b.name),
+                    trailing: Text(
+                      b.balance.abs() < 0.01
+                          ? l10n.ledEven
+                          : b.balance > 0
+                          ? l10n.ledOwed(formatMoney(context, b.balance, cur))
+                          : l10n.ledOwes(formatMoney(context, -b.balance, cur)),
+                      style: TextStyle(
+                        color: b.balance.abs() < 0.01
+                            ? tokens.textSecondary
+                            : (b.balance > 0 ? tokens.colorSuccess : tokens.colorDanger),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-              ]),
-            if (cross.isNotEmpty)
-              section('cross', l10n.ledAcrossTrips, [
-                for (final n in cross)
-                  ListTile(
-                    key: Key('cross-${n.currency}'),
+                if (canToggle)
+                  SwitchListTile(
+                    key: const Key('simplify-toggle'),
                     contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.ledAcrossLine(n.currency, formatMoney(context, n.net.abs(), n.currency))),
-                    trailing: Text(n.net > 0 ? l10n.ledOwed('') : l10n.ledOwes('')),
+                    title: Text(l10n.ledSimplify),
+                    subtitle: Text(l10n.ledSimplifyHint),
+                    value: trip.simplifyDebts,
+                    onChanged: (v) => ref.read(tripRepositoryProvider).setSimplifyDebts(id, v),
                   ),
               ]),
-          ],
+              section('transfers', l10n.ledWhoPays, [
+                if (allEven)
+                  EmptyState(
+                    key: const Key('all-settled'),
+                    icon: Icons.check_circle_outline,
+                    title: l10n.ledAllSettled,
+                    subtitle: l10n.ledAllSettledHint,
+                  )
+                else
+                  for (final (i, t) in result.transfers.indexed)
+                    ListTile(
+                      key: Key('transfer-$i'),
+                      contentPadding: EdgeInsets.zero,
+                      dense: compact,
+                      title: Text(l10n.ledTransfer(t.fromLabel, t.toLabel)),
+                      subtitle: Text(formatMoney(context, t.amount, cur)),
+                      trailing: AppButton(
+                        key: Key('settle-$i'),
+                        label: l10n.ledSettle,
+                        onPressed: () => _settle(context, t),
+                      ),
+                    ),
+              ]),
+              if (history)
+                section('history', l10n.ledHistory, [
+                  if (settlements.isEmpty)
+                    Text(
+                      l10n.ledNoHistory,
+                      key: const Key('history-empty'),
+                      style: TextStyle(color: tokens.textSecondary),
+                    ),
+                  for (final e in settlements)
+                    ListTile(
+                      key: Key('history-${e.id}'),
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(e.title.replaceFirst('Settlement: ', '')),
+                      subtitle: Text('${e.date} · ${formatMoney(context, e.amount, e.currency)}'),
+                      trailing: Text(
+                        e.settlementConfirmedAt != null ? l10n.ledConfirmed : l10n.ledAwaiting,
+                        style: TextStyle(
+                          color: e.settlementConfirmedAt != null ? tokens.colorSuccess : tokens.textSecondary,
+                        ),
+                      ),
+                      onTap: () => AppSheet.show<void>(
+                        context: context,
+                        builder: (sheetCtx) => ExpenseDetailSheet(
+                          tripId: id,
+                          expenseId: e.id,
+                          onEdit: () => Navigator.of(sheetCtx).pop(),
+                          onDelete: () => Navigator.of(sheetCtx).pop(),
+                        ),
+                      ),
+                    ),
+                ]),
+              if (cross.isNotEmpty)
+                section('cross', l10n.ledAcrossTrips, [
+                  for (final n in cross)
+                    ListTile(
+                      key: Key('cross-${n.currency}'),
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.ledAcrossLine(n.currency, formatMoney(context, n.net.abs(), n.currency))),
+                      trailing: Text(n.net > 0 ? l10n.ledOwed('') : l10n.ledOwes('')),
+                    ),
+                ]),
+            ],
+          ),
         ),
-      ),
-    ]);
+      ],
+    );
   }
 }
 
@@ -250,7 +288,9 @@ class _SettleSheet extends ConsumerStatefulWidget {
 class _SettleSheetState extends ConsumerState<_SettleSheet> {
   late final _amount = TextEditingController(text: widget.transfer.amount.toStringAsFixed(2));
   final _note = TextEditingController();
-  late final _upi = TextEditingController(text: ref.read(sharedPreferencesProvider).getString('member_upi:${widget.transfer.toMemberId}') ?? '');
+  late final _upi = TextEditingController(
+    text: ref.read(sharedPreferencesProvider).getString('member_upi:${widget.transfer.toMemberId}') ?? '',
+  );
   late String _date = todayDateString(ref.read(nowProvider)());
   String? _error;
   bool _busy = false;
@@ -282,7 +322,9 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
     setState(() => _busy = true);
     final nav = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final r = await ref.read(expenseRepositoryProvider).submit(plan.submission, tripId: widget.tripId, userId: ref.read(authStateProvider).userId ?? '');
+    final r = await ref
+        .read(expenseRepositoryProvider)
+        .submit(plan.submission, tripId: widget.tripId, userId: ref.read(authStateProvider).userId ?? '');
     if (!mounted) return;
     if (r.isOk) {
       nav.pop();
@@ -297,7 +339,12 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
 
   Future<void> _pickDate() async {
     final now = ref.read(nowProvider)();
-    final d = await showDatePicker(context: context, initialDate: DateTime.tryParse(_date) ?? now, firstDate: DateTime(2000), lastDate: DateTime(now.year + 2));
+    final d = await showDatePicker(
+      context: context,
+      initialDate: DateTime.tryParse(_date) ?? now,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(now.year + 2),
+    );
     if (d != null) setState(() => _date = todayDateString(d));
   }
 
@@ -305,14 +352,16 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
     final trip = ref.read(tripProvider(widget.tripId)).value;
     final amount = _value ?? widget.transfer.amount;
     final symbol = getCurrencySymbol(widget.currency);
-    final layout = settlementShareCardLayout(SettlementShareCardInput(
-      tripName: trip?.name ?? '',
-      fromLabel: widget.transfer.fromLabel,
-      toLabel: widget.transfer.toLabel,
-      amount: amount,
-      currencySymbol: symbol,
-      upiId: _upi.text.trim().isEmpty ? null : _upi.text.trim(),
-    ));
+    final layout = settlementShareCardLayout(
+      SettlementShareCardInput(
+        tripName: trip?.name ?? '',
+        fromLabel: widget.transfer.fromLabel,
+        toLabel: widget.transfer.toLabel,
+        amount: amount,
+        currencySymbol: symbol,
+        upiId: _upi.text.trim().isEmpty ? null : _upi.text.trim(),
+      ),
+    );
     final bytes = await renderSettlementPng(layout);
     if (!mounted) return;
     await ref.read(shareServiceProvider).sharePng(bytes, fileName: layout.fileName, text: layout.caption);
@@ -327,12 +376,14 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
     }
     await saveUpiId(ref, widget.transfer.toMemberId, id);
     final amount = _value ?? widget.transfer.amount;
-    final uri = Uri.parse(generateUpiUri({
-      'payeeUpiId': id,
-      'payeeName': widget.transfer.toLabel,
-      'amount': amount,
-      'note': 'Trip Settlement',
-    }));
+    final uri = Uri.parse(
+      generateUpiUri({
+        'payeeUpiId': id,
+        'payeeName': widget.transfer.toLabel,
+        'amount': amount,
+        'note': 'Trip Settlement',
+      }),
+    );
     final opened = await ref.read(externalLauncherProvider)(uri);
     if (!mounted) return;
     if (!opened) {
@@ -353,40 +404,82 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
     final shareOn = ref.watch(flagProvider(('enableWhatsAppSettlementShare', widget.tripId))).value ?? false;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(partial ? l10n.ledSettlePartialTitle : l10n.ledSettleTitle, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 4),
-        Text(l10n.ledTransfer(t.fromLabel, t.toLabel)),
-        Text(partial ? l10n.ledSettlePartialBody : l10n.ledSettleBody, key: const Key('settle-body')),
-        const SizedBox(height: 12),
-        AppTextField(
-          key: const Key('settle-amount'),
-          controller: _amount,
-          label: l10n.ledAmount,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          onChanged: (_) => setState(() => _error = null),
-        ),
-        if (partial) Padding(padding: const EdgeInsets.only(top: 4), child: Text(l10n.ledRemaining(formatMoney(context, t.amount - v, widget.currency)), key: const Key('settle-remaining'))),
-        if (dateNote) ...[
-          const SizedBox(height: 8),
-          OutlinedButton(key: const Key('settle-date'), onPressed: _pickDate, child: Text('${l10n.ledDate}: $_date')),
-          const SizedBox(height: 8),
-          AppTextField(key: const Key('settle-note'), controller: _note, label: l10n.ledNote),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            partial ? l10n.ledSettlePartialTitle : l10n.ledSettleTitle,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 4),
+          Text(l10n.ledTransfer(t.fromLabel, t.toLabel)),
+          Text(partial ? l10n.ledSettlePartialBody : l10n.ledSettleBody, key: const Key('settle-body')),
+          const SizedBox(height: 12),
+          AppTextField(
+            key: const Key('settle-amount'),
+            controller: _amount,
+            label: l10n.ledAmount,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) => setState(() => _error = null),
+          ),
+          if (partial)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                l10n.ledRemaining(formatMoney(context, t.amount - v, widget.currency)),
+                key: const Key('settle-remaining'),
+              ),
+            ),
+          if (dateNote) ...[
+            const SizedBox(height: 8),
+            OutlinedButton(key: const Key('settle-date'), onPressed: _pickDate, child: Text('${l10n.ledDate}: $_date')),
+            const SizedBox(height: 8),
+            AppTextField(key: const Key('settle-note'), controller: _note, label: l10n.ledNote),
+          ],
+          if (upiOn) ...[
+            const SizedBox(height: 8),
+            AppTextField(
+              key: const Key('settle-upi'),
+              controller: _upi,
+              label: l10n.upiHint,
+              onChanged: (_) => setState(() => _error = null),
+            ),
+            const SizedBox(height: 8),
+            AppButton(
+              key: const Key('settle-upi-pay'),
+              label: l10n.upiPay,
+              variant: AppButtonVariant.secondary,
+              onPressed: _payUpi,
+            ),
+          ],
+          if (shareOn) ...[
+            const SizedBox(height: 8),
+            AppButton(
+              key: const Key('settle-share'),
+              label: l10n.shareCard,
+              variant: AppButtonVariant.secondary,
+              onPressed: _share,
+            ),
+          ],
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                _error!,
+                key: const Key('settle-error'),
+                style: TextStyle(color: context.tokens.colorDanger),
+              ),
+            ),
+          const SizedBox(height: 12),
+          AppButton(
+            key: const Key('settle-confirm'),
+            label: partial ? l10n.ledMarkPartial : l10n.ledMarkSettled,
+            isLoading: _busy,
+            onPressed: _busy ? null : _submit,
+          ),
         ],
-        if (upiOn) ...[
-          const SizedBox(height: 8),
-          AppTextField(key: const Key('settle-upi'), controller: _upi, label: l10n.upiHint, onChanged: (_) => setState(() => _error = null)),
-          const SizedBox(height: 8),
-          AppButton(key: const Key('settle-upi-pay'), label: l10n.upiPay, variant: AppButtonVariant.secondary, onPressed: _payUpi),
-        ],
-        if (shareOn) ...[
-          const SizedBox(height: 8),
-          AppButton(key: const Key('settle-share'), label: l10n.shareCard, variant: AppButtonVariant.secondary, onPressed: _share),
-        ],
-        if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_error!, key: const Key('settle-error'), style: TextStyle(color: context.tokens.colorDanger))),
-        const SizedBox(height: 12),
-        AppButton(key: const Key('settle-confirm'), label: partial ? l10n.ledMarkPartial : l10n.ledMarkSettled, isLoading: _busy, onPressed: _busy ? null : _submit),
-      ]),
+      ),
     );
   }
 }

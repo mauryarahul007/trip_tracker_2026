@@ -17,7 +17,11 @@ Future<List<int>> renderSettlementPng(SettlementShareCardLayout layout) async {
     final tp = TextPainter(
       text: TextSpan(
         text: layout.lines[i],
-        style: TextStyle(color: Colors.white, fontSize: big ? 72 : 40, fontWeight: big ? FontWeight.w800 : FontWeight.w600),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: big ? 72 : 40,
+          fontWeight: big ? FontWeight.w800 : FontWeight.w600,
+        ),
       ),
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
@@ -43,7 +47,14 @@ class SettlementCardPreview extends StatelessWidget {
       color: const Color(0xFF111827),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [for (final line in layout.lines) Text(line, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white))],
+        children: [
+          for (final line in layout.lines)
+            Text(
+              line,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white),
+            ),
+        ],
       ),
     );
   }

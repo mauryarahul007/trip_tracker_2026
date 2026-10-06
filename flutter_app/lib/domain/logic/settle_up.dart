@@ -23,7 +23,9 @@ SettleUpPlan? planSettlement(
   if (!(amount > 0)) return null;
   final total = totalDebt ?? t.amount;
   final n = note.trim();
-  final title = n.isEmpty ? 'Settlement: ${t.fromLabel} ➔ ${t.toLabel}' : 'Settlement: ${t.fromLabel} ➔ ${t.toLabel} — $n';
+  final title = n.isEmpty
+      ? 'Settlement: ${t.fromLabel} ➔ ${t.toLabel}'
+      : 'Settlement: ${t.fromLabel} ➔ ${t.toLabel} — $n';
   return SettleUpPlan(
     isPartial: amount < total - 0.01,
     remaining: (total - amount).clamp(0, double.infinity).toDouble(),

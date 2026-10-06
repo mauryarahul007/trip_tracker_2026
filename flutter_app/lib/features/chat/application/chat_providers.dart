@@ -34,7 +34,8 @@ TripMessage? latestVisible(List<TripMessage> messages) {
 
 /// True when someone else posted after the last time this device opened chat.
 final chatUnreadProvider = Provider.family<bool, String>((ref, tripId) {
-  final on = ref.watch(flagProvider(('enableTripChat', tripId))).value ?? (defaultFeatureFlags['enableTripChat'] ?? false);
+  final on =
+      ref.watch(flagProvider(('enableTripChat', tripId))).value ?? (defaultFeatureFlags['enableTripChat'] ?? false);
   if (!on) return false;
   final latest = latestVisible(ref.watch(tripMessagesProvider(tripId)).value ?? const []);
   if (latest == null) return false;

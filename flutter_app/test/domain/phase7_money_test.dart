@@ -10,38 +10,35 @@ import 'package:trip_tracker/features/expenses/presentation/widgets/settlement_c
 import 'package:trip_tracker/domain/logic/settlement_share_card.dart';
 
 void main() {
-  test(
-    'live rates use a fresh cache and fall back when the fetch fails',
-    () async {
-      String? stored;
-      final fresh = await loadExchangeRates(
-        cachedJson: null,
-        writeCache: (json) async => stored = json,
-        online: true,
-        fetch: () async => {'USD': 1, 'INR': 90},
-        now: DateTime.utc(2026, 10, 6),
-      );
-      expect(fresh['INR'], 90);
-      expect(stored, isNotNull);
+  test('live rates use a fresh cache and fall back when the fetch fails', () async {
+    String? stored;
+    final fresh = await loadExchangeRates(
+      cachedJson: null,
+      writeCache: (json) async => stored = json,
+      online: true,
+      fetch: () async => {'USD': 1, 'INR': 90},
+      now: DateTime.utc(2026, 10, 6),
+    );
+    expect(fresh['INR'], 90);
+    expect(stored, isNotNull);
 
-      final cached = await loadExchangeRates(
-        cachedJson: stored,
-        writeCache: (_) async {},
-        online: false,
-        fetch: () async => throw StateError('offline'),
-        now: DateTime.utc(2026, 10, 6, 12),
-      );
-      expect(cached['INR'], 90);
+    final cached = await loadExchangeRates(
+      cachedJson: stored,
+      writeCache: (_) async {},
+      online: false,
+      fetch: () async => throw StateError('offline'),
+      now: DateTime.utc(2026, 10, 6, 12),
+    );
+    expect(cached['INR'], 90);
 
-      final fallback = await loadExchangeRates(
-        cachedJson: null,
-        writeCache: (_) async {},
-        online: false,
-        fetch: () async => null,
-      );
-      expect(fallback['USD'], defaultExchangeRates['USD']);
-    },
-  );
+    final fallback = await loadExchangeRates(
+      cachedJson: null,
+      writeCache: (_) async {},
+      online: false,
+      fetch: () async => null,
+    );
+    expect(fallback['USD'], defaultExchangeRates['USD']);
+  });
 
   test('csv escapes formulas and backup rejects a missing trips array', () {
     const trip = Trip(

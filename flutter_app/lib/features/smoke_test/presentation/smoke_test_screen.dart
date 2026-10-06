@@ -20,8 +20,7 @@ class SmokeTestScreen extends ConsumerStatefulWidget {
 
 class _SmokeTestScreenState extends ConsumerState<SmokeTestScreen> {
   SmokeTestStatus _status = SmokeTestStatus.idle;
-  String _details =
-      'Tap "Run Smoke Test" to verify network connectivity to Supabase staging.';
+  String _details = 'Tap "Run Smoke Test" to verify network connectivity to Supabase staging.';
   int _latencyMs = 0;
 
   @override
@@ -54,8 +53,7 @@ class _SmokeTestScreenState extends ConsumerState<SmokeTestScreen> {
         setState(() {
           _status = SmokeTestStatus.success;
           _latencyMs = stopwatch.elapsedMilliseconds;
-          _details =
-              'Network gate verified! Connected to Supabase staging successfully ($_latencyMs ms).';
+          _details = 'Network gate verified! Connected to Supabase staging successfully ($_latencyMs ms).';
         });
       } else {
         setState(() {
@@ -84,6 +82,7 @@ class _SmokeTestScreenState extends ConsumerState<SmokeTestScreen> {
       appBar: AppBar(
         title: const Text('Staging Smoke Test'),
         leading: IconButton(
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           icon: const Icon(AppIcons.back, size: 20),
           onPressed: () => context.pop(),
         ),
@@ -106,19 +105,12 @@ class _SmokeTestScreenState extends ConsumerState<SmokeTestScreen> {
                 children: [
                   Text(
                     'Environment Configuration',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                      color: tokens.textPrimary,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: tokens.textPrimary),
                   ),
                   const SizedBox(height: 8),
                   _envRow('Flavor', env.flavor.name),
                   _envRow('App Name', env.appName),
-                  _envRow(
-                    'Endpoint',
-                    env.supabaseUrl.isEmpty ? '(Not set)' : env.supabaseUrl,
-                  ),
+                  _envRow('Endpoint', env.supabaseUrl.isEmpty ? '(Not set)' : env.supabaseUrl),
                 ],
               ),
             ),
@@ -140,31 +132,19 @@ class _SmokeTestScreenState extends ConsumerState<SmokeTestScreen> {
                     const SizedBox(height: 16),
                     Text(
                       _statusTitle(),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: _statusColor(tokens),
-                      ),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _statusColor(tokens)),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       _details,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: tokens.textSecondary,
-                        height: 1.4,
-                      ),
+                      style: TextStyle(fontSize: 13, color: tokens.textSecondary, height: 1.4),
                     ),
                     if (_latencyMs > 0) ...[
                       const SizedBox(height: 8),
                       Text(
                         'Latency: ${_latencyMs}ms',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: tokens.textMuted,
-                        ),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tokens.textMuted),
                       ),
                     ],
                   ],
@@ -192,10 +172,7 @@ class _SmokeTestScreenState extends ConsumerState<SmokeTestScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(fontSize: 13, color: Colors.grey)),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-          ),
+          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -248,10 +225,7 @@ class _SmokeTestScreenState extends ConsumerState<SmokeTestScreen> {
         return SizedBox(
           width: 48,
           height: 48,
-          child: CircularProgressIndicator(
-            strokeWidth: 3,
-            color: tokens.primaryAccent,
-          ),
+          child: CircularProgressIndicator(strokeWidth: 3, color: tokens.primaryAccent),
         );
       case SmokeTestStatus.success:
         return Icon(AppIcons.check, size: 48, color: tokens.successColor);

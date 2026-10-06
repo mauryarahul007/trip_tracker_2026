@@ -11,12 +11,7 @@ class DeferredTripMapHero extends StatefulWidget {
   final ValueChanged<String>? onToneChange;
   final double height;
 
-  const DeferredTripMapHero({
-    super.key,
-    required this.trip,
-    this.onToneChange,
-    this.height = 220,
-  });
+  const DeferredTripMapHero({super.key, required this.trip, this.onToneChange, this.height = 220});
 
   @override
   State<DeferredTripMapHero> createState() => _DeferredTripMapHeroState();
@@ -51,9 +46,7 @@ class _DeferredTripMapHeroState extends State<DeferredTripMapHero> {
 
   void _scheduleMapMount() {
     _idleTimer?.cancel();
-    final hasStops = widget.trip.stops.any(
-      (s) => s.lat != null && s.lng != null,
-    );
+    final hasStops = widget.trip.stops.any((s) => s.lat != null && s.lng != null);
     if (!hasStops && widget.trip.destination == null) {
       return;
     }
@@ -68,9 +61,7 @@ class _DeferredTripMapHeroState extends State<DeferredTripMapHero> {
 
   @override
   Widget build(BuildContext context) {
-    final hasValidStops = widget.trip.stops.any(
-      (s) => s.lat != null && s.lng != null,
-    );
+    final hasValidStops = widget.trip.stops.any((s) => s.lat != null && s.lng != null);
 
     return SizedBox(
       height: widget.height,

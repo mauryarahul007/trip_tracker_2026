@@ -25,6 +25,7 @@ class TripsTable extends Table {
   BoolColumn get closed => boolean().withDefault(const Constant(false))();
   TextColumn get createdAt => text().named('created_at').nullable()();
   TextColumn get updatedAt => text().named('updated_at').nullable()();
+
   /// Full-fidelity domain `Trip.toJson()` (schema v2); columns above are for querying.
   TextColumn get domainJson => text().named('domain_json').nullable()();
 
@@ -127,6 +128,7 @@ class ExpensesTable extends Table {
   TextColumn get approvedAt => text().named('approved_at').nullable()();
   TextColumn get createdAt => text().named('created_at').nullable()();
   TextColumn get updatedAt => text().named('updated_at').nullable()();
+
   /// Full-fidelity domain `Expense.toJson()` (schema v2); columns above are for querying.
   TextColumn get domainJson => text().named('domain_json').nullable()();
 
@@ -147,6 +149,7 @@ class TripMessagesTable extends Table {
   TextColumn get message => text()();
   TextColumn get expensePayloadJson => text().named('expense_payload_json').nullable()();
   TextColumn get createdAt => text().named('created_at')();
+
   /// Full-fidelity domain `TripMessage.toJson()` (schema v2). Legacy columns
   /// map: user_id <- memberId, message <- body, sender_name unused ('').
   TextColumn get domainJson => text().named('domain_json').nullable()();

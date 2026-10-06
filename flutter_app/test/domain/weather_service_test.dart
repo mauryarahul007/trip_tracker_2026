@@ -86,10 +86,7 @@ void main() {
       final fake = FakeWeatherService(simulatedData: sample);
 
       WeatherData? liveCallbackData;
-      final result = await fake.getDestinationWeather(
-        'London Tour',
-        onLiveUpdate: (fresh) => liveCallbackData = fresh,
-      );
+      final result = await fake.getDestinationWeather('London Tour', onLiveUpdate: (fresh) => liveCallbackData = fresh);
 
       expect(result, isNotNull);
       expect(result!.tempC, equals(18));

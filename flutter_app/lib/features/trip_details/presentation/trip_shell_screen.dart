@@ -15,6 +15,7 @@ import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../chat/application/chat_providers.dart';
 import '../../expenses/application/expenses_providers.dart';
+import '../../notifications/presentation/notification_bell.dart';
 import '../../travel/maps/deferred_trip_map_hero.dart';
 import '../../travel/maps/trip_route_modal.dart';
 import '../../travel/presentation/live_location_share_modal.dart';
@@ -45,12 +46,7 @@ IconData tripTabIcon(TripNavTab tab) => switch (tab) {
 /// Header + bottom nav + swipeable tab pager. Per-tab state is kept by the
 /// [StatefulNavigationShell]; Back walks a short tab trail before leaving.
 class TripShellScreen extends ConsumerStatefulWidget {
-  const TripShellScreen({
-    required this.tripId,
-    required this.body,
-    required this.navigationShell,
-    super.key,
-  });
+  const TripShellScreen({required this.tripId, required this.body, required this.navigationShell, super.key});
 
   final String tripId;
   final Widget body;
@@ -136,10 +132,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 trip?.name ?? '',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
               ),
             ),
           ),
@@ -175,6 +168,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 );
               },
             ),
+            NotificationBell(tripId: widget.tripId),
             IconButton(
               icon: const Icon(AppIcons.settings),
               tooltip: l10n.navSettings,
@@ -213,13 +207,8 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 items: [
                   for (final t in tabs)
                     BottomNavigationBarItem(
-                      icon:
-                          t == TripNavTab.chat &&
-                              ref.watch(chatUnreadProvider(widget.tripId))
-                          ? Badge(
-                              key: const Key('chat-tab-unread'),
-                              child: Icon(tripTabIcon(t)),
-                            )
+                      icon: t == TripNavTab.chat && ref.watch(chatUnreadProvider(widget.tripId))
+                          ? Badge(key: const Key('chat-tab-unread'), child: Icon(tripTabIcon(t)))
                           : Icon(tripTabIcon(t)),
                       label: tripTabLabel(context, t),
                     ),
@@ -235,12 +224,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
 /// (bottom bar, back) animate the pager. Navigators are kept alive so each
 /// tab keeps its scroll/state.
 class TripTabPager extends ConsumerStatefulWidget {
-  const TripTabPager({
-    required this.tripId,
-    required this.navigationShell,
-    required this.branches,
-    super.key,
-  });
+  const TripTabPager({required this.tripId, required this.navigationShell, required this.branches, super.key});
 
   final String tripId;
   final StatefulNavigationShell navigationShell;
@@ -257,9 +241,7 @@ class _TripTabPagerState extends ConsumerState<TripTabPager> {
   List<TripNavTab> get _tabs => ref.read(visibleTabsProvider(widget.tripId));
 
   int get _page {
-    final i = _tabs.indexOf(
-      TripNavTab.values[widget.navigationShell.currentIndex],
-    );
+    final i = _tabs.indexOf(TripNavTab.values[widget.navigationShell.currentIndex]);
     return i < 0 ? 0 : i;
   }
 
@@ -278,11 +260,7 @@ class _TripTabPagerState extends ConsumerState<TripTabPager> {
     if ((c.page ?? target.toDouble()).round() != target) {
       _programmatic = true;
       c
-          .animateToPage(
-            target,
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeOutCubic,
-          )
+          .animateToPage(target, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic)
           .whenComplete(() => _programmatic = false);
     }
   }
@@ -306,9 +284,7 @@ class _TripTabPagerState extends ConsumerState<TripTabPager> {
           widget.navigationShell.goBranch(branch);
         }
       },
-      children: [
-        for (final t in tabs) _KeepAlive(child: widget.branches[t.index]),
-      ],
+      children: [for (final t in tabs) _KeepAlive(child: widget.branches[t.index])],
     );
   }
 }
@@ -321,8 +297,7 @@ class _KeepAlive extends StatefulWidget {
   State<_KeepAlive> createState() => _KeepAliveState();
 }
 
-class _KeepAliveState extends State<_KeepAlive>
-    with AutomaticKeepAliveClientMixin {
+class _KeepAliveState extends State<_KeepAlive> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -352,11 +327,7 @@ class TripTabPlaceholder extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               tripTabLabel(context, tab),
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w700,
-                color: tokens.textPrimary,
-              ),
+              style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: tokens.textPrimary),
             ),
           ],
         ),

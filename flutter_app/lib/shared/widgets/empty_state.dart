@@ -9,14 +9,7 @@ class EmptyState extends StatelessWidget {
   final String subtitle;
   final Widget? action;
 
-  const EmptyState({
-    super.key,
-    this.icon,
-    this.emoji,
-    required this.title,
-    required this.subtitle,
-    this.action,
-  });
+  const EmptyState({super.key, this.icon, this.emoji, required this.title, required this.subtitle, this.action});
 
   @override
   Widget build(BuildContext context) {
@@ -34,31 +27,20 @@ class EmptyState extends StatelessWidget {
               Container(
                 width: 64,
                 height: 64,
-                decoration: BoxDecoration(
-                  color: tokens.borderColor.withValues(alpha: 0.5),
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: tokens.borderColor.withValues(alpha: 0.5), shape: BoxShape.circle),
                 child: Icon(icon, size: 32, color: tokens.textSecondary),
               ),
             const SizedBox(height: 16),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: tokens.textPrimary,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: tokens.textPrimary),
             ),
             const SizedBox(height: 8),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: tokens.textSecondary,
-                height: 1.4,
-              ),
+              style: TextStyle(fontSize: 14, color: tokens.textSecondary, height: 1.4),
             ),
             if (action != null) ...[const SizedBox(height: 24), action!],
           ],

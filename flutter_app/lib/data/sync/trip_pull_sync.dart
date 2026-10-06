@@ -1,4 +1,3 @@
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/logic/sync_merge.dart';
@@ -33,10 +32,10 @@ class SupabaseTripReader implements TripRemoteReader {
 
   @override
   Future<Map<String, dynamic>> tripChanges(String tripId, DateTime? since) async {
-    final res = await _client.rpc<dynamic>('get_trip_changes', params: {
-      'p_trip_id': tripId,
-      if (since != null) 'p_since': since.toUtc().toIso8601String(),
-    });
+    final res = await _client.rpc<dynamic>(
+      'get_trip_changes',
+      params: {'p_trip_id': tripId, if (since != null) 'p_since': since.toUtc().toIso8601String()},
+    );
     return Map<String, dynamic>.from(res as Map);
   }
 
@@ -101,12 +100,15 @@ class TripPullSync {
 
     final conflicts = <ExpenseConflict>[];
     await _db.transaction(() async {
-      List<Map<String, dynamic>> rows(String k) =>
-          [for (final r in (res[k] as List? ?? const <dynamic>[])) Map<String, dynamic>.from(r as Map)];
+      List<Map<String, dynamic>> rows(String k) => [
+        for (final r in (res[k] as List? ?? const <dynamic>[])) Map<String, dynamic>.from(r as Map),
+      ];
 
       final trip = res['trip'];
       if (trip is Map && !dirty.contains(trip['id'])) {
-        await _db.into(_db.tripsTable).insertOnConflictUpdate(tripToCompanion(tripFromRow(Map<String, dynamic>.from(trip))));
+        await _db
+            .into(_db.tripsTable)
+            .insertOnConflictUpdate(tripToCompanion(tripFromRow(Map<String, dynamic>.from(trip))));
       }
       for (final r in rows('members')) {
         if (dirty.contains(r['id'])) continue;
@@ -119,15 +121,17 @@ class TripPullSync {
       // group_members arrives as a full snapshot: replace for clean groups.
       final mappings = rows('group_members');
       if (mappings.isNotEmpty || rows('groups').isNotEmpty) {
-        final groupIds = (await (_db.select(_db.groupsTable)..where((g) => g.tripId.equals(tripId))).get())
-            .map((g) => g.id)
-            .where((id) => !dirty.contains(id))
-            .toList();
+        final groupIds = (await (_db.select(
+          _db.groupsTable,
+        )..where((g) => g.tripId.equals(tripId))).get()).map((g) => g.id).where((id) => !dirty.contains(id)).toList();
         await (_db.delete(_db.groupMembersTable)..where((g) => g.groupId.isIn(groupIds))).go();
         for (final m in mappings) {
           if (!groupIds.contains(m['group_id'])) continue;
-          await _db.into(_db.groupMembersTable).insertOnConflictUpdate(
-              GroupMembersTableCompanion.insert(groupId: m['group_id'] as String, memberId: m['member_id'] as String));
+          await _db
+              .into(_db.groupMembersTable)
+              .insertOnConflictUpdate(
+                GroupMembersTableCompanion.insert(groupId: m['group_id'] as String, memberId: m['member_id'] as String),
+              );
         }
       }
       for (final r in rows('categories')) {
@@ -161,18 +165,24 @@ class TripPullSync {
         await _db.into(_db.expensesTable).insertOnConflictUpdate(expenseToCompanion(expenseFromRow(r)));
       }
 
-      await _db.into(_db.syncMetaTable).insertOnConflictUpdate(SyncMetaTableCompanion.insert(
-            key: _cursorKey(tripId),
-            value: res['server_time'] as String,
-            updatedAt: DateTime.now().toUtc().toIso8601String(),
-          ));
+      await _db
+          .into(_db.syncMetaTable)
+          .insertOnConflictUpdate(
+            SyncMetaTableCompanion.insert(
+              key: _cursorKey(tripId),
+              value: res['server_time'] as String,
+              updatedAt: DateTime.now().toUtc().toIso8601String(),
+            ),
+          );
     });
     return PullResult(conflicts);
   }
 
   Future<void> _deleteTripLocal(String tripId) async {
     await _db.transaction(() async {
-      final groupIds = (await (_db.select(_db.groupsTable)..where((g) => g.tripId.equals(tripId))).get()).map((g) => g.id);
+      final groupIds = (await (_db.select(
+        _db.groupsTable,
+      )..where((g) => g.tripId.equals(tripId))).get()).map((g) => g.id);
       await (_db.delete(_db.groupMembersTable)..where((g) => g.groupId.isIn(groupIds))).go();
       await (_db.delete(_db.groupsTable)..where((t) => t.tripId.equals(tripId))).go();
       await (_db.delete(_db.membersTable)..where((t) => t.tripId.equals(tripId))).go();
@@ -183,5 +193,4 @@ class TripPullSync {
       await (_db.delete(_db.tripsTable)..where((t) => t.id.equals(tripId))).go();
     });
   }
-
 }

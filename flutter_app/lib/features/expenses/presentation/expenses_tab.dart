@@ -97,11 +97,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     await repo.delete(e.id, userId: uid);
     if (!mounted) return;
     setState(() => _hidden.remove(e.id));
-    UndoSnackbar.show(
-      context: context,
-      message: l10n.expDeleted,
-      onUndo: () => unawaited(repo.restore(e.id)),
-    );
+    UndoSnackbar.show(context: context, message: l10n.expDeleted, onUndo: () => unawaited(repo.restore(e.id)));
   }
 
   void _edit(Expense e) => context.push('/trip/$id/expenses/${e.id}/edit');
@@ -188,16 +184,19 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final sync = ref.watch(syncStatusProvider).value;
 
     String chipLabel(AttentionChip c) => switch (c.id) {
-          'owe' => l10n.chipOwe,
-          'owed' => l10n.chipOwed,
-          'disputes' => l10n.chipDisputes(c.count),
-          'invites' => l10n.chipInvites(c.count),
-          _ => l10n.chipCloseout,
-        };
+      'owe' => l10n.chipOwe,
+      'owed' => l10n.chipOwed,
+      'disputes' => l10n.chipDisputes(c.count),
+      'invites' => l10n.chipInvites(c.count),
+      _ => l10n.chipCloseout,
+    };
 
     void chipTap(AttentionChip c) {
       if (c.id == 'closeout') {
-        AppSheet.show<void>(context: context, builder: (_) => CloseoutSheet(tripId: id));
+        AppSheet.show<void>(
+          context: context,
+          builder: (_) => CloseoutSheet(tripId: id),
+        );
         return;
       }
       final target = c.id == 'invites' ? 'members' : 'ledger';
@@ -218,7 +217,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         onTap: () => _openDetail(e),
       );
       final body = DecoratedBox(
-        decoration: BoxDecoration(border: lastInGroup ? null : Border(bottom: BorderSide(color: tokens.borderColor))),
+        decoration: BoxDecoration(
+          border: lastInGroup ? null : Border(bottom: BorderSide(color: tokens.borderColor)),
+        ),
         child: row,
       );
       if (!canManageExpense(e, isAdmin: isAdmin, userId: uid)) return body;
@@ -233,146 +234,212 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final sticky = _flag(ref, 'enableStickyDayHeaders', id);
     List<Widget> section(List<DayGroup> groups, {required bool collapsible}) {
       SliverPersistentHeader headerFor(DayGroup g, {required bool expanded}) => SliverPersistentHeader(
-            pinned: sticky && expanded,
-            delegate: _DayHeader(
-              date: g.date,
-              total: formatMoney(context, g.total, trip.baseCurrency),
-              count: g.expenses.length,
-              expanded: expanded,
-              collapsible: collapsible,
-              semantics: l10n.expDaySemantics(g.date, g.expenses.length, formatMoney(context, g.total, trip.baseCurrency)),
-              onTap: () => setState(() => _expandedDays.contains(g.date) ? _expandedDays.remove(g.date) : _expandedDays.add(g.date)),
-              background: tokens.bgSurface,
-              textColor: tokens.textPrimary,
-              mutedColor: tokens.textMuted,
-            ),
-          );
+        pinned: sticky && expanded,
+        delegate: _DayHeader(
+          date: g.date,
+          total: formatMoney(context, g.total, trip.baseCurrency),
+          count: g.expenses.length,
+          expanded: expanded,
+          collapsible: collapsible,
+          semantics: l10n.expDaySemantics(g.date, g.expenses.length, formatMoney(context, g.total, trip.baseCurrency)),
+          onTap: () =>
+              setState(() => _expandedDays.contains(g.date) ? _expandedDays.remove(g.date) : _expandedDays.add(g.date)),
+          background: tokens.bgSurface,
+          textColor: tokens.textPrimary,
+          mutedColor: tokens.textMuted,
+        ),
+      );
       SliverList listFor(DayGroup g) => SliverList.builder(
-            itemCount: g.expenses.length,
-            itemBuilder: (_, i) => rowFor(g.expenses[i], lastInGroup: i == g.expenses.length - 1),
-          );
+        itemCount: g.expenses.length,
+        itemBuilder: (_, i) => rowFor(g.expenses[i], lastInGroup: i == g.expenses.length - 1),
+      );
       return [
         for (final g in groups) ...[
           if (sticky) ...[
             headerFor(g, expanded: !collapsible || _expandedDays.contains(g.date)),
             if (!collapsible || _expandedDays.contains(g.date)) listFor(g),
           ] else
-            SliverMainAxisGroup(slivers: [
-              headerFor(g, expanded: !collapsible || _expandedDays.contains(g.date)),
-              if (!collapsible || _expandedDays.contains(g.date)) listFor(g),
-            ]),
+            SliverMainAxisGroup(
+              slivers: [
+                headerFor(g, expanded: !collapsible || _expandedDays.contains(g.date)),
+                if (!collapsible || _expandedDays.contains(g.date)) listFor(g),
+              ],
+            ),
         ],
       ];
     }
 
     final header = SliverToBoxAdapter(
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        if ((sync != null && !sync.idle) || chips.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Wrap(spacing: 8, runSpacing: 4, children: [
-              if (sync != null && !sync.idle)
-                ActionChip(
-                  key: const Key('strip-sync'),
-                  avatar: const Icon(AppIcons.sync, size: 16),
-                  label: Text(l10n.syncPending(sync.pending)),
-                  onPressed: () => unawaited(ref.read(refreshTripsProvider)()),
-                ),
-              if (conflicts.isNotEmpty)
-                ActionChip(
-                  key: const Key('open-conflicts'),
-                  label: Text(l10n.conflictTitle),
-                  onPressed: () => AppSheet.show<void>(context: context, builder: (_) => ConflictSheet(tripId: id)),
-                ),
-              for (final c in chips) ActionChip(key: Key('chip-${c.id}'), label: Text(chipLabel(c)), onPressed: () => chipTap(c)),
-            ]),
-          ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: Container(
-            padding: EdgeInsets.all(_flag(ref, 'enableCompactSummary', id) ? 10 : 14),
-            decoration: BoxDecoration(color: tokens.bgSurface, borderRadius: BorderRadius.circular(tokens.radiusMd), border: Border.all(color: tokens.borderColor)),
-            child: Row(children: [
-              Expanded(child: _Stat(label: l10n.expTotalSpent, value: formatMoney(context, totals.totalSpent, trip.baseCurrency), valueKey: const Key('stat-total'))),
-              Expanded(child: _Stat(label: l10n.expPerPerson, value: formatMoney(context, totals.averageCost, trip.baseCurrency), valueKey: const Key('stat-avg'))),
-              if (totals.top != null)
-                Expanded(child: _Stat(label: l10n.expTopCategory, value: '${totals.top!.name} ${totals.top!.percentage.round()}%', valueKey: const Key('stat-top'))),
-            ]),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
-          child: Row(children: [
-            Expanded(
-              child: AppTextField(
-                controller: _search,
-                hint: l10n.expSearchHint,
-                prefixIcon: const Icon(AppIcons.search),
-                onChanged: _onSearch,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if ((sync != null && !sync.idle) || chips.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  if (sync != null && !sync.idle)
+                    ActionChip(
+                      key: const Key('strip-sync'),
+                      avatar: const Icon(AppIcons.sync, size: 16),
+                      label: Text(l10n.syncPending(sync.pending)),
+                      onPressed: () => unawaited(ref.read(refreshTripsProvider)()),
+                    ),
+                  if (conflicts.isNotEmpty)
+                    ActionChip(
+                      key: const Key('open-conflicts'),
+                      label: Text(l10n.conflictTitle),
+                      onPressed: () => AppSheet.show<void>(
+                        context: context,
+                        builder: (_) => ConflictSheet(tripId: id),
+                      ),
+                    ),
+                  for (final c in chips)
+                    ActionChip(key: Key('chip-${c.id}'), label: Text(chipLabel(c)), onPressed: () => chipTap(c)),
+                ],
               ),
             ),
-            IconButton(
-              key: const Key('open-filters'),
-              tooltip: l10n.expFilters,
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              icon: Badge(isLabelVisible: filters.hasActive, child: const Icon(AppIcons.filter)),
-              onPressed: _openFilters,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Container(
+              padding: EdgeInsets.all(_flag(ref, 'enableCompactSummary', id) ? 10 : 14),
+              decoration: BoxDecoration(
+                color: tokens.bgSurface,
+                borderRadius: BorderRadius.circular(tokens.radiusMd),
+                border: Border.all(color: tokens.borderColor),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _Stat(
+                      label: l10n.expTotalSpent,
+                      value: formatMoney(context, totals.totalSpent, trip.baseCurrency),
+                      valueKey: const Key('stat-total'),
+                    ),
+                  ),
+                  Expanded(
+                    child: _Stat(
+                      label: l10n.expPerPerson,
+                      value: formatMoney(context, totals.averageCost, trip.baseCurrency),
+                      valueKey: const Key('stat-avg'),
+                    ),
+                  ),
+                  if (totals.top != null)
+                    Expanded(
+                      child: _Stat(
+                        label: l10n.expTopCategory,
+                        value: '${totals.top!.name} ${totals.top!.percentage.round()}%',
+                        valueKey: const Key('stat-top'),
+                      ),
+                    ),
+                ],
+              ),
             ),
-            PopupMenuButton<String>(
-              key: const Key('tab-menu'),
-              tooltip: l10n.rowEdit,
-              icon: const Icon(AppIcons.more),
-              onSelected: (v) {
-                if (v == 'bin') context.push('/trip/$id/recycle-bin');
-                if (v == 'categories') context.push('/trip/$id/categories');
-                if (v == 'tools') AppSheet.show<void>(context: context, builder: (_) => TripToolsSheet(tripId: id));
-                if (v == 'quick') AppSheet.show<void>(context: context, builder: (_) => QuickAddSheet(tripId: id));
-                if (v == 'compact') _toggleCompact();
-                if (v == 'expand') {
-                  setState(() {
-                    if (allExpanded) {
-                      _expandedDays.clear();
-                    } else {
-                      _expandedDays.addAll(dayGroups.map((g) => g.date));
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    controller: _search,
+                    hint: l10n.expSearchHint,
+                    prefixIcon: const Icon(AppIcons.search),
+                    onChanged: _onSearch,
+                  ),
+                ),
+                IconButton(
+                  key: const Key('open-filters'),
+                  tooltip: l10n.expFilters,
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  icon: Badge(isLabelVisible: filters.hasActive, child: const Icon(AppIcons.filter)),
+                  onPressed: _openFilters,
+                ),
+                PopupMenuButton<String>(
+                  key: const Key('tab-menu'),
+                  tooltip: l10n.rowEdit,
+                  icon: const Icon(AppIcons.more),
+                  onSelected: (v) {
+                    if (v == 'bin') context.push('/trip/$id/recycle-bin');
+                    if (v == 'categories') context.push('/trip/$id/categories');
+                    if (v == 'tools') {
+                      AppSheet.show<void>(
+                        context: context,
+                        builder: (_) => TripToolsSheet(tripId: id),
+                      );
                     }
-                  });
-                }
-              },
-              itemBuilder: (_) => [
-                PopupMenuItem(value: 'expand', child: Text(allExpanded ? l10n.expCollapseAll : l10n.expExpandAll)),
-                PopupMenuItem(value: 'quick', child: Text(l10n.toolsQuickAdd)),
-                PopupMenuItem(value: 'categories', child: Text(l10n.expCategories)),
-                PopupMenuItem(value: 'tools', child: Text(l10n.expTools)),
-                if (_flag(ref, 'enableCompactLedgerView', id)) PopupMenuItem(value: 'compact', child: Text(l10n.expCompactView)),
-                if (binOn) PopupMenuItem(value: 'bin', child: Text(l10n.expRecycleBin)),
+                    if (v == 'quick') {
+                      AppSheet.show<void>(
+                        context: context,
+                        builder: (_) => QuickAddSheet(tripId: id),
+                      );
+                    }
+                    if (v == 'compact') _toggleCompact();
+                    if (v == 'expand') {
+                      setState(() {
+                        if (allExpanded) {
+                          _expandedDays.clear();
+                        } else {
+                          _expandedDays.addAll(dayGroups.map((g) => g.date));
+                        }
+                      });
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    PopupMenuItem(value: 'expand', child: Text(allExpanded ? l10n.expCollapseAll : l10n.expExpandAll)),
+                    PopupMenuItem(value: 'quick', child: Text(l10n.toolsQuickAdd)),
+                    PopupMenuItem(value: 'categories', child: Text(l10n.expCategories)),
+                    PopupMenuItem(value: 'tools', child: Text(l10n.expTools)),
+                    if (_flag(ref, 'enableCompactLedgerView', id))
+                      PopupMenuItem(value: 'compact', child: Text(l10n.expCompactView)),
+                    if (binOn) PopupMenuItem(value: 'bin', child: Text(l10n.expRecycleBin)),
+                  ],
+                ),
               ],
             ),
-          ]),
-        ),
-        if (quickChips && myMember != null)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-            child: Wrap(spacing: 8, children: [
-              ChoiceChip(label: Text(l10n.expAll), selected: filters.relation == null, onSelected: (_) => _setFilters(filters.copyWith(clearRelation: true))),
-              ChoiceChip(label: Text(l10n.expPaidByMe), selected: filters.relation == ExpenseRelation.paidByMe, onSelected: (_) => _setFilters(filters.copyWith(relation: ExpenseRelation.paidByMe))),
-              ChoiceChip(label: Text(l10n.expInvolvesMe), selected: filters.relation == ExpenseRelation.involvesMe, onSelected: (_) => _setFilters(filters.copyWith(relation: ExpenseRelation.involvesMe))),
-            ]),
           ),
-        if (filters.hasActive)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-              key: const Key('clear-filters'),
-              onPressed: () {
-                _search.clear();
-                ref.read(expenseFiltersProvider(id).notifier).clear();
-                setState(() => _visible = _pageSize);
-              },
-              child: Text(l10n.expClearFilters),
+          if (quickChips && myMember != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: Text(l10n.expAll),
+                    selected: filters.relation == null,
+                    onSelected: (_) => _setFilters(filters.copyWith(clearRelation: true)),
+                  ),
+                  ChoiceChip(
+                    label: Text(l10n.expPaidByMe),
+                    selected: filters.relation == ExpenseRelation.paidByMe,
+                    onSelected: (_) => _setFilters(filters.copyWith(relation: ExpenseRelation.paidByMe)),
+                  ),
+                  ChoiceChip(
+                    label: Text(l10n.expInvolvesMe),
+                    selected: filters.relation == ExpenseRelation.involvesMe,
+                    onSelected: (_) => _setFilters(filters.copyWith(relation: ExpenseRelation.involvesMe)),
+                  ),
+                ],
+              ),
             ),
-          ),
-        const SizedBox(height: 4),
-      ]),
+          if (filters.hasActive)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                key: const Key('clear-filters'),
+                onPressed: () {
+                  _search.clear();
+                  ref.read(expenseFiltersProvider(id).notifier).clear();
+                  setState(() => _visible = _pageSize);
+                },
+                child: Text(l10n.expClearFilters),
+              ),
+            ),
+          const SizedBox(height: 4),
+        ],
+      ),
     );
 
     final Widget empty = active.isEmpty
@@ -382,53 +449,67 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             subtitle: l10n.expNoneBody,
             action: AppButton(label: l10n.expAdd, onPressed: () => context.push('/trip/$id/expenses/new')),
           )
-        : Padding(padding: const EdgeInsets.all(32), child: Center(child: Text(l10n.expNoMatches)));
+        : Padding(
+            padding: const EdgeInsets.all(32),
+            child: Center(child: Text(l10n.expNoMatches)),
+          );
 
-    return Stack(children: [
-      AppPullToRefresh(
-        onRefresh: ref.read(refreshTripsProvider),
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            header,
-            if (shown.isEmpty)
-              SliverToBoxAdapter(child: empty)
-            else ...[
-              ...section(dayGroups, collapsible: true),
-              if (settlementGroups.isNotEmpty) ...[
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                    child: Text(l10n.expSettlements, style: TextStyle(fontWeight: FontWeight.w700, color: tokens.textSecondary)),
+    return Stack(
+      children: [
+        AppPullToRefresh(
+          onRefresh: ref.read(refreshTripsProvider),
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              header,
+              if (shown.isEmpty)
+                SliverToBoxAdapter(child: empty)
+              else ...[
+                ...section(dayGroups, collapsible: true),
+                if (settlementGroups.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                      child: Text(
+                        l10n.expSettlements,
+                        style: TextStyle(fontWeight: FontWeight.w700, color: tokens.textSecondary),
+                      ),
+                    ),
                   ),
-                ),
-                ...section(settlementGroups, collapsible: false),
+                  ...section(settlementGroups, collapsible: false),
+                ],
+                if (filtered.length > _visible)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: AppButton(
+                        label: l10n.expLoadMore,
+                        variant: AppButtonVariant.secondary,
+                        onPressed: () => setState(() => _visible += _pageSize),
+                      ),
+                    ),
+                  ),
               ],
-              if (filtered.length > _visible)
+              if (_flag(ref, 'enableCrossTripSearch', id) && filters.query.trim().length >= 2)
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: AppButton(label: l10n.expLoadMore, variant: AppButtonVariant.secondary, onPressed: () => setState(() => _visible += _pageSize)),
-                  ),
+                  child: _OtherTrips(tripId: id, query: filters.query.trim()),
                 ),
+              const SliverToBoxAdapter(child: SizedBox(height: 96)),
             ],
-            if (_flag(ref, 'enableCrossTripSearch', id) && filters.query.trim().length >= 2)
-              SliverToBoxAdapter(child: _OtherTrips(tripId: id, query: filters.query.trim())),
-            const SliverToBoxAdapter(child: SizedBox(height: 96)),
-          ],
+          ),
         ),
-      ),
-      Positioned(
-        right: 16,
-        bottom: 16,
-        child: FloatingActionButton.extended(
-          heroTag: 'add-expense-$id',
-          onPressed: () => context.push('/trip/$id/expenses/new'),
-          icon: const Icon(AppIcons.add),
-          label: Text(l10n.expAdd),
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: FloatingActionButton.extended(
+            heroTag: 'add-expense-$id',
+            onPressed: () => context.push('/trip/$id/expenses/new'),
+            icon: const Icon(AppIcons.add),
+            label: Text(l10n.expAdd),
+          ),
         ),
-      ),
-    ]);
+      ],
+    );
   }
 
   String _today(WidgetRef ref) => todayDateString(ref.read(nowProvider)());
@@ -452,18 +533,21 @@ class _OtherTrips extends ConsumerWidget {
       trips['${t.id}'] = '${t.name}';
     }
     final l10n = context.l10n;
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-        child: Text(l10n.expOtherTrips, key: const Key('other-trips'), style: const TextStyle(fontWeight: FontWeight.w700)),
-      ),
-      for (final e in rows)
-        ListTile(
-          key: Key('other-${e.id}'),
-          title: Text(e.title),
-          subtitle: Text(trips[e.tripId] ?? e.tripId),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+          child: Text(
+            l10n.expOtherTrips,
+            key: const Key('other-trips'),
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
         ),
-    ]);
+        for (final e in rows)
+          ListTile(key: Key('other-${e.id}'), title: Text(e.title), subtitle: Text(trips[e.tripId] ?? e.tripId)),
+      ],
+    );
   }
 }
 
@@ -476,11 +560,20 @@ class _Stat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: TextStyle(fontSize: 11, color: tokens.textMuted)),
-      const SizedBox(height: 2),
-      Text(value, key: valueKey, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: tokens.textPrimary)),
-    ]);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontSize: 11, color: tokens.textMuted)),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          key: valueKey,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: tokens.textPrimary),
+        ),
+      ],
+    );
   }
 }
 
@@ -518,29 +611,41 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => Material(
-        color: background,
-        child: Semantics(
-          button: collapsible,
-          label: semantics,
-          child: InkWell(
-            key: Key('day-$date'),
-            onTap: collapsible ? onTap : null,
-            child: SizedBox(
-              height: _h,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(children: [
-                  Expanded(child: Text(date, style: TextStyle(fontWeight: FontWeight.w700, color: textColor))),
-                  Text('$total · $count', style: TextStyle(color: mutedColor, fontSize: 13)),
-                  if (collapsible) Icon(expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: mutedColor),
-                ]),
-              ),
+    color: background,
+    child: Semantics(
+      button: collapsible,
+      label: semantics,
+      child: InkWell(
+        key: Key('day-$date'),
+        onTap: collapsible ? onTap : null,
+        child: SizedBox(
+          height: _h,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    date,
+                    style: TextStyle(fontWeight: FontWeight.w700, color: textColor),
+                  ),
+                ),
+                Text('$total · $count', style: TextStyle(color: mutedColor, fontSize: 13)),
+                if (collapsible)
+                  Icon(expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: mutedColor),
+              ],
             ),
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   @override
   bool shouldRebuild(_DayHeader old) =>
-      old.date != date || old.total != total || old.count != count || old.expanded != expanded || old.background != background;
+      old.date != date ||
+      old.total != total ||
+      old.count != count ||
+      old.expanded != expanded ||
+      old.background != background;
 }

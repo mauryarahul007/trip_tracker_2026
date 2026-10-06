@@ -200,28 +200,18 @@ class AppTokens extends ThemeExtension<AppTokens> {
       bgPage: Color.lerp(bgPage, other.bgPage, t) ?? bgPage,
       bgApp: Color.lerp(bgApp, other.bgApp, t) ?? bgApp,
       bgSurface: Color.lerp(bgSurface, other.bgSurface, t) ?? bgSurface,
-      bgSurfaceHover:
-          Color.lerp(bgSurfaceHover, other.bgSurfaceHover, t) ?? bgSurfaceHover,
+      bgSurfaceHover: Color.lerp(bgSurfaceHover, other.bgSurfaceHover, t) ?? bgSurfaceHover,
       borderColor: Color.lerp(borderColor, other.borderColor, t) ?? borderColor,
       borderFocus: Color.lerp(borderFocus, other.borderFocus, t) ?? borderFocus,
-      primaryAccent:
-          Color.lerp(primaryAccent, other.primaryAccent, t) ?? primaryAccent,
-      primaryAccentLight:
-          Color.lerp(primaryAccentLight, other.primaryAccentLight, t) ??
-          primaryAccentLight,
-      secondaryAccent:
-          Color.lerp(secondaryAccent, other.secondaryAccent, t) ??
-          secondaryAccent,
-      accentOrange:
-          Color.lerp(accentOrange, other.accentOrange, t) ?? accentOrange,
-      colorSuccess:
-          Color.lerp(colorSuccess, other.colorSuccess, t) ?? colorSuccess,
+      primaryAccent: Color.lerp(primaryAccent, other.primaryAccent, t) ?? primaryAccent,
+      primaryAccentLight: Color.lerp(primaryAccentLight, other.primaryAccentLight, t) ?? primaryAccentLight,
+      secondaryAccent: Color.lerp(secondaryAccent, other.secondaryAccent, t) ?? secondaryAccent,
+      accentOrange: Color.lerp(accentOrange, other.accentOrange, t) ?? accentOrange,
+      colorSuccess: Color.lerp(colorSuccess, other.colorSuccess, t) ?? colorSuccess,
       colorDanger: Color.lerp(colorDanger, other.colorDanger, t) ?? colorDanger,
-      colorWarning:
-          Color.lerp(colorWarning, other.colorWarning, t) ?? colorWarning,
+      colorWarning: Color.lerp(colorWarning, other.colorWarning, t) ?? colorWarning,
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t) ?? textPrimary,
-      textSecondary:
-          Color.lerp(textSecondary, other.textSecondary, t) ?? textSecondary,
+      textSecondary: Color.lerp(textSecondary, other.textSecondary, t) ?? textSecondary,
       textMuted: Color.lerp(textMuted, other.textMuted, t) ?? textMuted,
       radiusSm: radiusSm,
       radiusMd: radiusMd,
@@ -238,6 +228,5 @@ class AppTokens extends ThemeExtension<AppTokens> {
 }
 
 extension AppTokensContext on BuildContext {
-  AppTokens get tokens =>
-      Theme.of(this).extension<AppTokens>() ?? AppTokens.light;
+  AppTokens get tokens => Theme.of(this).extension<AppTokens>() ?? AppTokens.light;
 }

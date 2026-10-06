@@ -11,8 +11,10 @@ const _knownDifferences = <String, String>{};
 
 void main() {
   final cases = [
-    for (final c in (jsonDecode(File('../docs/flutter-migration/fixtures/locale_money.json').readAsStringSync())
-        as Map<String, dynamic>)['cases'] as List)
+    for (final c
+        in (jsonDecode(File('../docs/flutter-migration/fixtures/locale_money.json').readAsStringSync())
+                as Map<String, dynamic>)['cases']
+            as List)
       c as Map<String, dynamic>,
   ];
 

@@ -32,30 +32,26 @@ void main() {
       ProviderScope(
         overrides: [
           tripProvider('trip-1').overrideWith((ref) => Stream.value(sampleTrip)),
-          tripMembersProvider('trip-1').overrideWith((ref) => Stream.value(const [
-                Member(id: 'm-1', name: 'Alice'),
-                Member(id: 'm-2', name: 'Bob'),
-              ])),
+          tripMembersProvider('trip-1').overrideWith(
+            (ref) => Stream.value(const [Member(id: 'm-1', name: 'Alice'), Member(id: 'm-2', name: 'Bob')]),
+          ),
           tripExpensesProvider('trip-1').overrideWith((ref) => Stream.value(const [])),
           shareServiceProvider.overrideWithValue(fakeShare),
-          flagsRepositoryProvider.overrideWithValue(FakeFlags(
-            {
+          flagsRepositoryProvider.overrideWithValue(
+            FakeFlags({
               'enableTripWrapped',
               'enableIcsExport',
               'enableAchievements',
               'enableTravelerPassport',
               'enableOfflineSnapshot',
-            },
-            {},
-          )),
+            }, {}),
+          ),
         ],
         child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
-            body: SingleChildScrollView(
-              child: TripToolsSheet(tripId: 'trip-1'),
-            ),
+            body: SingleChildScrollView(child: TripToolsSheet(tripId: 'trip-1')),
           ),
         ),
       ),

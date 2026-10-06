@@ -1,6 +1,11 @@
 /// Public invite preview (no auth): what a stranger may see before signing in.
 class JoinPreview {
-  const JoinPreview({required this.tripName, required this.startDate, required this.endDate, this.memberFirstNames = const []});
+  const JoinPreview({
+    required this.tripName,
+    required this.startDate,
+    required this.endDate,
+    this.memberFirstNames = const [],
+  });
   final String tripName;
   final String startDate;
   final String endDate;

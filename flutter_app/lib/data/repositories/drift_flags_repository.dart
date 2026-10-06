@@ -29,9 +29,9 @@ class DriftFlagsRepository implements FlagsRepository {
       Future<void> replace(String prefix, Map<String, bool> layer) async {
         await (_db.delete(_db.featureFlagsTable)..where((t) => t.key.like('$prefix|%'))).go();
         for (final e in layer.entries) {
-          await _db.into(_db.featureFlagsTable).insert(
-                FeatureFlagsTableCompanion.insert(key: '$prefix|${e.key}', enabled: e.value, updatedAt: now),
-              );
+          await _db
+              .into(_db.featureFlagsTable)
+              .insert(FeatureFlagsTableCompanion.insert(key: '$prefix|${e.key}', enabled: e.value, updatedAt: now));
         }
       }
 

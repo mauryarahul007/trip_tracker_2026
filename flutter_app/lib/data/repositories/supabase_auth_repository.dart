@@ -12,12 +12,7 @@ const _localSessionKey = 'auth.local_session';
 /// Mirrors authStore.ts: real Supabase sessions plus local-only guest/demo
 /// identities (never backed by a Supabase session). Superadmin is excluded.
 class SupabaseAuthRepository implements AuthRepository {
-  SupabaseAuthRepository(
-    this._client,
-    this._db, {
-    this.unregisterPush,
-    this.beforeWipe,
-  }) {
+  SupabaseAuthRepository(this._client, this._db, {this.unregisterPush, this.beforeWipe}) {
     final client = _client;
     if (client != null) {
       _sub = client.auth.onAuthStateChange.listen((s) {
@@ -75,16 +70,25 @@ class SupabaseAuthRepository implements AuthRepository {
     final row = await (_db.select(_db.settingsKvTable)..where((t) => t.key.equals(_localSessionKey))).getSingleOrNull();
     if (row == null) return;
     final m = jsonDecode(row.value) as Map<String, dynamic>;
-    _local = AuthUser(id: m['id'] as String, displayName: m['name'] as String?, email: m['email'] as String?, provider: m['provider'] as String);
+    _local = AuthUser(
+      id: m['id'] as String,
+      displayName: m['name'] as String?,
+      email: m['email'] as String?,
+      provider: m['provider'] as String,
+    );
     _emit(_local);
   }
 
   Future<void> _setLocal(AuthUser u) async {
     _local = u;
-    await _db.into(_db.settingsKvTable).insertOnConflictUpdate(SettingsKvTableCompanion.insert(
-          key: _localSessionKey,
-          value: jsonEncode({'id': u.id, 'name': u.displayName, 'email': u.email, 'provider': u.provider}),
-        ));
+    await _db
+        .into(_db.settingsKvTable)
+        .insertOnConflictUpdate(
+          SettingsKvTableCompanion.insert(
+            key: _localSessionKey,
+            value: jsonEncode({'id': u.id, 'name': u.displayName, 'email': u.email, 'provider': u.provider}),
+          ),
+        );
     _emit(u);
   }
 
@@ -114,10 +118,10 @@ class SupabaseAuthRepository implements AuthRepository {
       final failure = e is sb.AuthRetryableFetchException || m.contains('socket') || m.contains('connection')
           ? AuthFailure.network
           : m.contains('banned')
-              ? AuthFailure.banned
-              : m.contains('invalid')
-                  ? AuthFailure.invalidCredentials
-                  : AuthFailure.unknown;
+          ? AuthFailure.banned
+          : m.contains('invalid')
+          ? AuthFailure.invalidCredentials
+          : AuthFailure.unknown;
       throw AuthException(failure, e.message);
     } on AuthException {
       rethrow;
@@ -131,16 +135,15 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> signInWithEmail(String email, String password) =>
-      _guarded(() async {
-        await _api.auth.signInWithPassword(email: email, password: password);
-      });
+  Future<void> signInWithEmail(String email, String password) => _guarded(() async {
+    await _api.auth.signInWithPassword(email: email, password: password);
+  });
 
   @override
   Future<void> signUpWithEmail(String email, String password, {String? displayName}) => _guarded(() async {
-        await _requireOpen();
-        await _api.auth.signUp(email: email, password: password, data: {'full_name': ?displayName});
-      });
+    await _requireOpen();
+    await _api.auth.signUp(email: email, password: password, data: {'full_name': ?displayName});
+  });
 
   @override
   Future<void> resetPassword(String email) => _guarded(() => _api.auth.resetPasswordForEmail(email));
@@ -149,35 +152,40 @@ class SupabaseAuthRepository implements AuthRepository {
   Stream<bool> watchPasswordRecovery() => _recovery.stream;
 
   @override
-  Future<void> updatePassword(String newPassword) =>
-      _guarded(() async {
-        await _api.auth.updateUser(sb.UserAttributes(password: newPassword));
-        _recovery.add(false);
-      });
+  Future<void> updatePassword(String newPassword) => _guarded(() async {
+    await _api.auth.updateUser(sb.UserAttributes(password: newPassword));
+    _recovery.add(false);
+  });
 
   @override
   Future<void> signInWithGoogleIdToken(String idToken, {String? nonce}) => _guarded(() async {
-        await _requireOpen();
-        await _api.auth.signInWithIdToken(provider: sb.OAuthProvider.google, idToken: idToken, nonce: nonce);
-      });
+    await _requireOpen();
+    await _api.auth.signInWithIdToken(provider: sb.OAuthProvider.google, idToken: idToken, nonce: nonce);
+  });
 
   @override
   Future<void> signInWithAppleIdToken(String idToken, {String? nonce, String? fullName}) => _guarded(() async {
-        await _requireOpen();
-        await _api.auth.signInWithIdToken(provider: sb.OAuthProvider.apple, idToken: idToken, nonce: nonce);
-        // Apple sends the name only on first authorization (AUTH_SETUP §2).
-        if (fullName != null && fullName.trim().isNotEmpty) {
-          await _api.auth.updateUser(sb.UserAttributes(data: {'full_name': fullName.trim()}));
-        }
-      });
+    await _requireOpen();
+    await _api.auth.signInWithIdToken(provider: sb.OAuthProvider.apple, idToken: idToken, nonce: nonce);
+    // Apple sends the name only on first authorization (AUTH_SETUP §2).
+    if (fullName != null && fullName.trim().isNotEmpty) {
+      await _api.auth.updateUser(sb.UserAttributes(data: {'full_name': fullName.trim()}));
+    }
+  });
 
   @override
   Future<void> signInAsGuest({String displayName = 'Traveler'}) =>
       _setLocal(AuthUser(id: 'guest-traveler-user-id', displayName: displayName, provider: 'guest'));
 
   @override
-  Future<void> signInAsDemo() =>
-      _setLocal(const AuthUser(id: 'demo-user', displayName: 'Demo Traveler', email: 'traveler@triptracker.local', provider: 'demo'));
+  Future<void> signInAsDemo() => _setLocal(
+    const AuthUser(
+      id: 'demo-user',
+      displayName: 'Demo Traveler',
+      email: 'traveler@triptracker.local',
+      provider: 'demo',
+    ),
+  );
 
   Future<void> _wipeLocal() async {
     try {
@@ -191,6 +199,22 @@ class SupabaseAuthRepository implements AuthRepository {
       }
     });
     _local = null;
+  }
+
+  @override
+  Future<void> updateDisplayName(String name) async {
+    final u = _current;
+    final clean = name.trim();
+    if (u == null || clean.isEmpty) return;
+    if (u.isLocalOnly) {
+      await _setLocal(AuthUser(id: u.id, displayName: clean, email: u.email, provider: u.provider));
+      return;
+    }
+    await _guarded(() async {
+      await _api.auth.updateUser(sb.UserAttributes(data: {'full_name': clean}));
+      await _api.from('profiles').update({'display_name': clean}).eq('id', u.id);
+    });
+    _emit(AuthUser(id: u.id, email: u.email, displayName: clean, provider: u.provider));
   }
 
   @override

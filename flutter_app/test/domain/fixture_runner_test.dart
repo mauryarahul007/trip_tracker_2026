@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:trip_tracker/domain/models/trip.dart';
@@ -19,6 +20,7 @@ import 'package:trip_tracker/domain/logic/predictive_expenses.dart';
 import 'package:trip_tracker/domain/logic/category_helper.dart';
 import 'package:trip_tracker/domain/logic/passes_and_chat_cards.dart';
 import 'package:trip_tracker/domain/logic/notifications.dart';
+import 'package:trip_tracker/domain/models/notification_item.dart';
 import 'package:trip_tracker/domain/logic/trip_utilities.dart';
 import 'package:trip_tracker/domain/logic/imports_and_exports.dart';
 
@@ -48,20 +50,11 @@ void main() {
     test('1. settlement.json matches simplified, direct, summary & pairGroups', () {
       final json = loadFixture('settlement.json');
       final trip = Trip.fromJson(json['trip'] as Map<String, dynamic>);
-      final membersList = (json['members'] as List)
-          .map((m) => Member.fromJson(m as Map<String, dynamic>))
-          .toList();
+      final membersList = (json['members'] as List).map((m) => Member.fromJson(m as Map<String, dynamic>)).toList();
       final membersMap = {for (final m in membersList) m.id: m};
-      final expenses = (json['expenses'] as List)
-          .map((e) => Expense.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final expenses = (json['expenses'] as List).map((e) => Expense.fromJson(e as Map<String, dynamic>)).toList();
       final groups = [
-        const Group(
-          id: 'g1',
-          tripId: 't1',
-          name: 'Couples (Alice & Bob)',
-          memberIds: ['m1', 'm2'],
-        )
+        const Group(id: 'g1', tripId: 't1', name: 'Couples (Alice & Bob)', memberIds: ['m1', 'm2']),
       ];
 
       // Simplified
@@ -104,7 +97,7 @@ void main() {
           resolvedShares: {'m1': 5},
           createdAt: 1,
           updatedAt: 1,
-        )
+        ),
       ];
       final singleRes = calculateSettlements(singleTrip, {'m1': membersMap['m1']!}, singleExpenses);
       expect(singleRes.toJson(), json['results']['singleMemberResult']);
@@ -137,11 +130,7 @@ void main() {
 
       final conversions = (json['conversions'] as List).cast<Map<String, dynamic>>();
       for (final c in conversions) {
-        final res = convertCurrency(
-          (c['amount'] as num).toDouble(),
-          c['from'] as String,
-          c['to'] as String,
-        );
+        final res = convertCurrency((c['amount'] as num).toDouble(), c['from'] as String, c['to'] as String);
         expect(res.toJson(), c['result']);
       }
 
@@ -166,14 +155,7 @@ void main() {
 
       final parseCases = (json['parseCases'] as List).cast<Map<String, dynamic>>();
       for (final pc in parseCases) {
-        final parsed = parseQuickExpense(
-          pc['input'] as String,
-          categories,
-          [],
-          members,
-          null,
-          DateTime(2026, 10, 6),
-        );
+        final parsed = parseQuickExpense(pc['input'] as String, categories, [], members, null, DateTime(2026, 10, 6));
         expect(parsed?.toJson(), pc['output']);
       }
 
@@ -197,8 +179,12 @@ void main() {
       // Real mergeTripRoster signature
       final args = json['rosterMerge']['args'] as Map<String, dynamic>;
       final trips = [for (final t in args['trips'] as List) Trip.fromJson(t as Map<String, dynamic>)];
-      Map<String, Member> members(Map<String, dynamic> m) => {for (final e in m.entries) e.key: Member.fromJson(e.value as Map<String, dynamic>)};
-      Map<String, Group> groups(Map<String, dynamic> m) => {for (final e in m.entries) e.key: Group.fromJson(e.value as Map<String, dynamic>)};
+      Map<String, Member> members(Map<String, dynamic> m) => {
+        for (final e in m.entries) e.key: Member.fromJson(e.value as Map<String, dynamic>),
+      };
+      Map<String, Group> groups(Map<String, dynamic> m) => {
+        for (final e in m.entries) e.key: Group.fromJson(e.value as Map<String, dynamic>),
+      };
       final r = args['roster'] as Map<String, dynamic>;
       final roster = TripRoster(
         trip: Trip.fromJson(r['trip'] as Map<String, dynamic>),
@@ -210,12 +196,23 @@ void main() {
         for (final k in ['id', 'name', 'memberIds', 'groupIds', 'expenseCount', 'updatedAt']) {
           expect(j[k], want[k], reason: '$why: $k');
         }
-        expect((j['checklist'] as List).map((c) => (c as Map)['id']), (want['checklist'] as List).map((c) => c['id']), reason: '$why: checklist');
+        expect(
+          (j['checklist'] as List).map((c) => (c as Map)['id']),
+          (want['checklist'] as List).map((c) => c['id']),
+          reason: '$why: checklist',
+        );
       }
 
       for (final c in json['rosterMerge']['cases'] as List) {
         final want = c['result'] as Map<String, dynamic>;
-        final got = mergeTripRoster(trips, members(args['members'] as Map<String, dynamic>), groups(args['groups'] as Map<String, dynamic>), 't1', roster, c['keepLocalCollab'] as bool);
+        final got = mergeTripRoster(
+          trips,
+          members(args['members'] as Map<String, dynamic>),
+          groups(args['groups'] as Map<String, dynamic>),
+          't1',
+          roster,
+          c['keepLocalCollab'] as bool,
+        );
         final why = 'keep=${c['keepLocalCollab']}';
         expect(got.members.keys.toSet(), (want['members'] as Map).keys.toSet(), reason: why);
         expect(got.members['m1']!.name, want['members']['m1']['name'], reason: why);
@@ -225,18 +222,33 @@ void main() {
           expectTrip(got.trips[i], (want['trips'] as List)[i] as Map<String, dynamic>, why);
         }
       }
-      final missing = mergeTripRoster(trips, members(args['members'] as Map<String, dynamic>), groups(args['groups'] as Map<String, dynamic>), 'nope', roster, false);
+      final missing = mergeTripRoster(
+        trips,
+        members(args['members'] as Map<String, dynamic>),
+        groups(args['groups'] as Map<String, dynamic>),
+        'nope',
+        roster,
+        false,
+      );
       expect(missing.members.keys.toSet(), (json['rosterMerge']['missingTrip']['members'] as Map).keys.toSet());
 
       // applyLiveCollabRow
       final liveBase = Trip.fromJson(json['liveRow']['baseTrip'] as Map<String, dynamic>);
       for (final c in json['liveRow']['cases'] as List) {
         final want = c['result'] as Map<String, dynamic>;
-        final got = applyLiveCollabRow(liveBase, Map<String, dynamic>.from(c['row'] as Map), c['keepLocalCollab'] as bool).toJson();
+        final got = applyLiveCollabRow(
+          liveBase,
+          Map<String, dynamic>.from(c['row'] as Map),
+          c['keepLocalCollab'] as bool,
+        ).toJson();
         final why = '${jsonEncode(c['row'])} keep=${c['keepLocalCollab']}';
         expect(got['name'], want['name'], reason: why);
         expect(got['updatedAt'], want['updatedAt'], reason: why);
-        expect((got['checklist'] as List).map((x) => (x as Map)['id']), (want['checklist'] as List).map((x) => x['id']), reason: why);
+        expect(
+          (got['checklist'] as List).map((x) => (x as Map)['id']),
+          (want['checklist'] as List).map((x) => x['id']),
+          reason: why,
+        );
         expect((got['notes'] as List).length, (want['notes'] as List).length, reason: why);
         expect((got['passes'] as List).length, (want['passes'] as List).length, reason: why);
         expect(got['fxConfig'] != null, want['fxConfig'] != null, reason: why);
@@ -275,7 +287,13 @@ void main() {
       ];
 
       final exact = detectDuplicateExpense(
-        const CandidateExpense(title: 'Dinner at Chalet', amount: 50, currency: 'EUR', date: '2026-10-01', paidById: 'm1'),
+        const CandidateExpense(
+          title: 'Dinner at Chalet',
+          amount: 50,
+          currency: 'EUR',
+          date: '2026-10-01',
+          paidById: 'm1',
+        ),
         existingExpenses,
       );
       expect(exact?.isDuplicate, true);
@@ -340,7 +358,8 @@ void main() {
 
     test('8. imports_exports.json matches Splitwise, backup validation & ics', () {
       final json = loadFixture('imports_exports.json');
-      const csv = 'Date,Description,Category,Cost,Currency,Alice,Bob\n'
+      const csv =
+          'Date,Description,Category,Cost,Currency,Alice,Bob\n'
           '2026-10-01,Groceries,Food,100.00,USD,50.00,50.00\n'
           '2026-10-02,Dinner,Food,80.00,USD,40.00,40.00';
       final parsed = parseSplitwiseCsv(csv);
@@ -358,10 +377,12 @@ void main() {
       expect(cleanPassengerName('DOE/JOHN MR'), json['cleanedPassenger']);
       expect(resolveAirportCode('New York'), json['resolvedAirport']);
 
-      final stub = buildPassStub(
-        {'myNet': 60, 'paid': 120, 'share': 60, 'group': null},
-        (double amt) => '\$${amt.toStringAsFixed(2)}',
-      );
+      final stub = buildPassStub({
+        'myNet': 60,
+        'paid': 120,
+        'share': 60,
+        'group': null,
+      }, (double amt) => '\$${amt.toStringAsFixed(2)}');
       expect(stub.toJson(), json['passStub']);
 
       final card = getChatExpenseCardPresentation('settlement_recorded', true, 'Alice');
@@ -376,7 +397,15 @@ void main() {
       final catalogue = (json['renderedCatalogue'] as List).cast<Map<String, dynamic>>();
       for (final item in catalogue) {
         expect(getNotificationHeadline(item['type'] as String), item['headline']);
-        expect(renderNotificationBody(item['type'] as String, 'Alps Roadtrip', item['params'] as Map<String, dynamic>?), item['body']);
+        final n = NotificationItem(
+          id: 'n',
+          tripId: 't1',
+          title: 'Alps Roadtrip',
+          body: '',
+          data: {'type': item['type'], ...(item['params'] as Map<String, dynamic>)},
+          createdAt: '2026-10-06T00:00:00Z',
+        );
+        expect(renderNotificationBody(n), item['body']);
       }
 
       final burstList = [
@@ -387,7 +416,7 @@ void main() {
           'title': 'Trip Tracker',
           'data': {'type': 'expense_added'},
           'createdAt': '2026-10-06T00:00:00Z',
-          'read': false
+          'read': false,
         },
         {
           'id': 'n2',
@@ -396,7 +425,7 @@ void main() {
           'title': 'Trip Tracker',
           'data': {'type': 'expense_updated'},
           'createdAt': '2026-10-06T00:01:00Z',
-          'read': false
+          'read': false,
         },
       ];
       final burst = groupNotificationBursts(burstList);
@@ -408,7 +437,7 @@ void main() {
       final trips = [
         {'id': 't1', 'name': 'Zanzibar Retreat', 'startDate': '2026-11-01', 'createdAt': 1000},
         {'id': 't2', 'name': 'Amsterdam City Trip', 'startDate': '2026-09-01', 'createdAt': 2000},
-        {'id': 't3', 'name': 'Berlin Weekend', 'startDate': '2026-10-15', 'createdAt': 1500}
+        {'id': 't3', 'name': 'Berlin Weekend', 'startDate': '2026-10-15', 'createdAt': 1500},
       ];
 
       expect(sortTrips(trips, 'alphabetical'), json['sort']['sortedByName']);
@@ -436,13 +465,24 @@ void main() {
 
       expect(buildAutoGroupName(['Alice', 'Bob']), json['autoGroup']);
 
-      final passport = computeTravelerPassport(
-        [
-          {'id': 't1', 'name': 'France', 'destination': 'Paris', 'startDate': '2026-09-01', 'endDate': '2026-09-05', 'closed': true},
-          {'id': 't2', 'name': 'Italy', 'destination': 'Rome', 'startDate': '2026-10-01', 'endDate': '2026-10-06', 'closed': false}
-        ],
-        1791244800000,
-      );
+      final passport = computeTravelerPassport([
+        {
+          'id': 't1',
+          'name': 'France',
+          'destination': 'Paris',
+          'startDate': '2026-09-01',
+          'endDate': '2026-09-05',
+          'closed': true,
+        },
+        {
+          'id': 't2',
+          'name': 'Italy',
+          'destination': 'Rome',
+          'startDate': '2026-10-01',
+          'endDate': '2026-10-06',
+          'closed': false,
+        },
+      ], 1791244800000);
       expect(passport.toJson(), json['travelerPassport']);
 
       final achievements = calculateTripAchievements(
@@ -450,27 +490,37 @@ void main() {
         [
           {'id': 'e1', 'title': 'Morning Coffee', 'amount': 5, 'category': 'cat-food', 'date': '2026-10-01'},
           {'id': 'e2', 'title': 'Afternoon Tea', 'amount': 4, 'category': 'cat-food', 'date': '2026-10-01'},
-          {'id': 'e3', 'title': 'Cafe Breakfast', 'amount': 15, 'category': 'cat-food', 'date': '2026-10-02'}
+          {'id': 'e3', 'title': 'Cafe Breakfast', 'amount': 15, 'category': 'cat-food', 'date': '2026-10-02'},
         ],
-        [{'id': 'm1', 'name': 'Alice'}],
-        [{'id': 'cat-food', 'name': 'Food & Dining', 'icon': '☕'}],
+        [
+          {'id': 'm1', 'name': 'Alice'},
+        ],
+        [
+          {'id': 'cat-food', 'name': 'Food & Dining', 'icon': '☕'},
+        ],
         true,
       );
       expect(achievements.map((AchievementBadge a) => a.toJson()).toList(), json['achievements']);
 
       expect(inferSeasonalClimate('Switzerland', '2026-10-01'), json['packing']['packingSeasonal']);
-      expect(generateSmartPackingSuggestions({
-        'destination': 'Switzerland',
-        'startDate': '2026-10-01',
-        'endDate': '2026-10-07',
-        'durationDays': 7,
-      }), json['packing']['packingSuggestions']);
+      expect(
+        generateSmartPackingSuggestions({
+          'destination': 'Switzerland',
+          'startDate': '2026-10-01',
+          'endDate': '2026-10-07',
+          'durationDays': 7,
+        }),
+        json['packing']['packingSuggestions'],
+      );
 
-      expect(describeSyncItem({
-        'id': 'sq-1',
-        'type': 'addExpense',
-        'payload': {'title': 'Dinner', 'amount': 45}
-      }), json['syncQueueLabel']);
+      expect(
+        describeSyncItem({
+          'id': 'sq-1',
+          'type': 'addExpense',
+          'payload': {'title': 'Dinner', 'amount': 45},
+        }),
+        json['syncQueueLabel'],
+      );
     });
   });
 }

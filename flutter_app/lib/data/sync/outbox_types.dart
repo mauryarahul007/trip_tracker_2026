@@ -9,7 +9,8 @@ class OutboxType {
   static const createTrip = 'createTrip';
   static const updateTripState = 'updateTripState'; // archived / frozen / closed
   static const deleteTrip = 'deleteTrip';
-  static const setTripCollabField = 'setTripCollabField'; // checklist / notes / passes / fx_config (participants may write)
+  static const setTripCollabField =
+      'setTripCollabField'; // checklist / notes / passes / fx_config (participants may write)
   static const addMember = 'addMember';
   static const updateMember = 'updateMember';
   static const toggleArchiveMember = 'toggleArchiveMember';
@@ -26,12 +27,28 @@ class OutboxType {
   static const deleteMessage = 'deleteMessage';
 
   static const all = [
-    addExpense, updateExpense, deleteExpense, restoreExpense,
-    permanentlyDeleteExpense, emptyRecycleBin, createTrip, updateTripState,
-    deleteTrip, setTripCollabField, addMember,
-    updateMember, toggleArchiveMember, deleteMember, createGroup,
-    updateGroup, deleteGroup, addCategory, deleteCategory,
-    addMessage, editMessage, deleteMessage,
+    addExpense,
+    updateExpense,
+    deleteExpense,
+    restoreExpense,
+    permanentlyDeleteExpense,
+    emptyRecycleBin,
+    createTrip,
+    updateTripState,
+    deleteTrip,
+    setTripCollabField,
+    addMember,
+    updateMember,
+    toggleArchiveMember,
+    deleteMember,
+    createGroup,
+    updateGroup,
+    deleteGroup,
+    addCategory,
+    deleteCategory,
+    addMessage,
+    editMessage,
+    deleteMessage,
   ];
 }
 

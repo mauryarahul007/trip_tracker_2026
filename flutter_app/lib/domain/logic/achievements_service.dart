@@ -3,11 +3,7 @@ import '../models/expense.dart';
 import '../models/member.dart';
 import '../models/trip.dart';
 
-enum BadgeRarity {
-  common,
-  rare,
-  legendary,
-}
+enum BadgeRarity { common, rare, legendary }
 
 class AchievementBadge {
   const AchievementBadge({
@@ -81,11 +77,13 @@ List<AchievementBadge> calculateTripAchievements(
   final transitUnlocked = transitCount >= 3 || trip.stops.length >= 3;
 
   // 5. Executive Gourmet (Food dominant >= 35% of total spend)
-  final foodSpend = activeExpenses.where((e) {
-    final c = categories.where((cat) => cat.id == e.category).firstOrNull;
-    final catName = (c?.name ?? '').toLowerCase();
-    return catName.contains('food') || catName.contains('dining') || c?.icon == '🍔' || c?.icon == '🍕';
-  }).fold(0.0, (sum, e) => sum + e.amount);
+  final foodSpend = activeExpenses
+      .where((e) {
+        final c = categories.where((cat) => cat.id == e.category).firstOrNull;
+        final catName = (c?.name ?? '').toLowerCase();
+        return catName.contains('food') || catName.contains('dining') || c?.icon == '🍔' || c?.icon == '🍕';
+      })
+      .fold(0.0, (sum, e) => sum + e.amount);
 
   final totalSpend = activeExpenses.fold(0.0, (sum, e) => sum + e.amount);
   final foodDominant = totalSpend > 0 && (foodSpend / totalSpend) >= 0.35;

@@ -36,22 +36,13 @@ class ItineraryRouteInfo {
 
 final _splitPattern = RegExp(r'->|→|➔|\bto\b|\/| - ', caseSensitive: false);
 final _segmentSplit = RegExp(r'\s*(?:→|->|=>|—|–|\||\/|,|;)\s*');
-final _placeSplit = RegExp(
-  r'\s*(?:→|->|=>|—|–|\||\/|,|;|&|\band\b)\s*',
-  caseSensitive: false,
-);
+final _placeSplit = RegExp(r'\s*(?:→|->|=>|—|–|\||\/|,|;|&|\band\b)\s*', caseSensitive: false);
 
 /// Intelligently parse trip origin, destination, and full itinerary route
 /// from stops list, trip destination string, or trip composite title.
 /// Parity with web `parseTripRoute` in `src/utils/routeHelper.ts`.
-ParsedRoute parseTripRoute({
-  String? name,
-  String? destination,
-  List<TripStop>? stops,
-}) {
-  final stopNames =
-      stops?.map((s) => s.name.trim()).where((s) => s.isNotEmpty).toList() ??
-      [];
+ParsedRoute parseTripRoute({String? name, String? destination, List<TripStop>? stops}) {
+  final stopNames = stops?.map((s) => s.name.trim()).where((s) => s.isNotEmpty).toList() ?? [];
 
   if (stopNames.length >= 2) {
     return ParsedRoute(
@@ -65,34 +56,22 @@ ParsedRoute parseTripRoute({
 
   if (stopNames.length == 1) {
     final rawDest = (destination ?? name ?? '').trim();
-    final parts = rawDest
-        .split(_splitPattern)
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
+    final parts = rawDest.split(_splitPattern).map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
     final dest = parts.length > 1
         ? parts.last
-        : (rawDest.isNotEmpty && rawDest != stopNames.first
-              ? rawDest
-              : stopNames.first);
+        : (rawDest.isNotEmpty && rawDest != stopNames.first ? rawDest : stopNames.first);
     final all = {stopNames.first, dest}.toList();
     return ParsedRoute(
       origin: stopNames.first,
       destination: dest,
-      fullRoute: stopNames.first == dest
-          ? stopNames.first
-          : '${stopNames.first} ➔ $dest',
+      fullRoute: stopNames.first == dest ? stopNames.first : '${stopNames.first} ➔ $dest',
       allStops: all,
       isMultiStop: stopNames.first != dest,
     );
   }
 
   final raw = (destination ?? name ?? 'Trip').trim();
-  final parts = raw
-      .split(_splitPattern)
-      .map((s) => s.trim())
-      .where((s) => s.isNotEmpty)
-      .toList();
+  final parts = raw.split(_splitPattern).map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
 
   if (parts.length >= 2) {
     return ParsedRoute(
@@ -115,32 +94,17 @@ ParsedRoute parseTripRoute({
 
 /// Extracts primary single destination city for compact card badges.
 /// Parity with web `extractPrimaryCity` in `src/utils/tripDestination.ts`.
-({String primary, String full}) extractPrimaryCity(
-  String? destination,
-  List<TripStop>? stops,
-) {
-  final full =
-      (destination ??
-              (stops != null && stops.isNotEmpty
-                  ? stops.map((s) => s.name).join(' → ')
-                  : ''))
-          .trim();
+({String primary, String full}) extractPrimaryCity(String? destination, List<TripStop>? stops) {
+  final full = (destination ?? (stops != null && stops.isNotEmpty ? stops.map((s) => s.name).join(' → ') : '')).trim();
   if (full.isEmpty) return (primary: '', full: '');
-  final segments = full
-      .split(_segmentSplit)
-      .map((s) => s.trim())
-      .where((s) => s.isNotEmpty)
-      .toList();
+  final segments = full.split(_segmentSplit).map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
   final primary = segments.isNotEmpty ? segments.first : full;
   return (primary: primary, full: full);
 }
 
 /// Formats multi-city routes and stops for clean card and capsule layouts.
 /// Parity with web `getItineraryRouteInfo` in `src/utils/tripDestination.ts`.
-ItineraryRouteInfo getItineraryRouteInfo(
-  String? destination,
-  List<TripStop>? stops,
-) {
+ItineraryRouteInfo getItineraryRouteInfo(String? destination, List<TripStop>? stops) {
   final res = extractPrimaryCity(destination, stops);
   if (res.full.isEmpty) {
     return const ItineraryRouteInfo(
@@ -153,11 +117,7 @@ ItineraryRouteInfo getItineraryRouteInfo(
     );
   }
 
-  final segments = res.full
-      .split(_segmentSplit)
-      .map((s) => s.trim())
-      .where((s) => s.isNotEmpty)
-      .toList();
+  final segments = res.full.split(_segmentSplit).map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
   final stopsCount = segments.length;
   var routeSummary = res.full;
   var badgeSummary = res.primary;
@@ -210,9 +170,7 @@ double median(List<double> nums) {
   if (nums.isEmpty) return 0.0;
   final sorted = [...nums]..sort();
   final mid = sorted.length ~/ 2;
-  return sorted.length % 2 != 0
-      ? sorted[mid]
-      : (sorted[mid - 1] + sorted[mid]) / 2;
+  return sorted.length % 2 != 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
 /// Squared Euclidean distance for coordinate comparison.

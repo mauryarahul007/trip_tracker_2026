@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,12 +15,7 @@ import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_avatar.dart';
 
 class LiveLocationChatBanner extends ConsumerStatefulWidget {
-  const LiveLocationChatBanner({
-    super.key,
-    required this.tripId,
-    required this.members,
-    this.onShareMyLocation,
-  });
+  const LiveLocationChatBanner({super.key, required this.tripId, required this.members, this.onShareMyLocation});
 
   final String tripId;
   final List<Member> members;
@@ -94,13 +90,7 @@ class _LiveLocationChatBannerState extends ConsumerState<LiveLocationChatBanner>
         color: tokens.bgSurface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: tokens.borderColor.withValues(alpha: 0.6)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -113,10 +103,7 @@ class _LiveLocationChatBannerState extends ConsumerState<LiveLocationChatBanner>
                 Container(
                   width: 32,
                   height: 32,
-                  decoration: BoxDecoration(
-                    color: tokens.colorSuccess.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: BoxDecoration(color: tokens.colorSuccess.withValues(alpha: 0.12), shape: BoxShape.circle),
                   child: Icon(AppIcons.location, size: 16, color: tokens.colorSuccess),
                 ),
                 const SizedBox(width: 10),
@@ -130,10 +117,7 @@ class _LiveLocationChatBannerState extends ConsumerState<LiveLocationChatBanner>
                           Container(
                             width: 7,
                             height: 7,
-                            decoration: BoxDecoration(
-                              color: tokens.colorSuccess,
-                              shape: BoxShape.circle,
-                            ),
+                            decoration: BoxDecoration(color: tokens.colorSuccess, shape: BoxShape.circle),
                           ),
                           const SizedBox(width: 5),
                           Flexible(
@@ -141,11 +125,7 @@ class _LiveLocationChatBannerState extends ConsumerState<LiveLocationChatBanner>
                               shares.isEmpty
                                   ? 'Live Location Radar'
                                   : '${shares.length} ${shares.length == 1 ? "member" : "members"} sharing live location',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: tokens.textPrimary,
-                              ),
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -185,9 +165,7 @@ class _LiveLocationChatBannerState extends ConsumerState<LiveLocationChatBanner>
                 spacing: 8,
                 runSpacing: 6,
                 children: [
-                  for (final share in shares) ...[
-                    _buildMemberChip(context, tokens, share),
-                  ],
+                  for (final share in shares) ...[_buildMemberChip(context, tokens, share)],
                 ],
               ),
             ),
@@ -237,13 +215,9 @@ class _LiveLocationChatBannerState extends ConsumerState<LiveLocationChatBanner>
       child: Container(
         padding: const EdgeInsets.fromLTRB(4, 4, 10, 4),
         decoration: BoxDecoration(
-          color: isSelected
-              ? tokens.primaryAccent.withValues(alpha: 0.15)
-              : tokens.borderColor.withValues(alpha: 0.15),
+          color: isSelected ? tokens.primaryAccent.withValues(alpha: 0.15) : tokens.borderColor.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? tokens.primaryAccent : tokens.borderColor.withValues(alpha: 0.4),
-          ),
+          border: Border.all(color: isSelected ? tokens.primaryAccent : tokens.borderColor.withValues(alpha: 0.4)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

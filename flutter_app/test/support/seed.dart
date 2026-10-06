@@ -25,8 +25,16 @@ Future<Seed> seedTrip(WidgetTester tester, {String owner = 'u1', String base = '
   final c = containerOf(tester);
   final id = await real(
     tester,
-    () => c.read(tripRepositoryProvider).createTrip(
-        name: 'Goa Weekend', startDate: '2026-10-01', endDate: '2026-10-09', baseCurrency: base, ownerId: owner, creatorName: 'Asha'),
+    () => c
+        .read(tripRepositoryProvider)
+        .createTrip(
+          name: 'Goa Weekend',
+          startDate: '2026-10-01',
+          endDate: '2026-10-09',
+          baseCurrency: base,
+          ownerId: owner,
+          creatorName: 'Asha',
+        ),
   );
   final db = c.read(appDatabaseProvider);
   final me = (await real(tester, () => db.select(db.membersTable).get())).single.id;
@@ -50,7 +58,9 @@ Future<String> addExpense(
   final c = containerOf(tester);
   final r = await real(
     tester,
-    () => c.read(expenseRepositoryProvider).submit(
+    () => c
+        .read(expenseRepositoryProvider)
+        .submit(
           ExpenseSubmission(
             title: title,
             amount: amount,

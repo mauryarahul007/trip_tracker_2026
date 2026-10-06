@@ -17,20 +17,12 @@ class ErrorBoundary extends StatefulWidget {
   static void initialize(Widget app) {
     FlutterError.onError = (FlutterErrorDetails details) {
       FlutterError.presentError(details);
-      AppLogger.error(
-        'Uncaught Flutter Error: ${details.exceptionAsString()}',
-        details.exception,
-        details.stack,
-      );
+      AppLogger.error('Uncaught Flutter Error: ${details.exceptionAsString()}', details.exception, details.stack);
       _reportCrash(details.exception, details.stack);
     };
 
     PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
-      AppLogger.error(
-        'Uncaught Platform Dispatcher Error: $error',
-        error,
-        stack,
-      );
+      AppLogger.error('Uncaught Platform Dispatcher Error: $error', error, stack);
       _reportCrash(error, stack);
       return true;
     };
@@ -93,19 +85,11 @@ class _DefaultErrorView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.warning_amber_rounded,
-                color: Color(0xFFEF4444),
-                size: 56,
-              ),
+              const Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444), size: 56),
               const SizedBox(height: 16),
               const Text(
                 'Something went wrong',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               Text(

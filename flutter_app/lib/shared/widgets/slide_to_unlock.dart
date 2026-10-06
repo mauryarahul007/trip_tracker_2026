@@ -28,8 +28,7 @@ class SlideToUnlock extends StatefulWidget {
   State<SlideToUnlock> createState() => _SlideToUnlockState();
 }
 
-class _SlideToUnlockState extends State<SlideToUnlock>
-    with SingleTickerProviderStateMixin {
+class _SlideToUnlockState extends State<SlideToUnlock> with SingleTickerProviderStateMixin {
   double _dragPosition = 0.0;
   bool _isConfirmed = false;
   late AnimationController _springController;
@@ -38,10 +37,7 @@ class _SlideToUnlockState extends State<SlideToUnlock>
   @override
   void initState() {
     super.initState();
-    _springController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
+    _springController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
   }
 
   @override
@@ -69,12 +65,10 @@ class _SlideToUnlockState extends State<SlideToUnlock>
       widget.onConfirmed();
     } else {
       _springAnimation =
-          Tween<double>(begin: _dragPosition, end: 0.0).animate(
-            CurvedAnimation(
-              parent: _springController,
-              curve: Curves.easeOutCubic,
-            ),
-          )..addListener(() {
+          Tween<double>(
+            begin: _dragPosition,
+            end: 0.0,
+          ).animate(CurvedAnimation(parent: _springController, curve: Curves.easeOutCubic))..addListener(() {
             setState(() {
               _dragPosition = _springAnimation.value;
             });
@@ -94,10 +88,7 @@ class _SlideToUnlockState extends State<SlideToUnlock>
       builder: (context, constraints) {
         final double trackWidth = constraints.maxWidth;
         final double thumbSize = widget.height - 8;
-        final double maxDrag = (trackWidth - thumbSize - 8).clamp(
-          0.0,
-          trackWidth,
-        );
+        final double maxDrag = (trackWidth - thumbSize - 8).clamp(0.0, trackWidth);
 
         return Container(
           width: trackWidth,
@@ -113,9 +104,7 @@ class _SlideToUnlockState extends State<SlideToUnlock>
               // Center Label
               Center(
                 child: Opacity(
-                  opacity:
-                      (1.0 - (_dragPosition / (maxDrag > 0 ? maxDrag : 1.0)))
-                          .clamp(0.0, 1.0),
+                  opacity: (1.0 - (_dragPosition / (maxDrag > 0 ? maxDrag : 1.0))).clamp(0.0, 1.0),
                   child: Text(
                     widget.label,
                     style: TextStyle(
@@ -132,8 +121,7 @@ class _SlideToUnlockState extends State<SlideToUnlock>
               Positioned(
                 left: 4 + _dragPosition,
                 child: GestureDetector(
-                  onHorizontalDragUpdate: (details) =>
-                      _onPanUpdate(details, maxDrag),
+                  onHorizontalDragUpdate: (details) => _onPanUpdate(details, maxDrag),
                   onHorizontalDragEnd: (details) => _onPanEnd(details, maxDrag),
                   child: Container(
                     width: thumbSize,
@@ -156,19 +144,11 @@ class _SlideToUnlockState extends State<SlideToUnlock>
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             ),
                           )
-                        : Icon(
-                            _isConfirmed
-                                ? AppIcons.check
-                                : AppIcons.chevronRight,
-                            color: Colors.white,
-                            size: 22,
-                          ),
+                        : Icon(_isConfirmed ? AppIcons.check : AppIcons.chevronRight, color: Colors.white, size: 22),
                   ),
                 ),
               ),

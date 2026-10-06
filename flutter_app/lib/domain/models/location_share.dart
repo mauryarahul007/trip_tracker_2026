@@ -1,10 +1,6 @@
 /// Current user's location sharing status for a trip.
 class MyLocationShare {
-  const MyLocationShare({
-    required this.isSharing,
-    this.shareToken,
-    this.expiresAt,
-  });
+  const MyLocationShare({required this.isSharing, this.shareToken, this.expiresAt});
 
   final bool isSharing;
   final String? shareToken;
@@ -27,11 +23,7 @@ class MyLocationShare {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'is_sharing': isSharing,
-    'share_token': shareToken,
-    'expires_at': expiresAt,
-  };
+  Map<String, dynamic> toJson() => {'is_sharing': isSharing, 'share_token': shareToken, 'expires_at': expiresAt};
 }
 
 /// Public shared location retrieved by anonymous viewers via token.
@@ -73,12 +65,7 @@ class SharedLocation {
 
 /// Active member share visible to participants inside a trip.
 class TripActiveShare {
-  const TripActiveShare({
-    required this.memberId,
-    required this.lat,
-    required this.lng,
-    required this.updatedAt,
-  });
+  const TripActiveShare({required this.memberId, required this.lat, required this.lng, required this.updatedAt});
 
   final String memberId;
   final double lat;

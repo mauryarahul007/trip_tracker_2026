@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,12 +17,7 @@ import '../../../shared/widgets/app_sheet.dart';
 import '../application/live_location_service.dart';
 
 class LiveLocationShareModal extends ConsumerStatefulWidget {
-  const LiveLocationShareModal({
-    super.key,
-    required this.tripId,
-    required this.memberId,
-    required this.userId,
-  });
+  const LiveLocationShareModal({super.key, required this.tripId, required this.memberId, required this.userId});
 
   final String tripId;
   final String memberId;
@@ -35,11 +31,7 @@ class LiveLocationShareModal extends ConsumerStatefulWidget {
   }) {
     return AppSheet.show<void>(
       context: context,
-      builder: (ctx) => LiveLocationShareModal(
-        tripId: tripId,
-        memberId: memberId,
-        userId: userId,
-      ),
+      builder: (ctx) => LiveLocationShareModal(tripId: tripId, memberId: memberId, userId: userId),
     );
   }
 
@@ -109,7 +101,8 @@ class _LiveLocationShareModalState extends ConsumerState<LiveLocationShareModal>
 
       if (perm == LocationPermissionStatus.deniedForever) {
         setState(() {
-          _errorMessage = 'Location permissions are permanently denied. Please grant location access in device Settings.';
+          _errorMessage =
+              'Location permissions are permanently denied. Please grant location access in device Settings.';
           _isBusy = false;
         });
         return;
@@ -175,11 +168,7 @@ class _LiveLocationShareModalState extends ConsumerState<LiveLocationShareModal>
 
       if (mounted) {
         setState(() {
-          _share = MyLocationShare(
-            isSharing: false,
-            shareToken: _share?.shareToken,
-            expiresAt: _share?.expiresAt,
-          );
+          _share = MyLocationShare(isSharing: false, shareToken: _share?.shareToken, expiresAt: _share?.expiresAt);
           _isBusy = false;
         });
       }
@@ -213,10 +202,7 @@ class _LiveLocationShareModalState extends ConsumerState<LiveLocationShareModal>
   void _shareLink(String url) {
     final share = ref.read(shareServiceProvider);
     AppHaptics.selection();
-    share.share(
-      'Track my live location: $url',
-      subject: 'Trip Tracker · Live location',
-    );
+    share.share('Track my live location: $url', subject: 'Trip Tracker · Live location');
   }
 
   @override
@@ -241,11 +227,7 @@ class _LiveLocationShareModalState extends ConsumerState<LiveLocationShareModal>
                       : tokens.primaryAccent.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  AppIcons.location,
-                  size: 22,
-                  color: isSharing ? tokens.colorSuccess : tokens.primaryAccent,
-                ),
+                child: Icon(AppIcons.location, size: 22, color: isSharing ? tokens.colorSuccess : tokens.primaryAccent),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -254,11 +236,7 @@ class _LiveLocationShareModalState extends ConsumerState<LiveLocationShareModal>
                   children: [
                     Text(
                       'Live Location Sharing',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.textPrimary,
-                      ),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                     ),
                     Text(
                       isSharing ? 'Active · Broadcast to trip squad' : 'Share your real-time position',
@@ -283,10 +261,7 @@ class _LiveLocationShareModalState extends ConsumerState<LiveLocationShareModal>
                   Icon(AppIcons.alert, size: 18, color: tokens.colorDanger),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      _errorMessage!,
-                      style: TextStyle(fontSize: 13, color: tokens.colorDanger),
-                    ),
+                    child: Text(_errorMessage!, style: TextStyle(fontSize: 13, color: tokens.colorDanger)),
                   ),
                 ],
               ),
@@ -314,10 +289,7 @@ class _LiveLocationShareModalState extends ConsumerState<LiveLocationShareModal>
                       Container(
                         width: 10,
                         height: 10,
-                        decoration: BoxDecoration(
-                          color: tokens.colorSuccess,
-                          shape: BoxShape.circle,
-                        ),
+                        decoration: BoxDecoration(color: tokens.colorSuccess, shape: BoxShape.circle),
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -391,11 +363,7 @@ class _LiveLocationShareModalState extends ConsumerState<LiveLocationShareModal>
                 children: [
                   Text(
                     'Privacy & Battery Protection',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: tokens.textPrimary,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                   ),
                   const SizedBox(height: 8),
                   Text(

@@ -21,10 +21,7 @@ void main() {
       updatedAt: 1700000000000,
     );
 
-    const members = [
-      Member(id: 'm-1', name: 'Alice'),
-      Member(id: 'm-2', name: 'Bob'),
-    ];
+    const members = [Member(id: 'm-1', name: 'Alice'), Member(id: 'm-2', name: 'Bob')];
 
     const List<Expense> expenses = [
       Expense(
@@ -128,9 +125,7 @@ void main() {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: OfflineSnapshotModal(tripId: 't-demo'),
-            ),
+            home: Scaffold(body: OfflineSnapshotModal(tripId: 't-demo')),
           ),
         ),
       );

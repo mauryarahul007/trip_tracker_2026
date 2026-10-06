@@ -29,7 +29,13 @@ class PlatformReceiptPicker implements ReceiptPicker {
     final tmp = await getTemporaryDirectory();
     final out = p.join(tmp.path, 'receipt_${DateTime.now().microsecondsSinceEpoch}.jpg');
     // JPEG at ~1600 px keeps receipts legible at a fraction of the size (also converts HEIC).
-    final compressed = await FlutterImageCompress.compressAndGetFile(x.path, out, minWidth: 1600, minHeight: 1600, quality: 80);
+    final compressed = await FlutterImageCompress.compressAndGetFile(
+      x.path,
+      out,
+      minWidth: 1600,
+      minHeight: 1600,
+      quality: 80,
+    );
     return compressed?.path ?? (File(x.path).existsSync() ? x.path : null);
   }
 }

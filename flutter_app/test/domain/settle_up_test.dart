@@ -3,7 +3,15 @@ import 'package:trip_tracker/domain/logic/settle_up.dart';
 import 'package:trip_tracker/domain/logic/settlement.dart';
 
 void main() {
-  const t = Transfer(from: 'a', to: 'b', fromLabel: 'Ben', toLabel: 'Asha', fromMemberId: 'm2', toMemberId: 'm1', amount: 100);
+  const t = Transfer(
+    from: 'a',
+    to: 'b',
+    fromLabel: 'Ben',
+    toLabel: 'Asha',
+    fromMemberId: 'm2',
+    toMemberId: 'm1',
+    amount: 100,
+  );
 
   test('full payment: web title, debtor pays, creditor takes 100%', () {
     final p = planSettlement(t, amount: 100, currency: 'INR', date: '2026-10-06')!;

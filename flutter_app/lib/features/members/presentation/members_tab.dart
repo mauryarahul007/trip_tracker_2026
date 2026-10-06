@@ -28,52 +28,100 @@ class MembersTab extends ConsumerWidget {
     final trip = ref.watch(tripProvider(tripId)).value;
     final money = ref.watch(flagProvider(('enableMemberMoneyRow', tripId))).value ?? false;
     final settlement = ref.watch(tripSettlementProvider(tripId));
-    final canManage = ref.watch(isTripAdminProvider(tripId)) ||
+    final canManage =
+        ref.watch(isTripAdminProvider(tripId)) ||
         canManageTrip(trip, ref.watch(myMemberIdProvider(tripId)), ref.watch(isTripAdminProvider(tripId)));
-    final active = [for (final m in members) if (!m.archived) m];
-    final archived = [for (final m in members) if (m.archived) m];
+    final active = [
+      for (final m in members)
+        if (!m.archived) m,
+    ];
+    final archived = [
+      for (final m in members)
+        if (m.archived) m,
+    ];
     final balances = {for (final b in settlement?.balances ?? const <MemberBalance>[]) b.memberId: b.balance};
 
     return ListView(
       key: const Key('tab-members'),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
-        Row(children: [
-          Expanded(child: AppButton(key: const Key('member-add'), label: l10n.memAdd, onPressed: () => _add(context, ref))),
-          const SizedBox(width: 8),
-          Expanded(
-            child: AppButton(
-              key: const Key('member-invite'),
-              label: l10n.memInvite,
-              variant: AppButtonVariant.secondary,
-              onPressed: () => AppSheet.show<void>(context: context, title: l10n.inviteSheetTitle, builder: (_) => ShareTripSheet(tripId: tripId)),
+        Row(
+          children: [
+            Expanded(
+              child: AppButton(key: const Key('member-add'), label: l10n.memAdd, onPressed: () => _add(context, ref)),
             ),
-          ),
-        ]),
+            const SizedBox(width: 8),
+            Expanded(
+              child: AppButton(
+                key: const Key('member-invite'),
+                label: l10n.memInvite,
+                variant: AppButtonVariant.secondary,
+                onPressed: () => AppSheet.show<void>(
+                  context: context,
+                  title: l10n.inviteSheetTitle,
+                  builder: (_) => ShareTripSheet(tripId: tripId),
+                ),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 12),
         for (final m in active) _row(context, ref, m, balances[m.id], money, canManage, trip?.baseCurrency ?? 'INR'),
         if (archived.isNotEmpty) ...[
-          Padding(padding: const EdgeInsets.only(top: 16, bottom: 4), child: Text(l10n.memArchived, style: const TextStyle(fontWeight: FontWeight.w700))),
-          for (final m in archived) _row(context, ref, m, balances[m.id], false, canManage, trip?.baseCurrency ?? 'INR'),
+          Padding(
+            padding: const EdgeInsets.only(top: 16, bottom: 4),
+            child: Text(l10n.memArchived, style: const TextStyle(fontWeight: FontWeight.w700)),
+          ),
+          for (final m in archived)
+            _row(context, ref, m, balances[m.id], false, canManage, trip?.baseCurrency ?? 'INR'),
         ],
-        Padding(padding: const EdgeInsets.only(top: 20, bottom: 8), child: Text(l10n.memGroups, style: const TextStyle(fontWeight: FontWeight.w700))),
-        AppButton(key: const Key('member-group-add'), label: l10n.memAddGroup, variant: AppButtonVariant.secondary, onPressed: () => _addGroup(context, ref, active)),
+        Padding(
+          padding: const EdgeInsets.only(top: 20, bottom: 8),
+          child: Text(l10n.memGroups, style: const TextStyle(fontWeight: FontWeight.w700)),
+        ),
+        AppButton(
+          key: const Key('member-group-add'),
+          label: l10n.memAddGroup,
+          variant: AppButtonVariant.secondary,
+          onPressed: () => _addGroup(context, ref, active),
+        ),
         for (final g in groups)
           ListTile(
             key: Key('group-${g.id}'),
             contentPadding: EdgeInsets.zero,
             title: Text(g.name),
             subtitle: Text('${g.memberIds.length}'),
-            trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              IconButton(key: Key('group-rename-${g.id}'), icon: const Icon(Icons.edit_outlined), onPressed: () => _renameGroup(context, ref, g)),
-              IconButton(key: Key('group-delete-${g.id}'), icon: const Icon(Icons.delete_outline), onPressed: () => ref.read(memberRepositoryProvider).deleteGroup(g.id)),
-            ]),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: 'Rename',
+                  key: Key('group-rename-${g.id}'),
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () => _renameGroup(context, ref, g),
+                ),
+                IconButton(
+                  tooltip: 'Delete',
+                  key: Key('group-delete-${g.id}'),
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => ref.read(memberRepositoryProvider).deleteGroup(g.id),
+                ),
+              ],
+            ),
           ),
       ],
     );
   }
 
-  Widget _row(BuildContext context, WidgetRef ref, Member m, double? balance, bool money, bool canManage, String currency) {
+  Widget _row(
+    BuildContext context,
+    WidgetRef ref,
+    Member m,
+    double? balance,
+    bool money,
+    bool canManage,
+    String currency,
+  ) {
     final l10n = context.l10n;
     final role = getMemberRole(ref.watch(tripProvider(tripId)).value, m.id);
     String? moneyText;
@@ -86,38 +134,43 @@ class MembersTab extends ConsumerWidget {
       contentPadding: EdgeInsets.zero,
       title: Text(m.name),
       subtitle: Text(moneyText == null ? _roleLabel(l10n, role) : '${_roleLabel(l10n, role)} · $moneyText'),
-      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        if (canManage)
-          PopupMenuButton<String>(
-            key: Key('member-role-${m.id}'),
-            initialValue: role,
-            onSelected: (v) => ref.read(tripRepositoryProvider).setMemberRole(tripId, m.id, v),
-            itemBuilder: (_) => [
-              PopupMenuItem(value: 'organizer', child: Text(l10n.memRoleOrganizer)),
-              PopupMenuItem(value: 'contributor', child: Text(l10n.memRoleContributor)),
-              PopupMenuItem(value: 'viewer', child: Text(l10n.memRoleViewer)),
-            ],
-            child: const Icon(Icons.badge_outlined),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (canManage)
+            PopupMenuButton<String>(
+              key: Key('member-role-${m.id}'),
+              initialValue: role,
+              onSelected: (v) => ref.read(tripRepositoryProvider).setMemberRole(tripId, m.id, v),
+              itemBuilder: (_) => [
+                PopupMenuItem(value: 'organizer', child: Text(l10n.memRoleOrganizer)),
+                PopupMenuItem(value: 'contributor', child: Text(l10n.memRoleContributor)),
+                PopupMenuItem(value: 'viewer', child: Text(l10n.memRoleViewer)),
+              ],
+              child: const Icon(Icons.badge_outlined),
+            ),
+          IconButton(
+            tooltip: 'Rename',
+            key: Key('member-rename-${m.id}'),
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => _rename(context, ref, m),
           ),
-        IconButton(
-          key: Key('member-rename-${m.id}'),
-          icon: const Icon(Icons.edit_outlined),
-          onPressed: () => _rename(context, ref, m),
-        ),
-        IconButton(
-          key: Key('member-archive-${m.id}'),
-          icon: Icon(m.archived ? Icons.unarchive_outlined : Icons.archive_outlined),
-          onPressed: () => ref.read(memberRepositoryProvider).setArchived(m.id, !m.archived),
-        ),
-      ]),
+          IconButton(
+            tooltip: (m.archived ? 'Restore' : 'Archive'),
+            key: Key('member-archive-${m.id}'),
+            icon: Icon(m.archived ? Icons.unarchive_outlined : Icons.archive_outlined),
+            onPressed: () => ref.read(memberRepositoryProvider).setArchived(m.id, !m.archived),
+          ),
+        ],
+      ),
     );
   }
 
   String _roleLabel(AppLocalizations l10n, String role) => switch (role) {
-        'organizer' => l10n.memRoleOrganizer,
-        'viewer' => l10n.memRoleViewer,
-        _ => l10n.memRoleContributor,
-      };
+    'organizer' => l10n.memRoleOrganizer,
+    'viewer' => l10n.memRoleViewer,
+    _ => l10n.memRoleContributor,
+  };
 
   Future<void> _add(BuildContext context, WidgetRef ref) async {
     final name = await askText(context, context.l10n.memName);
@@ -178,16 +231,23 @@ class _GroupDialogState extends State<_GroupDialog> {
       title: Text(l10n.memAddGroup),
       content: SizedBox(
         width: 360,
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(key: const Key('group-name'), controller: _name, decoration: InputDecoration(labelText: l10n.memName)),
-          for (final m in widget.members)
-            CheckboxListTile(
-              key: Key('group-pick-${m.id}'),
-              value: _picked.contains(m.id),
-              title: Text(m.name),
-              onChanged: (v) => setState(() => v == true ? _picked.add(m.id) : _picked.remove(m.id)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              key: const Key('group-name'),
+              controller: _name,
+              decoration: InputDecoration(labelText: l10n.memName),
             ),
-        ]),
+            for (final m in widget.members)
+              CheckboxListTile(
+                key: Key('group-pick-${m.id}'),
+                value: _picked.contains(m.id),
+                title: Text(m.name),
+                onChanged: (v) => setState(() => v == true ? _picked.add(m.id) : _picked.remove(m.id)),
+              ),
+          ],
+        ),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.actionCancel)),

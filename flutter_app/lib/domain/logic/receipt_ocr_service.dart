@@ -32,18 +32,18 @@ class ParsedReceiptData {
   });
 
   Map<String, dynamic> toJson() => {
-        'items': items.map((i) => i.toJson()).toList(),
-        'subtotal': subtotal,
-        'tax': tax,
-        'tip': tip,
-        'discount': discount,
-        'total': total,
-        'amount': amount,
-        if (merchant != null) 'merchant': merchant,
-        if (date != null) 'date': date,
-        'confidence': confidence,
-        if (rawText != null) 'rawText': rawText,
-      };
+    'items': items.map((i) => i.toJson()).toList(),
+    'subtotal': subtotal,
+    'tax': tax,
+    'tip': tip,
+    'discount': discount,
+    'total': total,
+    'amount': amount,
+    if (merchant != null) 'merchant': merchant,
+    if (date != null) 'date': date,
+    'confidence': confidence,
+    if (rawText != null) 'rawText': rawText,
+  };
 }
 
 enum ReceiptOcrFailure { empty, unreadable, engine }
@@ -82,19 +82,16 @@ final RegExp _taxRegex = RegExp(r'(?:tax|gst|cgst|sgst|vat|service\s*tax|hst)\b'
 final RegExp _tipRegex = RegExp(r'(?:tip|service\s*charge|gratuity)\b', caseSensitive: false);
 final RegExp _discountRegex = RegExp(r'(?:discount|promo|coupon|savings|less)\b', caseSensitive: false);
 final RegExp _totalRegex = RegExp(
-    r'^(?:grand\s*total|net\s*amount|total\s*amount|total\s*due|final\s*total|total)\b',
-    caseSensitive: false);
+  r'^(?:grand\s*total|net\s*amount|total\s*amount|total\s*due|final\s*total|total)\b',
+  caseSensitive: false,
+);
 
 /// Pattern for price at end of line, e.g. "Burger $12.50", "Pizza 450.00", "Pasta ... 320"
 final RegExp _linePriceRegex = RegExp(r'(?:[$€£₹]\s*)?([0-9]{1,5}(?:\.[0-9]{2})?)\s*$');
 
 /// Pure Dart parser extracting line items, taxes, tips, discounts and total.
 ParsedReceiptData parseReceiptText(String text, [List<String> defaultMemberIds = const []]) {
-  final lines = text
-      .split(RegExp(r'\r?\n'))
-      .map((l) => l.trim())
-      .where((l) => l.isNotEmpty)
-      .toList();
+  final lines = text.split(RegExp(r'\r?\n')).map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
 
   final items = <ReceiptItemDto>[];
   double detectedSubtotal = 0;
@@ -119,8 +116,10 @@ ParsedReceiptData parseReceiptText(String text, [List<String> defaultMemberIds =
     desc = desc.replaceAll(RegExp(r'[.\-_: ]+$'), '').trim();
 
     // Ignore lines with metadata keywords or order/store numbers
-    if (RegExp(r'\b(?:202\d|inv|bill|table|date|time|cashier|tel|phone|token|pax|store|order|gstin|reg)\b|#', caseSensitive: false)
-        .hasMatch(line)) {
+    if (RegExp(
+      r'\b(?:202\d|inv|bill|table|date|time|cashier|tel|phone|token|pax|store|order|gstin|reg)\b|#',
+      caseSensitive: false,
+    ).hasMatch(line)) {
       continue;
     }
 
@@ -135,12 +134,14 @@ ParsedReceiptData parseReceiptText(String text, [List<String> defaultMemberIds =
     } else if (_discountRegex.hasMatch(desc)) {
       detectedDiscount += parsedPrice;
     } else if (desc.length >= 2) {
-      items.add(ReceiptItemDto(
-        id: 'item_${itemIdCounter++}',
-        name: desc,
-        amount: parsedPrice,
-        assignedMemberIds: List<String>.from(defaultMemberIds),
-      ));
+      items.add(
+        ReceiptItemDto(
+          id: 'item_${itemIdCounter++}',
+          name: desc,
+          amount: parsedPrice,
+          assignedMemberIds: List<String>.from(defaultMemberIds),
+        ),
+      );
     }
   }
 
@@ -180,7 +181,8 @@ ParsedReceiptData parseReceiptText(String text, [List<String> defaultMemberIds =
 
   // Detect date
   String? date;
-  final dateMatch = RegExp(r'\b(\d{4}-\d{2}-\d{2})\b').firstMatch(text) ??
+  final dateMatch =
+      RegExp(r'\b(\d{4}-\d{2}-\d{2})\b').firstMatch(text) ??
       RegExp(r'\b(\d{1,2}[/\-.]\d{1,2}[/\-.]\d{2,4})\b').firstMatch(text);
   if (dateMatch != null) {
     date = dateMatch.group(1);

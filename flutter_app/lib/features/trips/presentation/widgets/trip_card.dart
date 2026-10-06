@@ -86,15 +86,33 @@ class TripCard extends StatelessWidget {
                           style: TextStyle(fontSize: 13, color: tokens.textSecondary),
                         ),
                         const SizedBox(height: 8),
-                        Wrap(spacing: 8, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                          if (headline.isNotEmpty)
-                            Text(headline, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tokens.primaryAccent)),
-                          Text(l10n.tripTravelers(trip.memberIds.length), style: TextStyle(fontSize: 12, color: tokens.textMuted)),
-                          Text(l10n.tripExpenseCount(trip.expenseCount), style: TextStyle(fontSize: 12, color: tokens.textMuted)),
-                          if (trip.archived) _Badge(l10n.tripBadgeArchived, tokens.textMuted),
-                          if (trip.closed) _Badge(l10n.tripBadgeClosed, tokens.successColor),
-                          if (trip.frozen) _Badge(l10n.tripBadgeFrozen, tokens.primaryAccent),
-                        ]),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            if (headline.isNotEmpty)
+                              Text(
+                                headline,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: tokens.primaryAccent,
+                                ),
+                              ),
+                            Text(
+                              l10n.tripTravelers(trip.memberIds.length),
+                              style: TextStyle(fontSize: 12, color: tokens.textMuted),
+                            ),
+                            Text(
+                              l10n.tripExpenseCount(trip.expenseCount),
+                              style: TextStyle(fontSize: 12, color: tokens.textMuted),
+                            ),
+                            if (trip.archived) _Badge(l10n.tripBadgeArchived, tokens.textMuted),
+                            if (trip.closed) _Badge(l10n.tripBadgeClosed, tokens.successColor),
+                            if (trip.frozen) _Badge(l10n.tripBadgeFrozen, tokens.primaryAccent),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -124,8 +142,11 @@ class _Badge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
-        child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+    decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+    child: Text(
+      label,
+      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
+    ),
+  );
 }

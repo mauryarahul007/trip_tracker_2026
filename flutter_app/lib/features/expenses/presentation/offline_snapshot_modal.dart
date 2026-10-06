@@ -30,9 +30,7 @@ class OfflineSnapshotModal extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => OfflineSnapshotModal(tripId: tripId),
     );
   }
@@ -63,12 +61,7 @@ class _OfflineSnapshotModalState extends ConsumerState<OfflineSnapshotModal> {
     final categories = ref.read(tripCategoriesProvider(widget.tripId));
 
     unawaited(AppHaptics.selection());
-    final bundleJson = exportOfflineSnapshot(
-      trip: trip,
-      members: members,
-      expenses: expenses,
-      categories: categories,
-    );
+    final bundleJson = exportOfflineSnapshot(trip: trip, members: members, expenses: expenses, categories: categories);
 
     final filename = getSnapshotFilename(trip.name);
     await ref.read(shareServiceProvider).share(bundleJson, subject: filename);
@@ -144,7 +137,9 @@ class _OfflineSnapshotModalState extends ConsumerState<OfflineSnapshotModal> {
         final title = (row['title'] as String?)?.trim() ?? '';
         if (amount <= 0 || title.isEmpty || title.startsWith('Settlement:')) continue;
 
-        final res = await ref.read(expenseRepositoryProvider).submit(
+        final res = await ref
+            .read(expenseRepositoryProvider)
+            .submit(
               ExpenseSubmission(
                 title: title,
                 amount: amount,
@@ -188,10 +183,7 @@ class _OfflineSnapshotModalState extends ConsumerState<OfflineSnapshotModal> {
               Container(
                 width: 36,
                 height: 36,
-                decoration: BoxDecoration(
-                  color: tokens.primaryAccent.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: tokens.primaryAccent.withValues(alpha: 0.12), shape: BoxShape.circle),
                 child: Icon(AppIcons.sync, size: 20, color: tokens.primaryAccent),
               ),
               const SizedBox(width: 12),
@@ -201,11 +193,7 @@ class _OfflineSnapshotModalState extends ConsumerState<OfflineSnapshotModal> {
                   children: [
                     Text(
                       'Offline Snapshot (.triptracker)',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.textPrimary,
-                      ),
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                     ),
                     Text(
                       'Export & import offline .triptracker files',
@@ -230,10 +218,7 @@ class _OfflineSnapshotModalState extends ConsumerState<OfflineSnapshotModal> {
                   Icon(AppIcons.alert, size: 16, color: tokens.colorDanger),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      _errorMessage!,
-                      style: TextStyle(fontSize: 12.5, color: tokens.colorDanger),
-                    ),
+                    child: Text(_errorMessage!, style: TextStyle(fontSize: 12.5, color: tokens.colorDanger)),
                   ),
                 ],
               ),
@@ -253,10 +238,7 @@ class _OfflineSnapshotModalState extends ConsumerState<OfflineSnapshotModal> {
                   Icon(AppIcons.check, size: 16, color: tokens.colorSuccess),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      _successMessage!,
-                      style: TextStyle(fontSize: 12.5, color: tokens.colorSuccess),
-                    ),
+                    child: Text(_successMessage!, style: TextStyle(fontSize: 12.5, color: tokens.colorSuccess)),
                   ),
                 ],
               ),
@@ -265,7 +247,10 @@ class _OfflineSnapshotModalState extends ConsumerState<OfflineSnapshotModal> {
           ],
 
           // Export section
-          Text('EXPORT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: tokens.textMuted)),
+          Text(
+            'EXPORT',
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: tokens.textMuted),
+          ),
           const SizedBox(height: 6),
           AppButton(
             key: const Key('btn_export_snapshot'),
@@ -277,7 +262,10 @@ class _OfflineSnapshotModalState extends ConsumerState<OfflineSnapshotModal> {
           const SizedBox(height: 20),
 
           // Import section
-          Text('IMPORT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: tokens.textMuted)),
+          Text(
+            'IMPORT',
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: tokens.textMuted),
+          ),
           const SizedBox(height: 6),
           AppButton(
             key: const Key('btn_choose_snapshot_file'),

@@ -29,7 +29,9 @@ class _CloseoutSheetState extends ConsumerState<CloseoutSheet> {
     final l10n = context.l10n;
     final trip = ref.watch(tripProvider(widget.tripId)).value;
     final result = ref.watch(tripSettlementProvider(widget.tripId));
-    if (trip == null || result == null) return const SizedBox(height: 80, child: Center(child: CircularProgressIndicator()));
+    if (trip == null || result == null) {
+      return const SizedBox(height: 80, child: Center(child: CircularProgressIndicator()));
+    }
     final transfers = result.transfers;
     final settled = transfers.isEmpty;
     final outstanding = transfers.fold<double>(0, (s, t) => s + t.amount);
@@ -38,59 +40,87 @@ class _CloseoutSheetState extends ConsumerState<CloseoutSheet> {
     if (_pulse) {
       return Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text(l10n.closeoutPulse, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 12),
-          AppButton(key: const Key('closeout-yes'), label: l10n.closeoutYes, onPressed: () => Navigator.of(context).pop()),
-          const SizedBox(height: 8),
-          AppButton(key: const Key('closeout-no'), label: l10n.closeoutNo, variant: AppButtonVariant.secondary, onPressed: () => Navigator.of(context).pop()),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.closeoutPulse, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            AppButton(
+              key: const Key('closeout-yes'),
+              label: l10n.closeoutYes,
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            const SizedBox(height: 8),
+            AppButton(
+              key: const Key('closeout-no'),
+              label: l10n.closeoutNo,
+              variant: AppButtonVariant.secondary,
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ),
       );
     }
 
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(_locked ? l10n.closeoutLocked : l10n.closeoutTitle(trip.name), key: const Key('closeout-title'), style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Text(
-          settled ? l10n.closeoutSettled : l10n.closeoutOutstanding(formatMoney(context, outstanding, trip.baseCurrency), transfers.length),
-          key: const Key('closeout-body'),
-          style: TextStyle(color: context.tokens.textSecondary),
-        ),
-        if (!_locked && !settled)
-          for (final t in transfers.take(6))
-            Padding(padding: const EdgeInsets.only(top: 4), child: Text('${t.fromLabel} → ${t.toLabel}')),
-        const SizedBox(height: 16),
-        if (!_locked && !settled)
-          AppButton(
-            key: const Key('closeout-review'),
-            label: l10n.closeoutReview,
-            onPressed: () {
-              Navigator.of(context).pop();
-              context.go('/trip/${widget.tripId}/ledger');
-            },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            _locked ? l10n.closeoutLocked : l10n.closeoutTitle(trip.name),
+            key: const Key('closeout-title'),
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-        if (!_locked) ...[
+          const SizedBox(height: 8),
+          Text(
+            settled
+                ? l10n.closeoutSettled
+                : l10n.closeoutOutstanding(formatMoney(context, outstanding, trip.baseCurrency), transfers.length),
+            key: const Key('closeout-body'),
+            style: TextStyle(color: context.tokens.textSecondary),
+          ),
+          if (!_locked && !settled)
+            for (final t in transfers.take(6))
+              Padding(padding: const EdgeInsets.only(top: 4), child: Text('${t.fromLabel} → ${t.toLabel}')),
+          const SizedBox(height: 16),
+          if (!_locked && !settled)
+            AppButton(
+              key: const Key('closeout-review'),
+              label: l10n.closeoutReview,
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.go('/trip/${widget.tripId}/ledger');
+              },
+            ),
+          if (!_locked) ...[
+            const SizedBox(height: 8),
+            AppButton(
+              key: const Key('closeout-lock'),
+              label: settled ? l10n.closeoutLock : l10n.closeoutLockAnyway,
+              variant: settled ? AppButtonVariant.primary : AppButtonVariant.secondary,
+              onPressed: () async {
+                await ref.read(tripRepositoryProvider).setTripState(widget.tripId, closed: true);
+                if (!mounted) return;
+                if (pulseOn) {
+                  setState(() => _pulse = true);
+                } else {
+                  setState(() => _locked = true);
+                }
+              },
+            ),
+          ],
           const SizedBox(height: 8),
           AppButton(
-            key: const Key('closeout-lock'),
-            label: settled ? l10n.closeoutLock : l10n.closeoutLockAnyway,
-            variant: settled ? AppButtonVariant.primary : AppButtonVariant.secondary,
-            onPressed: () async {
-              await ref.read(tripRepositoryProvider).setTripState(widget.tripId, closed: true);
-              if (!mounted) return;
-              if (pulseOn) {
-                setState(() => _pulse = true);
-              } else {
-                setState(() => _locked = true);
-              }
-            },
+            key: const Key('closeout-dismiss'),
+            label: l10n.closeoutNotNow,
+            variant: AppButtonVariant.secondary,
+            onPressed: () => Navigator.of(context).pop(),
           ),
         ],
-        const SizedBox(height: 8),
-        AppButton(key: const Key('closeout-dismiss'), label: l10n.closeoutNotNow, variant: AppButtonVariant.secondary, onPressed: () => Navigator.of(context).pop()),
-      ]),
+      ),
     );
   }
 }

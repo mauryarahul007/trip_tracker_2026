@@ -8,13 +8,7 @@ class AppSwitch extends StatelessWidget {
   final String? title;
   final String? subtitle;
 
-  const AppSwitch({
-    super.key,
-    required this.value,
-    required this.onChanged,
-    this.title,
-    this.subtitle,
-  });
+  const AppSwitch({super.key, required this.value, required this.onChanged, this.title, this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -45,21 +39,11 @@ class AppSwitch extends StatelessWidget {
                 children: [
                   Text(
                     title!,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: tokens.textPrimary,
-                    ),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: tokens.textPrimary),
                   ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
-                    Text(
-                      subtitle!,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: tokens.textSecondary,
-                      ),
-                    ),
+                    Text(subtitle!, style: TextStyle(fontSize: 13, color: tokens.textSecondary)),
                   ],
                 ],
               ),

@@ -44,11 +44,7 @@ String deriveDestCode(String? dest, String? name) {
 }
 
 class StampInkColor {
-  const StampInkColor({
-    required this.stroke,
-    required this.fill,
-    required this.text,
-  });
+  const StampInkColor({required this.stroke, required this.fill, required this.text});
 
   final Color stroke;
   final Color fill;
@@ -56,36 +52,12 @@ class StampInkColor {
 }
 
 final Map<String, StampInkColor> stampPalette = {
-  'teal': const StampInkColor(
-    stroke: Color(0xFF10B981),
-    fill: Color(0x2610B981),
-    text: Color(0xFF34D399),
-  ),
-  'amber': const StampInkColor(
-    stroke: Color(0xFFF59E0B),
-    fill: Color(0x26F59E0B),
-    text: Color(0xFFFBBF24),
-  ),
-  'cyan': const StampInkColor(
-    stroke: Color(0xFF06B6D4),
-    fill: Color(0x2606B6D4),
-    text: Color(0xFF38BDF8),
-  ),
-  'coral': const StampInkColor(
-    stroke: Color(0xFFF43F5E),
-    fill: Color(0x26F43F5E),
-    text: Color(0xFFFB7185),
-  ),
-  'purple': const StampInkColor(
-    stroke: Color(0xFFA855F7),
-    fill: Color(0x26A855F7),
-    text: Color(0xFFC084FC),
-  ),
-  'navy': const StampInkColor(
-    stroke: Color(0xFF38BDF8),
-    fill: Color(0x2638BDF8),
-    text: Color(0xFF7DD3FC),
-  ),
+  'teal': const StampInkColor(stroke: Color(0xFF10B981), fill: Color(0x2610B981), text: Color(0xFF34D399)),
+  'amber': const StampInkColor(stroke: Color(0xFFF59E0B), fill: Color(0x26F59E0B), text: Color(0xFFFBBF24)),
+  'cyan': const StampInkColor(stroke: Color(0xFF06B6D4), fill: Color(0x2606B6D4), text: Color(0xFF38BDF8)),
+  'coral': const StampInkColor(stroke: Color(0xFFF43F5E), fill: Color(0x26F43F5E), text: Color(0xFFFB7185)),
+  'purple': const StampInkColor(stroke: Color(0xFFA855F7), fill: Color(0x26A855F7), text: Color(0xFFC084FC)),
+  'navy': const StampInkColor(stroke: Color(0xFF38BDF8), fill: Color(0x2638BDF8), text: Color(0xFF7DD3FC)),
 };
 
 /// Dynamic vector customs passport stamp matching web PassportStamp.
@@ -127,13 +99,7 @@ class PassportStamp extends StatelessWidget {
           shape: BoxShape.circle,
           color: ink.fill,
           border: Border.all(color: ink.stroke, width: 2.5),
-          boxShadow: [
-            BoxShadow(
-              color: ink.stroke.withValues(alpha: 0.18),
-              blurRadius: 8,
-              spreadRadius: 1,
-            ),
-          ],
+          boxShadow: [BoxShadow(color: ink.stroke.withValues(alpha: 0.18), blurRadius: 8, spreadRadius: 1)],
         ),
         padding: const EdgeInsets.all(4),
         child: Container(

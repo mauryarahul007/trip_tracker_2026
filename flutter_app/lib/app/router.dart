@@ -9,6 +9,13 @@ import '../features/auth/presentation/onboarding_screen.dart';
 import '../features/auth/presentation/reset_password_screen.dart';
 import '../features/auth/presentation/splash_screen.dart';
 import '../features/legal/presentation/privacy_screen.dart';
+import '../features/notifications/presentation/notification_prefs_screen.dart';
+import '../features/notifications/presentation/notifications_screen.dart';
+import '../features/feedback/presentation/bug_report_screen.dart';
+import '../features/feedback/presentation/diagnostics_screen.dart';
+import '../features/feedback/presentation/feature_request_screen.dart';
+import '../features/settings/presentation/flag_overrides_screen.dart';
+import '../features/settings/presentation/settings_screen.dart';
 import '../features/legal/presentation/terms_screen.dart';
 import '../features/smoke_test/presentation/smoke_test_screen.dart';
 import '../features/travel/presentation/live_screen.dart';
@@ -22,7 +29,7 @@ import '../features/members/presentation/members_tab.dart';
 import '../features/notes/presentation/notes_tab.dart';
 import '../features/trip_details/application/trip_nav.dart';
 import '../features/trip_details/domain/trip_tabs.dart';
-import '../features/trip_details/presentation/trip_settings_stub.dart';
+import '../features/trip_details/presentation/trip_settings_screen.dart';
 import '../features/trip_details/presentation/trip_shell_screen.dart';
 import '../features/trips/presentation/join_screen.dart';
 import '../features/trips/presentation/share_screen.dart';
@@ -32,8 +39,7 @@ import 'auth_state.dart';
 final routerKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
 /// Only app-internal invite return paths are honoured (no open redirects).
-String? _safeNext(String? next) =>
-    next != null && RegExp(r'^/join/[A-Za-z0-9._-]{3,64}$').hasMatch(next) ? next : null;
+String? _safeNext(String? next) => next != null && RegExp(r'^/join/[A-Za-z0-9._-]{3,64}$').hasMatch(next) ? next : null;
 
 /// Locations reachable without a session.
 bool _isPublic(String loc) =>
@@ -77,41 +83,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/splash',
-        name: 'splash',
-        builder: (context, state) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: '/',
-        name: 'trips',
-        builder: (context, state) => const TripsScreen(),
-      ),
-      GoRoute(
-        path: '/onboarding',
-        name: 'onboarding',
-        builder: (context, state) => const OnboardingScreen(),
-      ),
-      GoRoute(
-        path: '/login',
-        name: 'login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/splash', name: 'splash', builder: (context, state) => const SplashScreen()),
+      GoRoute(path: '/', name: 'trips', builder: (context, state) => const TripsScreen()),
+      GoRoute(path: '/onboarding', name: 'onboarding', builder: (context, state) => const OnboardingScreen()),
+      GoRoute(path: '/login', name: 'login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/reset-password',
         name: 'reset-password',
         builder: (context, state) => const ResetPasswordScreen(),
       ),
-      GoRoute(
-        path: '/privacy',
-        name: 'privacy',
-        builder: (context, state) => const PrivacyScreen(),
-      ),
-      GoRoute(
-        path: '/terms',
-        name: 'terms',
-        builder: (context, state) => const TermsScreen(),
-      ),
+      GoRoute(path: '/privacy', name: 'privacy', builder: (context, state) => const PrivacyScreen()),
+      GoRoute(path: '/terms', name: 'terms', builder: (context, state) => const TermsScreen()),
       GoRoute(
         path: '/delete-account',
         name: 'delete-account',
@@ -166,35 +148,39 @@ final routerProvider = Provider<GoRouter>((ref) {
             // One branch per TripNavTab, same order as the enum (the pager maps by index).
             branches: [
               for (final tab in TripNavTab.values)
-                StatefulShellBranch(routes: [
-                  GoRoute(
-                    path: tab.name,
-                    name: 'trip-${tab.name}',
-                    builder: (context, state) => switch (tab) {
-                      TripNavTab.chat => ChatPane(tripId: state.pathParameters['id']!),
-                      TripNavTab.expenses => ExpensesTab(tripId: state.pathParameters['id']!),
-                      TripNavTab.ledger => LedgerTab(tripId: state.pathParameters['id']!),
-                      TripNavTab.members => MembersTab(tripId: state.pathParameters['id']!),
-                      TripNavTab.notes => NotesTab(tripId: state.pathParameters['id']!),
-                    },
-                    routes: [
-                      if (tab == TripNavTab.expenses) ...[
-                        // Full-screen: must cover the tab bar, so they live on the root navigator.
-                        GoRoute(
-                          path: 'new',
-                          parentNavigatorKey: routerKey,
-                          builder: (context, state) => ExpenseFormScreen(tripId: state.pathParameters['id']!),
-                        ),
-                        GoRoute(
-                          path: ':eid/edit',
-                          parentNavigatorKey: routerKey,
-                          builder: (context, state) =>
-                              ExpenseFormScreen(tripId: state.pathParameters['id']!, expenseId: state.pathParameters['eid']),
-                        ),
+                StatefulShellBranch(
+                  routes: [
+                    GoRoute(
+                      path: tab.name,
+                      name: 'trip-${tab.name}',
+                      builder: (context, state) => switch (tab) {
+                        TripNavTab.chat => ChatPane(tripId: state.pathParameters['id']!),
+                        TripNavTab.expenses => ExpensesTab(tripId: state.pathParameters['id']!),
+                        TripNavTab.ledger => LedgerTab(tripId: state.pathParameters['id']!),
+                        TripNavTab.members => MembersTab(tripId: state.pathParameters['id']!),
+                        TripNavTab.notes => NotesTab(tripId: state.pathParameters['id']!),
+                      },
+                      routes: [
+                        if (tab == TripNavTab.expenses) ...[
+                          // Full-screen: must cover the tab bar, so they live on the root navigator.
+                          GoRoute(
+                            path: 'new',
+                            parentNavigatorKey: routerKey,
+                            builder: (context, state) => ExpenseFormScreen(tripId: state.pathParameters['id']!),
+                          ),
+                          GoRoute(
+                            path: ':eid/edit',
+                            parentNavigatorKey: routerKey,
+                            builder: (context, state) => ExpenseFormScreen(
+                              tripId: state.pathParameters['id']!,
+                              expenseId: state.pathParameters['eid'],
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                ]),
+                    ),
+                  ],
+                ),
             ],
           ),
           GoRoute(
@@ -210,15 +196,28 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'settings',
             name: 'trip-settings',
-            builder: (context, state) => const TripSettingsStub(),
+            builder: (context, state) => TripSettingsScreen(tripId: state.pathParameters['id']!),
           ),
         ],
       ),
       GoRoute(
-        path: '/smoke-test',
-        name: 'smoke-test',
-        builder: (context, state) => const SmokeTestScreen(),
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
+        routes: [
+          GoRoute(path: 'notifications', builder: (context, state) => const NotificationPrefsScreen()),
+          GoRoute(path: 'report-bug', builder: (context, state) => const BugReportScreen()),
+          GoRoute(path: 'feature-request', builder: (context, state) => const FeatureRequestScreen()),
+          GoRoute(path: 'diagnostics', builder: (context, state) => const DiagnosticsScreen()),
+          GoRoute(path: 'flag-overrides', builder: (context, state) => const FlagOverridesScreen()),
+        ],
       ),
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => NotificationsScreen(tripId: state.uri.queryParameters['trip']),
+      ),
+      GoRoute(path: '/smoke-test', name: 'smoke-test', builder: (context, state) => const SmokeTestScreen()),
     ],
   );
 });

@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -33,11 +34,8 @@ class ReceiptOcrModal extends ConsumerStatefulWidget {
     return AppSheet.show<void>(
       context: context,
       title: 'Scan & Itemize Receipt',
-      builder: (_) => ReceiptOcrModal(
-        tripId: tripId,
-        defaultMemberIds: defaultMemberIds,
-        onApplyReceipt: onApplyReceipt,
-      ),
+      builder: (_) =>
+          ReceiptOcrModal(tripId: tripId, defaultMemberIds: defaultMemberIds, onApplyReceipt: onApplyReceipt),
     );
   }
 
@@ -157,10 +155,7 @@ class _ReceiptOcrModalState extends ConsumerState<ReceiptOcrModal> {
               Container(
                 width: 36,
                 height: 36,
-                decoration: BoxDecoration(
-                  color: tokens.primaryAccent.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: tokens.primaryAccent.withValues(alpha: 0.12), shape: BoxShape.circle),
                 child: Icon(AppIcons.receipt, size: 20, color: tokens.primaryAccent),
               ),
               const SizedBox(width: 12),
@@ -170,11 +165,7 @@ class _ReceiptOcrModalState extends ConsumerState<ReceiptOcrModal> {
                   children: [
                     Text(
                       'Scan & Itemize Receipt',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.textPrimary,
-                      ),
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                     ),
                     Text(
                       'Extract items, taxes and tips automatically',
@@ -199,10 +190,7 @@ class _ReceiptOcrModalState extends ConsumerState<ReceiptOcrModal> {
                   Icon(AppIcons.alert, size: 16, color: tokens.colorDanger),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      _errorMessage!,
-                      style: TextStyle(fontSize: 12.5, color: tokens.colorDanger),
-                    ),
+                    child: Text(_errorMessage!, style: TextStyle(fontSize: 12.5, color: tokens.colorDanger)),
                   ),
                 ],
               ),
@@ -259,17 +247,10 @@ class _ReceiptOcrModalState extends ConsumerState<ReceiptOcrModal> {
                     children: [
                       Text(
                         parsed.merchant ?? 'Detected Receipt',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: tokens.textPrimary,
-                        ),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                       ),
                       if (parsed.date != null)
-                        Text(
-                          parsed.date!,
-                          style: TextStyle(fontSize: 12, color: tokens.textMuted),
-                        ),
+                        Text(parsed.date!, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
                     ],
                   ),
                   const Divider(height: 20),
@@ -305,8 +286,10 @@ class _ReceiptOcrModalState extends ConsumerState<ReceiptOcrModal> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Tax / GST', style: TextStyle(fontSize: 12, color: tokens.textSecondary)),
-                          Text(parsed.tax.toStringAsFixed(2),
-                              style: TextStyle(fontSize: 12, color: tokens.textSecondary, fontFamily: 'monospace')),
+                          Text(
+                            parsed.tax.toStringAsFixed(2),
+                            style: TextStyle(fontSize: 12, color: tokens.textSecondary, fontFamily: 'monospace'),
+                          ),
                         ],
                       ),
                     ),
@@ -317,8 +300,10 @@ class _ReceiptOcrModalState extends ConsumerState<ReceiptOcrModal> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Tip / Gratuity', style: TextStyle(fontSize: 12, color: tokens.textSecondary)),
-                          Text(parsed.tip.toStringAsFixed(2),
-                              style: TextStyle(fontSize: 12, color: tokens.textSecondary, fontFamily: 'monospace')),
+                          Text(
+                            parsed.tip.toStringAsFixed(2),
+                            style: TextStyle(fontSize: 12, color: tokens.textSecondary, fontFamily: 'monospace'),
+                          ),
                         ],
                       ),
                     ),
@@ -329,8 +314,10 @@ class _ReceiptOcrModalState extends ConsumerState<ReceiptOcrModal> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Discount', style: TextStyle(fontSize: 12, color: tokens.colorSuccess)),
-                          Text('-${parsed.discount.toStringAsFixed(2)}',
-                              style: TextStyle(fontSize: 12, color: tokens.colorSuccess, fontFamily: 'monospace')),
+                          Text(
+                            '-${parsed.discount.toStringAsFixed(2)}',
+                            style: TextStyle(fontSize: 12, color: tokens.colorSuccess, fontFamily: 'monospace'),
+                          ),
                         ],
                       ),
                     ),

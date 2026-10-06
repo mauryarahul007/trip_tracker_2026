@@ -7,10 +7,29 @@ import 'package:trip_tracker/shared/widgets/app_button.dart';
 
 import '../../support/pump_app.dart';
 
-Future<String> seedTrip(WidgetTester tester, ProviderContainer c, String name,
-    {String start = '2026-10-10', String end = '2026-10-15', String? destination, String owner = 'u1'}) async {
-  return real(tester, () => c.read(tripRepositoryProvider).createTrip(
-        name: name, startDate: start, endDate: end, baseCurrency: 'INR', ownerId: owner, creatorName: 'Asha', destination: destination));
+Future<String> seedTrip(
+  WidgetTester tester,
+  ProviderContainer c,
+  String name, {
+  String start = '2026-10-10',
+  String end = '2026-10-15',
+  String? destination,
+  String owner = 'u1',
+}) async {
+  return real(
+    tester,
+    () => c
+        .read(tripRepositoryProvider)
+        .createTrip(
+          name: name,
+          startDate: start,
+          endDate: end,
+          baseCurrency: 'INR',
+          ownerId: owner,
+          creatorName: 'Asha',
+          destination: destination,
+        ),
+  );
 }
 
 ProviderContainer containerOf(WidgetTester tester) =>
@@ -32,8 +51,12 @@ void main() {
     await seedTrip(tester, c, 'Beach Break', start: '2026-11-05', end: '2026-11-08');
     await settle(tester);
 
-    List<String> order() => tester.widgetList<Text>(find.byWidgetPredicate((w) => w is Text && ['Goa Weekend', 'Alps Ski', 'Beach Break'].contains(w.data)))
-        .map((t) => t.data!).toList();
+    List<String> order() => tester
+        .widgetList<Text>(
+          find.byWidgetPredicate((w) => w is Text && ['Goa Weekend', 'Alps Ski', 'Beach Break'].contains(w.data)),
+        )
+        .map((t) => t.data!)
+        .toList();
     expect(order(), ['Alps Ski', 'Goa Weekend', 'Beach Break']);
 
     await tester.tap(find.byTooltip('Newest first'));
@@ -90,7 +113,10 @@ void main() {
     await tester.pump(const Duration(seconds: 6));
     await settle(tester, rounds: 12);
     expect(await real(tester, () => c.read(tripRepositoryProvider).watchTrip(id).first), isNull);
-    expect((await real(tester, () => c.read(outboxStoreProvider).all())).map((i) => i.type), contains(OutboxType.deleteTrip));
+    expect(
+      (await real(tester, () => c.read(outboxStoreProvider).all())).map((i) => i.type),
+      contains(OutboxType.deleteTrip),
+    );
   });
 
   testApp('delete undo keeps the trip and queues nothing', (tester) async {
@@ -106,7 +132,10 @@ void main() {
     await settle(tester);
     expect(find.text('Goa Weekend'), findsOneWidget);
     expect(await real(tester, () => c.read(tripRepositoryProvider).watchTrip(id).first), isNotNull);
-    expect((await real(tester, () => c.read(outboxStoreProvider).all())).map((i) => i.type), isNot(contains(OutboxType.deleteTrip)));
+    expect(
+      (await real(tester, () => c.read(outboxStoreProvider).all())).map((i) => i.type),
+      isNot(contains(OutboxType.deleteTrip)),
+    );
   });
 
   testApp('trips owned by someone else cannot be archived or deleted from the list', (tester) async {

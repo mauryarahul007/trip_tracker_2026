@@ -119,3 +119,15 @@ flutter test
 # 4. Android APK verification build
 flutter build apk --debug --flavor dev -t lib/main.dart
 ```
+
+---
+
+## 6. Release builds (Phase 12)
+
+- **Version:** `tool/release_version.sh` prints `--build-name` (from the repo `package.json`) and `--build-number` (commit count, the Capacitor scheme). It refuses a number at or below the last Capacitor store build (default floor 746; set `TT_MIN_BUILD_NUMBER`). `pubspec.yaml`'s `version` is a placeholder; release builds always pass the flags.
+- **Android signing:** `android/key.properties` (git-ignored) or `TT_KEYSTORE_PATH`, `TT_KEYSTORE_PASSWORD`, `TT_KEY_ALIAS`, `TT_KEY_PASSWORD`. Without them a local release build falls back to the debug key; `tool/check_release_signing.sh` rejects such a file in CI.
+- **Hardening:** `allowBackup="false"`, cleartext traffic off in release (on in debug for a local Supabase), R8 shrinking, `--obfuscate --split-debug-info` (keep `build/symbols`).
+- **Checks on a built file:** `tool/check_release_signing.sh <aab|apk>`, `tool/scan_binary_secrets.sh <aab|apk|ipa>`.
+- **Pipelines and promotion:** `docs/flutter-migration/store/RELEASE_PIPELINE.md`.
+- **Formatting:** `analysis_options.yaml` sets the formatter width to 120; CI runs `dart format --set-exit-if-changed .`.
+

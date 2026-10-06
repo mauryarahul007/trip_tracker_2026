@@ -33,8 +33,8 @@ class SyncEngine {
     this.maxDelay = const Duration(minutes: 5),
     DateTime Function()? now,
     Random? random,
-  })  : _now = now ?? DateTime.now,
-        _random = random ?? Random();
+  }) : _now = now ?? DateTime.now,
+       _random = random ?? Random();
 
   final OutboxStore store;
   final OutboxRemote remote;

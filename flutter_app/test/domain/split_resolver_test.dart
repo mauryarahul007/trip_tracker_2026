@@ -8,7 +8,10 @@ import 'package:trip_tracker/domain/models/expense.dart';
 
 void main() {
   final cases = [
-    for (final c in (jsonDecode(File('../docs/flutter-migration/fixtures/split_resolver.json').readAsStringSync()) as Map<String, dynamic>)['cases'] as List)
+    for (final c
+        in (jsonDecode(File('../docs/flutter-migration/fixtures/split_resolver.json').readAsStringSync())
+                as Map<String, dynamic>)['cases']
+            as List)
       c as Map<String, dynamic>,
   ];
 
@@ -23,7 +26,9 @@ void main() {
         participants: List<String>.from(c['participants'] as List),
         currency: e['currency'] as String?,
         splitConfig: (e['splitConfig'] as Map<String, dynamic>?)?.map((k, v) => MapEntry(k, (v as num).toDouble())),
-        itemizedConfig: e['itemizedConfig'] == null ? null : ItemizedReceiptConfig.fromJson(e['itemizedConfig'] as Map<String, dynamic>),
+        itemizedConfig: e['itemizedConfig'] == null
+            ? null
+            : ItemizedReceiptConfig.fromJson(e['itemizedConfig'] as Map<String, dynamic>),
       );
       final want = (c['result'] as Map<String, dynamic>).map((k, v) => MapEntry(k, (v as num).toDouble()));
       if (got.length != want.length || want.entries.any((w) => got[w.key] != w.value)) {

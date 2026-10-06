@@ -183,10 +183,7 @@ class DefaultWeatherService implements WeatherService {
   final http.Client _client;
   final SharedPreferences? prefs;
 
-  DefaultWeatherService({
-    http.Client? client,
-    this.prefs,
-  }) : _client = client ?? http.Client();
+  DefaultWeatherService({http.Client? client, this.prefs}) : _client = client ?? http.Client();
 
   static const int realtimeTtlMs = 20 * 60 * 1000; // 20 minutes
   static const int maxOfflineCacheMs = 24 * 60 * 60 * 1000; // 24 hours
@@ -219,9 +216,7 @@ class DefaultWeatherService implements WeatherService {
 
     // 2. Photon Komoot OSM API fallback
     try {
-      final uri = Uri.parse(
-        'https://photon.komoot.io/api/?q=${Uri.encodeComponent(query)}&limit=1',
-      );
+      final uri = Uri.parse('https://photon.komoot.io/api/?q=${Uri.encodeComponent(query)}&limit=1');
       final res = await _client.get(uri).timeout(const Duration(milliseconds: 4000));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
@@ -254,10 +249,7 @@ class DefaultWeatherService implements WeatherService {
     return null;
   }
 
-  Future<WeatherData?> _fetchLiveWeather(
-    ({double lat, double lon, String name}) coords,
-    String targetName,
-  ) async {
+  Future<WeatherData?> _fetchLiveWeather(({double lat, double lon, String name}) coords, String targetName) async {
     try {
       final uri = Uri.parse(
         'https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,apparent_temperature,weather_code,is_day',

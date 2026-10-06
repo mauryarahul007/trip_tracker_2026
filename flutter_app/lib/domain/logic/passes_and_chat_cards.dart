@@ -25,9 +25,7 @@ String cleanPassengerName(String raw) {
       .replaceAll(RegExp(r'\s+'), ' ')
       .trim();
 
-  if (stripped.isNotEmpty &&
-      stripped == stripped.toUpperCase() &&
-      RegExp(r'[A-Z]').hasMatch(stripped)) {
+  if (stripped.isNotEmpty && stripped == stripped.toUpperCase() && RegExp(r'[A-Z]').hasMatch(stripped)) {
     return stripped
         .toLowerCase()
         .split(' ')
@@ -53,12 +51,12 @@ class PassStubCell {
   });
 
   Map<String, dynamic> toJson() => {
-        'label': label,
-        'amount': amount % 1 == 0 ? amount.toInt() : amount,
-        'signed': signed,
-        'tone': tone,
-        'caption': caption,
-      };
+    'label': label,
+    'amount': amount % 1 == 0 ? amount.toInt() : amount,
+    'signed': signed,
+    'tone': tone,
+    'caption': caption,
+  };
 }
 
 class PassStub {
@@ -66,17 +64,9 @@ class PassStub {
   final PassStubCell right;
   final String? summary;
 
-  const PassStub({
-    required this.left,
-    required this.right,
-    this.summary,
-  });
+  const PassStub({required this.left, required this.right, this.summary});
 
-  Map<String, dynamic> toJson() => {
-        'left': left.toJson(),
-        'right': right.toJson(),
-        'summary': summary,
-      };
+  Map<String, dynamic> toJson() => {'left': left.toJson(), 'right': right.toJson(), 'summary': summary};
 }
 
 class PassStubGroup {
@@ -84,11 +74,7 @@ class PassStubGroup {
   final double balance;
   final List<String> otherMemberNames;
 
-  const PassStubGroup({
-    required this.name,
-    required this.balance,
-    this.otherMemberNames = const [],
-  });
+  const PassStubGroup({required this.name, required this.balance, this.otherMemberNames = const []});
 }
 
 const _even = 0.01;
@@ -126,10 +112,7 @@ String toneFor(double amount) {
   return amount > 0 ? 'receive' : 'pay';
 }
 
-PassStub buildPassStub(
-  Map<String, dynamic> input,
-  String Function(double amount) format,
-) {
+PassStub buildPassStub(Map<String, dynamic> input, String Function(double amount) format) {
   final myNet = (input['myNet'] as num).toDouble();
   final paid = (input['paid'] as num).toDouble();
   final share = (input['share'] as num).toDouble();
@@ -184,24 +167,12 @@ class ChatExpenseCardPresentation {
   final String icon;
   final String whoLabel;
 
-  const ChatExpenseCardPresentation({
-    required this.variant,
-    required this.icon,
-    required this.whoLabel,
-  });
+  const ChatExpenseCardPresentation({required this.variant, required this.icon, required this.whoLabel});
 
-  Map<String, dynamic> toJson() => {
-        'variant': variant,
-        'icon': icon,
-        'whoLabel': whoLabel,
-      };
+  Map<String, dynamic> toJson() => {'variant': variant, 'icon': icon, 'whoLabel': whoLabel};
 }
 
-ChatExpenseCardPresentation getChatExpenseCardPresentation(
-  String kind,
-  bool isMine,
-  String senderName,
-) {
+ChatExpenseCardPresentation getChatExpenseCardPresentation(String kind, bool isMine, String senderName) {
   final who = isMine ? 'You' : senderName;
   if (kind == 'settlement_recorded') {
     return ChatExpenseCardPresentation(variant: 'settlement', icon: '🤝', whoLabel: '$who recorded settlement');

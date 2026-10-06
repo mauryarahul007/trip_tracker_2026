@@ -38,29 +38,19 @@ void main() {
     });
 
     test('counts distinct destinations case-insensitively and ignores blanks', () {
-      final p = computeTravelerPassport(
-        [
-          _makeTrip(destination: 'Goa'),
-          _makeTrip(destination: ' goa '),
-          _makeTrip(destination: 'Bali'),
-          _makeTrip(destination: '  '),
-          _makeTrip(),
-        ],
-        _now,
-      );
+      final p = computeTravelerPassport([
+        _makeTrip(destination: 'Goa'),
+        _makeTrip(destination: ' goa '),
+        _makeTrip(destination: 'Bali'),
+        _makeTrip(destination: '  '),
+        _makeTrip(),
+      ], _now);
       expect(p.destinations, 2);
       expect(p.trips, 5);
     });
 
     test('counts closed trips as settled', () {
-      final p = computeTravelerPassport(
-        [
-          _makeTrip(closed: true),
-          _makeTrip(closed: false),
-          _makeTrip(),
-        ],
-        _now,
-      );
+      final p = computeTravelerPassport([_makeTrip(closed: true), _makeTrip(closed: false), _makeTrip()], _now);
       expect(p.tripsSettled, 1);
     });
 

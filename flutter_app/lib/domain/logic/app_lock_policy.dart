@@ -8,5 +8,4 @@ bool shouldLockOnResume({
   required DateTime? backgroundedAt,
   required DateTime now,
   Duration timeout = appLockTimeout,
-}) =>
-    enabled && backgroundedAt != null && now.difference(backgroundedAt) >= timeout;
+}) => enabled && backgroundedAt != null && now.difference(backgroundedAt) >= timeout;

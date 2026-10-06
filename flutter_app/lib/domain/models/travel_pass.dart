@@ -149,10 +149,7 @@ class TravelPass {
       phone: json['phone'] as String?,
       qrData: json['qrData'] as String?,
       notes: json['notes'] as String?,
-      assignedMemberIds: (json['assignedMemberIds'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          const [],
+      assignedMemberIds: (json['assignedMemberIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
       attachmentUrl: json['attachmentUrl'] as String?,
       attachmentName: json['attachmentName'] as String?,
       createdAt: (json['createdAt'] as num?)?.toInt() ?? 0,

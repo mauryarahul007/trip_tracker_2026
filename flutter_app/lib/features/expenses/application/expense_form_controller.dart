@@ -67,10 +67,25 @@ class FormFlags {
   bool get chatCards => _f('enableInChatEventCards') && _f('enableTripChat');
 
   static const keys = [
-    'enableMultiPayerExpenses', 'enableItemizedSplit', 'enableAdvancedSplits', 'enableCurrencyFx', 'enableReceiptUpload',
-    'enableReceiptOcr', 'enablePredictiveChips', 'enableDuplicateDetector', 'enableCloneLastExpense', 'enableRememberDefaultSplit',
-    'enablePersistentExpenseDraft', 'enableSplitExclusionDefaults', 'enableDateRangeMembership', 'enableCategoryReorder',
-    'enableCompactExpenseForm', 'enableExplainThisNumber', 'enableExpenseApprovalThreshold', 'enableInChatEventCards', 'enableTripChat',
+    'enableMultiPayerExpenses',
+    'enableItemizedSplit',
+    'enableAdvancedSplits',
+    'enableCurrencyFx',
+    'enableReceiptUpload',
+    'enableReceiptOcr',
+    'enablePredictiveChips',
+    'enableDuplicateDetector',
+    'enableCloneLastExpense',
+    'enableRememberDefaultSplit',
+    'enablePersistentExpenseDraft',
+    'enableSplitExclusionDefaults',
+    'enableDateRangeMembership',
+    'enableCategoryReorder',
+    'enableCompactExpenseForm',
+    'enableExplainThisNumber',
+    'enableExpenseApprovalThreshold',
+    'enableInChatEventCards',
+    'enableTripChat',
   ];
 }
 
@@ -169,7 +184,10 @@ class ExpenseFormState {
   /// text fields rebuild with the new values instead of keeping stale text.
   final int epoch;
 
-  List<String> get selectedIds => [for (final e in selected.entries) if (e.value) e.key];
+  List<String> get selectedIds => [
+    for (final e in selected.entries)
+      if (e.value) e.key,
+  ];
 
   ExpenseFormState copyWith({
     String? title,
@@ -198,33 +216,32 @@ class ExpenseFormState {
     String? ignoredDuplicateId,
     bool? showDuplicateDetails,
     bool bump = false,
-  }) =>
-      ExpenseFormState(
-        title: title ?? this.title,
-        amount: amount ?? this.amount,
-        category: category ?? this.category,
-        date: date ?? this.date,
-        payer: payer ?? this.payer,
-        currency: currency ?? this.currency,
-        splitMode: splitMode ?? this.splitMode,
-        selected: selected ?? this.selected,
-        payerMode: payerMode ?? this.payerMode,
-        multiPayerShares: multiPayerShares ?? this.multiPayerShares,
-        splitConfig: splitConfig ?? this.splitConfig,
-        items: items ?? this.items,
-        tax: tax ?? this.tax,
-        tip: tip ?? this.tip,
-        discount: discount ?? this.discount,
-        receiptPath: clearReceipt ? null : (receiptPath ?? this.receiptPath),
-        error: clearError ? null : (error ?? this.error),
-        submitting: submitting ?? this.submitting,
-        draftRestored: draftRestored ?? this.draftRestored,
-        autoCategoryName: clearAutoCategory ? null : (autoCategoryName ?? this.autoCategoryName),
-        ignoredDuplicateId: ignoredDuplicateId ?? this.ignoredDuplicateId,
-        showDuplicateDetails: showDuplicateDetails ?? this.showDuplicateDetails,
-        newExpenseId: newExpenseId,
-        epoch: bump ? epoch + 1 : epoch,
-      );
+  }) => ExpenseFormState(
+    title: title ?? this.title,
+    amount: amount ?? this.amount,
+    category: category ?? this.category,
+    date: date ?? this.date,
+    payer: payer ?? this.payer,
+    currency: currency ?? this.currency,
+    splitMode: splitMode ?? this.splitMode,
+    selected: selected ?? this.selected,
+    payerMode: payerMode ?? this.payerMode,
+    multiPayerShares: multiPayerShares ?? this.multiPayerShares,
+    splitConfig: splitConfig ?? this.splitConfig,
+    items: items ?? this.items,
+    tax: tax ?? this.tax,
+    tip: tip ?? this.tip,
+    discount: discount ?? this.discount,
+    receiptPath: clearReceipt ? null : (receiptPath ?? this.receiptPath),
+    error: clearError ? null : (error ?? this.error),
+    submitting: submitting ?? this.submitting,
+    draftRestored: draftRestored ?? this.draftRestored,
+    autoCategoryName: clearAutoCategory ? null : (autoCategoryName ?? this.autoCategoryName),
+    ignoredDuplicateId: ignoredDuplicateId ?? this.ignoredDuplicateId,
+    showDuplicateDetails: showDuplicateDetails ?? this.showDuplicateDetails,
+    newExpenseId: newExpenseId,
+    epoch: bump ? epoch + 1 : epoch,
+  );
 
   /// Whether anything worth confirming on "close" has been entered.
   bool get isEmpty => title.trim().isEmpty && amount.isEmpty && receiptPath == null && splitConfig.isEmpty;
@@ -270,7 +287,9 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
     final members = _members;
     final base = trip.baseCurrency.isEmpty ? 'INR' : trip.baseCurrency;
     final today = todayDateString(_now);
-    final defaultCategory = _categories.any((c) => c.id == 'cat-food') ? 'cat-food' : (_categories.isEmpty ? '' : _categories.first.id);
+    final defaultCategory = _categories.any((c) => c.id == 'cat-food')
+        ? 'cat-food'
+        : (_categories.isEmpty ? '' : _categories.first.id);
     final newId = ref.read(expenseIdProvider)();
 
     if (editing) {
@@ -286,7 +305,9 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
           splitMode: e.splitMode,
           selected: {for (final id in e.splitMemberIds) id: true},
           payerMode: e.paidByShares != null && e.paidByShares!.length > 1 ? PayerMode.multiple : PayerMode.single,
-          multiPayerShares: {for (final p in (e.paidByShares ?? const <String, double>{}).entries) p.key: _numText(p.value)},
+          multiPayerShares: {
+            for (final p in (e.paidByShares ?? const <String, double>{}).entries) p.key: _numText(p.value),
+          },
           splitConfig: {for (final c in (e.splitConfig ?? const <String, double>{}).entries) c.key: _numText(c.value)},
           items: e.itemizedConfig?.items ?? const [],
           tax: e.itemizedConfig?.tax == null ? '' : _numText(e.itemizedConfig!.tax!),
@@ -297,9 +318,12 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
       }
     }
 
-    final payer = resolveDefaultExpensePayerId(members, currentMemberId: _myMemberId, fallbackToFirstMember: true) ?? '';
+    final payer =
+        resolveDefaultExpensePayerId(members, currentMemberId: _myMemberId, fallbackToFirstMember: true) ?? '';
     // New expenses start with everyone in, minus date-range absentees and the category's default exclusions.
-    final excluded = flags.exclusionDefaults ? (trip.splitExclusionDefaults[defaultCategory] ?? const <String>[]) : const <String>[];
+    final excluded = flags.exclusionDefaults
+        ? (trip.splitExclusionDefaults[defaultCategory] ?? const <String>[])
+        : const <String>[];
     final selected = {
       for (final m in members)
         m.id: (flags.dateRangeMembership ? isMemberPresentOnDate(m, today) : true) && !excluded.contains(m.id),
@@ -353,7 +377,10 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
           base0 = base0.copyWith(
             selected: {for (final m in members) m.id: ids.contains(m.id)},
             splitMode: stored.splitMode,
-            splitConfig: {for (final c in (stored.splitConfig ?? const <String, double>{}).entries) if (allowed.contains(c.key)) c.key: _numText(c.value)},
+            splitConfig: {
+              for (final c in (stored.splitConfig ?? const <String, double>{}).entries)
+                if (allowed.contains(c.key)) c.key: _numText(c.value),
+            },
           );
         }
       }
@@ -362,7 +389,8 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
   }
 
   static String _numText(double v) => v == v.roundToDouble() ? v.toInt().toString() : v.toString();
-  static Map<String, String> _strMap(Object? m) => m is Map ? {for (final e in m.entries) '${e.key}': '${e.value}'} : const {};
+  static Map<String, String> _strMap(Object? m) =>
+      m is Map ? {for (final e in m.entries) '${e.key}': '${e.value}'} : const {};
 
   Map<String, dynamic>? _readDraftSync() {
     if (editing) return null;
@@ -450,7 +478,9 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
     return ExpenseFormState(
       title: '',
       amount: '',
-      category: _categories.any((c) => c.id == 'cat-food') ? 'cat-food' : (_categories.isEmpty ? '' : _categories.first.id),
+      category: _categories.any((c) => c.id == 'cat-food')
+          ? 'cat-food'
+          : (_categories.isEmpty ? '' : _categories.first.id),
       date: today,
       payer: resolveDefaultExpensePayerId(members, currentMemberId: _myMemberId, fallbackToFirstMember: true) ?? '',
       currency: base,
@@ -492,7 +522,9 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
     // Changing category re-applies that category's default exclusions to a still-pristine split.
     if (flags.exclusionDefaults && !editing && state.splitConfig.isEmpty) {
       final excluded = _trip.splitExclusionDefaults[id] ?? const <String>[];
-      next = next.copyWith(selected: {for (final m in _members) m.id: (state.selected[m.id] ?? true) && !excluded.contains(m.id)});
+      next = next.copyWith(
+        selected: {for (final m in _members) m.id: (state.selected[m.id] ?? true) && !excluded.contains(m.id)},
+      );
     }
     _set(next);
   }
@@ -510,10 +542,14 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
       setDate(parsed.date!);
     }
   }
+
   void setPayer(String id) => _set(state.copyWith(payer: id, clearError: true));
   void setPayerMode(PayerMode m) {
     var next = state.copyWith(payerMode: m, clearError: true);
-    if (m == PayerMode.multiple && state.multiPayerShares.isEmpty && state.payer.isNotEmpty && state.amount.isNotEmpty) {
+    if (m == PayerMode.multiple &&
+        state.multiPayerShares.isEmpty &&
+        state.payer.isNotEmpty &&
+        state.amount.isNotEmpty) {
       next = next.copyWith(multiPayerShares: {state.payer: state.amount});
     }
     _set(next);
@@ -537,7 +573,14 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
       _set(state.copyWith(splitConfig: {...state.splitConfig, memberId: v}, clearError: true));
 
   // Presets (web: Equal for all / payer 50% / only payer / everyone but payer)
-  void presetEveryone() => _set(state.copyWith(selected: {for (final m in _members) m.id: true}, splitConfig: const {}, splitMode: 'equal', bump: true));
+  void presetEveryone() => _set(
+    state.copyWith(
+      selected: {for (final m in _members) m.id: true},
+      splitConfig: const {},
+      splitMode: 'equal',
+      bump: true,
+    ),
+  );
 
   void presetOnlyPayer() {
     if (state.payer.isEmpty) return;
@@ -546,14 +589,28 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
 
   void presetExcludePayer() {
     if (state.payer.isEmpty) return;
-    _set(state.copyWith(selected: {for (final m in _members) m.id: m.id != state.payer}, splitConfig: const {}, splitMode: 'equal', bump: true));
+    _set(
+      state.copyWith(
+        selected: {for (final m in _members) m.id: m.id != state.payer},
+        splitConfig: const {},
+        splitMode: 'equal',
+        bump: true,
+      ),
+    );
   }
 
   void presetPayerHalf() {
     if (state.payer.isEmpty) return;
     final others = _members.where((m) => m.id != state.payer).toList();
     final cfg = {state.payer: '50', for (final m in others) m.id: (50 / others.length).toStringAsFixed(1)};
-    _set(state.copyWith(selected: {for (final m in _members) m.id: true}, splitConfig: cfg, splitMode: 'percentage', bump: true));
+    _set(
+      state.copyWith(
+        selected: {for (final m in _members) m.id: true},
+        splitConfig: cfg,
+        splitMode: 'percentage',
+        bump: true,
+      ),
+    );
   }
 
   /// Group shortcut: select exactly this group's members (web `handleApplyGroupToSplitLocal`).
@@ -578,18 +635,45 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
   // Itemized receipt
   void addItem() {
     final n = state.items.length + 1;
-    _set(state.copyWith(items: [
-      ...state.items,
-      ReceiptItem(id: 'item-${_now.microsecondsSinceEpoch}-$n', name: 'Item $n', amount: 0, assignedMemberIds: [for (final m in _members) m.id]),
-    ]));
+    _set(
+      state.copyWith(
+        items: [
+          ...state.items,
+          ReceiptItem(
+            id: 'item-${_now.microsecondsSinceEpoch}-$n',
+            name: 'Item $n',
+            amount: 0,
+            assignedMemberIds: [for (final m in _members) m.id],
+          ),
+        ],
+      ),
+    );
   }
 
-  void updateItem(String id, {String? name, double? amount, List<String>? assigned}) => _set(state.copyWith(items: [
+  void updateItem(String id, {String? name, double? amount, List<String>? assigned}) => _set(
+    state.copyWith(
+      items: [
         for (final i in state.items)
-          i.id == id ? ReceiptItem(id: i.id, name: name ?? i.name, amount: amount ?? i.amount, assignedMemberIds: assigned ?? i.assignedMemberIds) : i,
-      ]));
+          i.id == id
+              ? ReceiptItem(
+                  id: i.id,
+                  name: name ?? i.name,
+                  amount: amount ?? i.amount,
+                  assignedMemberIds: assigned ?? i.assignedMemberIds,
+                )
+              : i,
+      ],
+    ),
+  );
 
-  void removeItem(String id) => _set(state.copyWith(items: [for (final i in state.items) if (i.id != id) i]));
+  void removeItem(String id) => _set(
+    state.copyWith(
+      items: [
+        for (final i in state.items)
+          if (i.id != id) i,
+      ],
+    ),
+  );
   void setTax(String v) => _set(state.copyWith(tax: v));
   void setTip(String v) => _set(state.copyWith(tip: v));
   void setDiscount(String v) => _set(state.copyWith(discount: v));
@@ -625,7 +709,8 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
   }
 
   // Shortcuts
-  List<PredictiveQuickChip> get chips => flags.predictiveChips ? getPredictiveQuickChips(_categories, _expenses, _now) : const [];
+  List<PredictiveQuickChip> get chips =>
+      flags.predictiveChips ? getPredictiveQuickChips(_categories, _expenses, _now) : const [];
 
   void applyChip(PredictiveQuickChip c) {
     _autoPicking = false;
@@ -640,18 +725,20 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
     if (e == null) return;
     final memberIds = _members.map((m) => m.id).toSet();
     _autoPicking = false;
-    _set(state.copyWith(
-      title: e.title,
-      amount: _numText(e.amount),
-      category: _categories.any((c) => c.id == e.category) ? e.category : null,
-      date: todayDateString(_now),
-      payer: memberIds.contains(e.paidBy) ? e.paidBy : null,
-      splitMode: e.splitMode,
-      selected: {for (final m in _members) m.id: e.splitMemberIds.contains(m.id)},
-      splitConfig: {for (final c in (e.splitConfig ?? const <String, double>{}).entries) c.key: _numText(c.value)},
-      clearError: true,
-      bump: true,
-    ));
+    _set(
+      state.copyWith(
+        title: e.title,
+        amount: _numText(e.amount),
+        category: _categories.any((c) => c.id == e.category) ? e.category : null,
+        date: todayDateString(_now),
+        payer: memberIds.contains(e.paidBy) ? e.paidBy : null,
+        splitMode: e.splitMode,
+        selected: {for (final m in _members) m.id: e.splitMemberIds.contains(m.id)},
+        splitConfig: {for (final c in (e.splitConfig ?? const <String, double>{}).entries) c.key: _numText(c.value)},
+        clearError: true,
+        bump: true,
+      ),
+    );
   }
 
   /// Quick fill from free text ("Coffee 4.50 Alice yesterday"). Returns false if nothing was understood.
@@ -660,18 +747,22 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
     if (p == null) return false;
     _autoPicking = p.categoryId == null;
     final memberIds = _members.map((m) => m.id).toSet();
-    _set(state.copyWith(
-      amount: p.amount != null && p.amount! > 0 ? _numText(p.amount!) : null,
-      currency: p.currency != null && defaultRateCurrencies.contains(p.currency) ? p.currency : null,
-      title: p.title.isNotEmpty ? p.title : null,
-      category: p.categoryId,
-      autoCategoryName: p.categoryId == null ? null : p.categoryName,
-      payer: p.paidById != null && memberIds.contains(p.paidById) ? p.paidById : null,
-      date: p.date,
-      selected: p.splitMemberIds == null || p.splitMemberIds!.isEmpty ? null : {for (final m in _members) m.id: p.splitMemberIds!.contains(m.id)},
-      clearError: true,
-      bump: true,
-    ));
+    _set(
+      state.copyWith(
+        amount: p.amount != null && p.amount! > 0 ? _numText(p.amount!) : null,
+        currency: p.currency != null && defaultRateCurrencies.contains(p.currency) ? p.currency : null,
+        title: p.title.isNotEmpty ? p.title : null,
+        category: p.categoryId,
+        autoCategoryName: p.categoryId == null ? null : p.categoryName,
+        payer: p.paidById != null && memberIds.contains(p.paidById) ? p.paidById : null,
+        date: p.date,
+        selected: p.splitMemberIds == null || p.splitMemberIds!.isEmpty
+            ? null
+            : {for (final m in _members) m.id: p.splitMemberIds!.contains(m.id)},
+        clearError: true,
+        bump: true,
+      ),
+    );
     return true;
   }
 
@@ -696,7 +787,10 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
       date: state.date,
       paidBy: state.payer,
       splitMode: state.splitMode,
-      splitSelectedIds: [for (final m in _members) if (state.selected[m.id] == true) m.id],
+      splitSelectedIds: [
+        for (final m in _members)
+          if (state.selected[m.id] == true) m.id,
+      ],
       splitConfig: state.splitConfig,
       payerMode: state.payerMode,
       multiPayerShares: state.multiPayerShares,
@@ -724,7 +818,9 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
       final id = editing ? args.editingId! : state.newExpenseId;
       if (state.receiptPath != null) staged = await ref.read(receiptStoreProvider).stage(id, state.receiptPath!);
       final uid = ref.read(authStateProvider).userId ?? '';
-      final outcome = await ref.read(expenseRepositoryProvider).submit(
+      final outcome = await ref
+          .read(expenseRepositoryProvider)
+          .submit(
             built.submission!,
             tripId: tripId,
             userId: uid,
@@ -755,7 +851,9 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
     final value = RememberedDefaultSplit(
       splitMode: s.splitMode,
       splitMemberIds: s.splitMemberIds,
-      splitConfig: (s.splitMode == 'percentage' || s.splitMode == 'exact') && cfg != null && cfg.isNotEmpty ? cfg : null,
+      splitConfig: (s.splitMode == 'percentage' || s.splitMode == 'exact') && cfg != null && cfg.isNotEmpty
+          ? cfg
+          : null,
     );
     await ref.read(sharedPreferencesProvider).setString(_defaultSplitKey(tripId), jsonEncode(value.toJson()));
   }
@@ -770,14 +868,36 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
   }
 
   /// True when the amount text is an expression rather than a plain number.
-  bool get amountIsExpression => state.amount.trim().isNotEmpty && evaluateMathExpression(state.amount) != null && double.tryParse(state.amount.trim()) == null;
+  bool get amountIsExpression =>
+      state.amount.trim().isNotEmpty &&
+      evaluateMathExpression(state.amount) != null &&
+      double.tryParse(state.amount.trim()) == null;
 }
 
 /// Currencies the quick parser may switch to (the web's `POPULAR_CURRENCIES`).
-const defaultRateCurrencies = ['USD', 'INR', 'EUR', 'GBP', 'AED', 'THB', 'JPY', 'SGD', 'AUD', 'CAD', 'CHF', 'MYR', 'VND', 'IDR'];
+const defaultRateCurrencies = [
+  'USD',
+  'INR',
+  'EUR',
+  'GBP',
+  'AED',
+  'THB',
+  'JPY',
+  'SGD',
+  'AUD',
+  'CAD',
+  'CHF',
+  'MYR',
+  'VND',
+  'IDR',
+];
 
 /// New-expense ids; overridable so tests (and staged receipt names) are predictable.
-final expenseIdProvider = Provider<String Function()>((ref) => () => _uuid.v4());
+final expenseIdProvider = Provider<String Function()>(
+  (ref) =>
+      () => _uuid.v4(),
+);
 const _uuid = Uuid();
 
-final expenseFormProvider = NotifierProvider.autoDispose.family<ExpenseFormController, ExpenseFormState, ExpenseFormArgs>(ExpenseFormController.new);
+final expenseFormProvider = NotifierProvider.autoDispose
+    .family<ExpenseFormController, ExpenseFormState, ExpenseFormArgs>(ExpenseFormController.new);

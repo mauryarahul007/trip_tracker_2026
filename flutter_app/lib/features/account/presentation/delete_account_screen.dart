@@ -13,8 +13,7 @@ class DeleteAccountScreen extends ConsumerStatefulWidget {
   const DeleteAccountScreen({super.key});
 
   @override
-  ConsumerState<DeleteAccountScreen> createState() =>
-      _DeleteAccountScreenState();
+  ConsumerState<DeleteAccountScreen> createState() => _DeleteAccountScreenState();
 }
 
 class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
@@ -56,6 +55,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       appBar: AppBar(
         title: const Text('Delete Account'),
         leading: IconButton(
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           icon: const Icon(AppIcons.back, size: 20),
           onPressed: () => context.pop(),
         ),
@@ -70,9 +70,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
               decoration: BoxDecoration(
                 color: tokens.dangerColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(tokens.radiusMd),
-                border: Border.all(
-                  color: tokens.dangerColor.withValues(alpha: 0.3),
-                ),
+                border: Border.all(color: tokens.dangerColor.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -81,11 +79,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   Expanded(
                     child: Text(
                       'Warning: Account deletion is permanent and cannot be undone.',
-                      style: TextStyle(
-                        color: tokens.dangerColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: tokens.dangerColor, fontWeight: FontWeight.w600, fontSize: 13),
                     ),
                   ),
                 ],
@@ -94,20 +88,12 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
             const SizedBox(height: 24),
             Text(
               'What happens when you delete your account:',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-                color: tokens.textPrimary,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: tokens.textPrimary),
             ),
             const SizedBox(height: 12),
             Text(
               '• Your user profile and authentication credentials will be erased.\n• Trips where you are the sole creator will be deleted.\n• In shared trips, your historical expenses remain preserved to prevent corrupting balances, but your identity will show as "Former Member".',
-              style: TextStyle(
-                height: 1.6,
-                fontSize: 14,
-                color: tokens.textSecondary,
-              ),
+              style: TextStyle(height: 1.6, fontSize: 14, color: tokens.textSecondary),
             ),
             const Spacer(),
             AppButton(

@@ -33,9 +33,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   factory AppDatabase.memory({bool logStatements = false}) {
-    return AppDatabase.forTesting(
-      NativeDatabase.memory(logStatements: logStatements),
-    );
+    return AppDatabase.forTesting(NativeDatabase.memory(logStatements: logStatements));
   }
 
   @override
@@ -43,18 +41,18 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) async {
-          await m.createAll();
-        },
-        onUpgrade: (m, from, to) async {
-          // Additive only; never destructive.
-          if (from < 2) {
-            await m.addColumn(tripsTable, tripsTable.domainJson);
-            await m.addColumn(expensesTable, expensesTable.domainJson);
-            await m.addColumn(tripMessagesTable, tripMessagesTable.domainJson);
-          }
-        },
-      );
+    onCreate: (m) async {
+      await m.createAll();
+    },
+    onUpgrade: (m, from, to) async {
+      // Additive only; never destructive.
+      if (from < 2) {
+        await m.addColumn(tripsTable, tripsTable.domainJson);
+        await m.addColumn(expensesTable, expensesTable.domainJson);
+        await m.addColumn(tripMessagesTable, tripMessagesTable.domainJson);
+      }
+    },
+  );
 }
 
 LazyDatabase _openConnection() {

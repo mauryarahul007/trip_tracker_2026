@@ -21,6 +21,12 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-07 | flutter 3.45 | FLUTTER-P12 | [Flutter: accessibility, hardening, release checks](#flutter-p12--flutter-accessibility-hardening-release-checks) |
+| 2026-10-06 | flutter 3.45 | FLUTTER-P10E | [Flutter: push, tap routing, pass reminders](#flutter-p10e--flutter-push-tap-routing-pass-reminders) |
+| 2026-10-06 | flutter 3.45 | FLUTTER-P10D | [Flutter: feedback, diagnostics, legal, telemetry](#flutter-p10d--flutter-feedback-diagnostics-legal-telemetry) |
+| 2026-10-06 | flutter 3.45 | FLUTTER-P10C | [Flutter: notification preferences, version gate, flags](#flutter-p10c--flutter-notification-preferences-version-gate-flags) |
+| 2026-10-06 | flutter 3.45 | FLUTTER-P10B | [Flutter: settings and trip settings](#flutter-p10b--flutter-settings-and-trip-settings) |
+| 2026-10-06 | flutter 3.45 | FLUTTER-P10A | [Flutter: in-app notifications](#flutter-p10a--flutter-in-app-notifications) |
 | 2026-10-06 | flutter 3.44 | FLUTTER-P8 | [Flutter: members, notes, text chat, manual passes](#flutter-p8--flutter-members-notes-text-chat-manual-passes) |
 | 2026-10-06 | flutter 3.44 | FLUTTER-P7-LOOP | [Flutter: ledger loop, files, and exit bar](#flutter-p7-loop--flutter-ledger-loop-files-and-exit-bar) |
 | 2026-10-06 | flutter 3.44 | FLUTTER-P7-FORM-LEDGER | [Flutter: expense form and balances tab](#flutter-p7-form-ledger--flutter-expense-form-and-balances-tab) |
@@ -1920,6 +1926,189 @@ Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, ne
 
 ### Pass
 - Balances match the web for the same expenses. UPI and the share PNG are confirmed on one Android device; iOS UPI query schemes are declared but need a device with a UPI app. The 500-row fps check is a device step (the widget test only checks that Load more appears).
+
+---
+
+## FLUTTER-P12 — Flutter: accessibility, hardening, release checks
+
+**Scope:** Phase 12 work in `flutter_app/`. No new flags. Device steps; the automated half is `test/a11y/a11y_test.dart`. ADR 275.
+
+### Steps
+1. **Screen reader (iOS VoiceOver and Android TalkBack).** On login, trips list, add expense, settle up, chat send and join by code: every control is announced with a name and role, focus moves in reading order, and you can complete each task without sight. Icon-only buttons say what they do (Back, Close, Rename, Delete, Send message).
+2. **Large text.** Set the OS text size to the maximum (and bold text on). Open trips list, add expense, balances, settings, notifications and Report a problem: nothing is cut off or overlaps, and every button is still reachable by scrolling. The Theme row in Settings stacks under its title.
+3. **Dark mode.** Selected chips, the Theme control and primary buttons are readable (dark text on the bright teal button).
+4. **Reduce motion.** With the OS setting on, screen transitions and the confetti/story animations do not play at full motion.
+5. **Haptics.** Settings, Haptic feedback off: no vibration on taps or saves.
+6. **Release build smoke (B-193).** Install a signed release build from the pipeline (not a debug build). Sign in, add an expense offline then online, open Notification preferences, trigger a push, and confirm no crash. This is the check for the R8 shrinking and release signing changes.
+7. **Signing and secrets.** `tool/check_release_signing.sh <aab>` passes (not the debug key) and `tool/scan_binary_secrets.sh <aab|ipa>` reports nothing.
+8. **Backups off.** On Android, `adb shell dumpsys package com.triptracker.app | grep -i allowBackup` shows it disabled; a clean-text `http://` URL is refused by a release build.
+9. **Version rule.** `tool/release_version.sh` prints the `package.json` version and a build number above the last store build.
+
+### Negative checks
+- A debug-signed bundle makes the release job fail.
+- A binary containing a `service_role` key makes the release job fail (the anon key is allowed).
+
+### Pass
+- The automated half passes headless today (28 tests). Steps 1 to 9 are open until run on devices and the pipeline (B-151, B-193, B-197).
+
+---
+
+## FLUTTER-P10E — Flutter: push, tap routing, pass reminders
+
+**Scope:** Phase 10 slice E in `flutter_app/`. No new flags. Needs the Firebase files, a real device and a staging project (B-136, B-137, B-170). ADR 273.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Alerts to your phone | none (a device permission) | asked once |
+| Quiet-hours shift of reminders | `enableQuietHours` | OFF |
+
+### Steps
+1. Fresh install, sign in with an account. No permission prompt appears at launch.
+2. Create a trip and save its first expense. A short explanation appears ("Get trip alerts?"). Tap Not now: the OS prompt does not appear, and the question is not asked again.
+3. Settings, Notification preferences, Push notifications tile says "Off. Tap to turn on." Tap it: the OS prompt appears. Allow. The tile says "On for this device".
+4. In the database, `device_push_tokens` has one row for your user with `client = flutter`, the platform and the app version.
+5. Second account on another phone adds an expense to the trip. Your phone gets a push ("Dinner — INR 900 added"). Do this for six states: app in the foreground, in the background, and killed; signed in and (after step 8) signed out.
+6. Foreground: you see the in-app banner and hear/feel a sound, but not a second system banner. Background or killed: tap the push. The app opens on that trip's Expenses tab (Balances for a settlement, Members for "joined"). A "trip deleted" push opens the trips list.
+7. Have the second account join through an invite: you get "Diana joined the trip".
+8. Sign out. The device row is gone from `device_push_tokens`. Trigger another expense: this phone gets nothing. Sign back in: the row returns.
+9. Add a flight pass 25 hours out. Two reminders are scheduled (24 h and 3 h). Android: after a reboot they are still scheduled. Turn "Travel pass reminders" off in Settings: both are cancelled.
+10. With `enableQuietHours` on and 22:00 to 07:00 set, a 24 h reminder that would land at 02:00 arrives at 07:00 (unless that is after departure).
+11. Deny the OS prompt: the tile says "Blocked. Turn it on in your phone settings." and nothing crashes.
+
+### Negative checks
+- Build without Firebase files: the tile says "Not available in this build"; the rest of the app works.
+- A push whose `route` is something other than a trip tab path (for example a URL) is ignored for routing; it lands by type and trip.
+- Guest or demo accounts never register a token.
+
+### Pass
+- Steps 1 to 4, 9 and the negative checks pass headless today. Steps 5 to 8, 10 and 11 need devices and are open (B-170).
+
+---
+
+## FLUTTER-P10D — Flutter: feedback, diagnostics, legal, telemetry
+
+**Scope:** Phase 10 slice D in `flutter_app/`. ADR 273.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Suggest a feature row | `enableFeatureSuggestions` | OFF |
+| Growth events | `enableGrowthTelemetry` | OFF (server also refuses inserts) |
+| What's new row | `enableWhatsNewHub` | OFF |
+
+### Steps
+1. Settings, Help, Report a problem. Leave the title empty and send: "Give the problem a short title." Enter a title that includes an email address, add two steps on two lines, send. The message says "Your report is BUG-nnn". In the Ops Deck bug ledger the title shows `[email]` instead of the address, two repro steps, `client: flutter`, and recent logs with no emails or tokens.
+2. Switch "Attach recent app logs" off and send again: no `consoleLogs` in diagnostics.
+3. Your reports list shows both cases with status and severity.
+4. As a guest: the screen says to sign in, and sending shows the same.
+5. With `enableFeatureSuggestions` on: Suggest a feature sends and appears in the Ops Deck features list.
+6. Settings, Help, Diagnostics: version, environment, sync state, last log lines. Share logs opens the share sheet. In a dev or staging build, "Feature flag overrides" lets you force a flag on or off; Reset all clears them.
+7. Cause an uncaught error in a release build: one critical case appears (`found_by: auto-crash-handler`), not one per repeat. A burst of different errors files at most 5 per session, 30 seconds apart. Network errors are not filed.
+8. Privacy Policy and Terms: tap "Read the full document online" and the web page opens.
+9. With `enableGrowthTelemetry` on (server flag): opening the app twice in one UTC day creates one `app_open` row; `sync_fail`, `queue_stuck` (10 minutes online with work waiting) and `flush_ok` once per session. With it off, nothing is written.
+
+### Negative checks
+- Flag OFF: no Suggest a feature or What's new rows.
+- Prod build: the flag override screen has no effect (the store is not wired).
+
+### Pass
+- Steps 1 to 6 and 8 pass headless. Steps 7 and 9 need a release build and staging.
+
+---
+
+## FLUTTER-P10C — Flutter: notification preferences, version gate, flags
+
+**Scope:** Phase 10 slice C in `flutter_app/`. Needs staging for the server checks. ADR 273.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Quiet hours rows | `enableQuietHours` | OFF |
+| Daily digest row | `enableDigestNotifications` | OFF |
+
+### Steps
+1. Settings, Notification preferences. With both flags off you see Push notifications and Muted trips only.
+2. Turn on `enableQuietHours`. Switch quiet hours on, set From and Until. In `quiet_hours_prefs` the row has your times and your IANA zone (for example Asia/Kolkata).
+3. Turn on `enableDigestNotifications`. The digest switch writes `notification_digest_prefs`.
+4. Mute a trip here, or in Trip settings, Mute this trip. `trip_mutes` has the row. No push from that trip arrives; in-app notifications still do.
+5. Version gate: set `min_supported_version_android` above the installed version in `app_config`. Reopen (or return to) the app: a full-screen "Update required" with Update now (store page). Set it back: normal.
+6. Set only `recommended_version_android` higher: a banner "A new version is available" with Update and a dismiss.
+7. Set `maintenance_mode` true: "Back soon" with the message and Try again.
+8. Airplane mode on a cold start: no block, no banner (fail open).
+9. Flags: change a global flag in the Ops Deck. After 15 minutes in the background, returning to the app picks it up.
+
+### Negative checks
+- Flags off: no quiet hours or digest rows.
+- A broken `get_app_version_gate` response never blocks the app.
+
+### Pass
+- Steps 1, 5 to 8 (with a faked gate) and the flag matrix pass headless. Server checks need staging.
+
+---
+
+## FLUTTER-P10B — Flutter: settings and trip settings
+
+**Scope:** Phase 10 slice B in `flutter_app/`. ADR 273.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Pure black dark mode | `enableAmoledTheme` | OFF |
+| Biometric lock row | `enableBiometricAuth` | OFF |
+| Simplify debts row | `enableSimplifyDebtsToggle` | OFF |
+| Approval threshold row | `enableExpenseApprovalThreshold` | OFF |
+
+### Steps
+1. Trips list, settings icon, Settings. The screen shows Profile, Appearance, Notifications, Data, Help, About, Account (Security only with the flag).
+2. Tap your name, change it, Save: the row updates. Reopen the app: the name is kept (accounts update the profile; guests keep it on the device).
+3. Theme: choose Dark, then Light, then Auto. The app changes at once and keeps the choice after a restart.
+4. With `enableAmoledTheme` on: the pure black switch appears and, in dark mode, backgrounds are black.
+5. Haptic feedback off: taps stop vibrating. Default currency EUR: the next new trip starts in EUR, even if the destination suggests another.
+6. With `enableBiometricAuth` on: turning the lock on asks for Face ID or fingerprint; a failed prompt leaves it off.
+7. Export backup shares a `triptracker-backup-YYYY-MM-DD.json`. On a fresh install (or after Sign out), sign in, Restore backup, pick the file: the dialog says how many trips and expenses it adds and warns that a second restore duplicates. Confirm: the trips, people, archived people and expenses appear, with the right payers and splits.
+8. Restore with a file that is not JSON: a clear message, nothing added.
+9. About shows the version and build. What's new (flag) lists releases. Sign out clears the device. Delete account opens the existing screen.
+10. Open a trip, Trip settings. As the owner: Freeze trip (confirm) makes expenses read-only; Trip closed and Archive work; Categories and Recycle bin open. Turning Freeze off restores edits.
+11. As a non-owner member: Trip state is absent and Simplify debts / Approval threshold are read-only.
+
+### Negative checks
+- Flags off: no pure black, no Security section, no Simplify debts or approval rows.
+- Guest: Settings works; Report a problem asks to sign in.
+
+### Pass
+- Steps 1 to 11 pass headless except Face ID (6) and the real restore on a clean device (7), which are device steps (B-012, B-146).
+
+---
+
+## FLUTTER-P10A — Flutter: in-app notifications
+
+**Scope:** Phase 10 slice A in `flutter_app/`. Bell, list, banner. No push yet (slice E), no new flags. Needs a staging project for steps 7 and 8.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Money chip and folding of bursts | `enableNotificationGrouping` | ON |
+
+### Steps
+1. Open a trip. The header shows a bell. With unread rows it carries a badge (9+ above nine). With none, no badge.
+2. Tap the bell. The list opens on "This trip". Each row has an icon, a headline ("Expense Added"), the detail ("Dinner — USD 85.00") and a relative time. Unread headlines are bold.
+3. Switch to "All trips": rows from other trips appear.
+4. Tap a row. It turns read and you land on the matching tab (chat message to Chat, settlement to Balances, member to Members, expense to Expenses). A "trip deleted" row only marks read.
+5. Use the mark icon on a row to flip read and unread. Mark all as read clears every unread in the current scope.
+6. Swipe a row left to delete it. Clear notifications asks first, then empties the current scope.
+7. Two or more expense rows within an hour from the same person fold into one with "Show N more". Chat messages never fold.
+8. Tap Money: only settlement rows stay. If rows exist but none are money, the empty state says "No money updates".
+9. With the app open, have another account add an expense on staging. A banner slides in at the top with the headline and detail; it disappears after about 5 seconds or when swiped up; tapping it opens the list. Open the app fresh on a new install: older notifications do not pop banners.
+10. Go offline, read a row, come back online. The row stays read after the next refresh.
+
+### Negative checks
+- `enableNotificationGrouping` off: no Money chip, bursts show as separate rows.
+- Signed out: no bell data, list empty.
+- Guest or demo (no backend): bell and list work from local rows only; nothing is sent.
+
+### Pass
+- Steps 1 to 8 pass headless (widget tests). Steps 9 and 10 need a staging project; steps on real devices stay unverified (B-001, B-004).
 
 ---
 

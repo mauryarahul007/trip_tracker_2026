@@ -84,9 +84,7 @@ void main() {
             tripCategoriesProvider('t-1').overrideWithValue(mockCategories),
           ],
           child: const MaterialApp(
-            home: Scaffold(
-              body: AchievementBadgeModal(tripId: 't-1'),
-            ),
+            home: Scaffold(body: AchievementBadgeModal(tripId: 't-1')),
           ),
         ),
       );
@@ -116,11 +114,7 @@ void main() {
           overrides: [
             tripsProvider.overrideWith((ref) => Stream.value([mockTrip1, mockTrip2])),
           ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: TravelerPassportModal(),
-            ),
-          ),
+          child: const MaterialApp(home: Scaffold(body: TravelerPassportModal())),
         ),
       );
 

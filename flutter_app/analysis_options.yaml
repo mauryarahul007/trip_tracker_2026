@@ -22,3 +22,8 @@ linter:
     - close_sinks
     - avoid_print
     - prefer_single_quotes
+
+# The codebase is written with long lines (one-line widgets, test tables). 120 keeps them readable
+# and makes the CI format gate (`dart format --set-exit-if-changed`) pass.
+formatter:
+  page_width: 120

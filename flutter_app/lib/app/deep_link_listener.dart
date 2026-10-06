@@ -42,9 +42,14 @@ class _DeepLinkListenerState extends ConsumerState<DeepLinkListener> {
   void initState() {
     super.initState();
     final source = ref.read(deepLinkSourceProvider);
-    unawaited(source.initial().then((u) {
-      if (u != null) _handle(u);
-    }).catchError((Object _) {}));
+    unawaited(
+      source
+          .initial()
+          .then((u) {
+            if (u != null) _handle(u);
+          })
+          .catchError((Object _) {}),
+    );
     _sub = source.stream.listen(_handle, onError: (Object _) {});
   }
 

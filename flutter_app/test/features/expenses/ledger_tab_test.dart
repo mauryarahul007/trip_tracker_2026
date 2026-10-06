@@ -46,7 +46,9 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 90);
     await openLedger(tester, s);
-    await tester.tap(find.descendant(of: find.widgetWithText(ListTile, 'Ben pays Asha'), matching: find.byType(AppButton)));
+    await tester.tap(
+      find.descendant(of: find.widgetWithText(ListTile, 'Ben pays Asha'), matching: find.byType(AppButton)),
+    );
     await settle(tester, rounds: 6);
     expect(find.text('Confirm settlement'), findsOneWidget);
     await tester.tap(key('settle-confirm'));
@@ -102,7 +104,10 @@ void main() {
     await tester.enterText(key('settle-note'), 'UPI');
     await tester.tap(key('settle-confirm'));
     await settle(tester, rounds: 14);
-    expect(((await expensesOf(tester, s)).cast<Expense>().singleWhere((e) => e.isSettlement)).title, 'Settlement: Ben ➔ Asha — UPI');
+    expect(
+      ((await expensesOf(tester, s)).cast<Expense>().singleWhere((e) => e.isSettlement)).title,
+      'Settlement: Ben ➔ Asha — UPI',
+    );
   });
 
   testApp('no date/note fields without the flag', (tester) async {
@@ -120,10 +125,16 @@ void main() {
     await pumpApp(tester, user: asha, flagsOn: {'enableSimplifyDebtsToggle'});
     final s = await seedTrip(tester);
     await openLedger(tester, s);
-    final before = (await real(tester, () => containerOf(tester).read(tripRepositoryProvider).watchTrip(s.tripId).first))!.simplifyDebts;
+    final before = (await real(
+      tester,
+      () => containerOf(tester).read(tripRepositoryProvider).watchTrip(s.tripId).first,
+    ))!.simplifyDebts;
     await tester.tap(key('simplify-toggle'));
     await settle(tester, rounds: 6);
-    final after = (await real(tester, () => containerOf(tester).read(tripRepositoryProvider).watchTrip(s.tripId).first))!.simplifyDebts;
+    final after = (await real(
+      tester,
+      () => containerOf(tester).read(tripRepositoryProvider).watchTrip(s.tripId).first,
+    ))!.simplifyDebts;
     expect(after, !before);
   });
 

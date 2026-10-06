@@ -5,8 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:trip_tracker/domain/logic/passes_and_chat_cards.dart';
 
 void main() {
-  final m = (jsonDecode(File('../docs/flutter-migration/fixtures/passes_chat_cards.json').readAsStringSync())
-      as Map<String, dynamic>)['matrices'] as Map<String, dynamic>;
+  final m =
+      (jsonDecode(File('../docs/flutter-migration/fixtures/passes_chat_cards.json').readAsStringSync())
+              as Map<String, dynamic>)['matrices']
+          as Map<String, dynamic>;
   List<Map<String, dynamic>> cases(String k) => [for (final c in m[k] as List) c as Map<String, dynamic>];
 
   test('resolveAirportCode matrix', () {
@@ -46,8 +48,11 @@ void main() {
 
   test('expense event bodies for every kind', () {
     for (final c in cases('bodies')) {
-      expect(expenseEventBody(c['kind'] as String, Map<String, dynamic>.from(c['expense'] as Map<String, dynamic>)), c['result'],
-          reason: '${c['kind']}');
+      expect(
+        expenseEventBody(c['kind'] as String, Map<String, dynamic>.from(c['expense'] as Map<String, dynamic>)),
+        c['result'],
+        reason: '${c['kind']}',
+      );
     }
   });
 }

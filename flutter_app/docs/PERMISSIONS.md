@@ -11,6 +11,7 @@ This document tracks all OS permissions requested by the native Flutter client o
 | **Biometric App Lock** | `android.permission.USE_BIOMETRIC` | `NSFaceIDUsageDescription` | "Trip Tracker uses Face ID to unlock the app." |
 | **Live Location Sharing (Foreground)** | `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION` | `NSLocationWhenInUseUsageDescription` | "Trip Tracker shares your live location with trip members when you turn on Live Location Share." |
 | **Live Location Sharing (Background)** | `ACCESS_BACKGROUND_LOCATION`, `FOREGROUND_SERVICE_LOCATION` | `NSLocationAlwaysAndWhenInUseUsageDescription`, `UIBackgroundModes: location` | "Trip Tracker shares your live location in the background with trip members when you turn on Live Location Share." |
+| **Push notifications & pass reminders** | `POST_NOTIFICATIONS` (Android 13+), `RECEIVE_BOOT_COMPLETED`, `VIBRATE` | `UIBackgroundModes: remote-notification` + Push Notifications capability (Xcode) | Asked once, after the first saved expense, with an explanation first. Never at launch. |
 | **Network & Outbox Sync** | `android.permission.INTERNET` | N/A (Standard) | Network communications for real-time collaboration and outbox sync. |
 
 ---

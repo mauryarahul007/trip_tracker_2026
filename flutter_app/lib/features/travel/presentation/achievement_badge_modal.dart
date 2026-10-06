@@ -38,9 +38,7 @@ class AchievementBadgeModal extends ConsumerWidget {
     final unlockedCount = badges.where((b) => b.unlocked).length;
 
     return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
-      ),
+      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
       decoration: BoxDecoration(
         color: tokens.bgSurface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -54,10 +52,7 @@ class AchievementBadgeModal extends ConsumerWidget {
             child: Container(
               width: 40,
               height: 4,
-              decoration: BoxDecoration(
-                color: tokens.borderColor,
-                borderRadius: BorderRadius.circular(2),
-              ),
+              decoration: BoxDecoration(color: tokens.borderColor, borderRadius: BorderRadius.circular(2)),
             ),
           ),
           const SizedBox(height: 16),
@@ -83,11 +78,7 @@ class AchievementBadgeModal extends ConsumerWidget {
                       const Text('🏆 ', style: TextStyle(fontSize: 18)),
                       Text(
                         'Trip Achievements',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: tokens.textPrimary,
-                        ),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: tokens.textPrimary),
                       ),
                     ],
                   ),
@@ -98,6 +89,7 @@ class AchievementBadgeModal extends ConsumerWidget {
                 ],
               ),
               IconButton(
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 key: const Key('achievements-close'),
                 icon: const Icon(Icons.close, size: 20),
                 onPressed: () {
@@ -136,10 +128,7 @@ class AchievementBadgeModal extends ConsumerWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: b.unlocked ? tokens.primaryAccent.withValues(alpha: 0.18) : tokens.bgSurface,
-                          border: Border.all(
-                            color: b.unlocked ? tokens.primaryAccent : tokens.borderColor,
-                            width: 2,
-                          ),
+                          border: Border.all(color: b.unlocked ? tokens.primaryAccent : tokens.borderColor, width: 2),
                           boxShadow: b.unlocked
                               ? [
                                   BoxShadow(
@@ -151,10 +140,7 @@ class AchievementBadgeModal extends ConsumerWidget {
                               : null,
                         ),
                         alignment: Alignment.center,
-                        child: Text(
-                          b.icon,
-                          style: const TextStyle(fontSize: 22),
-                        ),
+                        child: Text(b.icon, style: const TextStyle(fontSize: 22)),
                       ),
                       const SizedBox(width: 14),
 
@@ -206,11 +192,7 @@ class AchievementBadgeModal extends ConsumerWidget {
                             const SizedBox(height: 2),
                             Text(
                               b.subtitle,
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: tokens.textSecondary,
-                                height: 1.3,
-                              ),
+                              style: TextStyle(fontSize: 11.5, color: tokens.textSecondary, height: 1.3),
                             ),
                           ],
                         ),

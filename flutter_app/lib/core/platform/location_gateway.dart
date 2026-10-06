@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -15,14 +16,7 @@ enum LocationPermissionStatus {
 
 /// Normalized geo-position data.
 class UserLocation {
-  const UserLocation({
-    required this.lat,
-    required this.lng,
-    this.accuracy,
-    this.altitude,
-    this.speed,
-    this.timestamp,
-  });
+  const UserLocation({required this.lat, required this.lng, this.accuracy, this.altitude, this.speed, this.timestamp});
 
   final double lat;
   final double lng;
@@ -110,10 +104,7 @@ class GeolocatorLocationGateway implements LocationGateway {
         return null;
       }
       final pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium,
-          timeLimit: Duration(seconds: 10),
-        ),
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium, timeLimit: Duration(seconds: 10)),
       );
       return UserLocation(
         lat: pos.latitude,

@@ -30,7 +30,8 @@ Map<String, double> liveRatesOf(WidgetRef ref) => ref.watch(liveUsdRatesProvider
 
 const _upiPrefix = 'member_upi:';
 
-String? savedUpiId(WidgetRef ref, String memberId) => ref.watch(sharedPreferencesProvider).getString('$_upiPrefix$memberId');
+String? savedUpiId(WidgetRef ref, String memberId) =>
+    ref.watch(sharedPreferencesProvider).getString('$_upiPrefix$memberId');
 
 Future<void> saveUpiId(WidgetRef ref, String memberId, String upiId) =>
     ref.read(sharedPreferencesProvider).setString('$_upiPrefix$memberId', upiId.trim());
@@ -53,7 +54,9 @@ final receiptPreviewProvider = FutureProvider.family<String?, (String, String?)>
 Future<Map<String, double>?> fetchFrankfurterUsd() async {
   final client = HttpClient();
   try {
-    final req = await client.getUrl(Uri.parse('https://api.frankfurter.app/latest?from=USD')).timeout(const Duration(seconds: 8));
+    final req = await client
+        .getUrl(Uri.parse('https://api.frankfurter.app/latest?from=USD'))
+        .timeout(const Duration(seconds: 8));
     final res = await req.close().timeout(const Duration(seconds: 8));
     if (res.statusCode != 200) return null;
     final body = await res.transform(utf8.decoder).join();

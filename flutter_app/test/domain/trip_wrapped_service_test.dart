@@ -69,9 +69,30 @@ void main() {
 
     test('determines Gourmet Pilgrimage archetype when Food is top spend', () {
       final expenses = [
-        _createExpense(id: 'e-1', title: 'Beach Dinner', amount: 5000, paidBy: 'm-1', category: 'cat-food', date: '2026-08-21'),
-        _createExpense(id: 'e-2', title: 'Lunch', amount: 3000, paidBy: 'm-2', category: 'cat-food', date: '2026-08-22'),
-        _createExpense(id: 'e-3', title: 'Taxi', amount: 1500, paidBy: 'm-3', category: 'cat-transit', date: '2026-08-21'),
+        _createExpense(
+          id: 'e-1',
+          title: 'Beach Dinner',
+          amount: 5000,
+          paidBy: 'm-1',
+          category: 'cat-food',
+          date: '2026-08-21',
+        ),
+        _createExpense(
+          id: 'e-2',
+          title: 'Lunch',
+          amount: 3000,
+          paidBy: 'm-2',
+          category: 'cat-food',
+          date: '2026-08-22',
+        ),
+        _createExpense(
+          id: 'e-3',
+          title: 'Taxi',
+          amount: 1500,
+          paidBy: 'm-3',
+          category: 'cat-transit',
+          date: '2026-08-21',
+        ),
       ];
 
       final archetype = getTripArchetype(mockCategories, expenses);
@@ -82,9 +103,30 @@ void main() {
 
     test('assigns member superlatives without including raw financial currency values', () {
       final expenses = [
-        _createExpense(id: 'e-1', title: 'Beach Dinner', amount: 5000, paidBy: 'm-1', category: 'cat-food', date: '2026-08-21'),
-        _createExpense(id: 'e-2', title: 'Breakfast', amount: 1000, paidBy: 'm-1', category: 'cat-food', date: '2026-08-22'),
-        _createExpense(id: 'e-3', title: 'Flight', amount: 8000, paidBy: 'm-3', category: 'cat-transit', date: '2026-08-20'),
+        _createExpense(
+          id: 'e-1',
+          title: 'Beach Dinner',
+          amount: 5000,
+          paidBy: 'm-1',
+          category: 'cat-food',
+          date: '2026-08-21',
+        ),
+        _createExpense(
+          id: 'e-2',
+          title: 'Breakfast',
+          amount: 1000,
+          paidBy: 'm-1',
+          category: 'cat-food',
+          date: '2026-08-22',
+        ),
+        _createExpense(
+          id: 'e-3',
+          title: 'Flight',
+          amount: 8000,
+          paidBy: 'm-3',
+          category: 'cat-transit',
+          date: '2026-08-20',
+        ),
       ];
 
       final superlatives = getMemberSuperlatives(mockMembers, expenses, mockCategories);
@@ -104,8 +146,22 @@ void main() {
 
     test('calculates trip rhythm and peak adventure day cleanly', () {
       final expenses = [
-        _createExpense(id: 'e-1', title: 'Beach Party', amount: 2000, paidBy: 'm-1', category: 'cat-food', date: '2026-08-22'), // Saturday
-        _createExpense(id: 'e-2', title: 'Scuba', amount: 4000, paidBy: 'm-2', category: 'cat-transit', date: '2026-08-22'), // Saturday
+        _createExpense(
+          id: 'e-1',
+          title: 'Beach Party',
+          amount: 2000,
+          paidBy: 'm-1',
+          category: 'cat-food',
+          date: '2026-08-22',
+        ), // Saturday
+        _createExpense(
+          id: 'e-2',
+          title: 'Scuba',
+          amount: 4000,
+          paidBy: 'm-2',
+          category: 'cat-transit',
+          date: '2026-08-22',
+        ), // Saturday
       ];
 
       final rhythm = getTripRhythm(expenses, mockTrip);
@@ -116,8 +172,22 @@ void main() {
 
     test('handles multiple tied peak adventure days dynamically', () {
       final expenses = [
-        _createExpense(id: 'e-1', title: 'Sightseeing', amount: 2000, paidBy: 'm-1', category: 'cat-food', date: '2026-08-19'), // Wednesday
-        _createExpense(id: 'e-2', title: 'Trek', amount: 4000, paidBy: 'm-2', category: 'cat-transit', date: '2026-08-20'), // Thursday
+        _createExpense(
+          id: 'e-1',
+          title: 'Sightseeing',
+          amount: 2000,
+          paidBy: 'm-1',
+          category: 'cat-food',
+          date: '2026-08-19',
+        ), // Wednesday
+        _createExpense(
+          id: 'e-2',
+          title: 'Trek',
+          amount: 4000,
+          paidBy: 'm-2',
+          category: 'cat-transit',
+          date: '2026-08-20',
+        ), // Thursday
       ];
 
       final rhythm = getTripRhythm(expenses, mockTrip);
@@ -126,8 +196,22 @@ void main() {
 
     test('computes member spend leaderboard sorted descending', () {
       final expenses = [
-        _createExpense(id: 'e-1', title: 'Dinner', amount: 5000, paidBy: 'm-1', category: 'cat-food', date: '2026-08-21'),
-        _createExpense(id: 'e-2', title: 'Tickets', amount: 8000, paidBy: 'm-3', category: 'cat-transit', date: '2026-08-22'),
+        _createExpense(
+          id: 'e-1',
+          title: 'Dinner',
+          amount: 5000,
+          paidBy: 'm-1',
+          category: 'cat-food',
+          date: '2026-08-21',
+        ),
+        _createExpense(
+          id: 'e-2',
+          title: 'Tickets',
+          amount: 8000,
+          paidBy: 'm-3',
+          category: 'cat-transit',
+          date: '2026-08-22',
+        ),
       ];
 
       final leaderboard = getMemberSpendLeaderboard(mockMembers, expenses);

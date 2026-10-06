@@ -18,6 +18,12 @@ import 'package:trip_tracker/data/local/app_database.dart';
 import 'package:trip_tracker/data/providers.dart';
 import 'package:trip_tracker/domain/repositories/repositories.dart';
 import 'package:trip_tracker/features/auth/application/onboarding_state.dart';
+import 'package:trip_tracker/core/platform/local_notifications_gateway.dart';
+import 'package:trip_tracker/core/platform/push_gateway.dart';
+import 'package:trip_tracker/core/settings/app_settings.dart';
+import 'package:trip_tracker/core/version/version_gate.dart';
+import 'package:trip_tracker/features/feedback/application/feedback_providers.dart';
+import 'package:trip_tracker/features/notifications/application/notification_prefs_providers.dart';
 import 'package:trip_tracker/main.dart';
 
 import 'fakes.dart';
@@ -52,6 +58,10 @@ class TestApp {
     required this.share,
     required this.shareService,
     required this.links,
+    required this.push,
+    required this.local,
+    required this.feedback,
+    required this.notifPrefs,
   });
   final FakeAuthRepository auth;
   final FakeSocialAuth social;
@@ -63,6 +73,17 @@ class TestApp {
   final FakeShareRepository share;
   final FakeShareService shareService;
   final FakeDeepLinks links;
+  final FakePushGateway push;
+  final FakeLocalNotifications local;
+  final FakeFeedback feedback;
+  final FakeNotificationPrefs notifPrefs;
+
+  /// What the file picker returns (null = cancelled).
+  String? pickedText;
+
+  /// External URLs the app tried to open (store pages, policy links).
+  final launched = <Uri>[];
+  bool launchResult = false;
 }
 
 /// Boots the real app with every platform/backend seam faked.
@@ -85,10 +106,7 @@ Future<TestApp> pumpApp(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  SharedPreferences.setMockInitialValues({
-    if (user != null && onboarded) onboardedKey(user.id): true,
-    ...prefsExtra,
-  });
+  SharedPreferences.setMockInitialValues({if (user != null && onboarded) onboardedKey(user.id): true, ...prefsExtra});
   final prefs = await SharedPreferences.getInstance();
   final t = TestApp(
     auth: FakeAuthRepository(user: user, paused: signInsPaused),
@@ -101,6 +119,10 @@ Future<TestApp> pumpApp(
     share: FakeShareRepository(),
     shareService: FakeShareService(),
     links: FakeDeepLinks(launch: launchLink),
+    push: FakePushGateway(),
+    local: FakeLocalNotifications(),
+    feedback: FakeFeedback(),
+    notifPrefs: FakeNotificationPrefs(),
   );
   _lastDb = t.db;
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true; // one in-memory DB per test
@@ -120,10 +142,19 @@ Future<TestApp> pumpApp(
         shareRepositoryProvider.overrideWithValue(t.share),
         shareServiceProvider.overrideWithValue(t.shareService),
         rateFetchProvider.overrideWithValue(() async => null),
-        externalLauncherProvider.overrideWithValue((_) async => false),
-        textFilePickerProvider.overrideWithValue(({required extensions}) async => null),
+        externalLauncherProvider.overrideWithValue((u) async {
+          t.launched.add(u);
+          return t.launchResult;
+        }),
+        textFilePickerProvider.overrideWithValue(({required extensions}) async => t.pickedText),
         deepLinkSourceProvider.overrideWithValue(t.links),
         afterJoinSyncProvider.overrideWithValue((tripId) async {}),
+        pushGatewayProvider.overrideWithValue(t.push),
+        localNotificationsGatewayProvider.overrideWithValue(t.local),
+        feedbackRepositoryProvider.overrideWithValue(t.feedback),
+        notificationPrefsRepositoryProvider.overrideWithValue(t.notifPrefs),
+        appVersionProvider.overrideWith((ref) async => const AppVersionInfo('3.45.0', '1')),
+        gatePlatformProvider.overrideWithValue('android'),
         ...overrides,
       ],
       child: const TripTrackerApp(),

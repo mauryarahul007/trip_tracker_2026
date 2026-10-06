@@ -128,10 +128,7 @@ void main() {
           ],
           child: MaterialApp(
             home: Scaffold(
-              body: NextUpTravelCapsule(
-                trip: sampleTrip,
-                passes: [imminentPass],
-              ),
+              body: NextUpTravelCapsule(trip: sampleTrip, passes: [imminentPass]),
             ),
           ),
         ),
@@ -161,10 +158,7 @@ void main() {
           ],
           child: MaterialApp(
             home: Scaffold(
-              body: NextUpTravelCapsule(
-                trip: sampleTrip,
-                passes: [imminentPass],
-              ),
+              body: NextUpTravelCapsule(trip: sampleTrip, passes: [imminentPass]),
             ),
           ),
         ),

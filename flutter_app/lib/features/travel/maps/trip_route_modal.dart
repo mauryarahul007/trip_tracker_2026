@@ -113,11 +113,7 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
       updatedAt: widget.trip.updatedAt,
     );
 
-    final routeInfo = parseTripRoute(
-      name: widget.trip.name,
-      destination: widget.trip.destination,
-      stops: _stops,
-    );
+    final routeInfo = parseTripRoute(name: widget.trip.name, destination: widget.trip.destination, stops: _stops);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -125,10 +121,7 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Trip Route & Stops',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+            const Text('Trip Route & Stops', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             Text(
               routeInfo.fullRoute,
               style: const TextStyle(fontSize: 11, color: Colors.blueGrey),
@@ -141,15 +134,8 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
           TextButton(
             onPressed: _isSaving ? null : _saveRoute,
             child: _isSaving
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text(
-                    'Save',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('Save', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -173,6 +159,7 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                 prefixIcon: const Icon(Icons.add_location_alt_outlined),
                 suffixIcon: _addStopController.text.isNotEmpty
                     ? IconButton(
+                        tooltip: 'Clear',
                         icon: const Icon(Icons.clear, size: 16),
                         onPressed: () {
                           _addStopController.clear();
@@ -182,14 +169,8 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                     : null,
                 filled: true,
                 fillColor: const Color(0xFFF1F5F9),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none,
-                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
               ),
               onSubmitted: _addStop,
             ),
@@ -206,11 +187,7 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
-                  ),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6, offset: const Offset(0, 3)),
                 ],
               ),
               child: ListView.separated(
@@ -221,26 +198,11 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                   final s = _suggestions[i];
                   return ListTile(
                     dense: true,
-                    leading: const Icon(
-                      Icons.place_outlined,
-                      size: 18,
-                      color: Colors.blueGrey,
-                    ),
-                    title: Text(
-                      s.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                    subtitle: s.detail.isNotEmpty
-                        ? Text(s.detail, style: const TextStyle(fontSize: 11))
-                        : null,
+                    leading: const Icon(Icons.place_outlined, size: 18, color: Colors.blueGrey),
+                    title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    subtitle: s.detail.isNotEmpty ? Text(s.detail, style: const TextStyle(fontSize: 11)) : null,
                     trailing: s.source == SuggestionSource.local
-                        ? const Text(
-                            'Offline',
-                            style: TextStyle(fontSize: 10, color: Colors.teal),
-                          )
+                        ? const Text('Offline', style: TextStyle(fontSize: 10, color: Colors.teal))
                         : null,
                     onTap: () => _addStop(s.name),
                   );
@@ -255,70 +217,43 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                     child: Text(
                       'No route stops defined yet.\nAdd cities to plan your itinerary route.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.grey.shade500,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     itemCount: _stops.length,
                     itemBuilder: (context, index) {
                       final stop = _stops[index];
                       final isOrigin = index == 0;
-                      final isDest =
-                          index == _stops.length - 1 && _stops.length > 1;
+                      final isDest = index == _stops.length - 1 && _stops.length > 1;
                       final color = isOrigin
                           ? const Color(0xFF10B981)
-                          : (isDest
-                                ? const Color(0xFFF43F5E)
-                                : const Color(0xFF3B82F6));
+                          : (isDest ? const Color(0xFFF43F5E) : const Color(0xFF3B82F6));
 
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 4),
                         elevation: 1,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         child: ListTile(
                           leading: CircleAvatar(
                             radius: 14,
                             backgroundColor: color,
                             child: Text(
                               '${index + 1}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                             ),
                           ),
-                          title: Text(
-                            stop.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
+                          title: Text(stop.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                           subtitle: isOrigin
                               ? const Text(
                                   'Origin / Departure',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Color(0xFF10B981),
-                                  ),
+                                  style: TextStyle(fontSize: 11, color: Color(0xFF10B981)),
                                 )
                               : (isDest
                                     ? const Text(
                                         'Final Destination',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: Color(0xFFF43F5E),
-                                        ),
+                                        style: TextStyle(fontSize: 11, color: Color(0xFFF43F5E)),
                                       )
                                     : null),
                           trailing: Row(
@@ -326,28 +261,18 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                             children: [
                               if (index > 0)
                                 IconButton(
-                                  icon: const Icon(
-                                    Icons.arrow_upward,
-                                    size: 18,
-                                  ),
+                                  icon: const Icon(Icons.arrow_upward, size: 18),
                                   onPressed: () => _moveStop(index, index - 1),
                                   tooltip: 'Move Up',
                                 ),
                               if (index < _stops.length - 1)
                                 IconButton(
-                                  icon: const Icon(
-                                    Icons.arrow_downward,
-                                    size: 18,
-                                  ),
+                                  icon: const Icon(Icons.arrow_downward, size: 18),
                                   onPressed: () => _moveStop(index, index + 1),
                                   tooltip: 'Move Down',
                                 ),
                               IconButton(
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  size: 18,
-                                  color: Colors.red,
-                                ),
+                                icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
                                 onPressed: () => _removeStop(index),
                                 tooltip: 'Remove Stop',
                               ),

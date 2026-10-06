@@ -25,11 +25,23 @@ void main() {
         final base = cents ~/ split.length;
         final shares = {for (final id in split) id: base / 100};
         shares[split.first] = (base + cents - base * split.length) / 100;
-        expenses.add(Expense(
-          id: 'e$iter-$e', tripId: 't', title: 'x', amount: cents / 100, currency: 'INR', category: 'Food',
-          date: '2026-01-01', paidBy: ids[rnd.nextInt(n)], splitMode: 'equal',
-          splitMemberIds: split, resolvedShares: shares, createdAt: 0, updatedAt: 0,
-        ));
+        expenses.add(
+          Expense(
+            id: 'e$iter-$e',
+            tripId: 't',
+            title: 'x',
+            amount: cents / 100,
+            currency: 'INR',
+            category: 'Food',
+            date: '2026-01-01',
+            paidBy: ids[rnd.nextInt(n)],
+            splitMode: 'equal',
+            splitMemberIds: split,
+            resolvedShares: shares,
+            createdAt: 0,
+            updatedAt: 0,
+          ),
+        );
       }
 
       for (final simplify in [true, false]) {

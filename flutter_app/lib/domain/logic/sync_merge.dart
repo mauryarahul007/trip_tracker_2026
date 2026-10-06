@@ -32,16 +32,13 @@ Set<String> payloadEntityIds(String type, Map<String, dynamic> p) {
 }
 
 /// Entity ids with an unsynced mutation. Port of `collectDirtyExpenseIds`.
-Set<String> collectDirtyIds(Iterable<QueuedOp> queue) =>
-    {for (final op in queue) ...payloadEntityIds(op.type, op.payload)};
+Set<String> collectDirtyIds(Iterable<QueuedOp> queue) => {
+  for (final op in queue) ...payloadEntityIds(op.type, op.payload),
+};
 
 /// Server overwrites clean rows, local keeps dirty rows verbatim, and
 /// optimistic local-only rows survive (SYNC.md §3.2).
-List<Expense> mergeExpenses(
-  List<Expense> local,
-  List<Expense> server,
-  Set<String> dirtyIds,
-) {
+List<Expense> mergeExpenses(List<Expense> local, List<Expense> server, Set<String> dirtyIds) {
   final localById = {for (final e in local) e.id: e};
   final merged = <Expense>[];
   final seen = <String>{};

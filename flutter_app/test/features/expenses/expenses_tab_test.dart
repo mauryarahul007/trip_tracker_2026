@@ -31,8 +31,16 @@ Future<Seed> seedTrip(WidgetTester tester, {String owner = 'u1'}) async {
   final c = containerOf(tester);
   final id = await real(
     tester,
-    () => c.read(tripRepositoryProvider).createTrip(
-        name: 'Goa Weekend', startDate: '2026-10-01', endDate: '2026-10-09', baseCurrency: 'INR', ownerId: owner, creatorName: 'Asha'),
+    () => c
+        .read(tripRepositoryProvider)
+        .createTrip(
+          name: 'Goa Weekend',
+          startDate: '2026-10-01',
+          endDate: '2026-10-09',
+          baseCurrency: 'INR',
+          ownerId: owner,
+          creatorName: 'Asha',
+        ),
   );
   final db = c.read(appDatabaseProvider);
   final me = (await real(tester, () => db.select(db.membersTable).get())).single.id;
@@ -57,7 +65,9 @@ Future<String> addExpense(
   final c = containerOf(tester);
   final r = await real(
     tester,
-    () => c.read(expenseRepositoryProvider).submit(
+    () => c
+        .read(expenseRepositoryProvider)
+        .submit(
           ExpenseSubmission(
             title: title,
             amount: amount,
@@ -94,7 +104,9 @@ void main() {
     expect(where(tester), '/trip/${s.tripId}/expenses/new');
   });
 
-  testApp('summary: total, per person and top category; settlements and pending approvals are left out', (tester) async {
+  testApp('summary: total, per person and top category; settlements and pending approvals are left out', (
+    tester,
+  ) async {
     await pumpApp(tester, user: asha);
     final s = await seedTrip(tester);
     await addExpense(tester, s, title: 'Hotel', amount: 900, category: 'cat-stay');
@@ -104,7 +116,10 @@ void main() {
     // A pending-approval expense must not move any total.
     await real(tester, () async {
       final db = c.read(appDatabaseProvider);
-      await db.customStatement("UPDATE trips SET domain_json = json_set(domain_json, '\$.approvalThreshold', 1000) WHERE id = ?", [s.tripId]);
+      await db.customStatement(
+        "UPDATE trips SET domain_json = json_set(domain_json, '\$.approvalThreshold', 1000) WHERE id = ?",
+        [s.tripId],
+      );
     });
     await addExpense(tester, s, title: 'Big thing', amount: 1000, approvalGate: true);
     await openExpenses(tester, s);
@@ -114,7 +129,9 @@ void main() {
     expect(tester.widget<Text>(find.byKey(const Key('stat-top'))).data, 'Stay & Hotel 75%');
   });
 
-  testApp('days start collapsed; tap a day or "Expand all days" to see rows; settlements get their own section', (tester) async {
+  testApp('days start collapsed; tap a day or "Expand all days" to see rows; settlements get their own section', (
+    tester,
+  ) async {
     await pumpApp(tester, user: asha);
     final s = await seedTrip(tester);
     await addExpense(tester, s, title: 'Beach lunch', date: '2026-10-06');
@@ -162,7 +179,13 @@ void main() {
       final s = await seedTrip(tester);
       final c = containerOf(tester);
       final disputed = await addExpense(tester, s, title: 'Disputed one');
-      await real(tester, () => c.read(expenseRepositoryProvider).flagDispute(disputed, userId: 'u2', note: 'why twice?').catchError((_) {}));
+      await real(
+        tester,
+        () => c
+            .read(expenseRepositoryProvider)
+            .flagDispute(disputed, userId: 'u2', note: 'why twice?')
+            .catchError((_) {}),
+      );
       await addExpense(tester, s, title: 'Conflicted');
       await openExpenses(tester, s);
       await tester.tap(find.byKey(const Key('tab-menu')));
@@ -172,8 +195,13 @@ void main() {
       // Local writes are queued: every row reads as pending sync.
       expect(find.byTooltip('Pending sync'), findsWidgets);
 
-      final conflicted = (await real(tester, () => c.read(expenseRepositoryProvider).watchActive(s.tripId).first)).firstWhere((e) => e.title == 'Conflicted');
-      c.read(conflictStoreProvider.notifier).setForTrip(s.tripId, [ExpenseConflict(conflicted.id, conflicted, conflicted, 'updateExpense')]);
+      final conflicted = (await real(
+        tester,
+        () => c.read(expenseRepositoryProvider).watchActive(s.tripId).first,
+      )).firstWhere((e) => e.title == 'Conflicted');
+      c.read(conflictStoreProvider.notifier).setForTrip(s.tripId, [
+        ExpenseConflict(conflicted.id, conflicted, conflicted, 'updateExpense'),
+      ]);
       await settle(tester);
       expect(find.byTooltip('Sync conflict'), findsOneWidget);
     });
@@ -190,7 +218,10 @@ void main() {
       expect(tester.widget<Text>(find.byKey(const Key('row-amount'))).data, '₹872.50');
       await tester.tap(find.byKey(const Key('row-currency-toggle')));
       await settle(tester);
-      expect(tester.widget<Text>(find.byKey(const Key('row-amount'))).data, '\$10.00'); // 872.5 INR at the default rates
+      expect(
+        tester.widget<Text>(find.byKey(const Key('row-amount'))).data,
+        '\$10.00',
+      ); // 872.5 INR at the default rates
       await tester.tap(find.byKey(const Key('row-currency-toggle')));
       await settle(tester);
       expect(tester.widget<Text>(find.byKey(const Key('row-amount'))).data, '₹872.50');
@@ -202,8 +233,24 @@ void main() {
       await pumpApp(tester, user: asha, flagsOn: flags);
       final s = await seedTrip(tester);
       await addExpense(tester, s, title: 'Beach lunch', amount: 120, category: 'cat-food', paidBy: s.me);
-      await addExpense(tester, s, title: 'Taxi to airport', amount: 40, category: 'cat-travel', paidBy: s.ben, split: [s.ben, s.cara]);
-      await addExpense(tester, s, title: 'Hotel', amount: 900, category: 'cat-stay', paidBy: s.cara, date: '2026-10-04');
+      await addExpense(
+        tester,
+        s,
+        title: 'Taxi to airport',
+        amount: 40,
+        category: 'cat-travel',
+        paidBy: s.ben,
+        split: [s.ben, s.cara],
+      );
+      await addExpense(
+        tester,
+        s,
+        title: 'Hotel',
+        amount: 900,
+        category: 'cat-stay',
+        paidBy: s.cara,
+        date: '2026-10-04',
+      );
       await openExpenses(tester, s);
       await tester.tap(find.byKey(const Key('tab-menu')));
       await settle(tester);
@@ -381,7 +428,8 @@ void main() {
         flagsOn: flags,
         overrides: [
           expenseRepositoryProvider.overrideWith(
-            (ref) => DriftExpenseRepository(ref.watch(appDatabaseProvider), ref.watch(outboxStoreProvider), () {}, api: api),
+            (ref) =>
+                DriftExpenseRepository(ref.watch(appDatabaseProvider), ref.watch(outboxStoreProvider), () {}, api: api),
           ),
         ],
       );
@@ -452,7 +500,10 @@ void main() {
       final c = containerOf(tester);
       await real(tester, () async {
         final db = c.read(appDatabaseProvider);
-        await db.customStatement("UPDATE trips SET domain_json = json_set(domain_json, '\$.approvalThreshold', 100) WHERE id = ?", [s.tripId]);
+        await db.customStatement(
+          "UPDATE trips SET domain_json = json_set(domain_json, '\$.approvalThreshold', 100) WHERE id = ?",
+          [s.tripId],
+        );
       });
       final mine = await addExpense(tester, s, title: 'Mine', amount: 500, approvalGate: true); // created by u1 (me)
       final theirs = await addExpense(tester, s, title: 'Theirs', amount: 500, approvalGate: true, userId: 'u2');
@@ -474,7 +525,15 @@ void main() {
       // Asha (u1) is a plain member here; link her to the member who receives the money.
       final db = c.read(appDatabaseProvider);
       await real(tester, () => db.customStatement("UPDATE members SET linked_user_id = 'u1' WHERE id = ?", [s.ben]));
-      final id = await addExpense(tester, s, title: 'Settlement: Cara → Ben', amount: 80, split: [s.ben], paidBy: s.cara, userId: 'u2');
+      final id = await addExpense(
+        tester,
+        s,
+        title: 'Settlement: Cara → Ben',
+        amount: 80,
+        split: [s.ben],
+        paidBy: s.cara,
+        userId: 'u2',
+      );
       await openRow(tester, s, 'Settlement: Cara → Ben');
       await tester.tap(button('Confirm payment received'));
       await settle(tester, rounds: 10);

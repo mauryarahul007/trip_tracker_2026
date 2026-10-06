@@ -184,13 +184,7 @@ const Map<String, String> airlineNameToIata = {
 };
 
 class ParsedFlightDate {
-  const ParsedFlightDate({
-    this.year,
-    this.month,
-    this.day,
-    this.formattedDateString,
-    this.timeString,
-  });
+  const ParsedFlightDate({this.year, this.month, this.day, this.formattedDateString, this.timeString});
 
   final int? year;
   final int? month;
@@ -235,10 +229,29 @@ ParsedFlightDate? parseFlightDate(String? dateStr) {
 
   // 2. Natural text formats: e.g. "15 Sep 2026", "15 Oct at 08:30 AM"
   const monthMap = {
-    'jan': 1, 'january': 1, 'feb': 2, 'february': 2, 'mar': 3, 'march': 3,
-    'apr': 4, 'april': 4, 'may': 5, 'june': 6, 'jun': 6, 'july': 7, 'jul': 7,
-    'aug': 8, 'august': 8, 'sep': 9, 'september': 9, 'oct': 10, 'october': 10,
-    'nov': 11, 'november': 11, 'dec': 12, 'december': 12,
+    'jan': 1,
+    'january': 1,
+    'feb': 2,
+    'february': 2,
+    'mar': 3,
+    'march': 3,
+    'apr': 4,
+    'april': 4,
+    'may': 5,
+    'june': 6,
+    'jun': 6,
+    'july': 7,
+    'jul': 7,
+    'aug': 8,
+    'august': 8,
+    'sep': 9,
+    'september': 9,
+    'oct': 10,
+    'october': 10,
+    'nov': 11,
+    'november': 11,
+    'dec': 12,
+    'december': 12,
   };
   final textMatch = RegExp(
     r'(\d{1,2})\s+([A-Za-z]{3,9})(?:\s+(\d{4}))?(?:\s+(?:at\s+)?(\d{1,2}:\d{2}(?:\s*[AaPp][Mm])?))?',
@@ -312,7 +325,9 @@ class BuiltFlightUrls {
 BuiltFlightUrls buildFlightUrls(String carrierCode, String flightNumber, [String? dateString]) {
   final cleanCarrier = carrierCode.trim().toUpperCase();
   final trimmedNum = flightNumber.trim();
-  final cleanFlightNum = trimmedNum.replaceFirst(RegExp(r'^0+'), '').isEmpty ? trimmedNum : trimmedNum.replaceFirst(RegExp(r'^0+'), '');
+  final cleanFlightNum = trimmedNum.replaceFirst(RegExp(r'^0+'), '').isEmpty
+      ? trimmedNum
+      : trimmedNum.replaceFirst(RegExp(r'^0+'), '');
   final fullFlightCode = '$cleanCarrier-$cleanFlightNum';
   final icaoCode = iataToIcao[cleanCarrier] ?? cleanCarrier;
 
@@ -346,11 +361,7 @@ BuiltFlightUrls buildFlightUrls(String carrierCode, String flightNumber, [String
 }
 
 class ParsedFlightCode {
-  const ParsedFlightCode({
-    required this.carrierCode,
-    required this.flightNumber,
-    required this.airlineName,
-  });
+  const ParsedFlightCode({required this.carrierCode, required this.flightNumber, required this.airlineName});
 
   final String carrierCode;
   final String flightNumber;
@@ -369,7 +380,9 @@ ParsedFlightCode? parseFlightCode(String text, [String? providerHint]) {
   if (legMatch != null) {
     final carrierCode = legMatch.group(1)!.toUpperCase();
     final rawNum = legMatch.group(2)!;
-    final flightNumber = rawNum.replaceFirst(RegExp(r'^0+'), '').isEmpty ? rawNum : rawNum.replaceFirst(RegExp(r'^0+'), '');
+    final flightNumber = rawNum.replaceFirst(RegExp(r'^0+'), '').isEmpty
+        ? rawNum
+        : rawNum.replaceFirst(RegExp(r'^0+'), '');
     final airlineName = knownAirlines[carrierCode] ?? providerHint ?? 'Airline ($carrierCode)';
     return ParsedFlightCode(carrierCode: carrierCode, flightNumber: flightNumber, airlineName: airlineName);
   }
@@ -384,7 +397,9 @@ ParsedFlightCode? parseFlightCode(String text, [String? providerHint]) {
   if (knownMatch != null) {
     final carrierCode = knownMatch.group(1)!.toUpperCase();
     final rawNum = knownMatch.group(2)!;
-    final flightNumber = rawNum.replaceFirst(RegExp(r'^0+'), '').isEmpty ? rawNum : rawNum.replaceFirst(RegExp(r'^0+'), '');
+    final flightNumber = rawNum.replaceFirst(RegExp(r'^0+'), '').isEmpty
+        ? rawNum
+        : rawNum.replaceFirst(RegExp(r'^0+'), '');
     final airlineName = knownAirlines[carrierCode] ?? providerHint ?? 'Airline ($carrierCode)';
     return ParsedFlightCode(carrierCode: carrierCode, flightNumber: flightNumber, airlineName: airlineName);
   }
@@ -400,7 +415,9 @@ ParsedFlightCode? parseFlightCode(String text, [String? providerHint]) {
     final icaoCode = icaoMatch.group(1)!.toUpperCase();
     final carrierCode = icaoToIata[icaoCode] ?? icaoCode;
     final rawNum = icaoMatch.group(2)!;
-    final flightNumber = rawNum.replaceFirst(RegExp(r'^0+'), '').isEmpty ? rawNum : rawNum.replaceFirst(RegExp(r'^0+'), '');
+    final flightNumber = rawNum.replaceFirst(RegExp(r'^0+'), '').isEmpty
+        ? rawNum
+        : rawNum.replaceFirst(RegExp(r'^0+'), '');
     final airlineName = knownAirlines[carrierCode] ?? providerHint ?? 'Airline ($carrierCode)';
     return ParsedFlightCode(carrierCode: carrierCode, flightNumber: flightNumber, airlineName: airlineName);
   }
@@ -413,7 +430,9 @@ ParsedFlightCode? parseFlightCode(String text, [String? providerHint]) {
   if (generalMatch != null) {
     final carrierCode = generalMatch.group(1)!.toUpperCase();
     final rawNum = generalMatch.group(2)!;
-    final flightNumber = rawNum.replaceFirst(RegExp(r'^0+'), '').isEmpty ? rawNum : rawNum.replaceFirst(RegExp(r'^0+'), '');
+    final flightNumber = rawNum.replaceFirst(RegExp(r'^0+'), '').isEmpty
+        ? rawNum
+        : rawNum.replaceFirst(RegExp(r'^0+'), '');
     final airlineName = knownAirlines[carrierCode] ?? providerHint ?? 'Airline ($carrierCode)';
     return ParsedFlightCode(carrierCode: carrierCode, flightNumber: flightNumber, airlineName: airlineName);
   }
@@ -425,7 +444,9 @@ ParsedFlightCode? parseFlightCode(String text, [String? providerHint]) {
       final flightNumMatch = RegExp(r'(?:flight|flt|no\.?|#)?\s*([0-9]{1,4})(?=[^A-Za-z0-9]|$)').firstMatch(text);
       if (flightNumMatch != null && flightNumMatch.group(1) != null) {
         final rawNum = flightNumMatch.group(1)!;
-        final flightNumber = rawNum.replaceFirst(RegExp(r'^0+'), '').isEmpty ? rawNum : rawNum.replaceFirst(RegExp(r'^0+'), '');
+        final flightNumber = rawNum.replaceFirst(RegExp(r'^0+'), '').isEmpty
+            ? rawNum
+            : rawNum.replaceFirst(RegExp(r'^0+'), '');
         final airlineName = knownAirlines[entry.value] ?? providerHint ?? entry.key;
         return ParsedFlightCode(carrierCode: entry.value, flightNumber: flightNumber, airlineName: airlineName);
       }

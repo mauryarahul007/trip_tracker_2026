@@ -19,22 +19,10 @@ class AppEnv {
   final String googleServerClientId;
   final String googleIosClientId;
 
-  static const String _env = String.fromEnvironment(
-    'APP_ENV',
-    defaultValue: 'dev',
-  );
-  static const String _name = String.fromEnvironment(
-    'APP_NAME',
-    defaultValue: 'Trip Tracker (Dev)',
-  );
-  static const String _url = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'https://dev.triptracker.internal',
-  );
-  static const String _anonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: 'dev-anon-key-placeholder',
-  );
+  static const String _env = String.fromEnvironment('APP_ENV', defaultValue: 'dev');
+  static const String _name = String.fromEnvironment('APP_NAME', defaultValue: 'Trip Tracker (Dev)');
+  static const String _url = String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://dev.triptracker.internal');
+  static const String _anonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'dev-anon-key-placeholder');
 
   static const String _googleServer = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
   static const String _googleIos = String.fromEnvironment('GOOGLE_IOS_CLIENT_ID');

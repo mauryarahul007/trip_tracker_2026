@@ -65,11 +65,9 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
         // Fall back in headless / testing environments
       }
 
-      await ref.read(shareServiceProvider).sharePng(
-            pngBytes ?? const [],
-            fileName: fileName,
-            text: 'Here is our ${trip.name} Trip Wrapped story! ✨',
-          );
+      await ref
+          .read(shareServiceProvider)
+          .sharePng(pngBytes ?? const [], fileName: fileName, text: 'Here is our ${trip.name} Trip Wrapped story! ✨');
     } catch (_) {
       // Ignore or fall back gracefully
     } finally {
@@ -105,9 +103,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
     final accentColor = _isDark ? const Color(0xFF3FCBBD) : const Color(0xFF0F6F63);
 
     return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.92,
-      ),
+      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.92),
       decoration: BoxDecoration(
         color: _isDark ? const Color(0xFF071115) : const Color(0xFFF8FAFC),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -173,11 +169,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                           ),
                           child: Text(
                             '${_currentSlide + 1} / $_totalSlides',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: accentColor,
-                            ),
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: accentColor),
                           ),
                         ),
                       ],
@@ -211,6 +203,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                         ),
                         const SizedBox(width: 8),
                         IconButton(
+                          tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                           key: const Key('wrapped-close'),
                           icon: Icon(Icons.close, color: textPrimary, size: 20),
                           onPressed: () => Navigator.of(context).pop(),
@@ -233,8 +226,28 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                 _buildSlideWelcome(trip, members, archetype, bgCardColor, textPrimary, textSecondary, accentColor),
                 _buildSlideVibe(archetype, bgCardColor, textPrimary, textSecondary, accentColor),
                 _buildSlideSuperlatives(superlatives, bgCardColor, textPrimary, textSecondary, accentColor),
-                _buildSlideRhythmAndLeaderboard(rhythm, leaderboard, trip, bgCardColor, textPrimary, textSecondary, accentColor),
-                _buildSlideFullCard(trip, members, expenses, archetype, superlatives, rhythm, leaderboard, bgCardColor, textPrimary, textSecondary, accentColor),
+                _buildSlideRhythmAndLeaderboard(
+                  rhythm,
+                  leaderboard,
+                  trip,
+                  bgCardColor,
+                  textPrimary,
+                  textSecondary,
+                  accentColor,
+                ),
+                _buildSlideFullCard(
+                  trip,
+                  members,
+                  expenses,
+                  archetype,
+                  superlatives,
+                  rhythm,
+                  leaderboard,
+                  bgCardColor,
+                  textPrimary,
+                  textSecondary,
+                  accentColor,
+                ),
               ],
             ),
           ),
@@ -270,14 +283,13 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                   flex: 2,
                   child: AppButton(
                     key: const Key('wrapped-next-action'),
-                    label: _currentSlide < _totalSlides - 1 ? 'Next Chapter ➔' : (_isSharing ? 'Sharing...' : 'Share Wrapped 📤'),
+                    label: _currentSlide < _totalSlides - 1
+                        ? 'Next Chapter ➔'
+                        : (_isSharing ? 'Sharing...' : 'Share Wrapped 📤'),
                     onPressed: () {
                       unawaited(AppHaptics.light());
                       if (_currentSlide < _totalSlides - 1) {
-                        _pageController.nextPage(
-                          duration: const Duration(milliseconds: 240),
-                          curve: Curves.easeInOut,
-                        );
+                        _pageController.nextPage(duration: const Duration(milliseconds: 240), curve: Curves.easeInOut);
                       } else {
                         _shareStory(trip);
                       }
@@ -310,9 +322,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
           color: bgCardColor,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: accentColor.withValues(alpha: 0.3)),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, spreadRadius: 2),
-          ],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, spreadRadius: 2)],
         ),
         child: Column(
           children: [
@@ -398,10 +408,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: accentColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
+              decoration: BoxDecoration(color: accentColor, borderRadius: BorderRadius.circular(12)),
               child: Text(
                 archetype.tag,
                 style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white),
@@ -551,15 +558,27 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('PEAK ADVENTURE DAY', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: textSecondary)),
-                      Text(rhythm.peakDay, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: textPrimary)),
+                      Text(
+                        'PEAK ADVENTURE DAY',
+                        style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: textSecondary),
+                      ),
+                      Text(
+                        rhythm.peakDay,
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: textPrimary),
+                      ),
                     ],
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('EXPEDITION PACE', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: textSecondary)),
-                      Text(rhythm.pace, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: accentColor)),
+                      Text(
+                        'EXPEDITION PACE',
+                        style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: textSecondary),
+                      ),
+                      Text(
+                        rhythm.pace,
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: accentColor),
+                      ),
                     ],
                   ),
                 ],
@@ -584,7 +603,12 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                         children: [
                           Text(
                             '#${i + 1}',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: accentColor, fontFamily: 'monospace'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              color: accentColor,
+                              fontFamily: 'monospace',
+                            ),
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -630,9 +654,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
             color: bgCardColor,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: accentColor.withValues(alpha: 0.4), width: 1.5),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20, spreadRadius: 2),
-            ],
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20, spreadRadius: 2)],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -647,7 +669,12 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                       children: [
                         Text(
                           'TRIP TRACKER WRAPPED',
-                          style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w900, color: accentColor, letterSpacing: 0.8),
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w900,
+                            color: accentColor,
+                            letterSpacing: 0.8,
+                          ),
                         ),
                         Text(
                           trip.name,
@@ -662,12 +689,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                       ],
                     ),
                   ),
-                  PassportStamp(
-                    destination: trip.destination,
-                    tripName: trip.name,
-                    isSettled: trip.closed,
-                    size: 68,
-                  ),
+                  PassportStamp(destination: trip.destination, tripName: trip.name, isSettled: trip.closed, size: 68),
                 ],
               ),
               const Divider(height: 24),
@@ -687,8 +709,14 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(archetype.tag, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w900, color: accentColor)),
-                          Text(archetype.title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: textPrimary)),
+                          Text(
+                            archetype.tag,
+                            style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w900, color: accentColor),
+                          ),
+                          Text(
+                            archetype.title,
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: textPrimary),
+                          ),
                         ],
                       ),
                     ),
@@ -711,9 +739,15 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                       children: [
                         Text(s.icon, style: const TextStyle(fontSize: 14)),
                         const SizedBox(width: 6),
-                        Text(s.memberName, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: textPrimary)),
+                        Text(
+                          s.memberName,
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: textPrimary),
+                        ),
                         const SizedBox(width: 6),
-                        Text('· ${s.title}', style: TextStyle(fontSize: 11.5, color: accentColor, fontWeight: FontWeight.w600)),
+                        Text(
+                          '· ${s.title}',
+                          style: TextStyle(fontSize: 11.5, color: accentColor, fontWeight: FontWeight.w600),
+                        ),
                       ],
                     ),
                   ),
@@ -730,8 +764,14 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Peak Activity: ${rhythm.peakDay}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: textPrimary)),
-                    Text(rhythm.pace, style: TextStyle(fontSize: 10.5, color: accentColor, fontWeight: FontWeight.w700)),
+                    Text(
+                      'Peak Activity: ${rhythm.peakDay}',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: textPrimary),
+                    ),
+                    Text(
+                      rhythm.pace,
+                      style: TextStyle(fontSize: 10.5, color: accentColor, fontWeight: FontWeight.w700),
+                    ),
                   ],
                 ),
               ),
@@ -744,12 +784,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
 }
 
 class _ThemeTab extends StatelessWidget {
-  const _ThemeTab({
-    required this.label,
-    required this.icon,
-    required this.selected,
-    required this.onSelect,
-  });
+  const _ThemeTab({required this.label, required this.icon, required this.selected, required this.onSelect});
 
   final String label;
   final IconData icon;

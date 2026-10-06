@@ -3,35 +3,22 @@ class RememberedDefaultSplit {
   final List<String> splitMemberIds;
   final Map<String, double>? splitConfig;
 
-  const RememberedDefaultSplit({
-    required this.splitMode,
-    required this.splitMemberIds,
-    this.splitConfig,
-  });
+  const RememberedDefaultSplit({required this.splitMode, required this.splitMemberIds, this.splitConfig});
 
   Map<String, dynamic> toJson() => {
-        'splitMode': splitMode,
-        'splitMemberIds': splitMemberIds,
-        if (splitConfig != null) 'splitConfig': splitConfig,
-      };
+    'splitMode': splitMode,
+    'splitMemberIds': splitMemberIds,
+    if (splitConfig != null) 'splitConfig': splitConfig,
+  };
 
-  factory RememberedDefaultSplit.fromJson(Map<String, dynamic> json) =>
-      RememberedDefaultSplit(
-        splitMode: json['splitMode'] as String,
-        splitMemberIds: (json['splitMemberIds'] as List<dynamic>?)
-                ?.map((e) => e.toString())
-                .toList() ??
-            const [],
-        splitConfig: (json['splitConfig'] as Map<String, dynamic>?)?.map(
-          (k, v) => MapEntry(k, (v as num).toDouble()),
-        ),
-      );
+  factory RememberedDefaultSplit.fromJson(Map<String, dynamic> json) => RememberedDefaultSplit(
+    splitMode: json['splitMode'] as String,
+    splitMemberIds: (json['splitMemberIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+    splitConfig: (json['splitConfig'] as Map<String, dynamic>?)?.map((k, v) => MapEntry(k, (v as num).toDouble())),
+  );
 }
 
-RememberedDefaultSplit? remapDefaultSplit(
-  RememberedDefaultSplit? stored,
-  Map<String, String> memberIdMap,
-) {
+RememberedDefaultSplit? remapDefaultSplit(RememberedDefaultSplit? stored, Map<String, String> memberIdMap) {
   if (stored == null) return null;
   final splitMemberIds = stored.splitMemberIds
       .map((id) => memberIdMap[id])
@@ -52,9 +39,5 @@ RememberedDefaultSplit? remapDefaultSplit(
     if (next.isNotEmpty) splitConfig = next;
   }
 
-  return RememberedDefaultSplit(
-    splitMode: stored.splitMode,
-    splitMemberIds: splitMemberIds,
-    splitConfig: splitConfig,
-  );
+  return RememberedDefaultSplit(splitMode: stored.splitMode, splitMemberIds: splitMemberIds, splitConfig: splitConfig);
 }

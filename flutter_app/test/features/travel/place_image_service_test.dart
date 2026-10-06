@@ -15,41 +15,21 @@ void main() {
     });
 
     test('toSizedThumbnail rewrites wikimedia original to thumbnail', () {
-      const orig =
-          'https://upload.wikimedia.org/wikipedia/commons/a/ab/Goa_Beach.jpg';
+      const orig = 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Goa_Beach.jpg';
       final thumb = toSizedThumbnail(orig, width: 960);
-      expect(
-        thumb,
-        'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Goa_Beach.jpg/960px-Goa_Beach.jpg',
-      );
+      expect(thumb, 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Goa_Beach.jpg/960px-Goa_Beach.jpg');
     });
 
     test('coverImageUrlAtWidth scales Unsplash parameters', () {
-      const unsplash =
-          'https://images.unsplash.com/photo-123?w=1080&auto=format';
+      const unsplash = 'https://images.unsplash.com/photo-123?w=1080&auto=format';
       final sized = coverImageUrlAtWidth(unsplash, 500);
       expect(sized, contains('w=500'));
     });
 
     test('isPhotoUrl filters maps, flags, and diagrams', () {
-      expect(
-        isPhotoUrl(
-          'https://upload.wikimedia.org/wikipedia/commons/Map-Goa.png',
-        ),
-        isFalse,
-      );
-      expect(
-        isPhotoUrl(
-          'https://upload.wikimedia.org/wikipedia/commons/Flag_of_India.svg',
-        ),
-        isFalse,
-      );
-      expect(
-        isPhotoUrl(
-          'https://upload.wikimedia.org/wikipedia/commons/a/ab/Goa_sunset.jpg',
-        ),
-        isTrue,
-      );
+      expect(isPhotoUrl('https://upload.wikimedia.org/wikipedia/commons/Map-Goa.png'), isFalse);
+      expect(isPhotoUrl('https://upload.wikimedia.org/wikipedia/commons/Flag_of_India.svg'), isFalse);
+      expect(isPhotoUrl('https://upload.wikimedia.org/wikipedia/commons/a/ab/Goa_sunset.jpg'), isTrue);
     });
   });
 

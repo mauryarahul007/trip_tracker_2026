@@ -33,19 +33,19 @@ class ParsedQuickExpense {
   });
 
   Map<String, dynamic> toJson() => {
-        'amount': amount != null && amount! % 1 == 0 ? amount!.toInt() : amount,
-        if (currency != null) 'currency': currency,
-        'title': title,
-        'categoryId': categoryId,
-        if (categoryName != null) 'categoryName': categoryName,
-        'paidById': paidById,
-        if (paidByName != null) 'paidByName': paidByName,
-        if (splitMemberIds != null) 'splitMemberIds': splitMemberIds,
-        if (date != null) 'date': date,
-        if (paymentMode != null) 'paymentMode': paymentMode,
-        'rawInput': rawInput,
-        'confidence': ((confidence + 1e-7) * 10).round() / 10.0,
-      };
+    'amount': amount != null && amount! % 1 == 0 ? amount!.toInt() : amount,
+    if (currency != null) 'currency': currency,
+    'title': title,
+    'categoryId': categoryId,
+    if (categoryName != null) 'categoryName': categoryName,
+    'paidById': paidById,
+    if (paidByName != null) 'paidByName': paidByName,
+    if (splitMemberIds != null) 'splitMemberIds': splitMemberIds,
+    if (date != null) 'date': date,
+    if (paymentMode != null) 'paymentMode': paymentMode,
+    'rawInput': rawInput,
+    'confidence': ((confidence + 1e-7) * 10).round() / 10.0,
+  };
 }
 
 const Map<String, String> _currencySymbolsMap = {
@@ -110,11 +110,12 @@ ParsedQuickExpense? parseQuickExpense(
   // Normalize punctuation and symbols attached to numbers
   workingText = workingText.replaceAllMapped(RegExp(r'([0-9]+)\s*\/[-=]'), (m) => m[1]!);
   workingText = workingText.replaceAllMapped(
-      RegExp(r'\b(?:rs\.|rs|inr)\s*([0-9]+)', caseSensitive: false), (m) => 'INR ${m[1]}');
+    RegExp(r'\b(?:rs\.|rs|inr)\s*([0-9]+)', caseSensitive: false),
+    (m) => 'INR ${m[1]}',
+  );
   workingText = workingText.replaceAllMapped(RegExp(r'₹\s*([0-9]+)'), (m) => '₹${m[1]}');
   workingText = workingText.replaceAllMapped(RegExp(r'([0-9]+)[,:](\s|$)'), (m) => '${m[1]}${m[2]}');
-  workingText = workingText.replaceAllMapped(
-      RegExp(r'(^|\s)([0-9]+)\.(?=\s+[a-zA-Z]|$)'), (m) => '${m[1]}${m[2]}');
+  workingText = workingText.replaceAllMapped(RegExp(r'(^|\s)([0-9]+)\.(?=\s+[a-zA-Z]|$)'), (m) => '${m[1]}${m[2]}');
 
   double? detectedAmount;
   String? detectedCurrency;
@@ -126,8 +127,9 @@ ParsedQuickExpense? parseQuickExpense(
 
   // 1. Detect Action Verb + Amount
   final actionAmountRegex = RegExp(
-      r'(?:^|\s)(?:paid|pay|spent|spend|cost|charged|total(?:\s+of)?)\s+([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)(?=[.,;:!?-]?(\s|$))',
-      caseSensitive: false);
+    r'(?:^|\s)(?:paid|pay|spent|spend|cost|charged|total(?:\s+of)?)\s+([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)(?=[.,;:!?-]?(\s|$))',
+    caseSensitive: false,
+  );
   final actionMatch = actionAmountRegex.firstMatch(workingText);
   if (actionMatch != null) {
     final numStr = actionMatch.group(1)!.replaceAll(',', '');
@@ -140,10 +142,12 @@ ParsedQuickExpense? parseQuickExpense(
 
   workingText = workingText
       .replaceFirst(
-          RegExp(
-              r'^(?:please\s+)?(?:add\s+expense|log\s+expense|add|log|spent|spend|paid|pay|bought|buy|gave|give|cost|charged)\s+',
-              caseSensitive: false),
-          '')
+        RegExp(
+          r'^(?:please\s+)?(?:add\s+expense|log\s+expense|add|log|spent|spend|paid|pay|bought|buy|gave|give|cost|charged)\s+',
+          caseSensitive: false,
+        ),
+        '',
+      )
       .trim();
 
   // Detect Relative Date ("yesterday", "today")
@@ -209,8 +213,9 @@ ParsedQuickExpense? parseQuickExpense(
 
   if (detectedAmount == null) {
     final suffixRegex = RegExp(
-        r'(?:^|\s)([0-9.,]+)\s*(rs\.?|rupees?|bucks?|dollars?|euros?|pounds?|inr|usd|eur|gbp|aed|thb|sgd)(?:\s|$)',
-        caseSensitive: false);
+      r'(?:^|\s)([0-9.,]+)\s*(rs\.?|rupees?|bucks?|dollars?|euros?|pounds?|inr|usd|eur|gbp|aed|thb|sgd)(?:\s|$)',
+      caseSensitive: false,
+    );
     final match = suffixRegex.firstMatch(workingText);
     if (match != null) {
       final numStr = match.group(1)!.replaceAll(',', '');
@@ -226,8 +231,9 @@ ParsedQuickExpense? parseQuickExpense(
 
   if (detectedAmount == null) {
     final prefixRegex = RegExp(
-        r'(?:^|\s)(rs\.?|rupees?|bucks?|dollars?|inr|usd|eur|gbp)\s+([0-9.,]+)(?:\s|$)',
-        caseSensitive: false);
+      r'(?:^|\s)(rs\.?|rupees?|bucks?|dollars?|inr|usd|eur|gbp)\s+([0-9.,]+)(?:\s|$)',
+      caseSensitive: false,
+    );
     final match = prefixRegex.firstMatch(workingText);
     if (match != null) {
       final numStr = match.group(2)!.replaceAll(',', '');
@@ -243,8 +249,7 @@ ParsedQuickExpense? parseQuickExpense(
 
   // Standalone numbers
   if (detectedAmount == null) {
-    final numberRegex = RegExp(
-        r'(?<=\s|^)([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)(?=[.,;:!?-]?(\s|$))');
+    final numberRegex = RegExp(r'(?<=\s|^)([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)(?=[.,;:!?-]?(\s|$))');
     final matches = numberRegex.allMatches(workingText).toList();
     if (matches.isNotEmpty) {
       final chosen = matches.last;
@@ -252,9 +257,7 @@ ParsedQuickExpense? parseQuickExpense(
       final parsedNum = double.tryParse(numStr);
       if (parsedNum != null) {
         detectedAmount = parsedNum;
-        workingText =
-            '${workingText.substring(0, chosen.start)} ${workingText.substring(chosen.end)}'
-                .trim();
+        workingText = '${workingText.substring(0, chosen.start)} ${workingText.substring(chosen.end)}'.trim();
       }
     }
   }
@@ -299,17 +302,15 @@ ParsedQuickExpense? parseQuickExpense(
 
   // Clean up title
   workingText = workingText
-      .replaceFirst(
-          RegExp(r'^(?:for|on|towards|at|in|of|worth|ka|ki|ke|ko|about)\s+', caseSensitive: false), '')
+      .replaceFirst(RegExp(r'^(?:for|on|towards|at|in|of|worth|ka|ki|ke|ko|about)\s+', caseSensitive: false), '')
       .trim();
 
-  workingText = workingText.replaceAll(
-      RegExp(r'\b(?:paid\s+for|paid|spent\s+on|spent|bought|gave|cost)\b', caseSensitive: false), ' ').trim();
+  workingText = workingText
+      .replaceAll(RegExp(r'\b(?:paid\s+for|paid|spent\s+on|spent|bought|gave|cost)\b', caseSensitive: false), ' ')
+      .trim();
 
   workingText = workingText
-      .replaceFirst(
-          RegExp(r'\s+(?:for|on|towards|by|via|at|of|worth|ka|ki|ke|ko|mein|se)$', caseSensitive: false),
-          '')
+      .replaceFirst(RegExp(r'\s+(?:for|on|towards|by|via|at|of|worth|ka|ki|ke|ko|mein|se)$', caseSensitive: false), '')
       .trim();
 
   workingText = workingText.replaceAll(RegExp(r'^[.,:;!?-]+|[.,:;!?-]+$'), '').trim();

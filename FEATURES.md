@@ -9,8 +9,8 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **99** |
-| **💡 Requested** | **2** |
+| **Total Tracked** | **100** |
+| **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
 | **✅ Shipped** | **97** |
@@ -24,6 +24,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **[FEAT-002](#feat-002)** | `ui-ux` | Test | `mauryarahul007@gmail.com` | 💡 Requested |
 | **[FEAT-024](#feat-024)** | `admin` | CI pipeline for lint, build, and test on push/PR | `claude-cli` | 💡 Requested |
+| **[FEAT-100](#feat-100)** | `native` | Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12) | `claude-cli` | 💡 Requested |
 
 ---
 
@@ -45,6 +46,15 @@ Test
 - **Requested By**: `claude-cli` on 9/1/2026 (web)
 
 CI pipeline for lint, build, and test on push/PR
+
+---
+
+### FEAT-100: Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12)
+
+- **Category**: `native` | **Status**: `requested`
+- **Requested By**: `claude-cli` on 10/7/2026 (web)
+
+Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12)
 
 ---
 

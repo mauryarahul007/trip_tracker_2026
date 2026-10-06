@@ -59,10 +59,7 @@ String? coverImageUrlAtWidth(String? url, int width) {
 
     final targetWidth = normalizeWikimediaWidth(width);
     if (_wikimediaThumbPxPattern.hasMatch(uri.path)) {
-      final newPath = uri.path.replaceAll(
-        _wikimediaThumbPxPattern,
-        '/${targetWidth}px-\$2',
-      );
+      final newPath = uri.path.replaceAll(_wikimediaThumbPxPattern, '/${targetWidth}px-\$2');
       return uri.replace(path: newPath).toString();
     }
     return toSizedThumbnail(url, width: targetWidth);
@@ -76,9 +73,7 @@ bool isPhotoUrl(String? url) {
   if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
 
   final lower = url.toLowerCase();
-  if (lower.endsWith('.svg') ||
-      lower.endsWith('.gif') ||
-      lower.endsWith('.webp')) {
+  if (lower.endsWith('.svg') || lower.endsWith('.gif') || lower.endsWith('.webp')) {
     return false;
   }
   if (_nonPhotoFilenamePattern.hasMatch(lower)) return false;
@@ -87,10 +82,7 @@ bool isPhotoUrl(String? url) {
 
 /// Resolves a verified cover photo for a destination using Wikipedia REST APIs.
 /// Parity with web `placeImageService.ts`. Zero API keys required.
-Future<String?> resolveDestinationImage(
-  String destination, {
-  http.Client? client,
-}) async {
+Future<String?> resolveDestinationImage(String destination, {http.Client? client}) async {
   final trimmed = destination.trim();
   if (trimmed.isEmpty) return null;
 
@@ -119,17 +111,9 @@ Future<String?> _fetchImage(String place, {http.Client? client}) async {
   final httpClient = client ?? http.Client();
   try {
     final encoded = Uri.encodeComponent(place.replaceAll(' ', '_'));
-    final url = Uri.parse(
-      'https://en.wikipedia.org/api/rest_v1/page/summary/$encoded',
-    );
+    final url = Uri.parse('https://en.wikipedia.org/api/rest_v1/page/summary/$encoded');
     final response = await httpClient
-        .get(
-          url,
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'TripTracker/3.0',
-          },
-        )
+        .get(url, headers: {'Accept': 'application/json', 'User-Agent': 'TripTracker/3.0'})
         .timeout(const Duration(seconds: 4));
 
     if (response.statusCode != 200) return null;

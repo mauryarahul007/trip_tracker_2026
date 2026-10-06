@@ -27,40 +27,75 @@ class FakeReader extends TripRemoteReader {
 }
 
 Map<String, dynamic> tripRow(String id) => {
-      'id': id, 'name': 'Goa', 'start_date': '2026-01-01', 'end_date': '2026-01-05',
-      'base_currency': 'INR', 'owner_id': 'u1', 'join_code': 'ABC123',
-      'created_at': '2026-01-01T00:00:00Z', 'updated_at': '2026-01-01T00:00:00Z',
-    };
+  'id': id,
+  'name': 'Goa',
+  'start_date': '2026-01-01',
+  'end_date': '2026-01-05',
+  'base_currency': 'INR',
+  'owner_id': 'u1',
+  'join_code': 'ABC123',
+  'created_at': '2026-01-01T00:00:00Z',
+  'updated_at': '2026-01-01T00:00:00Z',
+};
 
 Map<String, dynamic> expRow(String id, {double amount = 100, String? deletedAt}) => {
-      'id': id, 'trip_id': 't1', 'title': 'Dinner', 'amount': amount, 'currency': 'INR',
-      'category': 'Food', 'date': '2026-01-02', 'paid_by': 'm1', 'split_mode': 'equal',
-      'split_member_ids': ['m1', 'm2'], 'resolved_shares': {'m1': 50, 'm2': 50},
-      'is_settlement': false, 'created_at': '2026-01-02T00:00:00Z', 'updated_at': '2026-01-02T00:00:00Z',
-    };
+  'id': id,
+  'trip_id': 't1',
+  'title': 'Dinner',
+  'amount': amount,
+  'currency': 'INR',
+  'category': 'Food',
+  'date': '2026-01-02',
+  'paid_by': 'm1',
+  'split_mode': 'equal',
+  'split_member_ids': ['m1', 'm2'],
+  'resolved_shares': {'m1': 50, 'm2': 50},
+  'is_settlement': false,
+  'created_at': '2026-01-02T00:00:00Z',
+  'updated_at': '2026-01-02T00:00:00Z',
+};
 
-Map<String, dynamic> changes({Map<String, dynamic>? trip, List<Map<String, dynamic>> expenses = const [], List<String> tombstones = const [], String time = '2026-01-03T00:00:00Z'}) => {
-      'server_time': time,
-      'trip': trip,
-      'members': [
-        {'id': 'm1', 'trip_id': 't1', 'name': 'Asha', 'archived': false},
-        {'id': 'm2', 'trip_id': 't1', 'name': 'Ben', 'archived': false},
-      ],
-      'groups': [{'id': 'g1', 'trip_id': 't1', 'name': 'Asha & Ben'}],
-      'group_members': [
-        {'group_id': 'g1', 'member_id': 'm1'},
-        {'group_id': 'g1', 'member_id': 'm2'},
-      ],
-      'categories': [{'id': 'c1', 'trip_id': 't1', 'name': 'Snacks', 'is_custom': true}],
-      'expenses': expenses,
-      'tombstones': {'expenses': tombstones},
-    };
+Map<String, dynamic> changes({
+  Map<String, dynamic>? trip,
+  List<Map<String, dynamic>> expenses = const [],
+  List<String> tombstones = const [],
+  String time = '2026-01-03T00:00:00Z',
+}) => {
+  'server_time': time,
+  'trip': trip,
+  'members': [
+    {'id': 'm1', 'trip_id': 't1', 'name': 'Asha', 'archived': false},
+    {'id': 'm2', 'trip_id': 't1', 'name': 'Ben', 'archived': false},
+  ],
+  'groups': [
+    {'id': 'g1', 'trip_id': 't1', 'name': 'Asha & Ben'},
+  ],
+  'group_members': [
+    {'group_id': 'g1', 'member_id': 'm1'},
+    {'group_id': 'g1', 'member_id': 'm2'},
+  ],
+  'categories': [
+    {'id': 'c1', 'trip_id': 't1', 'name': 'Snacks', 'is_custom': true},
+  ],
+  'expenses': expenses,
+  'tombstones': {'expenses': tombstones},
+};
 
 Expense localExpense(String id, {double amount = 10}) => Expense(
-      id: id, tripId: 't1', title: 'Lunch', amount: amount, currency: 'INR', category: 'Food',
-      date: '2026-01-02', paidBy: 'm1', splitMode: 'equal', splitMemberIds: const ['m1', 'm2'],
-      resolvedShares: const {'m1': 5, 'm2': 5}, createdAt: 0, updatedAt: 0,
-    );
+  id: id,
+  tripId: 't1',
+  title: 'Lunch',
+  amount: amount,
+  currency: 'INR',
+  category: 'Food',
+  date: '2026-01-02',
+  paidBy: 'm1',
+  splitMode: 'equal',
+  splitMemberIds: const ['m1', 'm2'],
+  resolvedShares: const {'m1': 5, 'm2': 5},
+  createdAt: 0,
+  updatedAt: 0,
+);
 
 void main() {
   late AppDatabase db;
@@ -90,7 +125,13 @@ void main() {
   group('repositories (optimistic local write + outbox)', () {
     test('createTrip writes trip + owner member and enqueues one createTrip', () async {
       final id = await trips.createTrip(
-          name: 'Goa', startDate: '2026-01-01', endDate: '2026-01-05', baseCurrency: 'INR', ownerId: 'u1', creatorName: 'Asha');
+        name: 'Goa',
+        startDate: '2026-01-01',
+        endDate: '2026-01-05',
+        baseCurrency: 'INR',
+        ownerId: 'u1',
+        creatorName: 'Asha',
+      );
       final trip = await trips.watchTrip(id).first;
       expect(trip!.name, 'Goa');
       expect(trip.memberIds, hasLength(1));
@@ -111,7 +152,10 @@ void main() {
       await expenses.restore('e1');
       expect((await expenses.watchActive('t1').first).single.deletedAt, isNull);
       expect((await outbox.all()).map((i) => i.type), [
-        OutboxType.addExpense, OutboxType.updateExpense, OutboxType.deleteExpense, OutboxType.restoreExpense,
+        OutboxType.addExpense,
+        OutboxType.updateExpense,
+        OutboxType.deleteExpense,
+        OutboxType.restoreExpense,
       ]);
     });
 
@@ -195,7 +239,9 @@ void main() {
       await pull.syncAll();
       // e1 is soft-deleted on the server: the delta feed reports a tombstone, the bin read returns the row.
       reader.responses['t1'] = changes(tombstones: ['e1']);
-      reader.recycled = [{...expRow('e1'), 'deleted_at': '2026-01-02T10:00:00Z'}];
+      reader.recycled = [
+        {...expRow('e1'), 'deleted_at': '2026-01-02T10:00:00Z'},
+      ];
       await pull.syncAll();
       expect((await expenses.watchActive('t1').first).map((e) => e.id), ['e2']);
       final bin = await expenses.watchRecycled('t1').first;
@@ -235,7 +281,13 @@ void main() {
 
       // A trip created offline (pending createTrip) must survive.
       final id = await trips.createTrip(
-          name: 'New', startDate: '2026-02-01', endDate: '2026-02-02', baseCurrency: 'INR', ownerId: 'u1', creatorName: 'Asha');
+        name: 'New',
+        startDate: '2026-02-01',
+        endDate: '2026-02-02',
+        baseCurrency: 'INR',
+        ownerId: 'u1',
+        creatorName: 'Asha',
+      );
       await pull.syncAll();
       expect((await trips.watchTrips().first).single.id, id);
     });

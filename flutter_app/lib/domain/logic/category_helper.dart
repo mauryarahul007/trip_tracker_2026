@@ -6,26 +6,14 @@ class ParsedCategoryIcon {
   final String iconName;
   final bool isEmoji;
 
-  const ParsedCategoryIcon({
-    required this.color,
-    required this.iconName,
-    required this.isEmoji,
-  });
+  const ParsedCategoryIcon({required this.color, required this.iconName, required this.isEmoji});
 
-  Map<String, dynamic> toJson() => {
-        'color': color,
-        'iconName': iconName,
-        'isEmoji': isEmoji,
-      };
+  Map<String, dynamic> toJson() => {'color': color, 'iconName': iconName, 'isEmoji': isEmoji};
 }
 
 ParsedCategoryIcon parseCategoryIcon(String? iconString) {
   if (iconString == null || iconString.isEmpty) {
-    return const ParsedCategoryIcon(
-      color: 'var(--primary-accent)',
-      iconName: 'Compass',
-      isEmoji: false,
-    );
+    return const ParsedCategoryIcon(color: 'var(--primary-accent)', iconName: 'Compass', isEmoji: false);
   }
 
   if (iconString.contains(':')) {
@@ -39,18 +27,10 @@ ParsedCategoryIcon parseCategoryIcon(String? iconString) {
 
   final isEmoji = !RegExp(r'^[\x20-\x7E]+$').hasMatch(iconString);
   if (isEmoji) {
-    return ParsedCategoryIcon(
-      color: 'var(--border-color)',
-      iconName: iconString,
-      isEmoji: true,
-    );
+    return ParsedCategoryIcon(color: 'var(--border-color)', iconName: iconString, isEmoji: true);
   }
 
-  return ParsedCategoryIcon(
-    color: 'var(--primary-accent)',
-    iconName: iconString,
-    isEmoji: false,
-  );
+  return ParsedCategoryIcon(color: 'var(--primary-accent)', iconName: iconString, isEmoji: false);
 }
 
 String serializeCategoryIcon(String color, [String? iconName]) {
@@ -62,76 +42,138 @@ String serializeCategoryIcon(String color, [String? iconName]) {
 
 const Map<String, List<String>> top50Brands = {
   'cat-food': [
-    'swiggy', 'zomato', 'starbucks', 'mcdonald', 'mcdonalds', 'kfc',
-    'burger king', 'dominos', 'pizza hut', 'subway', 'blinkit',
-    'zepto', 'instamart', 'dunkin', 'chai point', 'blue tokai'
+    'swiggy',
+    'zomato',
+    'starbucks',
+    'mcdonald',
+    'mcdonalds',
+    'kfc',
+    'burger king',
+    'dominos',
+    'pizza hut',
+    'subway',
+    'blinkit',
+    'zepto',
+    'instamart',
+    'dunkin',
+    'chai point',
+    'blue tokai',
   ],
   'cat-travel': [
-    'uber', 'ola', 'rapido', 'indigo', 'air india', 'spicejet',
-    'makemytrip', 'irctc', 'redbus', 'shell', 'hpcl', 'bpcl',
-    'indianoil', 'fastag', 'grab', 'lyft'
+    'uber',
+    'ola',
+    'rapido',
+    'indigo',
+    'air india',
+    'spicejet',
+    'makemytrip',
+    'irctc',
+    'redbus',
+    'shell',
+    'hpcl',
+    'bpcl',
+    'indianoil',
+    'fastag',
+    'grab',
+    'lyft',
   ],
-  'cat-stay': [
-    'airbnb', 'booking.com', 'agoda', 'oyo', 'marriott', 'hilton',
-    'hyatt', 'taj', 'zostel', 'hostelworld'
-  ],
-  'cat-activities': [
-    'bookmyshow', 'klook', 'getyourguide', 'disney',
-    'universal studios', 'imax', 'pvr'
-  ],
-  'cat-shopping': [
-    'zara', 'h&m', 'uniqlo', 'decathlon', 'amazon', 'flipkart', 'duty free'
-  ],
-  'cat-misc': [
-    'apollo pharmacy', 'medplus', 'airtel', 'jio', 'google pay', 'forex'
-  ],
+  'cat-stay': ['airbnb', 'booking.com', 'agoda', 'oyo', 'marriott', 'hilton', 'hyatt', 'taj', 'zostel', 'hostelworld'],
+  'cat-activities': ['bookmyshow', 'klook', 'getyourguide', 'disney', 'universal studios', 'imax', 'pvr'],
+  'cat-shopping': ['zara', 'h&m', 'uniqlo', 'decathlon', 'amazon', 'flipkart', 'duty free'],
+  'cat-misc': ['apollo pharmacy', 'medplus', 'airtel', 'jio', 'google pay', 'forex'],
 };
 
 const Map<String, List<String>> top50Items = {
   'cat-food': [
-    'milk', 'maggi', 'maggie', 'bread', 'eggs', 'butter', 'coffee',
-    'chai', 'tea', 'beer', 'wine', 'whiskey', 'pizza', 'burger',
-    'biryani', 'breakfast', 'lunch', 'dinner', 'snacks', 'chips',
-    'water', 'groceries', 'ice cream'
+    'milk',
+    'maggi',
+    'maggie',
+    'bread',
+    'eggs',
+    'butter',
+    'coffee',
+    'chai',
+    'tea',
+    'beer',
+    'wine',
+    'whiskey',
+    'pizza',
+    'burger',
+    'biryani',
+    'breakfast',
+    'lunch',
+    'dinner',
+    'snacks',
+    'chips',
+    'water',
+    'groceries',
+    'ice cream',
   ],
   'cat-travel': [
-    'petrol', 'diesel', 'fuel', 'toll', 'parking', 'flight', 'train',
-    'bus', 'metro', 'cab', 'taxi', 'auto', 'rickshaw',
-    'scooter rental', 'car rental', 'driver tip'
+    'petrol',
+    'diesel',
+    'fuel',
+    'toll',
+    'parking',
+    'flight',
+    'train',
+    'bus',
+    'metro',
+    'cab',
+    'taxi',
+    'auto',
+    'rickshaw',
+    'scooter rental',
+    'car rental',
+    'driver tip',
   ],
   'cat-stay': [
-    'hotel', 'hostel', 'resort', 'homestay', 'villa', 'room service',
-    'late checkout', 'city tax', 'lodge', 'dorm'
+    'hotel',
+    'hostel',
+    'resort',
+    'homestay',
+    'villa',
+    'room service',
+    'late checkout',
+    'city tax',
+    'lodge',
+    'dorm',
   ],
   'cat-activities': [
-    'museum', 'tickets', 'safari', 'scuba', 'diving', 'trek',
-    'tour guide', 'cinema', 'movie', 'theme park', 'monument'
+    'museum',
+    'tickets',
+    'safari',
+    'scuba',
+    'diving',
+    'trek',
+    'tour guide',
+    'cinema',
+    'movie',
+    'theme park',
+    'monument',
   ],
-  'cat-shopping': [
-    'shopping', 'souvenir', 'gifts', 'clothes', 'shoes', 'jacket',
-    'sunglasses', 'sunscreen'
-  ],
+  'cat-shopping': ['shopping', 'souvenir', 'gifts', 'clothes', 'shoes', 'jacket', 'sunglasses', 'sunscreen'],
   'cat-misc': [
-    'medicine', 'pharmacy', 'bandaid', 'sim card', 'esim', 'laundry',
-    'tips', 'atm fee', 'currency exchange'
+    'medicine',
+    'pharmacy',
+    'bandaid',
+    'sim card',
+    'esim',
+    'laundry',
+    'tips',
+    'atm fee',
+    'currency exchange',
   ],
 };
 
 bool _keywordMatchesText(String keyword, String text) {
   if (keyword.isEmpty || text.isEmpty) return false;
   final escaped = RegExp.escape(keyword.trim());
-  final pattern = RegExp(
-    '(^|\\s|[.,!?;:()/\'"\\[\\]])$escaped(\$|\\s|[.,!?;:()/\'"\\[\\]])',
-    caseSensitive: false,
-  );
+  final pattern = RegExp('(^|\\s|[.,!?;:()/\'"\\[\\]])$escaped(\$|\\s|[.,!?;:()/\'"\\[\\]])', caseSensitive: false);
   return pattern.hasMatch(text);
 }
 
-String? autoSuggestCategory(
-  String titleText,
-  List<Category> categories, [
-  List<Expense>? historicalExpenses,
-]) {
+String? autoSuggestCategory(String titleText, List<Category> categories, [List<Expense>? historicalExpenses]) {
   final cleanText = titleText.trim();
   if (cleanText.isEmpty) return null;
 

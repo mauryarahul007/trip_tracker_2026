@@ -16,8 +16,13 @@ abstract class ShareService {
       share(text ?? fileName, subject: fileName);
 
   /// Arbitrary file share (e.g. .ics, .triptracker).
-  Future<void> shareFile(List<int> bytes, {required String fileName, String? mimeType, String? subject, String? text}) =>
-      share(text ?? fileName, subject: subject ?? fileName);
+  Future<void> shareFile(
+    List<int> bytes, {
+    required String fileName,
+    String? mimeType,
+    String? subject,
+    String? text,
+  }) => share(text ?? fileName, subject: subject ?? fileName);
 }
 
 class PlatformShareService implements ShareService {
@@ -38,11 +43,23 @@ class PlatformShareService implements ShareService {
   }
 
   @override
-  Future<void> shareFile(List<int> bytes, {required String fileName, String? mimeType, String? subject, String? text}) async {
+  Future<void> shareFile(
+    List<int> bytes, {
+    required String fileName,
+    String? mimeType,
+    String? subject,
+    String? text,
+  }) async {
     final dir = await getTemporaryDirectory();
     final file = File(p.join(dir.path, fileName));
     await file.writeAsBytes(bytes, flush: true);
-    await SharePlus.instance.share(ShareParams(files: [XFile(file.path, mimeType: mimeType)], subject: subject, text: text));
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path, mimeType: mimeType)],
+        subject: subject,
+        text: text,
+      ),
+    );
   }
 }
 

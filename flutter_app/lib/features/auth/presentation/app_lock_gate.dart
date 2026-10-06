@@ -174,10 +174,7 @@ class _AppLockOverlayState extends ConsumerState<AppLockOverlay> {
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _verifying ? null : _unlock,
-                      child: Text(l10n.lockUnlock),
-                    ),
+                    child: FilledButton(onPressed: _verifying ? null : _unlock, child: Text(l10n.lockUnlock)),
                   ),
                   TextButton(
                     onPressed: () => ref.read(authRepositoryProvider).signOut(),

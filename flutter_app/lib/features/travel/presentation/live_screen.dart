@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,10 +37,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
+    _pulseController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
     _fetch();
     _pollTimer = Timer.periodic(_pollInterval, (_) => _fetch());
   }
@@ -105,10 +103,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
     final share = ref.read(shareServiceProvider);
     AppHaptics.selection();
     final url = 'https://trip-tracker.blackmaroon.in/live/${widget.token}';
-    share.share(
-      'My live location: $url',
-      subject: 'Trip Tracker · Live location',
-    );
+    share.share('My live location: $url', subject: 'Trip Tracker · Live location');
   }
 
   @override
@@ -133,17 +128,14 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
             if (loc != null)
               Text(
                 '${loc.memberName} · ${loc.tripName}',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: tokens.textPrimary,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
           ],
         ),
         leading: IconButton(
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           icon: const Icon(AppIcons.back, size: 20),
           onPressed: () {
             if (context.canPop()) {
@@ -155,11 +147,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
         ),
         actions: [
           if (loc != null)
-            IconButton(
-              icon: const Icon(AppIcons.share, size: 20),
-              tooltip: 'Share link',
-              onPressed: _shareLink,
-            ),
+            IconButton(icon: const Icon(AppIcons.share, size: 20), tooltip: 'Share link', onPressed: _shareLink),
         ],
       ),
       body: _buildBody(context, tokens),
@@ -174,10 +162,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
           children: [
             CircularProgressIndicator(color: tokens.primaryAccent),
             const SizedBox(height: 16),
-            Text(
-              'Connecting to live radar...',
-              style: TextStyle(fontSize: 14, color: tokens.textSecondary),
-            ),
+            Text('Connecting to live radar...', style: TextStyle(fontSize: 14, color: tokens.textSecondary)),
           ],
         ),
       );
@@ -193,20 +178,13 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
               Container(
                 width: 72,
                 height: 72,
-                decoration: BoxDecoration(
-                  color: tokens.textMuted.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: tokens.textMuted.withValues(alpha: 0.12), shape: BoxShape.circle),
                 child: Icon(AppIcons.location, size: 36, color: tokens.textMuted),
               ),
               const SizedBox(height: 20),
               Text(
                 'Live Location Ended',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: tokens.textPrimary,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: tokens.textPrimary),
               ),
               const SizedBox(height: 8),
               Text(
@@ -215,11 +193,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
                 style: TextStyle(fontSize: 14, color: tokens.textSecondary, height: 1.4),
               ),
               const SizedBox(height: 24),
-              AppButton(
-                label: 'Back to Trips',
-                variant: AppButtonVariant.primary,
-                onPressed: () => context.go('/'),
-              ),
+              AppButton(label: 'Back to Trips', variant: AppButtonVariant.primary, onPressed: () => context.go('/')),
             ],
           ),
         ),
@@ -262,11 +236,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: tokens.borderColor.withValues(alpha: 0.3)),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
+                BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 16, offset: const Offset(0, 4)),
               ],
             ),
             child: Row(
@@ -310,22 +280,12 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            '· Updated $relativeTime',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: tokens.textSecondary,
-                            ),
-                          ),
+                          Text('· Updated $relativeTime', style: TextStyle(fontSize: 12, color: tokens.textSecondary)),
                         ],
                       ),
                       Text(
                         '${loc.lat.toStringAsFixed(4)}°, ${loc.lng.toStringAsFixed(4)}°',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontFamily: 'monospace',
-                          color: tokens.textMuted,
-                        ),
+                        style: TextStyle(fontSize: 11, fontFamily: 'monospace', color: tokens.textMuted),
                       ),
                     ],
                   ),

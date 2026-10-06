@@ -50,34 +50,59 @@ class ShareScreen extends ConsumerWidget {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                Text(l10n.shareEyebrow, style: TextStyle(fontSize: 12, letterSpacing: 0.6, color: tokens.textMuted)),
-                const SizedBox(height: 8),
-                Text(s.tripName, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: tokens.textPrimary)),
-                const SizedBox(height: 4),
-                Text(
-                  [if ((s.destination ?? '').isNotEmpty) s.destination!, if (s.startDate.isNotEmpty) formatDateRange(s.startDate, s.endDate)].join(' · '),
-                  style: TextStyle(color: tokens.textSecondary),
-                ),
-                const SizedBox(height: 20),
-                Row(children: [
-                  Expanded(child: _Stat(label: l10n.shareTravelers, value: '${s.memberCount}')),
-                  const SizedBox(width: 12),
-                  Expanded(child: _Stat(label: l10n.shareExpenses, value: '${s.expenseCount}')),
-                ]),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: tokens.bgSurface, borderRadius: BorderRadius.circular(tokens.radiusMd), border: Border.all(color: tokens.borderColor)),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(l10n.shareTotalSpend, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
-                    const SizedBox(height: 6),
-                    for (final e in spend)
-                      Text(formatAmount(e.value, getCurrencySymbol(e.key)),
-                          key: Key('spend-${e.key}'), style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: tokens.textPrimary)),
-                  ]),
-                ),
-              ]),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(l10n.shareEyebrow, style: TextStyle(fontSize: 12, letterSpacing: 0.6, color: tokens.textMuted)),
+                  const SizedBox(height: 8),
+                  Text(
+                    s.tripName,
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: tokens.textPrimary),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    [
+                      if ((s.destination ?? '').isNotEmpty) s.destination!,
+                      if (s.startDate.isNotEmpty) formatDateRange(s.startDate, s.endDate),
+                    ].join(' · '),
+                    style: TextStyle(color: tokens.textSecondary),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _Stat(label: l10n.shareTravelers, value: '${s.memberCount}'),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _Stat(label: l10n.shareExpenses, value: '${s.expenseCount}'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: tokens.bgSurface,
+                      borderRadius: BorderRadius.circular(tokens.radiusMd),
+                      border: Border.all(color: tokens.borderColor),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.shareTotalSpend, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
+                        const SizedBox(height: 6),
+                        for (final e in spend)
+                          Text(
+                            formatAmount(e.value, getCurrencySymbol(e.key)),
+                            key: Key('spend-${e.key}'),
+                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: tokens.textPrimary),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -108,12 +133,22 @@ class _Stat extends StatelessWidget {
     final tokens = context.tokens;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: tokens.bgSurface, borderRadius: BorderRadius.circular(tokens.radiusMd), border: Border.all(color: tokens.borderColor)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
-        const SizedBox(height: 6),
-        Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: tokens.textPrimary)),
-      ]),
+      decoration: BoxDecoration(
+        color: tokens.bgSurface,
+        borderRadius: BorderRadius.circular(tokens.radiusMd),
+        border: Border.all(color: tokens.borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: tokens.textPrimary),
+          ),
+        ],
+      ),
     );
   }
 }

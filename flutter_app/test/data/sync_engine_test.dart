@@ -29,12 +29,12 @@ void main() {
   var session = true;
 
   SyncEngine engine() => SyncEngine(
-        store: store,
-        remote: remote,
-        isOnline: () async => online,
-        ensureSession: () async => session,
-        now: () => clock,
-      );
+    store: store,
+    remote: remote,
+    isOnline: () async => online,
+    ensureSession: () async => session,
+    now: () => clock,
+  );
 
   setUp(() {
     db = AppDatabase.memory();
@@ -46,8 +46,7 @@ void main() {
   });
   tearDown(() => db.close());
 
-  Future<String> add(String type, String id, {String trip = 't1'}) =>
-      store.enqueue(type, {'id': id}, tripId: trip);
+  Future<String> add(String type, String id, {String trip = 't1'}) => store.enqueue(type, {'id': id}, tripId: trip);
 
   test('flushes FIFO and clears the outbox', () async {
     final a = await add(OutboxType.updateMember, 'm1');
@@ -135,7 +134,10 @@ void main() {
   });
 
   test('failed createTrip blocks its dependent children', () async {
-    await store.enqueue(OutboxType.createTrip, {'trip': {'id': 't1'}, 'member': {'id': 'm1'}}, tripId: 't1');
+    await store.enqueue(OutboxType.createTrip, {
+      'trip': {'id': 't1'},
+      'member': {'id': 'm1'},
+    }, tripId: 't1');
     await add(OutboxType.addCategory, 'c1');
     remote.failures['t1'] = const RemoteFailure(FailureKind.permanent, 'bad');
     final r = await engine().flush();
@@ -177,7 +179,10 @@ void main() {
   test('classifyPostgrest', () {
     expect(classifyPostgrest(const PostgrestException(message: 'x', code: '42501')).kind, FailureKind.permanent);
     expect(classifyPostgrest(const PostgrestException(message: 'x', code: '23505')).kind, FailureKind.permanent);
-    expect(classifyPostgrest(const PostgrestException(message: 'JWT expired', code: 'PGRST301')).kind, FailureKind.auth);
+    expect(
+      classifyPostgrest(const PostgrestException(message: 'JWT expired', code: 'PGRST301')).kind,
+      FailureKind.auth,
+    );
     expect(classifyPostgrest(const PostgrestException(message: 'x', code: '503')).kind, FailureKind.transient);
   });
 }

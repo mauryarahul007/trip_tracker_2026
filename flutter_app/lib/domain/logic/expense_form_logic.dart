@@ -126,8 +126,8 @@ class ExpenseFormResult {
   final double? target = f.splitMode == 'percentage'
       ? 100
       : f.splitMode == 'exact'
-          ? _num(f.amountText)
-          : null;
+      ? _num(f.amountText)
+      : null;
   return (sum: sum, target: target, matches: target == null || (sum - target).abs() < 0.02);
 }
 
@@ -274,7 +274,12 @@ ExpenseFormResult buildExpenseSubmission(ExpenseFormInput f) {
 
 /// Store rule: settlements are never gated; otherwise an amount at or above the
 /// trip's threshold waits for a second person's approval.
-String computeApprovalStatus(Trip? trip, {required bool thresholdEnabled, required bool isSettlement, required double amount}) {
+String computeApprovalStatus(
+  Trip? trip, {
+  required bool thresholdEnabled,
+  required bool isSettlement,
+  required double amount,
+}) {
   if (isSettlement || !thresholdEnabled) return 'confirmed';
   final threshold = trip?.approvalThreshold;
   if (threshold == null || threshold <= 0) return 'confirmed';
@@ -334,7 +339,12 @@ Map<String, double> previewShares(ExpenseFormInput f) {
     itemized = ItemizedReceiptConfig(
       items: [
         for (final it in f.receiptItems)
-          ReceiptItem(id: it.id, name: it.name, amount: it.amount, assignedMemberIds: it.assignedMemberIds.isNotEmpty ? it.assignedMemberIds : f.splitSelectedIds),
+          ReceiptItem(
+            id: it.id,
+            name: it.name,
+            amount: it.amount,
+            assignedMemberIds: it.assignedMemberIds.isNotEmpty ? it.assignedMemberIds : f.splitSelectedIds,
+          ),
       ],
       tax: opt(f.receiptTax),
       tip: opt(f.receiptTip),

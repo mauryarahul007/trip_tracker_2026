@@ -8,13 +8,7 @@ class TripPhotoHero extends StatefulWidget {
   final double height;
   final bool isHidden;
 
-  const TripPhotoHero({
-    super.key,
-    this.destination,
-    this.coverImageUrl,
-    this.height = 220,
-    this.isHidden = false,
-  });
+  const TripPhotoHero({super.key, this.destination, this.coverImageUrl, this.height = 220, this.isHidden = false});
 
   @override
   State<TripPhotoHero> createState() => _TripPhotoHeroState();
@@ -33,8 +27,7 @@ class _TripPhotoHeroState extends State<TripPhotoHero> {
   @override
   void didUpdateWidget(covariant TripPhotoHero oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.destination != widget.destination ||
-        oldWidget.coverImageUrl != widget.coverImageUrl) {
+    if (oldWidget.destination != widget.destination || oldWidget.coverImageUrl != widget.coverImageUrl) {
       _loadPhoto();
     }
   }
@@ -73,10 +66,7 @@ class _TripPhotoHeroState extends State<TripPhotoHero> {
               ? DecorationImage(
                   image: NetworkImage(_resolvedUrl!),
                   fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(
-                    Colors.black.withValues(alpha: 0.35),
-                    BlendMode.darken,
-                  ),
+                  colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.35), BlendMode.darken),
                 )
               : null,
         ),
@@ -88,10 +78,7 @@ class _TripPhotoHeroState extends State<TripPhotoHero> {
                 child: SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white70,
-                  ),
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70),
                 ),
               ),
             // Bottom gradient overlay for legible typography
@@ -105,10 +92,7 @@ class _TripPhotoHeroState extends State<TripPhotoHero> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.7),
-                    ],
+                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
                   ),
                 ),
               ),

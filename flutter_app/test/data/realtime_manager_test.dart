@@ -136,12 +136,33 @@ void main() {
   test('message and notification events are persisted locally', () async {
     await mgr.openTrip('a');
     await mgr.watchNotifications('u1');
-    source.live('trip_messages:a').single.onEvent(const RealtimeEvent('trip_messages:a', 'trip_messages', 'INSERT', {
-      'id': 'msg1', 'trip_id': 'a', 'member_id': 'm1', 'body': 'hi', 'kind': 'text', 'created_at': '2026-01-01T00:00:00Z',
-    }));
-    source.live('notifications:u1').single.onEvent(const RealtimeEvent('notifications:u1', 'notifications', 'INSERT', {
-      'id': 'n1', 'user_id': 'u1', 'trip_id': 'a', 'title': 'T', 'body': 'B', 'read': false, 'created_at': '2026-01-01T00:00:00Z',
-    }));
+    source
+        .live('trip_messages:a')
+        .single
+        .onEvent(
+          const RealtimeEvent('trip_messages:a', 'trip_messages', 'INSERT', {
+            'id': 'msg1',
+            'trip_id': 'a',
+            'member_id': 'm1',
+            'body': 'hi',
+            'kind': 'text',
+            'created_at': '2026-01-01T00:00:00Z',
+          }),
+        );
+    source
+        .live('notifications:u1')
+        .single
+        .onEvent(
+          const RealtimeEvent('notifications:u1', 'notifications', 'INSERT', {
+            'id': 'n1',
+            'user_id': 'u1',
+            'trip_id': 'a',
+            'title': 'T',
+            'body': 'B',
+            'read': false,
+            'created_at': '2026-01-01T00:00:00Z',
+          }),
+        );
     await Future<void>.delayed(const Duration(milliseconds: 50));
     expect((await db.select(db.tripMessagesTable).get()).single.message, 'hi');
     expect((await db.select(db.notificationsTable).get()).single.title, 'T');
@@ -150,8 +171,12 @@ void main() {
   test('read cursor events are forwarded, not stored', () async {
     await mgr.openTrip('a');
     final got = mgr.readCursorEvents.first;
-    source.live('trip_chat_read_cursors:a').single.onEvent(
-        const RealtimeEvent('trip_chat_read_cursors:a', 'trip_chat_read_cursors', 'UPDATE', {'member_id': 'm1'}));
+    source
+        .live('trip_chat_read_cursors:a')
+        .single
+        .onEvent(
+          const RealtimeEvent('trip_chat_read_cursors:a', 'trip_chat_read_cursors', 'UPDATE', {'member_id': 'm1'}),
+        );
     expect((await got).record['member_id'], 'm1');
   });
 }

@@ -72,7 +72,9 @@ class RealtimeManager {
     if (_userId == userId) return;
     await _close('notifications:$_userId');
     _userId = userId;
-    final spec = ChannelSpec('notifications:$userId', [PgSub('INSERT', 'notifications', filterColumn: 'user_id', filterValue: userId)]);
+    final spec = ChannelSpec('notifications:$userId', [
+      PgSub('INSERT', 'notifications', filterColumn: 'user_id', filterValue: userId),
+    ]);
     _specs[spec.name] = spec;
     if (!_paused) _open(spec);
   }
@@ -100,19 +102,19 @@ class RealtimeManager {
   }
 
   List<ChannelSpec> _tripSpecs(String t) => [
-        ChannelSpec('trip_collab:$t', [
-          PgSub('INSERT', 'trip_collab_signals', filterColumn: 'trip_id', filterValue: t),
-          PgSub('UPDATE', 'trip_collab_signals', filterColumn: 'trip_id', filterValue: t),
-          PgSub('UPDATE', 'trips', filterColumn: 'id', filterValue: t),
-        ]),
-        ChannelSpec('trip_messages:$t', [
-          PgSub('INSERT', 'trip_messages', filterColumn: 'trip_id', filterValue: t),
-          PgSub('UPDATE', 'trip_messages', filterColumn: 'trip_id', filterValue: t),
-        ]),
-        ChannelSpec('trip_chat_read_cursors:$t', [
-          PgSub('*', 'trip_chat_read_cursors', filterColumn: 'trip_id', filterValue: t),
-        ]),
-      ];
+    ChannelSpec('trip_collab:$t', [
+      PgSub('INSERT', 'trip_collab_signals', filterColumn: 'trip_id', filterValue: t),
+      PgSub('UPDATE', 'trip_collab_signals', filterColumn: 'trip_id', filterValue: t),
+      PgSub('UPDATE', 'trips', filterColumn: 'id', filterValue: t),
+    ]),
+    ChannelSpec('trip_messages:$t', [
+      PgSub('INSERT', 'trip_messages', filterColumn: 'trip_id', filterValue: t),
+      PgSub('UPDATE', 'trip_messages', filterColumn: 'trip_id', filterValue: t),
+    ]),
+    ChannelSpec('trip_chat_read_cursors:$t', [
+      PgSub('*', 'trip_chat_read_cursors', filterColumn: 'trip_id', filterValue: t),
+    ]),
+  ];
 
   void _openAll(List<ChannelSpec> specs) {
     for (final s in specs) {
@@ -219,29 +221,37 @@ class RealtimeManager {
   Future<void> _ingestMessage(Map<String, dynamic> r) async {
     if (r['id'] == null) return;
     final m = messageFromRow(r);
-    await db.into(db.tripMessagesTable).insertOnConflictUpdate(TripMessagesTableCompanion.insert(
-          id: m.id,
-          tripId: m.tripId,
-          userId: m.memberId,
-          senderName: '',
-          kind: m.eventKind ?? 'text',
-          message: m.body,
-          createdAt: DateTime.fromMillisecondsSinceEpoch(m.createdAt, isUtc: true).toIso8601String(),
-          domainJson: Value(jsonEncode(m.toJson())),
-        ));
+    await db
+        .into(db.tripMessagesTable)
+        .insertOnConflictUpdate(
+          TripMessagesTableCompanion.insert(
+            id: m.id,
+            tripId: m.tripId,
+            userId: m.memberId,
+            senderName: '',
+            kind: m.eventKind ?? 'text',
+            message: m.body,
+            createdAt: DateTime.fromMillisecondsSinceEpoch(m.createdAt, isUtc: true).toIso8601String(),
+            domainJson: Value(jsonEncode(m.toJson())),
+          ),
+        );
   }
 
   Future<void> _ingestNotification(Map<String, dynamic> r) async {
     if (r['id'] == null) return;
-    await db.into(db.notificationsTable).insertOnConflictUpdate(NotificationsTableCompanion.insert(
-          id: r['id'] as String,
-          userId: r['user_id'] as String? ?? _userId ?? '',
-          tripId: Value(r['trip_id'] as String?),
-          title: r['title'] as String? ?? '',
-          body: r['body'] as String? ?? '',
-          dataJson: Value(r['data'] == null ? null : jsonEncode(r['data'])),
-          read: Value(r['read'] == true),
-          createdAt: r['created_at'] as String? ?? DateTime.now().toUtc().toIso8601String(),
-        ));
+    await db
+        .into(db.notificationsTable)
+        .insertOnConflictUpdate(
+          NotificationsTableCompanion.insert(
+            id: r['id'] as String,
+            userId: r['user_id'] as String? ?? _userId ?? '',
+            tripId: Value(r['trip_id'] as String?),
+            title: r['title'] as String? ?? '',
+            body: r['body'] as String? ?? '',
+            dataJson: Value(r['data'] == null ? null : jsonEncode(r['data'])),
+            read: Value(r['read'] == true),
+            createdAt: r['created_at'] as String? ?? DateTime.now().toUtc().toIso8601String(),
+          ),
+        );
   }
 }

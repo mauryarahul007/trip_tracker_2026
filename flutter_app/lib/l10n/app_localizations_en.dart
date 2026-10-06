@@ -70,8 +70,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusOffline => 'You are offline';
 
   @override
-  String get statusOfflineSubtitle =>
-      'Changes will be queued and synced when reconnected';
+  String get statusOfflineSubtitle => 'Changes will be queued and synced when reconnected';
 
   @override
   String get statusConnected => 'Connected';
@@ -80,29 +79,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorGenericTitle => 'Something went wrong';
 
   @override
-  String get errorGenericMessage =>
-      'An unexpected error occurred. Please try again.';
+  String get errorGenericMessage => 'An unexpected error occurred. Please try again.';
 
   @override
   String get errorBoundaryTitle => 'Application Error';
 
   @override
-  String get errorBoundarySubtitle =>
-      'We encountered an unexpected problem. You can retry or return home.';
+  String get errorBoundarySubtitle => 'We encountered an unexpected problem. You can retry or return home.';
 
   @override
   String get emptyTripsTitle => 'No trips yet';
 
   @override
-  String get emptyTripsSubtitle =>
-      'Start by creating a trip or joining an existing one with an invite code.';
+  String get emptyTripsSubtitle => 'Start by creating a trip or joining an existing one with an invite code.';
 
   @override
   String get authWelcome => 'Welcome to Trip Tracker';
 
   @override
-  String get authSubtitle =>
-      'Plan trips, split expenses, and travel seamlessly together.';
+  String get authSubtitle => 'Plan trips, split expenses, and travel seamlessly together.';
 
   @override
   String get authResetPassword => 'Reset Password';
@@ -132,8 +127,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smokeTestStatusConnecting => 'Connecting to Supabase staging...';
 
   @override
-  String get smokeTestStatusSuccess =>
-      'Successfully connected and verified row read.';
+  String get smokeTestStatusSuccess => 'Successfully connected and verified row read.';
 
   @override
   String get smokeTestStatusError => 'Smoke test failed: ';
@@ -145,8 +139,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authContinueApple => 'Continue with Apple';
 
   @override
-  String get authSignInsPaused =>
-      'New sign-ins are temporarily paused. Please check back shortly.';
+  String get authSignInsPaused => 'New sign-ins are temporarily paused. Please check back shortly.';
 
   @override
   String get authEmail => 'Email';
@@ -185,8 +178,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrorBanned => 'This account has been suspended.';
 
   @override
-  String get authErrorNetwork =>
-      'Can\'t reach the server. Check your connection and try again.';
+  String get authErrorNetwork => 'Can\'t reach the server. Check your connection and try again.';
 
   @override
   String get authErrorGeneric => 'Sign-in failed. Please try again.';
@@ -195,12 +187,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrorEmailRequired => 'Enter your email and password.';
 
   @override
-  String get authLegal =>
-      'By continuing you agree to our Terms of Service and Privacy Policy.';
+  String get authLegal => 'By continuing you agree to our Terms of Service and Privacy Policy.';
 
   @override
-  String get resetRequestSubtitle =>
-      'Enter your account email and we\'ll send you a reset link.';
+  String get resetRequestSubtitle => 'Enter your account email and we\'ll send you a reset link.';
 
   @override
   String get resetSendLink => 'Send Reset Link';
@@ -232,8 +222,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockTitle => 'Trip Tracker is Locked';
 
   @override
-  String get lockSubtitle =>
-      'Authenticate with Face ID, Touch ID or your device passcode to continue.';
+  String get lockSubtitle => 'Authenticate with Face ID, Touch ID or your device passcode to continue.';
 
   @override
   String get lockUnlock => 'Unlock';
@@ -248,15 +237,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingWelcomeTitle => 'Welcome to Trip Tracker';
 
   @override
-  String get onboardingWelcomeBody =>
-      'Plan trips, track shared expenses, and settle up — all offline-first.';
+  String get onboardingWelcomeBody => 'Plan trips, track shared expenses, and settle up — all offline-first.';
 
   @override
   String get onboardingTripTitle => 'Create Your First Trip';
 
   @override
-  String get onboardingTripBody =>
-      'Add a destination, dates, and members. Everyone can log expenses in real time.';
+  String get onboardingTripBody => 'Add a destination, dates, and members. Everyone can log expenses in real time.';
 
   @override
   String get onboardingExpenseTitle => 'Log & Split Expenses';
@@ -333,12 +320,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tripTravelers(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count travelers',
-      one: '1 traveler',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count travelers', one: '1 traveler');
     return '$_temp0';
   }
 
@@ -434,8 +416,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backAgainToExit => 'Press back again to exit';
 
   @override
-  String get tripSettingsComingSoon =>
-      'Trip settings arrive in a later update.';
+  String get tripSettingsComingSoon => 'Trip settings arrive in a later update.';
 
   @override
   String joinInvitedTitle(String trip) {
@@ -456,8 +437,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinSignInPrompt => 'Sign in to join this trip.';
 
   @override
-  String get joinGuestsCantJoin =>
-      'Guest mode can\'t join shared trips. Sign in with an account to continue.';
+  String get joinGuestsCantJoin => 'Guest mode can\'t join shared trips. Sign in with an account to continue.';
 
   @override
   String get joinMoreSignIn => 'More sign-in options';
@@ -476,8 +456,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get joinClaimedByOther =>
-      'That member was just claimed by someone else. Pick another.';
+  String get joinClaimedByOther => 'That member was just claimed by someone else. Pick another.';
 
   @override
   String joinAlreadyInTitle(String trip) {
@@ -488,8 +467,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinYoureAdmin => 'You\'re the admin of this trip.';
 
   @override
-  String get joinAlreadyClaimed =>
-      'You\'ve already claimed your spot on this trip.';
+  String get joinAlreadyClaimed => 'You\'ve already claimed your spot on this trip.';
 
   @override
   String get joinOpenTrip => 'Open trip';
@@ -548,8 +526,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareEndedTitle => 'This link has ended';
 
   @override
-  String get shareEndedBody =>
-      'It was turned off or has expired. Ask the trip organizer for a fresh link.';
+  String get shareEndedBody => 'It was turned off or has expired. Ask the trip organizer for a fresh link.';
 
   @override
   String get shareLoadError => 'Couldn\'t load this trip summary.';
@@ -570,8 +547,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteShare => 'Share invite';
 
   @override
-  String get inviteCodePending =>
-      'Your join code appears after this trip finishes syncing.';
+  String get inviteCodePending => 'Your join code appears after this trip finishes syncing.';
 
   @override
   String get inviteCopied => 'Copied';
@@ -600,12 +576,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get viewOnlyOffline =>
-      'Connect to the internet to change the view-only link.';
+  String get viewOnlyOffline => 'Connect to the internet to change the view-only link.';
 
   @override
-  String get viewOnlyOwnerOnly =>
-      'Only the trip owner or an admin can manage this link.';
+  String get viewOnlyOwnerOnly => 'Only the trip owner or an admin can manage this link.';
 
   @override
   String viewOnlyShareText(String trip, String link) {
@@ -676,12 +650,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String expDaySemantics(String date, int count, String amount) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count expenses',
-      one: '1 expense',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count expenses', one: '1 expense');
     return '$date, $_temp0, total $amount';
   }
 
@@ -751,8 +720,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rowPendingApproval => 'Pending approval';
 
   @override
-  String get rowPendingApprovalTip =>
-      'Pending approval — excluded from balances until a second member approves it';
+  String get rowPendingApprovalTip => 'Pending approval — excluded from balances until a second member approves it';
 
   @override
   String get rowSyncPending => 'Pending sync';
@@ -825,8 +793,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get detailConfirmed => 'Payment confirmed';
 
   @override
-  String get detailOfflineAction =>
-      'You\'re offline. Connect to the internet to do this.';
+  String get detailOfflineAction => 'You\'re offline. Connect to the internet to do this.';
 
   @override
   String detailActionFailed(String reason) {
@@ -889,12 +856,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String chipDisputes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count disputes',
-      one: '1 dispute',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count disputes', one: '1 dispute');
     return '$_temp0';
   }
 
@@ -902,8 +864,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chipCloseout => 'Close out trip';
 
   @override
-  String get expFormComingSoon =>
-      'The expense form is the next piece of Phase 7.';
+  String get expFormComingSoon => 'The expense form is the next piece of Phase 7.';
 
   @override
   String get formTitleAdd => 'Add expense';
@@ -1126,8 +1087,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get formNoMembers =>
-      'This trip has no active travelers to split with.';
+  String get formNoMembers => 'This trip has no active travelers to split with.';
 
   @override
   String get ledBalances => 'Balances';
@@ -1161,8 +1121,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledSimplify => 'Simplify debts';
 
   @override
-  String get ledSimplifyHint =>
-      'Fewer, larger payments instead of one per expense.';
+  String get ledSimplifyHint => 'Fewer, larger payments instead of one per expense.';
 
   @override
   String get ledSettleTitle => 'Confirm settlement';
@@ -1174,8 +1133,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledSettleBody => 'Record this payment as settled?';
 
   @override
-  String get ledSettlePartialBody =>
-      'Record part of this payment? The rest stays pending.';
+  String get ledSettlePartialBody => 'Record part of this payment? The rest stays pending.';
 
   @override
   String get ledAmount => 'Amount';
@@ -1238,8 +1196,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get conflictTitle => 'Sync conflict';
 
   @override
-  String get conflictBody =>
-      'This expense changed on another device while you still had a local edit.';
+  String get conflictBody => 'This expense changed on another device while you still had a local edit.';
 
   @override
   String get conflictKeepMine => 'Keep mine';
@@ -1280,8 +1237,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get closeoutSettled =>
-      'Everyone is settled. Lock the trip so nobody adds more expenses.';
+  String get closeoutSettled => 'Everyone is settled. Lock the trip so nobody adds more expenses.';
 
   @override
   String closeoutOutstanding(String amount, int count) {
@@ -1304,8 +1260,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get closeoutLocked => 'Trip locked';
 
   @override
-  String get closeoutPulse =>
-      'Would you use Trip Tracker for the next trip with this group?';
+  String get closeoutPulse => 'Would you use Trip Tracker for the next trip with this group?';
 
   @override
   String get closeoutYes => 'Yes';

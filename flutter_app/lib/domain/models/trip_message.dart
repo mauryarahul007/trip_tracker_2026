@@ -104,7 +104,8 @@ class TripMessage {
       replyToId: json['replyToId'] as String?,
       replyToSenderName: json['replyToSenderName'] as String?,
       replyToBody: json['replyToBody'] as String?,
-      reactions: (json['reactions'] as Map<String, dynamic>?)?.map(
+      reactions:
+          (json['reactions'] as Map<String, dynamic>?)?.map(
             (k, v) => MapEntry(k, (v as List<dynamic>).map((e) => e.toString()).toList()),
           ) ??
           const {},

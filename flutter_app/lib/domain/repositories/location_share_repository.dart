@@ -9,11 +9,7 @@ abstract class LocationShareRepository {
     required double lng,
   });
 
-  Future<void> updateLocationShare({
-    required String tripId,
-    required double lat,
-    required double lng,
-  });
+  Future<void> updateLocationShare({required String tripId, required double lat, required double lng});
 
   Future<void> stopLocationShare(String tripId);
 

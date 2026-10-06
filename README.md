@@ -53,7 +53,10 @@ A **mobile-first, offline-capable, multi-user** trip-expense splitter. Create a 
 - **Live web updates** — the deployed web app self-updates in the background with an update-available banner, no app-store round trip
 
 ### Native apps
-- **Capacitor-based Android & iOS builds** sharing 100% of the web codebase — native camera, geolocation, push notifications, and haptics
+- **Two mobile clients share one Supabase backend** (see [Flutter migration](docs/flutter-migration/README.md)):
+  - **Flutter app** in [`flutter_app/`](flutter_app/README.md): native UI for iOS and Android, offline-first with an outbox, push, maps, live location, OCR. Built behind the same Ops Deck feature flags. Release pipeline and rollout plan: [`ROLLOUT.md`](docs/flutter-migration/ROLLOUT.md), [`store/RELEASE_PIPELINE.md`](docs/flutter-migration/store/RELEASE_PIPELINE.md).
+  - **Capacitor builds** (the current store apps) sharing the web codebase, kept until the cutover window ends ([`SUNSET_CANDIDATES.md`](docs/flutter-migration/SUNSET_CANDIDATES.md)).
+- The web app is unchanged by the migration and keeps deploying from `main`.
 - Built via Codemagic (manually triggered — see [Native app builds](#native-app-builds-codemagic) below)
 
 ### Trust & safety
@@ -254,6 +257,8 @@ See [Reference: Data Model](docs/reference-data-model.md) for full field-level d
 ---
 
 ## Native app builds (Codemagic)
+
+> Flutter releases use separate workflows (`flutter-android-release`, `flutter-ios-release`, triggered by a `flutter-v*` tag) and their own secrets; see `docs/flutter-migration/store/RELEASE_PIPELINE.md`. The text below describes the Capacitor builds.
 
 `codemagic.yaml` defines two manually-triggered workflows: `android-release` and `ios-release`.
 Before running either for the first time, in the Codemagic dashboard:

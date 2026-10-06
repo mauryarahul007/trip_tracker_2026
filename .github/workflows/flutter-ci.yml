@@ -60,3 +60,22 @@ jobs:
 
       - name: Build Android Debug APK (Dev flavor)
         run: flutter build apk --debug --flavor dev -t lib/main.dart
+
+      - name: Fixtures still match the web source (no drift)
+        working-directory: .
+        run: |
+          node scripts/export-golden-fixtures.mjs
+          git diff --exit-code -- docs/flutter-migration/fixtures flutter_app/lib/domain/logic
+
+      - name: Dependency report (informational)
+        run: flutter pub outdated || true
+
+      - name: Release hardening files exist
+        working-directory: .
+        run: |
+          test -x flutter_app/tool/release_version.sh
+          test -x flutter_app/tool/check_release_signing.sh
+          test -x flutter_app/tool/scan_binary_secrets.sh
+          grep -q 'allowBackup="false"' flutter_app/android/app/src/main/AndroidManifest.xml
+          grep -q 'usesCleartextTraffic="false"' flutter_app/android/app/src/main/AndroidManifest.xml
+

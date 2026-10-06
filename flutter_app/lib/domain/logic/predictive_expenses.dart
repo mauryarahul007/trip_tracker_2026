@@ -19,39 +19,73 @@ class PredictiveQuickChip {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'label': label,
-        'title': title,
-        'icon': icon,
-        'categoryNameHint': categoryNameHint,
-        if (categoryId != null) 'categoryId': categoryId,
-      };
+    'id': id,
+    'label': label,
+    'title': title,
+    'icon': icon,
+    'categoryNameHint': categoryNameHint,
+    if (categoryId != null) 'categoryId': categoryId,
+  };
 }
 
 class CategoryKeywordRule {
   final List<String> keywords;
   final List<String> categoryPatterns;
 
-  const CategoryKeywordRule({
-    required this.keywords,
-    required this.categoryPatterns,
-  });
+  const CategoryKeywordRule({required this.keywords, required this.categoryPatterns});
 }
 
 const List<CategoryKeywordRule> categoryRules = [
   CategoryKeywordRule(
     keywords: [
-      'coffee', 'tea', 'cafe', 'breakfast', 'lunch', 'dinner', 'restaurant',
-      'food', 'snack', 'bakery', 'meal', 'drinks', 'bar', 'beer', 'wine',
-      'cocktail', 'juice', 'brunch', 'ice cream', 'dessert'
+      'coffee',
+      'tea',
+      'cafe',
+      'breakfast',
+      'lunch',
+      'dinner',
+      'restaurant',
+      'food',
+      'snack',
+      'bakery',
+      'meal',
+      'drinks',
+      'bar',
+      'beer',
+      'wine',
+      'cocktail',
+      'juice',
+      'brunch',
+      'ice cream',
+      'dessert',
     ],
     categoryPatterns: ['food', 'dining', 'drink', 'restaurant', 'meal', 'cafe'],
   ),
   CategoryKeywordRule(
     keywords: [
-      'taxi', 'cab', 'uber', 'ola', 'grab', 'metro', 'bus', 'train',
-      'flight', 'auto', 'tuk tuk', 'rickshaw', 'gas', 'fuel', 'petrol',
-      'diesel', 'toll', 'parking', 'ferry', 'rental', 'car', 'bike', 'scooter'
+      'taxi',
+      'cab',
+      'uber',
+      'ola',
+      'grab',
+      'metro',
+      'bus',
+      'train',
+      'flight',
+      'auto',
+      'tuk tuk',
+      'rickshaw',
+      'gas',
+      'fuel',
+      'petrol',
+      'diesel',
+      'toll',
+      'parking',
+      'ferry',
+      'rental',
+      'car',
+      'bike',
+      'scooter',
     ],
     categoryPatterns: ['transport', 'transit', 'travel', 'commute'],
   ),
@@ -61,9 +95,23 @@ const List<CategoryKeywordRule> categoryRules = [
   ),
   CategoryKeywordRule(
     keywords: [
-      'ticket', 'museum', 'monument', 'entry', 'safari', 'tour', 'park',
-      'movie', 'cinema', 'show', 'concert', 'activity', 'surfing', 'scuba',
-      'trek', 'guide', 'diving'
+      'ticket',
+      'museum',
+      'monument',
+      'entry',
+      'safari',
+      'tour',
+      'park',
+      'movie',
+      'cinema',
+      'show',
+      'concert',
+      'activity',
+      'surfing',
+      'scuba',
+      'trek',
+      'guide',
+      'diving',
     ],
     categoryPatterns: ['entertainment', 'activity', 'sightseeing', 'leisure', 'attraction', 'experience'],
   ),
@@ -105,30 +153,120 @@ List<PredictiveQuickChip> getTimeOfDayChips([DateTime? now]) {
 
   if (hours >= 5.0 && hours < 11.5) {
     return const [
-      PredictiveQuickChip(id: 'tod-morning-coffee', label: 'Coffee', title: 'Morning Coffee', icon: '☕', categoryNameHint: 'Food & Drinks'),
-      PredictiveQuickChip(id: 'tod-breakfast', label: 'Breakfast', title: 'Breakfast', icon: '🍳', categoryNameHint: 'Food & Drinks'),
-      PredictiveQuickChip(id: 'tod-cab', label: 'Cab / Taxi', title: 'Airport Taxi', icon: '🚕', categoryNameHint: 'Transport'),
-      PredictiveQuickChip(id: 'tod-metro', label: 'Metro / Bus', title: 'Metro Transit Card', icon: '🚇', categoryNameHint: 'Transport'),
-      PredictiveQuickChip(id: 'tod-water', label: 'Bottled Water', title: 'Bottled Water', icon: '💧', categoryNameHint: 'Groceries'),
+      PredictiveQuickChip(
+        id: 'tod-morning-coffee',
+        label: 'Coffee',
+        title: 'Morning Coffee',
+        icon: '☕',
+        categoryNameHint: 'Food & Drinks',
+      ),
+      PredictiveQuickChip(
+        id: 'tod-breakfast',
+        label: 'Breakfast',
+        title: 'Breakfast',
+        icon: '🍳',
+        categoryNameHint: 'Food & Drinks',
+      ),
+      PredictiveQuickChip(
+        id: 'tod-cab',
+        label: 'Cab / Taxi',
+        title: 'Airport Taxi',
+        icon: '🚕',
+        categoryNameHint: 'Transport',
+      ),
+      PredictiveQuickChip(
+        id: 'tod-metro',
+        label: 'Metro / Bus',
+        title: 'Metro Transit Card',
+        icon: '🚇',
+        categoryNameHint: 'Transport',
+      ),
+      PredictiveQuickChip(
+        id: 'tod-water',
+        label: 'Bottled Water',
+        title: 'Bottled Water',
+        icon: '💧',
+        categoryNameHint: 'Groceries',
+      ),
     ];
   }
 
   if (hours >= 11.5 && hours < 17.0) {
     return const [
-      PredictiveQuickChip(id: 'tod-lunch', label: 'Lunch', title: 'Lunch', icon: '🥗', categoryNameHint: 'Food & Drinks'),
-      PredictiveQuickChip(id: 'tod-entry-ticket', label: 'Entry Ticket', title: 'Museum / Monument Ticket', icon: '🎟️', categoryNameHint: 'Entertainment'),
-      PredictiveQuickChip(id: 'tod-beverage', label: 'Cold Drink / Tea', title: 'Afternoon Refreshments', icon: '🧃', categoryNameHint: 'Food & Drinks'),
-      PredictiveQuickChip(id: 'tod-local-cab', label: 'City Cab', title: 'City Cab', icon: '🚖', categoryNameHint: 'Transport'),
-      PredictiveQuickChip(id: 'tod-snack', label: 'Snacks', title: 'Snacks', icon: '🥪', categoryNameHint: 'Food & Drinks'),
+      PredictiveQuickChip(
+        id: 'tod-lunch',
+        label: 'Lunch',
+        title: 'Lunch',
+        icon: '🥗',
+        categoryNameHint: 'Food & Drinks',
+      ),
+      PredictiveQuickChip(
+        id: 'tod-entry-ticket',
+        label: 'Entry Ticket',
+        title: 'Museum / Monument Ticket',
+        icon: '🎟️',
+        categoryNameHint: 'Entertainment',
+      ),
+      PredictiveQuickChip(
+        id: 'tod-beverage',
+        label: 'Cold Drink / Tea',
+        title: 'Afternoon Refreshments',
+        icon: '🧃',
+        categoryNameHint: 'Food & Drinks',
+      ),
+      PredictiveQuickChip(
+        id: 'tod-local-cab',
+        label: 'City Cab',
+        title: 'City Cab',
+        icon: '🚖',
+        categoryNameHint: 'Transport',
+      ),
+      PredictiveQuickChip(
+        id: 'tod-snack',
+        label: 'Snacks',
+        title: 'Snacks',
+        icon: '🥪',
+        categoryNameHint: 'Food & Drinks',
+      ),
     ];
   }
 
   return const [
-    PredictiveQuickChip(id: 'tod-dinner', label: 'Dinner', title: 'Dinner', icon: '🍽️', categoryNameHint: 'Food & Drinks'),
-    PredictiveQuickChip(id: 'tod-drinks', label: 'Drinks', title: 'Drinks & Bar', icon: '🍹', categoryNameHint: 'Food & Drinks'),
-    PredictiveQuickChip(id: 'tod-dessert', label: 'Dessert', title: 'Dessert / Ice Cream', icon: '🍨', categoryNameHint: 'Food & Drinks'),
-    PredictiveQuickChip(id: 'tod-return-cab', label: 'Return Cab', title: 'Return Cab to Stay', icon: '🚕', categoryNameHint: 'Transport'),
-    PredictiveQuickChip(id: 'tod-night-snacks', label: 'Convenience', title: 'Convenience Store & Snacks', icon: '🛒', categoryNameHint: 'Groceries'),
+    PredictiveQuickChip(
+      id: 'tod-dinner',
+      label: 'Dinner',
+      title: 'Dinner',
+      icon: '🍽️',
+      categoryNameHint: 'Food & Drinks',
+    ),
+    PredictiveQuickChip(
+      id: 'tod-drinks',
+      label: 'Drinks',
+      title: 'Drinks & Bar',
+      icon: '🍹',
+      categoryNameHint: 'Food & Drinks',
+    ),
+    PredictiveQuickChip(
+      id: 'tod-dessert',
+      label: 'Dessert',
+      title: 'Dessert / Ice Cream',
+      icon: '🍨',
+      categoryNameHint: 'Food & Drinks',
+    ),
+    PredictiveQuickChip(
+      id: 'tod-return-cab',
+      label: 'Return Cab',
+      title: 'Return Cab to Stay',
+      icon: '🚕',
+      categoryNameHint: 'Transport',
+    ),
+    PredictiveQuickChip(
+      id: 'tod-night-snacks',
+      label: 'Convenience',
+      title: 'Convenience Store & Snacks',
+      icon: '🛒',
+      categoryNameHint: 'Groceries',
+    ),
   ];
 }
 
@@ -168,22 +306,22 @@ List<PredictiveQuickChip> getPredictiveQuickChips(
     }
   }
 
-  final sortedFrequent = frequencyMap.entries
-      .where((e) => e.value.count >= 2)
-      .toList()
+  final sortedFrequent = frequencyMap.entries.where((e) => e.value.count >= 2).toList()
     ..sort((a, b) => b.value.count.compareTo(a.value.count));
 
   for (final entry in sortedFrequent.take(2)) {
     final titleLower = entry.key;
     final formattedTitle = titleLower[0].toUpperCase() + titleLower.substring(1);
-    result.add(PredictiveQuickChip(
-      id: 'freq-$titleLower',
-      label: formattedTitle,
-      title: formattedTitle,
-      icon: entry.value.icon,
-      categoryId: entry.value.categoryId,
-      categoryNameHint: 'Frequent',
-    ));
+    result.add(
+      PredictiveQuickChip(
+        id: 'freq-$titleLower',
+        label: formattedTitle,
+        title: formattedTitle,
+        icon: entry.value.icon,
+        categoryId: entry.value.categoryId,
+        categoryNameHint: 'Frequent',
+      ),
+    );
     seenTitles.add(titleLower);
   }
 
@@ -191,14 +329,16 @@ List<PredictiveQuickChip> getPredictiveQuickChips(
   for (final chip in todChips) {
     if (seenTitles.contains(chip.title.toLowerCase())) continue;
     final inferredId = inferCategoryId(chip.title, categories);
-    result.add(PredictiveQuickChip(
-      id: chip.id,
-      label: chip.label,
-      title: chip.title,
-      icon: chip.icon,
-      categoryId: inferredId,
-      categoryNameHint: chip.categoryNameHint,
-    ));
+    result.add(
+      PredictiveQuickChip(
+        id: chip.id,
+        label: chip.label,
+        title: chip.title,
+        icon: chip.icon,
+        categoryId: inferredId,
+        categoryNameHint: chip.categoryNameHint,
+      ),
+    );
     seenTitles.add(chip.title.toLowerCase());
   }
 

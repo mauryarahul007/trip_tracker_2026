@@ -32,7 +32,7 @@ Living list of everything that was **deferred, skipped, or built but never verif
 |----|------|------|--------|--------------|--------------|-------------|
 | B-020 | P5 | SQLCipher / encrypted storage for document vault and pass attachments | deferred | Manual passes shipped in Phase 8 without attachments (ADR 267). Vault stays off. | Decide SQLCipher vs key-in-secure-storage when the vault flag is built | 9 |
 | B-021 | P5 | Background sync (`workmanager`: iOS BGAppRefresh / Android WorkManager) | deferred | Foreground sync is the contract; best-effort only | Add plugin, document platform limits | 11/12 |
-| B-022 | P5 | Repositories not built yet: profile, locations, growth telemetry, bugs/feedback, notifications (read side), push tokens | deferred | Messages (text) and passes (collab JSON) shipped in Phase 8. Receipts and settlements shipped in Phase 7. | Add the rest with their phases | 9-10 |
+| B-022 | P5 | Repositories not built yet: profile, locations, growth telemetry, bugs/feedback, notifications (read side, **done in P10 slice A**), push tokens | deferred | Messages (text) and passes (collab JSON) shipped in Phase 8. Receipts and settlements shipped in Phase 7. | Add the rest with their phases | 9-10 |
 | B-023 | P5 | Realtime: typing/presence channels (`trip_chat_typing`, `trip_presence`) | deferred | Text chat shipped without typing or presence (ADR 267) | Add when those labs flags are turned on | later |
 | B-024 | P5 | ~~Sync conflict resolver UI (data is exposed as a stream)~~ | **closed (P7 slice E)** | Ledger sheet: keep mine dismisses; keep theirs calls `adoptServerCopy` (B-060) | n/a | 7 |
 | B-025 | P5 | ~~Tombstones hard-delete expenses, so the 24 h recycle bin is not mirrored to other devices~~ | **closed (P7 slice A)** | Pull sync now also reads soft-deleted rows (`recycledExpenses`) and keeps them restorable; covered by a pull test | n/a | 7 |
@@ -41,15 +41,15 @@ Living list of everything that was **deferred, skipped, or built but never verif
 | B-030 | P6 | Trips home is a list; the web's 3D stacked-card trip stack is not built | deferred | Large visual port; Hero title transition used instead | Build stacked cards with slivers; measure 55 fps | 6 / 12 |
 | B-031 | P6 | Trip cards lack cover photo, `BoardingPassHeroCard`, `NextUpTravelCapsule`, destination photo service/cache | deferred | Needs image services (`placeImageService`) | Port with caching | 6 / 9 |
 | B-032 | P6 | Destination autocomplete / place gazetteer (`placeSuggest`) in create-trip; previous-members suggestions; clone-squad | deferred | `placeGazetteer` not ported | Port module + fixtures | 6 |
-| B-033 | P6 | Trip list actions are owner-only; trip admins cannot archive/delete; freeze/close have no UI | deferred | Needs members + settings | Add admin check via members, freeze/close in trip settings | 10 |
-| B-034 | P6 | Trip settings screen is a stub | deferred | Phase 10 | Build settings | 10 |
-| B-035 | P6 | Notification bell in the trip header | deferred | Notifications UI is Phase 10 | Add bell + unread badge | 10 |
-| B-036 | P6 | App-lock enable/disable toggle has no UI (preference is only readable) | deferred | Settings screen | Add toggle calling `BiometricLockEnabled.setEnabled` | 10 |
+| B-033 | P6 | Trip list actions are owner-only; trip admins cannot archive/delete | deferred | Trip settings (P10) is owner-only too, matching the trips list. RLS lets admins write, so the UI is stricter than the server | Add an admin check from members and use it in both places | 10 |
+| B-034 | P6 | ~~Trip settings screen is a stub~~ | **closed (P10 slice B)** | `TripSettingsScreen`: mute, simplify debts, approval threshold, categories, recycle bin, freeze, close, archive. FX config and category reorder are not in it (B-171) | n/a | 10 |
+| B-035 | P6 | ~~Notification bell in the trip header~~ | **closed (P10 slice A)** | `NotificationBell` with unread badge in the trip header, opens `/notifications?trip=<id>` | n/a | 10 |
+| B-036 | P6 | ~~App-lock toggle has no UI~~ | **closed (P10 slice B)** | Settings, Security (behind `enableBiometricAuth`). Real-device prompt unverified (B-012) | n/a | 10 |
 | B-037 | P6 | QR scanner for joining a trip | deferred | Needs `mobile_scanner` + camera permission. Not in the Phase 8 build. | Add scanner, route result to `/join/:code` | 9 |
 | B-038 | P6 | Contacts picker in the invite sheet (`flutter_contacts` removed for now) | deferred | Phase 8 invite reuses the share sheet. Contacts stay out. | Add package + iOS/Android permission strings + rationale | later |
 | B-039 | P6 | `/live/:token` read-only live-location page is a shell | **closed (P9 Sub-phase 9B)** | LiveScreen viewer with MapGateway, live pulse indicator, relative time, and expired states (ADR 269) | n/a | 9 |
 | B-040 | P6 | Invite-conversion growth behaviour (`enableInviteConversion` default attribution on join, `get_public_growth_flags`) | deferred | Growth flag plumbing not ported | Port `fetchPublicGrowthFlags` + attribution default | 10 |
-| B-041 | P6 | Share-link/invite push notification to existing members when someone joins (`member_joined`) | deferred | Push sending is Phase 10 | Call `send-push` after claim | 10 |
+| B-041 | P6 | ~~`member_joined` push to existing members after a join~~ | **closed (P10 slice E)** | `PushSender.notifyOthers` after a successful claim. Unverified against a real project | n/a | 10 |
 | B-042 | P6 | Per-trip default landing tab and `enableTabBackHistory` / `enableDeepLinkedTabs` flags not read; trail cap is fixed at 5 | deferred | Flags unchecked | Read the flags, mirror web | 10 |
 | B-043 | P6 | Dark mode, 200% text scale and a11y audit of new screens | open | Only widget-tested at one size/theme | Add golden tests (light/dark) for trip card variants; manual audit | 6 / 12 |
 | B-044 | P6 | l10n: only English; some Phase 2 strings (smoke test, legal screens) still hard-coded | deferred | Single locale for now | Move remaining strings, add locales when needed | 12 |
@@ -63,7 +63,7 @@ Living list of everything that was **deferred, skipped, or built but never verif
 | B-052 | Receipt photo is not shown anywhere yet (detail sheet shows no image); capture/pick UI is slice C; no signed-URL fetch for stored receipts or local preview | done | Detail sheet shows the staged local file, an http path, or a 1 h signed `receipts` URL | 7 |
 | B-053 | `enableStickyDayHeaders`: not implemented. A pinned `SliverPersistentHeader` inside `SliverMainAxisGroup` trips a SliverGeometry assertion (layoutExtent > paintExtent) | done | Flat slivers (not inside `SliverMainAxisGroup`); the day header is 48px tall so layoutExtent matches paintExtent. Flag stays OFF | 7 |
 | B-054 | Row swipe vs tab swipe: the web lets a 28 px edge zone start a tab swipe over a swipeable row (`EDGE_ZONE_PX`); in Flutter a horizontal drag that starts on a row is always the row's swipe, so tabs change only from outside rows | done | 28px opaque strips on both edges of each row. Device check is in FLUTTER-P7-LOOP | 7 |
-| B-055 | Push notifications for expense added / settlement confirmation requested (`sendPushNotification` -> `send-push`) are not sent | deferred | Phase 10 push work | 10 |
+| B-055 | ~~Push for expense added / settlement confirmation requested~~ | **closed (P10 slice E)** | The request rides the outbox payload (`push`) and is sent after the server write. Unverified against a real project | 10 |
 | B-056 | Divergence: saving a split with no active members returns an error ("Select at least one active traveler to split with."); the web silently does nothing | accepted | Intentional UX fix; revisit if strict parity is required | 7 |
 | B-057 | Cross-trip expense search (`enableCrossTripSearch`) and the web's collapsible stats "chrome" are not ported; Flutter always shows the summary card | done | Search (flag OFF) lists matches from other local trips. Compact summary is flag-gated | 7 |
 | B-058 | `enableCompactSummary`, `enableCategoryColorRings`, `enableMotionPolish` presentation flags are not honoured by the new rows | done | Compact summary, color rings, and compact ledger are gated. Motion polish stays a later visual pass | 12 |
@@ -123,52 +123,93 @@ Travel, Pro, and Labs beyond what Phases 7–8 already shipped. Each item stays 
 | B-114 | Command palette | deferred | Phase 9D says omit on mobile unless the parity matrix requires it. No matrix row today | 9 |
 | B-115 | Trip media gallery extras | open | Phase 9D. Image attach in chat is B-085 | 9 |
 
-## Phase 10 (not started)
+## Phase 10 (built, headless-verified; device verification open)
 
 Settings, notifications, push, flags in the UI, feedback, and profile. Pieces already owed: settings stub (B-034), notification bell (B-035), app-lock toggle (B-036), expense/join push (B-055, B-041), profile and push-token repositories (B-022).
 
 | ID | Item | Status | Why / how to close | Owner phase |
 |----|------|--------|--------------------|-------------|
-| B-120 | Push end to end: FCM/APNs, token register and unregister, tap-through deep link, foreground banner | open | Phase 10.1. Device matrix in the phase file | 10 |
-| B-121 | In-app notification list, grouping (`enableNotificationGrouping`), mark read | open | Read repository is B-022 | 10 |
-| B-122 | Quiet hours, digest, and per-trip mute (`enableQuietHours`, `enableDigestNotifications`) | open | Server prefs, same as web | 10 |
-| B-123 | Local pass and settlement reminders | open | `flutter_local_notifications`, reschedule on boot, honour quiet hours | 10 |
-| B-124 | Full settings tree: profile, appearance, haptics, currency, storage, trip tools, about, diagnostics | open | Replaces the settings stub (B-034) | 10 |
-| B-125 | AMOLED theme (`enableAmoledTheme`) | open | Pro. Tokens exist; the theme is not wired | 10 |
+| B-120 | Push end to end: FCM/APNs, token register and unregister, tap-through deep link, foreground banner | **built, unverified** | Code and tests done (P10 slice E). Needs Firebase files, Gradle plugin, iOS capability and the six-state device matrix (B-136, B-137) | 10 |
+| B-121 | ~~In-app notification list, grouping (`enableNotificationGrouping`), mark read~~ | **closed (P10 slice A)** | `NotificationRepository` (Drift read model + best-effort server writes), list with burst folding, Money chip, mark read/unread, swipe delete, clear, foreground banner. Push is B-120. Unverified against a real project (needs staging) | 10 |
+| B-122 | ~~Quiet hours, digest, and per-trip mute~~ | **closed (P10 slice C)** | Server-backed like the web. Real server behaviour unverified (needs staging) | 10 |
+| B-123 | ~~Local pass reminders~~ | **closed (P10 slice E)** | Settlement/closeout reminders are not ported: the web has none locally (the server sends `settlement_reminder`). Unverified on device | 10 |
+| B-124 | ~~Full settings tree~~ | **closed (P10 slice B)** | Profile name, appearance, haptics, default currency, notifications, security, backup export/restore, help, about, account. Avatar upload is B-138 | 10 |
+| B-125 | ~~AMOLED theme (`enableAmoledTheme`)~~ | **closed (P10 slice B)** | Settings switch (flag on) swaps the dark theme for the existing AMOLED tokens | 10 |
 | B-126 | Data saver mode (`enableDataSaverMode`) | open | Pro. Settings row | 10 |
-| B-127 | Min-version gate and maintenance banner (fail open offline) | open | Phase 10.4 | 10 |
-| B-128 | Bug report and feature request (`enableFeatureSuggestions`), including screenshot and log attach | open | Phase 10.5. PII scrub required | 10 |
-| B-129 | What's New hub (`enableWhatsNewHub`) | open | Labs. Changelog content from the web | 10 |
-| B-130 | Growth telemetry and lifecycle nudges (`enableGrowthTelemetry`, `enableLifecycleNudges`) | open | Consent and flag gated. Buffered offline | 10 |
-| B-131 | Sync queue inspector (`enableSyncQueueInspector`) | open | Pro. Debug/staging surface for the outbox | 10 |
+| B-127 | ~~Min-version gate and maintenance~~ | **closed (P10 slice C)** | Hard block, soft banner, maintenance screen, fail open, re-check on resume. Forced on staging unverified | 10 |
+| B-128 | ~~Bug report and feature request~~ | **closed (P10 slice D)** | Text, logs (scrubbed), "my reports", auto-report with dedupe and rate limit. Screenshot attach is B-139 | 10 |
+| B-129 | ~~What's New hub (`enableWhatsNewHub`)~~ | **closed (P10 slice B)** | Changelog sheet from a generated Dart const (newest 12 entries) | 10 |
+| B-130 | ~~Growth telemetry (`enableGrowthTelemetry`)~~ | **closed (P10 slice D)** | `app_open`, `sync_fail`, `queue_stuck`, `flush_ok`. Lifecycle nudges are server-only (nothing to port). Invite conversion is B-040 | 10 |
+| B-131 | ~~Sync queue inspector~~ | **closed (P6)** | Already built behind the flag (`SyncChip` sheet). Diagnostics adds a summary line | 10 |
 | B-132 | Demo data seeding (`enableDemoSeeding`) | open | Labs. Ops-style seed, not a traveler default | 10 |
 | B-133 | Trip stack alphabetical sort (`enableTripStackSort`) | open | Pro. The 3D stack itself is B-030 | 10 |
 | B-134 | Extended undo (`enableExtendedUndo`) | open | Core flag default on; the longer undo window is not ported | 10 |
 | B-135 | Motion polish (`enableMotionPolish`) | deferred | B-058 shipped the other presentation flags. This visual pass was left | 12 |
 
-## Phase 11 (not started)
-
-Cutover ops. Nothing in this phase has been written yet.
+### Added by Phase 10
 
 | ID | Item | Status | Why / how to close | Owner phase |
 |----|------|--------|--------------------|-------------|
-| B-140 | Legacy-data inventory (`contract/LEGACY_DATA.md`): unsynced Capacitor queue, guest trips, vault, local prefs | open | Phase 11.1 | 11 |
-| B-141 | Final Capacitor release spec: flush queue, migration banner, export for guest/vault data | open | Spec only until the owner approves the web change | 11 |
-| B-142 | Backup import contract for Flutter (id collisions, idempotent re-import) | open | Phase 10 builds the UI; this phase defines the contract | 11 |
-| B-143 | Observability by client (capacitor / flutter / web) and alert thresholds | open | Phase 11.4 | 11 |
-| B-144 | Staged rollout and rollback plan (`ROLLOUT.md`), including the contract-freeze window | open | Phase 11.5 | 11 |
+| B-136 | Firebase config and Gradle plugin | open (see B-182: the Capacitor files already exist) | `google-services.json` / `GoogleService-Info.plist` are not in the repo; the `com.google.gms.google-services` plugin was deliberately not added (build fails without the file). See `contract/PUSH_SETUP.md` section 5 | 11, 12 |
+| B-137 | iOS Push Notifications capability | open | Needs Xcode (creates `Runner.entitlements`, `aps-environment`) and the APNs key in Firebase. `UIBackgroundModes: remote-notification` is already set | 12 |
+| B-138 | Profile photo upload | open | Needs storage bucket policy decision; name edit is done | 10 follow-up |
+| B-139 | Bug report screenshot attach | open | `RenderRepaintBoundary` capture and a size cap; text and logs are done | 10 follow-up |
+| B-170 | Device matrix for push (iOS and Android x foreground, background, terminated x signed in and out) and sign-out stops pushes | open | Needs devices and staging. Steps in `FEATURE_TEST_STEPS.md` FLUTTER-P10E | 12 |
+| B-171 | Trip settings: FX config, category reorder, member roles screen | open | `TripToolsSheet` and the Members tab cover roles; FX and reorder have no Flutter UI yet | 10 follow-up |
+| B-172 | Legal text is a summary plus "read the full document online" | deferred | The web policy text contains web-specific statements (Tesseract, IndexedDB, WebAuthn) that are wrong for the app. Needs a counsel-approved native version, then port | 12 |
+| B-173 | `connectivity_plus` pinned to 7.3.1 (was 7.3.2) | deferred | Stable `flutter_local_notifications` 22.x needs `dbus` 0.7, 7.3.2 needs 0.8. Lift when a stable fln supports it | 12 |
+| B-174 | Data saver mode (`enableDataSaverMode`), demo seeding, trip stack sort, extended undo, motion polish | open | Pro/Labs rows from the original Phase 10 list, not built | 10 follow-up |
+| B-145 | `app_events` columns in `API_CONTRACT.md` section 2.17 are wrong | open | Doc says `platform`, `app_version`, `payload`; migration 0108 has `user_id`, `event`, `props`, `day`. The client follows the migration | 11 |
+| B-146 | Restoring a backup creates new trips (new ids) | deferred | Repositories own id creation; a second restore of the same file duplicates (the dialog says so). Add id-preserving import if wanted | 11 |
+| B-147 | Disabling app lock needs no biometric | deferred | `BiometricLockEnabled.setEnabled(false)` skips the prompt (Phase 6 design); a thief with an unlocked phone could turn it off | 12 |
+| B-160 | Staging verification of the Phase 10 server paths: quiet hours, digest and mute rows, `get_app_version_gate` forced below min, `send-push` for expense, settlement and join, `app_events` inserts, `report_bug` and `submit_feature_request` | open | Needs a staging Supabase project (B-001). Only fakes exercised so far | 11, 12 |
+| B-161 | PII review of real payloads | open | Exit criterion: dump a sample bug report, auto report and log share from a real session and confirm no emails, phone numbers or tokens. The scrubber is unit-tested only | 12 |
+| B-162 | Confirm iOS foreground push on a device | open | Chosen: badge and sound only, the in-app banner is the alert (Capacitor had alert on). Check there is no double banner or missed alert; flip `setForegroundNotificationPresentationOptions` if wrong | 12 |
+| B-163 | Android reminder timing and boot persistence | open | Inexact alarms can drift a few minutes under Doze. Verify on a device, reboot included; switch to exact alarms only if it matters | 12 |
 
-## Phase 12 (not started)
+## Phase 11 (documents written; nothing live, nothing applied)
+
+Cutover ops: specs, contracts, queries and plans. No migration was added, no web code changed.
+
+| ID | Item | Status | Why / how to close | Owner phase |
+|----|------|--------|--------------------|-------------|
+| B-140 | ~~Legacy-data inventory~~ | **documented (P11)** | `contract/LEGACY_DATA.md`. Owner decisions L1-L4 (B-179) and exposure sizing (needs telemetry, B-180) are open | 11 |
+| B-141 | Final Capacitor release spec | **documented (P11), build not started** | `contract/FINAL_CAPACITOR_RELEASE.md`. Needs owner approval, then web work under the normal rules (flags, steps, version bump). Ships over the air | 11 |
+| B-142 | ~~Backup import contract~~ | **documented (P11)** | `contract/BACKUP_IMPORT.md`. Fixed a real gap: the web export has `members` as a map, now supported. Idempotent re-import still needs the `import_batch_id` draft (B-146) | 11 |
+| B-143 | Observability by client and alert thresholds | **documented (P11), not live** | `ops/observability.sql`, `ops/ALERTS.md`. Queries are run by hand; thresholds await owner confirmation (B-179). Gaps listed in ALERTS.md section 4 | 11 |
+| B-144 | Staged rollout and rollback plan | **documented (P11)** | `ROLLOUT.md`, `CUTOVER_RUNBOOK.md`. Stages, soak times, sunset date and restore drill need owner decisions (B-179) | 11 |
+
+| B-175 | Flutter-only surfaces without a server kill switch: backup export/restore, push prompt and registration, auto bug reporter, Diagnostics | open | Cutover plan relies on flags (`ROLLOUT.md` section 4). Add Ops Deck flags in `src/types/admin.ts` and `src/utils/featureFlags.ts` (web change, normal rules), then read them in Flutter | 11 follow-up |
+| B-176 | Confirm production backups (PITR or daily), retention, and run a restore drill | open | Dashboard check; cannot be done from the repo. Record in `ROLLOUT.md` section 5 | 11, 12 |
+| B-177 | Per-user rate limit for `report_bug` and `submit_feature_request` | open | Additive RPC change; today any signed-in user can flood the ledger | 11 follow-up |
+| B-178 | Backup export should say it contains trip and member names | open | One line in the Settings export confirmation | 12 |
+| B-179 | Owner decisions: L1-L4 (`LEGACY_DATA.md`), A1 thresholds and A2 draft migrations (`ops/ALERTS.md`), R1-R4 stages, sunset date, who flips switches, restore-drill date (`ROLLOUT.md`) | open | Nothing downstream can be scheduled until these are answered | 11, 12 |
+| B-180 | Size the guest and vault exposure | open | Needs the two count-bucket telemetry events (draft migration 0116) shipped in the final Capacitor release | 11, 12 |
+| B-181 | Security review findings: restrict Firebase API keys, confirm `send-push` authorises the caller against the trip, confirm the anonymous join-preview IP header, run the RLS suite on staging | open | `ops/SECURITY_REVIEW.md` section 6 | 11, 12 |
+| B-182 | Reuse the committed Capacitor Firebase files for Flutter | open | `android/app/google-services.json` and `ios/App/App/GoogleService-Info.plist` already exist for `com.triptracker.app`. Copying them into `flutter_app` closes most of B-136 (owner decision: the contract says Flutter's copies are git-ignored) | 11, 12 |
+| B-183 | Draft migrations 0116 (more `app_events` kinds) and 0117 (`trips.import_batch_id`) | open | Drafts in `ops/ALERTS.md` section 5; nothing applied. Needs approval, a free migration number, a Flutter client change for the marker, and web CI green | 11 follow-up |
+
+## Phase 12 (prepared: automation, config, docs; device and store work open)
 
 Release gate. Device checks already listed above (B-004, B-005, B-007, B-043, B-071, B-081, B-082) close here if they are still open.
 
 | ID | Item | Status | Why / how to close | Owner phase |
 |----|------|--------|--------------------|-------------|
-| B-150 | Parity report: every T1/T2 row done or skipped with owner sign-off | open | Phase 12.1 | 12 |
-| B-151 | Full manual QA on the device matrix, failures filed in the bug tracker | open | Phase 12.2 | 12 |
-| B-152 | Performance budget recorded in `flutter_app/docs/PERF.md` | open | Phase 12.3 | 12 |
-| B-153 | Store listing, privacy labels, and release CI (TestFlight and Play internal) | open | Phase 12.6–12.7. Owner holds the store accounts | 12 |
-| B-154 | Capacitor sunset candidates list. Do not delete the wrapper without owner approval | open | Phase 12.9. The web app stays | 12 |
+| B-150 | Parity report: every T1/T2 row done or skipped with owner sign-off | **documented (P12)** | `PARITY_REPORT.md` shows 24 T1 and 2 T2 rows not done; needs owner sign-off or work (B-195) | 12 |
+| B-151 | Full manual QA on the device matrix, failures filed in the bug tracker | open | `QA_LOG.md` is the template; every cell is empty. Includes the screen-reader pass and `IOS_DEFECTS.md` evidence | 12 |
+| B-152 | Performance budget recorded in `flutter_app/docs/PERF.md` | **documented (P12)** | budgets and procedure in `flutter_app/docs/PERF.md`; nothing measured | 12 |
+| B-153 | Store listing, privacy labels, and release CI (TestFlight and Play internal) | **prepared (P12)** | `store/*`, `codemagic.yaml` release workflows, `tool/*`; nothing run | 12 |
+| B-154 | Capacitor sunset candidates list. Do not delete the wrapper without owner approval | **documented (P12)** | `SUNSET_CANDIDATES.md`; nothing deleted | 12 |
+| B-190 | Decide whether live location needs background access at all | open | Dropping `ACCESS_BACKGROUND_LOCATION` and `UIBackgroundModes: location` avoids the Play declaration video and extra Apple review; trade-off is updates stopping when the screen locks. See `store/REVIEW_NOTES.md` | 12 |
+| B-191 | No crash tool: release stack traces are obfuscated text in the bug ledger | open | Keep `build/symbols` from every release (pipeline saves them). Decide on a crash service or a symbolication step | 12 |
+| B-192 | Heavy parsing (backup restore, CSV, Splitwise import) runs on the UI isolate | open | Measure first (`PERF.md`); move to `Isolate.run` with a test seam if a long frame shows | 12 |
+| B-193 | R8 shrinking and the new release signing config were never built or smoke-tested | open | No Android SDK here. First `flutter build appbundle --release` must be installed and exercised (push, notifications, sign-in), not only built | 12 |
+| B-194 | Reduce-motion audit | open | Check `MediaQuery.disableAnimations` handling across the motion suite | 12 |
+| B-195 | T1 rows not built: destination suggest, covers, traveler pass back, clone squad, extended undo, calm haptics, expense photo link | open | `PARITY_REPORT.md`. Owner decision: build before first release or sign off the skip | 12 |
+| B-196 | Last Capacitor store build numbers | open | `tool/release_version.sh` assumes 746 (last in the repo). Check App Store Connect and Play Console and set `TT_MIN_BUILD_NUMBER` if higher | 12 |
+| B-197 | Release pipelines (`flutter-android-release`, `flutter-ios-release`) have never run | open | Needs Codemagic secrets, Firebase files, store accounts. See `store/RELEASE_PIPELINE.md` | 12 |
+| B-198 | Rollback drill on staging (config flips and a halted rollout) | open | Phase 12 exit criterion. Needs staging (B-001) | 12 |
+| B-199 | Store assets: screenshots from seeded staging, support URL and mailbox, age rating answers, reviewer demo account | open | `store/LISTING.md` has the drafts and checklists | 12 |
 
 ## Known limitations to remember
 

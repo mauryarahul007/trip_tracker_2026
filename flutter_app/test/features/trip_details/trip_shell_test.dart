@@ -11,14 +11,23 @@ import 'package:trip_tracker/features/expenses/presentation/expenses_tab.dart';
 
 import '../../support/pump_app.dart';
 
-ProviderContainer containerOf(WidgetTester tester) => ProviderScope.containerOf(tester.element(find.byType(MaterialApp)));
+ProviderContainer containerOf(WidgetTester tester) =>
+    ProviderScope.containerOf(tester.element(find.byType(MaterialApp)));
 
 Future<String> openTrip(WidgetTester tester, {String name = 'Goa Weekend'}) async {
   final c = containerOf(tester);
   final id = await real(
     tester,
-    () => c.read(tripRepositoryProvider).createTrip(
-        name: name, startDate: '2026-12-01', endDate: '2026-12-05', baseCurrency: 'INR', ownerId: 'u1', creatorName: 'Asha'),
+    () => c
+        .read(tripRepositoryProvider)
+        .createTrip(
+          name: name,
+          startDate: '2026-12-01',
+          endDate: '2026-12-05',
+          baseCurrency: 'INR',
+          ownerId: 'u1',
+          creatorName: 'Asha',
+        ),
   );
   await settle(tester);
   await tester.tap(find.text(name));
@@ -39,7 +48,11 @@ void main() {
     expect(find.descendant(of: find.byType(AppBar), matching: find.text('Goa Weekend')), findsOneWidget);
     final bar = find.byType(BottomNavigationBar);
     for (final label in ['Expenses', 'Balances', 'Members', 'Notes']) {
-      expect(find.descendant(of: bar, matching: find.text(label)), findsOneWidget, reason: label);
+      expect(
+        find.descendant(of: bar, matching: find.text(label)),
+        findsOneWidget,
+        reason: label,
+      );
     }
     expect(find.descendant(of: bar, matching: find.text('Chat')), findsNothing);
     expect(find.byType(ExpensesTab), findsOneWidget);
@@ -128,8 +141,16 @@ void main() {
     final c = containerOf(tester);
     final id = await real(
       tester,
-      () => c.read(tripRepositoryProvider).createTrip(
-          name: 'Deep', startDate: '2026-12-01', endDate: '2026-12-05', baseCurrency: 'INR', ownerId: 'u1', creatorName: 'A'),
+      () => c
+          .read(tripRepositoryProvider)
+          .createTrip(
+            name: 'Deep',
+            startDate: '2026-12-01',
+            endDate: '2026-12-05',
+            baseCurrency: 'INR',
+            ownerId: 'u1',
+            creatorName: 'A',
+          ),
     );
     GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/trip/$id');
     await settle(tester, rounds: 10);

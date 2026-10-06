@@ -23,7 +23,12 @@ void main() {
 
     testApp('single existing member uses the singular wording', (tester) async {
       final app = await pumpApp(tester, launchLink: Uri.parse('com.triptracker.app://join/ABC123'));
-      app.join.previewResult = const JoinPreview(tripName: 'Solo', startDate: '', endDate: '', memberFirstNames: ['Asha']);
+      app.join.previewResult = const JoinPreview(
+        tripName: 'Solo',
+        startDate: '',
+        endDate: '',
+        memberFirstNames: ['Asha'],
+      );
       GoRouter.of(tester.element(find.byType(AppBar).last)).go('/join/ZZZ999');
       await settle(tester);
       expect(find.text('Asha is already on this trip.'), findsOneWidget);
@@ -108,7 +113,12 @@ void main() {
 
     testApp('already a member: offers to open the trip', (tester) async {
       final app = await pumpApp(tester, user: asha);
-      app.join.lookupResult = const JoinLookup(tripId: 'trip-1', tripName: 'Goa Weekend', isAdmin: true, myMemberId: 'm9');
+      app.join.lookupResult = const JoinLookup(
+        tripId: 'trip-1',
+        tripName: 'Goa Weekend',
+        isAdmin: true,
+        myMemberId: 'm9',
+      );
       GoRouter.of(tester.element(find.byType(AppBar).last)).go('/join/ABC123');
       await settle(tester, rounds: 8);
       expect(find.text('You\'re already in "Goa Weekend"'), findsOneWidget);

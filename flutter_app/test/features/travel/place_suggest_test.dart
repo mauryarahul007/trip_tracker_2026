@@ -32,23 +32,14 @@ void main() {
       expect(res.first.source, SuggestionSource.local);
     });
 
-    test(
-      'recovers from typos via edit distance (Swtizerland -> Switzerland)',
-      () {
-        final res = localSuggestions('Swtizerland');
-        expect(res.any((s) => s.name == 'Switzerland'), isTrue);
-      },
-    );
+    test('recovers from typos via edit distance (Swtizerland -> Switzerland)', () {
+      final res = localSuggestions('Swtizerland');
+      expect(res.any((s) => s.name == 'Switzerland'), isTrue);
+    });
 
     test('includes past destinations with Used before subtitle', () {
-      final res = localSuggestions(
-        'Kashmir',
-        pastDestinations: ['Kashmir Valley'],
-      );
-      expect(
-        res.any((s) => s.name == 'Kashmir Valley' && s.detail == 'Used before'),
-        isTrue,
-      );
+      final res = localSuggestions('Kashmir', pastDestinations: ['Kashmir Valley']);
+      expect(res.any((s) => s.name == 'Kashmir Valley' && s.detail == 'Used before'), isTrue);
     });
   });
 
@@ -58,12 +49,7 @@ void main() {
         final body = jsonEncode({
           'features': [
             {
-              'properties': {
-                'name': 'Kyoto',
-                'state': 'Kyoto Prefecture',
-                'country': 'Japan',
-                'countrycode': 'jp',
-              },
+              'properties': {'name': 'Kyoto', 'state': 'Kyoto Prefecture', 'country': 'Japan', 'countrycode': 'jp'},
             },
           ],
         });

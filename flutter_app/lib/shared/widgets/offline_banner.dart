@@ -20,11 +20,7 @@ class OfflineBanner extends ConsumerWidget {
     return AnimatedSwitcher(
       duration: tokens.durationNormal,
       transitionBuilder: (child, animation) {
-        return SizeTransition(
-          sizeFactor: animation,
-          alignment: Alignment.topCenter,
-          child: child,
-        );
+        return SizeTransition(sizeFactor: animation, alignment: Alignment.topCenter, child: child);
       },
       child: isOnline
           ? const SizedBox.shrink(key: ValueKey('online'))
@@ -34,32 +30,19 @@ class OfflineBanner extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: tokens.warningColor.withValues(alpha: 0.15),
-                border: Border(
-                  bottom: BorderSide(
-                    color: tokens.warningColor.withValues(alpha: 0.4),
-                    width: 1,
-                  ),
-                ),
+                border: Border(bottom: BorderSide(color: tokens.warningColor.withValues(alpha: 0.4), width: 1)),
               ),
               child: SafeArea(
                 top: false,
                 bottom: false,
                 child: Row(
                   children: [
-                    Icon(
-                      AppIcons.offline,
-                      size: 16,
-                      color: tokens.warningColor,
-                    ),
+                    Icon(AppIcons.offline, size: 16, color: tokens.warningColor),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         customMessage ?? 'You are offline. Changes will sync when reconnected.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: tokens.warningColor,
-                        ),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: tokens.warningColor),
                       ),
                     ),
                   ],

@@ -35,22 +35,30 @@ String exportTripLedgerCsv({
   for (final e in active) {
     final payer = names[e.paidBy] ?? e.paidBy;
     final split = e.splitMemberIds.map((id) => names[id] ?? id).join('; ');
-    lines.add([
-      e.date,
-      e.title,
-      e.category,
-      e.currency,
-      e.amount.toStringAsFixed(2),
-      payer,
-      split,
-      e.isSettlement ? 'yes' : 'no',
-    ].map(_cell).join(','));
+    lines.add(
+      [
+        e.date,
+        e.title,
+        e.category,
+        e.currency,
+        e.amount.toStringAsFixed(2),
+        payer,
+        split,
+        e.isSettlement ? 'yes' : 'no',
+      ].map(_cell).join(','),
+    );
   }
   return lines.join('\n');
 }
 
 class BackupSummary {
-  const BackupSummary({required this.valid, this.error, this.tripCount = 0, this.expenseCount = 0, this.expenses = const []});
+  const BackupSummary({
+    required this.valid,
+    this.error,
+    this.tripCount = 0,
+    this.expenseCount = 0,
+    this.expenses = const [],
+  });
   final bool valid;
   final String? error;
   final int tripCount;
@@ -95,11 +103,7 @@ BackupSummary summarizeBackup(String jsonString) {
 Object? _decode(String s) => jsonDecode(s);
 
 /// Local snapshot of one trip, enough to round-trip through [summarizeBackup].
-String exportTripBackupJson({
-  required Trip trip,
-  required List<Member> members,
-  required List<Expense> expenses,
-}) {
+String exportTripBackupJson({required Trip trip, required List<Member> members, required List<Expense> expenses}) {
   return const JsonEncoder.withIndent('  ').convert({
     'trips': [trip.toJson()],
     'members': [for (final m in members) m.toJson()],

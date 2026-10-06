@@ -12,7 +12,8 @@ import 'package:trip_tracker/domain/repositories/repositories.dart';
 
 void main() {
   group('flag registry parity', () {
-    final fx = jsonDecode(File('../docs/flutter-migration/fixtures/flags.json').readAsStringSync()) as Map<String, dynamic>;
+    final fx =
+        jsonDecode(File('../docs/flutter-migration/fixtures/flags.json').readAsStringSync()) as Map<String, dynamic>;
 
     test('Dart flag key set equals the TS registry (CI drift check)', () {
       final ts = (fx['defaults'] as Map<String, dynamic>).keys.toSet();
@@ -34,9 +35,30 @@ void main() {
       const k = 'enableAchievements'; // default false
       expect(isFeatureActive(k, {}), isFalse);
       expect(isFeatureActive(k, {k: true}), isTrue);
-      expect(isFeatureActive(k, {k: true}, tripId: 't', tripOverrides: {'t': {k: false}}), isFalse);
       expect(
-        isFeatureActive(k, {k: true}, tripId: 't', userId: 'u', tripOverrides: {'t': {k: false}}, userOverrides: {'u': {k: true}}),
+        isFeatureActive(
+          k,
+          {k: true},
+          tripId: 't',
+          tripOverrides: {
+            't': {k: false},
+          },
+        ),
+        isFalse,
+      );
+      expect(
+        isFeatureActive(
+          k,
+          {k: true},
+          tripId: 't',
+          userId: 'u',
+          tripOverrides: {
+            't': {k: false},
+          },
+          userOverrides: {
+            'u': {k: true},
+          },
+        ),
         isTrue,
       );
     });
@@ -87,7 +109,11 @@ void main() {
 
     setUp(() {
       db = AppDatabase.memory();
-      client = sb.SupabaseClient('http://127.0.0.1:1', 'anon-key', authOptions: const sb.AuthClientOptions(autoRefreshToken: false));
+      client = sb.SupabaseClient(
+        'http://127.0.0.1:1',
+        'anon-key',
+        authOptions: const sb.AuthClientOptions(autoRefreshToken: false),
+      );
       repo = SupabaseAuthRepository(client, db, beforeWipe: () async => flushed++);
     });
     tearDown(() async {
@@ -106,7 +132,9 @@ void main() {
 
     test('signOut flushes first, wipes every table, and clears the user', () async {
       await repo.signInAsDemo();
-      await db.into(db.syncMetaTable).insert(SyncMetaTableCompanion.insert(key: 'cursor:t', value: 'x', updatedAt: 'x'));
+      await db
+          .into(db.syncMetaTable)
+          .insert(SyncMetaTableCompanion.insert(key: 'cursor:t', value: 'x', updatedAt: 'x'));
       await repo.signOut();
       expect(flushed, 1);
       expect(repo.currentUser, isNull);

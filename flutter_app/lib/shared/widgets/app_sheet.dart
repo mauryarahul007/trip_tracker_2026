@@ -29,15 +29,9 @@ class AppSheet extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: tokens.bgSurface,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(tokens.radiusLg),
-            ),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(tokens.radiusLg)),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 20,
-                offset: const Offset(0, -4),
-              ),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 20, offset: const Offset(0, -4)),
             ],
           ),
           child: SafeArea(
@@ -63,10 +57,7 @@ class AppSheet extends StatelessWidget {
             margin: const EdgeInsets.only(top: 10, bottom: 8),
             width: 36,
             height: 4,
-            decoration: BoxDecoration(
-              color: tokens.borderColor,
-              borderRadius: BorderRadius.circular(2),
-            ),
+            decoration: BoxDecoration(color: tokens.borderColor, borderRadius: BorderRadius.circular(2)),
           ),
         ),
         if (title != null) ...[
@@ -78,17 +69,14 @@ class AppSheet extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title!,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: tokens.textPrimary,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                   ),
                 ),
                 if (trailing != null)
                   trailing!
                 else
                   IconButton(
+                    tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                     icon: const Icon(Icons.close_rounded),
                     onPressed: () => Navigator.of(context).pop(),
                     iconSize: 20,

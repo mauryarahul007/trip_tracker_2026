@@ -1,13 +1,10 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'app_logger.dart';
 
 /// Pluggable crash reporting interface for telemetry and crash diagnostics.
 abstract class CrashReporter {
-  Future<void> recordError(
-    dynamic error,
-    StackTrace? stack, {
-    String? reason,
-    bool fatal = false,
-  });
+  Future<void> recordError(dynamic error, StackTrace? stack, {String? reason, bool fatal = false});
 
   Future<void> setUserIdentifier(String identifier);
 
@@ -21,17 +18,8 @@ class LoggerCrashReporter implements CrashReporter {
   const LoggerCrashReporter();
 
   @override
-  Future<void> recordError(
-    dynamic error,
-    StackTrace? stack, {
-    String? reason,
-    bool fatal = false,
-  }) async {
-    AppLogger.error(
-      'CrashReported [fatal=$fatal] ${reason ?? ''}: $error',
-      error,
-      stack,
-    );
+  Future<void> recordError(dynamic error, StackTrace? stack, {String? reason, bool fatal = false}) async {
+    AppLogger.error('CrashReported [fatal=$fatal] ${reason ?? ''}: $error', error, stack);
   }
 
   @override
@@ -49,3 +37,5 @@ class LoggerCrashReporter implements CrashReporter {
     AppLogger.debug('CrashReporter breadcrumb: $message');
   }
 }
+
+final crashReporterProvider = Provider<CrashReporter>((ref) => const LoggerCrashReporter());

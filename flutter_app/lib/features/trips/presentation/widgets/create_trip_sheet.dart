@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/auth_state.dart';
 import '../../../../data/providers.dart';
 import '../../../../domain/logic/currency.dart' show defaultExchangeRates;
+import '../../../../core/settings/app_settings.dart';
 import '../../../../domain/logic/trip_utilities.dart' show formatDateRange, guessTripCurrency, suggestTripName;
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/widgets/app_button.dart';
@@ -11,7 +12,8 @@ import '../../../../shared/widgets/app_text_field.dart';
 
 /// Seam so tests can pick dates without driving the Material picker.
 final dateRangePickerProvider = Provider<Future<DateTimeRange?> Function(BuildContext, DateTime, DateTimeRange?)>(
-  (ref) => (context, today, initial) => showDateRangePicker(
+  (ref) =>
+      (context, today, initial) => showDateRangePicker(
         context: context,
         firstDate: DateTime(today.year - 1),
         lastDate: DateTime(today.year + 5),
@@ -19,7 +21,8 @@ final dateRangePickerProvider = Provider<Future<DateTimeRange?> Function(BuildCo
       ),
 );
 
-String _iso(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+String _iso(DateTime d) =>
+    '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
 /// Create-trip form. Pops the new trip id.
 class CreateTripSheet extends ConsumerStatefulWidget {
@@ -43,6 +46,17 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
   String? _dateError;
 
   DateTime get _today => widget.today ?? DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    // A default currency chosen in Settings beats the destination guess.
+    final preferred = ref.read(defaultCurrencyPrefProvider);
+    if (preferred != null && defaultExchangeRates.containsKey(preferred)) {
+      _currency = preferred;
+      _currencyTouched = true;
+    }
+  }
 
   @override
   void dispose() {
@@ -82,7 +96,9 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
 
     final user = ref.read(authStateProvider).user!;
     setState(() => _busy = true);
-    final id = await ref.read(tripRepositoryProvider).createTrip(
+    final id = await ref
+        .read(tripRepositoryProvider)
+        .createTrip(
           name: name,
           startDate: _iso(_range!.start),
           endDate: _iso(_range!.end),
@@ -132,6 +148,7 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
               ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue: _currency,
               decoration: InputDecoration(labelText: l10n.fieldCurrency),
               items: [for (final c in defaultExchangeRates.keys) DropdownMenuItem(value: c, child: Text(c))],
@@ -141,7 +158,12 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
               }),
             ),
             const SizedBox(height: 20),
-            AppButton(label: l10n.actionCreateTrip, isLoading: _busy, isFullWidth: true, onPressed: _busy ? null : _submit),
+            AppButton(
+              label: l10n.actionCreateTrip,
+              isLoading: _busy,
+              isFullWidth: true,
+              onPressed: _busy ? null : _submit,
+            ),
           ],
         ),
       ),

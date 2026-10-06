@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,10 +8,7 @@ import '../../../data/repositories/supabase_location_share_repository.dart';
 import '../../../domain/repositories/location_share_repository.dart';
 
 class LiveLocationService with WidgetsBindingObserver {
-  LiveLocationService({
-    required this.locationGateway,
-    required this.locationShareRepository,
-  }) {
+  LiveLocationService({required this.locationGateway, required this.locationShareRepository}) {
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -39,11 +37,7 @@ class LiveLocationService with WidgetsBindingObserver {
     try {
       final pos = await locationGateway.getCurrentPosition();
       if (pos != null) {
-        await locationShareRepository.updateLocationShare(
-          tripId: tripId,
-          lat: pos.lat,
-          lng: pos.lng,
-        );
+        await locationShareRepository.updateLocationShare(tripId: tripId, lat: pos.lat, lng: pos.lng);
       }
     } catch (_) {
       // Best-effort network or sensor error; keep timer running
@@ -81,10 +75,7 @@ class LiveLocationService with WidgetsBindingObserver {
 final liveLocationServiceProvider = Provider<LiveLocationService>((ref) {
   final location = ref.watch(locationGatewayProvider);
   final shareRepo = ref.watch(locationShareRepositoryProvider);
-  final service = LiveLocationService(
-    locationGateway: location,
-    locationShareRepository: shareRepo,
-  );
+  final service = LiveLocationService(locationGateway: location, locationShareRepository: shareRepo);
   ref.onDispose(service.dispose);
   return service;
 });

@@ -8,21 +8,13 @@ class CategoryChip extends StatelessWidget {
   final bool isSelected;
   final VoidCallback? onTap;
 
-  const CategoryChip({
-    super.key,
-    required this.label,
-    this.icon,
-    this.isSelected = false,
-    this.onTap,
-  });
+  const CategoryChip({super.key, required this.label, this.icon, this.isSelected = false, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
 
-    final bg = isSelected
-        ? tokens.primaryAccent.withValues(alpha: 0.15)
-        : tokens.bgSurface;
+    final bg = isSelected ? tokens.primaryAccent.withValues(alpha: 0.15) : tokens.bgSurface;
     final border = isSelected ? tokens.primaryAccent : tokens.borderColor;
     final textColor = isSelected ? tokens.primaryAccent : tokens.textPrimary;
 
@@ -58,11 +50,7 @@ class CategoryChip extends StatelessWidget {
       button: true,
       selected: isSelected,
       label: label,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(tokens.radiusFull),
-        child: chipContent,
-      ),
+      child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(tokens.radiusFull), child: chipContent),
     );
   }
 }

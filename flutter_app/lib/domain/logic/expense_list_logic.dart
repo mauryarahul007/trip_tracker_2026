@@ -58,18 +58,17 @@ class ExpenseFilters {
     ExpenseRelation? relation,
     bool clearRelation = false,
     String? location,
-  }) =>
-      ExpenseFilters(
-        query: query ?? this.query,
-        categoryId: categoryId ?? this.categoryId,
-        memberId: memberId ?? this.memberId,
-        dateFrom: dateFrom ?? this.dateFrom,
-        dateTo: dateTo ?? this.dateTo,
-        amountMin: amountMin ?? this.amountMin,
-        amountMax: amountMax ?? this.amountMax,
-        relation: clearRelation ? null : (relation ?? this.relation),
-        location: location ?? this.location,
-      );
+  }) => ExpenseFilters(
+    query: query ?? this.query,
+    categoryId: categoryId ?? this.categoryId,
+    memberId: memberId ?? this.memberId,
+    dateFrom: dateFrom ?? this.dateFrom,
+    dateTo: dateTo ?? this.dateTo,
+    amountMin: amountMin ?? this.amountMin,
+    amountMax: amountMax ?? this.amountMax,
+    relation: clearRelation ? null : (relation ?? this.relation),
+    location: location ?? this.location,
+  );
 }
 
 /// Port of `filteredExpenses`. Search is a case-insensitive title match; the
@@ -91,7 +90,8 @@ List<Expense> filterExpenses(List<Expense> all, ExpenseFilters f, {String? myMem
           (myMemberId == null ||
               f.relation == null ||
               (f.relation == ExpenseRelation.paidByMe && e.paidBy == myMemberId) ||
-              (f.relation == ExpenseRelation.involvesMe && (e.paidBy == myMemberId || e.splitMemberIds.contains(myMemberId)))) &&
+              (f.relation == ExpenseRelation.involvesMe &&
+                  (e.paidBy == myMemberId || e.splitMemberIds.contains(myMemberId)))) &&
           (f.location.isEmpty || e.location?.placeName == f.location))
         e,
   ];
@@ -193,17 +193,17 @@ class ExpenseReview {
   String? get message => !needsReview
       ? null
       : payerRemoved && participantRemoved
-          ? 'Payer and a split member were removed — reassign the payer and update the split.'
-          : payerRemoved
-              ? 'Payer was removed — assign a new payer.'
-              : 'A split member was removed — update the split.';
+      ? 'Payer and a split member were removed — reassign the payer and update the split.'
+      : payerRemoved
+      ? 'Payer was removed — assign a new payer.'
+      : 'A split member was removed — update the split.';
 }
 
 /// A payer or split member that is no longer on the trip.
 ExpenseReview reviewExpense(Trip trip, Expense e) => ExpenseReview(
-      payerRemoved: !trip.memberIds.contains(e.paidBy),
-      participantRemoved: e.splitMemberIds.any((id) => !trip.memberIds.contains(id)),
-    );
+  payerRemoved: !trip.memberIds.contains(e.paidBy),
+  participantRemoved: e.splitMemberIds.any((id) => !trip.memberIds.contains(id)),
+);
 
 /// Port of the "your share" hint: shown only when it differs from the line total.
 double? myShareToShow(Expense e, String? myMemberId) {
@@ -243,8 +243,13 @@ List<AttentionChip> attentionChips({
     if (open > 0) chips.add(AttentionChip('disputes', '$open dispute${open == 1 ? '' : 's'}', count: open));
   }
   final byId = {for (final m in members) m.id: m};
-  final unlinked = [for (final id in trip.memberIds) byId[id]].whereType<Member>().where((m) => !m.archived && m.linkedUserId == null).length;
-  if (unlinked > 0) chips.add(AttentionChip('invites', '$unlinked invite${unlinked == 1 ? '' : 's'} pending', count: unlinked));
+  final unlinked = [for (final id in trip.memberIds) byId[id]]
+      .whereType<Member>()
+      .where((m) => !m.archived && m.linkedUserId == null)
+      .length;
+  if (unlinked > 0) {
+    chips.add(AttentionChip('invites', '$unlinked invite${unlinked == 1 ? '' : 's'} pending', count: unlinked));
+  }
   if (!trip.closed && trip.endDate.isNotEmpty && closeoutEnabled && trip.endDate.compareTo(today) < 0) {
     chips.add(const AttentionChip('closeout', 'Close out trip'));
   }

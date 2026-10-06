@@ -47,10 +47,9 @@ class ConfirmDialog extends StatelessWidget {
 
     return Dialog(
       backgroundColor: tokens.bgSurface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(tokens.radiusLg),
-      ),
-      child: Padding(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(tokens.radiusLg)),
+      // Scrolls: at 200% text on a small phone the content is taller than the screen.
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -58,21 +57,10 @@ class ConfirmDialog extends StatelessWidget {
           children: [
             Text(
               title,
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w700,
-                color: tokens.textPrimary,
-              ),
+              style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: tokens.textPrimary),
             ),
             const SizedBox(height: 12),
-            Text(
-              message,
-              style: TextStyle(
-                fontSize: 15,
-                height: 1.4,
-                color: tokens.textSecondary,
-              ),
-            ),
+            Text(message, style: TextStyle(fontSize: 15, height: 1.4, color: tokens.textSecondary)),
             const SizedBox(height: 24),
             // Wrap, not Row: long labels or large text must flow onto a second line.
             Wrap(
@@ -87,9 +75,7 @@ class ConfirmDialog extends StatelessWidget {
                 ),
                 AppButton(
                   label: confirmLabel,
-                  variant: isDestructive
-                      ? AppButtonVariant.danger
-                      : AppButtonVariant.primary,
+                  variant: isDestructive ? AppButtonVariant.danger : AppButtonVariant.primary,
                   onPressed: () => Navigator.of(context).pop(true),
                 ),
               ],

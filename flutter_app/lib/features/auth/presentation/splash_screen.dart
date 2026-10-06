@@ -20,18 +20,11 @@ class SplashScreen extends StatelessWidget {
             Container(
               width: 72,
               height: 72,
-              decoration: BoxDecoration(
-                color: tokens.primaryAccent.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: tokens.primaryAccent.withValues(alpha: 0.15), shape: BoxShape.circle),
               child: Icon(AppIcons.expenses, size: 36, color: tokens.primaryAccent),
             ),
             const SizedBox(height: 24),
-            const SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(strokeWidth: 2.5),
-            ),
+            const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5)),
           ],
         ),
       ),

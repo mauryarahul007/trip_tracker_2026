@@ -6,8 +6,7 @@ import '../../../../core/clock.dart';
 import '../../../../core/platform/share_service.dart';
 import '../../../../data/providers.dart';
 import '../../../../domain/logic/flag_defaults.g.dart';
-import '../../../../domain/logic/trip_utilities.dart'
-    show buildCanonicalJoinLink, canonicalAppOrigin;
+import '../../../../domain/logic/trip_utilities.dart' show buildCanonicalJoinLink, canonicalAppOrigin;
 import '../../../../domain/models/join_share.dart';
 import '../../../../domain/models/trip.dart';
 import '../../../../l10n/l10n_ext.dart';
@@ -27,8 +26,7 @@ class ShareTripSheet extends ConsumerStatefulWidget {
 }
 
 class _ShareTripSheetState extends ConsumerState<ShareTripSheet> {
-  ShareLinkState?
-  _link; // after generate/revoke in this sheet; otherwise from the synced trip
+  ShareLinkState? _link; // after generate/revoke in this sheet; otherwise from the synced trip
   bool _busy = false;
   String? _error;
 
@@ -58,12 +56,8 @@ class _ShareTripSheetState extends ConsumerState<ShareTripSheet> {
   Future<void> _copy(String text) async {
     await ref.read(shareServiceProvider).copy(text);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.inviteCopied),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(context.l10n.inviteCopied), duration: const Duration(seconds: 2)));
   }
 
   @override
@@ -72,10 +66,7 @@ class _ShareTripSheetState extends ConsumerState<ShareTripSheet> {
     final tokens = context.tokens;
     final trip = ref.watch(tripProvider(widget.tripId)).value;
     if (trip == null) {
-      return const SizedBox(
-        height: 120,
-        child: Center(child: CircularProgressIndicator()),
-      );
+      return const SizedBox(height: 120, child: Center(child: CircularProgressIndicator()));
     }
     final auth = ref.watch(authRepositoryProvider).currentUser;
     final canManage = trip.ownerId == auth?.id;
@@ -112,12 +103,7 @@ class _ShareTripSheetState extends ConsumerState<ShareTripSheet> {
               code,
               key: const Key('join-code'),
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 32,
-                letterSpacing: 6,
-                fontWeight: FontWeight.w800,
-                color: tokens.textPrimary,
-              ),
+              style: TextStyle(fontSize: 32, letterSpacing: 6, fontWeight: FontWeight.w800, color: tokens.textPrimary),
             ),
             const SizedBox(height: 16),
             Center(
@@ -127,11 +113,7 @@ class _ShareTripSheetState extends ConsumerState<ShareTripSheet> {
                 color: Colors.white,
                 child: Semantics(
                   label: l10n.joinTripTitle,
-                  child: QrImageView(
-                    key: ValueKey(joinLink),
-                    data: joinLink,
-                    size: 180,
-                  ),
+                  child: QrImageView(key: ValueKey(joinLink), data: joinLink, size: 180),
                 ),
               ),
             ),
@@ -141,10 +123,7 @@ class _ShareTripSheetState extends ConsumerState<ShareTripSheet> {
               isFullWidth: true,
               onPressed: () => ref
                   .read(shareServiceProvider)
-                  .share(
-                    l10n.inviteShareText(trip.name, joinLink, code),
-                    subject: trip.name,
-                  ),
+                  .share(l10n.inviteShareText(trip.name, joinLink, code), subject: trip.name),
             ),
             const SizedBox(height: 8),
             Row(
@@ -171,23 +150,13 @@ class _ShareTripSheetState extends ConsumerState<ShareTripSheet> {
             const Divider(height: 36),
             Text(
               l10n.viewOnlyTitle,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: tokens.textPrimary,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: tokens.textPrimary),
             ),
             const SizedBox(height: 4),
-            Text(
-              l10n.viewOnlyBody,
-              style: TextStyle(fontSize: 13, color: tokens.textSecondary),
-            ),
+            Text(l10n.viewOnlyBody, style: TextStyle(fontSize: 13, color: tokens.textSecondary)),
             const SizedBox(height: 12),
             if (!canManage)
-              Text(
-                l10n.viewOnlyOwnerOnly,
-                style: TextStyle(fontSize: 13, color: tokens.textMuted),
-              )
+              Text(l10n.viewOnlyOwnerOnly, style: TextStyle(fontSize: 13, color: tokens.textMuted))
             else if (active) ...[
               Text(
                 l10n.viewOnlyActiveUntil(
@@ -203,12 +172,7 @@ class _ShareTripSheetState extends ConsumerState<ShareTripSheet> {
                       label: l10n.inviteShare,
                       onPressed: () => ref
                           .read(shareServiceProvider)
-                          .share(
-                            l10n.viewOnlyShareText(
-                              trip.name,
-                              shareLinkFor(link.token),
-                            ),
-                          ),
+                          .share(l10n.viewOnlyShareText(trip.name, shareLinkFor(link.token))),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -231,11 +195,7 @@ class _ShareTripSheetState extends ConsumerState<ShareTripSheet> {
                     ? null
                     : () => _change(() async {
                         await ref.read(shareRepositoryProvider).revoke(trip.id);
-                        return ShareLinkState(
-                          token: link.token,
-                          enabled: false,
-                          expiresAt: link.expiresAt,
-                        );
+                        return ShareLinkState(token: link.token, enabled: false, expiresAt: link.expiresAt);
                       }),
               ),
             ] else
@@ -244,12 +204,7 @@ class _ShareTripSheetState extends ConsumerState<ShareTripSheet> {
                 variant: AppButtonVariant.secondary,
                 isLoading: _busy,
                 isFullWidth: true,
-                onPressed: _busy
-                    ? null
-                    : () => _change(
-                        () =>
-                            ref.read(shareRepositoryProvider).generate(trip.id),
-                      ),
+                onPressed: _busy ? null : () => _change(() => ref.read(shareRepositoryProvider).generate(trip.id)),
               ),
           ],
           if (linkEnabled && _error != null) ...[

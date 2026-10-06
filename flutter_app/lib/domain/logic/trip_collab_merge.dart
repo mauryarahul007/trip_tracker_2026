@@ -49,23 +49,17 @@ Trip applyLiveCollabRow(Trip local, Map<String, dynamic> row, [bool keepLocalCol
 
   List<ChecklistItem> checklist = local.checklist;
   if (row['checklist'] is List) {
-    checklist = (row['checklist'] as List)
-        .map((e) => ChecklistItem.fromJson(e as Map<String, dynamic>))
-        .toList();
+    checklist = (row['checklist'] as List).map((e) => ChecklistItem.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   List<TripNote> notes = local.notes;
   if (row['notes'] is List) {
-    notes = (row['notes'] as List)
-        .map((e) => TripNote.fromJson(e as Map<String, dynamic>))
-        .toList();
+    notes = (row['notes'] as List).map((e) => TripNote.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   List<TravelPass> passes = local.passes;
   if (row['passes'] is List) {
-    passes = (row['passes'] as List)
-        .map((e) => TravelPass.fromJson(e as Map<String, dynamic>))
-        .toList();
+    passes = (row['passes'] as List).map((e) => TravelPass.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   TripFxConfig? fxConfig = local.fxConfig;
@@ -88,11 +82,7 @@ class TripRoster {
   final Map<String, Member> members;
   final Map<String, Group> groups;
 
-  const TripRoster({
-    required this.trip,
-    required this.members,
-    required this.groups,
-  });
+  const TripRoster({required this.trip, required this.members, required this.groups});
 }
 
 class MergedRoster {

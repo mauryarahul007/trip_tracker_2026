@@ -20,31 +20,33 @@ class CategoryScreen extends ConsumerWidget {
     final isAdmin = ref.watch(isTripAdminProvider(tripId));
     return Scaffold(
       appBar: AppBar(title: Text(l10n.catTitle)),
-      body: Column(children: [
-        if (isAdmin)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: AppButton(key: const Key('cat-add'), label: l10n.catAdd, onPressed: () => _add(context, ref)),
+      body: Column(
+        children: [
+          if (isAdmin)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: AppButton(key: const Key('cat-add'), label: l10n.catAdd, onPressed: () => _add(context, ref)),
+            ),
+          Expanded(
+            child: reorder
+                ? ReorderableListView(
+                    key: const Key('cat-list'),
+                    padding: const EdgeInsets.all(8),
+                    onReorderItem: (oldIndex, newIndex) {
+                      final next = [...cats];
+                      final item = next.removeAt(oldIndex);
+                      next.insert(newIndex, item);
+                      ref.read(tripRepositoryProvider).setCategoryOrder(tripId, [for (final c in next) c.id]);
+                    },
+                    children: [for (final c in cats) _tile(context, ref, c, isAdmin, key: ValueKey(c.id))],
+                  )
+                : ListView(
+                    key: const Key('cat-list'),
+                    children: [for (final c in cats) _tile(context, ref, c, isAdmin)],
+                  ),
           ),
-        Expanded(
-          child: reorder
-              ? ReorderableListView(
-                  key: const Key('cat-list'),
-                  padding: const EdgeInsets.all(8),
-                  onReorderItem: (oldIndex, newIndex) {
-                    final next = [...cats];
-                    final item = next.removeAt(oldIndex);
-                    next.insert(newIndex, item);
-                    ref.read(tripRepositoryProvider).setCategoryOrder(tripId, [for (final c in next) c.id]);
-                  },
-                  children: [for (final c in cats) _tile(context, ref, c, isAdmin, key: ValueKey(c.id))],
-                )
-              : ListView(
-                  key: const Key('cat-list'),
-                  children: [for (final c in cats) _tile(context, ref, c, isAdmin)],
-                ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 
@@ -54,14 +56,23 @@ class CategoryScreen extends ConsumerWidget {
       title: Text(c.name),
       subtitle: Text(c.icon ?? ''),
       trailing: isAdmin && c.isCustom
-          ? Row(mainAxisSize: MainAxisSize.min, children: [
-              IconButton(key: Key('cat-rename-${c.id}'), icon: const Icon(Icons.edit_outlined), onPressed: () => _rename(context, ref, c)),
-              IconButton(
-                key: Key('cat-delete-${c.id}'),
-                icon: const Icon(Icons.delete_outline),
-                onPressed: () => ref.read(categoryRepositoryProvider).delete(c.id),
-              ),
-            ])
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: 'Rename',
+                  key: Key('cat-rename-${c.id}'),
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () => _rename(context, ref, c),
+                ),
+                IconButton(
+                  tooltip: 'Delete',
+                  key: Key('cat-delete-${c.id}'),
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => ref.read(categoryRepositoryProvider).delete(c.id),
+                ),
+              ],
+            )
           : null,
     );
   }

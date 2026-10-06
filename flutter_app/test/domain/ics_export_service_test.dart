@@ -116,11 +116,7 @@ void main() {
             startDateTime: '2026-01-01T08:00:00Z',
             endDateTime: '2026-01-01T10:30:00Z',
           ),
-          _makePass(
-            id: 'p2',
-            type: 'stay',
-            title: 'Hotel check-in',
-          ),
+          _makePass(id: 'p2', type: 'stay', title: 'Hotel check-in'),
         ],
       );
 
@@ -163,14 +159,7 @@ void main() {
     test('shareTripIcs formats filename and hands off to shareService.shareFile', () async {
       final fakeShare = _FakeShareService();
       final trip = _makeTrip(
-        passes: [
-          _makePass(
-            id: 'p1',
-            type: 'flight',
-            title: 'Flight',
-            startDateTime: '2026-01-01T08:00:00Z',
-          ),
-        ],
+        passes: [_makePass(id: 'p1', type: 'flight', title: 'Flight', startDateTime: '2026-01-01T08:00:00Z')],
       );
 
       await shareTripIcs(trip: trip, shareService: fakeShare);

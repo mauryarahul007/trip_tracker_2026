@@ -1,4 +1,4 @@
-package com.triptracker.trip_tracker
+package com.triptracker.app
 
 import io.flutter.embedding.android.FlutterActivity
 

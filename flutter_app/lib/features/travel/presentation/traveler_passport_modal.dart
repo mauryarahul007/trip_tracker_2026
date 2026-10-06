@@ -28,9 +28,7 @@ class TravelerPassportModal extends ConsumerWidget {
     final passport = computeTravelerPassport(trips);
 
     return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.88,
-      ),
+      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.88),
       decoration: BoxDecoration(
         color: tokens.bgSurface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -45,10 +43,7 @@ class TravelerPassportModal extends ConsumerWidget {
             child: Container(
               width: 40,
               height: 4,
-              decoration: BoxDecoration(
-                color: tokens.borderColor,
-                borderRadius: BorderRadius.circular(2),
-              ),
+              decoration: BoxDecoration(color: tokens.borderColor, borderRadius: BorderRadius.circular(2)),
             ),
           ),
           const SizedBox(height: 16),
@@ -84,17 +79,14 @@ class TravelerPassportModal extends ConsumerWidget {
                       ),
                       Text(
                         'Lifetime Odyssey',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: tokens.textPrimary,
-                        ),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: tokens.textPrimary),
                       ),
                     ],
                   ),
                 ],
               ),
               IconButton(
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 key: const Key('passport-close'),
                 icon: const Icon(Icons.close, size: 20),
                 onPressed: () {
@@ -117,26 +109,10 @@ class TravelerPassportModal extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _StatItem(
-                  label: 'Trips',
-                  value: '${passport.trips}',
-                  icon: '✈️',
-                ),
-                _StatItem(
-                  label: 'Destinations',
-                  value: '${passport.destinations}',
-                  icon: '📍',
-                ),
-                _StatItem(
-                  label: 'Settled',
-                  value: '${passport.tripsSettled}',
-                  icon: '✓',
-                ),
-                _StatItem(
-                  label: 'Days on Road',
-                  value: '${passport.daysOnTheRoad}',
-                  icon: '🗓️',
-                ),
+                _StatItem(label: 'Trips', value: '${passport.trips}', icon: '✈️'),
+                _StatItem(label: 'Destinations', value: '${passport.destinations}', icon: '📍'),
+                _StatItem(label: 'Settled', value: '${passport.tripsSettled}', icon: '✓'),
+                _StatItem(label: 'Days on Road', value: '${passport.daysOnTheRoad}', icon: '🗓️'),
               ],
             ),
           ),
@@ -201,11 +177,7 @@ class TravelerPassportModal extends ConsumerWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: tokens.textPrimary,
-                              ),
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                             ),
                           ],
                         ),
@@ -230,11 +202,7 @@ class TravelerPassportModal extends ConsumerWidget {
 }
 
 class _StatItem extends StatelessWidget {
-  const _StatItem({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
+  const _StatItem({required this.label, required this.value, required this.icon});
 
   final String label;
   final String value;
@@ -249,19 +217,11 @@ class _StatItem extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           value,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: tokens.textPrimary,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: tokens.textPrimary),
         ),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 10,
-            color: tokens.textSecondary,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 10, color: tokens.textSecondary, fontWeight: FontWeight.w600),
         ),
       ],
     );

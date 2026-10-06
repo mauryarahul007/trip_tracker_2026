@@ -15,11 +15,7 @@ class WeatherBadge extends ConsumerStatefulWidget {
   final dynamic destination;
   final bool compact;
 
-  const WeatherBadge({
-    super.key,
-    required this.destination,
-    this.compact = false,
-  });
+  const WeatherBadge({super.key, required this.destination, this.compact = false});
 
   @override
   ConsumerState<WeatherBadge> createState() => _WeatherBadgeState();
@@ -33,10 +29,7 @@ class _WeatherBadgeState extends ConsumerState<WeatherBadge> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    _spinController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
+    _spinController = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
     _loadWeather();
   }
 
@@ -120,18 +113,11 @@ class _WeatherBadgeState extends ConsumerState<WeatherBadge> with SingleTickerPr
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              weather?.weatherEmoji ?? '⛅',
-              style: const TextStyle(fontSize: 13),
-            ),
+            Text(weather?.weatherEmoji ?? '⛅', style: const TextStyle(fontSize: 13)),
             const SizedBox(width: 4),
             Text(
               weather != null ? '${weather.tempC}°C' : '...',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: tokens.textPrimary,
-              ),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tokens.textPrimary),
             ),
           ],
         ),
@@ -149,10 +135,7 @@ class _WeatherBadgeState extends ConsumerState<WeatherBadge> with SingleTickerPr
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            weather?.weatherEmoji ?? '⛅',
-            style: const TextStyle(fontSize: 16),
-          ),
+          Text(weather?.weatherEmoji ?? '⛅', style: const TextStyle(fontSize: 16)),
           const SizedBox(width: 6),
           Column(
             mainAxisSize: MainAxisSize.min,
@@ -160,20 +143,10 @@ class _WeatherBadgeState extends ConsumerState<WeatherBadge> with SingleTickerPr
             children: [
               Text(
                 weather != null ? '${weather.tempC}°C · ${weather.condition}' : 'Checking weather...',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: tokens.textPrimary,
-                ),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: tokens.textPrimary),
               ),
               if (weather != null && weather.city.isNotEmpty)
-                Text(
-                  weather.city,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: tokens.textMuted,
-                  ),
-                ),
+                Text(weather.city, style: TextStyle(fontSize: 10, color: tokens.textMuted)),
             ],
           ),
           const SizedBox(width: 6),
@@ -185,11 +158,7 @@ class _WeatherBadgeState extends ConsumerState<WeatherBadge> with SingleTickerPr
               padding: const EdgeInsets.all(4),
               child: RotationTransition(
                 turns: _spinController,
-                child: Icon(
-                  AppIcons.sync,
-                  size: 14,
-                  color: tokens.primaryAccent,
-                ),
+                child: Icon(AppIcons.sync, size: 14, color: tokens.primaryAccent),
               ),
             ),
           ),

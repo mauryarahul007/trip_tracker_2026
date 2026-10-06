@@ -85,16 +85,10 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
       isDestructive: true,
     );
     if (!ok || !mounted) return;
-    final repo = ref.read(
-      tripRepositoryProvider,
-    ); // captured: screen may be gone when the snackbar closes
+    final repo = ref.read(tripRepositoryProvider); // captured: screen may be gone when the snackbar closes
     setState(() => _hidden.add(t.id));
     unawaited(
-      UndoSnackbar.show(
-        context: context,
-        message: l10n.tripDeleted,
-        onUndo: () {},
-      ).closed.then((reason) {
+      UndoSnackbar.show(context: context, message: l10n.tripDeleted, onUndo: () {}).closed.then((reason) {
         // Only an explicit UNDO keeps the trip; timeout/dismiss/replace commits.
         if (reason == SnackBarClosedReason.action) {
           if (mounted) setState(() => _hidden.remove(t.id));
@@ -106,21 +100,14 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   }
 
   Widget _card(Trip t, bool isOwner) {
-    final card = TripCard(
-      trip: t,
-      now: _now,
-      onTap: () => _open(t),
-      onMenu: isOwner ? () => _delete(t) : null,
-    );
+    final card = TripCard(trip: t, now: _now, onTap: () => _open(t), onMenu: isOwner ? () => _delete(t) : null);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: isOwner
           ? SwipeableRow(
               itemKey: ValueKey('trip-${t.id}'),
               actionIcon: t.archived ? AppIcons.undo : Icons.archive_outlined,
-              actionLabel: t.archived
-                  ? context.l10n.tripUnarchive
-                  : context.l10n.tripArchive,
+              actionLabel: t.archived ? context.l10n.tripUnarchive : context.l10n.tripArchive,
               backgroundColor: context.tokens.secondaryAccent,
               onDismissed: () => _setArchived(t, !t.archived),
               child: card,
@@ -171,39 +158,25 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
               initialValue: sort,
               onSelected: ref.read(tripSortProvider.notifier).set,
               itemBuilder: (_) => [
-                PopupMenuItem(
-                  value: TripSort.date,
-                  child: Text(l10n.tripsSortDate),
-                ),
-                PopupMenuItem(
-                  value: TripSort.name,
-                  child: Text(l10n.tripsSortName),
-                ),
+                PopupMenuItem(value: TripSort.date, child: Text(l10n.tripsSortDate)),
+                PopupMenuItem(value: TripSort.name, child: Text(l10n.tripsSortName)),
               ],
             ),
             PopupMenuButton<String>(
               tooltip: l10n.navSettings,
               icon: const Icon(AppIcons.settings),
               onSelected: (v) {
+                if (v == 'settings') context.push('/settings');
                 if (v == 'signout') ref.read(authRepositoryProvider).signOut();
                 if (v == 'join') showJoinCodeSheet(context);
-              if (v == 'delete') context.push('/delete-account');
+                if (v == 'delete') context.push('/delete-account');
                 if (v == 'smoke') context.push('/smoke-test');
               },
               itemBuilder: (_) => [
-                PopupMenuItem(
-                  value: 'signout',
-                  child: Text(l10n.actionSignOut),
-                ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Text(l10n.authDeleteAccount),
-                ),
-                if (!AppEnv.current.isProd)
-                  PopupMenuItem(
-                    value: 'smoke',
-                    child: Text(l10n.smokeTestTitle),
-                  ),
+                PopupMenuItem(key: const Key('menu-settings'), value: 'settings', child: Text(l10n.navSettings)),
+                PopupMenuItem(value: 'signout', child: Text(l10n.actionSignOut)),
+                PopupMenuItem(value: 'delete', child: Text(l10n.authDeleteAccount)),
+                if (!AppEnv.current.isProd) PopupMenuItem(value: 'smoke', child: Text(l10n.smokeTestTitle)),
               ],
             ),
           ],
@@ -236,9 +209,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                               height: 96,
                               decoration: BoxDecoration(
                                 color: tokens.bgSurface,
-                                borderRadius: BorderRadius.circular(
-                                  tokens.radiusMd,
-                                ),
+                                borderRadius: BorderRadius.circular(tokens.radiusMd),
                               ),
                             ),
                           ),
@@ -252,20 +223,13 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                         icon: AppIcons.alert,
                         title: l10n.tripsLoadError,
                         subtitle: l10n.errorGenericMessage,
-                        action: AppButton(
-                          label: l10n.actionRetry,
-                          onPressed: () => ref.invalidate(tripsProvider),
-                        ),
+                        action: AppButton(label: l10n.actionRetry, onPressed: () => ref.invalidate(tripsProvider)),
                       ),
                     ],
                   ),
                   data: (data) {
-                    final active = data.active
-                        .where((t) => !_hidden.contains(t.id))
-                        .toList();
-                    final archived = data.archived
-                        .where((t) => !_hidden.contains(t.id))
-                        .toList();
+                    final active = data.active.where((t) => !_hidden.contains(t.id)).toList();
+                    final archived = data.archived.where((t) => !_hidden.contains(t.id)).toList();
                     if (data.total == 0) {
                       return ListView(
                         physics: const AlwaysScrollableScrollPhysics(),
@@ -277,10 +241,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                             action: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                AppButton(
-                                  label: l10n.actionCreateTrip,
-                                  onPressed: _create,
-                                ),
+                                AppButton(label: l10n.actionCreateTrip, onPressed: _create),
                                 const SizedBox(height: 8),
                                 AppButton(
                                   label: l10n.tripsJoinWithCode,
@@ -317,9 +278,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                               l10n.tripsArchivedSection(archived.length),
                               style: TextStyle(color: tokens.textSecondary),
                             ),
-                            children: [
-                              for (final t in archived) _card(t, owner(t)),
-                            ],
+                            children: [for (final t in archived) _card(t, owner(t))],
                           ),
                       ],
                     );

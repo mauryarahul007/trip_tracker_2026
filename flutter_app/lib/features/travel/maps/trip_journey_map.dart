@@ -31,13 +31,7 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
   Widget build(BuildContext context) {
     final geotagged =
         widget.expenses
-            .where(
-              (e) =>
-                  e.deletedAt == null &&
-                  e.location != null &&
-                  e.location!.lat != 0.0 &&
-                  e.location!.lng != 0.0,
-            )
+            .where((e) => e.deletedAt == null && e.location != null && e.location!.lat != 0.0 && e.location!.lng != 0.0)
             .toList()
           ..sort((a, b) {
             final dCmp = a.date.compareTo(b.date);
@@ -53,16 +47,9 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.map_outlined,
-                size: 40,
-                color: Colors.blueGrey.shade300,
-              ),
+              Icon(Icons.map_outlined, size: 40, color: Colors.blueGrey.shade300),
               const SizedBox(height: 8),
-              Text(
-                'No geotagged expenses yet',
-                style: TextStyle(color: Colors.blueGrey.shade600, fontSize: 13),
-              ),
+              Text('No geotagged expenses yet', style: TextStyle(color: Colors.blueGrey.shade600, fontSize: 13)),
               const SizedBox(height: 4),
               Text(
                 'Add locations to expenses to see your trip timeline map',
@@ -106,12 +93,7 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
 
     final routes = <MapRouteLine>[
       if (waypoints.length >= 2)
-        MapRouteLine(
-          id: 'journey_path',
-          coordinates: waypoints,
-          color: const Color(0xFF17B6A6),
-          strokeWidth: 3.0,
-        ),
+        MapRouteLine(id: 'journey_path', coordinates: waypoints, color: const Color(0xFF17B6A6), strokeWidth: 3.0),
     ];
 
     final firstLoc = geotagged.first.location!;
@@ -136,9 +118,7 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
               bottom: 16,
               child: Card(
                 elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Row(
@@ -162,20 +142,14 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
                           children: [
                             Text(
                               _selectedExpense!.title,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             if (_selectedExpense!.location?.placeName != null)
                               Text(
                                 _selectedExpense!.location!.placeName!,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.blueGrey,
-                                ),
+                                style: const TextStyle(fontSize: 11, color: Colors.blueGrey),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -188,24 +162,15 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
                         children: [
                           Text(
                             '$currencySymbol${formatMoneyNumber(_selectedExpense!.amount)}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                           ),
-                          Text(
-                            _selectedExpense!.date,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey,
-                            ),
-                          ),
+                          Text(_selectedExpense!.date, style: const TextStyle(fontSize: 10, color: Colors.grey)),
                         ],
                       ),
                       IconButton(
+                        tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                         icon: const Icon(Icons.close, size: 16),
-                        onPressed: () =>
-                            setState(() => _selectedExpense = null),
+                        onPressed: () => setState(() => _selectedExpense = null),
                       ),
                     ],
                   ),

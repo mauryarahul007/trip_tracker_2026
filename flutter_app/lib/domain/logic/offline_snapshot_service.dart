@@ -64,8 +64,7 @@ class SnapshotValidationResult {
 String getSnapshotFilename(String tripName, [DateTime? date]) {
   final safeName = tripName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '-');
   final now = date ?? DateTime.now();
-  final dateStr =
-      '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   return 'triptracker-$safeName-$dateStr.triptracker';
 }
 
@@ -105,10 +104,7 @@ SnapshotValidationResult validateOfflineSnapshot(String jsonString) {
   }
 
   if (jsonString.length > 10 * 1024 * 1024) {
-    return const SnapshotValidationResult(
-      valid: false,
-      error: 'Backup file exceeds maximum allowed size (10MB).',
-    );
+    return const SnapshotValidationResult(valid: false, error: 'Backup file exceeds maximum allowed size (10MB).');
   }
 
   Object? parsed;
@@ -119,10 +115,7 @@ SnapshotValidationResult validateOfflineSnapshot(String jsonString) {
   }
 
   if (parsed is! Map) {
-    return const SnapshotValidationResult(
-      valid: false,
-      error: 'Root object must be a valid JSON dictionary.',
-    );
+    return const SnapshotValidationResult(valid: false, error: 'Root object must be a valid JSON dictionary.');
   }
 
   final raw = Map<String, dynamic>.from(parsed);
@@ -136,10 +129,7 @@ SnapshotValidationResult validateOfflineSnapshot(String jsonString) {
   }
 
   if (trips.length > 50) {
-    return const SnapshotValidationResult(
-      valid: false,
-      error: 'Import contains too many trips (max 50).',
-    );
+    return const SnapshotValidationResult(valid: false, error: 'Import contains too many trips (max 50).');
   }
 
   final firstTrip = trips.first;

@@ -25,8 +25,9 @@ class AnimatedNumber extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveStyle = (style ?? Theme.of(context).textTheme.titleLarge)
-        ?.copyWith(fontFeatures: AppTypography.tabularFigures);
+    final effectiveStyle = (style ?? Theme.of(context).textTheme.titleLarge)?.copyWith(
+      fontFeatures: AppTypography.tabularFigures,
+    );
 
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0.0, end: value),

@@ -25,7 +25,9 @@ void main() {
   });
 
   test('attribution: utm_* or ref as source, trimmed to 80 chars, first match wins', () {
-    final t = routeForDeepLink(Uri.parse('https://x/join/ABC123?utm_source=wa&utm_medium=chat&utm_campaign=${'c' * 100}&ref=ignored'))!;
+    final t = routeForDeepLink(
+      Uri.parse('https://x/join/ABC123?utm_source=wa&utm_medium=chat&utm_campaign=${'c' * 100}&ref=ignored'),
+    )!;
     expect(t.attribution['utm_source'], 'wa');
     expect(t.attribution['utm_medium'], 'chat');
     expect(t.attribution['utm_campaign'], 'c' * 80);

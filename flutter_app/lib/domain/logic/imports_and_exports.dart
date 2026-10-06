@@ -18,14 +18,14 @@ class ParsedSplitwiseRow {
   });
 
   Map<String, dynamic> toJson() => {
-        'date': date,
-        'description': description,
-        'categoryLabel': categoryLabel,
-        'cost': cost % 1 == 0 ? cost.toInt() : cost,
-        'currency': currency,
-        'isPayment': isPayment,
-        'nets': nets.map((k, v) => MapEntry(k, v % 1 == 0 ? v.toInt() : v)),
-      };
+    'date': date,
+    'description': description,
+    'categoryLabel': categoryLabel,
+    'cost': cost % 1 == 0 ? cost.toInt() : cost,
+    'currency': currency,
+    'isPayment': isPayment,
+    'nets': nets.map((k, v) => MapEntry(k, v % 1 == 0 ? v.toInt() : v)),
+  };
 }
 
 class SplitwiseParseResult {
@@ -33,17 +33,13 @@ class SplitwiseParseResult {
   final List<String> personNames;
   final List<String> errors;
 
-  const SplitwiseParseResult({
-    required this.rows,
-    required this.personNames,
-    required this.errors,
-  });
+  const SplitwiseParseResult({required this.rows, required this.personNames, required this.errors});
 
   Map<String, dynamic> toJson() => {
-        'rows': rows.map((r) => r.toJson()).toList(),
-        'personNames': personNames,
-        'errors': errors,
-      };
+    'rows': rows.map((r) => r.toJson()).toList(),
+    'personNames': personNames,
+    'errors': errors,
+  };
 }
 
 List<List<String>> parseCsvRecords(String text) {
@@ -173,34 +169,27 @@ SplitwiseParseResult parseSplitwiseCsv(String csv) {
     final hay = '$catLabel $description'.toLowerCase();
     final isPayment = RegExp(r'\bpayment\b').hasMatch(hay) || hay.contains('settled up') || hay.contains('settle up');
 
-    rows.add(ParsedSplitwiseRow(
-      date: rawDate,
-      description: description.isNotEmpty ? description : 'Untitled',
-      categoryLabel: catLabel,
-      cost: double.parse(cost.toStringAsFixed(2)),
-      currency: cur.isNotEmpty ? cur : 'INR',
-      isPayment: isPayment,
-      nets: nets,
-    ));
+    rows.add(
+      ParsedSplitwiseRow(
+        date: rawDate,
+        description: description.isNotEmpty ? description : 'Untitled',
+        categoryLabel: catLabel,
+        cost: double.parse(cost.toStringAsFixed(2)),
+        currency: cur.isNotEmpty ? cur : 'INR',
+        isPayment: isPayment,
+        nets: nets,
+      ),
+    );
   }
 
-  return SplitwiseParseResult(
-    rows: rows,
-    personNames: personCols.map((p) => p.key).toList(),
-    errors: errors,
-  );
+  return SplitwiseParseResult(rows: rows, personNames: personCols.map((p) => p.key).toList(), errors: errors);
 }
 
 Map<String, dynamic> validateAndSanitizeBackup(dynamic backup) {
   if (backup is! String) {
-    return {
-      'valid': false,
-      'error': 'Empty or invalid JSON payload.',
-    };
+    return {'valid': false, 'error': 'Empty or invalid JSON payload.'};
   }
-  return {
-    'valid': true,
-  };
+  return {'valid': true};
 }
 
 String generateTripIcs(dynamic trip) {

@@ -182,3 +182,123 @@ workflows:
       - flutter_app/build/ios/iphonesimulator/*.app
       - flutter_app/build/ios/iphoneos/*.app
 
+
+  # ---------------------------------------------------------------------------
+  # Phase 12.7: Flutter release pipelines. Tagged releases only (flutter-v*), never on push.
+  # Required Codemagic secrets (nothing is stored in the repo):
+  #   group flutter_release_env: PROD_ENV_JSON_B64 (base64 of env/prod.json: SUPABASE_*, GOOGLE_* ids)
+  #   group flutter_android_signing: TT_KEYSTORE_PATH (file secret path), TT_KEYSTORE_PASSWORD,
+  #                                  TT_KEY_ALIAS, TT_KEY_PASSWORD, GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+  #   iOS: App Store Connect API key integration `codemagic_asc_api_key`; automatic signing for
+  #        com.triptracker.app. Firebase files must be present (see contract/PUSH_SETUP.md section 5).
+  # Manual promotion steps: docs/flutter-migration/store/RELEASE_PIPELINE.md
+  # ---------------------------------------------------------------------------
+  flutter-android-release:
+    name: Flutter Android Release (signed AAB to Play internal)
+    max_build_duration: 45
+    instance_type: linux_x2
+    environment:
+      groups:
+        - flutter_release_env
+        - flutter_android_signing
+      flutter: stable
+      java: 21
+      node: 22
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'flutter-v*'
+          include: true
+    scripts:
+      - name: Get packages
+        script: cd flutter_app && flutter pub get
+      - name: Quality gate (format, analyze, tests)
+        script: |
+          cd flutter_app
+          dart format --output=none --set-exit-if-changed .
+          flutter analyze
+          flutter test
+      - name: Fixtures match the web source
+        script: |
+          node scripts/export-golden-fixtures.mjs
+          git diff --exit-code -- docs/flutter-migration/fixtures flutter_app/lib/domain/logic
+      - name: Write prod env (git-ignored file)
+        script: echo "$PROD_ENV_JSON_B64" | base64 --decode > flutter_app/env/prod.json
+      - name: Build signed App Bundle (obfuscated)
+        script: |
+          cd flutter_app
+          flutter build appbundle --release --flavor prod -t lib/main.dart \
+            --dart-define-from-file=env/prod.json \
+            --obfuscate --split-debug-info=build/symbols \
+            $(tool/release_version.sh)
+      - name: Refuse a debug-signed or secret-bearing artifact
+        script: |
+          cd flutter_app
+          aab=build/app/outputs/bundle/prodRelease/app-prod-release.aab
+          tool/check_release_signing.sh "$aab"
+          tool/scan_binary_secrets.sh "$aab"
+    artifacts:
+      - flutter_app/build/app/outputs/bundle/prodRelease/*.aab
+      - flutter_app/build/symbols/**
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
+
+  flutter-ios-release:
+    name: Flutter iOS Release (signed IPA to TestFlight)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: codemagic_asc_api_key
+    environment:
+      groups:
+        - flutter_release_env
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.triptracker.app
+      flutter: stable
+      xcode: latest
+      node: 22
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'flutter-v*'
+          include: true
+    scripts:
+      - name: Get packages
+        script: cd flutter_app && flutter pub get
+      - name: Quality gate (format, analyze, tests)
+        script: |
+          cd flutter_app
+          dart format --output=none --set-exit-if-changed .
+          flutter analyze
+          flutter test
+      - name: Write prod env (git-ignored file)
+        script: echo "$PROD_ENV_JSON_B64" | base64 --decode > flutter_app/env/prod.json
+      - name: Install pods
+        script: cd flutter_app/ios && pod install
+      - name: Set up code signing
+        script: xcode-project use-profiles --project flutter_app/ios/Runner.xcodeproj
+      - name: Build signed IPA (obfuscated)
+        script: |
+          cd flutter_app
+          flutter build ipa --release -t lib/main.dart \
+            --dart-define-from-file=env/prod.json \
+            --obfuscate --split-debug-info=build/symbols \
+            --export-options-plist=/Users/builder/export_options.plist \
+            $(tool/release_version.sh)
+      - name: Refuse an artifact that carries secrets
+        script: |
+          cd flutter_app
+          tool/scan_binary_secrets.sh build/ios/ipa/*.ipa
+    artifacts:
+      - flutter_app/build/ios/ipa/*.ipa
+      - flutter_app/build/symbols/**
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

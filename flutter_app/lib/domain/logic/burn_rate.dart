@@ -12,19 +12,14 @@ class BurnRateInsight {
   });
 
   Map<String, dynamic> toJson() => {
-        'daysElapsed': daysElapsed,
-        'daysTotal': daysTotal,
-        'dailyAverage': dailyAverage % 1 == 0 ? dailyAverage.toInt() : dailyAverage,
-        'projectedTotal': projectedTotal % 1 == 0 ? projectedTotal.toInt() : projectedTotal,
-      };
+    'daysElapsed': daysElapsed,
+    'daysTotal': daysTotal,
+    'dailyAverage': dailyAverage % 1 == 0 ? dailyAverage.toInt() : dailyAverage,
+    'projectedTotal': projectedTotal % 1 == 0 ? projectedTotal.toInt() : projectedTotal,
+  };
 }
 
-BurnRateInsight? computeBurnRateInsight(
-  String startDate,
-  String endDate,
-  double totalSpent, [
-  DateTime? now,
-]) {
+BurnRateInsight? computeBurnRateInsight(String startDate, String endDate, double totalSpent, [DateTime? now]) {
   final startParts = startDate.split('-').map(int.parse).toList();
   final endParts = endDate.split('-').map(int.parse).toList();
   final start = DateTime.utc(startParts[0], startParts[1], startParts[2]);

@@ -56,8 +56,14 @@ final tripListsProvider = Provider<AsyncValue<TripLists>>((ref) {
   return ref.watch(tripsProvider).whenData((all) {
     final sorted = sortTripModels(all, mode).where((t) => tripMatches(t, query)).toList();
     return TripLists(
-      active: [for (final t in sorted) if (!t.archived) t],
-      archived: [for (final t in sorted) if (t.archived) t],
+      active: [
+        for (final t in sorted)
+          if (!t.archived) t,
+      ],
+      archived: [
+        for (final t in sorted)
+          if (t.archived) t,
+      ],
       total: all.length,
     );
   });
@@ -75,19 +81,24 @@ class SyncStatus {
 final syncStatusProvider = StreamProvider<SyncStatus>((ref) {
   final a = ref.watch(authStateProvider);
   if (!AppEnv.current.hasBackend || !a.isAuthenticated || a.isLocalOnly) return Stream.value(const SyncStatus());
-  return ref.watch(outboxStoreProvider).watchAll().map((items) => SyncStatus(
-        pending: items.where((i) => i.status != OutboxStatus.poison).length,
-        issues: items.where((i) => i.status == OutboxStatus.poison).length,
-      ));
+  return ref
+      .watch(outboxStoreProvider)
+      .watchAll()
+      .map(
+        (items) => SyncStatus(
+          pending: items.where((i) => i.status != OutboxStatus.poison).length,
+          issues: items.where((i) => i.status == OutboxStatus.poison).length,
+        ),
+      );
 });
 
-final syncItemsProvider = StreamProvider<List<OutboxItem>>(
-  (ref) => ref.watch(outboxStoreProvider).watchAll(),
-);
+final syncItemsProvider = StreamProvider<List<OutboxItem>>((ref) => ref.watch(outboxStoreProvider).watchAll());
 
 /// Pull-to-refresh: push then pull when this account syncs; no-op otherwise.
-final refreshTripsProvider = Provider<Future<void> Function()>((ref) => () async {
-      final a = ref.read(authStateProvider);
-      if (!AppEnv.current.hasBackend || !a.isAuthenticated || a.isLocalOnly) return;
-      await ref.read(syncCoordinatorProvider).syncNow();
-    });
+final refreshTripsProvider = Provider<Future<void> Function()>(
+  (ref) => () async {
+    final a = ref.read(authStateProvider);
+    if (!AppEnv.current.hasBackend || !a.isAuthenticated || a.isLocalOnly) return;
+    await ref.read(syncCoordinatorProvider).syncNow();
+  },
+);

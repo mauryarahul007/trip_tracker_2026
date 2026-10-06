@@ -61,7 +61,9 @@ SettlementShareCardLayout settlementShareCardLayout(SettlementShareCardInput i, 
     'Tracked with Trip Tracker',
   ];
   // The file name slug falls back to lowercase 'trip' (the headline uses 'Trip').
-  final slug = (i.tripName.isEmpty ? 'trip' : i.tripName).replaceAll(RegExp(r'\s+'), '_').replaceAll(RegExp(r'[^\w-]'), '');
+  final slug = (i.tripName.isEmpty ? 'trip' : i.tripName)
+      .replaceAll(RegExp(r'\s+'), '_')
+      .replaceAll(RegExp(r'[^\w-]'), '');
   return SettlementShareCardLayout(
     width: 1080,
     height: hasUpi ? 720 : 640,

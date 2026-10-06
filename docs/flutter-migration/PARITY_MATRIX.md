@@ -22,7 +22,7 @@
 | `/share/:token` | `src/components/TripShareView.tsx` | `enableTripShareLink` | `core` | T1 | Phase 6 | `partial` (tests only) | `## FEAT-078` |
 | `/live/:token` | `src/components/LiveLocationShareModal.tsx` | `enableLiveLocationShare` | `travel` | T2 | Phase 9 | `done` | Phase 9B shipped in ADR 269 (`LiveScreen`, `/live/:token`) |
 | App Shell / Router | `src/App.tsx`, `src/components/NavTabs.tsx` | `enableTabBackHistory`, `enableDeepLinkedTabs` | `core` | T1 | Phase 2, 6 | `partial` | `## Navigation, dialogs & sync UX pass` |
-| Bottom Nav Tabs | `src/components/NavTabs.tsx`, `src/utils/tripTabs.ts` | `enableChatFirstNav` | `trip` | T1 | Phase 2, 6, 8 | `partial` (expenses, ledger, members, notes, and chat-first chat are built; settings is a stub) | `## FLUTTER-P8` |
+| Bottom Nav Tabs | `src/components/NavTabs.tsx`, `src/utils/tripTabs.ts` | `enableChatFirstNav` | `trip` | T1 | Phase 2, 6, 8 | `partial` (expenses, ledger, members, notes, and chat-first chat are built; settings built in Phase 10) | `## FLUTTER-P8` |
 
 ---
 
@@ -65,7 +65,7 @@
 | Feature / Screen | Web Source File(s) | Feature Flag Key | Pack | Tier | Flutter Phase | Status | Test-Steps Anchor in `FEATURE_TEST_STEPS.md` |
 |---|---|---|---|---|---|---|---|
 | Member Money Row | `src/components/MembersGroupsTab.tsx` | `enableMemberMoneyRow` | `trip` | T1 | Phase 8 | `partial` (balance line on the roster; widget-tested) | `## FLUTTER-P8` |
-| Notification Groups | `src/components/NotificationsPanel.tsx`| `enableNotificationGrouping` | `trip` | T1 | Phase 10| `todo` | `## UX-POLISH3` |
+| Notification Groups | `src/components/NotificationsPanel.tsx`| `enableNotificationGrouping` | `trip` | T1 | Phase 10| `done` (P10 slice A; headless only) | `## UX-POLISH3` |
 | Voice Expense Input | `src/components/VoiceExpenseModal.tsx` | `enableVoiceInput` | `trip` | T1 | Phase 9 | `done` | Phase 9C shipped in ADR 270 (`speech_recognition_gateway`, mic button in `QuickAddSheet`) |
 | Receipt Image Upload | `src/components/ReceiptModal.tsx` | `enableReceiptUpload` | `trip` | T1 | Phase 7 | `done` | `## FLUTTER-P7-LOOP` |
 | Notes & Checklist | `src/components/ChecklistNotesTab.tsx` | `enableNotesAndChecklist` | `trip` | T1 | Phase 8 | `partial` (collab RPC; cursor kept while typing) | `## FLUTTER-P8` |
@@ -76,7 +76,7 @@
 | Currency FX Overrides| `src/components/FxRatesModal.tsx` | `enableCurrencyFx` | `trip` | T1 | Phase 7 | `done` | `## FLUTTER-P7-LOOP` |
 | Expense Photo Link | `src/components/ExpenseForm.tsx` | `enableExpensePhotoLinking` | `trip` | T1 | Phase 7 | `todo` | `## FEAT-076` |
 | Expense Disputes | `src/components/DisputeModal.tsx` | `enableExpenseDisputes` | `trip` | T1 | Phase 7 | `done` | `## FLUTTER-P7-EXPENSES` |
-| Digest Notifications| `src/components/DigestSettingsModal.tsx`| `enableDigestNotifications` | `trip` | T1 | Phase 10| `todo` | `## FEAT-078` |
+| Digest Notifications| `src/components/DigestSettingsModal.tsx`| `enableDigestNotifications` | `trip` | T1 | Phase 10| `done` (P10; headless only, server prefs unverified) | `## FEAT-078` |
 | Member Last Seen | `src/components/TripChatPanel.tsx` | `enableMemberLastSeen` | `trip` | T1 | Phase 8 | `deferred` | B-089 |
 
 ---
@@ -107,7 +107,7 @@
 | Itemized Receipt Split| `src/components/ItemizedSplitModal.tsx`| `enableItemizedSplit` | `pro` | T3 | Phase 7 | `done` | `## FLUTTER-P7-FORM-LEDGER` |
 | On-Device Receipt OCR| `src/components/ReceiptOcrModal.tsx` | `enableReceiptOcr` | `pro` | T3 | Phase 9 | `done` | Phase 9C shipped in ADR 270 (`receipt_ocr_service`, `OcrGateway`, `ReceiptOcrModal`) |
 | Multi-Trip Analytics | `src/components/AnalyticsTab.tsx` | `enableMultiTripAnalytics` | `pro` | T3 | Phase 9 | `deferred` | T3 charts skipped; no `fl_chart` (B-070) |
-| Biometric App Lock | `src/utils/webAuthn.ts` | `enableBiometricAuth` | `pro` | T3 | Phase 10| `todo` | `## Shared prep` |
+| Biometric App Lock | `src/utils/webAuthn.ts` | `enableBiometricAuth` | `pro` | T3 | Phase 10| `partial` (settings toggle built; real device unverified) | `## Shared prep` |
 | Document Vault | `src/components/DocumentVaultModal.tsx` | `enableDocumentVault` | `pro` | T3 | Phase 9 | `deferred` | B-020; not in the Phase 8 build |
 | Burn Rate Insights | `src/components/BurnRateInsightCard.tsx`| `enableBurnRateInsight` | `pro` | T3 | Phase 7 | `deferred` | T3 charts skipped; no `fl_chart` in this slice (B-070) |
 | Date Range Members | `src/components/MemberDateModal.tsx` | `enableDateRangeMembership` | `pro` | T3 | Phase 8 | `deferred` | B-083 |
@@ -115,7 +115,7 @@
 | Split Exclusion Dflts| `src/components/SplitExclusionModal.tsx`| `enableSplitExclusionDefaults` | `pro` | T3 | Phase 7 | `todo` | `## FEAT-079` |
 | Multi-Payer Expenses | `src/components/MultiPayerForm.tsx` | `enableMultiPayerExpenses` | `pro` | T3 | Phase 7 | `done` | `## FLUTTER-P7-FORM-LEDGER` |
 | AMOLED Pure Black | `src/index.css` | `enableAmoledTheme` | `pro` | T3 | Phase 2, 10| `todo` | `## FEAT-079` |
-| Quiet Hours Window | `src/components/QuietHoursModal.tsx` | `enableQuietHours` | `pro` | T3 | Phase 10| `todo` | `## FEAT-078` |
+| Quiet Hours Window | `src/components/QuietHoursModal.tsx` | `enableQuietHours` | `pro` | T3 | Phase 10| `done` (P10; headless only) | `## FEAT-078` |
 | Splitwise CSV Import | `src/components/SplitwiseImportModal.tsx`| `enableSplitwiseImport` | `pro` | T3 | Phase 7 | `done` | `## FLUTTER-P7-LOOP` |
 | Trip Stack Alphabetical| `src/components/TripStack.tsx` | `enableTripStackSort` | `pro` | T3 | Phase 6 | `todo` | `## FEAT-TRIPSORT` |
 | Sync Queue Inspector | `src/components/SyncQueueModal.tsx` | `enableSyncQueueInspector` | `pro` | T3 | Phase 10| `todo` | `## Navigation, dialogs & sync UX pass` |
@@ -144,14 +144,14 @@
 | Chat Unread on Notes | `src/components/NavTabs.tsx` | `enableChatUnreadOnNotes` | `labs` | T4 | Phase 8 | `partial` (unread follows `enableTripChat`, not this flag) | `## FLUTTER-P8` |
 | Keyword Tagging | `src/utils/categoryKeywords.ts` | `enableKeywordTagging` | `labs` | T4 | Phase 7 | `todo` | `## Shared prep` |
 | Demo Data Seeding | `src/components/DemoSeedModal.tsx` | `enableDemoSeeding` | `labs` | T4 | Phase 10| `todo` | `## Shared prep` |
-| Feature Suggestions | `src/components/FeatureRequestModal.tsx`| `enableFeatureSuggestions` | `labs` | T4 | Phase 10| `todo` | `## Shared prep` |
+| Feature Suggestions | `src/components/FeatureRequestModal.tsx`| `enableFeatureSuggestions` | `labs` | T4 | Phase 10| `done` (P10; headless only) | `## Shared prep` |
 | Achievements Badges | `src/components/AchievementsModal.tsx` | `enableAchievements` | `labs` | T4 | Phase 9 | `done` | Phase 9D shipped in ADR 271 (`achievements_service`, `AchievementBadgeModal`) |
 | Offline Snapshot | `src/utils/offlineSnapshot.ts` | `enableOfflineSnapshot` | `labs` | T4 | Phase 9 | `done` | Phase 9C shipped in ADR 270 (`offline_snapshot_service`, `OfflineSnapshotModal`) |
 | Closeout Pulse Mood | `src/components/TripCloseoutModal.tsx` | `enableCloseoutPulse` | `labs` | T4 | Phase 7 | `done` | `## FLUTTER-P7-LOOP` |
 | Category Reorder | `src/components/CategoryOrderModal.tsx` | `enableCategoryReorder` | `labs` | T4 | Phase 7 | `done` | `## FLUTTER-P7-LOOP` |
-| What's New Hub | `src/components/WhatsNewModal.tsx` | `enableWhatsNewHub` | `labs` | T4 | Phase 10| `todo` | `## FEAT-080` |
+| What's New Hub | `src/components/WhatsNewModal.tsx` | `enableWhatsNewHub` | `labs` | T4 | Phase 10| `done` (P10; changelog sheet) | `## FEAT-080` |
 | Traveler Passport | `src/components/TravelerPassportModal.tsx`| `enableTravelerPassport` | `labs` | T4 | Phase 9 | `done` | Phase 9D shipped in ADR 271 (`traveler_passport_service`, `TravelerPassportModal`, `PassportStamp`) |
-| Growth Telemetry | `src/services/growthApi.ts` | `enableGrowthTelemetry` | `labs` | T4 | Phase 10| `todo` | `## FEAT-GROWTH2` |
+| Growth Telemetry | `src/services/growthApi.ts` | `enableGrowthTelemetry` | `labs` | T4 | Phase 10| `done` (P10; headless only) | `## FEAT-GROWTH2` |
 | Lifecycle Nudges | `src/services/growthApi.ts` | `enableLifecycleNudges` | `labs` | T4 | Phase 10| `todo` | `## FEAT-GROWTH2` |
 
 ---

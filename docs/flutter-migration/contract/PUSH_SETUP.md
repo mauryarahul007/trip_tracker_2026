@@ -123,3 +123,23 @@ The [`send-push`](file:///home/rahulm/Documents/trip_tracker_2026/supabase/funct
 1. **Dead Token Pruning:** `send-push` catches FCM error status `UNREGISTERED` or `NOT_FOUND` and immediately deletes the stale token row from `public.device_push_tokens`.
 2. **Active Timestamping:** Each successful send updates `last_seen_at = now()`.
 3. **Dual-Install Coexistence:** If a user has both Capacitor and Flutter installed during migration testing, both devices receive notification pings with their respective platform-appropriate payloads.
+
+---
+
+## 5. Flutter wiring (Phase 10)
+
+What the app does, in code (`flutter_app/lib/core/platform/push_gateway.dart`, `data/push/push_service.dart`, `features/notifications/`):
+
+- **No config, no push.** `Firebase.initializeApp()` runs without options; if `google-services.json` / `GoogleService-Info.plist` are missing it throws, the gateway reports `unavailable`, Settings says "Not available in this build", and nothing else changes.
+- **Permission** is asked once, after the first meaningful action (a trip created or an expense saved), with a short explanation first. Never at launch. Settings, Notification preferences, has a tile to turn it on later.
+- **Registration**: `register_device_push_token(p_fcm_token, p_platform, 'flutter', p_app_version)` on sign-in (when permission is granted) and on token rotation. **Sign-out** deletes this device's `device_push_tokens` row and the FCM token.
+- **Tap routing**: `routeForPush` accepts the payload `route` only if it is one of our `/trip/<id>/<tab>` paths; otherwise it rebuilds the path from `type` + `tripId`. A tap before sign-in is parked and replayed after.
+- **Foreground**: iOS shows badge and sound only; the realtime in-app banner is the visible alert (avoids two banners for one event). This differs from the Capacitor config (`alert` on) on purpose.
+- **Android channel** `trip_tracker_high_importance` is created at start so background pushes have a channel.
+- **Pass reminders** are local notifications (`flutter_local_notifications`, inexact alarms so no exact-alarm permission). The full set is recomputed whenever trips, passes, the switch or quiet hours change.
+- **Sending**: after an expense reaches the server the client calls `send-push` (`expense_added` to the other linked members, `settlement_confirmation_requested` to the person paid); joining a trip sends `member_joined`.
+
+### Still manual (not in the repo)
+1. Put `google-services.json` and `GoogleService-Info.plist` in place (see section 1) and add the `com.google.gms.google-services` Gradle plugin to `android/` (not added: it fails the build without the file).
+2. iOS: enable the **Push Notifications** capability in Xcode (creates `Runner.entitlements` with `aps-environment`) and upload the APNs key to Firebase. `UIBackgroundModes: remote-notification` is already in `Info.plist`.
+3. Run the device matrix in `docs/FEATURE_TEST_STEPS.md` (FLUTTER-P10E).

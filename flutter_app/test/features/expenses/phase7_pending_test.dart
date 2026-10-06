@@ -106,7 +106,10 @@ void main() {
     expect(key('quick-add-preview'), findsOneWidget);
     await tester.tap(key('quick-add-save'));
     await settle(tester, rounds: 10);
-    final titles = (await real(tester, () => containerOf(tester).read(expenseRepositoryProvider).watchActive(s.tripId).first)).map((e) => e.title);
+    final titles = (await real(
+      tester,
+      () => containerOf(tester).read(expenseRepositoryProvider).watchActive(s.tripId).first,
+    )).map((e) => e.title);
     expect(titles, contains('Lunch'));
 
     await tester.tap(key('tab-menu'));
@@ -151,7 +154,9 @@ void main() {
     final c = containerOf(tester);
     final other = await real(
       tester,
-      () => c.read(tripRepositoryProvider).createTrip(
+      () => c
+          .read(tripRepositoryProvider)
+          .createTrip(
             name: 'Kerala',
             startDate: '2026-11-01',
             endDate: '2026-11-05',
@@ -162,19 +167,25 @@ void main() {
     );
     await real(tester, () async {
       final db = c.read(appDatabaseProvider);
-      await db.into(db.expensesTable).insert(expenseToCompanion(Expense(
-            id: 'other-dinner',
-            tripId: other,
-            title: 'Beach dinner',
-            amount: 80,
-            currency: 'INR',
-            category: 'cat-food',
-            date: '2026-11-02',
-            paidBy: s.me,
-            splitMode: 'equal',
-            createdAt: 1,
-            updatedAt: 1,
-          )));
+      await db
+          .into(db.expensesTable)
+          .insert(
+            expenseToCompanion(
+              Expense(
+                id: 'other-dinner',
+                tripId: other,
+                title: 'Beach dinner',
+                amount: 80,
+                currency: 'INR',
+                category: 'cat-food',
+                date: '2026-11-02',
+                paidBy: s.me,
+                splitMode: 'equal',
+                createdAt: 1,
+                updatedAt: 1,
+              ),
+            ),
+          );
     });
     await openExpenses(tester, s);
     await tester.enterText(find.byType(TextField).first, 'beach');
@@ -194,20 +205,22 @@ void main() {
         for (var i = 0; i < 500; i++) {
           b.insert(
             db.expensesTable,
-            expenseToCompanion(Expense(
-              id: 'bulk-$i',
-              tripId: s.tripId,
-              title: 'Row $i',
-              amount: 10,
-              currency: 'INR',
-              category: 'cat-food',
-              date: '2026-10-0${(i % 9) + 1}',
-              paidBy: s.me,
-              splitMode: 'equal',
-              splitMemberIds: [s.me, s.ben],
-              createdAt: i,
-              updatedAt: i,
-            )),
+            expenseToCompanion(
+              Expense(
+                id: 'bulk-$i',
+                tripId: s.tripId,
+                title: 'Row $i',
+                amount: 10,
+                currency: 'INR',
+                category: 'cat-food',
+                date: '2026-10-0${(i % 9) + 1}',
+                paidBy: s.me,
+                splitMode: 'equal',
+                splitMemberIds: [s.me, s.ben],
+                createdAt: i,
+                updatedAt: i,
+              ),
+            ),
           );
         }
       });

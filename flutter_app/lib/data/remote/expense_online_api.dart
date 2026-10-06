@@ -37,7 +37,8 @@ class SupabaseExpenseOnlineApi implements ExpenseOnlineApi {
   }
 
   @override
-  Future<void> flagDispute(String id, String? note) => _rpc('flag_expense_dispute', {'p_expense_id': id, 'p_note': note});
+  Future<void> flagDispute(String id, String? note) =>
+      _rpc('flag_expense_dispute', {'p_expense_id': id, 'p_note': note});
 
   @override
   Future<void> resolveDispute(String id) => _rpc('resolve_expense_dispute', {'p_expense_id': id});

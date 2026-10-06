@@ -40,52 +40,68 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     return AppScaffold(
       body: SafeArea(
-        child: Column(children: [
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(onPressed: _finish, child: Text(l10n.onboardingSkip)),
-          ),
-          Expanded(
-            child: PageView.builder(
-              controller: _controller,
-              itemCount: steps.length,
-              onPageChanged: (i) => setState(() => _index = i),
-              itemBuilder: (_, i) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Text(steps[i].$1, style: const TextStyle(fontSize: 72)),
-                  const SizedBox(height: 24),
-                  Text(steps[i].$2, textAlign: TextAlign.center, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: tokens.textPrimary)),
-                  const SizedBox(height: 12),
-                  Text(steps[i].$3, textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: tokens.textSecondary, height: 1.4)),
-                ]),
-              ),
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(onPressed: _finish, child: Text(l10n.onboardingSkip)),
             ),
-          ),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            for (var i = 0; i < steps.length; i++)
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.all(4),
-                width: i == _index ? 22 : 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: i == _index ? tokens.primaryAccent : tokens.borderColor,
-                  borderRadius: BorderRadius.circular(4),
+            Expanded(
+              child: PageView.builder(
+                controller: _controller,
+                itemCount: steps.length,
+                onPageChanged: (i) => setState(() => _index = i),
+                itemBuilder: (_, i) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(steps[i].$1, style: const TextStyle(fontSize: 72)),
+                      const SizedBox(height: 24),
+                      Text(
+                        steps[i].$2,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: tokens.textPrimary),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        steps[i].$3,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 16, color: tokens.textSecondary, height: 1.4),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-          ]),
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: AppButton(
-              label: last ? l10n.onboardingGetStarted : l10n.onboardingNext,
-              isFullWidth: true,
-              onPressed: last
-                  ? _finish
-                  : () => _controller.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut),
             ),
-          ),
-        ]),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var i = 0; i < steps.length; i++)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.all(4),
+                    width: i == _index ? 22 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: i == _index ? tokens.primaryAccent : tokens.borderColor,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: AppButton(
+                label: last ? l10n.onboardingGetStarted : l10n.onboardingNext,
+                isFullWidth: true,
+                onPressed: last
+                    ? _finish
+                    : () => _controller.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

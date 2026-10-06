@@ -49,30 +49,30 @@ Trip tripFromRow(Map<String, dynamic> r, {List<String> memberIds = const [], Lis
 }
 
 Member memberFromRow(Map<String, dynamic> r) => Member(
-      id: r['id'] as String,
-      name: r['name'] as String? ?? '',
-      tripId: r['trip_id'] as String?,
-      archived: r['archived'] == true,
-      linkedUserId: r['linked_user_id'] as String?,
-      avatarUrl: _map(r['profile'])?['avatar_url'] as String?,
-      joinDate: r['join_date'] as String?,
-      leaveDate: r['leave_date'] as String?,
-    );
+  id: r['id'] as String,
+  name: r['name'] as String? ?? '',
+  tripId: r['trip_id'] as String?,
+  archived: r['archived'] == true,
+  linkedUserId: r['linked_user_id'] as String?,
+  avatarUrl: _map(r['profile'])?['avatar_url'] as String?,
+  joinDate: r['join_date'] as String?,
+  leaveDate: r['leave_date'] as String?,
+);
 
 Group groupFromRow(Map<String, dynamic> r, List<String> memberIds) => Group(
-      id: r['id'] as String,
-      tripId: r['trip_id'] as String?,
-      name: r['name'] as String? ?? '',
-      memberIds: memberIds,
-    );
+  id: r['id'] as String,
+  tripId: r['trip_id'] as String?,
+  name: r['name'] as String? ?? '',
+  memberIds: memberIds,
+);
 
 Category categoryFromRow(Map<String, dynamic> r) => Category(
-      id: r['id'] as String,
-      tripId: r['trip_id'] as String?,
-      name: r['name'] as String? ?? '',
-      icon: r['icon'] as String?,
-      isCustom: r['is_custom'] != false,
-    );
+  id: r['id'] as String,
+  tripId: r['trip_id'] as String?,
+  name: r['name'] as String? ?? '',
+  icon: r['icon'] as String?,
+  isCustom: r['is_custom'] != false,
+);
 
 Expense expenseFromRow(Map<String, dynamic> r) {
   Map<String, dynamic>? shares(Object? v) => _map(v);
@@ -112,37 +112,37 @@ Expense expenseFromRow(Map<String, dynamic> r) {
 
 /// Arguments for `upsert_expense_v1` (migration 0115).
 Map<String, dynamic> expenseToUpsertArgs(Expense e) => {
-      'p_id': e.id,
-      'p_trip_id': e.tripId,
-      'p_title': e.title,
-      'p_amount': e.amount,
-      'p_currency': e.currency,
-      'p_category': e.category,
-      'p_date': e.date,
-      'p_paid_by': e.paidBy,
-      'p_split_mode': e.splitMode,
-      'p_split_member_ids': e.splitMemberIds,
-      'p_split_config': e.splitConfig,
-      'p_resolved_shares': e.resolvedShares,
-      'p_receipt_path': e.receiptPath,
-      'p_paid_by_shares': e.paidByShares,
-      'p_itemized_config': e.itemizedConfig?.toJson(),
-      'p_location': e.location == null ? null : {'lat': e.location!.lat, 'lng': e.location!.lng},
-      'p_approval_status': e.approvalStatus,
-    };
+  'p_id': e.id,
+  'p_trip_id': e.tripId,
+  'p_title': e.title,
+  'p_amount': e.amount,
+  'p_currency': e.currency,
+  'p_category': e.category,
+  'p_date': e.date,
+  'p_paid_by': e.paidBy,
+  'p_split_mode': e.splitMode,
+  'p_split_member_ids': e.splitMemberIds,
+  'p_split_config': e.splitConfig,
+  'p_resolved_shares': e.resolvedShares,
+  'p_receipt_path': e.receiptPath,
+  'p_paid_by_shares': e.paidByShares,
+  'p_itemized_config': e.itemizedConfig?.toJson(),
+  'p_location': e.location == null ? null : {'lat': e.location!.lat, 'lng': e.location!.lng},
+  'p_approval_status': e.approvalStatus,
+};
 
 /// Real `trip_messages` row (member_id/body/kind/payload) -> domain.
 TripMessage messageFromRow(Map<String, dynamic> r) => TripMessage.fromJson({
-      'id': r['id'],
-      'tripId': r['trip_id'],
-      'memberId': r['member_id'],
-      'body': r['body'],
-      'eventKind': r['kind'],
-      'payload': _map(r['payload']),
-      'createdAt': _ms(r['created_at']),
-      'editedAt': _msOrNull(r['edited_at']),
-      'deletedAt': _msOrNull(r['deleted_at']),
-      'replyToId': r['reply_to_id'],
-      'reactions': r['reactions'] is Map ? r['reactions'] : <String, dynamic>{},
-      'isPinned': r['is_pinned'] == true,
-    });
+  'id': r['id'],
+  'tripId': r['trip_id'],
+  'memberId': r['member_id'],
+  'body': r['body'],
+  'eventKind': r['kind'],
+  'payload': _map(r['payload']),
+  'createdAt': _ms(r['created_at']),
+  'editedAt': _msOrNull(r['edited_at']),
+  'deletedAt': _msOrNull(r['deleted_at']),
+  'replyToId': r['reply_to_id'],
+  'reactions': r['reactions'] is Map ? r['reactions'] : <String, dynamic>{},
+  'isPinned': r['is_pinned'] == true,
+});

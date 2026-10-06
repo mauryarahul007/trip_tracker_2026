@@ -45,5 +45,7 @@ This document records all third-party dependencies used in `flutter_app/`, their
 | `share_plus` | `^10.1.x` | **D6** | Native platform share sheet for settlement summaries and join links. |
 | `image_picker` | `^1.1.x` | **D6** | Camera and photo gallery picker for receipt images and profile avatars. |
 | `pdfrx` | `^1.1.x` | **D6** | High-performance native PDF document viewer for travel passes and tickets. |
-| `firebase_messaging` | `^15.2.x` | **D5** | FCM v1 push notification receiver. |
-| `flutter_local_notifications` | `^18.0.x` | **D5** | In-app notification heads-up banners when received in foreground. |
+| `firebase_core` / `firebase_messaging` | `^4.15` / `^16.7` | **D5** | FCM v1 push receiver and token. Build needs `google-services.json` / `GoogleService-Info.plist` (not in repo); without them push reports "not available". |
+| `flutter_local_notifications` | `^22.3.1` | **D5** | Scheduled pass reminders (inexact alarms, no exact-alarm permission) and the Android push channel. Latest *stable*; the 23.x line is prerelease. |
+| `timezone` / `flutter_timezone` | `^0.11` / `^5.1` | **D5** | Local-zone scheduling for reminders and the IANA zone sent with quiet hours. |
+| `package_info_plus` | `^10.2` | **D5** | App version for the version gate, push registration and bug reports. |

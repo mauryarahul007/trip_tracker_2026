@@ -1,8 +1,20 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Release signing: android/key.properties (git-ignored) or CI environment variables. When neither is
+// present (local `flutter run --release`) the build falls back to the debug key so it still runs; the
+// release CI job refuses such an artifact (tool/check_release_signing.sh).
+val keyProps = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun signingValue(prop: String, env: String): String? = keyProps.getProperty(prop) ?: System.getenv(env)
+val releaseStoreFile = signingValue("storeFile", "TT_KEYSTORE_PATH")
 
 android {
     namespace = "com.triptracker.app"
@@ -40,11 +52,23 @@ android {
         }
     }
 
+    signingConfigs {
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = file(releaseStoreFile)
+                storePassword = signingValue("storePassword", "TT_KEYSTORE_PASSWORD")
+                keyAlias = signingValue("keyAlias", "TT_KEY_ALIAS")
+                keyPassword = signingValue("keyPassword", "TT_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (releaseStoreFile != null) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 }

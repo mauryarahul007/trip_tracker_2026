@@ -44,7 +44,13 @@ class FakeReceipts implements ReceiptUploader {
   final events = <String>[];
   Object? failWith;
   @override
-  Future<String> upload({required String tripId, required String expenseId, required String localPath, required String ext, required String mime}) async {
+  Future<String> upload({
+    required String tripId,
+    required String expenseId,
+    required String localPath,
+    required String ext,
+    required String mime,
+  }) async {
     events.add('upload:$tripId/$expenseId.$ext');
     final f = failWith;
     if (f != null) throw f;
@@ -72,18 +78,17 @@ ExpenseSubmission sub({
   List<String> split = const [],
   String paidBy = '',
   Map<String, double>? paidByShares,
-}) =>
-    ExpenseSubmission(
-      title: title,
-      amount: amount,
-      currency: 'INR',
-      category: 'Food',
-      date: '2026-10-06',
-      paidBy: paidBy,
-      paidByShares: paidByShares,
-      splitMode: mode,
-      splitMemberIds: split,
-    );
+}) => ExpenseSubmission(
+  title: title,
+  amount: amount,
+  currency: 'INR',
+  category: 'Food',
+  date: '2026-10-06',
+  paidBy: paidBy,
+  paidByShares: paidByShares,
+  splitMode: mode,
+  splitMemberIds: split,
+);
 
 void main() {
   late AppDatabase db;
@@ -108,7 +113,13 @@ void main() {
     members = DriftMemberRepository(db, outbox, req);
     expenses = DriftExpenseRepository(db, outbox, req, api: api);
     tripId = await trips.createTrip(
-        name: 'Goa', startDate: '2026-10-01', endDate: '2026-10-09', baseCurrency: 'INR', ownerId: 'u1', creatorName: 'Asha');
+      name: 'Goa',
+      startDate: '2026-10-01',
+      endDate: '2026-10-09',
+      baseCurrency: 'INR',
+      ownerId: 'u1',
+      creatorName: 'Asha',
+    );
     me = (await db.select(db.membersTable).get()).single.id;
     ben = await members.addMember(tripId, 'Ben');
     cara = await members.addMember(tripId, 'Cara', linkedUserId: 'u3');
@@ -123,7 +134,11 @@ void main() {
 
   group('submit (port of addExpense/updateExpense)', () {
     test('resolves shares over active participants, writes locally and queues one addExpense', () async {
-      final r = await expenses.submit(sub(split: [me, ben, cara], paidBy: me), tripId: tripId, userId: 'u1');
+      final r = await expenses.submit(
+        sub(split: [me, ben, cara], paidBy: me),
+        tripId: tripId,
+        userId: 'u1',
+      );
       expect(r.isOk, isTrue);
       final e = (await expenses.watchActive(tripId).first).single;
       expect(e.id, r.expenseId);
@@ -142,7 +157,11 @@ void main() {
 
     test('archived members are excluded from shares but stay in splitMemberIds (web behaviour)', () async {
       await members.setArchived(cara, true);
-      await expenses.submit(sub(amount: 90, split: [me, ben, cara], paidBy: me), tripId: tripId, userId: 'u1');
+      await expenses.submit(
+        sub(amount: 90, split: [me, ben, cara], paidBy: me),
+        tripId: tripId,
+        userId: 'u1',
+      );
       final e = (await expenses.watchActive(tripId).first).single;
       expect(e.resolvedShares.keys.toSet(), {me, ben});
       expect(e.splitMemberIds, [me, ben, cara]);
@@ -153,7 +172,11 @@ void main() {
       for (final i in await outbox.all()) {
         await outbox.markDone(i.id);
       }
-      final r = await expenses.submit(sub(split: [ben], paidBy: me), tripId: tripId, userId: 'u1');
+      final r = await expenses.submit(
+        sub(split: [ben], paidBy: me),
+        tripId: tripId,
+        userId: 'u1',
+      );
       expect(r.error, 'Select at least one active traveler to split with.');
       expect(await expenses.watchActive(tripId).first, isEmpty);
       expect(await queue(), isEmpty);
@@ -161,20 +184,40 @@ void main() {
 
     test('frozen and closed trips refuse writes with the web wording', () async {
       await trips.setTripState(tripId, closed: true);
-      var r = await expenses.submit(sub(split: [me], paidBy: me), tripId: tripId, userId: 'u1');
+      var r = await expenses.submit(
+        sub(split: [me], paidBy: me),
+        tripId: tripId,
+        userId: 'u1',
+      );
       expect(r.error, 'This trip is closed. Reopen it to add expenses.');
       await trips.setTripState(tripId, closed: false, frozen: true);
-      r = await expenses.submit(sub(split: [me], paidBy: me), tripId: tripId, userId: 'u1');
+      r = await expenses.submit(
+        sub(split: [me], paidBy: me),
+        tripId: tripId,
+        userId: 'u1',
+      );
       expect(r.error, 'This trip is currently locked / frozen by Superadmin. Modifications are disabled.');
-      r = await expenses.submit(sub(split: [me], paidBy: me), tripId: tripId, userId: 'u1', isSuperadmin: true);
+      r = await expenses.submit(
+        sub(split: [me], paidBy: me),
+        tripId: tripId,
+        userId: 'u1',
+        isSuperadmin: true,
+      );
       expect(r.isOk, isTrue);
     });
 
     test('approval threshold gates big expenses but never settlements', () async {
-      await db.customStatement("UPDATE trips SET domain_json = json_set(domain_json, '\$.approvalThreshold', 500) WHERE id = ?", [tripId]);
+      await db.customStatement(
+        "UPDATE trips SET domain_json = json_set(domain_json, '\$.approvalThreshold', 500) WHERE id = ?",
+        [tripId],
+      );
       Future<String> status(String title, double amount) async {
-        final r = await expenses.submit(sub(title: title, amount: amount, split: [me, ben], paidBy: me),
-            tripId: tripId, userId: 'u1', approvalThresholdEnabled: true);
+        final r = await expenses.submit(
+          sub(title: title, amount: amount, split: [me, ben], paidBy: me),
+          tripId: tripId,
+          userId: 'u1',
+          approvalThresholdEnabled: true,
+        );
         return (await expenses.watchExpense(r.expenseId!).first)!.approvalStatus;
       }
 
@@ -184,70 +227,126 @@ void main() {
     });
 
     test('settlement titles are flagged as settlements', () async {
-      final r = await expenses.submit(sub(title: 'Settlement: Ben → Asha', amount: 50, split: [me], paidBy: ben), tripId: tripId, userId: 'u1');
+      final r = await expenses.submit(
+        sub(title: 'Settlement: Ben → Asha', amount: 50, split: [me], paidBy: ben),
+        tripId: tripId,
+        userId: 'u1',
+      );
       expect((await expenses.watchExpense(r.expenseId!).first)!.isSettlement, isTrue);
     });
 
-    test('edit: queues updateExpense, keeps creator/createdAt/approval/dispute, drops stale multi-payer data', () async {
-      final created = await expenses.submit(
-          sub(amount: 100, split: [me, ben], paidBy: me, paidByShares: {me: 60, ben: 40}), tripId: tripId, userId: 'u1');
-      final id = created.expenseId!;
-      await expenses.flagDispute(id, userId: 'u3', note: 'too much');
-      for (final i in await queue()) {
-        await outbox.markDone(i.id);
-      }
-      final before = (await expenses.watchExpense(id).first)!;
+    test(
+      'edit: queues updateExpense, keeps creator/createdAt/approval/dispute, drops stale multi-payer data',
+      () async {
+        final created = await expenses.submit(
+          sub(amount: 100, split: [me, ben], paidBy: me, paidByShares: {me: 60, ben: 40}),
+          tripId: tripId,
+          userId: 'u1',
+        );
+        final id = created.expenseId!;
+        await expenses.flagDispute(id, userId: 'u3', note: 'too much');
+        for (final i in await queue()) {
+          await outbox.markDone(i.id);
+        }
+        final before = (await expenses.watchExpense(id).first)!;
 
-      final r = await expenses.submit(sub(title: 'Dinner v2', amount: 120, split: [me, ben], paidBy: ben), tripId: tripId, userId: 'u9', editingId: id);
-      expect(r.expenseId, id);
-      final after = (await expenses.watchExpense(id).first)!;
-      expect(after.title, 'Dinner v2');
-      expect(after.paidByShares, isNull); // switched back to a single payer
-      expect(after.createdByUserId, 'u1'); // editor is not the creator
-      expect(after.createdAt, before.createdAt);
-      expect(after.disputedByUserId, 'u3'); // dispute survives an edit
-      expect(after.resolvedShares, {me: 60.0, ben: 60.0});
-      final q = await queue();
-      expect(q.single.type, OutboxType.updateExpense);
-      expect(q.single.payload['id'], id);
-      expect((await expenses.watchActive(tripId).first), hasLength(1));
-    });
+        final r = await expenses.submit(
+          sub(title: 'Dinner v2', amount: 120, split: [me, ben], paidBy: ben),
+          tripId: tripId,
+          userId: 'u9',
+          editingId: id,
+        );
+        expect(r.expenseId, id);
+        final after = (await expenses.watchExpense(id).first)!;
+        expect(after.title, 'Dinner v2');
+        expect(after.paidByShares, isNull); // switched back to a single payer
+        expect(after.createdByUserId, 'u1'); // editor is not the creator
+        expect(after.createdAt, before.createdAt);
+        expect(after.disputedByUserId, 'u3'); // dispute survives an edit
+        expect(after.resolvedShares, {me: 60.0, ben: 60.0});
+        final q = await queue();
+        expect(q.single.type, OutboxType.updateExpense);
+        expect(q.single.payload['id'], id);
+        expect((await expenses.watchActive(tripId).first), hasLength(1));
+      },
+    );
 
     test('editing something that was removed reports it', () async {
-      final r = await expenses.submit(sub(split: [me], paidBy: me), tripId: tripId, userId: 'u1', editingId: 'ghost');
+      final r = await expenses.submit(
+        sub(split: [me], paidBy: me),
+        tripId: tripId,
+        userId: 'u1',
+        editingId: 'ghost',
+      );
       expect(r.error, 'This expense no longer exists.');
     });
 
     test('a staged receipt rides in the payload; the stored path waits for the upload', () async {
-      final r = await expenses.submit(sub(split: [me], paidBy: me),
-          tripId: tripId, userId: 'u1', expenseId: 'e-fixed', receipt: const StagedReceipt(localPath: '/tmp/r.jpg', ext: 'jpg', mime: 'image/jpeg'));
+      final r = await expenses.submit(
+        sub(split: [me], paidBy: me),
+        tripId: tripId,
+        userId: 'u1',
+        expenseId: 'e-fixed',
+        receipt: const StagedReceipt(localPath: '/tmp/r.jpg', ext: 'jpg', mime: 'image/jpeg'),
+      );
       expect(r.expenseId, 'e-fixed');
       final q = await queue();
-      expect(q.single.payload['receipt'], {'tripId': tripId, 'expenseId': 'e-fixed', 'localPath': '/tmp/r.jpg', 'ext': 'jpg', 'mime': 'image/jpeg'});
+      expect(q.single.payload['receipt'], {
+        'tripId': tripId,
+        'expenseId': 'e-fixed',
+        'localPath': '/tmp/r.jpg',
+        'ext': 'jpg',
+        'mime': 'image/jpeg',
+      });
       expect((await expenses.watchExpense('e-fixed').first)!.receiptPath, isNull);
     });
 
-    test('chat card: only when asked and only for linked members; settlements get their own kind; id is fixed', () async {
-      // u1 is linked to the owner member (`me`).
-      await expenses.submit(sub(title: 'Lunch', amount: 40, split: [me], paidBy: me), tripId: tripId, userId: 'u1', postChatCard: true);
-      await expenses.submit(sub(title: 'Settlement: Ben → Asha', amount: 10, split: [me], paidBy: ben), tripId: tripId, userId: 'u1', postChatCard: true);
-      await expenses.submit(sub(title: 'No card', split: [me], paidBy: me), tripId: tripId, userId: 'u1'); // flag off
-      await expenses.submit(sub(title: 'Stranger', split: [me], paidBy: me), tripId: tripId, userId: 'not-a-member', postChatCard: true);
-      final q = await queue();
-      final cards = [for (final i in q) i.payload['chat']].toList();
-      expect(cards[0]['kind'], 'expense_added');
-      expect(cards[0]['body'], 'Added Lunch · INR 40.00');
-      expect(cards[0]['member_id'], me);
-      expect(cards[0]['id'], isNotEmpty);
-      expect(cards[1]['kind'], 'settlement_recorded');
-      expect(cards[2], isNull);
-      expect(cards[3], isNull);
-    });
+    test(
+      'chat card: only when asked and only for linked members; settlements get their own kind; id is fixed',
+      () async {
+        // u1 is linked to the owner member (`me`).
+        await expenses.submit(
+          sub(title: 'Lunch', amount: 40, split: [me], paidBy: me),
+          tripId: tripId,
+          userId: 'u1',
+          postChatCard: true,
+        );
+        await expenses.submit(
+          sub(title: 'Settlement: Ben → Asha', amount: 10, split: [me], paidBy: ben),
+          tripId: tripId,
+          userId: 'u1',
+          postChatCard: true,
+        );
+        await expenses.submit(
+          sub(title: 'No card', split: [me], paidBy: me),
+          tripId: tripId,
+          userId: 'u1',
+        ); // flag off
+        await expenses.submit(
+          sub(title: 'Stranger', split: [me], paidBy: me),
+          tripId: tripId,
+          userId: 'not-a-member',
+          postChatCard: true,
+        );
+        final q = await queue();
+        final cards = [for (final i in q) i.payload['chat']].toList();
+        expect(cards[0]['kind'], 'expense_added');
+        expect(cards[0]['body'], 'Added Lunch · INR 40.00');
+        expect(cards[0]['member_id'], me);
+        expect(cards[0]['id'], isNotEmpty);
+        expect(cards[1]['kind'], 'settlement_recorded');
+        expect(cards[2], isNull);
+        expect(cards[3], isNull);
+      },
+    );
   });
 
   group('online-only actions (same as the web)', () {
-    Future<String> seed({String title = 'Dinner'}) async =>
-        (await expenses.submit(sub(title: title, split: [me, ben], paidBy: me), tripId: tripId, userId: 'u1')).expenseId!;
+    Future<String> seed({String title = 'Dinner'}) async => (await expenses.submit(
+      sub(title: title, split: [me, ben], paidBy: me),
+      tripId: tripId,
+      userId: 'u1',
+    )).expenseId!;
 
     test('flag dispute: server first, then local state; chat card is best effort', () async {
       final id = await seed();
@@ -272,7 +371,10 @@ void main() {
     test('refused or offline: local state is untouched and the error surfaces', () async {
       final id = await seed();
       api.fail = const ExpenseActionException('You are offline.', offline: true);
-      await expectLater(expenses.flagDispute(id, userId: 'u1'), throwsA(isA<ExpenseActionException>().having((e) => e.offline, 'offline', isTrue)));
+      await expectLater(
+        expenses.flagDispute(id, userId: 'u1'),
+        throwsA(isA<ExpenseActionException>().having((e) => e.offline, 'offline', isTrue)),
+      );
       expect((await expenses.watchExpense(id).first)!.disputedAt, isNull);
       api.fail = const ExpenseActionException('not allowed');
       await expectLater(expenses.approve(id, userId: 'u1'), throwsA(isA<ExpenseActionException>()));
@@ -286,7 +388,10 @@ void main() {
       expect(e.settlementConfirmedAt, isNotNull);
 
       final a = await seed();
-      await db.customStatement("UPDATE expenses SET domain_json = json_set(domain_json, '\$.approvalStatus', 'pending_approval') WHERE id = ?", [a]);
+      await db.customStatement(
+        "UPDATE expenses SET domain_json = json_set(domain_json, '\$.approvalStatus', 'pending_approval') WHERE id = ?",
+        [a],
+      );
       await expenses.approve(a, userId: 'u3');
       final ap = (await expenses.watchExpense(a).first)!;
       expect(ap.approvalStatus, 'confirmed');
@@ -295,7 +400,10 @@ void main() {
 
     test('without a backend every online action reports offline', () async {
       final noApi = DriftExpenseRepository(db, outbox, () {});
-      await expectLater(noApi.approve('x', userId: 'u1'), throwsA(isA<ExpenseActionException>().having((e) => e.offline, 'offline', isTrue)));
+      await expectLater(
+        noApi.approve('x', userId: 'u1'),
+        throwsA(isA<ExpenseActionException>().having((e) => e.offline, 'offline', isTrue)),
+      );
     });
 
     test('unknown expense', () async {
@@ -305,8 +413,16 @@ void main() {
   });
 
   test('trip card expense count follows active expenses (recycled ones do not count)', () async {
-    final a = (await expenses.submit(sub(split: [me], paidBy: me), tripId: tripId, userId: 'u1')).expenseId!;
-    await expenses.submit(sub(title: 'Two', split: [me], paidBy: me), tripId: tripId, userId: 'u1');
+    final a = (await expenses.submit(
+      sub(split: [me], paidBy: me),
+      tripId: tripId,
+      userId: 'u1',
+    )).expenseId!;
+    await expenses.submit(
+      sub(title: 'Two', split: [me], paidBy: me),
+      tripId: tripId,
+      userId: 'u1',
+    );
     expect((await trips.watchTrip(tripId).first)!.expenseCount, 2);
     await expenses.delete(a, userId: 'u1');
     expect((await trips.watchTrip(tripId).first)!.expenseCount, 1);
@@ -317,17 +433,19 @@ void main() {
   group('expense side effects around the RPC', () {
     late FakeReceipts receipts;
     late FakeChat chat;
-    ExpenseSideEffects fx({bool exists = true}) => ExpenseSideEffects(receipts: receipts, chat: chat, fileExists: (_) => exists);
+    ExpenseSideEffects fx({bool exists = true}) =>
+        ExpenseSideEffects(receipts: receipts, chat: chat, fileExists: (_) => exists);
     setUp(() {
       receipts = FakeReceipts();
       chat = FakeChat();
     });
 
     Map<String, dynamic> payload({bool withReceipt = true, bool withChat = true}) => {
-          'args': {'p_id': 'e1', 'p_receipt_path': null},
-          if (withReceipt) 'receipt': {'tripId': 't', 'expenseId': 'e1', 'localPath': '/x/e1.jpg', 'ext': 'jpg', 'mime': 'image/jpeg'},
-          if (withChat) 'chat': {'id': 'm1', 'kind': 'expense_added'},
-        };
+      'args': {'p_id': 'e1', 'p_receipt_path': null},
+      if (withReceipt)
+        'receipt': {'tripId': 't', 'expenseId': 'e1', 'localPath': '/x/e1.jpg', 'ext': 'jpg', 'mime': 'image/jpeg'},
+      if (withChat) 'chat': {'id': 'm1', 'kind': 'expense_added'},
+    };
 
     test('uploads the photo before the row and sets p_receipt_path', () async {
       final args = await fx().prepareArgs(payload());
@@ -374,11 +492,28 @@ void main() {
 
   test('chat row builder: body text, payload and optional note', () {
     final row = buildExpenseChatRow(
-        id: 'm', tripId: 't', memberId: 'x', kind: 'expense_disputed', expenseId: 'e', title: 'Taxi', amount: 12.5, currency: 'EUR', note: 'why?');
+      id: 'm',
+      tripId: 't',
+      memberId: 'x',
+      kind: 'expense_disputed',
+      expenseId: 'e',
+      title: 'Taxi',
+      amount: 12.5,
+      currency: 'EUR',
+      note: 'why?',
+    );
     expect(row['body'], 'Disputed Taxi — why?');
     expect(row['payload'], {'expenseId': 'e', 'title': 'Taxi', 'amount': 12.5, 'currency': 'EUR', 'note': 'why?'});
     final plain = buildExpenseChatRow(
-        id: 'm', tripId: 't', memberId: 'x', kind: 'expense_added', expenseId: 'e', title: 'Taxi', amount: 12.5, currency: 'EUR');
+      id: 'm',
+      tripId: 't',
+      memberId: 'x',
+      kind: 'expense_added',
+      expenseId: 'e',
+      title: 'Taxi',
+      amount: 12.5,
+      currency: 'EUR',
+    );
     expect((plain['payload'] as Map).containsKey('note'), isFalse);
     expect(plain['body'], 'Added Taxi · EUR 12.50');
   });

@@ -8,49 +8,31 @@ class TripStop {
   final double? lat;
   final double? lng;
 
-  const TripStop({
-    required this.id,
-    required this.name,
-    this.lat,
-    this.lng,
-  });
+  const TripStop({required this.id, required this.name, this.lat, this.lng});
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        if (lat != null) 'lat': lat,
-        if (lng != null) 'lng': lng,
-      };
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, if (lat != null) 'lat': lat, if (lng != null) 'lng': lng};
 
   factory TripStop.fromJson(Map<String, dynamic> json) => TripStop(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        lat: (json['lat'] as num?)?.toDouble(),
-        lng: (json['lng'] as num?)?.toDouble(),
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    lat: (json['lat'] as num?)?.toDouble(),
+    lng: (json['lng'] as num?)?.toDouble(),
+  );
 }
 
 class TripFxConfig {
   final Map<String, double> customRates;
   final double markupPercent;
 
-  const TripFxConfig({
-    this.customRates = const {},
-    this.markupPercent = 0.0,
-  });
+  const TripFxConfig({this.customRates = const {}, this.markupPercent = 0.0});
 
-  Map<String, dynamic> toJson() => {
-        'customRates': customRates,
-        'markupPercent': markupPercent,
-      };
+  Map<String, dynamic> toJson() => {'customRates': customRates, 'markupPercent': markupPercent};
 
   factory TripFxConfig.fromJson(Map<String, dynamic> json) => TripFxConfig(
-        customRates: (json['customRates'] as Map<String, dynamic>?)?.map(
-              (k, v) => MapEntry(k, (v as num).toDouble()),
-            ) ??
-            const {},
-        markupPercent: (json['markupPercent'] as num?)?.toDouble() ?? 0.0,
-      );
+    customRates:
+        (json['customRates'] as Map<String, dynamic>?)?.map((k, v) => MapEntry(k, (v as num).toDouble())) ?? const {},
+    markupPercent: (json['markupPercent'] as num?)?.toDouble() ?? 0.0,
+  );
 }
 
 class Trip {
@@ -243,7 +225,8 @@ class Trip {
       groupIds: (json['groupIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
       adminMemberIds: (json['adminMemberIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
       memberRoles: (json['memberRoles'] as Map<String, dynamic>?)?.map((k, v) => MapEntry(k, v.toString())) ?? const {},
-      splitExclusionDefaults: (json['splitExclusionDefaults'] as Map<String, dynamic>?)?.map(
+      splitExclusionDefaults:
+          (json['splitExclusionDefaults'] as Map<String, dynamic>?)?.map(
             (k, v) => MapEntry(k, (v as List<dynamic>).map((e) => e.toString()).toList()),
           ) ??
           const {},
@@ -252,10 +235,20 @@ class Trip {
       archived: json['archived'] as bool? ?? false,
       frozen: json['frozen'] as bool? ?? false,
       closed: json['closed'] as bool? ?? false,
-      stops: (json['stops'] as List<dynamic>?)?.map((e) => TripStop.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
-      checklist: (json['checklist'] as List<dynamic>?)?.map((e) => ChecklistItem.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
-      notes: (json['notes'] as List<dynamic>?)?.map((e) => TripNote.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
-      passes: (json['passes'] as List<dynamic>?)?.map((e) => TravelPass.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
+      stops:
+          (json['stops'] as List<dynamic>?)?.map((e) => TripStop.fromJson(e as Map<String, dynamic>)).toList() ??
+          const [],
+      checklist:
+          (json['checklist'] as List<dynamic>?)
+              ?.map((e) => ChecklistItem.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      notes:
+          (json['notes'] as List<dynamic>?)?.map((e) => TripNote.fromJson(e as Map<String, dynamic>)).toList() ??
+          const [],
+      passes:
+          (json['passes'] as List<dynamic>?)?.map((e) => TravelPass.fromJson(e as Map<String, dynamic>)).toList() ??
+          const [],
       fxConfig: json['fxConfig'] != null ? TripFxConfig.fromJson(json['fxConfig'] as Map<String, dynamic>) : null,
       expenseCount: (json['expenseCount'] as num?)?.toInt() ?? 0,
       shareToken: json['shareToken'] as String?,

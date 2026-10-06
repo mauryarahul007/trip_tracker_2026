@@ -14,20 +14,20 @@ class ExpenseLocation {
   });
 
   Map<String, dynamic> toJson() => {
-        'lat': lat,
-        'lng': lng,
-        if (placeName != null) 'placeName': placeName,
-        if (pendingName != null) 'pendingName': pendingName,
-        if (locationUnresolved != null) 'locationUnresolved': locationUnresolved,
-      };
+    'lat': lat,
+    'lng': lng,
+    if (placeName != null) 'placeName': placeName,
+    if (pendingName != null) 'pendingName': pendingName,
+    if (locationUnresolved != null) 'locationUnresolved': locationUnresolved,
+  };
 
   factory ExpenseLocation.fromJson(Map<String, dynamic> json) => ExpenseLocation(
-        lat: (json['lat'] as num?)?.toDouble() ?? 0.0,
-        lng: (json['lng'] as num?)?.toDouble() ?? 0.0,
-        placeName: json['placeName'] as String?,
-        pendingName: json['pendingName'] as String?,
-        locationUnresolved: json['locationUnresolved'] as bool?,
-      );
+    lat: (json['lat'] as num?)?.toDouble() ?? 0.0,
+    lng: (json['lng'] as num?)?.toDouble() ?? 0.0,
+    placeName: json['placeName'] as String?,
+    pendingName: json['pendingName'] as String?,
+    locationUnresolved: json['locationUnresolved'] as bool?,
+  );
 }
 
 class ReceiptItem {
@@ -36,26 +36,16 @@ class ReceiptItem {
   final double amount;
   final List<String> assignedMemberIds;
 
-  const ReceiptItem({
-    required this.id,
-    required this.name,
-    required this.amount,
-    this.assignedMemberIds = const [],
-  });
+  const ReceiptItem({required this.id, required this.name, required this.amount, this.assignedMemberIds = const []});
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'amount': amount,
-        'assignedMemberIds': assignedMemberIds,
-      };
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'amount': amount, 'assignedMemberIds': assignedMemberIds};
 
   factory ReceiptItem.fromJson(Map<String, dynamic> json) => ReceiptItem(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-        assignedMemberIds: (json['assignedMemberIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+    assignedMemberIds: (json['assignedMemberIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+  );
 }
 
 class ItemizedReceiptConfig {
@@ -64,26 +54,23 @@ class ItemizedReceiptConfig {
   final double? tip;
   final double? discount;
 
-  const ItemizedReceiptConfig({
-    this.items = const [],
-    this.tax,
-    this.tip,
-    this.discount,
-  });
+  const ItemizedReceiptConfig({this.items = const [], this.tax, this.tip, this.discount});
 
   Map<String, dynamic> toJson() => {
-        'items': items.map((i) => i.toJson()).toList(),
-        if (tax != null) 'tax': tax,
-        if (tip != null) 'tip': tip,
-        if (discount != null) 'discount': discount,
-      };
+    'items': items.map((i) => i.toJson()).toList(),
+    if (tax != null) 'tax': tax,
+    if (tip != null) 'tip': tip,
+    if (discount != null) 'discount': discount,
+  };
 
   factory ItemizedReceiptConfig.fromJson(Map<String, dynamic> json) => ItemizedReceiptConfig(
-        items: (json['items'] as List<dynamic>?)?.map((e) => ReceiptItem.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
-        tax: (json['tax'] as num?)?.toDouble(),
-        tip: (json['tip'] as num?)?.toDouble(),
-        discount: (json['discount'] as num?)?.toDouble(),
-      );
+    items:
+        (json['items'] as List<dynamic>?)?.map((e) => ReceiptItem.fromJson(e as Map<String, dynamic>)).toList() ??
+        const [],
+    tax: (json['tax'] as num?)?.toDouble(),
+    tip: (json['tip'] as num?)?.toDouble(),
+    discount: (json['discount'] as num?)?.toDouble(),
+  );
 }
 
 class Expense {
@@ -268,21 +255,17 @@ class Expense {
       currency: json['currency'] as String? ?? 'INR',
       category: (json['category'] ?? json['categoryId'] ?? json['category_id'] ?? 'Misc') as String,
       date: json['date'] as String? ?? '',
-      paidBy: (json['paidBy'] ?? json['paidByMemberId'] ?? json['paid_by'] ?? json['paid_by_member_id'] ?? '') as String,
-      paidByShares: (json['paidByShares'] as Map<String, dynamic>?)?.map(
-        (k, v) => MapEntry(k, (v as num).toDouble()),
-      ),
+      paidBy:
+          (json['paidBy'] ?? json['paidByMemberId'] ?? json['paid_by'] ?? json['paid_by_member_id'] ?? '') as String,
+      paidByShares: (json['paidByShares'] as Map<String, dynamic>?)?.map((k, v) => MapEntry(k, (v as num).toDouble())),
       splitMode: (json['splitMode'] ?? json['split_mode'] ?? 'equal') as String,
       splitMemberIds: (json['splitMemberIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
-      splitConfig: (json['splitConfig'] as Map<String, dynamic>?)?.map(
-        (k, v) => MapEntry(k, (v as num).toDouble()),
-      ),
+      splitConfig: (json['splitConfig'] as Map<String, dynamic>?)?.map((k, v) => MapEntry(k, (v as num).toDouble())),
       itemizedConfig: json['itemizedConfig'] != null
           ? ItemizedReceiptConfig.fromJson(json['itemizedConfig'] as Map<String, dynamic>)
           : null,
-      resolvedShares: (json['resolvedShares'] as Map<String, dynamic>?)?.map(
-            (k, v) => MapEntry(k, (v as num).toDouble()),
-          ) ??
+      resolvedShares:
+          (json['resolvedShares'] as Map<String, dynamic>?)?.map((k, v) => MapEntry(k, (v as num).toDouble())) ??
           const {},
       receiptImage: json['receiptImage'] as String?,
       receiptPath: (json['receiptPath'] ?? json['receiptUrl'] ?? json['receipt_url']) as String?,

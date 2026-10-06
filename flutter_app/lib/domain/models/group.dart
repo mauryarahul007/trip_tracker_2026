@@ -4,19 +4,9 @@ class Group {
   final String name;
   final List<String> memberIds;
 
-  const Group({
-    required this.id,
-    this.tripId,
-    required this.name,
-    this.memberIds = const [],
-  });
+  const Group({required this.id, this.tripId, required this.name, this.memberIds = const []});
 
-  Group copyWith({
-    String? id,
-    String? tripId,
-    String? name,
-    List<String>? memberIds,
-  }) {
+  Group copyWith({String? id, String? tripId, String? name, List<String>? memberIds}) {
     return Group(
       id: id ?? this.id,
       tripId: tripId ?? this.tripId,
@@ -26,12 +16,7 @@ class Group {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      if (tripId != null) 'tripId': tripId,
-      'name': name,
-      'memberIds': memberIds,
-    };
+    return {'id': id, if (tripId != null) 'tripId': tripId, 'name': name, 'memberIds': memberIds};
   }
 
   factory Group.fromJson(Map<String, dynamic> json) {

@@ -15,7 +15,14 @@ void main() {
     db = AppDatabase.memory();
     outbox = OutboxStore(db);
     trips = DriftTripRepository(db, outbox, () {});
-    id = await trips.createTrip(name: 'Goa', startDate: '2026-10-01', endDate: '2026-10-09', baseCurrency: 'INR', ownerId: 'u1', creatorName: 'A');
+    id = await trips.createTrip(
+      name: 'Goa',
+      startDate: '2026-10-01',
+      endDate: '2026-10-09',
+      baseCurrency: 'INR',
+      ownerId: 'u1',
+      creatorName: 'A',
+    );
     for (final i in await outbox.all()) {
       await outbox.markDone(i.id);
     }
@@ -45,10 +52,14 @@ void main() {
 
   test('category order and exclusion defaults persist', () async {
     await trips.setCategoryOrder(id, ['b', 'a']);
-    await trips.setSplitExclusionDefaults(id, {'cat-food': ['m1']});
+    await trips.setSplitExclusionDefaults(id, {
+      'cat-food': ['m1'],
+    });
     final t = (await trips.watchTrip(id).first)!;
     expect(t.categoryOrder, ['b', 'a']);
-    expect(t.splitExclusionDefaults, {'cat-food': ['m1']});
+    expect(t.splitExclusionDefaults, {
+      'cat-food': ['m1'],
+    });
   });
 
   test('FX config is written through the collab RPC path (any participant may)', () async {
@@ -59,7 +70,10 @@ void main() {
     final q = (await outbox.all()).single;
     expect(q.type, OutboxType.setTripCollabField);
     expect(q.payload['field'], 'fx_config');
-    expect(q.payload['value'], {'customRates': {'USD': 1.1}, 'markupPercent': 2.0});
+    expect(q.payload['value'], {
+      'customRates': {'USD': 1.1},
+      'markupPercent': 2.0,
+    });
   });
 
   test('settings on a trip that no longer exists are ignored, not queued', () async {

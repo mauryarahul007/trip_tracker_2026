@@ -87,9 +87,12 @@
 	<string>Trip Tracker shares your live location with trip members when you turn on Live Location Share.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Trip Tracker shares your live location in the background with trip members when you turn on Live Location Share.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
+		<string>remote-notification</string>
 	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>

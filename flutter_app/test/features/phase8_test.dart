@@ -116,7 +116,8 @@ void main() {
     final c = containerOf(tester);
     await real(
       tester,
-      () => c.read(messageRepositoryProvider).send(tripId: s.tripId, memberId: s.ben, senderName: 'Ben', body: 'see you'),
+      () =>
+          c.read(messageRepositoryProvider).send(tripId: s.tripId, memberId: s.ben, senderName: 'Ben', body: 'see you'),
     );
     await openTab(tester, s, 'notes');
     expect(key('notes-chat-unread'), findsOneWidget);
@@ -144,16 +145,20 @@ void main() {
     final db = c.read(appDatabaseProvider);
     await real(
       tester,
-      () => db.into(db.tripMessagesTable).insert(TripMessagesTableCompanion.insert(
-            id: msg.id,
-            tripId: msg.tripId,
-            userId: msg.memberId,
-            senderName: 'Asha',
-            kind: 'expense_added',
-            message: msg.body,
-            createdAt: DateTime.fromMillisecondsSinceEpoch(msg.createdAt, isUtc: true).toIso8601String(),
-            domainJson: Value(jsonEncode(msg.toJson())),
-          )),
+      () => db
+          .into(db.tripMessagesTable)
+          .insert(
+            TripMessagesTableCompanion.insert(
+              id: msg.id,
+              tripId: msg.tripId,
+              userId: msg.memberId,
+              senderName: 'Asha',
+              kind: 'expense_added',
+              message: msg.body,
+              createdAt: DateTime.fromMillisecondsSinceEpoch(msg.createdAt, isUtc: true).toIso8601String(),
+              domainJson: Value(jsonEncode(msg.toJson())),
+            ),
+          ),
     );
     await settle(tester, rounds: 8);
     expect(key('chat-event-evt-1'), findsOneWidget);

@@ -24,9 +24,7 @@ void main() {
     );
 
     test('FakeSpeechRecognitionGateway tracks sessions and emits transcripts', () async {
-      final fakeGateway = FakeSpeechRecognitionGateway(
-        simulatedTranscript: 'Dinner 600',
-      );
+      final fakeGateway = FakeSpeechRecognitionGateway(simulatedTranscript: 'Dinner 600');
 
       expect(await fakeGateway.isSupported(), isTrue);
       expect(await fakeGateway.requestPermission(), isTrue);
@@ -51,9 +49,7 @@ void main() {
     });
 
     testWidgets('QuickAddSheet mic button populates speech transcript into input', (tester) async {
-      final fakeGateway = FakeSpeechRecognitionGateway(
-        simulatedTranscript: 'Burger 350',
-      );
+      final fakeGateway = FakeSpeechRecognitionGateway(simulatedTranscript: 'Burger 350');
 
       await tester.pumpWidget(
         ProviderScope(
@@ -68,9 +64,7 @@ void main() {
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: QuickAddSheet(tripId: 't-voice'),
-            ),
+            home: Scaffold(body: QuickAddSheet(tripId: 't-voice')),
           ),
         ),
       );

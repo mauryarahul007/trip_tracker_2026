@@ -9,7 +9,9 @@ import 'package:trip_tracker/data/mappers/row_mappers.dart';
 void main() {
   late Map<String, dynamic> fx;
   setUpAll(() {
-    fx = jsonDecode(File('../docs/flutter-migration/fixtures/database_mappings.json').readAsStringSync()) as Map<String, dynamic>;
+    fx = jsonDecode(
+      File('../docs/flutter-migration/fixtures/database_mappings.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
   });
 
   Map<String, dynamic> row(String k) => Map<String, dynamic>.from(fx[k]['dbRow'] as Map);
@@ -18,7 +20,17 @@ void main() {
   test('trip row -> domain', () {
     final t = tripFromRow(row('trips')).toJson();
     final a = app('trips');
-    for (final k in ['id', 'name', 'startDate', 'endDate', 'baseCurrency', 'ownerId', 'joinCode', 'archived', 'destination']) {
+    for (final k in [
+      'id',
+      'name',
+      'startDate',
+      'endDate',
+      'baseCurrency',
+      'ownerId',
+      'joinCode',
+      'archived',
+      'destination',
+    ]) {
       expect(t[k], a[k], reason: k);
     }
   });

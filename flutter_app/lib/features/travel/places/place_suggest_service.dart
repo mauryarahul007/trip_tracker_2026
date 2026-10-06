@@ -12,19 +12,9 @@ class PlaceSuggestion {
   final String countryCode;
   final SuggestionSource source;
 
-  const PlaceSuggestion({
-    required this.name,
-    required this.detail,
-    required this.countryCode,
-    required this.source,
-  });
+  const PlaceSuggestion({required this.name, required this.detail, required this.countryCode, required this.source});
 
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'detail': detail,
-    'countryCode': countryCode,
-    'source': source.name,
-  };
+  Map<String, dynamic> toJson() => {'name': name, 'detail': detail, 'countryCode': countryCode, 'source': source.name};
 }
 
 const String _photonUrl =
@@ -34,30 +24,17 @@ final Map<String, List<PlaceSuggestion>> _onlineCache = {};
 
 /// Offline suggestions: prefix matches and close misspellings from the curated gazetteer.
 /// Parity with web `localSuggestions` in `src/services/placeSuggest.ts`.
-List<PlaceSuggestion> localSuggestions(
-  String query, {
-  List<String> pastDestinations = const [],
-  int limit = 5,
-}) {
+List<PlaceSuggestion> localSuggestions(String query, {List<String> pastDestinations = const [], int limit = 5}) {
   final q = normalizeQuery(query);
   if (q.length < 2) return const [];
 
   final pool = <PlaceSuggestion>[
     ...gazetteer.map(
-      (e) => PlaceSuggestion(
-        name: e.name,
-        detail: e.region,
-        countryCode: e.countryCode,
-        source: SuggestionSource.local,
-      ),
+      (e) =>
+          PlaceSuggestion(name: e.name, detail: e.region, countryCode: e.countryCode, source: SuggestionSource.local),
     ),
     ...pastDestinations.map(
-      (name) => PlaceSuggestion(
-        name: name,
-        detail: 'Used before',
-        countryCode: '',
-        source: SuggestionSource.local,
-      ),
+      (name) => PlaceSuggestion(name: name, detail: 'Used before', countryCode: '', source: SuggestionSource.local),
     ),
   ];
 
@@ -77,9 +54,7 @@ List<PlaceSuggestion> localSuggestions(
       final dist = editDistance(q, n);
       if (dist <= typoTolerance(q.length)) {
         score = dist.toDouble();
-      } else if (q.length >= 3 &&
-          n.length > q.length &&
-          editDistance(q, n.substring(0, q.length)) <= 1) {
+      } else if (q.length >= 3 && n.length > q.length && editDistance(q, n.substring(0, q.length)) <= 1) {
         score = 1.5;
       }
     }
@@ -101,10 +76,7 @@ List<PlaceSuggestion> localSuggestions(
 
 /// Online suggestions from Photon (Komoot). Empty when offline or on network failure.
 /// Parity with web `onlineSuggestions` in `src/services/placeSuggest.ts`.
-Future<List<PlaceSuggestion>> onlineSuggestions(
-  String query, {
-  http.Client? client,
-}) async {
+Future<List<PlaceSuggestion>> onlineSuggestions(String query, {http.Client? client}) async {
   final q = normalizeQuery(query);
   if (q.length < 3) return const [];
 
@@ -114,9 +86,7 @@ Future<List<PlaceSuggestion>> onlineSuggestions(
   final httpClient = client ?? http.Client();
   try {
     final url = Uri.parse('$_photonUrl${Uri.encodeComponent(q)}');
-    final response = await httpClient
-        .get(url)
-        .timeout(const Duration(seconds: 4));
+    final response = await httpClient.get(url).timeout(const Duration(seconds: 4));
 
     if (response.statusCode != 200) return const [];
 
@@ -133,26 +103,15 @@ Future<List<PlaceSuggestion>> onlineSuggestions(
 
       final state = props['state'] as String?;
       final country = props['country'] as String?;
-      final countryCode = ((props['countrycode'] as String?) ?? '')
-          .toUpperCase();
+      final countryCode = ((props['countrycode'] as String?) ?? '').toUpperCase();
 
-      final details = [
-        state,
-        country,
-      ].where((x) => x != null && x != name).join(', ');
+      final details = [state, country].where((x) => x != null && x != name).join(', ');
       final key = '${normalizeQuery(name)}|$details';
 
       if (seen.contains(key)) continue;
       seen.add(key);
 
-      out.add(
-        PlaceSuggestion(
-          name: name,
-          detail: details,
-          countryCode: countryCode,
-          source: SuggestionSource.online,
-        ),
-      );
+      out.add(PlaceSuggestion(name: name, detail: details, countryCode: countryCode, source: SuggestionSource.online));
     }
 
     _onlineCache[q] = out;

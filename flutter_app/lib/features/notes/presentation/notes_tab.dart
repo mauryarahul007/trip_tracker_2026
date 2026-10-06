@@ -53,38 +53,37 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     final unread = ref.watch(chatUnreadProvider(widget.tripId));
     if (!showChat && _pane == 'chat') _pane = 'checklist';
 
-    final panes = [
-      ('checklist', l10n.notesCheck),
-      ('notes', l10n.notesNotes),
-      if (showChat) ('chat', l10n.notesChat),
-    ];
+    final panes = [('checklist', l10n.notesCheck), ('notes', l10n.notesNotes), if (showChat) ('chat', l10n.notesChat)];
 
-    return Column(key: const Key('tab-notes'), children: [
-      if (trip != null) NextUpTravelCapsule(trip: trip, passes: trip.passes),
-      if (passesOn) _passes(context, trip?.passes ?? const []),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-        child: SegmentedButton<String>(
-          key: const Key('notes-panes'),
-          segments: [
-            for (final p in panes)
-              ButtonSegment(
-                value: p.$1,
-                label: p.$1 == 'chat' && unread ? Text(p.$2, key: const Key('notes-chat-unread')) : Text(p.$2),
-              ),
-          ],
-          selected: {_pane},
-          onSelectionChanged: (s) => setState(() => _pane = s.first),
+    return Column(
+      key: const Key('tab-notes'),
+      children: [
+        if (trip != null) NextUpTravelCapsule(trip: trip, passes: trip.passes),
+        if (passesOn) _passes(context, trip?.passes ?? const []),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+          child: SegmentedButton<String>(
+            key: const Key('notes-panes'),
+            segments: [
+              for (final p in panes)
+                ButtonSegment(
+                  value: p.$1,
+                  label: p.$1 == 'chat' && unread ? Text(p.$2, key: const Key('notes-chat-unread')) : Text(p.$2),
+                ),
+            ],
+            selected: {_pane},
+            onSelectionChanged: (s) => setState(() => _pane = s.first),
+          ),
         ),
-      ),
-      Expanded(
-        child: switch (_pane) {
-          'notes' => _notes(context, trip?.notes ?? const []),
-          'chat' => ChatPane(tripId: widget.tripId),
-          _ => _checklist(context, trip?.checklist ?? const [], packing),
-        },
-      ),
-    ]);
+        Expanded(
+          child: switch (_pane) {
+            'notes' => _notes(context, trip?.notes ?? const []),
+            'chat' => ChatPane(tripId: widget.tripId),
+            _ => _checklist(context, trip?.checklist ?? const [], packing),
+          },
+        ),
+      ],
+    );
   }
 
   bool _flag(String key) => ref.watch(flagProvider((key, widget.tripId))).value ?? (defaultFeatureFlags[key] ?? false);
@@ -96,60 +95,74 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     final icsOn = _flag('enableIcsExport');
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        if (passes.isNotEmpty) Text(l10n.notesPasses, style: const TextStyle(fontWeight: FontWeight.w700)),
-        for (final p in passes)
-          Builder(
-            builder: (ctx) {
-              final statusInfo = getTravelStatusInfo(p);
-              return ListTile(
-                key: Key('pass-${p.id}'),
-                contentPadding: EdgeInsets.zero,
-                title: Text(p.title),
-                subtitle: Text([p.type, if (p.origin != null) p.origin, if (p.destination != null) p.destination].whereType<String>().join(' · ')),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (gateScannerOn)
-                      IconButton(
-                        key: Key('pass-scan-${p.id}'),
-                        icon: const Icon(Icons.qr_code_2, size: 20),
-                        tooltip: 'Show Pass / QR',
-                        onPressed: () => PassScannerModal.show(ctx, pass: p),
-                      ),
-                    if (statusInfo != null)
-                      IconButton(
-                        icon: const Icon(Icons.radar, size: 20),
-                        tooltip: 'Live Travel Status',
-                        onPressed: () => LiveTravelStatusModal.show(ctx, statusInfo),
-                      ),
-                  ],
-                ),
-                onTap: () {
-                  if (gateScannerOn) {
-                    PassScannerModal.show(ctx, pass: p);
-                  } else if (statusInfo != null) {
-                    LiveTravelStatusModal.show(ctx, statusInfo);
-                  }
-                },
-              );
-            },
-          ),
-        Wrap(
-          spacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            TextButton(key: const Key('pass-add'), onPressed: () => _addPass(context, passes), child: Text(l10n.notesAddPass)),
-            if (icsOn && passes.isNotEmpty && trip != null)
-              TextButton.icon(
-                key: const Key('pass-export-ics'),
-                icon: const Icon(Icons.calendar_month, size: 16),
-                label: const Text('Add to Calendar'),
-                onPressed: () => shareTripIcs(trip: trip, shareService: ref.read(shareServiceProvider), passes: passes),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (passes.isNotEmpty) Text(l10n.notesPasses, style: const TextStyle(fontWeight: FontWeight.w700)),
+          for (final p in passes)
+            Builder(
+              builder: (ctx) {
+                final statusInfo = getTravelStatusInfo(p);
+                return ListTile(
+                  key: Key('pass-${p.id}'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(p.title),
+                  subtitle: Text(
+                    [
+                      p.type,
+                      if (p.origin != null) p.origin,
+                      if (p.destination != null) p.destination,
+                    ].whereType<String>().join(' · '),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (gateScannerOn)
+                        IconButton(
+                          key: Key('pass-scan-${p.id}'),
+                          icon: const Icon(Icons.qr_code_2, size: 20),
+                          tooltip: 'Show Pass / QR',
+                          onPressed: () => PassScannerModal.show(ctx, pass: p),
+                        ),
+                      if (statusInfo != null)
+                        IconButton(
+                          icon: const Icon(Icons.radar, size: 20),
+                          tooltip: 'Live Travel Status',
+                          onPressed: () => LiveTravelStatusModal.show(ctx, statusInfo),
+                        ),
+                    ],
+                  ),
+                  onTap: () {
+                    if (gateScannerOn) {
+                      PassScannerModal.show(ctx, pass: p);
+                    } else if (statusInfo != null) {
+                      LiveTravelStatusModal.show(ctx, statusInfo);
+                    }
+                  },
+                );
+              },
+            ),
+          Wrap(
+            spacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              TextButton(
+                key: const Key('pass-add'),
+                onPressed: () => _addPass(context, passes),
+                child: Text(l10n.notesAddPass),
               ),
-          ],
-        ),
-      ]),
+              if (icsOn && passes.isNotEmpty && trip != null)
+                TextButton.icon(
+                  key: const Key('pass-export-ics'),
+                  icon: const Icon(Icons.calendar_month, size: 16),
+                  label: const Text('Add to Calendar'),
+                  onPressed: () =>
+                      shareTripIcs(trip: trip, shareService: ref.read(shareServiceProvider), passes: passes),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -157,7 +170,10 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     final l10n = context.l10n;
     final trip = ref.watch(tripProvider(widget.tripId)).value;
     final members = ref.watch(tripMembersProvider(widget.tripId)).value ?? const <Member>[];
-    final shown = [for (final i in items) if (_category == 'all' || i.category == _category) i];
+    final shown = [
+      for (final i in items)
+        if (_category == 'all' || i.category == _category) i,
+    ];
     final done = items.where((i) => i.completed).length;
     final dest = trip?.destination?.isNotEmpty == true ? trip!.destination : trip?.name;
     return ListView(
@@ -173,15 +189,18 @@ class _NotesTabState extends ConsumerState<NotesTab> {
             ),
           ),
         Text(l10n.notesProgress(done, items.length)),
-        Wrap(spacing: 6, children: [
-          for (final c in ['all', ..._categories])
-            ChoiceChip(
-              key: Key('check-cat-$c'),
-              label: Text(c),
-              selected: _category == c,
-              onSelected: (_) => setState(() => _category = c),
-            ),
-        ]),
+        Wrap(
+          spacing: 6,
+          children: [
+            for (final c in ['all', ..._categories])
+              ChoiceChip(
+                key: Key('check-cat-$c'),
+                label: Text(c),
+                selected: _category == c,
+                onSelected: (_) => setState(() => _category = c),
+              ),
+          ],
+        ),
         for (final item in shown) _checkRow(context, items, item, members),
         AppButton(key: const Key('check-add'), label: l10n.notesAddItem, onPressed: () => _addItem(context, items)),
         if (packing)
@@ -213,36 +232,43 @@ class _NotesTabState extends ConsumerState<NotesTab> {
       ),
       title: Text(item.text, style: item.completed ? const TextStyle(decoration: TextDecoration.lineThrough) : null),
       subtitle: Text([?item.category, ?assignee].join(' · ')),
-      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        PopupMenuButton<String>(
-          key: Key('check-assign-${item.id}'),
-          onSelected: (id) => _saveChecks([
-            for (final i in all) i.id == item.id ? i.copyWith(assignedToMemberId: id, updatedAt: _now()) : i,
-          ]),
-          itemBuilder: (_) => [for (final m in members) PopupMenuItem(value: m.id, child: Text(m.name))],
-          child: const Icon(Icons.person_outline),
-        ),
-        IconButton(
-          key: Key('check-up-${item.id}'),
-          onPressed: index <= 0 ? null : () => _move(all, index, index - 1),
-          icon: const Icon(Icons.arrow_upward),
-        ),
-        IconButton(
-          key: Key('check-down-${item.id}'),
-          onPressed: index < 0 || index >= all.length - 1 ? null : () => _move(all, index, index + 1),
-          icon: const Icon(Icons.arrow_downward),
-        ),
-      ]),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          PopupMenuButton<String>(
+            key: Key('check-assign-${item.id}'),
+            onSelected: (id) => _saveChecks([
+              for (final i in all) i.id == item.id ? i.copyWith(assignedToMemberId: id, updatedAt: _now()) : i,
+            ]),
+            itemBuilder: (_) => [for (final m in members) PopupMenuItem(value: m.id, child: Text(m.name))],
+            child: const Icon(Icons.person_outline),
+          ),
+          IconButton(
+            tooltip: 'Move up',
+            key: Key('check-up-${item.id}'),
+            onPressed: index <= 0 ? null : () => _move(all, index, index - 1),
+            icon: const Icon(Icons.arrow_upward),
+          ),
+          IconButton(
+            tooltip: 'Move down',
+            key: Key('check-down-${item.id}'),
+            onPressed: index < 0 || index >= all.length - 1 ? null : () => _move(all, index, index + 1),
+            icon: const Icon(Icons.arrow_downward),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _notes(BuildContext context, List<TripNote> notes) {
     final l10n = context.l10n;
     if (notes.isEmpty) {
-      return ListView(children: [
-        Padding(padding: const EdgeInsets.all(24), child: Text(l10n.notesEmptyNotes)),
-        AppButton(key: const Key('note-add'), label: l10n.notesAddNote, onPressed: () => _addNote(context, notes)),
-      ]);
+      return ListView(
+        children: [
+          Padding(padding: const EdgeInsets.all(24), child: Text(l10n.notesEmptyNotes)),
+          AppButton(key: const Key('note-add'), label: l10n.notesAddNote, onPressed: () => _addNote(context, notes)),
+        ],
+      );
     }
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -251,9 +277,8 @@ class _NotesTabState extends ConsumerState<NotesTab> {
           _NoteCard(
             key: Key('note-${n.id}'),
             note: n,
-            onContent: (text) => _saveNotes([
-              for (final x in notes) x.id == n.id ? x.copyWith(content: text, updatedAt: _now()) : x,
-            ]),
+            onContent: (text) =>
+                _saveNotes([for (final x in notes) x.id == n.id ? x.copyWith(content: text, updatedAt: _now()) : x]),
           ),
         AppButton(key: const Key('note-add'), label: l10n.notesAddNote, onPressed: () => _addNote(context, notes)),
       ],
@@ -266,7 +291,13 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     final now = _now();
     await _saveChecks([
       ...items,
-      ChecklistItem(id: const Uuid().v4(), text: text, category: _category == 'all' ? 'general' : _category, createdAt: now, updatedAt: now),
+      ChecklistItem(
+        id: const Uuid().v4(),
+        text: text,
+        category: _category == 'all' ? 'general' : _category,
+        createdAt: now,
+        updatedAt: now,
+      ),
     ]);
   }
 
@@ -277,13 +308,15 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     for (final s in generateSmartPackingSuggestions(const {})) {
       final text = s['text'] as String;
       if (have.contains(text)) continue;
-      extra.add(ChecklistItem(
-        id: const Uuid().v4(),
-        text: text,
-        category: s['category'] as String? ?? 'packing',
-        createdAt: now,
-        updatedAt: now,
-      ));
+      extra.add(
+        ChecklistItem(
+          id: const Uuid().v4(),
+          text: text,
+          category: s['category'] as String? ?? 'packing',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
     }
     if (extra.isEmpty) return;
     await _saveChecks([...items, ...extra]);
@@ -325,7 +358,8 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     unawaited(_saveChecks(next));
   }
 
-  Future<void> _saveChecks(List<ChecklistItem> items) => ref.read(tripRepositoryProvider).setChecklist(widget.tripId, items);
+  Future<void> _saveChecks(List<ChecklistItem> items) =>
+      ref.read(tripRepositoryProvider).setChecklist(widget.tripId, items);
   Future<void> _saveNotes(List<TripNote> notes) => ref.read(tripRepositoryProvider).setNotes(widget.tripId, notes);
 
   int _now() => DateTime.now().millisecondsSinceEpoch;
@@ -378,22 +412,25 @@ class _NoteCardState extends ConsumerState<_NoteCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(widget.note.title, style: const TextStyle(fontWeight: FontWeight.w700)),
-      TextField(
-        key: Key('note-body-${widget.note.id}'),
-        controller: _c,
-        focusNode: _focus,
-        maxLines: 4,
-        onChanged: (v) {
-          _draft = v;
-          setState(() {});
-          _debounce?.cancel();
-          _debounce = Timer(const Duration(milliseconds: 400), () => widget.onContent(v));
-        },
-      ),
-      _Linked(text: _draft ?? _c.text),
-    ]);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(widget.note.title, style: const TextStyle(fontWeight: FontWeight.w700)),
+        TextField(
+          key: Key('note-body-${widget.note.id}'),
+          controller: _c,
+          focusNode: _focus,
+          maxLines: 4,
+          onChanged: (v) {
+            _draft = v;
+            setState(() {});
+            _debounce?.cancel();
+            _debounce = Timer(const Duration(milliseconds: 400), () => widget.onContent(v));
+          },
+        ),
+        _Linked(text: _draft ?? _c.text),
+      ],
+    );
   }
 }
 
@@ -406,14 +443,20 @@ class _Linked extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final matches = _re.allMatches(text).map((m) => m.group(0)!).toList();
     if (matches.isEmpty) return const SizedBox.shrink();
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      for (final url in matches)
-        GestureDetector(
-          key: Key('note-link-$url'),
-          onTap: () => ref.read(externalLauncherProvider)(Uri.parse(url)),
-          child: Text(url, style: TextStyle(color: Theme.of(context).colorScheme.primary, decoration: TextDecoration.underline)),
-        ),
-    ]);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final url in matches)
+          GestureDetector(
+            key: Key('note-link-$url'),
+            onTap: () => ref.read(externalLauncherProvider)(Uri.parse(url)),
+            child: Text(
+              url,
+              style: TextStyle(color: Theme.of(context).colorScheme.primary, decoration: TextDecoration.underline),
+            ),
+          ),
+      ],
+    );
   }
 }
 
@@ -451,26 +494,42 @@ class _PassDialogState extends State<_PassDialog> {
     final l10n = context.l10n;
     return AlertDialog(
       title: Text(l10n.notesAddPass),
-      content: Column(mainAxisSize: MainAxisSize.min, children: [
-        DropdownButton<String>(
-          key: const Key('pass-type'),
-          value: _type,
-          items: [
-            DropdownMenuItem(value: 'flight', child: Text(l10n.notesPassFlight)),
-            DropdownMenuItem(value: 'train', child: Text(l10n.notesPassTrain)),
-            DropdownMenuItem(value: 'stay', child: Text(l10n.notesPassHotel)),
-          ],
-          onChanged: (v) => setState(() => _type = v ?? 'flight'),
-        ),
-        TextField(key: const Key('pass-title'), controller: _title, decoration: InputDecoration(labelText: l10n.notesPassTitle)),
-        TextField(key: const Key('pass-from'), controller: _from, decoration: InputDecoration(labelText: l10n.notesPassFrom)),
-        TextField(key: const Key('pass-to'), controller: _to, decoration: InputDecoration(labelText: l10n.notesPassTo)),
-      ]),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DropdownButton<String>(
+            key: const Key('pass-type'),
+            value: _type,
+            items: [
+              DropdownMenuItem(value: 'flight', child: Text(l10n.notesPassFlight)),
+              DropdownMenuItem(value: 'train', child: Text(l10n.notesPassTrain)),
+              DropdownMenuItem(value: 'stay', child: Text(l10n.notesPassHotel)),
+            ],
+            onChanged: (v) => setState(() => _type = v ?? 'flight'),
+          ),
+          TextField(
+            key: const Key('pass-title'),
+            controller: _title,
+            decoration: InputDecoration(labelText: l10n.notesPassTitle),
+          ),
+          TextField(
+            key: const Key('pass-from'),
+            controller: _from,
+            decoration: InputDecoration(labelText: l10n.notesPassFrom),
+          ),
+          TextField(
+            key: const Key('pass-to'),
+            controller: _to,
+            decoration: InputDecoration(labelText: l10n.notesPassTo),
+          ),
+        ],
+      ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.actionCancel)),
         TextButton(
           key: const Key('pass-save'),
-          onPressed: () => Navigator.pop(context, _PassDraft(_type, _title.text.trim(), _from.text.trim(), _to.text.trim())),
+          onPressed: () =>
+              Navigator.pop(context, _PassDraft(_type, _title.text.trim(), _from.text.trim(), _to.text.trim())),
           child: Text(l10n.actionSave),
         ),
       ],

@@ -23,28 +23,21 @@ class SupabaseLocationShareRepository implements LocationShareRepository {
     final client = _client;
     final expiresAt = DateTime.now().toUtc().add(_shareDuration).toIso8601String();
     if (client == null) {
-      return MyLocationShare(
-        isSharing: true,
-        shareToken: 'demo_token_$tripId',
-        expiresAt: expiresAt,
-      );
+      return MyLocationShare(isSharing: true, shareToken: 'demo_token_$tripId', expiresAt: expiresAt);
     }
 
     final data = await client
         .from('member_locations')
-        .upsert(
-          {
-            'trip_id': tripId,
-            'member_id': memberId,
-            'user_id': userId,
-            'lat': lat,
-            'lng': lng,
-            'is_sharing': true,
-            'expires_at': expiresAt,
-            'updated_at': DateTime.now().toUtc().toIso8601String(),
-          },
-          onConflict: 'trip_id,user_id',
-        )
+        .upsert({
+          'trip_id': tripId,
+          'member_id': memberId,
+          'user_id': userId,
+          'lat': lat,
+          'lng': lng,
+          'is_sharing': true,
+          'expires_at': expiresAt,
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        }, onConflict: 'trip_id,user_id')
         .select('share_token, is_sharing, expires_at')
         .single();
 
@@ -52,11 +45,7 @@ class SupabaseLocationShareRepository implements LocationShareRepository {
   }
 
   @override
-  Future<void> updateLocationShare({
-    required String tripId,
-    required double lat,
-    required double lng,
-  }) async {
+  Future<void> updateLocationShare({required String tripId, required double lat, required double lng}) async {
     final client = _client;
     if (client == null) {
       return;
@@ -64,11 +53,7 @@ class SupabaseLocationShareRepository implements LocationShareRepository {
 
     await client
         .from('member_locations')
-        .update({
-          'lat': lat,
-          'lng': lng,
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        })
+        .update({'lat': lat, 'lng': lng, 'updated_at': DateTime.now().toUtc().toIso8601String()})
         .eq('trip_id', tripId);
   }
 
@@ -79,10 +64,7 @@ class SupabaseLocationShareRepository implements LocationShareRepository {
       return;
     }
 
-    await client
-        .from('member_locations')
-        .update({'is_sharing': false})
-        .eq('trip_id', tripId);
+    await client.from('member_locations').update({'is_sharing': false}).eq('trip_id', tripId);
   }
 
   @override
@@ -140,10 +122,7 @@ class SupabaseLocationShareRepository implements LocationShareRepository {
       return null;
     }
 
-    final data = await client.rpc<dynamic>(
-      'get_shared_location',
-      params: {'p_token': shareToken},
-    );
+    final data = await client.rpc<dynamic>('get_shared_location', params: {'p_token': shareToken});
 
     if (data is List && data.isNotEmpty) {
       final row = Map<String, dynamic>.from(data.first as Map);
@@ -173,12 +152,9 @@ class FakeLocationShareRepository implements LocationShareRepository {
     );
     myShare = share;
     activeShares.removeWhere((s) => s.memberId == memberId);
-    activeShares.add(TripActiveShare(
-      memberId: memberId,
-      lat: lat,
-      lng: lng,
-      updatedAt: DateTime.now().toIso8601String(),
-    ));
+    activeShares.add(
+      TripActiveShare(memberId: memberId, lat: lat, lng: lng, updatedAt: DateTime.now().toIso8601String()),
+    );
     publicShares['test_token_$tripId'] = SharedLocation(
       memberName: 'Test Member',
       tripName: 'Test Trip',
@@ -191,11 +167,7 @@ class FakeLocationShareRepository implements LocationShareRepository {
   }
 
   @override
-  Future<void> updateLocationShare({
-    required String tripId,
-    required double lat,
-    required double lng,
-  }) async {
+  Future<void> updateLocationShare({required String tripId, required double lat, required double lng}) async {
     if (myShare != null && myShare!.isSharing) {
       publicShares[myShare!.shareToken ?? ''] = SharedLocation(
         memberName: 'Test Member',
@@ -210,11 +182,7 @@ class FakeLocationShareRepository implements LocationShareRepository {
   @override
   Future<void> stopLocationShare(String tripId) async {
     if (myShare != null) {
-      myShare = MyLocationShare(
-        isSharing: false,
-        shareToken: myShare!.shareToken,
-        expiresAt: myShare!.expiresAt,
-      );
+      myShare = MyLocationShare(isSharing: false, shareToken: myShare!.shareToken, expiresAt: myShare!.expiresAt);
     }
     activeShares.clear();
   }

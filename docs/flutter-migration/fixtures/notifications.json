@@ -8,7 +8,7 @@
         "amount": "85.00"
       },
       "headline": "Expense Added",
-      "body": "You have a new notification"
+      "body": "Dinner — USD 85.00"
     },
     {
       "type": "expense_updated",
@@ -16,7 +16,7 @@
         "expenseTitle": "Dinner"
       },
       "headline": "Expense Updated",
-      "body": "You have a new notification"
+      "body": "Dinner"
     },
     {
       "type": "expense_deleted",
@@ -24,7 +24,7 @@
         "expenseTitle": "Lunch"
       },
       "headline": "Expense Deleted",
-      "body": "You have a new notification"
+      "body": "Lunch"
     },
     {
       "type": "expense_restored",
@@ -32,13 +32,13 @@
         "expenseTitle": "Lunch"
       },
       "headline": "Expense Restored",
-      "body": "You have a new notification"
+      "body": "Lunch"
     },
     {
       "type": "member_added",
       "params": {},
       "headline": "Member Added",
-      "body": "You have a new notification"
+      "body": "You were added to Alps Roadtrip"
     },
     {
       "type": "member_added_notice",
@@ -46,7 +46,7 @@
         "memberName": "Charlie"
       },
       "headline": "Member Added",
-      "body": "You have a new notification"
+      "body": "Charlie was added to the trip"
     },
     {
       "type": "member_joined",
@@ -54,7 +54,7 @@
         "memberName": "Diana"
       },
       "headline": "Member Joined",
-      "body": "You have a new notification"
+      "body": "Diana joined the trip"
     },
     {
       "type": "settlement_reminder",
@@ -64,7 +64,7 @@
         "amount": "45.00"
       },
       "headline": "Settlement Reminder",
-      "body": "You have a new notification"
+      "body": "You owe Alice USD45.00 for this trip"
     },
     {
       "type": "settlement_confirmation_requested",
@@ -73,13 +73,13 @@
         "amount": "50.00"
       },
       "headline": "Confirm Settlement",
-      "body": "You have a new notification"
+      "body": "Someone marked USD 50.00 as paid to you — confirm you received it"
     },
     {
       "type": "trip_deleted",
       "params": {},
       "headline": "Trip Deleted",
-      "body": "You have a new notification"
+      "body": "\"Alps Roadtrip\" was deleted"
     },
     {
       "type": "chat_message",
@@ -88,7 +88,7 @@
         "preview": "Hey everyone, check this out!"
       },
       "headline": "New Message",
-      "body": "You have a new notification"
+      "body": "Alice: Hey everyone, check this out!"
     }
   ],
   "burstGroups": [

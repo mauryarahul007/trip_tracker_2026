@@ -28,7 +28,9 @@ TripStatus tripStatus(String startDate, String endDate, DateTime now) {
   int days(DateTime a, DateTime b) =>
       DateTime.utc(b.year, b.month, b.day).difference(DateTime.utc(a.year, a.month, a.day)).inDays;
   final total = days(start, end) + 1;
-  if (today.isBefore(start)) return TripStatus(TripPhase.upcoming, daysUntilStart: days(today, start), totalDays: total);
+  if (today.isBefore(start)) {
+    return TripStatus(TripPhase.upcoming, daysUntilStart: days(today, start), totalDays: total);
+  }
   if (today.isAfter(end)) return TripStatus(TripPhase.ended, totalDays: total);
   return TripStatus(TripPhase.active, dayNumber: days(start, today) + 1, totalDays: total);
 }

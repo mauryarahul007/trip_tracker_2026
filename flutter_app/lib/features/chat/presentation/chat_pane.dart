@@ -56,59 +56,74 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
       if (mounted) _markSeen(messages);
     });
 
-    return Column(key: const Key('tab-chat'), children: [
-      if (showLiveBanner)
-        LiveLocationChatBanner(
-          tripId: widget.tripId,
-          members: members.values.toList(),
-          onShareMyLocation: () {
-            final userId = ref.read(authStateProvider).user?.id ?? '';
-            LiveLocationShareModal.show(
-              context,
-              tripId: widget.tripId,
-              memberId: me ?? '',
-              userId: userId,
-            );
-          },
-        ),
-      Expanded(
-        child: messages.isEmpty
-            ? Center(child: Text(l10n.chatEmpty))
-            : ListView.builder(
-                key: const Key('chat-list'),
-                controller: _scroll,
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                itemCount: messages.length,
-                itemBuilder: (context, i) {
-                  final m = messages[i];
-                  final showDay = i == 0 || _day(messages[i - 1].createdAt) != _day(m.createdAt);
-                  return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                    if (showDay) Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Center(child: Text(_day(m.createdAt)))),
-                    if (m.deletedAt != null)
-                      Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Text(l10n.chatDeleted, style: const TextStyle(fontStyle: FontStyle.italic)))
-                    else if (_isEvent(m))
-                      _event(context, m, dirty.contains(m.id))
-                    else
-                      _bubble(context, m, members[m.memberId]?.name ?? '', m.memberId == me, dirty.contains(m.id)),
-                  ]);
-                },
-              ),
-      ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        child: Row(children: [
-          Expanded(
-            child: TextField(
-              key: const Key('chat-input'),
-              controller: _input,
-              decoration: InputDecoration(hintText: l10n.chatHint),
-              onSubmitted: (_) => _send(),
-            ),
+    return Column(
+      key: const Key('tab-chat'),
+      children: [
+        if (showLiveBanner)
+          LiveLocationChatBanner(
+            tripId: widget.tripId,
+            members: members.values.toList(),
+            onShareMyLocation: () {
+              final userId = ref.read(authStateProvider).user?.id ?? '';
+              LiveLocationShareModal.show(context, tripId: widget.tripId, memberId: me ?? '', userId: userId);
+            },
           ),
-          IconButton(key: const Key('chat-send'), onPressed: _send, icon: const Icon(Icons.send)),
-        ]),
-      ),
-    ]);
+        Expanded(
+          child: messages.isEmpty
+              ? Center(child: Text(l10n.chatEmpty))
+              : ListView.builder(
+                  key: const Key('chat-list'),
+                  controller: _scroll,
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                  itemCount: messages.length,
+                  itemBuilder: (context, i) {
+                    final m = messages[i];
+                    final showDay = i == 0 || _day(messages[i - 1].createdAt) != _day(m.createdAt);
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (showDay)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Center(child: Text(_day(m.createdAt))),
+                          ),
+                        if (m.deletedAt != null)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(l10n.chatDeleted, style: const TextStyle(fontStyle: FontStyle.italic)),
+                          )
+                        else if (_isEvent(m))
+                          _event(context, m, dirty.contains(m.id))
+                        else
+                          _bubble(context, m, members[m.memberId]?.name ?? '', m.memberId == me, dirty.contains(m.id)),
+                      ],
+                    );
+                  },
+                ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  key: const Key('chat-input'),
+                  controller: _input,
+                  decoration: InputDecoration(hintText: l10n.chatHint),
+                  onSubmitted: (_) => _send(),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Send message',
+                key: const Key('chat-send'),
+                onPressed: _send,
+                icon: const Icon(Icons.send),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   bool _isEvent(TripMessage m) => m.eventKind != null && m.eventKind != 'text';
@@ -125,14 +140,19 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           constraints: const BoxConstraints(maxWidth: 280),
           decoration: BoxDecoration(
-            color: mine ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.surfaceContainerHighest,
+            color: mine
+                ? Theme.of(context).colorScheme.primaryContainer
+                : Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            if (!mine) Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-            Text(m.body),
-            if (pending) Text(l10n.chatPending, style: const TextStyle(fontSize: 11)),
-          ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!mine) Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+              Text(m.body),
+              if (pending) Text(l10n.chatPending, style: const TextStyle(fontSize: 11)),
+            ],
+          ),
         ),
       ),
     );
@@ -152,10 +172,13 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
             border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(m.body),
-            if (pending) Text(context.l10n.chatPending, style: const TextStyle(fontSize: 11)),
-          ]),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(m.body),
+              if (pending) Text(context.l10n.chatPending, style: const TextStyle(fontSize: 11)),
+            ],
+          ),
         ),
       ),
     );
@@ -170,7 +193,9 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     if (memberId == null) return;
     final name = members.where((m) => m.id == memberId).map((m) => m.name).firstOrNull ?? '';
     _input.clear();
-    await ref.read(messageRepositoryProvider).send(tripId: widget.tripId, memberId: memberId, senderName: name, body: body);
+    await ref
+        .read(messageRepositoryProvider)
+        .send(tripId: widget.tripId, memberId: memberId, senderName: name, body: body);
   }
 
   Future<void> _edit(TripMessage m) async {

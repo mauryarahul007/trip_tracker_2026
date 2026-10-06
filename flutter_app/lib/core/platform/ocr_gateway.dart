@@ -9,10 +9,7 @@ abstract class OcrGateway {
 
 /// Headless deterministic mock for widget and unit tests.
 class FakeOcrGateway implements OcrGateway {
-  FakeOcrGateway({
-    this.cannedText = '',
-    this.supported = true,
-  });
+  FakeOcrGateway({this.cannedText = '', this.supported = true});
 
   String cannedText;
   bool supported;

@@ -23,7 +23,10 @@ class ConflictStore extends Notifier<Map<String, List<ExpenseConflict>>> {
   void dismiss(String tripId, String expenseId) {
     final list = state[tripId];
     if (list == null) return;
-    setForTrip(tripId, [for (final c in list) if (c.expenseId != expenseId) c]);
+    setForTrip(tripId, [
+      for (final c in list)
+        if (c.expenseId != expenseId) c,
+    ]);
   }
 }
 

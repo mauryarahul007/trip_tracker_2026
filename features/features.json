@@ -1580,5 +1580,18 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-01T20:05:30.238Z",
     "shippedNote": "Shipped in commit 1cf0b67 (v3.43.3). decisions.md #248. QA steps in FEATURE_TEST_STEPS.md: PASS-STUB-SIMPLIFY."
+  },
+  {
+    "id": "FEAT-100",
+    "title": "Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12)",
+    "description": "Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12)",
+    "category": "native",
+    "status": "requested",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-06T18:39:46.729Z",
+    "updatedAt": "2026-10-06T18:39:46.729Z"
   }
 ]

@@ -4,12 +4,7 @@ import '../models/member.dart';
 import '../models/trip.dart';
 
 class TripArchetype {
-  const TripArchetype({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.tag,
-  });
+  const TripArchetype({required this.title, required this.subtitle, required this.icon, required this.tag});
 
   final String title;
   final String subtitle;
@@ -18,12 +13,7 @@ class TripArchetype {
 }
 
 class MemberSuperlative {
-  const MemberSuperlative({
-    required this.memberName,
-    required this.title,
-    required this.icon,
-    required this.note,
-  });
+  const MemberSuperlative({required this.memberName, required this.title, required this.icon, required this.note});
 
   final String memberName;
   final String title;
@@ -32,11 +22,7 @@ class MemberSuperlative {
 }
 
 class TripRhythm {
-  const TripRhythm({
-    required this.peakDay,
-    required this.pace,
-    required this.vibeTag,
-  });
+  const TripRhythm({required this.peakDay, required this.pace, required this.vibeTag});
 
   final String peakDay;
   final String pace;
@@ -44,10 +30,7 @@ class TripRhythm {
 }
 
 class MemberSpendEntry {
-  const MemberSpendEntry({
-    required this.memberName,
-    required this.amount,
-  });
+  const MemberSpendEntry({required this.memberName, required this.amount});
 
   final String memberName;
   final double amount;
@@ -121,9 +104,7 @@ TripArchetype getTripArchetype(List<Category> categories, List<Expense> expenses
     );
   }
 
-  if (topCategoryName.contains('shop') ||
-      topCategoryName.contains('souvenir') ||
-      topCategoryIcon == '🛍️') {
+  if (topCategoryName.contains('shop') || topCategoryName.contains('souvenir') || topCategoryIcon == '🛍️') {
     return const TripArchetype(
       title: 'The Collector’s Grand Tour',
       subtitle: 'No market left unexplored, bags filled with local gems.',
@@ -153,11 +134,7 @@ TripArchetype getTripArchetype(List<Category> categories, List<Expense> expenses
 }
 
 /// Awards narrative superlatives and honorary roles to squad members without raw currency amounts.
-List<MemberSuperlative> getMemberSuperlatives(
-  List<Member> members,
-  List<Expense> expenses,
-  List<Category> categories,
-) {
+List<MemberSuperlative> getMemberSuperlatives(List<Member> members, List<Expense> expenses, List<Category> categories) {
   if (members.isEmpty) return const [];
 
   final activeExpenses = expenses.where((e) => !e.isSettlement && e.deletedAt == null).toList();
@@ -210,12 +187,14 @@ List<MemberSuperlative> getMemberSuperlatives(
   if (topCountMemberId != null && maxCount > 0) {
     final m = members.where((x) => x.id == topCountMemberId).firstOrNull;
     if (m != null) {
-      superlatives.add(MemberSuperlative(
-        memberName: m.name,
-        title: 'Chief Quartermaster',
-        icon: '👑',
-        note: 'Coordinated crew logistics & kept the trip moving smoothly.',
-      ));
+      superlatives.add(
+        MemberSuperlative(
+          memberName: m.name,
+          title: 'Chief Quartermaster',
+          icon: '👑',
+          note: 'Coordinated crew logistics & kept the trip moving smoothly.',
+        ),
+      );
       assignedMemberIds.add(m.id);
     }
   }
@@ -233,12 +212,14 @@ List<MemberSuperlative> getMemberSuperlatives(
   if (topFoodMemberId != null && maxFood > 0) {
     final m = members.where((x) => x.id == topFoodMemberId).firstOrNull;
     if (m != null) {
-      superlatives.add(MemberSuperlative(
-        memberName: m.name,
-        title: 'Executive Tasting Officer',
-        icon: '🍕',
-        note: 'Discovered the best dining, cafes & group treats.',
-      ));
+      superlatives.add(
+        MemberSuperlative(
+          memberName: m.name,
+          title: 'Executive Tasting Officer',
+          icon: '🍕',
+          note: 'Discovered the best dining, cafes & group treats.',
+        ),
+      );
       assignedMemberIds.add(m.id);
     }
   }
@@ -256,12 +237,14 @@ List<MemberSuperlative> getMemberSuperlatives(
   if (topTravelMemberId != null && maxTravel > 0) {
     final m = members.where((x) => x.id == topTravelMemberId).firstOrNull;
     if (m != null) {
-      superlatives.add(MemberSuperlative(
-        memberName: m.name,
-        title: 'Transit Navigator',
-        icon: '🚗',
-        note: 'Kept the squad rolling across cabs, flights & roads.',
-      ));
+      superlatives.add(
+        MemberSuperlative(
+          memberName: m.name,
+          title: 'Transit Navigator',
+          icon: '🚗',
+          note: 'Kept the squad rolling across cabs, flights & roads.',
+        ),
+      );
       assignedMemberIds.add(m.id);
     }
   }
@@ -278,12 +261,7 @@ List<MemberSuperlative> getMemberSuperlatives(
   for (final m in members) {
     if (!assignedMemberIds.contains(m.id) && superlatives.length < 4) {
       final role = honoraryRoles[roleIdx % honoraryRoles.length];
-      superlatives.add(MemberSuperlative(
-        memberName: m.name,
-        title: role.title,
-        icon: role.icon,
-        note: role.note,
-      ));
+      superlatives.add(MemberSuperlative(memberName: m.name, title: role.title, icon: role.icon, note: role.note));
       assignedMemberIds.add(m.id);
       roleIdx++;
     }

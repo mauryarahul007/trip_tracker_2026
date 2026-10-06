@@ -13,18 +13,14 @@ class SkeletonLoader extends StatefulWidget {
   State<SkeletonLoader> createState() => _SkeletonLoaderState();
 }
 
-class _SkeletonLoaderState extends State<SkeletonLoader>
-    with SingleTickerProviderStateMixin {
+class _SkeletonLoaderState extends State<SkeletonLoader> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..repeat(reverse: true);
     _animation = Tween<double>(
       begin: 0.35,
       end: 0.85,
@@ -52,12 +48,7 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
 
 /// A convenient rounded box placeholder.
 class SkeletonBox extends StatelessWidget {
-  const SkeletonBox({
-    super.key,
-    this.width,
-    this.height = 16,
-    this.borderRadius,
-  });
+  const SkeletonBox({super.key, this.width, this.height = 16, this.borderRadius});
 
   final double? width;
   final double height;
@@ -89,10 +80,7 @@ class SkeletonCircle extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: tokens.borderColor.withValues(alpha: 0.6),
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: tokens.borderColor.withValues(alpha: 0.6), shape: BoxShape.circle),
     );
   }
 }

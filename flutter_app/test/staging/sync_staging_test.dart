@@ -44,14 +44,31 @@ void main() {
     final expenses = DriftExpenseRepository(db, outbox, noop);
 
     final tripId = await trips.createTrip(
-        name: 'staging-sync-${DateTime.now().millisecondsSinceEpoch}', startDate: '2026-01-01', endDate: '2026-01-02',
-        baseCurrency: 'INR', ownerId: uid, creatorName: 'Harness');
+      name: 'staging-sync-${DateTime.now().millisecondsSinceEpoch}',
+      startDate: '2026-01-01',
+      endDate: '2026-01-02',
+      baseCurrency: 'INR',
+      ownerId: uid,
+      creatorName: 'Harness',
+    );
     final memberId = (await db.select(db.membersTable).get()).single.id;
-    await expenses.add(Expense(
+    await expenses.add(
+      Expense(
         id: const Uuid().v4(),
-        tripId: tripId, title: 'Offline lunch', amount: 120, currency: 'INR', category: 'Food', date: '2026-01-01',
-        paidBy: memberId, splitMode: 'equal', splitMemberIds: [memberId], resolvedShares: {memberId: 120},
-        createdAt: 0, updatedAt: 0));
+        tripId: tripId,
+        title: 'Offline lunch',
+        amount: 120,
+        currency: 'INR',
+        category: 'Food',
+        date: '2026-01-01',
+        paidBy: memberId,
+        splitMode: 'equal',
+        splitMemberIds: [memberId],
+        resolvedShares: {memberId: 120},
+        createdAt: 0,
+        updatedAt: 0,
+      ),
+    );
 
     expect((await engine.flush()).paused, isTrue); // offline: nothing lost
     expect(await outbox.all(), hasLength(2));

@@ -32,7 +32,10 @@ class SyncChip extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
         child: ActionChip(
           avatar: Icon(issue ? AppIcons.alert : AppIcons.sync, size: 16, color: color),
-          label: Text(issue ? l10n.syncIssue : l10n.syncPending(status.pending), style: TextStyle(color: color, fontSize: 12)),
+          label: Text(
+            issue ? l10n.syncIssue : l10n.syncPending(status.pending),
+            style: TextStyle(color: color, fontSize: 12),
+          ),
           side: BorderSide(color: color.withValues(alpha: 0.4)),
           backgroundColor: color.withValues(alpha: 0.08),
           onPressed: inspector ? () => _openSheet(context) : null,
@@ -42,11 +45,7 @@ class SyncChip extends ConsumerWidget {
   }
 
   void _openSheet(BuildContext context) {
-    AppSheet.show<void>(
-      context: context,
-      title: context.l10n.syncSheetTitle,
-      builder: (_) => const _SyncSheet(),
-    );
+    AppSheet.show<void>(context: context, title: context.l10n.syncSheetTitle, builder: (_) => const _SyncSheet());
   }
 }
 
@@ -68,10 +67,13 @@ class _SyncSheet extends ConsumerWidget {
               title: Text(describeSyncItem({'id': i.id, 'type': i.type, 'payload': i.payload})),
               subtitle: i.lastError == null ? null : Text(i.lastError!, maxLines: 2, overflow: TextOverflow.ellipsis),
               trailing: i.status == OutboxStatus.poison
-                  ? Row(mainAxisSize: MainAxisSize.min, children: [
-                      TextButton(onPressed: () => store.retry(i.id), child: Text(l10n.syncRetry)),
-                      TextButton(onPressed: () => store.discard(i.id), child: Text(l10n.syncDiscard)),
-                    ])
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton(onPressed: () => store.retry(i.id), child: Text(l10n.syncRetry)),
+                        TextButton(onPressed: () => store.discard(i.id), child: Text(l10n.syncDiscard)),
+                      ],
+                    )
                   : null,
             ),
         ],

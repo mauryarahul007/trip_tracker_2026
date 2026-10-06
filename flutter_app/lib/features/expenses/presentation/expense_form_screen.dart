@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
+import '../../notifications/presentation/push_prompt.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -52,9 +55,15 @@ class ExpenseFormScreen extends ConsumerWidget {
     return AppScaffold(
       appBar: AppBar(
         title: Text(expenseId == null ? l10n.formTitleAdd : l10n.formTitleEdit),
-        leading: IconButton(tooltip: l10n.actionClose, icon: const Icon(AppIcons.close), onPressed: () => context.pop()),
+        leading: IconButton(
+          tooltip: l10n.actionClose,
+          icon: const Icon(AppIcons.close),
+          onPressed: () => context.pop(),
+        ),
       ),
-      body: ready ? _FormBody(args: ExpenseFormArgs(tripId, expenseId)) : const Center(child: CircularProgressIndicator()),
+      body: ready
+          ? _FormBody(args: ExpenseFormArgs(tripId, expenseId))
+          : const Center(child: CircularProgressIndicator()),
     );
   }
 }
@@ -98,7 +107,9 @@ class _FormBodyState extends ConsumerState<_FormBody> {
 
   Future<void> _save() async {
     final outcome = await _c.submit();
-    if (outcome.isOk && mounted) context.pop();
+    if (!outcome.isOk || !mounted) return;
+    await maybeAskForPush(context, ref); // first meaningful action: the one moment we ask
+    if (mounted) context.pop();
   }
 
   Future<void> _pickDate() async {
@@ -126,8 +137,18 @@ class _FormBodyState extends ConsumerState<_FormBody> {
 
     // Programmatic changes (clone, chips, quick fill, draft discard) must reach the text fields.
     ref.listen(expenseFormProvider(args), (prev, next) {
-      if (next.title != _title.text) _title.value = TextEditingValue(text: next.title, selection: TextSelection.collapsed(offset: next.title.length));
-      if (next.amount != _amount.text) _amount.value = TextEditingValue(text: next.amount, selection: TextSelection.collapsed(offset: next.amount.length));
+      if (next.title != _title.text) {
+        _title.value = TextEditingValue(
+          text: next.title,
+          selection: TextSelection.collapsed(offset: next.title.length),
+        );
+      }
+      if (next.amount != _amount.text) {
+        _amount.value = TextEditingValue(
+          text: next.amount,
+          selection: TextSelection.collapsed(offset: next.amount.length),
+        );
+      }
     });
 
     final input = c.toInput();
@@ -152,47 +173,80 @@ class _FormBodyState extends ConsumerState<_FormBody> {
     ];
 
     Widget section(String title, Widget child) => Padding(
-          padding: const EdgeInsets.only(top: 18),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary)),
-            const SizedBox(height: 8),
-            child,
-          ]),
-        );
+      padding: const EdgeInsets.only(top: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
+          ),
+          const SizedBox(height: 8),
+          child,
+        ],
+      ),
+    );
 
     final showReceiptOcr = flags.receiptOcr || flags.receiptUpload;
     final receiptSection = flags.receiptUpload || flags.receiptOcr || s.receiptPath != null
         ? section(
             l10n.formReceipt,
             s.receiptPath != null
-                ? Row(children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(File(s.receiptPath!), key: const Key('receipt-preview'), width: 64, height: 64, fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => const SizedBox(width: 64, height: 64, child: Icon(Icons.image_outlined))),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(l10n.formReceiptAttached)),
-                    TextButton(key: const Key('receipt-remove'), onPressed: c.removeReceipt, child: Text(l10n.formReceiptRemove)),
-                  ])
-                : Wrap(spacing: 8, runSpacing: 8, children: [
-                    if (flags.receiptUpload) ...[
-                      OutlinedButton.icon(key: const Key('receipt-camera'), onPressed: () => c.pickReceipt(ReceiptSource.camera), icon: const Icon(AppIcons.camera), label: Text(l10n.formReceiptCamera)),
-                      OutlinedButton.icon(key: const Key('receipt-gallery'), onPressed: () => c.pickReceipt(ReceiptSource.gallery), icon: const Icon(AppIcons.image), label: Text(l10n.formReceiptGallery)),
-                    ],
-                    if (showReceiptOcr)
-                      OutlinedButton.icon(
-                        key: const Key('receipt-scan-ocr'),
-                        onPressed: () => ReceiptOcrModal.show(
-                          context,
-                          tripId: args.tripId,
-                          onApplyReceipt: c.applyReceiptOcr,
-                          defaultMemberIds: s.selected.entries.where((e) => e.value).map((e) => e.key).toList(),
+                ? Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          File(s.receiptPath!),
+                          key: const Key('receipt-preview'),
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) =>
+                              const SizedBox(width: 64, height: 64, child: Icon(Icons.image_outlined)),
                         ),
-                        icon: const Icon(AppIcons.receipt),
-                        label: const Text('Scan & Itemize'),
                       ),
-                  ]),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(l10n.formReceiptAttached)),
+                      TextButton(
+                        key: const Key('receipt-remove'),
+                        onPressed: c.removeReceipt,
+                        child: Text(l10n.formReceiptRemove),
+                      ),
+                    ],
+                  )
+                : Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (flags.receiptUpload) ...[
+                        OutlinedButton.icon(
+                          key: const Key('receipt-camera'),
+                          onPressed: () => c.pickReceipt(ReceiptSource.camera),
+                          icon: const Icon(AppIcons.camera),
+                          label: Text(l10n.formReceiptCamera),
+                        ),
+                        OutlinedButton.icon(
+                          key: const Key('receipt-gallery'),
+                          onPressed: () => c.pickReceipt(ReceiptSource.gallery),
+                          icon: const Icon(AppIcons.image),
+                          label: Text(l10n.formReceiptGallery),
+                        ),
+                      ],
+                      if (showReceiptOcr)
+                        OutlinedButton.icon(
+                          key: const Key('receipt-scan-ocr'),
+                          onPressed: () => ReceiptOcrModal.show(
+                            context,
+                            tripId: args.tripId,
+                            onApplyReceipt: c.applyReceiptOcr,
+                            defaultMemberIds: s.selected.entries.where((e) => e.value).map((e) => e.key).toList(),
+                          ),
+                          icon: const Icon(AppIcons.receipt),
+                          label: const Text('Scan & Itemize'),
+                        ),
+                    ],
+                  ),
           )
         : const SizedBox.shrink();
 
@@ -208,328 +262,518 @@ class _FormBodyState extends ConsumerState<_FormBody> {
 
     return PopScope(
       canPop: true,
-      child: Column(children: [
-        Expanded(
-          child: SingleChildScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: EdgeInsets.fromLTRB(16, flags.compactForm ? 0 : 4, 16, flags.compactForm ? 16 : 24),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              if (s.draftRestored)
-                Container(
-                  key: const Key('draft-banner'),
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: tokens.primaryAccent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                  child: Row(children: [
-                    Expanded(child: Text(l10n.formDraftRestored)),
-                    TextButton(key: const Key('draft-discard'), onPressed: c.discardDraft, child: Text(l10n.formDiscardDraft)),
-                  ]),
-                ),
-              if (!c.editing)
-                Wrap(spacing: 8, children: [
-                  if (flags.cloneLast && c.lastExpense != null)
-                    ActionChip(key: const Key('same-as-last'), avatar: const Icon(Icons.history_rounded, size: 16), label: Text(l10n.formSameAsLast), onPressed: c.applyLast),
-                  ActionChip(key: const Key('quick-fill-toggle'), avatar: const Icon(Icons.bolt_rounded, size: 16), label: Text(l10n.formQuickFill), onPressed: () => setState(() => _quickOpen = !_quickOpen)),
-                ]),
-              if (_quickOpen && !c.editing)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Row(children: [
-                    Expanded(child: AppTextField(key: const Key('quick-field'), controller: _quick, hint: l10n.formQuickFillHint, errorText: _quickError)),
-                    const SizedBox(width: 8),
-                    AppButton(
-                      label: l10n.formQuickFillApply,
-                      onPressed: () {
-                        final ok = c.quickFill(_quick.text);
-                        setState(() => _quickError = ok ? null : l10n.formQuickFillFailed);
-                        if (ok) _quick.clear();
-                      },
-                    ),
-                  ]),
-                ),
-
-              // Amount (+ currency)
-              section(
-                l10n.formAmount,
-                Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  Row(children: [
-                    if (flags.currencyFx || foreign)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: OutlinedButton(
-                          key: const Key('currency-chip'),
-                          onPressed: () => AppSheet.show<void>(
-                            context: context,
-                            title: l10n.formCurrency,
-                            builder: (_) => CurrencyPickerSheet(selected: s.currency, base: base, onPick: c.setCurrency),
-                          ),
-                          child: Text('${getCurrencySymbol(s.currency)} ${s.currency}'),
-                        ),
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.fromLTRB(16, flags.compactForm ? 0 : 4, 16, flags.compactForm ? 16 : 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (s.draftRestored)
+                    Container(
+                      key: const Key('draft-banner'),
+                      margin: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: tokens.primaryAccent.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    Expanded(
-                      child: TextField(
-                        key: const Key('amount-field'),
-                        controller: _amount,
-                        autofocus: !c.editing,
-                        // Operators are typeable (12*3+4), so a plain text keyboard with a character whitelist.
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-*/().,xX×÷\s]'))],
-                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
-                        decoration: InputDecoration(hintText: l10n.formAmountHint),
-                        onChanged: c.setAmount,
+                      child: Row(
+                        children: [
+                          Expanded(child: Text(l10n.formDraftRestored)),
+                          TextButton(
+                            key: const Key('draft-discard'),
+                            onPressed: c.discardDraft,
+                            child: Text(l10n.formDiscardDraft),
+                          ),
+                        ],
                       ),
                     ),
-                  ]),
-                  if (c.amountIsExpression && amountVal != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(l10n.formAmountEquals(_fmt(context, amountVal, s.currency)), key: const Key('amount-eval'), style: TextStyle(color: tokens.primaryAccent, fontWeight: FontWeight.w600)),
-                    ),
-                  if (conversion != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Row(children: [
-                        Text(l10n.formConverted(_fmt(context, conversion.convertedAmount, base), conversion.rate.toString()), key: const Key('conversion'), style: TextStyle(color: tokens.textSecondary)),
-                        TextButton(
-                          key: const Key('fx-set'),
-                          onPressed: () => AppSheet.show<void>(
-                            context: context,
-                            title: l10n.formFxTitle(s.currency, base),
-                            builder: (_) => FxRateSheet(
-                              code: s.currency,
-                              base: base,
-                              customRates: trip.fxConfig?.customRates ?? const {},
-                              liveRates: live,
-                              onSave: (rates) => ref.read(tripRepositoryProvider).setFxConfig(
-                                    id,
-                                    (trip.fxConfig ?? const TripFxConfigDefaults().value).copyWithRates(rates),
-                                  ),
-                            ),
+                  if (!c.editing)
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        if (flags.cloneLast && c.lastExpense != null)
+                          ActionChip(
+                            key: const Key('same-as-last'),
+                            avatar: const Icon(Icons.history_rounded, size: 16),
+                            label: Text(l10n.formSameAsLast),
+                            onPressed: c.applyLast,
                           ),
-                          child: Text(l10n.formFxSet),
+                        ActionChip(
+                          key: const Key('quick-fill-toggle'),
+                          avatar: const Icon(Icons.bolt_rounded, size: 16),
+                          label: Text(l10n.formQuickFill),
+                          onPressed: () => setState(() => _quickOpen = !_quickOpen),
                         ),
-                      ]),
+                      ],
                     ),
-                ]),
-              ),
-
-              // Title + chips
-              section(
-                l10n.formWhat,
-                Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  TextField(key: const Key('title-field'), controller: _title, textCapitalization: TextCapitalization.sentences, decoration: InputDecoration(hintText: l10n.formWhatHint), onChanged: c.setTitle),
-                  if (c.chips.isNotEmpty)
+                  if (_quickOpen && !c.editing)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
-                      child: Wrap(spacing: 8, runSpacing: 4, children: [
-                        for (final chip in c.chips) ActionChip(key: Key('chip-${chip.id}'), label: Text('${chip.icon} ${chip.label}'), onPressed: () => c.applyChip(chip)),
-                      ]),
-                    ),
-                ]),
-              ),
-
-              // Category
-              section(
-                l10n.formCategory,
-                Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  Wrap(spacing: 8, runSpacing: 4, children: [
-                    for (final cat in (flags.categoryReorder ? categories : _unordered(categories)))
-                      _CategoryChip(category: cat, selected: cat.id == s.category, onTap: () => c.setCategory(cat.id)),
-                  ]),
-                  if (s.autoCategoryName != null)
-                    Padding(padding: const EdgeInsets.only(top: 4), child: Text(l10n.formAutoCategory(s.autoCategoryName!), key: const Key('auto-category'), style: TextStyle(fontSize: 12, color: tokens.textMuted))),
-                ]),
-              ),
-
-              // Date
-              section(
-                l10n.formDate,
-                OutlinedButton.icon(key: const Key('date-button'), onPressed: _pickDate, icon: const Icon(Icons.event_rounded), label: Text(s.date), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48), alignment: Alignment.centerLeft)),
-              ),
-
-              // Payer(s)
-              section(
-                l10n.formPaidBy,
-                Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  if (flags.multiPayer)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton(
-                        key: const Key('payer-mode'),
-                        onPressed: () => c.setPayerMode(s.payerMode == PayerMode.multiple ? PayerMode.single : PayerMode.multiple),
-                        child: Text(s.payerMode == PayerMode.multiple ? l10n.formOnePayer : l10n.formMultiplePayers),
-                      ),
-                    ),
-                  if (s.payerMode == PayerMode.multiple && flags.multiPayer) ...[
-                    for (final m in members)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Row(children: [
-                          Expanded(child: Text(m.name)),
-                          SizedBox(
-                            width: 130,
-                            child: TextFormField(
-                              key: ValueKey('payer-amt-${m.id}-${s.epoch}'),
-                              initialValue: s.multiPayerShares[m.id],
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              decoration: InputDecoration(hintText: l10n.formExactHint, isDense: true),
-                              onChanged: (v) => c.setMultiPayerShare(m.id, v),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: AppTextField(
+                              key: const Key('quick-field'),
+                              controller: _quick,
+                              hint: l10n.formQuickFillHint,
+                              errorText: _quickError,
                             ),
                           ),
-                        ]),
+                          const SizedBox(width: 8),
+                          AppButton(
+                            label: l10n.formQuickFillApply,
+                            onPressed: () {
+                              final ok = c.quickFill(_quick.text);
+                              setState(() => _quickError = ok ? null : l10n.formQuickFillFailed);
+                              if (ok) _quick.clear();
+                            },
+                          ),
+                        ],
                       ),
-                    Text(
-                      l10n.formAllocated(
-                        _fmt(context, s.multiPayerShares.values.fold<double>(0, (a, b) => a + (double.tryParse(b) ?? 0)), s.currency),
-                        _fmt(context, amountVal ?? 0, s.currency),
-                      ),
-                      key: const Key('allocated'),
-                      style: TextStyle(color: tokens.textSecondary),
                     ),
-                  ] else
-                    DropdownButtonFormField<String>(
-                      key: const Key('payer-dropdown'),
-                      initialValue: byId.containsKey(s.payer) ? s.payer : null,
-                      isExpanded: true,
-                      items: [for (final m in members) DropdownMenuItem(value: m.id, child: Text(m.name, overflow: TextOverflow.ellipsis))],
-                      onChanged: (v) => v == null ? null : c.setPayer(v),
-                    ),
-                ]),
-              ),
 
-              // Split
-              section(
-                l10n.formSplitBetween,
-                members.isEmpty
-                    ? Text(l10n.formNoMembers)
-                    : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                        Wrap(spacing: 8, runSpacing: 4, children: [
-                          ActionChip(key: const Key('preset-everyone'), label: Text(l10n.formEveryone), onPressed: c.presetEveryone),
-                          ActionChip(key: const Key('preset-only-payer'), label: Text(l10n.formOnlyPayer), onPressed: c.presetOnlyPayer),
-                          ActionChip(key: const Key('preset-exclude-payer'), label: Text(l10n.formExcludePayer), onPressed: c.presetExcludePayer),
-                          if (flags.advancedSplits) ActionChip(key: const Key('preset-half'), label: Text(l10n.formPayerHalf), onPressed: c.presetPayerHalf),
-                          for (final g in groups.where((g) => g.memberIds.length > 1))
-                            FilterChip(
-                              key: Key('group-${g.id}'),
-                              label: Text(g.name),
-                              selected: g.memberIds.every((m) => s.selected[m] == true),
-                              onSelected: (on) => c.applyGroup(g.memberIds, checked: on),
+                  // Amount (+ currency)
+                  section(
+                    l10n.formAmount,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            if (flags.currencyFx || foreign)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: OutlinedButton(
+                                  key: const Key('currency-chip'),
+                                  onPressed: () => AppSheet.show<void>(
+                                    context: context,
+                                    title: l10n.formCurrency,
+                                    builder: (_) =>
+                                        CurrencyPickerSheet(selected: s.currency, base: base, onPick: c.setCurrency),
+                                  ),
+                                  child: Text('${getCurrencySymbol(s.currency)} ${s.currency}'),
+                                ),
+                              ),
+                            Expanded(
+                              child: TextField(
+                                key: const Key('amount-field'),
+                                controller: _amount,
+                                autofocus: !c.editing,
+                                // Operators are typeable (12*3+4), so a plain text keyboard with a character whitelist.
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-*/().,xX×÷\s]'))],
+                                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+                                decoration: InputDecoration(hintText: l10n.formAmountHint),
+                                onChanged: c.setAmount,
+                              ),
                             ),
-                        ]),
-                        const SizedBox(height: 8),
-                        SegmentedButton<String>(
-                          key: const Key('split-modes'),
-                          showSelectedIcon: false,
-                          segments: [for (final m in modes) ButtonSegment(value: m.$1, label: Text(m.$2, key: Key('mode-${m.$1}')))],
-                          selected: {s.splitMode},
-                          onSelectionChanged: (v) => c.setSplitMode(v.first),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        for (final m in members)
-                          _MemberRow(
-                            key: ValueKey('member-${m.id}'),
-                            member: m,
-                            selected: s.selected[m.id] == true,
-                            mode: s.splitMode,
-                            configText: s.splitConfig[m.id],
-                            epoch: s.epoch,
-                            onToggle: () => c.toggleMember(m.id),
-                            onConfig: (v) => c.setSplitConfig(m.id, v),
-                          ),
-                        if (s.splitMode == 'percentage' || s.splitMode == 'exact')
+                        if (c.amountIsExpression && amountVal != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
                             child: Text(
-                              s.splitMode == 'percentage'
-                                  ? l10n.formSumStatus('${status.sum.toStringAsFixed(1)}%', '100%')
-                                  : l10n.formSumStatus(_fmt(context, status.sum, s.currency), _fmt(context, status.target ?? 0, s.currency)),
-                              key: const Key('sum-status'),
-                              style: TextStyle(fontWeight: FontWeight.w600, color: status.matches ? tokens.colorSuccess : tokens.colorDanger),
+                              l10n.formAmountEquals(_fmt(context, amountVal, s.currency)),
+                              key: const Key('amount-eval'),
+                              style: TextStyle(color: tokens.primaryAccent, fontWeight: FontWeight.w600),
                             ),
                           ),
-                        if (s.splitMode == 'custom') Text(l10n.formSharesWeights, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
-                        if (s.splitMode == 'itemized') _Itemized(state: s, controller: c, members: members, currency: s.currency),
-                      ]),
-              ),
-
-              if (dupShown)
-                Container(
-                  key: const Key('duplicate-card'),
-                  margin: const EdgeInsets.only(top: 16),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: tokens.colorWarning.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12), border: Border.all(color: tokens.colorWarning.withValues(alpha: 0.4))),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(l10n.formDuplicateTitle, style: TextStyle(fontWeight: FontWeight.w700, color: tokens.colorWarning)),
-                    const SizedBox(height: 4),
-                    Text(dup.reason, key: const Key('duplicate-reason')),
-                    if (s.showDuplicateDetails)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text('${dup.matchedExpense.title} · ${_fmt(context, dup.matchedExpense.amount, base)} · ${dup.matchedExpense.date}', style: TextStyle(color: tokens.textSecondary)),
-                      ),
-                    Wrap(children: [
-                      TextButton(onPressed: c.toggleDuplicateDetails, child: Text(l10n.formDuplicateDetails)),
-                      TextButton(key: const Key('duplicate-ignore'), onPressed: () => c.ignoreDuplicate(dup.matchedExpense.id), child: Text(l10n.formDuplicateIgnore)),
-                    ]),
-                  ]),
-                ),
-
-              if (preview.isNotEmpty)
-                section(
-                  l10n.formWhoOwes,
-                  Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                    for (final e in preview.entries)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Row(children: [
-                          Expanded(child: Text(byId[e.key]?.name ?? l10n.rowRemovedMember)),
-                          Text(_fmt(context, e.value, s.currency), key: Key('preview-${e.key}'), style: const TextStyle(fontWeight: FontWeight.w600)),
-                        ]),
-                      ),
-                    if (flags.explain)
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
-                          key: const Key('explain'),
-                          icon: const Icon(Icons.help_outline_rounded, size: 18),
-                          label: Text(l10n.formExplain),
-                          onPressed: () => AppSheet.show<void>(
-                            context: context,
-                            title: l10n.formExplainTitle,
-                            builder: (_) => ExplainSharesSheet(input: input, members: byId),
+                        if (conversion != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Row(
+                              children: [
+                                Text(
+                                  l10n.formConverted(
+                                    _fmt(context, conversion.convertedAmount, base),
+                                    conversion.rate.toString(),
+                                  ),
+                                  key: const Key('conversion'),
+                                  style: TextStyle(color: tokens.textSecondary),
+                                ),
+                                TextButton(
+                                  key: const Key('fx-set'),
+                                  onPressed: () => AppSheet.show<void>(
+                                    context: context,
+                                    title: l10n.formFxTitle(s.currency, base),
+                                    builder: (_) => FxRateSheet(
+                                      code: s.currency,
+                                      base: base,
+                                      customRates: trip.fxConfig?.customRates ?? const {},
+                                      liveRates: live,
+                                      onSave: (rates) => ref
+                                          .read(tripRepositoryProvider)
+                                          .setFxConfig(
+                                            id,
+                                            (trip.fxConfig ?? const TripFxConfigDefaults().value).copyWithRates(rates),
+                                          ),
+                                    ),
+                                  ),
+                                  child: Text(l10n.formFxSet),
+                                ),
+                              ],
+                            ),
                           ),
+                      ],
+                    ),
+                  ),
+
+                  // Title + chips
+                  section(
+                    l10n.formWhat,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextField(
+                          key: const Key('title-field'),
+                          controller: _title,
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: InputDecoration(hintText: l10n.formWhatHint),
+                          onChanged: c.setTitle,
                         ),
+                        if (c.chips.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              children: [
+                                for (final chip in c.chips)
+                                  ActionChip(
+                                    key: Key('chip-${chip.id}'),
+                                    label: Text('${chip.icon} ${chip.label}'),
+                                    onPressed: () => c.applyChip(chip),
+                                  ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  // Category
+                  section(
+                    l10n.formCategory,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: [
+                            for (final cat in (flags.categoryReorder ? categories : _unordered(categories)))
+                              _CategoryChip(
+                                category: cat,
+                                selected: cat.id == s.category,
+                                onTap: () => c.setCategory(cat.id),
+                              ),
+                          ],
+                        ),
+                        if (s.autoCategoryName != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              l10n.formAutoCategory(s.autoCategoryName!),
+                              key: const Key('auto-category'),
+                              style: TextStyle(fontSize: 12, color: tokens.textMuted),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  // Date
+                  section(
+                    l10n.formDate,
+                    OutlinedButton.icon(
+                      key: const Key('date-button'),
+                      onPressed: _pickDate,
+                      icon: const Icon(Icons.event_rounded),
+                      label: Text(s.date),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                        alignment: Alignment.centerLeft,
                       ),
-                  ]),
-                ),
+                    ),
+                  ),
 
-              moreDetails,
+                  // Payer(s)
+                  section(
+                    l10n.formPaidBy,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (flags.multiPayer)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton(
+                              key: const Key('payer-mode'),
+                              onPressed: () => c.setPayerMode(
+                                s.payerMode == PayerMode.multiple ? PayerMode.single : PayerMode.multiple,
+                              ),
+                              child: Text(
+                                s.payerMode == PayerMode.multiple ? l10n.formOnePayer : l10n.formMultiplePayers,
+                              ),
+                            ),
+                          ),
+                        if (s.payerMode == PayerMode.multiple && flags.multiPayer) ...[
+                          for (final m in members)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Row(
+                                children: [
+                                  Expanded(child: Text(m.name)),
+                                  SizedBox(
+                                    width: 130,
+                                    child: TextFormField(
+                                      key: ValueKey('payer-amt-${m.id}-${s.epoch}'),
+                                      initialValue: s.multiPayerShares[m.id],
+                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                      decoration: InputDecoration(hintText: l10n.formExactHint, isDense: true),
+                                      onChanged: (v) => c.setMultiPayerShare(m.id, v),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          Text(
+                            l10n.formAllocated(
+                              _fmt(
+                                context,
+                                s.multiPayerShares.values.fold<double>(0, (a, b) => a + (double.tryParse(b) ?? 0)),
+                                s.currency,
+                              ),
+                              _fmt(context, amountVal ?? 0, s.currency),
+                            ),
+                            key: const Key('allocated'),
+                            style: TextStyle(color: tokens.textSecondary),
+                          ),
+                        ] else
+                          DropdownButtonFormField<String>(
+                            key: const Key('payer-dropdown'),
+                            initialValue: byId.containsKey(s.payer) ? s.payer : null,
+                            isExpanded: true,
+                            items: [
+                              for (final m in members)
+                                DropdownMenuItem(
+                                  value: m.id,
+                                  child: Text(m.name, overflow: TextOverflow.ellipsis),
+                                ),
+                            ],
+                            onChanged: (v) => v == null ? null : c.setPayer(v),
+                          ),
+                      ],
+                    ),
+                  ),
 
-              if (s.error != null)
-                Container(
-                  key: const Key('form-error'),
-                  margin: const EdgeInsets.only(top: 16),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: tokens.colorDanger.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                  child: Text(s.error!, style: TextStyle(color: tokens.colorDanger)),
-                ),
-            ]),
-          ),
-        ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: AppButton(
-              key: const Key('save'),
-              label: s.submitting ? l10n.formSaving : l10n.formSave,
-              isLoading: s.submitting,
-              isFullWidth: true,
-              onPressed: s.submitting ? null : _save,
+                  // Split
+                  section(
+                    l10n.formSplitBetween,
+                    members.isEmpty
+                        ? Text(l10n.formNoMembers)
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                children: [
+                                  ActionChip(
+                                    key: const Key('preset-everyone'),
+                                    label: Text(l10n.formEveryone),
+                                    onPressed: c.presetEveryone,
+                                  ),
+                                  ActionChip(
+                                    key: const Key('preset-only-payer'),
+                                    label: Text(l10n.formOnlyPayer),
+                                    onPressed: c.presetOnlyPayer,
+                                  ),
+                                  ActionChip(
+                                    key: const Key('preset-exclude-payer'),
+                                    label: Text(l10n.formExcludePayer),
+                                    onPressed: c.presetExcludePayer,
+                                  ),
+                                  if (flags.advancedSplits)
+                                    ActionChip(
+                                      key: const Key('preset-half'),
+                                      label: Text(l10n.formPayerHalf),
+                                      onPressed: c.presetPayerHalf,
+                                    ),
+                                  for (final g in groups.where((g) => g.memberIds.length > 1))
+                                    FilterChip(
+                                      key: Key('group-${g.id}'),
+                                      label: Text(g.name),
+                                      selected: g.memberIds.every((m) => s.selected[m] == true),
+                                      onSelected: (on) => c.applyGroup(g.memberIds, checked: on),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              SegmentedButton<String>(
+                                key: const Key('split-modes'),
+                                showSelectedIcon: false,
+                                segments: [
+                                  for (final m in modes)
+                                    ButtonSegment(
+                                      value: m.$1,
+                                      label: Text(m.$2, key: Key('mode-${m.$1}')),
+                                    ),
+                                ],
+                                selected: {s.splitMode},
+                                onSelectionChanged: (v) => c.setSplitMode(v.first),
+                              ),
+                              const SizedBox(height: 8),
+                              for (final m in members)
+                                _MemberRow(
+                                  key: ValueKey('member-${m.id}'),
+                                  member: m,
+                                  selected: s.selected[m.id] == true,
+                                  mode: s.splitMode,
+                                  configText: s.splitConfig[m.id],
+                                  epoch: s.epoch,
+                                  onToggle: () => c.toggleMember(m.id),
+                                  onConfig: (v) => c.setSplitConfig(m.id, v),
+                                ),
+                              if (s.splitMode == 'percentage' || s.splitMode == 'exact')
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    s.splitMode == 'percentage'
+                                        ? l10n.formSumStatus('${status.sum.toStringAsFixed(1)}%', '100%')
+                                        : l10n.formSumStatus(
+                                            _fmt(context, status.sum, s.currency),
+                                            _fmt(context, status.target ?? 0, s.currency),
+                                          ),
+                                    key: const Key('sum-status'),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: status.matches ? tokens.colorSuccess : tokens.colorDanger,
+                                    ),
+                                  ),
+                                ),
+                              if (s.splitMode == 'custom')
+                                Text(l10n.formSharesWeights, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
+                              if (s.splitMode == 'itemized')
+                                _Itemized(state: s, controller: c, members: members, currency: s.currency),
+                            ],
+                          ),
+                  ),
+
+                  if (dupShown)
+                    Container(
+                      key: const Key('duplicate-card'),
+                      margin: const EdgeInsets.only(top: 16),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: tokens.colorWarning.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: tokens.colorWarning.withValues(alpha: 0.4)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.formDuplicateTitle,
+                            style: TextStyle(fontWeight: FontWeight.w700, color: tokens.colorWarning),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(dup.reason, key: const Key('duplicate-reason')),
+                          if (s.showDuplicateDetails)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Text(
+                                '${dup.matchedExpense.title} · ${_fmt(context, dup.matchedExpense.amount, base)} · ${dup.matchedExpense.date}',
+                                style: TextStyle(color: tokens.textSecondary),
+                              ),
+                            ),
+                          Wrap(
+                            children: [
+                              TextButton(onPressed: c.toggleDuplicateDetails, child: Text(l10n.formDuplicateDetails)),
+                              TextButton(
+                                key: const Key('duplicate-ignore'),
+                                onPressed: () => c.ignoreDuplicate(dup.matchedExpense.id),
+                                child: Text(l10n.formDuplicateIgnore),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  if (preview.isNotEmpty)
+                    section(
+                      l10n.formWhoOwes,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (final e in preview.entries)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: Row(
+                                children: [
+                                  Expanded(child: Text(byId[e.key]?.name ?? l10n.rowRemovedMember)),
+                                  Text(
+                                    _fmt(context, e.value, s.currency),
+                                    key: Key('preview-${e.key}'),
+                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (flags.explain)
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton.icon(
+                                key: const Key('explain'),
+                                icon: const Icon(Icons.help_outline_rounded, size: 18),
+                                label: Text(l10n.formExplain),
+                                onPressed: () => AppSheet.show<void>(
+                                  context: context,
+                                  title: l10n.formExplainTitle,
+                                  builder: (_) => ExplainSharesSheet(input: input, members: byId),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+
+                  moreDetails,
+
+                  if (s.error != null)
+                    Container(
+                      key: const Key('form-error'),
+                      margin: const EdgeInsets.only(top: 16),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: tokens.colorDanger.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(s.error!, style: TextStyle(color: tokens.colorDanger)),
+                    ),
+                ],
+              ),
             ),
           ),
-        ),
-      ]),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: AppButton(
+                key: const Key('save'),
+                label: s.submitting ? l10n.formSaving : l10n.formSave,
+                isLoading: s.submitting,
+                isFullWidth: true,
+                onPressed: s.submitting ? null : _save,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -581,30 +825,36 @@ class _MemberRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final needsInput = selected && (mode == 'custom' || mode == 'percentage' || mode == 'exact');
-    final hint = mode == 'custom' ? l10n.formShareHint : mode == 'percentage' ? l10n.formPercentHint : l10n.formExactHint;
-    return Row(children: [
-      Expanded(
-        child: CheckboxListTile(
-          key: Key('split-${member.id}'),
-          contentPadding: EdgeInsets.zero,
-          controlAffinity: ListTileControlAffinity.leading,
-          value: selected,
-          onChanged: (_) => onToggle(),
-          title: Text(member.name),
-        ),
-      ),
-      if (needsInput)
-        SizedBox(
-          width: 110,
-          child: TextFormField(
-            key: ValueKey('cfg-${member.id}-$mode-$epoch'),
-            initialValue: configText,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(hintText: hint, isDense: true),
-            onChanged: onConfig,
+    final hint = mode == 'custom'
+        ? l10n.formShareHint
+        : mode == 'percentage'
+        ? l10n.formPercentHint
+        : l10n.formExactHint;
+    return Row(
+      children: [
+        Expanded(
+          child: CheckboxListTile(
+            key: Key('split-${member.id}'),
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            value: selected,
+            onChanged: (_) => onToggle(),
+            title: Text(member.name),
           ),
         ),
-    ]);
+        if (needsInput)
+          SizedBox(
+            width: 110,
+            child: TextFormField(
+              key: ValueKey('cfg-${member.id}-$mode-$epoch'),
+              initialValue: configText,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(hintText: hint, isDense: true),
+              onChanged: onConfig,
+            ),
+          ),
+      ],
+    );
   }
 }
 
@@ -620,74 +870,110 @@ class _Itemized extends StatelessWidget {
     final l10n = context.l10n;
     final tokens = context.tokens;
     final total = itemizedTotal(state.items, tax: state.tax, tip: state.tip, discount: state.discount);
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      for (final item in state.items)
-        Card(
-          key: Key('item-${item.id}'),
-          margin: const EdgeInsets.only(top: 8),
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Row(children: [
-                Expanded(
-                  child: TextFormField(
-                    key: ValueKey('item-name-${item.id}-${state.epoch}'),
-                    initialValue: item.name,
-                    decoration: InputDecoration(labelText: l10n.formItemName, isDense: true),
-                    onChanged: (v) => controller.updateItem(item.id, name: v),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 100,
-                  child: TextFormField(
-                    key: ValueKey('item-amt-${item.id}-${state.epoch}'),
-                    initialValue: item.amount == 0 ? '' : item.amount.toString(),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(labelText: l10n.formItemAmount, isDense: true),
-                    onChanged: (v) => controller.updateItem(item.id, amount: double.tryParse(v) ?? 0),
-                  ),
-                ),
-                IconButton(tooltip: l10n.rowDelete, icon: const Icon(AppIcons.delete), onPressed: () => controller.removeItem(item.id)),
-              ]),
-              Text(l10n.formItemSharedBy, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
-              Wrap(spacing: 6, children: [
-                for (final m in members)
-                  FilterChip(
-                    key: Key('item-${item.id}-${m.id}'),
-                    label: Text(m.name),
-                    selected: item.assignedMemberIds.contains(m.id),
-                    onSelected: (on) => controller.updateItem(item.id, assigned: [
-                      for (final x in members)
-                        if (x.id == m.id ? on : item.assignedMemberIds.contains(x.id)) x.id,
-                    ]),
-                  ),
-              ]),
-            ]),
-          ),
-        ),
-      Align(alignment: Alignment.centerLeft, child: TextButton.icon(key: const Key('add-item'), onPressed: controller.addItem, icon: const Icon(AppIcons.add), label: Text(l10n.formAddItem))),
-      Row(children: [
-        for (final f in [(l10n.formTax, state.tax, controller.setTax, 'tax'), (l10n.formTip, state.tip, controller.setTip, 'tip'), (l10n.formDiscount, state.discount, controller.setDiscount, 'discount')])
-          Expanded(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final item in state.items)
+          Card(
+            key: Key('item-${item.id}'),
+            margin: const EdgeInsets.only(top: 8),
             child: Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: TextFormField(
-                key: ValueKey('extra-${f.$4}-${state.epoch}'),
-                initialValue: f.$2,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(labelText: f.$1, isDense: true),
-                onChanged: f.$3,
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          key: ValueKey('item-name-${item.id}-${state.epoch}'),
+                          initialValue: item.name,
+                          decoration: InputDecoration(labelText: l10n.formItemName, isDense: true),
+                          onChanged: (v) => controller.updateItem(item.id, name: v),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 100,
+                        child: TextFormField(
+                          key: ValueKey('item-amt-${item.id}-${state.epoch}'),
+                          initialValue: item.amount == 0 ? '' : item.amount.toString(),
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: InputDecoration(labelText: l10n.formItemAmount, isDense: true),
+                          onChanged: (v) => controller.updateItem(item.id, amount: double.tryParse(v) ?? 0),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: l10n.rowDelete,
+                        icon: const Icon(AppIcons.delete),
+                        onPressed: () => controller.removeItem(item.id),
+                      ),
+                    ],
+                  ),
+                  Text(l10n.formItemSharedBy, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
+                  Wrap(
+                    spacing: 6,
+                    children: [
+                      for (final m in members)
+                        FilterChip(
+                          key: Key('item-${item.id}-${m.id}'),
+                          label: Text(m.name),
+                          selected: item.assignedMemberIds.contains(m.id),
+                          onSelected: (on) => controller.updateItem(
+                            item.id,
+                            assigned: [
+                              for (final x in members)
+                                if (x.id == m.id ? on : item.assignedMemberIds.contains(x.id)) x.id,
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
-      ]),
-      if (total > 0)
         Align(
           alignment: Alignment.centerLeft,
-          child: TextButton(key: const Key('use-total'), onPressed: controller.syncItemizedTotal, child: Text(l10n.formUseTotal(formatMoney(context, total, currency)))),
+          child: TextButton.icon(
+            key: const Key('add-item'),
+            onPressed: controller.addItem,
+            icon: const Icon(AppIcons.add),
+            label: Text(l10n.formAddItem),
+          ),
         ),
-    ]);
+        Row(
+          children: [
+            for (final f in [
+              (l10n.formTax, state.tax, controller.setTax, 'tax'),
+              (l10n.formTip, state.tip, controller.setTip, 'tip'),
+              (l10n.formDiscount, state.discount, controller.setDiscount, 'discount'),
+            ])
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: TextFormField(
+                    key: ValueKey('extra-${f.$4}-${state.epoch}'),
+                    initialValue: f.$2,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(labelText: f.$1, isDense: true),
+                    onChanged: f.$3,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        if (total > 0)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              key: const Key('use-total'),
+              onPressed: controller.syncItemizedTotal,
+              child: Text(l10n.formUseTotal(formatMoney(context, total, currency))),
+            ),
+          ),
+      ],
+    );
   }
 }
 
@@ -698,5 +984,6 @@ class TripFxConfigDefaults {
 }
 
 extension on TripFxConfig {
-  TripFxConfig copyWithRates(Map<String, double> rates) => TripFxConfig(customRates: rates, markupPercent: markupPercent);
+  TripFxConfig copyWithRates(Map<String, double> rates) =>
+      TripFxConfig(customRates: rates, markupPercent: markupPercent);
 }

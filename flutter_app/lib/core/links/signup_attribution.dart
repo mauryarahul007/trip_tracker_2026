@@ -34,5 +34,6 @@ class SignupAttributionStore {
   Future<void> clear() => _prefs.remove(_key);
 }
 
-final signupAttributionStoreProvider =
-    Provider<SignupAttributionStore>((ref) => SignupAttributionStore(ref.watch(sharedPreferencesProvider)));
+final signupAttributionStoreProvider = Provider<SignupAttributionStore>(
+  (ref) => SignupAttributionStore(ref.watch(sharedPreferencesProvider)),
+);

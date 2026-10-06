@@ -14,5 +14,7 @@ Future<void> signInWithGoogle(WidgetRef ref) async {
 Future<void> signInWithApple(WidgetRef ref) async {
   final cred = await ref.read(socialAuthProvider).apple();
   if (cred == null) return;
-  await ref.read(authRepositoryProvider).signInWithAppleIdToken(cred.idToken, nonce: cred.nonce, fullName: cred.fullName);
+  await ref
+      .read(authRepositoryProvider)
+      .signInWithAppleIdToken(cred.idToken, nonce: cred.nonce, fullName: cred.fullName);
 }

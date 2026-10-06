@@ -22,13 +22,9 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            weatherServiceProvider.overrideWithValue(fakeService),
-          ],
+          overrides: [weatherServiceProvider.overrideWithValue(fakeService)],
           child: const MaterialApp(
-            home: Scaffold(
-              body: WeatherBadge(destination: 'Goa'),
-            ),
+            home: Scaffold(body: WeatherBadge(destination: 'Goa')),
           ),
         ),
       );
@@ -57,13 +53,9 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            weatherServiceProvider.overrideWithValue(fakeService),
-          ],
+          overrides: [weatherServiceProvider.overrideWithValue(fakeService)],
           child: const MaterialApp(
-            home: Scaffold(
-              body: WeatherBadge(destination: 'Manali'),
-            ),
+            home: Scaffold(body: WeatherBadge(destination: 'Manali')),
           ),
         ),
       );
@@ -96,13 +88,9 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            weatherServiceProvider.overrideWithValue(fakeService),
-          ],
+          overrides: [weatherServiceProvider.overrideWithValue(fakeService)],
           child: const MaterialApp(
-            home: Scaffold(
-              body: WeatherBadge(destination: 'Shimla', compact: true),
-            ),
+            home: Scaffold(body: WeatherBadge(destination: 'Shimla', compact: true)),
           ),
         ),
       );

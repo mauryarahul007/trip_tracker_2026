@@ -18,12 +18,12 @@ class DuplicateMatchResult {
   });
 
   Map<String, dynamic> toJson() => {
-        'isDuplicate': isDuplicate,
-        'confidence': confidence,
-        'reason': reason,
-        'matchedExpense': matchedExpense.toJson(),
-        'matchedPayerName': matchedPayerName,
-      };
+    'isDuplicate': isDuplicate,
+    'confidence': confidence,
+    'reason': reason,
+    'matchedExpense': matchedExpense.toJson(),
+    'matchedPayerName': matchedPayerName,
+  };
 }
 
 class CandidateExpense {
@@ -134,12 +134,10 @@ DuplicateMatchResult? detectDuplicateExpense(
     if (!isSameDay && !isAdjacentDay) continue;
 
     final sim = _titleSimilarity(candidate.title, existing.title);
-    final isCategoryMatch = candidate.categoryId != null &&
-        existing.category.isNotEmpty &&
-        candidate.categoryId == existing.category;
-    final isSamePayer = candidate.paidById != null &&
-        existing.paidBy.isNotEmpty &&
-        candidate.paidById == existing.paidBy;
+    final isCategoryMatch =
+        candidate.categoryId != null && existing.category.isNotEmpty && candidate.categoryId == existing.category;
+    final isSamePayer =
+        candidate.paidById != null && existing.paidBy.isNotEmpty && candidate.paidById == existing.paidBy;
 
     final matchedPayerName = memberMap[existing.paidBy] ?? 'Someone';
     final catName = categoryMap[existing.category] ?? 'expense';
@@ -171,7 +169,8 @@ DuplicateMatchResult? detectDuplicateExpense(
       bestMatch = DuplicateMatchResult(
         isDuplicate: true,
         confidence: 'medium',
-        reason: '$matchedPayerName already logged a $catName expense for $amtStr today ("${existing.title}"). Did you both pay, or is this a duplicate?',
+        reason:
+            '$matchedPayerName already logged a $catName expense for $amtStr today ("${existing.title}"). Did you both pay, or is this a duplicate?',
         matchedExpense: existing,
         matchedPayerName: matchedPayerName,
       );

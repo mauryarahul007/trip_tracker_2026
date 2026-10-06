@@ -6,7 +6,9 @@ import 'package:trip_tracker/domain/logic/category_color.dart';
 import 'package:trip_tracker/domain/logic/default_categories.g.dart';
 
 void main() {
-  final fx = jsonDecode(File('../docs/flutter-migration/fixtures/category_colors.json').readAsStringSync()) as Map<String, dynamic>;
+  final fx = jsonDecode(
+    File('../docs/flutter-migration/fixtures/category_colors.json').readAsStringSync(),
+  ) as Map<String, dynamic>;
 
   test('category colour matches the web for built-ins, custom ids, emoji and empty ids', () {
     for (final c in fx['cases'] as List) {

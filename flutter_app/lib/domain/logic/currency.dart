@@ -1,8 +1,22 @@
 import 'package:intl/intl.dart';
 
 const Set<String> zeroDecimalCodes = {
-  'BIF', 'CLP', 'DJF', 'GNF', 'ISK', 'JPY', 'KMF', 'KRW',
-  'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF',
+  'BIF',
+  'CLP',
+  'DJF',
+  'GNF',
+  'ISK',
+  'JPY',
+  'KMF',
+  'KRW',
+  'PYG',
+  'RWF',
+  'UGX',
+  'VND',
+  'VUV',
+  'XAF',
+  'XOF',
+  'XPF',
 };
 
 int getCurrencyDecimals(String code) {
@@ -26,7 +40,6 @@ String getCurrencySymbol(String code) {
       return code;
   }
 }
-
 
 /// Rounds like ICU/`toLocaleString`: half away from zero on the *shortest
 /// decimal representation* (so 1234.565 -> 1234.57), not on the binary value.
@@ -74,10 +87,7 @@ String formatAmount(dynamic amount, String currencySymbol, [String locale = 'en_
 }
 
 /// Live USD-based rates overlaid by trip custom rates. Custom wins.
-Map<String, double> fxOverlay({Map<String, double>? live, Map<String, double>? custom}) => {
-      ...?live,
-      ...?custom,
-    };
+Map<String, double> fxOverlay({Map<String, double>? live, Map<String, double>? custom}) => {...?live, ...?custom};
 
 const Map<String, double> defaultExchangeRates = {
   'USD': 1.0,
@@ -112,12 +122,12 @@ class ConvertedRate {
   });
 
   Map<String, dynamic> toJson() => {
-        'originalAmount': (originalAmount % 1 == 0) ? originalAmount.toInt() : originalAmount,
-        'originalCurrency': originalCurrency,
-        'targetCurrency': targetCurrency,
-        'convertedAmount': (convertedAmount % 1 == 0) ? convertedAmount.toInt() : convertedAmount,
-        'rate': (rate % 1 == 0) ? rate.toInt() : rate,
-      };
+    'originalAmount': (originalAmount % 1 == 0) ? originalAmount.toInt() : originalAmount,
+    'originalCurrency': originalCurrency,
+    'targetCurrency': targetCurrency,
+    'convertedAmount': (convertedAmount % 1 == 0) ? convertedAmount.toInt() : convertedAmount,
+    'rate': (rate % 1 == 0) ? rate.toInt() : rate,
+  };
 }
 
 ConvertedRate convertCurrency(
@@ -157,20 +167,87 @@ ConvertedRate convertCurrency(
 }
 
 const Map<String, String> countryCurrencyMap = {
-  'IN': 'INR', 'US': 'USD', 'GB': 'GBP', 'AE': 'AED', 'SG': 'SGD', 'TH': 'THB',
-  'MY': 'MYR', 'ID': 'IDR', 'VN': 'VND', 'PH': 'PHP', 'LK': 'LKR', 'NP': 'NPR',
-  'BT': 'BTN', 'BD': 'BDT', 'MV': 'MVR', 'JP': 'JPY', 'KR': 'KRW', 'CN': 'CNY',
-  'HK': 'HKD', 'MO': 'MOP', 'TW': 'TWD', 'AU': 'AUD', 'NZ': 'NZD', 'CA': 'CAD',
-  'MX': 'MXN', 'BR': 'BRL', 'AR': 'ARS', 'CL': 'CLP', 'CO': 'COP', 'PE': 'PEN',
-  'DE': 'EUR', 'FR': 'EUR', 'IT': 'EUR', 'ES': 'EUR', 'PT': 'EUR', 'NL': 'EUR',
-  'BE': 'EUR', 'AT': 'EUR', 'IE': 'EUR', 'GR': 'EUR', 'FI': 'EUR', 'CH': 'CHF',
-  'SE': 'SEK', 'NO': 'NOK', 'DK': 'DKK', 'IS': 'ISK', 'PL': 'PLN', 'CZ': 'CZK',
-  'HU': 'HUF', 'RO': 'RON', 'TR': 'TRY', 'RU': 'RUB', 'UA': 'UAH', 'EG': 'EGP',
-  'ZA': 'ZAR', 'KE': 'KES', 'TZ': 'TZS', 'MA': 'MAD', 'NG': 'NGN', 'GHS': 'GHS',
-  'IL': 'ILS', 'SA': 'SAR', 'QA': 'QAR', 'KW': 'KWD', 'BH': 'BHD', 'OM': 'OMR',
-  'JO': 'JOD', 'LB': 'LBP', 'PK': 'PKR', 'KZ': 'KZT', 'GE': 'GEL', 'AM': 'AMD',
-  'AZ': 'AZN', 'UZ': 'UZS', 'FJ': 'FJD', 'MU': 'MUR', 'SC': 'SCR', 'KH': 'KHR',
-  'LA': 'LAK', 'MM': 'MMK', 'MN': 'MNT',
+  'IN': 'INR',
+  'US': 'USD',
+  'GB': 'GBP',
+  'AE': 'AED',
+  'SG': 'SGD',
+  'TH': 'THB',
+  'MY': 'MYR',
+  'ID': 'IDR',
+  'VN': 'VND',
+  'PH': 'PHP',
+  'LK': 'LKR',
+  'NP': 'NPR',
+  'BT': 'BTN',
+  'BD': 'BDT',
+  'MV': 'MVR',
+  'JP': 'JPY',
+  'KR': 'KRW',
+  'CN': 'CNY',
+  'HK': 'HKD',
+  'MO': 'MOP',
+  'TW': 'TWD',
+  'AU': 'AUD',
+  'NZ': 'NZD',
+  'CA': 'CAD',
+  'MX': 'MXN',
+  'BR': 'BRL',
+  'AR': 'ARS',
+  'CL': 'CLP',
+  'CO': 'COP',
+  'PE': 'PEN',
+  'DE': 'EUR',
+  'FR': 'EUR',
+  'IT': 'EUR',
+  'ES': 'EUR',
+  'PT': 'EUR',
+  'NL': 'EUR',
+  'BE': 'EUR',
+  'AT': 'EUR',
+  'IE': 'EUR',
+  'GR': 'EUR',
+  'FI': 'EUR',
+  'CH': 'CHF',
+  'SE': 'SEK',
+  'NO': 'NOK',
+  'DK': 'DKK',
+  'IS': 'ISK',
+  'PL': 'PLN',
+  'CZ': 'CZK',
+  'HU': 'HUF',
+  'RO': 'RON',
+  'TR': 'TRY',
+  'RU': 'RUB',
+  'UA': 'UAH',
+  'EG': 'EGP',
+  'ZA': 'ZAR',
+  'KE': 'KES',
+  'TZ': 'TZS',
+  'MA': 'MAD',
+  'NG': 'NGN',
+  'GHS': 'GHS',
+  'IL': 'ILS',
+  'SA': 'SAR',
+  'QA': 'QAR',
+  'KW': 'KWD',
+  'BH': 'BHD',
+  'OM': 'OMR',
+  'JO': 'JOD',
+  'LB': 'LBP',
+  'PK': 'PKR',
+  'KZ': 'KZT',
+  'GE': 'GEL',
+  'AM': 'AMD',
+  'AZ': 'AZN',
+  'UZ': 'UZS',
+  'FJ': 'FJD',
+  'MU': 'MUR',
+  'SC': 'SCR',
+  'KH': 'KHR',
+  'LA': 'LAK',
+  'MM': 'MMK',
+  'MN': 'MNT',
 };
 
 String? currencyForCountryCode(String? countryCode) {

@@ -21,9 +21,7 @@ Total 493.50
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            ocrGatewayProvider.overrideWithValue(FakeOcrGateway(cannedText: sampleReceiptText)),
-          ],
+          overrides: [ocrGatewayProvider.overrideWithValue(FakeOcrGateway(cannedText: sampleReceiptText))],
           child: MaterialApp(
             home: Scaffold(
               body: ReceiptOcrModal(
@@ -75,9 +73,7 @@ Total 493.50
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            ocrGatewayProvider.overrideWithValue(fakeOcr),
-          ],
+          overrides: [ocrGatewayProvider.overrideWithValue(fakeOcr)],
           child: MaterialApp(
             home: Scaffold(
               body: ReceiptOcrModal(

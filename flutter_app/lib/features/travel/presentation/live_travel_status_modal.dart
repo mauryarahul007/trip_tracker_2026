@@ -11,10 +11,7 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
 
 class LiveTravelStatusModal extends ConsumerStatefulWidget {
-  const LiveTravelStatusModal({
-    super.key,
-    required this.statusInfo,
-  });
+  const LiveTravelStatusModal({super.key, required this.statusInfo});
 
   final TravelStatusInfo statusInfo;
 
@@ -115,10 +112,7 @@ class _LiveTravelStatusModalState extends ConsumerState<LiveTravelStatusModal> {
         children: [
           Row(
             children: [
-              Text(
-                status is FlightStatusInfo ? '✈️' : '🚆',
-                style: const TextStyle(fontSize: 26),
-              ),
+              Text(status is FlightStatusInfo ? '✈️' : '🚆', style: const TextStyle(fontSize: 26)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -126,11 +120,7 @@ class _LiveTravelStatusModalState extends ConsumerState<LiveTravelStatusModal> {
                   children: [
                     Text(
                       status is FlightStatusInfo ? 'Live Flight Status' : 'Live Train & PNR Tracker',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.textPrimary,
-                      ),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                     ),
                     Text(
                       status is FlightStatusInfo
@@ -175,11 +165,7 @@ class _LiveTravelStatusModalState extends ConsumerState<LiveTravelStatusModal> {
                     children: [
                       Text(
                         flight.airlineName,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: tokens.textSecondary,
-                        ),
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: tokens.textSecondary),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -438,10 +424,7 @@ class _LiveTravelStatusModalState extends ConsumerState<LiveTravelStatusModal> {
                     title,
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                   ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 11, color: tokens.textSecondary),
-                  ),
+                  Text(subtitle, style: TextStyle(fontSize: 11, color: tokens.textSecondary)),
                 ],
               ),
             ),

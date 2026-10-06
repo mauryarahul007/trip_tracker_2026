@@ -26,15 +26,21 @@ abstract class ChatEventSender {
   Future<void> send(Map<String, dynamic> row);
 }
 
+/// Fires `send-push` for an expense (best effort).
+abstract class ExpensePushSender {
+  Future<void> send(Map<String, dynamic> request);
+}
+
 /// Expense payload extras (receipt + chat card), applied around the RPC:
 ///   payload.receipt = {tripId, expenseId, localPath, ext, mime}
 ///   payload.chat    = a full `trip_messages` row incl. a client-made id
 class ExpenseSideEffects {
-  ExpenseSideEffects({required this.receipts, required this.chat, bool Function(String path)? fileExists})
-      : _exists = fileExists ?? ((p) => File(p).existsSync());
+  ExpenseSideEffects({required this.receipts, required this.chat, this.push, bool Function(String path)? fileExists})
+    : _exists = fileExists ?? ((p) => File(p).existsSync());
 
   final ReceiptUploader receipts;
   final ChatEventSender chat;
+  final ExpensePushSender? push;
   final bool Function(String path) _exists;
 
   /// RPC args with `p_receipt_path` set after uploading the staged photo.
@@ -81,6 +87,15 @@ class ExpenseSideEffects {
         AppLogger.warn('Chat card skipped: $e');
       }
     }
+    final p = payload['push'];
+    final sender = push;
+    if (p is Map && sender != null) {
+      try {
+        await sender.send(Map<String, dynamic>.from(p));
+      } catch (e) {
+        AppLogger.warn('Push skipped: $e');
+      }
+    }
   }
 }
 
@@ -99,7 +114,9 @@ class SupabaseReceiptUploader implements ReceiptUploader {
   }) async {
     final path = '$tripId/$expenseId.$ext';
     try {
-      await _client.storage.from('receipts').upload(
+      await _client.storage
+          .from('receipts')
+          .upload(
             path,
             File(localPath),
             fileOptions: FileOptions(contentType: mime, upsert: true), // upsert: replay-safe
@@ -108,14 +125,19 @@ class SupabaseReceiptUploader implements ReceiptUploader {
       final code = int.tryParse(e.statusCode ?? '') ?? 0;
       // Too large / wrong type / forbidden never succeed on retry; 408, 429 and 5xx do.
       final permanent = code >= 400 && code < 500 && code != 408 && code != 429;
-      throw RemoteFailure(permanent ? FailureKind.permanent : FailureKind.transient, 'receipt upload ${e.statusCode}: ${e.message}');
+      throw RemoteFailure(
+        permanent ? FailureKind.permanent : FailureKind.transient,
+        'receipt upload ${e.statusCode}: ${e.message}',
+      );
     }
     return path;
   }
 
   @override
   Future<void> markUploaded(String expenseId, String remotePath) async {
-    final row = await (_db.select(_db.offlineReceiptsTable)..where((t) => t.expenseId.equals(expenseId))).getSingleOrNull();
+    final row = await (_db.select(
+      _db.offlineReceiptsTable,
+    )..where((t) => t.expenseId.equals(expenseId))).getSingleOrNull();
     await (_db.update(_db.offlineReceiptsTable)..where((t) => t.expenseId.equals(expenseId))).write(
       OfflineReceiptsTableCompanion(uploaded: const Value(true), remoteUrl: Value(remotePath)),
     );
@@ -135,5 +157,15 @@ class SupabaseChatEventSender implements ChatEventSender {
   @override
   Future<void> send(Map<String, dynamic> row) async {
     await _client.from('trip_messages').upsert(row);
+  }
+}
+
+class SupabaseExpensePushSender implements ExpensePushSender {
+  SupabaseExpensePushSender(this._client);
+  final SupabaseClient _client;
+
+  @override
+  Future<void> send(Map<String, dynamic> request) async {
+    await _client.functions.invoke('send-push', body: request);
   }
 }

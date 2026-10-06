@@ -23,24 +23,24 @@ class Transfer {
   });
 
   Map<String, dynamic> toJson() => {
-        'from': from,
-        'to': to,
-        'fromLabel': fromLabel,
-        'toLabel': toLabel,
-        'fromMemberId': fromMemberId,
-        'toMemberId': toMemberId,
-        'amount': amount,
-      };
+    'from': from,
+    'to': to,
+    'fromLabel': fromLabel,
+    'toLabel': toLabel,
+    'fromMemberId': fromMemberId,
+    'toMemberId': toMemberId,
+    'amount': amount,
+  };
 
   factory Transfer.fromJson(Map<String, dynamic> json) => Transfer(
-        from: json['from'] as String,
-        to: json['to'] as String,
-        fromLabel: json['fromLabel'] as String,
-        toLabel: json['toLabel'] as String,
-        fromMemberId: json['fromMemberId'] as String,
-        toMemberId: json['toMemberId'] as String,
-        amount: (json['amount'] as num).toDouble(),
-      );
+    from: json['from'] as String,
+    to: json['to'] as String,
+    fromLabel: json['fromLabel'] as String,
+    toLabel: json['toLabel'] as String,
+    fromMemberId: json['fromMemberId'] as String,
+    toMemberId: json['toMemberId'] as String,
+    amount: (json['amount'] as num).toDouble(),
+  );
 }
 
 class PairSettlementGroup {
@@ -57,11 +57,11 @@ class PairSettlementGroup {
   });
 
   Map<String, dynamic> toJson() => {
-        'fromMemberId': fromMemberId,
-        'toMemberId': toMemberId,
-        'totalPaid': totalPaid,
-        'payments': payments.map((e) => e.toJson()).toList(),
-      };
+    'fromMemberId': fromMemberId,
+    'toMemberId': toMemberId,
+    'totalPaid': totalPaid,
+    'payments': payments.map((e) => e.toJson()).toList(),
+  };
 }
 
 class MemberBalance {
@@ -69,23 +69,15 @@ class MemberBalance {
   final String name;
   final double balance;
 
-  const MemberBalance({
-    required this.memberId,
-    required this.name,
-    required this.balance,
-  });
+  const MemberBalance({required this.memberId, required this.name, required this.balance});
 
-  Map<String, dynamic> toJson() => {
-        'memberId': memberId,
-        'name': name,
-        'balance': balance,
-      };
+  Map<String, dynamic> toJson() => {'memberId': memberId, 'name': name, 'balance': balance};
 
   factory MemberBalance.fromJson(Map<String, dynamic> json) => MemberBalance(
-        memberId: json['memberId'] as String,
-        name: json['name'] as String,
-        balance: (json['balance'] as num).toDouble(),
-      );
+    memberId: json['memberId'] as String,
+    name: json['name'] as String,
+    balance: (json['balance'] as num).toDouble(),
+  );
 }
 
 class SettlementNode {
@@ -94,12 +86,7 @@ class SettlementNode {
   final List<String> memberIds;
   double balance;
 
-  SettlementNode({
-    required this.id,
-    required this.name,
-    required this.memberIds,
-    required this.balance,
-  });
+  SettlementNode({required this.id, required this.name, required this.memberIds, required this.balance});
 }
 
 class SettlementCloseoutSummary {
@@ -116,11 +103,11 @@ class SettlementCloseoutSummary {
   });
 
   Map<String, dynamic> toJson() => {
-        'isFullySettled': isFullySettled,
-        'totalOutstanding': totalOutstanding,
-        'transferCount': transferCount,
-        'unsettledMemberCount': unsettledMemberCount,
-      };
+    'isFullySettled': isFullySettled,
+    'totalOutstanding': totalOutstanding,
+    'transferCount': transferCount,
+    'unsettledMemberCount': unsettledMemberCount,
+  };
 }
 
 class SettlementResult {
@@ -128,17 +115,13 @@ class SettlementResult {
   final List<Transfer> transfers;
   final bool isSimplified;
 
-  const SettlementResult({
-    required this.balances,
-    required this.transfers,
-    required this.isSimplified,
-  });
+  const SettlementResult({required this.balances, required this.transfers, required this.isSimplified});
 
   Map<String, dynamic> toJson() => {
-        'balances': balances.map((b) => b.toJson()).toList(),
-        'transfers': transfers.map((t) => t.toJson()).toList(),
-        'isSimplified': isSimplified,
-      };
+    'balances': balances.map((b) => b.toJson()).toList(),
+    'transfers': transfers.map((t) => t.toJson()).toList(),
+    'isSimplified': isSimplified,
+  };
 }
 
 double _roundToTwo(double val) {
@@ -170,8 +153,7 @@ List<PairSettlementGroup> groupSettlementsByPair(List<Expense> settlementExpense
   }
 
   final result = groups.values.map((group) {
-    final sortedPayments = List<Expense>.from(group.payments)
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final sortedPayments = List<Expense>.from(group.payments)..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return PairSettlementGroup(
       fromMemberId: group.fromMemberId,
       toMemberId: group.toMemberId,
@@ -213,18 +195,24 @@ List<SettlementNode> buildSettlementNodes(List<MemberBalance> balances, List<Gro
   return nodeMap.values.toList();
 }
 
-String _pickRepresentative(
-  List<String> memberIds,
-  List<MemberBalance> balances,
-  String direction,
-) {
+String _pickRepresentative(List<String> memberIds, List<MemberBalance> balances, String direction) {
   if (memberIds.isEmpty) return '';
   var best = memberIds[0];
-  var bestBal = balances.firstWhere((b) => b.memberId == best, orElse: () => MemberBalance(memberId: best, name: '', balance: 0)).balance;
+  var bestBal = balances
+      .firstWhere(
+        (b) => b.memberId == best,
+        orElse: () => MemberBalance(memberId: best, name: '', balance: 0),
+      )
+      .balance;
 
   for (int i = 1; i < memberIds.length; i++) {
     final id = memberIds[i];
-    final bal = balances.firstWhere((b) => b.memberId == id, orElse: () => MemberBalance(memberId: id, name: '', balance: 0)).balance;
+    final bal = balances
+        .firstWhere(
+          (b) => b.memberId == id,
+          orElse: () => MemberBalance(memberId: id, name: '', balance: 0),
+        )
+        .balance;
     if (direction == 'debtor') {
       if (bal < bestBal) {
         best = id;
@@ -243,22 +231,12 @@ String _pickRepresentative(
 List<Transfer> _matchDebtorsToCreditors(List<SettlementNode> nodes, List<MemberBalance> balances) {
   final debtors = nodes
       .where((n) => n.balance < -0.01)
-      .map((n) => SettlementNode(
-            id: n.id,
-            name: n.name,
-            memberIds: List.from(n.memberIds),
-            balance: n.balance,
-          ))
+      .map((n) => SettlementNode(id: n.id, name: n.name, memberIds: List.from(n.memberIds), balance: n.balance))
       .toList();
 
   final creditors = nodes
       .where((n) => n.balance > 0.01)
-      .map((n) => SettlementNode(
-            id: n.id,
-            name: n.name,
-            memberIds: List.from(n.memberIds),
-            balance: n.balance,
-          ))
+      .map((n) => SettlementNode(id: n.id, name: n.name, memberIds: List.from(n.memberIds), balance: n.balance))
       .toList();
 
   final transfers = <Transfer>[];
@@ -273,15 +251,17 @@ List<Transfer> _matchDebtorsToCreditors(List<SettlementNode> nodes, List<MemberB
     final amountToSettle = (-debtor.balance < creditor.balance) ? -debtor.balance : creditor.balance;
 
     if (amountToSettle > 0.005) {
-      transfers.add(Transfer(
-        from: debtor.id,
-        to: creditor.id,
-        fromLabel: debtor.name,
-        toLabel: creditor.name,
-        fromMemberId: _pickRepresentative(debtor.memberIds, balances, 'debtor'),
-        toMemberId: _pickRepresentative(creditor.memberIds, balances, 'creditor'),
-        amount: _roundToTwo(amountToSettle),
-      ));
+      transfers.add(
+        Transfer(
+          from: debtor.id,
+          to: creditor.id,
+          fromLabel: debtor.name,
+          toLabel: creditor.name,
+          fromMemberId: _pickRepresentative(debtor.memberIds, balances, 'debtor'),
+          toMemberId: _pickRepresentative(creditor.memberIds, balances, 'creditor'),
+          amount: _roundToTwo(amountToSettle),
+        ),
+      );
 
       debtor.balance += amountToSettle;
       creditor.balance -= amountToSettle;
@@ -296,13 +276,11 @@ List<Transfer> _matchDebtorsToCreditors(List<SettlementNode> nodes, List<MemberB
 
 List<Transfer> calculateGroupInternalTransfers(List<MemberBalance> balances, Group group) {
   final memberNodes = group.memberIds.map((mid) {
-    final b = balances.firstWhere((bal) => bal.memberId == mid, orElse: () => MemberBalance(memberId: mid, name: 'Deleted Member', balance: 0));
-    return SettlementNode(
-      id: 'member:$mid',
-      name: b.name,
-      memberIds: [mid],
-      balance: b.balance,
+    final b = balances.firstWhere(
+      (bal) => bal.memberId == mid,
+      orElse: () => MemberBalance(memberId: mid, name: 'Deleted Member', balance: 0),
     );
+    return SettlementNode(id: 'member:$mid', name: b.name, memberIds: [mid], balance: b.balance);
   }).toList();
   return _matchDebtorsToCreditors(memberNodes, balances);
 }
@@ -313,10 +291,9 @@ List<Transfer> calculateDirectSettlements(
   List<Expense> expenses, [
   List<Group> groups = const [],
 ]) {
-  final activeTripExpenses = expenses.where((e) =>
-      e.tripId == trip.id &&
-      e.deletedAt == null &&
-      e.approvalStatus != 'pending_approval').toList();
+  final activeTripExpenses = expenses
+      .where((e) => e.tripId == trip.id && e.deletedAt == null && e.approvalStatus != 'pending_approval')
+      .toList();
 
   final groupOfMember = <String, String>{};
   for (final g in groups) {
@@ -392,27 +369,31 @@ List<Transfer> calculateDirectSettlements(
       if (net > 0.005) {
         final memA = members[idA];
         final memB = members[idB];
-        transfers.add(Transfer(
-          from: 'member:$idA',
-          to: 'member:$idB',
-          fromLabel: memA != null ? memA.name : 'Deleted Member',
-          toLabel: memB != null ? memB.name : 'Deleted Member',
-          fromMemberId: idA,
-          toMemberId: idB,
-          amount: net,
-        ));
+        transfers.add(
+          Transfer(
+            from: 'member:$idA',
+            to: 'member:$idB',
+            fromLabel: memA != null ? memA.name : 'Deleted Member',
+            toLabel: memB != null ? memB.name : 'Deleted Member',
+            fromMemberId: idA,
+            toMemberId: idB,
+            amount: net,
+          ),
+        );
       } else if (net < -0.005) {
         final memA = members[idA];
         final memB = members[idB];
-        transfers.add(Transfer(
-          from: 'member:$idB',
-          to: 'member:$idA',
-          fromLabel: memB != null ? memB.name : 'Deleted Member',
-          toLabel: memA != null ? memA.name : 'Deleted Member',
-          fromMemberId: idB,
-          toMemberId: idA,
-          amount: _roundToTwo(-net),
-        ));
+        transfers.add(
+          Transfer(
+            from: 'member:$idB',
+            to: 'member:$idA',
+            fromLabel: memB != null ? memB.name : 'Deleted Member',
+            toLabel: memA != null ? memA.name : 'Deleted Member',
+            fromMemberId: idB,
+            toMemberId: idA,
+            amount: _roundToTwo(-net),
+          ),
+        );
       }
     }
   }
@@ -428,10 +409,9 @@ SettlementResult calculateSettlements(
   List<Group> groups = const [],
   bool? simplifyDebts,
 ]) {
-  final activeTripExpenses = expenses.where((e) =>
-      e.tripId == trip.id &&
-      e.deletedAt == null &&
-      e.approvalStatus != 'pending_approval').toList();
+  final activeTripExpenses = expenses
+      .where((e) => e.tripId == trip.id && e.deletedAt == null && e.approvalStatus != 'pending_approval')
+      .toList();
 
   final netBalances = <String, double>{};
   for (final id in trip.memberIds) {
@@ -469,27 +449,16 @@ SettlementResult calculateSettlements(
 
   if (!shouldSimplify) {
     final directTransfers = calculateDirectSettlements(trip, members, expenses, groups);
-    return SettlementResult(
-      balances: balances,
-      transfers: directTransfers,
-      isSimplified: false,
-    );
+    return SettlementResult(balances: balances, transfers: directTransfers, isSimplified: false);
   }
 
   final nodes = buildSettlementNodes(balances, groups);
   final transfers = _matchDebtorsToCreditors(nodes, balances);
 
-  return SettlementResult(
-    balances: balances,
-    transfers: transfers,
-    isSimplified: true,
-  );
+  return SettlementResult(balances: balances, transfers: transfers, isSimplified: true);
 }
 
-SettlementCloseoutSummary summarizeSettlement(
-  List<dynamic> balances,
-  List<dynamic> transfers,
-) {
+SettlementCloseoutSummary summarizeSettlement(List<dynamic> balances, List<dynamic> transfers) {
   double totalOutstanding = 0.0;
   for (final t in transfers) {
     if (t is Transfer) {

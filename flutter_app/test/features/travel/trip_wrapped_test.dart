@@ -105,9 +105,7 @@ void main() {
             shareServiceProvider.overrideWithValue(fakeShare),
           ],
           child: const MaterialApp(
-            home: Scaffold(
-              body: TripWrappedModal(tripId: 't-wrapped'),
-            ),
+            home: Scaffold(body: TripWrappedModal(tripId: 't-wrapped')),
           ),
         ),
       );

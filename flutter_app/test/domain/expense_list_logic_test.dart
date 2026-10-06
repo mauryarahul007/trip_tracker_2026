@@ -19,38 +19,49 @@ Expense ex(
   String approval = 'confirmed',
   int? disputedAt,
   ExpenseLocation? location,
-}) =>
-    Expense(
-      id: id,
-      tripId: 't',
-      title: title,
-      amount: amount,
-      currency: 'INR',
-      category: category,
-      date: date,
-      paidBy: paidBy,
-      splitMode: 'equal',
-      splitMemberIds: split,
-      resolvedShares: shares,
-      isSettlement: settlement,
-      approvalStatus: approval,
-      disputedAt: disputedAt,
-      location: location,
-      createdAt: 1,
-      updatedAt: 1,
-    );
+}) => Expense(
+  id: id,
+  tripId: 't',
+  title: title,
+  amount: amount,
+  currency: 'INR',
+  category: category,
+  date: date,
+  paidBy: paidBy,
+  splitMode: 'equal',
+  splitMemberIds: split,
+  resolvedShares: shares,
+  isSettlement: settlement,
+  approvalStatus: approval,
+  disputedAt: disputedAt,
+  location: location,
+  createdAt: 1,
+  updatedAt: 1,
+);
 
 void main() {
   final all = [
     ex('1', title: 'Beach Lunch', amount: 120, date: '2026-10-06', paidBy: 'a', split: ['a', 'b']),
     ex('2', title: 'Taxi', amount: 40, date: '2026-10-06', category: 'cat-travel', paidBy: 'b', split: ['b', 'c']),
     ex('3', title: 'Hotel', amount: 900, date: '2026-10-05', category: 'cat-stay', paidBy: 'c', split: ['a', 'b', 'c']),
-    ex('4', title: 'Museum', amount: 60, date: '2026-10-04', category: 'cat-activities', paidBy: 'a', split: ['a'], location: const ExpenseLocation(lat: 1, lng: 2, placeName: 'Panjim')),
+    ex(
+      '4',
+      title: 'Museum',
+      amount: 60,
+      date: '2026-10-04',
+      category: 'cat-activities',
+      paidBy: 'a',
+      split: ['a'],
+      location: const ExpenseLocation(lat: 1, lng: 2, placeName: 'Panjim'),
+    ),
   ];
   ids(List<Expense> l) => [for (final e in l) e.id];
 
   group('filterExpenses (port of filteredExpenses)', () {
-    test('no filters keeps everything in order', () => expect(ids(filterExpenses(all, const ExpenseFilters())), ['1', '2', '3', '4']));
+    test(
+      'no filters keeps everything in order',
+      () => expect(ids(filterExpenses(all, const ExpenseFilters())), ['1', '2', '3', '4']),
+    );
 
     test('search is a case-insensitive title match, trimmed', () {
       expect(ids(filterExpenses(all, const ExpenseFilters(query: '  LUNCH '))), ['1']);
@@ -64,7 +75,11 @@ void main() {
     });
 
     test('date range is inclusive on both ends', () {
-      expect(ids(filterExpenses(all, const ExpenseFilters(dateFrom: '2026-10-05', dateTo: '2026-10-06'))), ['1', '2', '3']);
+      expect(ids(filterExpenses(all, const ExpenseFilters(dateFrom: '2026-10-05', dateTo: '2026-10-06'))), [
+        '1',
+        '2',
+        '3',
+      ]);
       expect(ids(filterExpenses(all, const ExpenseFilters(dateFrom: '2026-10-06'))), ['1', '2']);
       expect(ids(filterExpenses(all, const ExpenseFilters(dateTo: '2026-10-04'))), ['4']);
     });
@@ -76,8 +91,14 @@ void main() {
     });
 
     test('relation filters need a member id; without one they are ignored (web)', () {
-      expect(ids(filterExpenses(all, const ExpenseFilters(relation: ExpenseRelation.paidByMe), myMemberId: 'a')), ['1', '4']);
-      expect(ids(filterExpenses(all, const ExpenseFilters(relation: ExpenseRelation.involvesMe), myMemberId: 'c')), ['2', '3']);
+      expect(ids(filterExpenses(all, const ExpenseFilters(relation: ExpenseRelation.paidByMe), myMemberId: 'a')), [
+        '1',
+        '4',
+      ]);
+      expect(ids(filterExpenses(all, const ExpenseFilters(relation: ExpenseRelation.involvesMe), myMemberId: 'c')), [
+        '2',
+        '3',
+      ]);
       expect(ids(filterExpenses(all, const ExpenseFilters(relation: ExpenseRelation.paidByMe))), ['1', '2', '3', '4']);
     });
 
@@ -139,32 +160,64 @@ void main() {
     });
 
     test('unknown category shows as Other; no members -> zero average; empty -> no top', () {
-      final t = computeTotals([ex('1', amount: 10, category: 'gone')], visibleMemberCount: 0, categories: defaultCategories);
+      final t = computeTotals(
+        [ex('1', amount: 10, category: 'gone')],
+        visibleMemberCount: 0,
+        categories: defaultCategories,
+      );
       expect(t.categories.single.name, 'Other');
       expect(t.averageCost, 0);
       expect(computeTotals([], visibleMemberCount: 2, categories: defaultCategories).top, isNull);
     });
 
     test('equal-spend categories keep first-seen order (stable sort)', () {
-      final t = computeTotals([ex('1', amount: 10, category: 'cat-misc'), ex('2', amount: 10, category: 'cat-food')],
-          visibleMemberCount: 1, categories: defaultCategories);
-      expect([for (final c in t.categories) c.id], ['cat-food', 'cat-misc']); // follows the category list, like the web's object order
+      final t = computeTotals(
+        [ex('1', amount: 10, category: 'cat-misc'), ex('2', amount: 10, category: 'cat-food')],
+        visibleMemberCount: 1,
+        categories: defaultCategories,
+      );
+      expect(
+        [for (final c in t.categories) c.id],
+        ['cat-food', 'cat-misc'],
+      ); // follows the category list, like the web's object order
     });
   });
 
   group('row rules', () {
-    final trip = Trip.fromJson({'id': 't', 'name': 'T', 'memberIds': ['a', 'b']});
+    final trip = Trip.fromJson({
+      'id': 't',
+      'name': 'T',
+      'memberIds': ['a', 'b'],
+    });
 
     test('removed payer / participants produce the web warnings', () {
       expect(reviewExpense(trip, ex('1')).needsReview, isFalse);
       expect(reviewExpense(trip, ex('1', paidBy: 'gone')).message, 'Payer was removed — assign a new payer.');
-      expect(reviewExpense(trip, ex('1', split: ['a', 'gone'])).message, 'A split member was removed — update the split.');
-      expect(reviewExpense(trip, ex('1', paidBy: 'gone', split: ['gone'])).message,
-          'Payer and a split member were removed — reassign the payer and update the split.');
+      expect(
+        reviewExpense(trip, ex('1', split: ['a', 'gone'])).message,
+        'A split member was removed — update the split.',
+      );
+      expect(
+        reviewExpense(trip, ex('1', paidBy: 'gone', split: ['gone'])).message,
+        'Payer and a split member were removed — reassign the payer and update the split.',
+      );
     });
 
     test('who can manage a row: admin or author', () {
-      const e = Expense(id: 'e', tripId: 't', title: 't', amount: 1, currency: 'INR', category: 'c', date: 'd', paidBy: 'a', splitMode: 'equal', createdByUserId: 'u1', createdAt: 1, updatedAt: 1);
+      const e = Expense(
+        id: 'e',
+        tripId: 't',
+        title: 't',
+        amount: 1,
+        currency: 'INR',
+        category: 'c',
+        date: 'd',
+        paidBy: 'a',
+        splitMode: 'equal',
+        createdByUserId: 'u1',
+        createdAt: 1,
+        updatedAt: 1,
+      );
       expect(canManageExpense(e, isAdmin: true, userId: 'x'), isTrue);
       expect(canManageExpense(e, isAdmin: false, userId: 'u1'), isTrue);
       expect(canManageExpense(e, isAdmin: false, userId: 'u2'), isFalse);
@@ -181,22 +234,33 @@ void main() {
   });
 
   group('attention chips (port of SummaryAttentionStrip)', () {
-    final trip = Trip.fromJson({'id': 't', 'name': 'T', 'memberIds': ['a', 'b', 'c'], 'endDate': '2026-10-01'});
+    final trip = Trip.fromJson({
+      'id': 't',
+      'name': 'T',
+      'memberIds': ['a', 'b', 'c'],
+      'endDate': '2026-10-01',
+    });
     final members = [
       const Member(id: 'a', name: 'A', linkedUserId: 'u1'),
       const Member(id: 'b', name: 'B'),
       const Member(id: 'c', name: 'C', archived: true),
     ];
-    List<AttentionChip> chips({double mine = 0, bool disputes = true, bool closeout = true, Trip? t, List<Expense>? ex2}) => attentionChips(
-          trip: t ?? trip,
-          myMemberId: 'a',
-          balances: [MemberBalance(memberId: 'a', name: 'A', balance: mine)],
-          expenses: ex2 ?? [ex('1', disputedAt: 5), ex('2', disputedAt: 6), ex('3')],
-          members: members,
-          disputesEnabled: disputes,
-          closeoutEnabled: closeout,
-          today: '2026-10-06',
-        );
+    List<AttentionChip> chips({
+      double mine = 0,
+      bool disputes = true,
+      bool closeout = true,
+      Trip? t,
+      List<Expense>? ex2,
+    }) => attentionChips(
+      trip: t ?? trip,
+      myMemberId: 'a',
+      balances: [MemberBalance(memberId: 'a', name: 'A', balance: mine)],
+      expenses: ex2 ?? [ex('1', disputedAt: 5), ex('2', disputedAt: 6), ex('3')],
+      members: members,
+      disputesEnabled: disputes,
+      closeoutEnabled: closeout,
+      today: '2026-10-06',
+    );
     labels(List<AttentionChip> c) => [for (final x in c) x.label];
 
     test('owe / owed use a 0.009 threshold', () {
@@ -218,8 +282,33 @@ void main() {
     test('close-out only after the end date, if open, if enabled', () {
       expect(labels(chips()), contains('Close out trip'));
       expect(labels(chips(closeout: false)), isNot(contains('Close out trip')));
-      expect(labels(chips(t: Trip.fromJson({'id': 't', 'name': 'T', 'memberIds': ['a'], 'endDate': '2026-10-06'}))), isNot(contains('Close out trip'))); // ends today
-      expect(labels(chips(t: Trip.fromJson({'id': 't', 'name': 'T', 'memberIds': ['a'], 'endDate': '2026-10-01', 'closed': true}))), isNot(contains('Close out trip')));
+      expect(
+        labels(
+          chips(
+            t: Trip.fromJson({
+              'id': 't',
+              'name': 'T',
+              'memberIds': ['a'],
+              'endDate': '2026-10-06',
+            }),
+          ),
+        ),
+        isNot(contains('Close out trip')),
+      ); // ends today
+      expect(
+        labels(
+          chips(
+            t: Trip.fromJson({
+              'id': 't',
+              'name': 'T',
+              'memberIds': ['a'],
+              'endDate': '2026-10-01',
+              'closed': true,
+            }),
+          ),
+        ),
+        isNot(contains('Close out trip')),
+      );
     });
   });
 }

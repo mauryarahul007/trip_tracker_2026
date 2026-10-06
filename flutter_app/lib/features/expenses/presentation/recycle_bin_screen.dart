@@ -36,7 +36,11 @@ class RecycleBinScreen extends ConsumerWidget {
     return AppScaffold(
       appBar: AppBar(
         title: Text(l10n.binTitle),
-        leading: IconButton(tooltip: l10n.actionBack, icon: const Icon(AppIcons.back, size: 20), onPressed: () => context.pop()),
+        leading: IconButton(
+          tooltip: l10n.actionBack,
+          icon: const Icon(AppIcons.back, size: 20),
+          onPressed: () => context.pop(),
+        ),
         actions: [
           if (items.isNotEmpty && isAdmin)
             TextButton(
@@ -60,43 +64,66 @@ class RecycleBinScreen extends ConsumerWidget {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(l10n.binBody, style: TextStyle(color: tokens.textSecondary))),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(l10n.binBody, style: TextStyle(color: tokens.textSecondary)),
+                ),
                 for (final e in items)
                   Card(
                     key: Key('bin-${e.id}'),
                     margin: const EdgeInsets.only(bottom: 10),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                        Row(children: [
-                          Expanded(child: Text(e.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600))),
-                          Text(formatMoney(context, e.amount, base)),
-                        ]),
-                        const SizedBox(height: 8),
-                        Row(children: [
-                          Expanded(child: AppButton(label: l10n.binRestore, variant: AppButtonVariant.secondary, onPressed: () => repo.restore(e.id))),
-                          if (canManageExpense(e, isAdmin: isAdmin, userId: uid)) ...[
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: AppButton(
-                                label: l10n.binDeleteForever,
-                                variant: AppButtonVariant.danger,
-                                onPressed: () async {
-                                  final ok = await ConfirmDialog.show(
-                                    context: context,
-                                    title: l10n.binDeleteForever,
-                                    message: l10n.binDeleteConfirm(e.title),
-                                    confirmLabel: l10n.binDeleteForever,
-                                    cancelLabel: l10n.actionCancel,
-                                    isDestructive: true,
-                                  );
-                                  if (ok) await repo.permanentlyDelete(e.id);
-                                },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  e.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                ),
                               ),
-                            ),
-                          ],
-                        ]),
-                      ]),
+                              Text(formatMoney(context, e.amount, base)),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: AppButton(
+                                  label: l10n.binRestore,
+                                  variant: AppButtonVariant.secondary,
+                                  onPressed: () => repo.restore(e.id),
+                                ),
+                              ),
+                              if (canManageExpense(e, isAdmin: isAdmin, userId: uid)) ...[
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: AppButton(
+                                    label: l10n.binDeleteForever,
+                                    variant: AppButtonVariant.danger,
+                                    onPressed: () async {
+                                      final ok = await ConfirmDialog.show(
+                                        context: context,
+                                        title: l10n.binDeleteForever,
+                                        message: l10n.binDeleteConfirm(e.title),
+                                        confirmLabel: l10n.binDeleteForever,
+                                        cancelLabel: l10n.actionCancel,
+                                        isDestructive: true,
+                                      );
+                                      if (ok) await repo.permanentlyDelete(e.id);
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
               ],

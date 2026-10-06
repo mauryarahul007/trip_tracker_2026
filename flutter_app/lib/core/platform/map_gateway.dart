@@ -117,8 +117,7 @@ class FakeMapGateway implements MapGateway {
               style: const TextStyle(fontSize: 10, color: Colors.blueGrey),
             ),
           ),
-          for (final route in routes)
-            SizedBox(key: Key('map_route_${route.id}')),
+          for (final route in routes) SizedBox(key: Key('map_route_${route.id}')),
           for (final marker in markers)
             Positioned(
               left: 20,
@@ -128,10 +127,7 @@ class FakeMapGateway implements MapGateway {
                 onTap: marker.onTap,
                 child: Container(
                   padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: marker.color ?? Colors.blue,
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: BoxDecoration(color: marker.color ?? Colors.blue, shape: BoxShape.circle),
                   child: Text(
                     marker.icon ?? marker.label ?? '📍',
                     style: const TextStyle(fontSize: 12, color: Colors.white),
@@ -183,10 +179,7 @@ class _InteractiveCanvasMapState extends State<_InteractiveCanvasMap> {
     return Container(
       color: const Color(0xFFF1F5F9),
       child: CustomPaint(
-        painter: _MapCanvasPainter(
-          markers: widget.markers,
-          routes: widget.routes,
-        ),
+        painter: _MapCanvasPainter(markers: widget.markers, routes: widget.routes),
         child: Stack(
           children: [
             for (final marker in widget.markers)
@@ -197,10 +190,7 @@ class _InteractiveCanvasMapState extends State<_InteractiveCanvasMap> {
                 child: GestureDetector(
                   onTap: marker.onTap,
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: marker.color ?? Colors.teal,
-                      shape: BoxShape.circle,
-                    ),
+                    decoration: BoxDecoration(color: marker.color ?? Colors.teal, shape: BoxShape.circle),
                     padding: const EdgeInsets.all(4),
                     child: Text(marker.icon ?? '📍'),
                   ),
@@ -235,12 +225,7 @@ class _MapCanvasPainter extends CustomPainter {
       final path = Path();
       // Draw simulated subtle curve across the viewport
       path.moveTo(size.width * 0.15, size.height * 0.35);
-      path.quadraticBezierTo(
-        size.width * 0.5,
-        size.height * 0.7,
-        size.width * 0.85,
-        size.height * 0.4,
-      );
+      path.quadraticBezierTo(size.width * 0.5, size.height * 0.7, size.width * 0.85, size.height * 0.4);
       canvas.drawPath(path, paint);
     }
   }

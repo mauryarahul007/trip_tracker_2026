@@ -55,10 +55,7 @@ void main() {
     test('starts and stops heartbeat cleanly', () async {
       final fakeGateway = FakeLocationGateway();
       final fakeRepo = FakeLocationShareRepository();
-      final service = LiveLocationService(
-        locationGateway: fakeGateway,
-        locationShareRepository: fakeRepo,
-      );
+      final service = LiveLocationService(locationGateway: fakeGateway, locationShareRepository: fakeRepo);
 
       expect(service.isHeartbeatActive, isFalse);
       expect(service.activeTripId, isNull);
@@ -94,9 +91,7 @@ void main() {
             locationShareRepositoryProvider.overrideWithValue(fakeRepo),
             mapGatewayProvider.overrideWithValue(const FakeMapGateway()),
           ],
-          child: const MaterialApp(
-            home: LiveScreen(token: 'valid_token'),
-          ),
+          child: const MaterialApp(home: LiveScreen(token: 'valid_token')),
         ),
       );
 
@@ -117,9 +112,7 @@ void main() {
             locationShareRepositoryProvider.overrideWithValue(fakeRepo),
             mapGatewayProvider.overrideWithValue(const FakeMapGateway()),
           ],
-          child: const MaterialApp(
-            home: LiveScreen(token: 'non_existent_token'),
-          ),
+          child: const MaterialApp(home: LiveScreen(token: 'non_existent_token')),
         ),
       );
 
@@ -144,11 +137,7 @@ void main() {
           ],
           child: const MaterialApp(
             home: Scaffold(
-              body: LiveLocationShareModal(
-                tripId: 'trip_1',
-                memberId: 'm1',
-                userId: 'u1',
-              ),
+              body: LiveLocationShareModal(tripId: 'trip_1', memberId: 'm1', userId: 'u1'),
             ),
           ),
         ),
@@ -182,18 +171,10 @@ void main() {
     testWidgets('renders active sharing members and toggles mini-map preview', (tester) async {
       final fakeRepo = FakeLocationShareRepository();
       fakeRepo.activeShares.add(
-        TripActiveShare(
-          memberId: 'm1',
-          lat: 15.2993,
-          lng: 74.1240,
-          updatedAt: DateTime.now().toIso8601String(),
-        ),
+        TripActiveShare(memberId: 'm1', lat: 15.2993, lng: 74.1240, updatedAt: DateTime.now().toIso8601String()),
       );
 
-      const members = [
-        Member(id: 'm1', tripId: 't1', name: 'Asha'),
-        Member(id: 'm2', tripId: 't1', name: 'Rohan'),
-      ];
+      const members = [Member(id: 'm1', tripId: 't1', name: 'Asha'), Member(id: 'm2', tripId: 't1', name: 'Rohan')];
 
       await tester.pumpWidget(
         ProviderScope(
@@ -203,10 +184,7 @@ void main() {
           ],
           child: const MaterialApp(
             home: Scaffold(
-              body: LiveLocationChatBanner(
-                tripId: 't1',
-                members: members,
-              ),
+              body: LiveLocationChatBanner(tripId: 't1', members: members),
             ),
           ),
         ),
@@ -243,9 +221,7 @@ void main() {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: LiveTravelStatusModal(statusInfo: flightInfo),
-            ),
+            home: Scaffold(body: LiveTravelStatusModal(statusInfo: flightInfo)),
           ),
         ),
       );
@@ -276,9 +252,7 @@ void main() {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: LiveTravelStatusModal(statusInfo: trainInfo),
-            ),
+            home: Scaffold(body: LiveTravelStatusModal(statusInfo: trainInfo)),
           ),
         ),
       );

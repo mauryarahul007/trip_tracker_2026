@@ -18,12 +18,7 @@ class AppAvatar extends StatelessWidget {
   final String? avatarUrl;
   final double size;
 
-  const AppAvatar({
-    super.key,
-    required this.name,
-    this.avatarUrl,
-    this.size = 36.0,
-  });
+  const AppAvatar({super.key, required this.name, this.avatarUrl, this.size = 36.0});
 
   static Color colorForName(String name) {
     final normalized = name.trim().toLowerCase();
@@ -37,10 +32,7 @@ class AppAvatar extends StatelessWidget {
 
   static String initialsForName(String nameOrEmail) {
     final namePart = nameOrEmail.split('@')[0];
-    final words = namePart
-        .split(RegExp(r'[.\s_-]+'))
-        .where((w) => w.isNotEmpty)
-        .toList();
+    final words = namePart.split(RegExp(r'[.\s_-]+')).where((w) => w.isNotEmpty).toList();
     if (words.length >= 2) {
       return (words[0][0] + words[1][0]).toUpperCase();
     }
@@ -78,12 +70,7 @@ class AppAvatar extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         initials,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: size * 0.4,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.5,
-        ),
+        style: TextStyle(color: Colors.white, fontSize: size * 0.4, fontWeight: FontWeight.w700, letterSpacing: -0.5),
       ),
     );
   }

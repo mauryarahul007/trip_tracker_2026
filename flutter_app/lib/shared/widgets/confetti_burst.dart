@@ -4,11 +4,7 @@ import 'package:flutter/material.dart';
 
 /// A lightweight confetti particle burst for celebrating settlements and achievements.
 class ConfettiBurst extends StatefulWidget {
-  const ConfettiBurst({
-    super.key,
-    required this.child,
-    this.playOnStart = true,
-  });
+  const ConfettiBurst({super.key, required this.child, this.playOnStart = true});
 
   final Widget child;
   final bool playOnStart;
@@ -17,8 +13,7 @@ class ConfettiBurst extends StatefulWidget {
   State<ConfettiBurst> createState() => ConfettiBurstState();
 }
 
-class ConfettiBurstState extends State<ConfettiBurst>
-    with SingleTickerProviderStateMixin {
+class ConfettiBurstState extends State<ConfettiBurst> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   final List<_ConfettiParticle> _particles = [];
   final math.Random _random = math.Random();
@@ -26,10 +21,7 @@ class ConfettiBurstState extends State<ConfettiBurst>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    );
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
 
     if (widget.playOnStart) {
       _initParticles();
@@ -58,9 +50,7 @@ class ConfettiBurstState extends State<ConfettiBurst>
       final speed = 80.0 + _random.nextDouble() * 140.0;
       final size = 4.0 + _random.nextDouble() * 6.0;
       final color = colors[_random.nextInt(colors.length)];
-      _particles.add(
-        _ConfettiParticle(angle: angle, speed: speed, size: size, color: color),
-      );
+      _particles.add(_ConfettiParticle(angle: angle, speed: speed, size: size, color: color));
     }
   }
 
@@ -85,10 +75,7 @@ class ConfettiBurstState extends State<ConfettiBurst>
                   return const SizedBox.shrink();
                 }
                 return CustomPaint(
-                  painter: _ConfettiPainter(
-                    progress: _controller.value,
-                    particles: _particles,
-                  ),
+                  painter: _ConfettiPainter(progress: _controller.value, particles: _particles),
                 );
               },
             ),
@@ -100,12 +87,7 @@ class ConfettiBurstState extends State<ConfettiBurst>
 }
 
 class _ConfettiParticle {
-  _ConfettiParticle({
-    required this.angle,
-    required this.speed,
-    required this.size,
-    required this.color,
-  });
+  _ConfettiParticle({required this.angle, required this.speed, required this.size, required this.color});
 
   final double angle;
   final double speed;
@@ -127,10 +109,7 @@ class _ConfettiPainter extends CustomPainter {
     for (final p in particles) {
       final distance = p.speed * progress;
       final x = center.dx + math.cos(p.angle) * distance;
-      final y =
-          center.dy +
-          math.sin(p.angle) * distance +
-          (progress * progress * 60.0);
+      final y = center.dy + math.sin(p.angle) * distance + (progress * progress * 60.0);
 
       final paint = Paint()
         ..color = p.color.withValues(alpha: opacity)
@@ -139,14 +118,7 @@ class _ConfettiPainter extends CustomPainter {
       canvas.save();
       canvas.translate(x, y);
       canvas.rotate(p.angle + (progress * math.pi * 2));
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset.zero,
-          width: p.size,
-          height: p.size * 0.6,
-        ),
-        paint,
-      );
+      canvas.drawRect(Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size * 0.6), paint);
       canvas.restore();
     }
   }

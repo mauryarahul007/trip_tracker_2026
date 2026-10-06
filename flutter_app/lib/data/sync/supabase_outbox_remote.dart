@@ -45,7 +45,10 @@ class SupabaseOutboxRemote implements OutboxRemote {
         await db.rpc<dynamic>('upsert_expense_v1', params: args);
         await fx?.afterWritten(p, args);
       case OutboxType.deleteExpense:
-        await db.from('expenses').update({'deleted_at': DateTime.now().toUtc().toIso8601String()}).eq('id', p['id'] as String);
+        await db
+            .from('expenses')
+            .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
+            .eq('id', p['id'] as String);
       case OutboxType.restoreExpense:
         await db.from('expenses').update({'deleted_at': null}).eq('id', p['id'] as String);
       case OutboxType.permanentlyDeleteExpense:
@@ -58,11 +61,10 @@ class SupabaseOutboxRemote implements OutboxRemote {
       case OutboxType.updateTripState:
         await db.from('trips').update(Map<String, dynamic>.from(p['patch'] as Map)).eq('id', p['id'] as String);
       case OutboxType.setTripCollabField:
-        await db.rpc<dynamic>('set_trip_collab_field', params: {
-          'p_trip_id': p['id'],
-          'p_field': p['field'],
-          'p_value': p['value'],
-        });
+        await db.rpc<dynamic>(
+          'set_trip_collab_field',
+          params: {'p_trip_id': p['id'], 'p_field': p['field'], 'p_value': p['value']},
+        );
       case OutboxType.deleteTrip:
         // Deleting an already-deleted trip matches 0 rows: fine, replay-safe.
         await db.from('trips').delete().eq('id', p['id'] as String);
@@ -133,7 +135,11 @@ RemoteFailure classifyPostgrest(PostgrestException e) {
   if (code == 'PGRST301' || code == 'PGRST303' || msg.toLowerCase().contains('jwt')) {
     return RemoteFailure(FailureKind.auth, msg);
   }
-  if (code.startsWith('23') || code.startsWith('22') || code.startsWith('42') || code == 'P0001' || code == 'PGRST204') {
+  if (code.startsWith('23') ||
+      code.startsWith('22') ||
+      code.startsWith('42') ||
+      code == 'P0001' ||
+      code == 'PGRST204') {
     return RemoteFailure(FailureKind.permanent, '$code $msg');
   }
   return RemoteFailure(FailureKind.transient, '$code $msg');

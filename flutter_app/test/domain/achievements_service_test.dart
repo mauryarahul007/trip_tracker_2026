@@ -67,9 +67,7 @@ void main() {
     });
 
     test('unlocks Lightning Settlement badge when trip is fully settled', () {
-      final expenses = [
-        _createExpense(id: 'e-1', title: 'Dinner', amount: 2000, category: 'cat-food'),
-      ];
+      final expenses = [_createExpense(id: 'e-1', title: 'Dinner', amount: 2000, category: 'cat-food')];
 
       final badges = calculateTripAchievements(mockTrip, expenses, mockMembers, mockCategories, true);
       final settleBadge = badges.firstWhere((b) => b.id == 'lightning_settle');
@@ -116,7 +114,13 @@ void main() {
 
     test('unlocks Visual Chronicler when receipts are attached', () {
       final expenses = [
-        _createExpense(id: 'e-1', title: 'Hotel', amount: 4000, category: 'cat-travel', receiptImage: 'https://img.com/rec.jpg'),
+        _createExpense(
+          id: 'e-1',
+          title: 'Hotel',
+          amount: 4000,
+          category: 'cat-travel',
+          receiptImage: 'https://img.com/rec.jpg',
+        ),
       ];
 
       final badges = calculateTripAchievements(mockTrip, expenses, mockMembers, mockCategories, false);

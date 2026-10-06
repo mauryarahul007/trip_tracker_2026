@@ -34,13 +34,7 @@ bool canAddExpense(Trip? trip, String? memberId, [bool isTripAdmin = false]) {
   return role == 'organizer' || role == 'contributor';
 }
 
-bool canEditExpense(
-  Expense? expense,
-  Trip? trip,
-  String? memberId,
-  String? userId, [
-  bool isTripAdmin = false,
-]) {
+bool canEditExpense(Expense? expense, Trip? trip, String? memberId, String? userId, [bool isTripAdmin = false]) {
   if (isTripAdmin) return true;
   if (trip == null || expense == null) return false;
   if (trip.closed || trip.frozen || trip.archived) return false;

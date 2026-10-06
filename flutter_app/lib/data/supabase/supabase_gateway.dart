@@ -8,8 +8,7 @@ import '../../core/logging/app_logger.dart';
 /// Secure hardware-backed storage adapter for Supabase session persistence
 /// on iOS Keychain and Android EncryptedSharedPreferences.
 class SecureLocalStorage extends LocalStorage {
-  const SecureLocalStorage({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+  const SecureLocalStorage({FlutterSecureStorage? storage}) : _storage = storage ?? const FlutterSecureStorage();
 
   final FlutterSecureStorage _storage;
   static const _sessionKey = 'supabase_auth_session';
@@ -88,16 +87,12 @@ class AppSupabaseGateway implements SupabaseGateway {
   /// Initializes Supabase singleton with environment configuration
   /// and secure hardware storage.
   static Future<AppSupabaseGateway> initialize(AppEnv env) async {
-    AppLogger.info(
-      'Initializing SupabaseGateway for ${env.flavor.name} (${env.supabaseUrl})',
-    );
+    AppLogger.info('Initializing SupabaseGateway for ${env.flavor.name} (${env.supabaseUrl})');
 
     final instance = await Supabase.initialize(
       url: env.supabaseUrl,
       publishableKey: env.supabaseAnonKey,
-      authOptions: const FlutterAuthClientOptions(
-        localStorage: SecureLocalStorage(),
-      ),
+      authOptions: const FlutterAuthClientOptions(localStorage: SecureLocalStorage()),
     );
 
     return AppSupabaseGateway(instance.client);

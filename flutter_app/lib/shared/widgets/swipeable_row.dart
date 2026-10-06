@@ -46,10 +46,7 @@ class SwipeableRow extends StatelessWidget {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        decoration: BoxDecoration(
-          color: actionBg,
-          borderRadius: BorderRadius.circular(tokens.radiusMd),
-        ),
+        decoration: BoxDecoration(color: actionBg, borderRadius: BorderRadius.circular(tokens.radiusMd)),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -57,11 +54,7 @@ class SwipeableRow extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               actionLabel,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
             ),
           ],
         ),

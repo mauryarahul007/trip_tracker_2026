@@ -47,11 +47,7 @@ class AppTextField extends StatelessWidget {
         if (label != null) ...[
           Text(
             label!,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: tokens.textSecondary,
-            ),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: tokens.textSecondary),
           ),
           const SizedBox(height: 6),
         ],
@@ -74,10 +70,7 @@ class AppTextField extends StatelessWidget {
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: tokens.bgSurface,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(tokens.radiusMd),
               borderSide: BorderSide(color: tokens.borderColor),

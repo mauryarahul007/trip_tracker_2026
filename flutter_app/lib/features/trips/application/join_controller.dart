@@ -6,6 +6,7 @@ import '../../../app/auth_state.dart';
 import '../../../core/env/app_env.dart';
 import '../../../data/providers.dart';
 import '../../../domain/models/join_share.dart';
+import '../../notifications/application/push_providers.dart';
 
 enum JoinStatus { loading, invalid, preview, ready, alreadyIn, allClaimed, claiming, error }
 
@@ -41,28 +42,29 @@ class JoinState {
     bool clearLockout = false,
     bool? claimedByOther,
     String? joinedTripId,
-  }) =>
-      JoinState(
-        status: status ?? this.status,
-        preview: preview ?? this.preview,
-        lookup: lookup ?? this.lookup,
-        message: message ?? this.message,
-        lockoutSeconds: clearLockout ? null : (lockoutSeconds ?? this.lockoutSeconds),
-        claimedByOther: claimedByOther ?? this.claimedByOther,
-        joinedTripId: joinedTripId ?? this.joinedTripId,
-      );
+  }) => JoinState(
+    status: status ?? this.status,
+    preview: preview ?? this.preview,
+    lookup: lookup ?? this.lookup,
+    message: message ?? this.message,
+    lockoutSeconds: clearLockout ? null : (lockoutSeconds ?? this.lockoutSeconds),
+    claimedByOther: claimedByOther ?? this.claimedByOther,
+    joinedTripId: joinedTripId ?? this.joinedTripId,
+  );
 }
 
 /// After a claim, pull the new trip so it is on the device before we open it.
 /// Overridable in tests.
-final afterJoinSyncProvider = Provider<Future<void> Function(String tripId)>((ref) => (tripId) async {
-      if (!AppEnv.current.hasBackend) return;
-      try {
-        await ref.read(tripPullSyncProvider).syncTrip(tripId);
-      } catch (_) {
-        // The trip still opens; the next sync fills it in.
-      }
-    });
+final afterJoinSyncProvider = Provider<Future<void> Function(String tripId)>(
+  (ref) => (tripId) async {
+    if (!AppEnv.current.hasBackend) return;
+    try {
+      await ref.read(tripPullSyncProvider).syncTrip(tripId);
+    } catch (_) {
+      // The trip still opens; the next sync fills it in.
+    }
+  },
+);
 
 /// Invite flow: signed out -> public preview; signed in -> lookup + claim.
 /// Guests have no real account, so they get the preview and a sign-in prompt.
@@ -145,6 +147,21 @@ class JoinController extends Notifier<JoinState> {
         return;
       }
       await ref.read(afterJoinSyncProvider)(lookup.tripId);
+      final me = ref.read(authStateProvider).userId;
+      final name = lookup.unclaimedMembers.where((m) => m.id == memberId).firstOrNull?.name;
+      if (me != null && name != null) {
+        unawaited(
+          ref
+              .read(pushSenderProvider)
+              .notifyOthers(
+                tripId: lookup.tripId,
+                tripName: lookup.tripName,
+                type: 'member_joined',
+                selfUserId: me,
+                params: {'memberName': name},
+              ),
+        );
+      }
       state = state.copyWith(status: JoinStatus.alreadyIn, joinedTripId: lookup.tripId);
     } on InviteException catch (e) {
       state = state.copyWith(status: JoinStatus.ready, message: e.message);
@@ -154,4 +171,6 @@ class JoinController extends Notifier<JoinState> {
   }
 }
 
-final joinControllerProvider = NotifierProvider.autoDispose.family<JoinController, JoinState, String>(JoinController.new);
+final joinControllerProvider = NotifierProvider.autoDispose.family<JoinController, JoinState, String>(
+  JoinController.new,
+);

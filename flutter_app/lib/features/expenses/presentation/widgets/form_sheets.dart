@@ -8,17 +8,11 @@ import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
-import '../../application/expense_form_controller.dart'
-    show defaultRateCurrencies;
+import '../../application/expense_form_controller.dart' show defaultRateCurrencies;
 
 /// Currency list: the web's popular currencies plus the trip's own.
 class CurrencyPickerSheet extends StatelessWidget {
-  const CurrencyPickerSheet({
-    required this.selected,
-    required this.base,
-    required this.onPick,
-    super.key,
-  });
+  const CurrencyPickerSheet({required this.selected, required this.base, required this.onPick, super.key});
   final String selected;
   final String base;
   final ValueChanged<String> onPick;
@@ -27,9 +21,7 @@ class CurrencyPickerSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final codes = {base, ...defaultRateCurrencies, selected}.toList();
     return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.6,
-      ),
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.6),
       child: Material(
         type: MaterialType.transparency,
         child: ListView(
@@ -38,12 +30,8 @@ class CurrencyPickerSheet extends StatelessWidget {
             for (final c in codes)
               ListTile(
                 key: Key('currency-$c'),
-                title: Text(
-                  '$c  ${getCurrencySymbol(c) == c ? '' : getCurrencySymbol(c)}',
-                ),
-                trailing: c == selected
-                    ? const Icon(Icons.check_rounded)
-                    : null,
+                title: Text('$c  ${getCurrencySymbol(c) == c ? '' : getCurrencySymbol(c)}'),
+                trailing: c == selected ? const Icon(Icons.check_rounded) : null,
                 onTap: () {
                   onPick(c);
                   Navigator.of(context).pop();
@@ -79,13 +67,16 @@ class FxRateSheet extends StatefulWidget {
 }
 
 class _FxRateSheetState extends State<FxRateSheet> {
-  late final _c = TextEditingController(
-    text: _current == null ? '' : _current.toString(),
-  );
+  late final _c = TextEditingController(text: _current == null ? '' : _current.toString());
 
   /// 1 [code] in [base] under the rates in force (custom rates win).
   double? get _current {
-    final r = convertCurrency(1, widget.code, widget.base, fxOverlay(live: widget.liveRates, custom: widget.customRates));
+    final r = convertCurrency(
+      1,
+      widget.code,
+      widget.base,
+      fxOverlay(live: widget.liveRates, custom: widget.customRates),
+    );
     return r.rate;
   }
 
@@ -118,10 +109,7 @@ class _FxRateSheetState extends State<FxRateSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l10n.formFxCurrent((_current ?? 0).toString()),
-            style: TextStyle(color: tokens.textSecondary),
-          ),
+          Text(l10n.formFxCurrent((_current ?? 0).toString()), style: TextStyle(color: tokens.textSecondary)),
           const SizedBox(height: 12),
           AppTextField(
             controller: _c,
@@ -147,11 +135,7 @@ class _FxRateSheetState extends State<FxRateSheet> {
 
 /// "How each share is worked out": the resolver's numbers with their working.
 class ExplainSharesSheet extends StatelessWidget {
-  const ExplainSharesSheet({
-    required this.input,
-    required this.members,
-    super.key,
-  });
+  const ExplainSharesSheet({required this.input, required this.members, super.key});
   final ExpenseFormInput input;
   final Map<String, Member> members;
 
@@ -177,41 +161,25 @@ class ExplainSharesSheet extends StatelessWidget {
                       children: [
                         Text(
                           members[e.memberId]?.name ?? l10n.rowRemovedMember,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: tokens.textPrimary,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w600, color: tokens.textPrimary),
                         ),
                         Text(
                           e.formula,
                           key: Key('explain-${e.memberId}'),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: tokens.textMuted,
-                          ),
+                          style: TextStyle(fontSize: 12, color: tokens.textMuted),
                         ),
                       ],
                     ),
                   ),
                   Text(
                     formatMoney(context, e.amount, input.currency),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: tokens.textPrimary,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w700, color: tokens.textPrimary),
                   ),
                 ],
               ),
             ),
           const SizedBox(height: 8),
-          Text(
-            l10n.formExplainRounding,
-            style: TextStyle(
-              fontSize: 12,
-              color: tokens.textMuted,
-              height: 1.4,
-            ),
-          ),
+          Text(l10n.formExplainRounding, style: TextStyle(fontSize: 12, color: tokens.textMuted, height: 1.4)),
         ],
       ),
     );

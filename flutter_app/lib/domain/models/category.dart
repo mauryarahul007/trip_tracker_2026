@@ -15,14 +15,7 @@ class Category {
     this.keywords = const [],
   });
 
-  Category copyWith({
-    String? id,
-    String? tripId,
-    String? name,
-    String? icon,
-    bool? isCustom,
-    List<String>? keywords,
-  }) {
+  Category copyWith({String? id, String? tripId, String? name, String? icon, bool? isCustom, List<String>? keywords}) {
     return Category(
       id: id ?? this.id,
       tripId: tripId ?? this.tripId,

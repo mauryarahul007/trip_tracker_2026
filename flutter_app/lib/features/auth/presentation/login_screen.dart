@@ -68,7 +68,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
     final repo = ref.read(authRepositoryProvider);
-    await _run(() => _signUp ? repo.signUpWithEmail(email, _password.text) : repo.signInWithEmail(email, _password.text));
+    await _run(
+      () => _signUp ? repo.signUpWithEmail(email, _password.text) : repo.signInWithEmail(email, _password.text),
+    );
   }
 
   Future<void> _google() => _run(() => signInWithGoogle(ref));
@@ -100,7 +102,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Container(
                   width: 72,
                   height: 72,
-                  decoration: BoxDecoration(color: tokens.primaryAccent.withValues(alpha: 0.15), shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                    color: tokens.primaryAccent.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
                   child: Icon(AppIcons.expenses, size: 36, color: tokens.primaryAccent),
                 ),
               ),
@@ -108,12 +113,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Text(
                 l10n.authWelcome,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: tokens.textPrimary, letterSpacing: -0.5),
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  color: tokens.textPrimary,
+                  letterSpacing: -0.5,
+                ),
               ),
               const SizedBox(height: 8),
-              Text(l10n.authSubtitle, textAlign: TextAlign.center, style: TextStyle(fontSize: 15, color: tokens.textSecondary)),
+              Text(
+                l10n.authSubtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15, color: tokens.textSecondary),
+              ),
               const SizedBox(height: 24),
-              if (paused) _Banner(key: const Key('paused-banner'), text: l10n.authSignInsPaused, color: tokens.warningColor),
+              if (paused)
+                _Banner(key: const Key('paused-banner'), text: l10n.authSignInsPaused, color: tokens.warningColor),
               if (_error != null) _Banner(key: const Key('error-banner'), text: _error!, color: tokens.colorDanger),
               AppButton(
                 label: l10n.authContinueGoogle,
@@ -133,39 +148,49 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ],
               const SizedBox(height: 20),
-              Row(children: [
-                Expanded(child: Divider(color: tokens.borderColor)),
-                Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text(l10n.authOr, style: TextStyle(color: tokens.textMuted))),
-                Expanded(child: Divider(color: tokens.borderColor)),
-              ]),
+              Row(
+                children: [
+                  Expanded(child: Divider(color: tokens.borderColor)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(l10n.authOr, style: TextStyle(color: tokens.textMuted)),
+                  ),
+                  Expanded(child: Divider(color: tokens.borderColor)),
+                ],
+              ),
               const SizedBox(height: 20),
               AutofillGroup(
-                child: Column(children: [
-                  AppTextField(
-                    controller: _email,
-                    label: l10n.authEmail,
-                    hint: l10n.authEmailHint,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    prefixIcon: const Icon(Icons.mail_outline_rounded),
-                  ),
-                  const SizedBox(height: 16),
-                  AppTextField(
-                    controller: _password,
-                    label: l10n.authPassword,
-                    obscureText: true,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _submitEmail(),
-                    prefixIcon: const Icon(Icons.lock_outline_rounded),
-                  ),
-                ]),
+                child: Column(
+                  children: [
+                    AppTextField(
+                      controller: _email,
+                      label: l10n.authEmail,
+                      hint: l10n.authEmailHint,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      prefixIcon: const Icon(Icons.mail_outline_rounded),
+                    ),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      controller: _password,
+                      label: l10n.authPassword,
+                      obscureText: true,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _submitEmail(),
+                      prefixIcon: const Icon(Icons.lock_outline_rounded),
+                    ),
+                  ],
+                ),
               ),
               if (!_signUp)
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () => context.push('/reset-password'),
-                    child: Text(l10n.authForgotPassword, style: TextStyle(color: tokens.primaryAccent, fontSize: 13, fontWeight: FontWeight.w600)),
+                    child: Text(
+                      l10n.authForgotPassword,
+                      style: TextStyle(color: tokens.primaryAccent, fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
                   ),
                 )
               else
@@ -184,11 +209,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Text(_signUp ? l10n.authToggleToSignIn : l10n.authToggleToSignUp),
               ),
               const SizedBox(height: 8),
-              Wrap(alignment: WrapAlignment.center, children: [
-                TextButton(onPressed: _busy ? null : () => repo.signInAsGuest(), child: Text(l10n.authGuest)),
-                if (!AppEnv.current.isProd)
-                  TextButton(onPressed: _busy ? null : () => repo.signInAsDemo(), child: Text(l10n.authDemo)),
-              ]),
+              Wrap(
+                alignment: WrapAlignment.center,
+                children: [
+                  TextButton(onPressed: _busy ? null : () => repo.signInAsGuest(), child: Text(l10n.authGuest)),
+                  if (!AppEnv.current.isProd)
+                    TextButton(onPressed: _busy ? null : () => repo.signInAsDemo(), child: Text(l10n.authDemo)),
+                ],
+              ),
               const SizedBox(height: 8),
               AppTextField(
                 controller: _code,
@@ -198,11 +226,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 prefixIcon: const Icon(Icons.confirmation_number_outlined),
               ),
               const SizedBox(height: 16),
-              Text(l10n.authLegal, textAlign: TextAlign.center, style: TextStyle(color: tokens.textMuted, fontSize: 12)),
-              Wrap(alignment: WrapAlignment.center, children: [
-                TextButton(onPressed: () => context.push('/terms'), child: Text(l10n.authTerms, style: TextStyle(color: tokens.textMuted, fontSize: 12))),
-                TextButton(onPressed: () => context.push('/privacy'), child: Text(l10n.authPrivacy, style: TextStyle(color: tokens.textMuted, fontSize: 12))),
-              ]),
+              Text(
+                l10n.authLegal,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: tokens.textMuted, fontSize: 12),
+              ),
+              Wrap(
+                alignment: WrapAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () => context.push('/terms'),
+                    child: Text(l10n.authTerms, style: TextStyle(color: tokens.textMuted, fontSize: 12)),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/privacy'),
+                    child: Text(l10n.authPrivacy, style: TextStyle(color: tokens.textMuted, fontSize: 12)),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -218,9 +259,13 @@ class _Banner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withValues(alpha: 0.4))),
-        child: Text(text, style: TextStyle(color: color, fontSize: 13, height: 1.4)),
-      );
+    margin: const EdgeInsets.only(bottom: 16),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: color.withValues(alpha: 0.4)),
+    ),
+    child: Text(text, style: TextStyle(color: color, fontSize: 13, height: 1.4)),
+  );
 }

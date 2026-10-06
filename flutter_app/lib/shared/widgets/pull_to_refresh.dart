@@ -5,11 +5,7 @@ import '../theme/app_tokens.dart';
 
 /// Styled pull-to-refresh container matching the app design system tokens and haptics.
 class AppPullToRefresh extends StatelessWidget {
-  const AppPullToRefresh({
-    super.key,
-    required this.onRefresh,
-    required this.child,
-  });
+  const AppPullToRefresh({super.key, required this.onRefresh, required this.child});
 
   final Future<void> Function() onRefresh;
   final Widget child;

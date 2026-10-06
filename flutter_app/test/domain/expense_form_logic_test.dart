@@ -21,27 +21,26 @@ ExpenseFormInput form({
   String tax = '',
   String tip = '',
   String discount = '',
-}) =>
-    ExpenseFormInput(
-      title: title,
-      amountText: amount,
-      currency: currency,
-      baseCurrency: base,
-      category: 'Food',
-      date: '2026-10-06',
-      paidBy: paidBy,
-      splitMode: mode,
-      splitSelectedIds: split,
-      splitConfig: config,
-      payerMode: payerMode,
-      multiPayerShares: multi,
-      multiPayerEnabled: multiEnabled,
-      currencyFxEnabled: fx,
-      receiptItems: items,
-      receiptTax: tax,
-      receiptTip: tip,
-      receiptDiscount: discount,
-    );
+}) => ExpenseFormInput(
+  title: title,
+  amountText: amount,
+  currency: currency,
+  baseCurrency: base,
+  category: 'Food',
+  date: '2026-10-06',
+  paidBy: paidBy,
+  splitMode: mode,
+  splitSelectedIds: split,
+  splitConfig: config,
+  payerMode: payerMode,
+  multiPayerShares: multi,
+  multiPayerEnabled: multiEnabled,
+  currencyFxEnabled: fx,
+  receiptItems: items,
+  receiptTax: tax,
+  receiptTip: tip,
+  receiptDiscount: discount,
+);
 
 String? err(ExpenseFormInput f) => buildExpenseSubmission(f).error;
 ExpenseSubmission ok(ExpenseFormInput f) {
@@ -89,15 +88,24 @@ void main() {
     });
 
     test('percentages must total 100 (within 0.02) and show the live sum', () {
-      expect(err(form(mode: 'percentage', config: {'a': '60', 'b': '30'})), 'Split percentages sum (90.00) must equal 100%.');
+      expect(
+        err(form(mode: 'percentage', config: {'a': '60', 'b': '30'})),
+        'Split percentages sum (90.00) must equal 100%.',
+      );
       expect(err(form(mode: 'percentage', config: {'a': '60', 'b': '39.97'})), isNotNull); // 0.03 off
       expect(err(form(mode: 'percentage', config: {'a': '60', 'b': '39.99'})), isNull); // 0.01 off is fine
       expect(ok(form(mode: 'percentage', config: {'a': '60', 'b': '40'})).splitConfig, {'a': 60.0, 'b': 40.0});
     });
 
     test('exact amounts must equal the total, message uses the currency symbol', () {
-      expect(err(form(mode: 'exact', config: {'a': '50', 'b': '40'})), 'Split exact amounts sum (90.00) must equal ₹ 100.00.');
-      expect(err(form(mode: 'exact', currency: 'USD', base: 'USD', amount: '10', config: {'a': '4'})), 'Split exact amounts sum (4.00) must equal \$ 10.00.');
+      expect(
+        err(form(mode: 'exact', config: {'a': '50', 'b': '40'})),
+        'Split exact amounts sum (90.00) must equal ₹ 100.00.',
+      );
+      expect(
+        err(form(mode: 'exact', currency: 'USD', base: 'USD', amount: '10', config: {'a': '4'})),
+        'Split exact amounts sum (4.00) must equal \$ 10.00.',
+      );
       expect(ok(form(mode: 'exact', config: {'a': '70', 'b': '30'})).splitConfig, {'a': 70.0, 'b': 30.0});
     });
 
@@ -114,15 +122,24 @@ void main() {
     test('preview matches what will be saved, for every mode', () {
       expect(previewShares(form(amount: '100')), {'a': 50.0, 'b': 50.0});
       expect(previewShares(form(amount: '100', mode: 'custom', config: {'a': '3', 'b': '1'})), {'a': 75.0, 'b': 25.0});
-      expect(previewShares(form(amount: '100', mode: 'percentage', config: {'a': '70', 'b': '30'})), {'a': 70.0, 'b': 30.0});
+      expect(previewShares(form(amount: '100', mode: 'percentage', config: {'a': '70', 'b': '30'})), {
+        'a': 70.0,
+        'b': 30.0,
+      });
       expect(previewShares(form(amount: '100', mode: 'exact', config: {'a': '60', 'b': '40'})), {'a': 60.0, 'b': 40.0});
-      expect(previewShares(form(amount: '12*3+4', split: ['a', 'b', 'c'])).values.fold<double>(0, (s, v) => s + v), closeTo(40, 1e-9));
+      expect(
+        previewShares(form(amount: '12*3+4', split: ['a', 'b', 'c'])).values.fold<double>(0, (s, v) => s + v),
+        closeTo(40, 1e-9),
+      );
       expect(previewShares(form(amount: '')), isEmpty);
       expect(previewShares(form(amount: '100', split: [])), isEmpty);
     });
 
     test('itemized preview spreads items, tax and tip', () {
-      const items = [ReceiptItem(id: '1', name: 'x', amount: 30, assignedMemberIds: ['a']), ReceiptItem(id: '2', name: 'y', amount: 60, assignedMemberIds: ['b'])];
+      const items = [
+        ReceiptItem(id: '1', name: 'x', amount: 30, assignedMemberIds: ['a']),
+        ReceiptItem(id: '2', name: 'y', amount: 60, assignedMemberIds: ['b']),
+      ];
       final p = previewShares(form(amount: '100', mode: 'itemized', items: items, tax: '10'));
       expect(p['a']! + p['b']!, closeTo(100, 0.011));
       expect(p['b']! > p['a']!, isTrue);
@@ -131,7 +148,10 @@ void main() {
     });
 
     test('defaults: payer resolution, membership on a date', () {
-      const ms = [Member(id: 'a', name: 'A', joinDate: '2026-10-03', leaveDate: '2026-10-08'), Member(id: 'b', name: 'B')];
+      const ms = [
+        Member(id: 'a', name: 'A', joinDate: '2026-10-03', leaveDate: '2026-10-08'),
+        Member(id: 'b', name: 'B'),
+      ];
       expect(resolveDefaultExpensePayerId(ms, parsedPaidById: 'b', currentMemberId: 'a'), 'b');
       expect(resolveDefaultExpensePayerId(ms, parsedPaidById: 'zz', currentMemberId: 'a'), 'a');
       expect(resolveDefaultExpensePayerId(ms, currentMemberId: 'zz'), isNull);
@@ -161,7 +181,14 @@ void main() {
     });
 
     test('assigned items keep their assignees', () {
-      final s = ok(form(mode: 'itemized', items: const [ReceiptItem(id: '1', name: 'x', amount: 5, assignedMemberIds: ['b'])]));
+      final s = ok(
+        form(
+          mode: 'itemized',
+          items: const [
+            ReceiptItem(id: '1', name: 'x', amount: 5, assignedMemberIds: ['b']),
+          ],
+        ),
+      );
       expect(s.itemizedConfig!.items.single.assignedMemberIds, ['b']);
     });
 
@@ -178,8 +205,14 @@ void main() {
     });
 
     test('nobody allocated -> message', () {
-      expect(err(form(payerMode: PayerMode.multiple, multiEnabled: true, multi: {'a': '', 'b': '0'})), 'Please allocate payment amounts for at least one member.');
-      expect(err(form(payerMode: PayerMode.multiple, multiEnabled: true, multi: {'a': '0.004'})), 'Please allocate payment amounts for at least one member.');
+      expect(
+        err(form(payerMode: PayerMode.multiple, multiEnabled: true, multi: {'a': '', 'b': '0'})),
+        'Please allocate payment amounts for at least one member.',
+      );
+      expect(
+        err(form(payerMode: PayerMode.multiple, multiEnabled: true, multi: {'a': '0.004'})),
+        'Please allocate payment amounts for at least one member.',
+      );
     });
 
     test('must add up to the total within 0.02, with the exact difference message', () {
@@ -194,12 +227,16 @@ void main() {
       final s = ok(form(payerMode: PayerMode.multiple, multiEnabled: true, paidBy: 'a', multi: {'a': '30', 'b': '70'}));
       expect(s.paidBy, 'b');
       expect(s.paidByShares, {'a': 30.0, 'b': 70.0});
-      final tie = ok(form(payerMode: PayerMode.multiple, multiEnabled: true, paidBy: 'a', multi: {'b': '50', 'a': '50'}));
+      final tie = ok(
+        form(payerMode: PayerMode.multiple, multiEnabled: true, paidBy: 'a', multi: {'b': '50', 'a': '50'}),
+      );
       expect(tie.paidBy, 'b'); // first entered wins the tie
     });
 
     test('amounts are rounded to cents', () {
-      final s = ok(form(amount: '10', payerMode: PayerMode.multiple, multiEnabled: true, multi: {'a': '3.333', 'b': '6.667'}));
+      final s = ok(
+        form(amount: '10', payerMode: PayerMode.multiple, multiEnabled: true, multi: {'a': '3.333', 'b': '6.667'}),
+      );
       expect(s.paidByShares, {'a': 3.33, 'b': 6.67});
     });
   });
@@ -213,8 +250,17 @@ void main() {
 
     test('custom per-trip rate wins', () {
       const f = ExpenseFormInput(
-        title: 't', amountText: '10', currency: 'USD', baseCurrency: 'INR', category: 'c', date: 'd',
-        paidBy: 'a', splitMode: 'equal', splitSelectedIds: ['a'], currencyFxEnabled: true, customRates: {'INR': 80.0},
+        title: 't',
+        amountText: '10',
+        currency: 'USD',
+        baseCurrency: 'INR',
+        category: 'c',
+        date: 'd',
+        paidBy: 'a',
+        splitMode: 'equal',
+        splitSelectedIds: ['a'],
+        currencyFxEnabled: true,
+        customRates: {'INR': 80.0},
       );
       expect(ok(f).amount, 800);
     });
@@ -228,13 +274,25 @@ void main() {
     });
 
     test('multi-payer shares are converted and the rounding cent lands on the largest payer', () {
-      final s = ok(form(
-        amount: '10', currency: 'USD', base: 'INR', fx: true, payerMode: PayerMode.multiple, multiEnabled: true,
-        multi: {'a': '3.33', 'b': '3.33', 'c': '3.34'}, split: ['a', 'b', 'c'],
-      ));
+      final s = ok(
+        form(
+          amount: '10',
+          currency: 'USD',
+          base: 'INR',
+          fx: true,
+          payerMode: PayerMode.multiple,
+          multiEnabled: true,
+          multi: {'a': '3.33', 'b': '3.33', 'c': '3.34'},
+          split: ['a', 'b', 'c'],
+        ),
+      );
       expect(s.amount, 872.5);
       final sum = s.paidByShares!.values.fold<double>(0, (a, b) => a + b);
-      expect((sum - 872.5).abs() < 0.0001, isTrue, reason: 'converted shares must add to the converted total, got $sum');
+      expect(
+        (sum - 872.5).abs() < 0.0001,
+        isTrue,
+        reason: 'converted shares must add to the converted total, got $sum',
+      );
       expect(s.paidBy, 'c');
     });
   });
@@ -244,17 +302,28 @@ void main() {
         Trip.fromJson({'id': 't', 'name': 'T', 'frozen': frozen, 'closed': closed, 'approvalThreshold': threshold});
 
     test('frozen trips block everyone but a superadmin; closed trips block everyone', () {
-      expect(tripWriteBlockReason(trip(frozen: true)), 'This trip is currently locked / frozen by Superadmin. Modifications are disabled.');
+      expect(
+        tripWriteBlockReason(trip(frozen: true)),
+        'This trip is currently locked / frozen by Superadmin. Modifications are disabled.',
+      );
       expect(tripWriteBlockReason(trip(frozen: true), isSuperadmin: true), isNull);
       expect(tripWriteBlockReason(trip(closed: true)), 'This trip is closed. Reopen it to add expenses.');
-      expect(tripWriteBlockReason(trip(closed: true), isSuperadmin: true), 'This trip is closed. Reopen it to add expenses.');
+      expect(
+        tripWriteBlockReason(trip(closed: true), isSuperadmin: true),
+        'This trip is closed. Reopen it to add expenses.',
+      );
       expect(tripWriteBlockReason(trip()), isNull);
       expect(tripWriteBlockReason(null), isNull);
     });
 
     test('approval threshold: at-or-above waits; settlements, flag off, no threshold never wait', () {
       String s(double amount, {bool enabled = true, bool settlement = false, double? th = 100}) =>
-          computeApprovalStatus(trip(threshold: th), thresholdEnabled: enabled, isSettlement: settlement, amount: amount);
+          computeApprovalStatus(
+            trip(threshold: th),
+            thresholdEnabled: enabled,
+            isSettlement: settlement,
+            amount: amount,
+          );
       expect(s(99.99), 'confirmed');
       expect(s(100), 'pending_approval');
       expect(s(500), 'pending_approval');

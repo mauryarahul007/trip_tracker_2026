@@ -10,6 +10,7 @@ class AppIcons {
   static const IconData members = Icons.people_outline_rounded;
   static const IconData notes = Icons.check_circle_outline_rounded;
   static const IconData settings = Icons.settings_outlined;
+  static const IconData bell = Icons.notifications_none_rounded;
 
   // Actions & Controls
   static const IconData add = Icons.add_rounded;

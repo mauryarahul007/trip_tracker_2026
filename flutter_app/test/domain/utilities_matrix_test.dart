@@ -7,8 +7,10 @@ import 'package:trip_tracker/domain/logic/trip_utilities.dart';
 const _now = 1791244800000; // fixture clock
 
 void main() {
-  final m = (jsonDecode(File('../docs/flutter-migration/fixtures/utilities.json').readAsStringSync())
-      as Map<String, dynamic>)['matrix'] as Map<String, dynamic>;
+  final m =
+      (jsonDecode(File('../docs/flutter-migration/fixtures/utilities.json').readAsStringSync())
+              as Map<String, dynamic>)['matrix']
+          as Map<String, dynamic>;
   List<Map<String, dynamic>> cases(String k) => [for (final c in m[k] as List) c as Map<String, dynamic>];
 
   test('sortTrips by name (numeric, case/accent-insensitive) and date', () {
@@ -42,7 +44,9 @@ void main() {
   test('formatRelativeTime thresholds', () {
     for (final c in cases('relative')) {
       final ago = c['ago'];
-      final ts = ago is num ? DateTime.fromMillisecondsSinceEpoch(_now - ago.toInt(), isUtc: true).toIso8601String() : 'not-a-date';
+      final ts = ago is num
+          ? DateTime.fromMillisecondsSinceEpoch(_now - ago.toInt(), isUtc: true).toIso8601String()
+          : 'not-a-date';
       expect(formatRelativeTime(ts, _now), c['result'], reason: jsonEncode(c));
     }
   });
@@ -58,8 +62,12 @@ void main() {
       expect(isValidUpiId(c['id'] as String), c['result'], reason: jsonEncode(c));
     }
     for (final c in cases('upiUris')) {
-      final got = generateUpiUri(
-          {'payeeUpiId': 'a@okaxis', 'payeeName': 'Al Ice', 'amount': 12.5, 'note': 'Trip & fun'}, c['scheme'] as String?);
+      final got = generateUpiUri({
+        'payeeUpiId': 'a@okaxis',
+        'payeeName': 'Al Ice',
+        'amount': 12.5,
+        'note': 'Trip & fun',
+      }, c['scheme'] as String?);
       expect(got, c['result'], reason: jsonEncode(c));
     }
   });

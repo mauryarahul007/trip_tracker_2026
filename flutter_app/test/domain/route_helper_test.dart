@@ -54,10 +54,7 @@ void main() {
       expect(city1.primary, 'Manali');
       expect(city1.full, 'Manali → Shimla → Chandigarh');
 
-      final city2 = extractPrimaryCity(null, const [
-        TripStop(id: '1', name: 'Paris'),
-        TripStop(id: '2', name: 'Rome'),
-      ]);
+      final city2 = extractPrimaryCity(null, const [TripStop(id: '1', name: 'Paris'), TripStop(id: '2', name: 'Rome')]);
       expect(city2.primary, 'Paris');
       expect(city2.full, 'Paris → Rome');
     });
@@ -67,28 +64,17 @@ void main() {
       expect(info2.badgeSummary, 'Goa (+1)');
       expect(info2.routeSummary, 'Goa ➔ Mumbai');
 
-      final info5 = getItineraryRouteInfo(
-        'Delhi -> Jaipur -> Jodhpur -> Udaipur -> Agra',
-        null,
-      );
+      final info5 = getItineraryRouteInfo('Delhi -> Jaipur -> Jodhpur -> Udaipur -> Agra', null);
       expect(info5.badgeSummary, 'Delhi (+4)');
       expect(info5.routeSummary, 'Delhi ➔ Agra · 5 stops');
     });
   });
 
   group('collectTripPhotoPlaces', () {
-    test(
-      'extracts unique places in priority order ignoring case and digits',
-      () {
-        final places = collectTripPhotoPlaces('Goa, Mumbai -> Goa', [
-          'Pune',
-          '123',
-          'pune',
-          'Goa',
-        ]);
-        expect(places, ['Goa', 'Mumbai', 'Pune']);
-      },
-    );
+    test('extracts unique places in priority order ignoring case and digits', () {
+      final places = collectTripPhotoPlaces('Goa, Mumbai -> Goa', ['Pune', '123', 'pune', 'Goa']);
+      expect(places, ['Goa', 'Mumbai', 'Pune']);
+    });
   });
 
   group('median & squaredDist', () {

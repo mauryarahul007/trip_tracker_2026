@@ -29,7 +29,8 @@ class FakePicker implements ReceiptPicker {
 
 Finder key(String k) => find.byKey(Key(k));
 Finder button(String l) => find.widgetWithText(AppButton, l);
-String errorText(WidgetTester t) => (t.widget<Text>(find.descendant(of: key('form-error'), matching: find.byType(Text)).first)).data!;
+String errorText(WidgetTester t) =>
+    (t.widget<Text>(find.descendant(of: key('form-error'), matching: find.byType(Text)).first)).data!;
 
 Future<void> tap(WidgetTester t, Finder f) async {
   await t.ensureVisible(f);
@@ -239,7 +240,10 @@ void main() {
     testApp('a group chip selects exactly its members', (tester) async {
       await pumpApp(tester, user: asha);
       final s = await seedTrip(tester);
-      final g = await real(tester, () => containerOf(tester).read(memberRepositoryProvider).createGroup(s.tripId, 'Couple', [s.ben, s.cara]));
+      final g = await real(
+        tester,
+        () => containerOf(tester).read(memberRepositoryProvider).createGroup(s.tripId, 'Couple', [s.ben, s.cara]),
+      );
       await openForm(tester, s);
       await tap(tester, key('preset-only-payer'));
       await tap(tester, key('group-$g'));
@@ -251,7 +255,12 @@ void main() {
     testApp('split exclusion defaults (Pro) leave excluded people out of a new expense', (tester) async {
       await pumpApp(tester, user: asha, flagsOn: {'enableSplitExclusionDefaults'});
       final s = await seedTrip(tester);
-      await real(tester, () => containerOf(tester).read(tripRepositoryProvider).setSplitExclusionDefaults(s.tripId, {'cat-food': [s.cara]}));
+      await real(
+        tester,
+        () => containerOf(tester).read(tripRepositoryProvider).setSplitExclusionDefaults(s.tripId, {
+          'cat-food': [s.cara],
+        }),
+      );
       await openForm(tester, s);
       expect(tester.widget<CheckboxListTile>(key('split-${s.cara}')).value, isFalse);
       expect(tester.widget<CheckboxListTile>(key('split-${s.me}')).value, isTrue);
@@ -260,7 +269,10 @@ void main() {
     testApp('date-range membership (Pro): someone who joins later is not preselected', (tester) async {
       await pumpApp(tester, user: asha, flagsOn: {'enableDateRangeMembership'});
       final s = await seedTrip(tester);
-      await real(tester, () => containerOf(tester).read(memberRepositoryProvider).updateMember(s.cara, joinDate: '2099-01-01'));
+      await real(
+        tester,
+        () => containerOf(tester).read(memberRepositoryProvider).updateMember(s.cara, joinDate: '2099-01-01'),
+      );
       await openForm(tester, s);
       expect(tester.widget<CheckboxListTile>(key('split-${s.cara}')).value, isFalse);
     });
@@ -287,7 +299,10 @@ void main() {
       await typeAmount(tester, '100');
       await typeTitle(tester, 'Hotel');
       await tap(tester, key('payer-mode'));
-      expect(tester.widget<Text>(key('allocated')).data, 'Allocated ₹100.00 of ₹100.00'); // seeded from the single payer
+      expect(
+        tester.widget<Text>(key('allocated')).data,
+        'Allocated ₹100.00 of ₹100.00',
+      ); // seeded from the single payer
       await tester.enterText(find.byKey(ValueKey('payer-amt-${s.me}-0')), '60');
       await settle(tester, rounds: 2);
       await save(tester);
@@ -359,7 +374,15 @@ void main() {
     testApp('Same as last time copies the last expense (date becomes today)', (tester) async {
       await pumpApp(tester, user: asha, flagsOn: {'enableCloneLastExpense'});
       final s = await seedTrip(tester);
-      await addExpense(tester, s, title: 'Morning coffee', amount: 30, date: '2026-09-01', paidBy: s.ben, split: [s.me, s.ben]);
+      await addExpense(
+        tester,
+        s,
+        title: 'Morning coffee',
+        amount: 30,
+        date: '2026-09-01',
+        paidBy: s.ben,
+        split: [s.me, s.ben],
+      );
       await openForm(tester, s);
       await tap(tester, key('same-as-last'));
       await settle(tester, rounds: 3);
@@ -408,7 +431,8 @@ void main() {
       await pumpApp(tester, user: asha, flagsOn: {'enableDuplicateDetector'});
       final s = await seedTrip(tester);
       final today = DateTime.now();
-      final ymd = '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      final ymd =
+          '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
       await addExpense(tester, s, title: 'Dinner at Chalet', amount: 100, date: ymd);
       await openForm(tester, s);
       await typeAmount(tester, '100');
@@ -513,10 +537,18 @@ void main() {
       final photo = File(p.join(tmp.path, 'camera.jpg'))..writeAsBytesSync([1, 2, 3]);
       final picker = FakePicker(photo.path);
       late AppDatabase db;
-      await pumpApp(tester, user: asha, flagsOn: {'enableReceiptUpload'}, flagsOff: {'enableCompactExpenseForm'}, overrides: [
-        receiptPickerProvider.overrideWithValue(picker),
-        receiptStoreProvider.overrideWith((ref) => ReceiptStore(db = ref.watch(appDatabaseProvider), baseDir: () async => tmp)),
-      ]);
+      await pumpApp(
+        tester,
+        user: asha,
+        flagsOn: {'enableReceiptUpload'},
+        flagsOff: {'enableCompactExpenseForm'},
+        overrides: [
+          receiptPickerProvider.overrideWithValue(picker),
+          receiptStoreProvider.overrideWith(
+            (ref) => ReceiptStore(db = ref.watch(appDatabaseProvider), baseDir: () async => tmp),
+          ),
+        ],
+      );
       final s = await seedTrip(tester);
       await openForm(tester, s);
       await typeAmount(tester, '25');

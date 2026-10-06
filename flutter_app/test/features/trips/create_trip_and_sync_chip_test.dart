@@ -10,9 +10,11 @@ import 'package:trip_tracker/shared/widgets/app_button.dart';
 
 import '../../support/pump_app.dart';
 
-ProviderContainer containerOf(WidgetTester tester) => ProviderScope.containerOf(tester.element(find.byType(MaterialApp)));
+ProviderContainer containerOf(WidgetTester tester) =>
+    ProviderScope.containerOf(tester.element(find.byType(MaterialApp)));
 
-OutboxItem item(String id, String type, String status, {String? err, Map<String, dynamic> payload = const {}}) => OutboxItem(
+OutboxItem item(String id, String type, String status, {String? err, Map<String, dynamic> payload = const {}}) =>
+    OutboxItem(
       id: id,
       type: type,
       tripId: 't',
@@ -86,9 +88,11 @@ void main() {
 
   group('sync chip', () {
     testApp('shows the pending count and is inert without the inspector flag', (tester) async {
-      await pumpApp(tester, user: asha, overrides: [
-        syncStatusProvider.overrideWith((ref) => Stream.value(const SyncStatus(pending: 3))),
-      ]);
+      await pumpApp(
+        tester,
+        user: asha,
+        overrides: [syncStatusProvider.overrideWith((ref) => Stream.value(const SyncStatus(pending: 3)))],
+      );
       expect(find.text('3 changes waiting to sync'), findsOneWidget);
       await tester.tap(find.text('3 changes waiting to sync'));
       await settle(tester);
@@ -96,12 +100,27 @@ void main() {
     });
 
     testApp('issue state opens the review sheet with retry/discard when the flag is on', (tester) async {
-      await pumpApp(tester, user: asha, flagsOn: {'enableSyncQueueInspector'}, overrides: [
-        syncStatusProvider.overrideWith((ref) => Stream.value(const SyncStatus(pending: 1, issues: 1))),
-        syncItemsProvider.overrideWith((ref) => Stream.value([
-              item('i1', OutboxType.addCategory, OutboxStatus.poison, err: '42501 rls', payload: {'row': {'name': 'Fuel'}}),
-            ])),
-      ]);
+      await pumpApp(
+        tester,
+        user: asha,
+        flagsOn: {'enableSyncQueueInspector'},
+        overrides: [
+          syncStatusProvider.overrideWith((ref) => Stream.value(const SyncStatus(pending: 1, issues: 1))),
+          syncItemsProvider.overrideWith(
+            (ref) => Stream.value([
+              item(
+                'i1',
+                OutboxType.addCategory,
+                OutboxStatus.poison,
+                err: '42501 rls',
+                payload: {
+                  'row': {'name': 'Fuel'},
+                },
+              ),
+            ]),
+          ),
+        ],
+      );
       expect(find.text('Sync issue: tap to review'), findsOneWidget);
       await tester.tap(find.text('Sync issue: tap to review'));
       await settle(tester);

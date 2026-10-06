@@ -241,19 +241,13 @@ String normalizeQuery(String s) {
   for (final entry in _diacritics.entries) {
     res = res.replaceAll(entry.key, entry.value);
   }
-  return res
-      .replaceAll(RegExp(r'[\u0300-\u036f]'), '')
-      .replaceAll(RegExp(r'\s+'), ' ')
-      .trim();
+  return res.replaceAll(RegExp(r'[\u0300-\u036f]'), '').replaceAll(RegExp(r'\s+'), ' ').trim();
 }
 
 /// Edit distance counting a swapped pair of letters as one edit ("Swtizerland").
 /// Parity with web `editDistance` in `src/services/placeSuggest.ts`.
 int editDistance(String a, String b) {
-  final d = List.generate(
-    a.length + 1,
-    (i) => List<int>.filled(b.length + 1, 0),
-  );
+  final d = List.generate(a.length + 1, (i) => List<int>.filled(b.length + 1, 0));
 
   for (var i = 0; i <= a.length; i++) {
     d[i][0] = i;
@@ -265,11 +259,7 @@ int editDistance(String a, String b) {
   for (var i = 1; i <= a.length; i++) {
     for (var j = 1; j <= b.length; j++) {
       final cost = a[i - 1] == b[j - 1] ? 0 : 1;
-      d[i][j] = [
-        d[i - 1][j] + 1,
-        d[i][j - 1] + 1,
-        d[i - 1][j - 1] + cost,
-      ].reduce((min, val) => val < min ? val : min);
+      d[i][j] = [d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost].reduce((min, val) => val < min ? val : min);
 
       if (i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1]) {
         final trans = d[i - 2][j - 2] + 1;

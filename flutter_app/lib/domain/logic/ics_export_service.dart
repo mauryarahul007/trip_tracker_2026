@@ -20,11 +20,7 @@ String toIcsDateUtc(DateTime date) {
 
 /// Escapes special characters for RFC 5545 iCalendar values.
 String escapeIcsText(String text) {
-  return text
-      .replaceAll(r'\', r'\\')
-      .replaceAll(';', r'\;')
-      .replaceAll(',', r'\,')
-      .replaceAll('\n', r'\n');
+  return text.replaceAll(r'\', r'\\').replaceAll(';', r'\;').replaceAll(',', r'\,').replaceAll('\n', r'\n');
 }
 
 /// Builds an individual VEVENT for a [TravelPass].

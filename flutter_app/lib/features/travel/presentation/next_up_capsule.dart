@@ -88,13 +88,15 @@ ImminentPassTarget? evaluateImminentPass(List<TravelPass> passes, [DateTime? ref
         badgeColor = const Color(0xFF6366F1);
       }
 
-      candidates.add(ImminentPassTarget(
-        pass: pass,
-        status: status,
-        countdownText: countdownText,
-        badgeColor: badgeColor,
-        diffHours: diffHours,
-      ));
+      candidates.add(
+        ImminentPassTarget(
+          pass: pass,
+          status: status,
+          countdownText: countdownText,
+          badgeColor: badgeColor,
+          diffHours: diffHours,
+        ),
+      );
     }
   }
 
@@ -105,11 +107,7 @@ ImminentPassTarget? evaluateImminentPass(List<TravelPass> passes, [DateTime? ref
 
 /// Dynamic Next Up travel countdown capsule with gate scanner and radar integrations.
 class NextUpTravelCapsule extends ConsumerWidget {
-  const NextUpTravelCapsule({
-    required this.trip,
-    this.passes,
-    super.key,
-  });
+  const NextUpTravelCapsule({required this.trip, this.passes, super.key});
 
   final Trip trip;
   final List<TravelPass>? passes;
@@ -143,17 +141,8 @@ class NextUpTravelCapsule extends ConsumerWidget {
       decoration: BoxDecoration(
         color: tokens.bgSurfaceHover,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: target.badgeColor.withValues(alpha: 0.35),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: target.badgeColor.withValues(alpha: 0.1),
-            blurRadius: 12,
-            spreadRadius: 1,
-          ),
-        ],
+        border: Border.all(color: target.badgeColor.withValues(alpha: 0.35), width: 1.5),
+        boxShadow: [BoxShadow(color: target.badgeColor.withValues(alpha: 0.1), blurRadius: 12, spreadRadius: 1)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,7 +153,14 @@ class NextUpTravelCapsule extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Text(isFlight ? '✈️' : isTrain ? '🚆' : '🎫', style: const TextStyle(fontSize: 14)),
+                  Text(
+                    isFlight
+                        ? '✈️'
+                        : isTrain
+                        ? '🚆'
+                        : '🎫',
+                    style: const TextStyle(fontSize: 14),
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'NEXT UP',
@@ -186,11 +182,7 @@ class NextUpTravelCapsule extends ConsumerWidget {
                 ),
                 child: Text(
                   target.countdownText,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: target.badgeColor,
-                  ),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: target.badgeColor),
                 ),
               ),
             ],
@@ -207,21 +199,13 @@ class NextUpTravelCapsule extends ConsumerWidget {
                   children: [
                     Text(
                       pass.title,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: tokens.textPrimary,
-                      ),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: tokens.textPrimary),
                     ),
                     if (pass.origin != null || pass.destination != null) ...[
                       const SizedBox(height: 2),
                       Text(
                         [pass.origin, pass.destination].whereType<String>().join(' → '),
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                          color: tokens.primaryAccent,
-                        ),
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: tokens.primaryAccent),
                       ),
                     ],
                   ],
@@ -232,12 +216,12 @@ class NextUpTravelCapsule extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      isFlight ? 'SEAT' : isTrain ? 'BERTH' : 'ROOM',
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.textSecondary,
-                      ),
+                      isFlight
+                          ? 'SEAT'
+                          : isTrain
+                          ? 'BERTH'
+                          : 'ROOM',
+                      style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: tokens.textSecondary),
                     ),
                     Text(
                       pass.seatOrRoom!,

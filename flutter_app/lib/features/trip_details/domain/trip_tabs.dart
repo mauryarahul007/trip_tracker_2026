@@ -9,18 +9,13 @@ bool showNotesNavTab({
   required bool isTripChatEnabled,
   required bool isChatFirstNav,
 }) {
-  return isNotesEnabled ||
-      isPassesEnabled ||
-      (isTripChatEnabled && !isChatFirstNav);
+  return isNotesEnabled || isPassesEnabled || (isTripChatEnabled && !isChatFirstNav);
 }
 
 /// Computes the active bottom-nav tabs and ordering for a trip.
 /// Settings is accessed from the trip header and is not in the bottom tab bar.
 /// Mirrors `visibleTripTabs` in `src/utils/tripTabs.ts`.
-List<TripNavTab> visibleTripTabs({
-  required bool isChatFirstNav,
-  required bool showNotesTab,
-}) {
+List<TripNavTab> visibleTripTabs({required bool isChatFirstNav, required bool showNotesTab}) {
   final tabs = <TripNavTab>[];
   if (isChatFirstNav) {
     tabs.add(TripNavTab.chat);

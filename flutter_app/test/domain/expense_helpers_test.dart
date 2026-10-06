@@ -18,7 +18,9 @@ class MemStore implements KeyValueStore {
 }
 
 void main() {
-  final fx = jsonDecode(File('../docs/flutter-migration/fixtures/expense_helpers.json').readAsStringSync()) as Map<String, dynamic>;
+  final fx = jsonDecode(
+    File('../docs/flutter-migration/fixtures/expense_helpers.json').readAsStringSync(),
+  ) as Map<String, dynamic>;
 
   test('latest non-settlement expense matches the web (ties, trips, deleted, settlements)', () {
     final last = fx['last'] as Map<String, dynamic>;
@@ -45,7 +47,11 @@ void main() {
     }
     for (final mcase in d['malformed'] as List) {
       store.m['m'] = mcase['raw'] as String;
-      expect(await loadDraft(store, 'm', DateTime.fromMillisecondsSinceEpoch(6)), mcase['result'], reason: mcase['raw'] as String);
+      expect(
+        await loadDraft(store, 'm', DateTime.fromMillisecondsSinceEpoch(6)),
+        mcase['result'],
+        reason: mcase['raw'] as String,
+      );
       expect(!store.m.containsKey('m'), mcase['removed'], reason: 'removed ${mcase['raw']}');
     }
     expect(await loadDraft(store, 'absent', DateTime.fromMillisecondsSinceEpoch(t0)), isNull);
@@ -55,14 +61,16 @@ void main() {
     for (final c in fx['shareCard'] as List) {
       final i = c['input'] as Map<String, dynamic>;
       final amount = i['amount'] == 'NaN' ? double.nan : (i['amount'] as num).toDouble();
-      final got = settlementShareCardLayout(SettlementShareCardInput(
-        tripName: i['tripName'] as String,
-        fromLabel: i['fromLabel'] as String,
-        toLabel: i['toLabel'] as String,
-        amount: amount,
-        currencySymbol: i['currencySymbol'] as String,
-        upiId: i['upiId'] as String?,
-      ));
+      final got = settlementShareCardLayout(
+        SettlementShareCardInput(
+          tripName: i['tripName'] as String,
+          fromLabel: i['fromLabel'] as String,
+          toLabel: i['toLabel'] as String,
+          amount: amount,
+          currencySymbol: i['currencySymbol'] as String,
+          upiId: i['upiId'] as String?,
+        ),
+      );
       final want = c['layout'] as Map<String, dynamic>;
       expect(got.width, want['width']);
       expect(got.height, want['height']);

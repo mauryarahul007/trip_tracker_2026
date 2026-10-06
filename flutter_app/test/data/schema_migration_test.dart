@@ -5,8 +5,10 @@ import 'package:trip_tracker/data/local/app_database.dart';
 /// v1 -> v2 must be additive: existing rows survive, new column is nullable.
 void main() {
   test('upgrade 1 -> 2 keeps data and adds domain_json columns', () async {
-    final db = AppDatabase.forTesting(NativeDatabase.memory(setup: (raw) {
-      raw.execute('''
+    final db = AppDatabase.forTesting(
+      NativeDatabase.memory(
+        setup: (raw) {
+          raw.execute('''
         CREATE TABLE trips (id TEXT NOT NULL PRIMARY KEY, name TEXT NOT NULL, start_date TEXT NOT NULL,
           end_date TEXT NOT NULL, base_currency TEXT NOT NULL, owner_id TEXT NOT NULL, join_code TEXT,
           destination TEXT, stops_json TEXT, checklist_json TEXT, notes_json TEXT, passes_json TEXT,
@@ -27,7 +29,9 @@ void main() {
         INSERT INTO trips (id, name, start_date, end_date, base_currency, owner_id) VALUES ('t1','Goa','a','b','INR','u');
         PRAGMA user_version = 1;
       ''');
-    }));
+        },
+      ),
+    );
     final trips = await db.select(db.tripsTable).get();
     expect(trips.single.name, 'Goa');
     expect(trips.single.domainJson, isNull);

@@ -10,10 +10,10 @@ final _codeShape = RegExp(r'^[A-Za-z0-9]{6}$');
 
 /// Manual invite-code entry (also the fallback when no QR scanner is available).
 Future<void> showJoinCodeSheet(BuildContext context) => AppSheet.show<void>(
-      context: context,
-      title: context.l10n.joinEnterCodeTitle,
-      builder: (_) => const _JoinCodeForm(),
-    );
+  context: context,
+  title: context.l10n.joinEnterCodeTitle,
+  builder: (_) => const _JoinCodeForm(),
+);
 
 class _JoinCodeForm extends StatefulWidget {
   const _JoinCodeForm();
@@ -47,18 +47,22 @@ class _JoinCodeFormState extends State<_JoinCodeForm> {
     final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        AppTextField(
-          controller: _controller,
-          hint: l10n.authTripCodeHint,
-          errorText: _error,
-          autofocus: true,
-          textInputAction: TextInputAction.go,
-          onSubmitted: (_) => _go(),
-        ),
-        const SizedBox(height: 16),
-        AppButton(label: l10n.joinEnterCodeAction, isFullWidth: true, onPressed: _go),
-      ]),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AppTextField(
+            controller: _controller,
+            hint: l10n.authTripCodeHint,
+            errorText: _error,
+            autofocus: true,
+            textInputAction: TextInputAction.go,
+            onSubmitted: (_) => _go(),
+          ),
+          const SizedBox(height: 16),
+          AppButton(label: l10n.joinEnterCodeAction, isFullWidth: true, onPressed: _go),
+        ],
+      ),
     );
   }
 }

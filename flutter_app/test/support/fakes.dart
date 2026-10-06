@@ -1,6 +1,13 @@
 import 'dart:async';
 
 import 'package:trip_tracker/app/deep_link_listener.dart';
+import 'package:trip_tracker/core/platform/local_notifications_gateway.dart';
+import 'package:trip_tracker/core/platform/push_gateway.dart';
+import 'package:trip_tracker/data/push/push_service.dart';
+import 'package:trip_tracker/domain/logic/bug_report.dart';
+import 'package:trip_tracker/domain/logic/pass_reminders.dart';
+import 'package:trip_tracker/domain/repositories/feedback_repository.dart';
+import 'package:trip_tracker/domain/repositories/notification_prefs_repository.dart';
 import 'package:trip_tracker/core/platform/share_service.dart';
 import 'package:trip_tracker/data/auth/biometric_service.dart';
 import 'package:trip_tracker/domain/models/join_share.dart';
@@ -70,6 +77,13 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<void> signInAsDemo() => _auth('demo', const AuthUser(id: 'demo', provider: 'demo'));
   @override
+  Future<void> updateDisplayName(String name) async {
+    calls.add('rename:$name');
+    final u = _current;
+    if (u != null) _set(AuthUser(id: u.id, email: u.email, displayName: name, provider: u.provider));
+  }
+
+  @override
   Future<void> signOut() async {
     calls.add('signOut');
     _set(null);
@@ -121,19 +135,32 @@ class FakeFlags implements FlagsRepository {
   final Set<String> on;
   final Set<String> off;
   @override
-  Stream<bool> watch(String key, {String? tripId}) =>
-      Stream.value(on.contains(key) ? true : off.contains(key) ? false : (defaultFeatureFlags[key] ?? false));
+  Stream<bool> watch(String key, {String? tripId}) => Stream.value(
+    on.contains(key)
+        ? true
+        : off.contains(key)
+        ? false
+        : (defaultFeatureFlags[key] ?? false),
+  );
   @override
   Future<void> refresh({String? tripId}) async {}
 }
 
 class FakeJoinRepository implements JoinRepository {
-  JoinPreview? previewResult = const JoinPreview(tripName: 'Goa Weekend', startDate: '2026-12-01', endDate: '2026-12-05', memberFirstNames: ['Asha', 'Ben']);
+  JoinPreview? previewResult = const JoinPreview(
+    tripName: 'Goa Weekend',
+    startDate: '2026-12-01',
+    endDate: '2026-12-05',
+    memberFirstNames: ['Asha', 'Ben'],
+  );
   JoinLookup? lookupResult = const JoinLookup(
     tripId: 'trip-1',
     tripName: 'Goa Weekend',
     isAdmin: false,
-    unclaimedMembers: [UnclaimedMember(id: 'm1', name: 'Asha K'), UnclaimedMember(id: 'm2', name: 'Ben')],
+    unclaimedMembers: [
+      UnclaimedMember(id: 'm1', name: 'Asha K'),
+      UnclaimedMember(id: 'm2', name: 'Ben'),
+    ],
   );
   Object? error; // thrown by preview/lookup when set (once)
   bool claimResult = true;
@@ -223,9 +250,16 @@ class FakeShareService implements ShareService {
     pngs.add(fileName);
     if (text != null) shared.add(text);
   }
+
   final files = <String>[];
   @override
-  Future<void> shareFile(List<int> bytes, {required String fileName, String? mimeType, String? subject, String? text}) async {
+  Future<void> shareFile(
+    List<int> bytes, {
+    required String fileName,
+    String? mimeType,
+    String? subject,
+    String? text,
+  }) async {
     files.add(fileName);
     if (text != null) shared.add(text);
   }
@@ -240,4 +274,123 @@ class FakeDeepLinks implements DeepLinkSource {
   Future<Uri?> initial() async => launch;
   @override
   Stream<Uri> get stream => controller.stream;
+}
+
+class FakePushGateway implements PushGateway {
+  /// Granted by default so the contextual prompt never interrupts unrelated tests.
+  PushPermission perm = PushPermission.granted;
+  PushPermission afterRequest = PushPermission.granted;
+  bool available = true;
+  String? tokenValue = 'fcm-token-1';
+  PushMessage? initial;
+  int requests = 0;
+  bool tokenDeleted = false;
+  // ignore: close_sinks
+  final refresh = StreamController<String>.broadcast();
+  // ignore: close_sinks
+  final foreground = StreamController<PushMessage>.broadcast();
+  // ignore: close_sinks
+  final opened = StreamController<PushMessage>.broadcast();
+
+  @override
+  String get platform => 'android';
+  @override
+  Future<bool> initialize() async => available;
+  @override
+  Future<PushPermission> permission() async => available ? perm : PushPermission.unavailable;
+  @override
+  Future<PushPermission> requestPermission() async {
+    requests++;
+    perm = afterRequest;
+    return perm;
+  }
+
+  @override
+  Future<String?> token() async => tokenValue;
+  @override
+  Stream<String> get tokenRefreshes => refresh.stream;
+  @override
+  Future<void> deleteToken() async => tokenDeleted = true;
+  @override
+  Stream<PushMessage> get onForeground => foreground.stream;
+  @override
+  Stream<PushMessage> get onOpened => opened.stream;
+  @override
+  Future<PushMessage?> initialMessage() async => initial;
+}
+
+class FakePushTokenBackend implements PushTokenBackend {
+  final registered = <String>[];
+  final removed = <String>[];
+  @override
+  Future<void> register({required String token, required String platform, required String appVersion}) async =>
+      registered.add('$token|$platform|$appVersion');
+  @override
+  Future<void> remove({required String userId, required String token}) async => removed.add('$userId|$token');
+}
+
+class FakeLocalNotifications implements LocalNotificationsGateway {
+  bool permissionOk = true;
+  int permissionAsks = 0;
+  List<PlannedReminder> scheduled = const [];
+  int replaceCalls = 0;
+  @override
+  Future<bool> requestPermission() async {
+    permissionAsks++;
+    return permissionOk;
+  }
+
+  @override
+  Future<void> replaceAll(List<PlannedReminder> reminders) async {
+    replaceCalls++;
+    scheduled = reminders;
+  }
+
+  @override
+  Future<List<int>> pendingIds() async => [for (final r in scheduled) r.id];
+}
+
+class FakeFeedback implements FeedbackRepository {
+  final bugs = <BugReport>[];
+  final features = <String>[];
+  bool unavailable = false;
+  List<MyBugReport> mine = const [];
+  @override
+  Future<String> reportBug(BugReport report) async {
+    if (unavailable) throw const FeedbackUnavailable();
+    bugs.add(report);
+    return 'BUG-900';
+  }
+
+  @override
+  Future<List<MyBugReport>> myBugReports() async => mine;
+  @override
+  Future<void> submitFeatureRequest({
+    required String title,
+    required String description,
+    required String category,
+    required String requestedBy,
+    required Map<String, Object?> environment,
+  }) async {
+    if (unavailable) throw const FeedbackUnavailable();
+    features.add(title);
+  }
+}
+
+class FakeNotificationPrefs implements NotificationPrefsRepository {
+  QuietHoursPref quiet = const QuietHoursPref();
+  bool digest = false;
+  final muted = <String>{};
+  @override
+  Future<QuietHoursPref> getQuietHours() async => quiet;
+  @override
+  Future<void> setQuietHours(QuietHoursPref pref) async => quiet = pref;
+  @override
+  Future<bool> getDigest() async => digest;
+  @override
+  Future<void> setDigest(bool enabled) async => digest = enabled;
+  @override
+  Future<bool> isTripMuted(String tripId) async => muted.contains(tripId);
+  @override
+  Future<void> setTripMuted(String tripId, bool m) async => m ? muted.add(tripId) : muted.remove(tripId);
 }

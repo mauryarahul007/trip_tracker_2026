@@ -114,7 +114,9 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
     final members = ref.read(visibleMembersProvider(widget.tripId));
     if (trip == null || mine == null) return;
     setState(() => _busy = true);
-    final r = await ref.read(expenseRepositoryProvider).submit(
+    final r = await ref
+        .read(expenseRepositoryProvider)
+        .submit(
           ExpenseSubmission(
             title: p.title.isEmpty ? l10n.quickAddFallback : p.title,
             amount: p.amount!,
@@ -144,45 +146,62 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
     final l10n = context.l10n;
     final tokens = context.tokens;
     final p = _parsed;
-    final voiceEnabled = ref.watch(flagProvider(('enableVoiceInput', widget.tripId))).value ??
+    final voiceEnabled =
+        ref.watch(flagProvider(('enableVoiceInput', widget.tripId))).value ??
         (defaultFeatureFlags['enableVoiceInput'] ?? true);
 
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(l10n.toolsQuickAdd, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: AppTextField(
-                key: const Key('quick-add-text'),
-                controller: _text,
-                label: l10n.quickAddHint,
-                onChanged: _parse,
-              ),
-            ),
-            if (voiceEnabled) ...[
-              const SizedBox(width: 8),
-              IconButton(
-                key: const Key('quick-add-mic'),
-                icon: Icon(
-                  _isListening ? Icons.mic : AppIcons.mic,
-                  color: _isListening ? tokens.colorDanger : tokens.primaryAccent,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l10n.toolsQuickAdd, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: AppTextField(
+                  key: const Key('quick-add-text'),
+                  controller: _text,
+                  label: l10n.quickAddHint,
+                  onChanged: _parse,
                 ),
-                tooltip: _isListening ? 'Stop recording' : 'Voice input',
-                onPressed: _busy ? null : _toggleVoiceInput,
               ),
+              if (voiceEnabled) ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  key: const Key('quick-add-mic'),
+                  icon: Icon(
+                    _isListening ? Icons.mic : AppIcons.mic,
+                    color: _isListening ? tokens.colorDanger : tokens.primaryAccent,
+                  ),
+                  tooltip: _isListening ? 'Stop recording' : 'Voice input',
+                  onPressed: _busy ? null : _toggleVoiceInput,
+                ),
+              ],
             ],
-          ],
-        ),
-        if (p != null && p.amount != null)
-          Padding(padding: const EdgeInsets.only(top: 8), child: Text('${p.title} · ${p.amount}', key: const Key('quick-add-preview'))),
-        if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_error!, key: const Key('quick-add-error'))),
-        const SizedBox(height: 12),
-        AppButton(key: const Key('quick-add-save'), label: l10n.quickAddConfirm, isLoading: _busy, onPressed: _busy ? null : _save),
-      ]),
+          ),
+          if (p != null && p.amount != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text('${p.title} · ${p.amount}', key: const Key('quick-add-preview')),
+            ),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(_error!, key: const Key('quick-add-error')),
+            ),
+          const SizedBox(height: 12),
+          AppButton(
+            key: const Key('quick-add-save'),
+            label: l10n.quickAddConfirm,
+            isLoading: _busy,
+            onPressed: _busy ? null : _save,
+          ),
+        ],
+      ),
     );
   }
 }

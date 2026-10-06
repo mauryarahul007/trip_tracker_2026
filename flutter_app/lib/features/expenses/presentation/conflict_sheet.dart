@@ -23,13 +23,17 @@ class ConflictSheet extends ConsumerWidget {
     }
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(l10n.conflictTitle, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 4),
-        Text(l10n.conflictBody, style: TextStyle(color: tokens.textSecondary)),
-        const SizedBox(height: 12),
-        for (final c in conflicts) _row(context, ref, c),
-      ]),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l10n.conflictTitle, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 4),
+          Text(l10n.conflictBody, style: TextStyle(color: tokens.textSecondary)),
+          const SizedBox(height: 12),
+          for (final c in conflicts) _row(context, ref, c),
+        ],
+      ),
     );
   }
 
@@ -38,33 +42,38 @@ class ConflictSheet extends ConsumerWidget {
     final cur = c.local.currency;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(c.local.title, style: const TextStyle(fontWeight: FontWeight.w700)),
-        Text('${l10n.conflictLocal}: ${formatMoney(context, c.local.amount, cur)} · ${c.local.date}'),
-        Text('${l10n.conflictServer}: ${formatMoney(context, c.server.amount, cur)} · ${c.server.date}'),
-        const SizedBox(height: 8),
-        Row(children: [
-          Expanded(
-            child: AppButton(
-              key: Key('conflict-mine-${c.expenseId}'),
-              label: l10n.conflictKeepMine,
-              variant: AppButtonVariant.secondary,
-              onPressed: () => ref.read(conflictStoreProvider.notifier).dismiss(tripId, c.expenseId),
-            ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(c.local.title, style: const TextStyle(fontWeight: FontWeight.w700)),
+          Text('${l10n.conflictLocal}: ${formatMoney(context, c.local.amount, cur)} · ${c.local.date}'),
+          Text('${l10n.conflictServer}: ${formatMoney(context, c.server.amount, cur)} · ${c.server.date}'),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  key: Key('conflict-mine-${c.expenseId}'),
+                  label: l10n.conflictKeepMine,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () => ref.read(conflictStoreProvider.notifier).dismiss(tripId, c.expenseId),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: AppButton(
+                  key: Key('conflict-theirs-${c.expenseId}'),
+                  label: l10n.conflictKeepTheirs,
+                  onPressed: () async {
+                    await ref.read(expenseRepositoryProvider).adoptServerCopy(c.server);
+                    ref.read(conflictStoreProvider.notifier).dismiss(tripId, c.expenseId);
+                  },
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: AppButton(
-              key: Key('conflict-theirs-${c.expenseId}'),
-              label: l10n.conflictKeepTheirs,
-              onPressed: () async {
-                await ref.read(expenseRepositoryProvider).adoptServerCopy(c.server);
-                ref.read(conflictStoreProvider.notifier).dismiss(tripId, c.expenseId);
-              },
-            ),
-          ),
-        ]),
-      ]),
+        ],
+      ),
     );
   }
 }

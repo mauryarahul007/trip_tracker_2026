@@ -8,9 +8,7 @@ class AppColors {
   static const Color lightBgSurface = Color(0xFFFFFFFF);
   static const Color lightBgSurfaceHover = Color(0xFFF1F2F4);
   static const Color lightBorder = Color(0xFFE4E7EC);
-  static const Color lightBorderFocus = Color(
-    0x590F6F63,
-  ); // rgba(15, 111, 99, 0.35)
+  static const Color lightBorderFocus = Color(0x590F6F63); // rgba(15, 111, 99, 0.35)
 
   static const Color lightPrimaryAccent = Color(0xFF0F6F63);
   static const Color lightPrimaryAccentLight = Color(0xFF3FA396);
@@ -34,9 +32,7 @@ class AppColors {
   static const Color darkBgSurface = Color(0xFF1A1C20);
   static const Color darkBgSurfaceHover = Color(0xFF22252A);
   static const Color darkBorder = Color(0xFF2A2D33);
-  static const Color darkBorderFocus = Color(
-    0x663FCBBD,
-  ); // rgba(63, 203, 189, 0.4)
+  static const Color darkBorderFocus = Color(0x663FCBBD); // rgba(63, 203, 189, 0.4)
 
   static const Color darkPrimaryAccent = Color(0xFF3FCBBD);
   static const Color darkPrimaryAccentLight = Color(0xFF63D8CC);

@@ -12,7 +12,11 @@ Future<String?> askText(BuildContext context, String title, {String initial = ''
       content: TextField(key: const Key('ask-field'), controller: c, autofocus: true),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx), child: Text(ctx.l10n.actionCancel)),
-        TextButton(key: const Key('ask-ok'), onPressed: () => Navigator.pop(ctx, c.text.trim()), child: Text(ctx.l10n.actionSave)),
+        TextButton(
+          key: const Key('ask-ok'),
+          onPressed: () => Navigator.pop(ctx, c.text.trim()),
+          child: Text(ctx.l10n.actionSave),
+        ),
       ],
     ),
   );

@@ -18,9 +18,7 @@ final tripMembersProvider = StreamProvider.family<List<Member>, String>(
   (ref, tripId) => ref.watch(memberRepositoryProvider).watchMembers(tripId),
 );
 
-final allMembersProvider = StreamProvider<List<Member>>(
-  (ref) => ref.watch(memberRepositoryProvider).watchAll(),
-);
+final allMembersProvider = StreamProvider<List<Member>>((ref) => ref.watch(memberRepositoryProvider).watchAll());
 
 final tripGroupsProvider = StreamProvider.family<List<Group>, String>(
   (ref, tripId) => ref.watch(memberRepositoryProvider).watchGroups(tripId),
@@ -81,11 +79,17 @@ class ExpenseFiltersNotifier extends Notifier<ExpenseFilters> {
   void clear() => state = const ExpenseFilters();
 }
 
-final expenseFiltersProvider = NotifierProvider.family<ExpenseFiltersNotifier, ExpenseFilters, String>(ExpenseFiltersNotifier.new);
+final expenseFiltersProvider = NotifierProvider.family<ExpenseFiltersNotifier, ExpenseFilters, String>(
+  ExpenseFiltersNotifier.new,
+);
 
 final filteredExpensesProvider = Provider.family<List<Expense>, String>((ref, tripId) {
   final all = ref.watch(tripExpensesProvider(tripId)).value ?? const <Expense>[];
-  return filterExpenses(all, ref.watch(expenseFiltersProvider(tripId)), myMemberId: ref.watch(myMemberIdProvider(tripId)));
+  return filterExpenses(
+    all,
+    ref.watch(expenseFiltersProvider(tripId)),
+    myMemberId: ref.watch(myMemberIdProvider(tripId)),
+  );
 });
 
 /// Entities with unsynced local changes (rows show a "pending sync" badge).
@@ -112,7 +116,10 @@ final visibleMembersProvider = Provider.family<List<Member>, String>((ref, tripI
   final trip = ref.watch(tripProvider(tripId)).value;
   final members = ref.watch(tripMembersProvider(tripId)).value ?? const <Member>[];
   if (trip == null) return members.where((m) => !m.archived).toList();
-  return [for (final m in members) if (!m.archived && trip.memberIds.contains(m.id)) m];
+  return [
+    for (final m in members)
+      if (!m.archived && trip.memberIds.contains(m.id)) m,
+  ];
 });
 
 /// Needed by [Trip] consumers that only have an id.
