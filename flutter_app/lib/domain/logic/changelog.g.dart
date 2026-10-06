@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.46.1', '2026-10-07', [
+    'Behind the scenes: fixed the Flutter Android build (core library desugaring for local notifications). No change to the web app.',
+  ]),
   ChangelogEntry('3.46.0', '2026-10-07', [
     'Behind the scenes: Flutter migration Phases 10-12 (notifications, settings, push and reminders, feedback, version gate, accessibility fixes, release hardening, cutover and rollout plans). No change to the web app.',
   ]),
@@ -50,9 +53,5 @@ const List<ChangelogEntry> changelogEntries = [
     'If you are in a couple or group, the flipped pass shows how your balance splits inside and outside the group.',
     'The bottom bar is more solid, so cards no longer show through it, and the top chips are easier to tap.',
     'The "You’re owed" chip says "see who" instead of promising a reminder it did not send.',
-  ]),
-  ChangelogEntry('3.43.5', '2026-10-02', [
-    'The Summary pass is shorter. The flipped side fits its join code, last-updated time, and travelers on one row.',
-    'With the new pass back on, the duplicate settled-up bar under Who owes who is gone. The pass shows it once.',
   ]),
 ];

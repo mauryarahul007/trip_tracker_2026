@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **270** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **271** | All recorded bugs across sessions |
+| **🟢 Open** | **1** | No critical blockers, 1 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **243** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
@@ -19,13 +19,27 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-271](#bug-271)** | 🟠 High | `general` | Flutter Android build fails: flutter_local_notifications needs core library desugaring | `claude-cli` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-271: Flutter Android build fails: flutter_local_notifications needs core library desugaring
+
+- **Severity**: `HIGH` | **Category**: `general` | **Status**: `open`
+- **Found By**: `claude-cli` on 10/7/2026 (web)
+
+**Description**:
+Flutter CI step 'Build Android Debug APK (Dev flavor)' failed at :app:checkDevDebugAarMetadata: Dependency ':flutter_local_notifications' requires core library desugaring to be enabled for :app. Introduced in Phase 10 (v3.46.0) when the package was added; first Android build to run exposed it.
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
 
 ## ✅ Resolved Bugs History
 
