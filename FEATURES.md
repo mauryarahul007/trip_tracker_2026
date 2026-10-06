@@ -10,10 +10,10 @@
 | Metric | Count |
 | :--- | :--- |
 | **Total Tracked** | **100** |
-| **💡 Requested** | **3** |
+| **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **97** |
+| **✅ Shipped** | **98** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -24,7 +24,6 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **[FEAT-002](#feat-002)** | `ui-ux` | Test | `mauryarahul007@gmail.com` | 💡 Requested |
 | **[FEAT-024](#feat-024)** | `admin` | CI pipeline for lint, build, and test on push/PR | `claude-cli` | 💡 Requested |
-| **[FEAT-100](#feat-100)** | `native` | Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12) | `claude-cli` | 💡 Requested |
 
 ---
 
@@ -46,15 +45,6 @@ Test
 - **Requested By**: `claude-cli` on 9/1/2026 (web)
 
 CI pipeline for lint, build, and test on push/PR
-
----
-
-### FEAT-100: Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12)
-
-- **Category**: `native` | **Status**: `requested`
-- **Requested By**: `claude-cli` on 10/7/2026 (web)
-
-Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12)
 
 ---
 
@@ -159,6 +149,7 @@ Flutter app: notifications, settings, push, feedback, version gate, accessibilit
 | **FEAT-097** | Pass back seat-and-gate balances | `ui-ux` | `rahul` | `rahul` | Shipped in dc59c9d (v3.42.1). |
 | **FEAT-098** | Cycling destination photos on the home stack and list | `ui-ux` | `rahul` | `rahul` | Shipped in v3.43.1. ADR 246. Flag cycleDestinationCovers (Core, default ON). |
 | **FEAT-099** | Simplified pass back: one balance hero | `ui-ux` | `rahul` | `claude-cli` | Shipped in commit 1cf0b67 (v3.43.3). decisions.md #248. QA steps in FEATURE_TEST_STEPS.md: PASS-STUB-SIMPLIFY. |
+| **FEAT-100** | Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12) | `native` | `claude-cli` | `claude-cli` | Shipped in commit 42ef52a (v3.46.0). Headless-verified only; device, Firebase and store checks open (see docs/flutter-migration/BACKLOG.md). |
 
 ---
 

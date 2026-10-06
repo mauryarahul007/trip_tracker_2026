@@ -1586,12 +1586,15 @@
     "title": "Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12)",
     "description": "Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12)",
     "category": "native",
-    "status": "requested",
+    "status": "shipped",
     "requestedBy": "claude-cli",
     "environment": {
       "platform": "web"
     },
     "createdAt": "2026-10-06T18:39:46.729Z",
-    "updatedAt": "2026-10-06T18:39:46.729Z"
+    "updatedAt": "2026-10-06T18:41:42.169Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-06T18:41:42.168Z",
+    "shippedNote": "Shipped in commit 42ef52a (v3.46.0). Headless-verified only; device, Firebase and store checks open (see docs/flutter-migration/BACKLOG.md)."
   }
 ]
