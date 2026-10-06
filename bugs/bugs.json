@@ -7941,7 +7941,7 @@
     "description": "Flutter CI step 'Build Android Debug APK (Dev flavor)' failed at :app:checkDevDebugAarMetadata: Dependency ':flutter_local_notifications' requires core library desugaring to be enabled for :app. Introduced in Phase 10 (v3.46.0) when the package was added; first Android build to run exposed it.",
     "severity": "high",
     "category": "general",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -7956,6 +7956,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-10-06T18:53:21.088Z",
-    "updatedAt": "2026-10-06T18:53:21.088Z"
+    "updatedAt": "2026-10-06T18:54:16.642Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-06T18:54:16.641Z",
+    "resolutionNote": "Fixed in commit cfe5b04 (v3.46.1): enabled core library desugaring in flutter_app/android/app/build.gradle.kts"
   }
 ]

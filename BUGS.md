@@ -10,36 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **271** | All recorded bugs across sessions |
-| **🟢 Open** | **1** | No critical blockers, 1 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **243** | Verified & closed |
+| **✅ Resolved** | **244** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-271](#bug-271)** | 🟠 High | `general` | Flutter Android build fails: flutter_local_notifications needs core library desugaring | `claude-cli` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-271: Flutter Android build fails: flutter_local_notifications needs core library desugaring
-
-- **Severity**: `HIGH` | **Category**: `general` | **Status**: `open`
-- **Found By**: `claude-cli` on 10/7/2026 (web)
-
-**Description**:
-Flutter CI step 'Build Android Debug APK (Dev flavor)' failed at :app:checkDevDebugAarMetadata: Dependency ':flutter_local_notifications' requires core library desugaring to be enabled for :app. Introduced in Phase 10 (v3.46.0) when the package was added; first Android build to run exposed it.
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -288,6 +274,7 @@ Flutter CI step 'Build Android Debug APK (Dev flavor)' failed at :app:checkDevDe
 | **BUG-268** | v3.43.9 failed to build | `general` | `high` | `rahul` | `rahul` | Fixed in commit 112d02e (v3.43.10). The coach click only adds an expense, because it no longer renders on Members. |
 | **BUG-269** | Flutter ledger could not show a receipt, pay, share, or close a trip | `ui-ux` | `medium` | `rahul` | `rahul` | Fixed in commit 6011605 (v3.44.2). The Flutter ledger shows the receipt, pays or shares a settlement, and locks the trip. Categories, CSV, and text quick-add are included. |
 | **BUG-270** | Flutter Members, Notes, and Chat tabs were empty placeholders | `ui-ux` | `medium` | `rahul` | `rahul` | Fixed in commit 012c03a (v3.44.3). The Flutter Members, Notes, and Chat tabs now work: roster, roles, groups, checklist, notes, packing suggestions, manual passes, and offline text chat with unread mark. |
+| **BUG-271** | Flutter Android build fails: flutter_local_notifications needs core library desugaring | `general` | `high` | `claude-cli` | `claude-cli` | Fixed in commit cfe5b04 (v3.46.1): enabled core library desugaring in flutter_app/android/app/build.gradle.kts |
 
 ---
 
