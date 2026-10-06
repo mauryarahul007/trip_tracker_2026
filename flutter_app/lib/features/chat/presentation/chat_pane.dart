@@ -13,6 +13,8 @@ import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/ask_text.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../../expenses/presentation/widgets/expense_detail_sheet.dart';
+import '../../travel/presentation/live_location_chat_banner.dart';
+import '../../travel/presentation/live_location_share_modal.dart';
 import '../application/chat_providers.dart';
 
 class ChatPane extends ConsumerStatefulWidget {
@@ -49,11 +51,26 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     final members = {for (final m in ref.watch(tripMembersProvider(widget.tripId)).value ?? const <Member>[]) m.id: m};
     final me = ref.watch(myMemberIdProvider(widget.tripId));
     final dirty = ref.watch(dirtyIdsProvider).value ?? const <String>{};
+    final showLiveBanner = ref.watch(flagProvider(('enableLiveLocationShare', widget.tripId))).value ?? false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _markSeen(messages);
     });
 
     return Column(key: const Key('tab-chat'), children: [
+      if (showLiveBanner)
+        LiveLocationChatBanner(
+          tripId: widget.tripId,
+          members: members.values.toList(),
+          onShareMyLocation: () {
+            final userId = ref.read(authStateProvider).user?.id ?? '';
+            LiveLocationShareModal.show(
+              context,
+              tripId: widget.tripId,
+              memberId: me ?? '',
+              userId: userId,
+            );
+          },
+        ),
       Expanded(
         child: messages.isEmpty
             ? Center(child: Text(l10n.chatEmpty))

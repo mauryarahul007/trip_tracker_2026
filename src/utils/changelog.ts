@@ -9,6 +9,27 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.45.0',
+    date: '2026-10-06',
+    changes: [
+      'Behind the scenes: Flutter migration Phase 9 (maps, live location, receipts OCR, weather, Trip Wrapped, squad badges, traveler passport, ICS calendar export, Next Up capsule & gate scanner). No change to the web app.',
+    ],
+  },
+  {
+    version: '3.44.3',
+    date: '2026-10-06',
+    changes: [
+      'Behind the scenes: groundwork for Flutter migration Phase 8 (members, notes, chat, boarding passes). No change to the web app.',
+    ],
+  },
+  {
+    version: '3.44.2',
+    date: '2026-10-06',
+    changes: [
+      'Behind the scenes: groundwork for Flutter migration Phase 7 slices E-G (ledger loop, UPI, share card, close-out). No change to the web app.',
+    ],
+  },
+  {
     version: '3.44.1',
     date: '2026-10-06',
     changes: [

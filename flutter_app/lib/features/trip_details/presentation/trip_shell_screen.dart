@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/auth_state.dart';
 import '../../../core/platform/haptics.dart';
 import '../../../domain/logic/tab_trail.dart';
 import '../../../l10n/l10n_ext.dart';
@@ -13,6 +14,10 @@ import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../chat/application/chat_providers.dart';
+import '../../expenses/application/expenses_providers.dart';
+import '../../travel/maps/deferred_trip_map_hero.dart';
+import '../../travel/maps/trip_route_modal.dart';
+import '../../travel/presentation/live_location_share_modal.dart';
 import '../../trips/presentation/widgets/share_trip_sheet.dart';
 import '../application/trip_nav.dart';
 import '../domain/trip_tabs.dart';
@@ -30,17 +35,22 @@ String tripTabLabel(BuildContext context, TripNavTab tab) {
 }
 
 IconData tripTabIcon(TripNavTab tab) => switch (tab) {
-      TripNavTab.chat => AppIcons.chat,
-      TripNavTab.expenses => AppIcons.expenses,
-      TripNavTab.ledger => AppIcons.ledger,
-      TripNavTab.members => AppIcons.members,
-      TripNavTab.notes => AppIcons.notes,
-    };
+  TripNavTab.chat => AppIcons.chat,
+  TripNavTab.expenses => AppIcons.expenses,
+  TripNavTab.ledger => AppIcons.ledger,
+  TripNavTab.members => AppIcons.members,
+  TripNavTab.notes => AppIcons.notes,
+};
 
 /// Header + bottom nav + swipeable tab pager. Per-tab state is kept by the
 /// [StatefulNavigationShell]; Back walks a short tab trail before leaving.
 class TripShellScreen extends ConsumerStatefulWidget {
-  const TripShellScreen({required this.tripId, required this.body, required this.navigationShell, super.key});
+  const TripShellScreen({
+    required this.tripId,
+    required this.body,
+    required this.navigationShell,
+    super.key,
+  });
 
   final String tripId;
   final Widget body;
@@ -53,6 +63,7 @@ class TripShellScreen extends ConsumerStatefulWidget {
 class _TripShellScreenState extends ConsumerState<TripShellScreen> {
   var _trail = <int>[];
   late int _current;
+  bool _mapExpanded = false;
 
   @override
   void initState() {
@@ -125,11 +136,21 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 trip?.name ?? '',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                ),
               ),
             ),
           ),
           actions: [
+            if (trip != null)
+              IconButton(
+                key: const Key('action-trip-map'),
+                icon: Icon(_mapExpanded ? Icons.map : Icons.map_outlined),
+                tooltip: 'Route Map',
+                onPressed: () => setState(() => _mapExpanded = !_mapExpanded),
+              ),
             IconButton(
               icon: const Icon(AppIcons.share),
               tooltip: l10n.shareTripTitle,
@@ -140,13 +161,43 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
               ),
             ),
             IconButton(
+              key: const Key('action-live-location'),
+              icon: const Icon(AppIcons.location, size: 20),
+              tooltip: 'Live Location Share',
+              onPressed: () {
+                final user = ref.read(authStateProvider).user;
+                final myMember = ref.read(myMemberIdProvider(widget.tripId));
+                LiveLocationShareModal.show(
+                  context,
+                  tripId: widget.tripId,
+                  memberId: myMember ?? '',
+                  userId: user?.id ?? '',
+                );
+              },
+            ),
+            IconButton(
               icon: const Icon(AppIcons.settings),
               tooltip: l10n.navSettings,
               onPressed: () => context.push('/trip/${widget.tripId}/settings'),
             ),
           ],
         ),
-        body: Column(children: [const OfflineBanner(), Expanded(child: widget.body)]),
+        body: Column(
+          children: [
+            const OfflineBanner(),
+            if (_mapExpanded && trip != null)
+              GestureDetector(
+                onTap: () => showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  useSafeArea: true,
+                  builder: (_) => TripRouteModal(trip: trip),
+                ),
+                child: DeferredTripMapHero(trip: trip, height: 160),
+              ),
+            Expanded(child: widget.body),
+          ],
+        ),
         bottomNavigationBar: tabs.length < 2
             ? null
             : BottomNavigationBar(
@@ -162,8 +213,13 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 items: [
                   for (final t in tabs)
                     BottomNavigationBarItem(
-                      icon: t == TripNavTab.chat && ref.watch(chatUnreadProvider(widget.tripId))
-                          ? Badge(key: const Key('chat-tab-unread'), child: Icon(tripTabIcon(t)))
+                      icon:
+                          t == TripNavTab.chat &&
+                              ref.watch(chatUnreadProvider(widget.tripId))
+                          ? Badge(
+                              key: const Key('chat-tab-unread'),
+                              child: Icon(tripTabIcon(t)),
+                            )
                           : Icon(tripTabIcon(t)),
                       label: tripTabLabel(context, t),
                     ),
@@ -179,7 +235,12 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
 /// (bottom bar, back) animate the pager. Navigators are kept alive so each
 /// tab keeps its scroll/state.
 class TripTabPager extends ConsumerStatefulWidget {
-  const TripTabPager({required this.tripId, required this.navigationShell, required this.branches, super.key});
+  const TripTabPager({
+    required this.tripId,
+    required this.navigationShell,
+    required this.branches,
+    super.key,
+  });
 
   final String tripId;
   final StatefulNavigationShell navigationShell;
@@ -196,7 +257,9 @@ class _TripTabPagerState extends ConsumerState<TripTabPager> {
   List<TripNavTab> get _tabs => ref.read(visibleTabsProvider(widget.tripId));
 
   int get _page {
-    final i = _tabs.indexOf(TripNavTab.values[widget.navigationShell.currentIndex]);
+    final i = _tabs.indexOf(
+      TripNavTab.values[widget.navigationShell.currentIndex],
+    );
     return i < 0 ? 0 : i;
   }
 
@@ -214,7 +277,13 @@ class _TripTabPagerState extends ConsumerState<TripTabPager> {
     final target = _page;
     if ((c.page ?? target.toDouble()).round() != target) {
       _programmatic = true;
-      c.animateToPage(target, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic).whenComplete(() => _programmatic = false);
+      c
+          .animateToPage(
+            target,
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+          )
+          .whenComplete(() => _programmatic = false);
     }
   }
 
@@ -237,7 +306,9 @@ class _TripTabPagerState extends ConsumerState<TripTabPager> {
           widget.navigationShell.goBranch(branch);
         }
       },
-      children: [for (final t in tabs) _KeepAlive(child: widget.branches[t.index])],
+      children: [
+        for (final t in tabs) _KeepAlive(child: widget.branches[t.index]),
+      ],
     );
   }
 }
@@ -250,7 +321,8 @@ class _KeepAlive extends StatefulWidget {
   State<_KeepAlive> createState() => _KeepAliveState();
 }
 
-class _KeepAliveState extends State<_KeepAlive> with AutomaticKeepAliveClientMixin {
+class _KeepAliveState extends State<_KeepAlive>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -273,11 +345,21 @@ class TripTabPlaceholder extends StatelessWidget {
       key: Key('tab-${tab.name}'),
       child: Padding(
         padding: const EdgeInsets.all(32),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(tripTabIcon(tab), size: 40, color: tokens.primaryAccent),
-          const SizedBox(height: 16),
-          Text(tripTabLabel(context, tab), style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: tokens.textPrimary)),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(tripTabIcon(tab), size: 40, color: tokens.primaryAccent),
+            const SizedBox(height: 16),
+            Text(
+              tripTabLabel(context, tab),
+              style: TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                color: tokens.textPrimary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

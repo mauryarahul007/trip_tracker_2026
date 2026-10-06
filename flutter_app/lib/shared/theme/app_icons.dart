@@ -5,6 +5,7 @@ class AppIcons {
   // Navigation Tabs
   static const IconData chat = Icons.chat_bubble_outline_rounded;
   static const IconData expenses = Icons.receipt_long_rounded;
+  static const IconData receipt = Icons.receipt_long_rounded;
   static const IconData ledger = Icons.account_balance_wallet_outlined;
   static const IconData members = Icons.people_outline_rounded;
   static const IconData notes = Icons.check_circle_outline_rounded;

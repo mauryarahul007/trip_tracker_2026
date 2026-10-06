@@ -5,8 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/platform/external_launcher.dart';
+import '../../../core/platform/share_service.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/flag_defaults.g.dart';
+import '../../../domain/logic/ics_export_service.dart';
+import '../../../domain/logic/travel_status_service.dart';
 import '../../../domain/logic/trip_utilities.dart';
 import '../../../domain/models/checklist_item.dart';
 import '../../../domain/models/member.dart';
@@ -18,6 +21,10 @@ import '../../../shared/widgets/ask_text.dart';
 import '../../chat/application/chat_providers.dart';
 import '../../chat/presentation/chat_pane.dart';
 import '../../expenses/application/expenses_providers.dart';
+import '../../travel/presentation/live_travel_status_modal.dart';
+import '../../travel/presentation/next_up_capsule.dart';
+import '../../travel/presentation/pass_scanner_modal.dart';
+import '../../travel/presentation/weather_badge.dart';
 import '../../trip_details/application/trip_nav.dart';
 
 const _categories = ['packing', 'prep', 'documents', 'medical', 'general'];
@@ -53,6 +60,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     ];
 
     return Column(key: const Key('tab-notes'), children: [
+      if (trip != null) NextUpTravelCapsule(trip: trip, passes: trip.passes),
       if (passesOn) _passes(context, trip?.passes ?? const []),
       Padding(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
@@ -83,20 +91,63 @@ class _NotesTabState extends ConsumerState<NotesTab> {
 
   Widget _passes(BuildContext context, List<TravelPass> passes) {
     final l10n = context.l10n;
+    final trip = ref.watch(tripProvider(widget.tripId)).value;
+    final gateScannerOn = _flag('enableGateScanner');
+    final icsOn = _flag('enableIcsExport');
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         if (passes.isNotEmpty) Text(l10n.notesPasses, style: const TextStyle(fontWeight: FontWeight.w700)),
         for (final p in passes)
-          ListTile(
-            key: Key('pass-${p.id}'),
-            contentPadding: EdgeInsets.zero,
-            title: Text(p.title),
-            subtitle: Text([p.type, if (p.origin != null) p.origin, if (p.destination != null) p.destination].whereType<String>().join(' · ')),
+          Builder(
+            builder: (ctx) {
+              final statusInfo = getTravelStatusInfo(p);
+              return ListTile(
+                key: Key('pass-${p.id}'),
+                contentPadding: EdgeInsets.zero,
+                title: Text(p.title),
+                subtitle: Text([p.type, if (p.origin != null) p.origin, if (p.destination != null) p.destination].whereType<String>().join(' · ')),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (gateScannerOn)
+                      IconButton(
+                        key: Key('pass-scan-${p.id}'),
+                        icon: const Icon(Icons.qr_code_2, size: 20),
+                        tooltip: 'Show Pass / QR',
+                        onPressed: () => PassScannerModal.show(ctx, pass: p),
+                      ),
+                    if (statusInfo != null)
+                      IconButton(
+                        icon: const Icon(Icons.radar, size: 20),
+                        tooltip: 'Live Travel Status',
+                        onPressed: () => LiveTravelStatusModal.show(ctx, statusInfo),
+                      ),
+                  ],
+                ),
+                onTap: () {
+                  if (gateScannerOn) {
+                    PassScannerModal.show(ctx, pass: p);
+                  } else if (statusInfo != null) {
+                    LiveTravelStatusModal.show(ctx, statusInfo);
+                  }
+                },
+              );
+            },
           ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton(key: const Key('pass-add'), onPressed: () => _addPass(context, passes), child: Text(l10n.notesAddPass)),
+        Wrap(
+          spacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            TextButton(key: const Key('pass-add'), onPressed: () => _addPass(context, passes), child: Text(l10n.notesAddPass)),
+            if (icsOn && passes.isNotEmpty && trip != null)
+              TextButton.icon(
+                key: const Key('pass-export-ics'),
+                icon: const Icon(Icons.calendar_month, size: 16),
+                label: const Text('Add to Calendar'),
+                onPressed: () => shareTripIcs(trip: trip, shareService: ref.read(shareServiceProvider), passes: passes),
+              ),
+          ],
         ),
       ]),
     );
@@ -104,13 +155,23 @@ class _NotesTabState extends ConsumerState<NotesTab> {
 
   Widget _checklist(BuildContext context, List<ChecklistItem> items, bool packing) {
     final l10n = context.l10n;
+    final trip = ref.watch(tripProvider(widget.tripId)).value;
     final members = ref.watch(tripMembersProvider(widget.tripId)).value ?? const <Member>[];
     final shown = [for (final i in items) if (_category == 'all' || i.category == _category) i];
     final done = items.where((i) => i.completed).length;
+    final dest = trip?.destination?.isNotEmpty == true ? trip!.destination : trip?.name;
     return ListView(
       key: const Key('checklist'),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
+        if (dest != null && dest.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: WeatherBadge(destination: dest),
+            ),
+          ),
         Text(l10n.notesProgress(done, items.length)),
         Wrap(spacing: 6, children: [
           for (final c in ['all', ..._categories])

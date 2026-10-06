@@ -83,6 +83,14 @@
 	<string>Trip Tracker lets you pick a receipt photo from your library.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Trip Tracker uses Face ID to unlock the app.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Trip Tracker shares your live location with trip members when you turn on Live Location Share.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Trip Tracker shares your live location in the background with trip members when you turn on Live Location Share.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>upi</string>

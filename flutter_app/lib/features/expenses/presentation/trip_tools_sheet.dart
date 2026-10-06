@@ -10,12 +10,18 @@ import '../../../core/platform/share_service.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/csv_export.dart';
 import '../../../domain/logic/expense_form_logic.dart';
+import '../../../domain/logic/flag_defaults.g.dart';
+import '../../../domain/logic/ics_export_service.dart';
 import '../../../domain/logic/imports_and_exports.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../travel/presentation/achievement_badge_modal.dart';
+import '../../travel/presentation/traveler_passport_modal.dart';
+import '../../travel/presentation/trip_wrapped_modal.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
+import 'offline_snapshot_modal.dart';
 
 typedef TextFilePicker = Future<String?> Function({required List<String> extensions});
 
@@ -55,6 +61,16 @@ class _TripToolsSheetState extends ConsumerState<TripToolsSheet> {
     final expenses = ref.read(tripExpensesProvider(widget.tripId)).value ?? const [];
     final json = exportTripBackupJson(trip: trip, members: members, expenses: expenses);
     await ref.read(shareServiceProvider).share(json, subject: trip.name);
+  }
+
+  Future<void> _exportIcs() async {
+    final trip = ref.read(tripProvider(widget.tripId)).value;
+    if (trip == null) return;
+    await shareTripIcs(
+      trip: trip,
+      shareService: ref.read(shareServiceProvider),
+      now: ref.read(nowProvider)(),
+    );
   }
 
   Future<void> _importJson() async {
@@ -151,17 +167,62 @@ class _TripToolsSheetState extends ConsumerState<TripToolsSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    ref.watch(tripProvider(widget.tripId));
+    ref.watch(tripMembersProvider(widget.tripId));
+    ref.watch(tripExpensesProvider(widget.tripId));
     final splitwise = ref.watch(flagProvider(('enableSplitwiseImport', widget.tripId))).value ?? false;
+    final wrapped = ref.watch(flagProvider(('enableTripWrapped', widget.tripId))).value ?? (defaultFeatureFlags['enableTripWrapped'] ?? true);
+    final icsExport = ref.watch(flagProvider(('enableIcsExport', widget.tripId))).value ?? (defaultFeatureFlags['enableIcsExport'] ?? true);
+    final achievements = ref.watch(flagProvider(('enableAchievements', widget.tripId))).value ?? (defaultFeatureFlags['enableAchievements'] ?? false);
+    final passport = ref.watch(flagProvider(('enableTravelerPassport', widget.tripId))).value ?? (defaultFeatureFlags['enableTravelerPassport'] ?? true);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(l10n.toolsTitle, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
+        if (wrapped) ...[
+          AppButton(
+            key: const Key('trip-wrapped'),
+            label: 'Trip Wrapped ✨',
+            onPressed: _busy ? null : () => TripWrappedModal.show(context, tripId: widget.tripId),
+          ),
+          const SizedBox(height: 8),
+        ],
         AppButton(key: const Key('export-csv'), label: l10n.toolsExportCsv, onPressed: _busy ? null : _exportCsv),
         const SizedBox(height: 8),
         AppButton(key: const Key('export-json'), label: l10n.toolsExportJson, variant: AppButtonVariant.secondary, onPressed: _busy ? null : _exportJson),
+        if (icsExport) ...[
+          const SizedBox(height: 8),
+          AppButton(key: const Key('export-ics'), label: 'Add to Calendar (.ics) 📅', variant: AppButtonVariant.secondary, onPressed: _busy ? null : _exportIcs),
+        ],
         const SizedBox(height: 8),
         AppButton(key: const Key('import-json'), label: l10n.toolsImportJson, variant: AppButtonVariant.secondary, onPressed: _busy ? null : _importJson),
+        const SizedBox(height: 8),
+        AppButton(
+          key: const Key('offline-snapshot'),
+          label: 'Offline Snapshot (.triptracker)',
+          variant: AppButtonVariant.secondary,
+          onPressed: _busy ? null : () => OfflineSnapshotModal.show(context, tripId: widget.tripId),
+        ),
+        if (achievements) ...[
+          const SizedBox(height: 8),
+          AppButton(
+            key: const Key('trip-achievements'),
+            label: 'Achievements & Badges 🏆',
+            variant: AppButtonVariant.secondary,
+            onPressed: _busy ? null : () => AchievementBadgeModal.show(context, tripId: widget.tripId),
+          ),
+        ],
+        if (passport) ...[
+          const SizedBox(height: 8),
+          AppButton(
+            key: const Key('traveler-passport'),
+            label: 'Traveler Passport 🛂',
+            variant: AppButtonVariant.secondary,
+            onPressed: _busy ? null : () => TravelerPassportModal.show(context),
+          ),
+        ],
         if (splitwise) ...[
           const SizedBox(height: 8),
           AppButton(key: const Key('import-splitwise'), label: l10n.toolsSplitwise, variant: AppButtonVariant.secondary, onPressed: _busy ? null : _importSplitwise),

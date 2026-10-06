@@ -4643,3 +4643,144 @@ This document logs all meaningful technical decisions, library choices, design p
   - **Left out:** contacts picker (B-038), date ranges, previous-member suggestions, images, voice, reactions, typing (B-023), Tripbot, live map, OCR, and push.
 * **Verification:** `flutter analyze` on the new screens is clean. `test/features/phase8_test.dart` covers the roster (including the money line, archive, group, and invite sheet), checklist, packing suggestions, a detected link, a manual pass, the unread mark, a text bubble, and an expense card. Two-account staging, 1,000-message fps, and the iOS keyboard are manual steps in `docs/FEATURE_TEST_STEPS.md` (FLUTTER-P8).
 * **Release:** v3.44.3 (patch bump). Flutter only; the web app is untouched.
+
+## 268. Flutter Phase 9 Sub-phase 9A: Maps & Journey (Route parsing, Gazetteer, Deferred Map Hero & Journey Map)
+
+* **Date:** 2026-10-06
+* **Context:**
+  - Active trips and expense ledgers on the web feature interactive route maps (OSRM driving geometry, multi-stop itineraries, geotagged expense journey markers, Wikipedia destination photo discovery, and Photon Komoot autocomplete).
+  - Flutter migration needed parity for route parsing, gazetteer search, photo hero banners, interactive map gateways, and stop itinerary management.
+* **Decisions:**
+  - **Pure Domain Route Logic (`route_helper.dart`):** Transcribed and unit-tested `parseTripRoute`, `extractPrimaryCity`, `getItineraryRouteInfo`, `collectTripPhotoPlaces`, and geometric utilities (`median`, `squaredDist`) in pure Dart without Flutter UI or Drift database dependencies.
+  - **Offline Gazetteer & Fast Levenshtein (`place_gazetteer.dart`, `place_suggest_service.dart`):** Bundled top 100+ global destinations with country-to-currency mappings and Damerau-Levenshtein typo tolerance with Latin diacritics folding. Blends local matches (boosted by prior trip destinations) with online Photon Komoot API with 3.5s timeout.
+  - **Cover Photo & Road Route Services (`place_image_service.dart`, `road_route_service.dart`):** Ported Wikipedia REST API summary photo resolver with `normalizeWikimediaWidth` (960px/500px) and Unsplash query resolution. Built OSRM driving geometry fetcher with in-memory polyline caching and straight-line fallback.
+  - **MapGateway Platform Abstraction (`map_gateway.dart`):** Established `MapGateway` with `DefaultMapGateway` rendering interactive vector paths/pins via Flutter canvas and `FakeMapGateway` for deterministic headless widget testing.
+  - **Deferred Hero Map & Journey Map (`deferred_trip_map_hero.dart`, `trip_journey_map.dart`):** Implemented 300ms idle-mount deferral for trip map heroes so shell tab navigation stays at 60 fps, smoothly fading the destination photo once map renders. Built chronological expense journey map with category markers and tapped expense detail cards.
+  - **Collaborative Stops Persistence (`trip_route_modal.dart`, `repositories.dart`, `drift_repositories.dart`):** Stop changes save through `TripRepository.setStops`, writing to `set_trip_collab_field` (`field: 'stops'`) for real-time multiplayer syncing.
+* **Verification:**
+  - 408 tests pass (`flutter test`), including 28 dedicated unit and widget tests covering route parsing, gazetteer suggestions, image resolution, and map rendering.
+  - `flutter analyze` clean (0 warnings).
+* **Trade-offs Accepted:**
+  - Interactive map canvas uses custom high-performance vector rendering for universal platform compatibility and zero third-party mapbox/google binaries in unit test environments. Full tile-based MapLibre/Google Maps native plugin integration can be swapped via `MapGateway` if offline tile caching is needed.
+
+---
+
+## 269. Flutter Phase 9 Sub-phase 9B: Live Location & Travel Status (Geolocator, Heartbeat, Live Viewer & Flight Radar)
+
+* **Date:** 2026-10-06
+* **Context:**
+  - Parity with web application required live location sharing (`/live/:token`), 60s background heartbeat reporting, in-chat member radar banner with mini-map preview, and flight radar / train PNR live tracking portals.
+  - Device platform permissions, battery preservation, traveler privacy (12-hour automatic expiry), and headless widget test determinism were essential.
+* **Decisions:**
+  - **Platform Location Abstraction (`location_gateway.dart`):** Decoupled `geolocator: ^14.0.1` behind `LocationGateway`, providing `GeolocatorLocationGateway` for Android/iOS devices and `FakeLocationGateway` for deterministic headless testing. Documented privacy and permission requirements in `docs/PERMISSIONS.md` and added permissions to `AndroidManifest.xml` and `Info.plist`.
+  - **Pure Domain & Status Services (`location_share.dart`, `travel_status_service.dart`):** Created immutable models `MyLocationShare`, `SharedLocation`, `TripActiveShare` with 12-hour expiry logic. Ported pure airline IATA/ICAO code resolution (IndiGo, Air India, Emirates, Delta, etc.), flight date formatting, URL builders for Google Flight Search, Flightradar24, FlightAware, FlightStats, and Indian Railways 10-digit PNR / 5-digit train status generators (`ConfirmTkt`, `RailYatri`).
+  - **Data Layer & Heartbeat Service (`supabase_location_share_repository.dart`, `live_location_service.dart`):** Implemented `SupabaseLocationShareRepository` wrapping RPCs `start_location_share`, `update_location_share`, `stop_location_share`, `get_my_location_share`, `get_active_trip_location_shares`, and `get_shared_location`. `LiveLocationService` manages periodic 60s heartbeat ticks and automatically syncs positions on app lifecycle resume (`WidgetsBindingObserver`).
+  - **Non-Blocking Tactile Feedback:** Dispatched `AppHaptics` using `unawaited(...)` inside asynchronous UI handlers to avoid blocking state updates on multi-step haptic vibration delays.
+  - **UI Experiences & Feature Flag Guarding:**
+    - `LiveScreen`: Dedicated `/live/:token` viewer with live radar pulse animation, relative timestamps, and expired/ended share screens.
+    - `LiveLocationShareModal`: Bottom sheet modal with permission requesting, link generation, and one-tap stop sharing.
+    - `LiveLocationChatBanner`: Chat header banner with active traveler chips and interactive mini-map preview, strictly guarded behind `enableLiveLocationShare`.
+    - `LiveTravelStatusModal`: Interactive modal presenting direct flight radar status and PNR tracking cards, integrated into travel passes in `NotesTab`.
+* **Verification:**
+  - 13 unit tests pass in `travel_status_service_test.dart`.
+  - 9 widget/flow tests pass in `live_location_test.dart`.
+  - Full Flutter test suite and `phase8_test.dart` pass.
+  - `flutter analyze` reports 0 issues.
+  - Web `npm test` and `npm run build` pass with exit code 0.
+* **Trade-offs Accepted:**
+  - 60s heartbeat interval minimizes battery impact over high-frequency GPS polling while maintaining sufficient squad coordination accuracy.
+  - `enableLiveLocationShare` flag remains in Labs pack (default OFF in production).
+
+---
+
+## 270. Flutter Phase 9 Sub-phase 9C: Receipts OCR, Ambient Weather, Offline Snapshot & Voice Input
+
+* **Date:** 2026-10-06
+* **Context:**
+  - Active travelers need high-efficiency input tools: itemized receipt scanning (OCR) to eliminate manual receipt typing, voice input for rapid on-the-go expense entry, ambient destination weather telemetry for trip planning, and `.triptracker` offline snapshot files for cross-device portability without cloud sync dependencies.
+  - All utilities required pure-domain testability, robust offline fallbacks, zero regressions on the web codebase, and strict feature flag guarding.
+* **Decisions:**
+  - **Receipts OCR Engine (`receipt_ocr_service.dart`, `ocr_gateway.dart`, `receipt_ocr_modal.dart`):**
+    - Pure Dart receipt parsing service (`parseReceiptText`, `parseScannedReceipt`) extracting line item descriptions, item prices, subtotals, taxes (GST, CGST, VAT), tips/gratuities, discounts, and total amounts.
+    - Brand detection matching known merchants (Starbucks, Blue Tokai, McDonald's, Costa Coffee, etc.) and receipt date normalization.
+    - `OcrGateway` platform abstraction with headless `FakeOcrGateway` for deterministic test suites and `DefaultOcrGateway` for device execution.
+    - `ReceiptOcrModal` bottom sheet modal providing both photo scanning and manual text parsing, itemized review cards, and one-tap application into `ExpenseFormController.applyReceiptOcr`.
+    - Integrated into `ExpenseFormScreen` and guarded by `enableReceiptOcr` in `FormFlags`.
+  - **Ambient Destination Weather Service (`weather_service.dart`, `weather_badge.dart`):**
+    - Built lightweight destination weather indicator querying Open-Meteo REST API (`api.open-meteo.com/v1/forecast`) and Open-Meteo Geocoding with Photon Komoot fallback.
+    - WMO standard weather code mapping to daylight-aware emoji (☀️/🌙, ⛅, 🌧️, ❄️, ⛈️) and conditions.
+    - Robust destination query extraction (`extractPlaceCandidates`, `cleanPlaceQuery`) stripping route delimiters, directional words, and trip filler terms with Latin diacritic normalization.
+    - Real-time Stale-While-Revalidate (SWR) caching with in-memory cache and 20-minute freshness TTL backed by `SharedPreferences` (24-hour offline fallback).
+    - `WeatherBadge` telemetry widget with card and compact variants, animated refresh button, and integration into `NotesTab`.
+  - **Offline Snapshot & Device Transfer (`offline_snapshot_service.dart`, `offline_snapshot_modal.dart`):**
+    - Generates standalone `.triptracker` JSON bundles with format manifest (`version: '3.3.0'`, `appName: 'Trip Tracker 2026'`, `type: 'single_trip_snapshot'`), complete trip metadata, members, and expenses.
+    - Full payload validation (`validateOfflineSnapshot`) enforcing 10MB limits, JSON dictionary structure, max trip counts, and financial preview calculation (trip name, expense count, total spend).
+    - Integrated with `ShareService` and `textFilePickerProvider` in `TripToolsSheet`.
+  - **Voice Quick-Add & Platform Speech Recognition (`speech_recognition_gateway.dart`, `quick_add_sheet.dart`):**
+    - Established `SpeechRecognitionGateway` platform contract with `FakeSpeechRecognitionGateway` and `DefaultSpeechRecognitionGateway`.
+    - Integrated microphone trigger directly into `QuickAddSheet` gated by `enableVoiceInput` flag.
+    - On transcript arrival, updates text field and triggers `parseQuickExpense` for instantaneous amount and title resolution.
+* **Verification:**
+  - 5/5 unit tests in `weather_service_test.dart` and 3/3 widget tests in `weather_badge_test.dart`.
+  - 5/5 unit tests in `receipt_ocr_service_test.dart` and 2/2 widget tests in `receipt_ocr_flow_test.dart`.
+  - 4/4 tests in `offline_snapshot_test.dart`.
+  - 2/2 tests in `voice_quick_add_test.dart`.
+  - Full Flutter test suite passing (51/51 tests across all suites).
+  - `flutter analyze` reports 0 issues found.
+  - Web `npm test` (93 files, 505 tests) and `npm run build` pass with exit code 0.
+* **Trade-offs Accepted:**
+  - OCR platform integration defaults to zero-binary fallback in unit test environments while providing extensible hooks for on-device MLKit text recognition.
+  - Weather service uses free Open-Meteo and Photon Komoot REST endpoints with zero user accounts or API keys required, adhering strictly to traveler privacy.
+
+---
+
+## 271. Flutter Phase 9 Sub-phase 9D: Trip Wrapped, Squad Badges, Traveler Passport, ICS Export, Next Up Capsule & Gate Scanner
+
+* **Date:** 2026-10-06
+* **Context:**
+  - Travelers and trip squads rely on milestone summaries and social sharing to celebrate completed journeys, calendar synchronization to keep trips on device schedules, persistent lifetime travel statistics across all expeditions, and immediate boarding pass access (QR/barcode scanner) at airport gates and train stations.
+  - As part of Phase 9 of the Flutter migration, full feature parity was required for Trip Wrapped (`B-107`), Squad Achievements & Badges (`B-108`), Traveler Passport (`B-109`), Calendar (.ics) Export (`B-103`), Next Up Countdown Capsule (`B-101`), and High-Contrast Gate Scanner (`B-110`).
+  - All utilities required pure-domain separation, clean widget tests, zero regressions on the web codebase, and strict feature flag guarding.
+* **Decisions:**
+  - **Pure Dart RFC 5545 Calendar (.ics) Generator (`ics_export_service.dart`):**
+    - Built pure Dart iCalendar export engine generating valid `VCALENDAR` documents with `VEVENT` blocks for every travel pass with scheduled departure.
+    - Added RFC 5545 escaping for commas, semicolons, backslashes, and newlines; formatted UTC timestamps (`YYYYMMDDTHHMMSSZ`).
+    - Enhanced `ShareService` with `shareFile(bytes, fileName, mimeType, subject, text)` for seamless system share sheet integration across iOS, Android, and desktop.
+    - Wired into `TripToolsSheet` (`export-ics`) and `NotesTab` (`pass-export-ics`), guarded by `enableIcsExport`.
+  - **Trip Wrapped Service & Interactive Story Deck (`trip_wrapped_service.dart`, `trip_wrapped_modal.dart`):**
+    - Created pure domain archetype generator (`getTripArchetype`), member superlatives (`getMemberSuperlatives`), weekly rhythm and peak adventure day calculator (`getTripRhythm`), and member spend leaderboard (`getMemberSpendLeaderboard`).
+    - Implemented 5-slide interactive story viewer with `PageView`, night/day aesthetic toggle, vector customs visa stamp, superlatives grid, rhythm metrics, and shareable PNG card rasterization via `RepaintBoundary` with headless test fallbacks.
+    - Wired into `TripToolsSheet` (`trip-wrapped`), guarded by `enableTripWrapped`.
+  - **Squad Milestones & Achievements Engine (`achievements_service.dart`, `achievement_badge_modal.dart`):**
+    - Built milestone evaluator calculating 7 squad enamel badges (`caffeine`, `midnight`, `lightning_settle`, `apex_roadrunner`, `executive_gourmet`, `squad_harmony`, `visual_chronicler`).
+    - Created enamel pin badges modal with progress bars, locked/unlocked states, and responsive scrollable layout.
+    - Wired into `TripToolsSheet` (`trip-achievements`), guarded by `enableAchievements`.
+  - **Traveler Passport Engine & Customs Ink Stamps (`traveler_passport_service.dart`, `passport_stamp.dart`, `traveler_passport_modal.dart`):**
+    - Pure Dart calculation of lifetime travel metrics: total trips, unique destinations (case-insensitive deduplication), settled trips count, and inclusive days on the road (clipped to 366 days/trip and bounded by today for active trips).
+    - Designed dynamic vector customs visa ink stamp (`PassportStamp`) with authentic tilt angle, double ring border, destination IATA code, and `FittedBox` scaling.
+    - Created `TravelerPassportModal` displaying lifetime metrics summary and interactive destination visa stamps grid.
+    - Wired into `TripToolsSheet` (`traveler-passport`), guarded by `enableTravelerPassport`.
+  - **Next Up Travel Countdown Capsule & Fullscreen Gate Scanner (`next_up_capsule.dart`, `pass_scanner_modal.dart`):**
+    - Implemented `evaluateImminentPass` evaluating passes within temporal window (-3h to +36h) with dynamic states (`en-route`, `boarding-soon`, `upcoming`, `today`) and time formatting (`Departs in Xh Ym`, `Boarding in Xm`).
+    - Created `NextUpTravelCapsule` widget mounted above notes, showing route (`BOM → GOI`), seat/berth, countdown pill, "Show Pass" button, and "Live Status" button.
+    - Created high-contrast `PassScannerModal` with high-contrast QR code (`QrImageView`), monospace seat/berth badge, copyable booking/PNR code, and timer lifecycle management.
+* **Verification:**
+  - 5/5 unit tests in `ics_export_service_test.dart`.
+  - 6/6 unit tests in `trip_wrapped_service_test.dart`.
+  - 6/6 unit tests in `achievements_service_test.dart`.
+  - 5/5 unit tests in `traveler_passport_service_test.dart`.
+  - 1/1 widget test in `trip_wrapped_test.dart`.
+  - 2/2 widget tests in `achievements_and_passport_test.dart`.
+  - 7/7 widget tests in `next_up_capsule_and_scanner_test.dart`.
+  - 1/1 widget test in `trip_tools_sheet_9d_test.dart`.
+  - All 484 Flutter tests pass with 0 failures (`phase8_test.dart` fully passing).
+  - `flutter analyze` reports 0 issues.
+  - Web `npm test` (93 files, 505 tests) and `npm run build` pass with exit code 0.
+* **Trade-offs Accepted:**
+  - Pure Dart ICS generator avoids external heavyweight calendar packages while adhering strictly to RFC 5545 format specs.
+  - `RepaintBoundary` rasterization in `TripWrappedModal` utilizes a 50ms timeout and headless fallback to ensure test suites and headless engines never stall.
+* **Release Cut:**
+  - Version bumped to `3.45.0` via `npm run release:minor` covering complete delivery of Flutter Phase 9 (Maps, Live Location, Receipts OCR, Ambient Weather, Offline Snapshot, Trip Wrapped, Squad Milestones, Traveler Passport, ICS Calendar Export, Next Up Capsule, and Gate Scanner).
+
+
+

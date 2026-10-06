@@ -29,6 +29,7 @@ import '../../trip_details/application/trip_nav.dart';
 import '../../trips/presentation/widgets/create_trip_sheet.dart' show dateRangePickerProvider;
 import '../application/expense_form_controller.dart';
 import '../application/expenses_providers.dart';
+import 'receipt_ocr_modal.dart';
 import 'widgets/form_sheets.dart';
 
 String _fmt(BuildContext c, double v, String code) => formatMoney(c, v, code);
@@ -159,7 +160,8 @@ class _FormBodyState extends ConsumerState<_FormBody> {
           ]),
         );
 
-    final receiptSection = flags.receiptUpload || s.receiptPath != null
+    final showReceiptOcr = flags.receiptOcr || flags.receiptUpload;
+    final receiptSection = flags.receiptUpload || flags.receiptOcr || s.receiptPath != null
         ? section(
             l10n.formReceipt,
             s.receiptPath != null
@@ -173,9 +175,23 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                     Expanded(child: Text(l10n.formReceiptAttached)),
                     TextButton(key: const Key('receipt-remove'), onPressed: c.removeReceipt, child: Text(l10n.formReceiptRemove)),
                   ])
-                : Wrap(spacing: 8, children: [
-                    OutlinedButton.icon(key: const Key('receipt-camera'), onPressed: () => c.pickReceipt(ReceiptSource.camera), icon: const Icon(AppIcons.camera), label: Text(l10n.formReceiptCamera)),
-                    OutlinedButton.icon(key: const Key('receipt-gallery'), onPressed: () => c.pickReceipt(ReceiptSource.gallery), icon: const Icon(AppIcons.image), label: Text(l10n.formReceiptGallery)),
+                : Wrap(spacing: 8, runSpacing: 8, children: [
+                    if (flags.receiptUpload) ...[
+                      OutlinedButton.icon(key: const Key('receipt-camera'), onPressed: () => c.pickReceipt(ReceiptSource.camera), icon: const Icon(AppIcons.camera), label: Text(l10n.formReceiptCamera)),
+                      OutlinedButton.icon(key: const Key('receipt-gallery'), onPressed: () => c.pickReceipt(ReceiptSource.gallery), icon: const Icon(AppIcons.image), label: Text(l10n.formReceiptGallery)),
+                    ],
+                    if (showReceiptOcr)
+                      OutlinedButton.icon(
+                        key: const Key('receipt-scan-ocr'),
+                        onPressed: () => ReceiptOcrModal.show(
+                          context,
+                          tripId: args.tripId,
+                          onApplyReceipt: c.applyReceiptOcr,
+                          defaultMemberIds: s.selected.entries.where((e) => e.value).map((e) => e.key).toList(),
+                        ),
+                        icon: const Icon(AppIcons.receipt),
+                        label: const Text('Scan & Itemize'),
+                      ),
                   ]),
           )
         : const SizedBox.shrink();

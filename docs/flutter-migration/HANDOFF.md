@@ -405,3 +405,86 @@ Drift runs outside `FakeAsync`. In widget tests use `real(tester, ...)` for ever
 
 ### Still later
 Logged in [`BACKLOG.md`](BACKLOG.md): contacts (B-038), date ranges (B-083), typing (B-023), reactions (B-084), attachments (B-085), voice notes (B-086), read receipts (B-087), Tripbot (B-088), last seen (B-089), scanner/PDF/brightness (B-090), full packing modal (B-091), vault (B-020). Two-account proof (B-080), 1,000-message fps (B-081), and the iOS keyboard (B-082) are unverified. Maps, OCR, and voice expense entry are Phase 9 (B-064, B-100). Push and the notification bell are Phase 10 (B-035, B-055, B-120).
+
+---
+
+## Phase 9 Sub-phase 9A (FE): Maps, Journey, Gazetteer & Destination Media
+
+- **Status:** **DONE**. ADR 268.
+- **Date:** 2026-10-06
+
+### Delivered
+- **Domain Logic:** `route_helper.dart` (pure Dart route parsing, `extractPrimaryCity`, `getItineraryRouteInfo`, `collectTripPhotoPlaces`, `median`, `squaredDist`). 100% pure Dart, verified without Flutter/Drift imports.
+- **Places & Gazetteer:** `place_gazetteer.dart` (top 100+ global destinations, country currency map, typo-tolerant Damerau-Levenshtein, Latin diacritics folding) and `place_suggest_service.dart` (offline gazetteer + past trip destinations blend + online Photon Komoot API with 3.5s timeout).
+- **Images & Routes:** `place_image_service.dart` (Wikipedia REST summary destination cover photos with Wikimedia width normalization and Unsplash query resolution) and `road_route_service.dart` (OSRM driving geometry polyline caching with straight-line fallback).
+- **Map Components & Platform Abstraction:** `map_gateway.dart` (`MapGateway` abstraction with `DefaultMapGateway` rendering interactive vector paths/pins and `FakeMapGateway` for deterministic test rendering), `trip_photo_hero.dart`, `trip_map_hero.dart`, `deferred_trip_map_hero.dart` (300ms idle mount deferral for 60 fps tab switching), `trip_journey_map.dart` (chronological geotagged expense timeline with category markers and detail card), and `trip_route_modal.dart` (reorderable stop waypoints with autocomplete search and `tripRepository.setStops` multiplayer collab sync).
+- **Tests & Quality:** 408 tests pass (`flutter test`), 0 issues in `flutter analyze`. Closed B-100 in `BACKLOG.md`.
+
+---
+
+## Phase 9 Sub-phase 9B (FE): Live Location & Travel Status
+
+- **Status:** **DONE**. ADR 269.
+- **Date:** 2026-10-06
+
+### Delivered
+- **Platform Abstraction & Permissions:** `location_gateway.dart` (`LocationGateway` with `GeolocatorLocationGateway` wrapping `geolocator: ^14.0.1` and `FakeLocationGateway` for headless deterministic widget testing). Added Android fine/coarse/background location permissions and iOS `NSLocationWhenInUseUsageDescription` / `NSLocationAlwaysAndWhenInUseUsageDescription` / `UIBackgroundModes` entries. Documented privacy and OS constraints in `docs/PERMISSIONS.md`.
+- **Domain Models & Travel Status Pure Logic:** `location_share.dart` (`MyLocationShare`, `SharedLocation`, `TripActiveShare` with 12-hour expiry calculation). `travel_status_service.dart` (IATA/ICAO airline code resolution, flight date parsing, Google Flight Status, Flightradar24, FlightAware, FlightStats URL builders, and Indian Railways 10-digit PNR / 5-digit train status link generators). 13 unit tests pass in `travel_status_service_test.dart`.
+- **Data Layer & Heartbeat Service:** `supabase_location_share_repository.dart` (`SupabaseLocationShareRepository` wrapping RPCs `start_location_share`, `update_location_share`, `stop_location_share`, `get_my_location_share`, `get_active_trip_location_shares`, `get_shared_location` and `FakeLocationShareRepository`). `live_location_service.dart` (60-second periodic heartbeat service with `WidgetsBindingObserver` lifecycle resume triggers).
+- **UI Components & Integrations:**
+  - `live_screen.dart`: Dedicated `/live/:token` viewer page with `MapGateway`, live pulsing radar indicator, relative time formatting, open in external maps, copy/share link, and expired/ended share state.
+  - `live_location_share_modal.dart`: Share modal for requesting device permissions, starting/stopping live location broadcasts, and link copying.
+  - `live_location_chat_banner.dart`: Chat header banner with active traveler chips and interactive mini-map preview, strictly guarded behind `enableLiveLocationShare`.
+  - `live_travel_status_modal.dart`: Live flight and train tracker portal card modal, wired to travel passes in `NotesTab`.
+- **Haptic Timing & Test Harness:** Dispatched `AppHaptics` asynchronously with `unawaited(...)` to avoid blocking UI state transitions on haptic vibration delays.
+- **Tests & Quality:**
+  - 9 tests pass in `test/features/travel/live_location_test.dart`.
+  - 13 tests pass in `test/domain/travel_status_service_test.dart`.
+  - Full Flutter test suite and `phase8_test.dart` pass.
+  - `flutter analyze` reports 0 issues.
+  - Web `npm test` and `npm run build` pass with exit code 0.
+  - Closed B-039, B-102, B-104 in `BACKLOG.md`. Updated `PARITY_MATRIX.md`.
+
+---
+
+## Phase 9 Sub-phase 9C (FE): Receipts OCR, Ambient Weather, Offline Snapshot & Voice Input
+
+- **Status:** **DONE**. ADR 270.
+- **Date:** 2026-10-06
+
+### Delivered
+- **Receipts OCR Engine:** `receipt_ocr_service.dart` (pure Dart OCR text parser, line items, subtotal, tax/discount/tip extraction, brand recognition, date normalization), `ocr_gateway.dart` platform seam, `receipt_ocr_modal.dart` bottom sheet modal, wired into `ExpenseFormScreen` and `ExpenseFormController.applyReceiptOcr`, guarded by `enableReceiptOcr`.
+- **Ambient Destination Weather:** `weather_service.dart` (Open-Meteo REST forecast & geocoding, Photon Komoot fallback, SWR caching with SharedPreferences, 20m freshness TTL), `weather_badge.dart` telemetry badge with card/compact variants and refresh trigger, wired into `NotesTab`.
+- **Offline Snapshot & Transfer:** `offline_snapshot_service.dart` (pure Dart `.triptracker` bundle exporter and validator), `offline_snapshot_modal.dart` with export/import and financial summary preview, wired into `TripToolsSheet`, guarded by `enableOfflineSnapshot`.
+- **Voice Quick-Add:** `speech_recognition_gateway.dart` platform abstraction, microphone trigger on `QuickAddSheet`, automatic transcription and quick-expense parsing, guarded by `enableVoiceInput`.
+- **Tests & Quality:** 14 tests across `receipt_ocr_service_test.dart`, `weather_service_test.dart`, `weather_badge_test.dart`, `receipt_ocr_flow_test.dart`, `offline_snapshot_test.dart`, and `voice_quick_add_test.dart`. Closed B-105, B-106 in `BACKLOG.md`.
+
+---
+
+## Phase 9 Sub-phase 9D (FE): Trip Wrapped, Squad Badges, Traveler Passport, ICS Export, Next Up Capsule & Gate Scanner
+
+- **Status:** **DONE**. ADR 271.
+- **Date:** 2026-10-06
+
+### Delivered
+- **Pure Dart RFC 5545 Calendar (.ics) Generator (`B-103`):** `ics_export_service.dart` (`generateTripIcs`, `buildEventForPass`, `shareTripIcs`), `ShareService.shareFile` abstraction. Wired into `TripToolsSheet` (`export-ics`) and `NotesTab` (`pass-export-ics`), guarded by `enableIcsExport`.
+- **Trip Wrapped Engine & Interactive Story Modal (`B-107`):** `trip_wrapped_service.dart` (trip archetype, member superlatives, rhythm & peak day, spend leaderboard), `trip_wrapped_modal.dart` (5-slide story viewer with `PageView`, theme toggle, customs stamp, and rasterized PNG card sharing with headless test fallback). Wired into `TripToolsSheet` (`trip-wrapped`), guarded by `enableTripWrapped`.
+- **Squad Milestones & Achievements (`B-108`):** `achievements_service.dart` (evaluates 7 squad enamel badges: `squad_harmony`, `lightning_settle`, `caffeine`, `midnight`, `apex_roadrunner`, `executive_gourmet`, `visual_chronicler`), `achievement_badge_modal.dart` enamel pin milestone modal. Wired into `TripToolsSheet` (`trip-achievements`), guarded by `enableAchievements`.
+- **Traveler Passport Engine & Stamps (`B-109`):** `traveler_passport_service.dart` (pure Dart lifetime stats calculation: total trips, unique destinations, settled trips, days on the road clipped to 366/trip), `passport_stamp.dart` (customs visa ink stamp vector with authentic tilt angle and double ring), `traveler_passport_modal.dart` (lifetime metrics and stamps grid). Wired into `TripToolsSheet` (`traveler-passport`), guarded by `enableTravelerPassport`.
+- **Next Up Travel Countdown Capsule & Gate Scanner (`B-101`, `B-110`):** `next_up_capsule.dart` (evaluates imminent passes -3h to +36h, displays route, seat/berth, countdown badge, gate scanner shortcut, and live radar status), `pass_scanner_modal.dart` (high-contrast QR / barcode modal with `QrImageView`, seat/berth badge, copyable booking/PNR code, timer lifecycle cleanup). Mounted on `NotesTab`.
+- **Tests & Quality:**
+  - 5/5 tests in `ics_export_service_test.dart`.
+  - 6/6 tests in `trip_wrapped_service_test.dart`.
+  - 6/6 tests in `achievements_service_test.dart`.
+  - 5/5 tests in `traveler_passport_service_test.dart`.
+  - 1/1 widget test in `trip_wrapped_test.dart`.
+  - 2/2 widget tests in `achievements_and_passport_test.dart`.
+  - 7/7 widget tests in `next_up_capsule_and_scanner_test.dart`.
+  - 1/1 widget test in `trip_tools_sheet_9d_test.dart`.
+  - All 484 Flutter tests pass (`phase8_test.dart` passes cleanly).
+  - `flutter analyze` reports 0 issues.
+  - Web `npm test` (93 files, 505 tests) and `npm run build` pass with exit code 0.
+  - Closed B-101, B-103, B-107, B-108, B-109, B-110 in `BACKLOG.md`. Updated `PARITY_MATRIX.md`.
+
+
+

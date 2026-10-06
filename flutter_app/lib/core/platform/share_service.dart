@@ -14,6 +14,10 @@ abstract class ShareService {
   /// PNG share. The default sends the caption as text so fakes record it.
   Future<void> sharePng(List<int> bytes, {required String fileName, String? text}) =>
       share(text ?? fileName, subject: fileName);
+
+  /// Arbitrary file share (e.g. .ics, .triptracker).
+  Future<void> shareFile(List<int> bytes, {required String fileName, String? mimeType, String? subject, String? text}) =>
+      share(text ?? fileName, subject: subject ?? fileName);
 }
 
 class PlatformShareService implements ShareService {
@@ -31,6 +35,14 @@ class PlatformShareService implements ShareService {
     final file = File(p.join(dir.path, fileName));
     await file.writeAsBytes(bytes, flush: true);
     await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], text: text));
+  }
+
+  @override
+  Future<void> shareFile(List<int> bytes, {required String fileName, String? mimeType, String? subject, String? text}) async {
+    final dir = await getTemporaryDirectory();
+    final file = File(p.join(dir.path, fileName));
+    await file.writeAsBytes(bytes, flush: true);
+    await SharePlus.instance.share(ShareParams(files: [XFile(file.path, mimeType: mimeType)], subject: subject, text: text));
   }
 }
 

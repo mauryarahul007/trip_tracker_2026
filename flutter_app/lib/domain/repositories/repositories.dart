@@ -29,7 +29,12 @@ abstract class TripRepository {
   });
 
   /// Optimistic archive / freeze / close (any subset). Owner/admin only on the server (RLS).
-  Future<void> setTripState(String id, {bool? archived, bool? frozen, bool? closed});
+  Future<void> setTripState(
+    String id, {
+    bool? archived,
+    bool? frozen,
+    bool? closed,
+  });
 
   /// Removes the trip locally now and on the server on next sync (cascades).
   Future<void> deleteTrip(String id);
@@ -43,20 +48,29 @@ abstract class TripRepository {
 
   /// Per-trip FX overrides + markup. Any participant may write (collab RPC).
   Future<void> setFxConfig(String id, TripFxConfig config);
-  Future<void> setSplitExclusionDefaults(String id, Map<String, List<String>> defaults);
+  Future<void> setSplitExclusionDefaults(
+    String id,
+    Map<String, List<String>> defaults,
+  );
 
   /// Organizer / contributor / viewer. Owner/admin write (trips.member_roles).
   Future<void> setMemberRole(String id, String memberId, String role);
 
-  /// Checklist, notes, and passes. Any participant may write (collab RPC).
+  /// Checklist, notes, passes, and stops. Any participant may write (collab RPC).
   Future<void> setChecklist(String id, List<ChecklistItem> items);
   Future<void> setNotes(String id, List<TripNote> notes);
   Future<void> setPasses(String id, List<TravelPass> passes);
+  Future<void> setStops(String id, List<TripStop> stops);
 }
 
 abstract class MessageRepository {
   Stream<List<TripMessage>> watch(String tripId);
-  Future<void> send({required String tripId, required String memberId, required String senderName, required String body});
+  Future<void> send({
+    required String tripId,
+    required String memberId,
+    required String senderName,
+    required String body,
+  });
   Future<void> edit(String id, String body);
   Future<void> delete(String id);
 }
@@ -92,8 +106,17 @@ abstract class ExpenseRepository {
 
   // Online-only, like the web: they need the server's rules (RPCs) and throw
   // [ExpenseActionException] when offline or refused.
-  Future<void> flagDispute(String id, {required String userId, String? note, bool postChatCard = false});
-  Future<void> resolveDispute(String id, {required String userId, bool postChatCard = false});
+  Future<void> flagDispute(
+    String id, {
+    required String userId,
+    String? note,
+    bool postChatCard = false,
+  });
+  Future<void> resolveDispute(
+    String id, {
+    required String userId,
+    bool postChatCard = false,
+  });
   Future<void> confirmSettlement(String id, {required String userId});
   Future<void> approve(String id, {required String userId});
 
@@ -109,12 +132,21 @@ abstract class MemberRepository {
   Stream<List<Member>> watchAll();
   Stream<List<Group>> watchGroups(String tripId);
   Future<String> addMember(String tripId, String name, {String? linkedUserId});
-  Future<void> updateMember(String id, {String? name, String? joinDate, String? leaveDate});
+  Future<void> updateMember(
+    String id, {
+    String? name,
+    String? joinDate,
+    String? leaveDate,
+  });
   Future<void> setArchived(String id, bool archived);
 
   /// Removes the member and cascades group dissolve/rename like the web store.
   Future<void> deleteMember(String id);
-  Future<String> createGroup(String tripId, String name, List<String> memberIds);
+  Future<String> createGroup(
+    String tripId,
+    String name,
+    List<String> memberIds,
+  );
   Future<void> updateGroup(String id, String name, List<String> memberIds);
   Future<void> deleteGroup(String id);
 }
@@ -131,7 +163,11 @@ class ResolvedFlags {
   final Map<String, bool> global;
   final Map<String, bool> trip;
   final Map<String, bool> user;
-  const ResolvedFlags({this.global = const {}, this.trip = const {}, this.user = const {}});
+  const ResolvedFlags({
+    this.global = const {},
+    this.trip = const {},
+    this.user = const {},
+  });
 }
 
 abstract class FlagsRepository {
@@ -149,7 +185,12 @@ class AuthUser {
 
   /// 'google' | 'apple' | 'email' | 'guest' | 'demo'
   final String provider;
-  const AuthUser({required this.id, this.email, this.displayName, required this.provider});
+  const AuthUser({
+    required this.id,
+    this.email,
+    this.displayName,
+    required this.provider,
+  });
 
   /// Guest/demo sessions never have a Supabase session behind them.
   bool get isLocalOnly => provider == 'guest' || provider == 'demo';
@@ -173,14 +214,22 @@ abstract class AuthRepository {
   Future<bool> signInsPaused();
 
   Future<void> signInWithEmail(String email, String password);
-  Future<void> signUpWithEmail(String email, String password, {String? displayName});
+  Future<void> signUpWithEmail(
+    String email,
+    String password, {
+    String? displayName,
+  });
   Future<void> resetPassword(String email);
 
   /// Emits true when the app was opened from a password-recovery link.
   Stream<bool> watchPasswordRecovery();
   Future<void> updatePassword(String newPassword);
   Future<void> signInWithGoogleIdToken(String idToken, {String? nonce});
-  Future<void> signInWithAppleIdToken(String idToken, {String? nonce, String? fullName});
+  Future<void> signInWithAppleIdToken(
+    String idToken, {
+    String? nonce,
+    String? fullName,
+  });
   Future<void> signInAsGuest({String displayName = 'Traveler'});
   Future<void> signInAsDemo();
 

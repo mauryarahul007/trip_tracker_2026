@@ -1,12 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/auth_state.dart';
 import '../../../core/clock.dart';
+import '../../../core/platform/haptics.dart';
+import '../../../core/platform/speech_recognition_gateway.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/expense_form_logic.dart';
 import '../../../domain/logic/expense_quick_parser.dart';
+import '../../../domain/logic/flag_defaults.g.dart';
 import '../../../l10n/l10n_ext.dart';
+import '../../../shared/theme/app_icons.dart';
+import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../trip_details/application/trip_nav.dart';
@@ -25,11 +32,63 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
   ParsedQuickExpense? _parsed;
   String? _error;
   bool _busy = false;
+  bool _isListening = false;
+  SpeechRecognitionSession? _speechSession;
 
   @override
   void dispose() {
+    _speechSession?.cancel();
     _text.dispose();
     super.dispose();
+  }
+
+  Future<void> _toggleVoiceInput() async {
+    final gateway = ref.read(speechRecognitionGatewayProvider);
+    if (_isListening) {
+      _speechSession?.stop();
+      setState(() => _isListening = false);
+      return;
+    }
+
+    final isSupported = await gateway.isSupported();
+    if (!isSupported) {
+      setState(() => _error = 'Speech recognition not supported on this device.');
+      return;
+    }
+
+    final permGranted = await gateway.requestPermission();
+    if (!permGranted) {
+      setState(() => _error = 'Microphone permission not granted.');
+      return;
+    }
+
+    unawaited(AppHaptics.selection());
+    setState(() {
+      _isListening = true;
+      _error = null;
+    });
+
+    _speechSession = gateway.startListening(
+      onResult: (transcript, isFinal) {
+        if (!mounted) return;
+        setState(() {
+          _text.text = transcript;
+          _parse(transcript);
+        });
+      },
+      onError: (err) {
+        if (!mounted) return;
+        unawaited(AppHaptics.warning());
+        setState(() {
+          _isListening = false;
+          _error = err;
+        });
+      },
+      onEnd: () {
+        if (!mounted) return;
+        setState(() => _isListening = false);
+      },
+    );
   }
 
   void _parse(String raw) {
@@ -83,13 +142,41 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final tokens = context.tokens;
     final p = _parsed;
+    final voiceEnabled = ref.watch(flagProvider(('enableVoiceInput', widget.tripId))).value ??
+        (defaultFeatureFlags['enableVoiceInput'] ?? true);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(l10n.toolsQuickAdd, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
-        AppTextField(key: const Key('quick-add-text'), controller: _text, label: l10n.quickAddHint, onChanged: _parse),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: AppTextField(
+                key: const Key('quick-add-text'),
+                controller: _text,
+                label: l10n.quickAddHint,
+                onChanged: _parse,
+              ),
+            ),
+            if (voiceEnabled) ...[
+              const SizedBox(width: 8),
+              IconButton(
+                key: const Key('quick-add-mic'),
+                icon: Icon(
+                  _isListening ? Icons.mic : AppIcons.mic,
+                  color: _isListening ? tokens.colorDanger : tokens.primaryAccent,
+                ),
+                tooltip: _isListening ? 'Stop recording' : 'Voice input',
+                onPressed: _busy ? null : _toggleVoiceInput,
+              ),
+            ],
+          ],
+        ),
         if (p != null && p.amount != null)
           Padding(padding: const EdgeInsets.only(top: 8), child: Text('${p.title} · ${p.amount}', key: const Key('quick-add-preview'))),
         if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_error!, key: const Key('quick-add-error'))),

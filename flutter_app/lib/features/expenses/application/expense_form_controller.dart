@@ -20,6 +20,7 @@ import '../../../domain/logic/flag_defaults.g.dart';
 import '../../../domain/logic/last_expense.dart';
 import '../../../domain/logic/math_expression.dart';
 import '../../../domain/logic/predictive_expenses.dart';
+import '../../../domain/logic/receipt_ocr_service.dart';
 import '../../../domain/models/category.dart';
 import '../../../domain/models/expense.dart';
 import '../../../domain/models/expense_io.dart';
@@ -51,6 +52,7 @@ class FormFlags {
   bool get advancedSplits => _f('enableAdvancedSplits');
   bool get currencyFx => _f('enableCurrencyFx');
   bool get receiptUpload => _f('enableReceiptUpload');
+  bool get receiptOcr => _f('enableReceiptOcr');
   bool get predictiveChips => _f('enablePredictiveChips');
   bool get duplicateDetector => _f('enableDuplicateDetector');
   bool get cloneLast => _f('enableCloneLastExpense');
@@ -66,7 +68,7 @@ class FormFlags {
 
   static const keys = [
     'enableMultiPayerExpenses', 'enableItemizedSplit', 'enableAdvancedSplits', 'enableCurrencyFx', 'enableReceiptUpload',
-    'enablePredictiveChips', 'enableDuplicateDetector', 'enableCloneLastExpense', 'enableRememberDefaultSplit',
+    'enableReceiptOcr', 'enablePredictiveChips', 'enableDuplicateDetector', 'enableCloneLastExpense', 'enableRememberDefaultSplit',
     'enablePersistentExpenseDraft', 'enableSplitExclusionDefaults', 'enableDateRangeMembership', 'enableCategoryReorder',
     'enableCompactExpenseForm', 'enableExplainThisNumber', 'enableExpenseApprovalThreshold', 'enableInChatEventCards', 'enableTripChat',
   ];
@@ -496,6 +498,18 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
   }
 
   void setDate(String v) => _set(state.copyWith(date: v));
+
+  void applyReceiptOcr(ParsedReceiptData parsed) {
+    if (parsed.total > 0) {
+      setAmount(parsed.total.toStringAsFixed(2));
+    }
+    if (state.title.trim().isEmpty && parsed.merchant != null && parsed.merchant!.isNotEmpty) {
+      setTitle(parsed.merchant!);
+    }
+    if (parsed.date != null && parsed.date!.isNotEmpty) {
+      setDate(parsed.date!);
+    }
+  }
   void setPayer(String id) => _set(state.copyWith(payer: id, clearError: true));
   void setPayerMode(PayerMode m) {
     var next = state.copyWith(payerMode: m, clearError: true);

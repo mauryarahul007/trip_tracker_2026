@@ -209,6 +209,9 @@ class DriftTripRepository extends _DriftRepo implements TripRepository {
   Future<void> setPasses(String id, List<TravelPass> passes) => _collab(id, 'passes', [for (final p in passes) p.toJson()], 'passes');
 
   @override
+  Future<void> setStops(String id, List<TripStop> stops) => _collab(id, 'stops', [for (final s in stops) s.toJson()], 'stops');
+
+  @override
   Future<void> deleteTrip(String id) => write(() async {
         final groupIds = (await (db.select(db.groupsTable)..where((g) => g.tripId.equals(id))).get()).map((g) => g.id);
         await (db.delete(db.groupMembersTable)..where((g) => g.groupId.isIn(groupIds))).go();

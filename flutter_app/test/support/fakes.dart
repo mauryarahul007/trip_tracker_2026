@@ -223,6 +223,12 @@ class FakeShareService implements ShareService {
     pngs.add(fileName);
     if (text != null) shared.add(text);
   }
+  final files = <String>[];
+  @override
+  Future<void> shareFile(List<int> bytes, {required String fileName, String? mimeType, String? subject, String? text}) async {
+    files.add(fileName);
+    if (text != null) shared.add(text);
+  }
 }
 
 class FakeDeepLinks implements DeepLinkSource {

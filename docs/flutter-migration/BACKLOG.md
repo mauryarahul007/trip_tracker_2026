@@ -47,7 +47,7 @@ Living list of everything that was **deferred, skipped, or built but never verif
 | B-036 | P6 | App-lock enable/disable toggle has no UI (preference is only readable) | deferred | Settings screen | Add toggle calling `BiometricLockEnabled.setEnabled` | 10 |
 | B-037 | P6 | QR scanner for joining a trip | deferred | Needs `mobile_scanner` + camera permission. Not in the Phase 8 build. | Add scanner, route result to `/join/:code` | 9 |
 | B-038 | P6 | Contacts picker in the invite sheet (`flutter_contacts` removed for now) | deferred | Phase 8 invite reuses the share sheet. Contacts stay out. | Add package + iOS/Android permission strings + rationale | later |
-| B-039 | P6 | `/live/:token` read-only live-location page is a shell | deferred | Map is Phase 9 | Implement with MapLibre | 9 |
+| B-039 | P6 | `/live/:token` read-only live-location page is a shell | **closed (P9 Sub-phase 9B)** | LiveScreen viewer with MapGateway, live pulse indicator, relative time, and expired states (ADR 269) | n/a | 9 |
 | B-040 | P6 | Invite-conversion growth behaviour (`enableInviteConversion` default attribution on join, `get_public_growth_flags`) | deferred | Growth flag plumbing not ported | Port `fetchPublicGrowthFlags` + attribution default | 10 |
 | B-041 | P6 | Share-link/invite push notification to existing members when someone joins (`member_joined`) | deferred | Push sending is Phase 10 | Call `send-push` after claim | 10 |
 | B-042 | P6 | Per-trip default landing tab and `enableTabBackHistory` / `enableDeepLinkedTabs` flags not read; trail cap is fixed at 5 | deferred | Flags unchecked | Read the flags, mirror web | 10 |
@@ -72,7 +72,7 @@ Living list of everything that was **deferred, skipped, or built but never verif
 | B-061 | Test harness note: Drift streams created under `FakeAsync` can stall a following transaction. Widget tests must use `real()`/`settle()` from `test/support/pump_app.dart`; two writes in one `real()` block can hang | known | Document for new tests (done in HANDOFF) | n/a |
 | B-062 | Divergence: Shares (weights) split now persists its weights (`splitConfig`); the web dropped them, which made edits reset to equal | accepted | Web bug; fix web to match if desired | 7 |
 | B-063 | Expense form uses built-in/custom exchange rates only; the web's live `fetchExchangeRates` is not called | done | Frankfurter USD rates, 24h cache, offline fallback to `defaultExchangeRates`; custom trip rates still win | 7 |
-| B-064 | Expense form: geotag / location search, receipt OCR and voice input are not built | open | Phase 9 (travel/pro) | 9 |
+| B-064 | Expense form: receipt OCR and voice input are not built | done | Phase 9C shipped in ADR 270: `receipt_ocr_service`, `OcrGateway`, `ReceiptOcrModal`, `speech_recognition_gateway`, mic input in `QuickAddSheet` | 9 |
 | B-065 | Expense form: the web's presets tip and one-time nudge are not ported | open | Low value; port with onboarding tips | 7 |
 | B-066 | Ledger tab built (balances, who-pays-whom, simplify toggle, settle up with partial amount + date/note, history, confirm via detail sheet). NOT built: UPI payment sheet, settlement share-card PNG, trip close-out modal, cross-trip balances, sticky balance bar, collapsible sections, conflict resolver UI | done | UPI (prefs, not a member column), share PNG, close-out, cross-trip nets, sticky bar, collapsible sections | 7 |
 | B-067 | Category management (create/edit/delete/reorder UI), CSV export, backup import/export, Splitwise import, analytics (T3, needs `fl_chart`) and the smart quick-add modal UI are not built (pure logic for imports/exports exists in `imports_and_exports.dart`) | done | Categories, CSV, JSON backup, Splitwise (flag OFF), text quick-add. Analytics stays B-070 | 7 |
@@ -106,17 +106,17 @@ Travel, Pro, and Labs beyond what Phases 7–8 already shipped. Each item stays 
 
 | ID | Item | Status | Why / how to close | Owner phase |
 |----|------|--------|--------------------|-------------|
-| B-100 | Maps and journey: trip map, route stops, geotagged expense pins, destination photos, offline tiles, map collapsed by default | open | Phase 9A. MapLibre. Place search overlaps B-032 | 9 |
-| B-101 | Boarding-pass gate scanner (`enableGateScanner`) | open | Camera scan into the pass wallet. Join-trip QR is B-037, not this | 9 |
-| B-102 | Flight radar status (`enableFlightRadar`) | open | Phase 9 travel status | 9 |
-| B-103 | Add-to-calendar / ICS export (`enableIcsExport`) | open | Share an `.ics` file. Do not rebuild the removed server calendar sync | 9 |
-| B-104 | Live location share, heartbeat, member map, and a finished `/live/:token` page (`enableLiveLocationShare`) | open | Phase 9B. The page is still a shell (B-039). Background location and the privacy indicator are part of this | 9 |
-| B-105 | Weather itinerary nudges (`enableWeatherItineraryNudges`) | open | Port `weatherService` with cache. No location permission | 9 |
-| B-106 | Offline trip snapshot (`enableOfflineSnapshot`) | open | Export/import a snapshot and show the offline banner | 9 |
-| B-107 | Trip Wrapped slides and share image (`enableTripWrapped`) | open | Phase 9D. Flag is default on in the registry; there is no screen | 9 |
-| B-108 | Achievements and badges (`enableAchievements`) | open | Labs. Port only if the owner turns the flag on | 9 |
-| B-109 | Traveler passport (`enableTravelerPassport`) | open | Labs. Same gate as B-108 | 9 |
-| B-110 | Next Up capsule and progressive Next Up (`enableNextUpCapsule`, `enableProgressiveNextUp`) | open | Trip cards still lack this (also B-031) | 9 |
+| B-100 | Maps and journey: trip map, route stops, geotagged expense pins, destination photos, offline tiles, map collapsed by default | closed | Phase 9A shipped in ADR 268 (`route_helper`, `place_suggest`, `place_image_service`, `road_route_service`, `MapGateway`, `DeferredTripMapHero`, `TripJourneyMap`, `TripRouteModal`). | 9 |
+| B-101 | Boarding-pass gate scanner (`enableGateScanner`) | closed | Phase 9D shipped in ADR 271: `pass_scanner_modal.dart`, `PassScannerModal` with high-contrast QR display, booking code copy, seat/berth details. | 9 |
+| B-102 | Flight radar status (`enableFlightRadar`) | closed | Phase 9B shipped in ADR 269: `travel_status_service.dart`, `LiveTravelStatusModal` on travel passes in NotesTab, flight and train trackers. | 9 |
+| B-103 | Add-to-calendar / ICS export (`enableIcsExport`) | closed | Phase 9D shipped in ADR 271: `ics_export_service.dart`, `shareTripIcs`, Pure Dart RFC 5545 generator wired into `TripToolsSheet` and `NotesTab`. | 9 |
+| B-104 | Live location share, heartbeat, member map, and a finished `/live/:token` page (`enableLiveLocationShare`) | closed | Phase 9B shipped in ADR 269: `LocationGateway`, `GeolocatorLocationGateway`, `LocationShareRepository`, `LiveLocationService` 60s heartbeat, `LiveScreen`, `LiveLocationShareModal`, `LiveLocationChatBanner`. | 9 |
+| B-105 | Weather itinerary nudges (`enableWeatherItineraryNudges`) | closed | Phase 9C shipped in ADR 270: `weather_service.dart` with SWR caching, `WeatherBadge` in checklist/notes and trip shell. | 9 |
+| B-106 | Offline trip snapshot (`enableOfflineSnapshot`) | closed | Phase 9C shipped in ADR 270: `offline_snapshot_service.dart`, `OfflineSnapshotModal`, integrated into `TripToolsSheet`. | 9 |
+| B-107 | Trip Wrapped slides and share image (`enableTripWrapped`) | closed | Phase 9D shipped in ADR 271: `trip_wrapped_service.dart`, `TripWrappedModal` 5-slide interactive story viewer, theme toggle, and rasterized PNG card sharing. | 9 |
+| B-108 | Achievements and badges (`enableAchievements`) | closed | Phase 9D shipped in ADR 271: `achievements_service.dart`, `AchievementBadgeModal` enamel pin squad milestone badges wired in `TripToolsSheet`. | 9 |
+| B-109 | Traveler passport (`enableTravelerPassport`) | closed | Phase 9D shipped in ADR 271: `traveler_passport_service.dart`, `TravelerPassportModal`, vector customs ink stamps (`PassportStamp`) wired in `TripToolsSheet`. | 9 |
+| B-110 | Next Up capsule and progressive Next Up (`enableNextUpCapsule`, `enableProgressiveNextUp`) | closed | Phase 9D shipped in ADR 271: `next_up_capsule.dart`, `NextUpTravelCapsule` with countdown, route, seat, and gate scanner shortcut. | 9 |
 | B-111 | Keyword tagging (`enableKeywordTagging`) | open | Labs. Category keywords from the web util | 9 |
 | B-112 | Auto currency detection (`enableAutoCurrencyDetection`) | open | Pro. Country map exists in domain logic; the form does not use it | 9 |
 | B-113 | Expense photo linking (`enableExpensePhotoLinking`) | open | Pro. Receipt upload exists; linking a photo as the web does is not built | 9 |
