@@ -1,0 +1,162 @@
+{
+  "tripMerge": {
+    "localTrip": {
+      "id": "t1",
+      "name": "Alps Local",
+      "checklist": [
+        {
+          "id": "c1",
+          "text": "Passports",
+          "done": false,
+          "updatedAt": 1000
+        }
+      ],
+      "notes": [
+        {
+          "id": "n1",
+          "title": "Hotel Note",
+          "content": "Local text",
+          "updatedAt": 1000
+        }
+      ],
+      "passes": [
+        {
+          "id": "p1",
+          "title": "Flight DL10",
+          "confirmationCode": "ABC",
+          "updatedAt": 1000
+        }
+      ]
+    },
+    "remoteTrip": {
+      "id": "t1",
+      "name": "Alps Remote",
+      "checklist": [
+        {
+          "id": "c1",
+          "text": "Passports & Visas",
+          "done": true,
+          "updatedAt": 2000
+        },
+        {
+          "id": "c2",
+          "text": "Warm Coats",
+          "done": false,
+          "updatedAt": 1500
+        }
+      ],
+      "notes": [
+        {
+          "id": "n1",
+          "title": "Hotel Note",
+          "content": "Updated remote text",
+          "updatedAt": 2000
+        }
+      ],
+      "passes": [
+        {
+          "id": "p1",
+          "title": "Flight DL10",
+          "confirmationCode": "ABC-SYNCED",
+          "updatedAt": 2000
+        }
+      ]
+    },
+    "mergedTrip": {
+      "id": "t1",
+      "name": "Alps Remote",
+      "checklist": [
+        {
+          "id": "c1",
+          "text": "Passports & Visas",
+          "done": true,
+          "updatedAt": 2000
+        },
+        {
+          "id": "c2",
+          "text": "Warm Coats",
+          "done": false,
+          "updatedAt": 1500
+        }
+      ],
+      "notes": [
+        {
+          "id": "n1",
+          "title": "Hotel Note",
+          "content": "Updated remote text",
+          "updatedAt": 2000
+        }
+      ],
+      "passes": [
+        {
+          "id": "p1",
+          "title": "Flight DL10",
+          "confirmationCode": "ABC-SYNCED",
+          "updatedAt": 2000
+        }
+      ]
+    }
+  },
+  "rosterMerge": {
+    "localRoster": [
+      {
+        "id": "m1",
+        "name": "Alice",
+        "linkedUserId": "u1"
+      },
+      {
+        "id": "m2",
+        "name": "Bob",
+        "linkedUserId": null
+      }
+    ],
+    "remoteRoster": [
+      {
+        "id": "m1",
+        "name": "Alice Cooper",
+        "linkedUserId": "u1"
+      },
+      {
+        "id": "m2",
+        "name": "Bob",
+        "linkedUserId": "u2"
+      },
+      {
+        "id": "m3",
+        "name": "Charlie",
+        "linkedUserId": null
+      }
+    ],
+    "mergedRoster": {
+      "trips": [
+        {
+          "id": "m1",
+          "name": "Alice",
+          "linkedUserId": "u1"
+        },
+        {
+          "id": "m2",
+          "name": "Bob",
+          "linkedUserId": null
+        }
+      ],
+      "members": [
+        {
+          "id": "m1",
+          "name": "Alice Cooper",
+          "linkedUserId": "u1"
+        },
+        {
+          "id": "m2",
+          "name": "Bob",
+          "linkedUserId": "u2"
+        },
+        {
+          "id": "m3",
+          "name": "Charlie",
+          "linkedUserId": null
+        }
+      ]
+    }
+  }
+}

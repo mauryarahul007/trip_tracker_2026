@@ -120,3 +120,65 @@ workflows:
     artifacts:
       - build/ios/Build/Products/Debug-iphonesimulator/*.app
 
+  flutter-android-debug:
+    name: Flutter Android Debug (Dev Flavor APK)
+    max_build_duration: 25
+    instance_type: linux_x2
+    environment:
+      groups:
+        - trip_tracker_secrets
+      flutter: stable
+      java: 21
+    triggering:
+      events: []
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd flutter_app
+          flutter packages get
+      - name: Flutter analyze & test
+        script: |
+          cd flutter_app
+          flutter analyze
+          flutter test
+      - name: Build Android Debug APK
+        script: |
+          cd flutter_app
+          flutter build apk --debug --flavor dev -t lib/main.dart
+    artifacts:
+      - flutter_app/build/app/outputs/flutter-apk/*.apk
+
+  flutter-ios-debug:
+    name: Flutter iOS Debug (Simulator .app + Unsigned Device)
+    max_build_duration: 35
+    instance_type: mac_mini_m2
+    environment:
+      groups:
+        - trip_tracker_secrets
+      flutter: stable
+      xcode: latest
+    triggering:
+      events: []
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd flutter_app
+          flutter packages get
+      - name: Flutter analyze & test
+        script: |
+          cd flutter_app
+          flutter analyze
+          flutter test
+      - name: Build iOS Simulator App
+        script: |
+          cd flutter_app
+          flutter build ios --simulator --debug --no-codesign -t lib/main.dart
+      - name: Build Unsigned iOS Device App
+        script: |
+          cd flutter_app
+          flutter build ios --debug --no-codesign -t lib/main.dart
+      # TODO (Phase 12): Add App Store signing certificates, provisioning profiles, and TestFlight release scripts
+    artifacts:
+      - flutter_app/build/ios/iphonesimulator/*.app
+      - flutter_app/build/ios/iphoneos/*.app
+

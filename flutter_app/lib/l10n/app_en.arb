@@ -1,0 +1,54 @@
+{
+  "@@locale": "en",
+  "appTitle": "Trip Tracker",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "navTrips": "Trips",
+  "navChat": "Chat",
+  "navExpenses": "Expenses",
+  "navBalances": "Balances",
+  "navMembers": "Members",
+  "navNotes": "Notes",
+  "navSettings": "Settings",
+  
+  "actionCancel": "Cancel",
+  "actionConfirm": "Confirm",
+  "actionSave": "Save",
+  "actionDelete": "Delete",
+  "actionUndo": "Undo",
+  "actionRetry": "Retry",
+  "actionBack": "Back",
+  "actionSignIn": "Sign In",
+  "actionSignOut": "Sign Out",
+  "actionClose": "Close",
+  "actionCreateTrip": "Create Trip",
+
+  "statusOffline": "You are offline",
+  "statusOfflineSubtitle": "Changes will be queued and synced when reconnected",
+  "statusConnected": "Connected",
+
+  "errorGenericTitle": "Something went wrong",
+  "errorGenericMessage": "An unexpected error occurred. Please try again.",
+  "errorBoundaryTitle": "Application Error",
+  "errorBoundarySubtitle": "We encountered an unexpected problem. You can retry or return home.",
+
+  "emptyTripsTitle": "No trips yet",
+  "emptyTripsSubtitle": "Start by creating a trip or joining an existing one with an invite code.",
+
+  "authWelcome": "Welcome to Trip Tracker",
+  "authSubtitle": "Plan trips, split expenses, and travel seamlessly together.",
+  "authResetPassword": "Reset Password",
+  "authTerms": "Terms of Service",
+  "authPrivacy": "Privacy Policy",
+  "authDeleteAccount": "Delete Account",
+
+  "joinTripTitle": "Join Trip",
+  "shareTripTitle": "Share Trip",
+  "liveLocationTitle": "Live Location",
+
+  "smokeTestTitle": "Staging Smoke Test",
+  "smokeTestStatusConnecting": "Connecting to Supabase staging...",
+  "smokeTestStatusSuccess": "Successfully connected and verified row read.",
+  "smokeTestStatusError": "Smoke test failed: "
+}

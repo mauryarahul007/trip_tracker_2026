@@ -1,0 +1,204 @@
+{
+  "sort": {
+    "sortedByName": [
+      {
+        "id": "t1",
+        "name": "Zanzibar Retreat",
+        "startDate": "2026-11-01",
+        "createdAt": 1000
+      },
+      {
+        "id": "t3",
+        "name": "Berlin Weekend",
+        "startDate": "2026-10-15",
+        "createdAt": 1500
+      },
+      {
+        "id": "t2",
+        "name": "Amsterdam City Trip",
+        "startDate": "2026-09-01",
+        "createdAt": 2000
+      }
+    ],
+    "sortedByDate": [
+      {
+        "id": "t1",
+        "name": "Zanzibar Retreat",
+        "startDate": "2026-11-01",
+        "createdAt": 1000
+      },
+      {
+        "id": "t3",
+        "name": "Berlin Weekend",
+        "startDate": "2026-10-15",
+        "createdAt": 1500
+      },
+      {
+        "id": "t2",
+        "name": "Amsterdam City Trip",
+        "startDate": "2026-09-01",
+        "createdAt": 2000
+      }
+    ]
+  },
+  "suggestions": {
+    "suggestedName": "Tokyo trip",
+    "guessedCurr": "JPY",
+    "extractedCity": {
+      "primary": "Paris",
+      "full": "Paris, France"
+    }
+  },
+  "dates": {
+    "dateRange": "1–8 Oct",
+    "tripDay": 3,
+    "relativeTime": "just now"
+  },
+  "deepLink": {
+    "canonicalJoin": "https://trip-tracker.blackmaroon.in/join/ABC123",
+    "parsedJoin": "ABC123"
+  },
+  "upi": {
+    "upiUri": "upi://pay?pa=traveler%40okhdfcbank&pn=Alice&am=1500.00&cu=INR&tn=Trip%20Settlement",
+    "upiValid": true
+  },
+  "autoGroup": "Alice & Bob",
+  "travelerPassport": {
+    "trips": 2,
+    "destinations": 2,
+    "tripsSettled": 1,
+    "daysOnTheRoad": 11
+  },
+  "achievements": [
+    {
+      "id": "caffeine",
+      "title": "Caffeine Logistics",
+      "subtitle": "Fueled the expedition with 3+ coffee, tea & breakfast stops.",
+      "icon": "☕",
+      "unlocked": true,
+      "progressText": "3/3 Stops",
+      "rarity": "common"
+    },
+    {
+      "id": "midnight",
+      "title": "Midnight Odyssey",
+      "subtitle": "Kept the squad vibes glowing into the late night hours.",
+      "icon": "🌙",
+      "unlocked": false,
+      "progressText": "0/2 Night Outings",
+      "rarity": "rare"
+    },
+    {
+      "id": "lightning_settle",
+      "title": "Lightning Settlement",
+      "subtitle": "Zero outstanding debts — 100% squared up and settled.",
+      "icon": "⚡",
+      "unlocked": true,
+      "progressText": "All Squared ✓",
+      "rarity": "legendary"
+    },
+    {
+      "id": "apex_roadrunner",
+      "title": "Apex Roadrunner",
+      "subtitle": "Navigated 3+ major waypoints & transit legs across the route.",
+      "icon": "⛰️",
+      "unlocked": false,
+      "progressText": "0 Transit Legs",
+      "rarity": "rare"
+    },
+    {
+      "id": "executive_gourmet",
+      "title": "Executive Gourmet",
+      "subtitle": "35%+ of squad expedition spend invested in culinary tastings.",
+      "icon": "🍕",
+      "unlocked": true,
+      "progressText": "100% Food Spend",
+      "rarity": "common"
+    },
+    {
+      "id": "squad_harmony",
+      "title": "Squad Power",
+      "subtitle": "3+ explorers united on a seamless group journey.",
+      "icon": "👑",
+      "unlocked": false,
+      "progressText": "1 Squad Members",
+      "rarity": "common"
+    },
+    {
+      "id": "visual_chronicler",
+      "title": "Visual Chronicler",
+      "subtitle": "Saved official receipts & travel polaroids into the ledger.",
+      "icon": "📸",
+      "unlocked": false,
+      "progressText": "0 Captured",
+      "rarity": "rare"
+    }
+  ],
+  "packing": {
+    "packingSeasonal": {
+      "seasonName": "Cool Alpine",
+      "isCold": true,
+      "isRainy": false,
+      "isHot": false,
+      "estimatedTempC": 8
+    },
+    "packingSuggestions": [
+      {
+        "id": "doc-id",
+        "text": "Government Photo ID / Physical Passport",
+        "category": "documents",
+        "airplaneEligibility": "cabin-only",
+        "isFlightEssential": true,
+        "scope": "personal",
+        "cabinNote": "Must be in cabin / accessible for airport check-in and security checkpoints",
+        "defaultChecked": true,
+        "icon": "🪪"
+      },
+      {
+        "id": "doc-tickets",
+        "text": "Flight / Train Boarding Passes & Itinerary",
+        "category": "documents",
+        "airplaneEligibility": "cabin-only",
+        "isFlightEssential": true,
+        "scope": "personal",
+        "cabinNote": "Carry in cabin or store in digital passes wallet",
+        "defaultChecked": true,
+        "icon": "🎫"
+      },
+      {
+        "id": "doc-hotel",
+        "text": "Hotel / Stay Confirmation Vouchers",
+        "category": "documents",
+        "airplaneEligibility": "cabin-only",
+        "scope": "shared",
+        "cabinNote": "Keep booking reference handy for immigration / customs",
+        "defaultChecked": true,
+        "icon": "🏨"
+      },
+      {
+        "id": "doc-cash",
+        "text": "Cash & Forex / Debit Cards",
+        "category": "documents",
+        "airplaneEligibility": "cabin-only",
+        "isFlightEssential": true,
+        "scope": "personal",
+        "cabinNote": "Aviation security: never pack money or credit cards in check-in hold",
+        "defaultChecked": true,
+        "icon": "💵"
+      },
+      {
+        "id": "elec-powerbank",
+        "text": "Power Bank (10,000 - 20,000 mAh)",
+        "category": "packing",
+        "airplaneEligibility": "cabin-only",
+        "isFlightEssential": true,
+        "scope": "personal",
+        "reason": "ICAO Aviation Safety: loose lithium batteries strictly prohibited in hold",
+        "cabinNote": "Must be carried in cabin only. Prohibited in check-in baggage!",
+        "defaultChecked": true,
+        "icon": "🔋"
+      }
+    ]
+  },
+  "syncQueueLabel": "Add expense"
+}

@@ -1,0 +1,72 @@
+{
+  "duplicateExact": {
+    "isDuplicate": true,
+    "confidence": "high",
+    "reason": "A matching \"Dinner at Chalet\" (50) was already logged today by Someone.",
+    "matchedExpense": {
+      "id": "e1",
+      "title": "Dinner at Chalet",
+      "amount": 50,
+      "currency": "EUR",
+      "date": "2026-10-01",
+      "paidBy": "m1",
+      "category": "cat-food"
+    },
+    "matchedPayerName": "Someone"
+  },
+  "duplicateDifferent": null,
+  "burnRate": {
+    "daysElapsed": 4,
+    "daysTotal": 8,
+    "dailyAverage": 56.25,
+    "projectedTotal": 450
+  },
+  "predictiveChips": [
+    {
+      "id": "freq-dinner at chalet",
+      "label": "Dinner at chalet",
+      "title": "Dinner at chalet",
+      "icon": "🍽️",
+      "categoryId": "cat-food",
+      "categoryNameHint": "Frequent"
+    },
+    {
+      "id": "tod-lunch",
+      "label": "Lunch",
+      "title": "Lunch",
+      "icon": "🥗",
+      "categoryNameHint": "Food & Drinks",
+      "categoryId": "cat-food"
+    },
+    {
+      "id": "tod-entry-ticket",
+      "label": "Entry Ticket",
+      "title": "Museum / Monument Ticket",
+      "icon": "🎟️",
+      "categoryNameHint": "Entertainment"
+    },
+    {
+      "id": "tod-beverage",
+      "label": "Cold Drink / Tea",
+      "title": "Afternoon Refreshments",
+      "icon": "🧃",
+      "categoryNameHint": "Food & Drinks"
+    },
+    {
+      "id": "tod-local-cab",
+      "label": "City Cab",
+      "title": "City Cab",
+      "icon": "🚖",
+      "categoryNameHint": "Transport",
+      "categoryId": "cat-travel"
+    },
+    {
+      "id": "tod-snack",
+      "label": "Snacks",
+      "title": "Snacks",
+      "icon": "🥪",
+      "categoryNameHint": "Food & Drinks",
+      "categoryId": "cat-food"
+    }
+  ]
+}

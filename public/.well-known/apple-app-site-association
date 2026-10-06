@@ -8,7 +8,25 @@
           {
             "/": "/join/*",
             "comment": "Trip join invite Universal Links"
+          },
+          {
+            "/": "/share/*",
+            "comment": "Trip share Universal Links"
+          },
+          {
+            "/": "/live/*",
+            "comment": "Live location radar Universal Links"
+          },
+          {
+            "/": "/reset-password*",
+            "comment": "Password reset Universal Links"
           }
+        ],
+        "paths": [
+          "/join/*",
+          "/share/*",
+          "/live/*",
+          "/reset-password*"
         ]
       }
     ]

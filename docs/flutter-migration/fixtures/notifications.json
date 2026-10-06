@@ -1,0 +1,130 @@
+{
+  "renderedCatalogue": [
+    {
+      "type": "expense_added",
+      "params": {
+        "expenseTitle": "Dinner",
+        "currency": "USD",
+        "amount": "85.00"
+      },
+      "headline": "Expense Added",
+      "body": "You have a new notification"
+    },
+    {
+      "type": "expense_updated",
+      "params": {
+        "expenseTitle": "Dinner"
+      },
+      "headline": "Expense Updated",
+      "body": "You have a new notification"
+    },
+    {
+      "type": "expense_deleted",
+      "params": {
+        "expenseTitle": "Lunch"
+      },
+      "headline": "Expense Deleted",
+      "body": "You have a new notification"
+    },
+    {
+      "type": "expense_restored",
+      "params": {
+        "expenseTitle": "Lunch"
+      },
+      "headline": "Expense Restored",
+      "body": "You have a new notification"
+    },
+    {
+      "type": "member_added",
+      "params": {},
+      "headline": "Member Added",
+      "body": "You have a new notification"
+    },
+    {
+      "type": "member_added_notice",
+      "params": {
+        "memberName": "Charlie"
+      },
+      "headline": "Member Added",
+      "body": "You have a new notification"
+    },
+    {
+      "type": "member_joined",
+      "params": {
+        "memberName": "Diana"
+      },
+      "headline": "Member Joined",
+      "body": "You have a new notification"
+    },
+    {
+      "type": "settlement_reminder",
+      "params": {
+        "toLabel": "Alice",
+        "currency": "USD",
+        "amount": "45.00"
+      },
+      "headline": "Settlement Reminder",
+      "body": "You have a new notification"
+    },
+    {
+      "type": "settlement_confirmation_requested",
+      "params": {
+        "currency": "USD",
+        "amount": "50.00"
+      },
+      "headline": "Confirm Settlement",
+      "body": "You have a new notification"
+    },
+    {
+      "type": "trip_deleted",
+      "params": {},
+      "headline": "Trip Deleted",
+      "body": "You have a new notification"
+    },
+    {
+      "type": "chat_message",
+      "params": {
+        "senderName": "Alice",
+        "preview": "Hey everyone, check this out!"
+      },
+      "headline": "New Message",
+      "body": "You have a new notification"
+    }
+  ],
+  "burstGroups": [
+    [
+      {
+        "id": "n1",
+        "userId": "u1",
+        "tripId": "t1",
+        "title": "Trip Tracker",
+        "data": {
+          "type": "expense_added",
+          "params": {
+            "expenseTitle": "Dinner",
+            "currency": "USD",
+            "amount": "85.00"
+          }
+        },
+        "createdAt": "2026-10-06T00:00:00Z",
+        "read": false
+      }
+    ],
+    [
+      {
+        "id": "n2",
+        "userId": "u1",
+        "tripId": "t1",
+        "title": "Trip Tracker",
+        "data": {
+          "type": "expense_updated",
+          "params": {
+            "expenseTitle": "Dinner"
+          }
+        },
+        "createdAt": "2026-10-06T00:01:00Z",
+        "read": false
+      }
+    ]
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "cleanedPassenger": "Doe/john Mr",
+  "resolvedAirport": "JFK",
+  "passStub": {
+    "left": {
+      "label": "You get",
+      "amount": 60,
+      "signed": true,
+      "tone": "receive",
+      "caption": "To receive"
+    },
+    "right": {
+      "label": "You paid",
+      "amount": 120,
+      "signed": false,
+      "tone": "ink",
+      "caption": "Your share $60.00"
+    },
+    "summary": null
+  },
+  "cardPresentation": {
+    "variant": "settlement",
+    "icon": "🤝",
+    "whoLabel": "You recorded settlement"
+  },
+  "eventBody": "Added Ski Pass · EUR 150.00"
+}

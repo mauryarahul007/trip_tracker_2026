@@ -1,0 +1,5 @@
+{
+  "APP_ENV": "prod",
+  "SUPABASE_URL": "https://your-prod-project.supabase.co",
+  "SUPABASE_ANON_KEY": "your-prod-anon-key-here"
+}

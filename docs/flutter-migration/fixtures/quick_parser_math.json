@@ -1,0 +1,120 @@
+{
+  "parseCases": [
+    {
+      "input": "Dinner 45.50",
+      "output": {
+        "amount": 45.5,
+        "title": "Dinner",
+        "categoryId": "cat-food",
+        "categoryName": "Food & Dining",
+        "paidById": null,
+        "rawInput": "Dinner 45.50",
+        "confidence": 0.8
+      }
+    },
+    {
+      "input": "Taxi 25 EUR",
+      "output": {
+        "amount": 25,
+        "currency": "EUR",
+        "title": "Taxi",
+        "categoryId": "cat-travel",
+        "categoryName": "Travel & Transport",
+        "paidById": null,
+        "rawInput": "Taxi 25 EUR",
+        "confidence": 0.8
+      }
+    },
+    {
+      "input": "Lunch 12 Bob",
+      "output": {
+        "amount": 12,
+        "title": "Lunch Bob",
+        "categoryId": "cat-food",
+        "categoryName": "Food & Dining",
+        "paidById": null,
+        "rawInput": "Lunch 12 Bob",
+        "confidence": 0.8
+      }
+    },
+    {
+      "input": "Coffee 4.50 Alice yesterday",
+      "output": {
+        "amount": 4.5,
+        "title": "Coffee Alice",
+        "categoryId": "cat-food",
+        "categoryName": "Food & Dining",
+        "paidById": null,
+        "date": "2026-10-04",
+        "rawInput": "Coffee 4.50 Alice yesterday",
+        "confidence": 0.8
+      }
+    },
+    {
+      "input": "Groceries 150 EUR Charlie 2026-10-02",
+      "output": {
+        "amount": 150,
+        "currency": "EUR",
+        "title": "Charlie 2026-10-02",
+        "categoryId": "cat-groceries",
+        "categoryName": "Groceries",
+        "paidById": null,
+        "rawInput": "Groceries 150 EUR Charlie 2026-10-02",
+        "confidence": 0.8
+      }
+    },
+    {
+      "input": "Beer 3*12",
+      "output": {
+        "amount": null,
+        "title": "Beer 3*12",
+        "categoryId": "cat-food",
+        "categoryName": "Food & Dining",
+        "paidById": null,
+        "rawInput": "Beer 3*12",
+        "confidence": 0.5
+      }
+    },
+    {
+      "input": "Invalid input without any amount",
+      "output": {
+        "amount": null,
+        "title": "Invalid input without any amount",
+        "categoryId": null,
+        "paidById": null,
+        "rawInput": "Invalid input without any amount",
+        "confidence": 0.3
+      }
+    }
+  ],
+  "mathCases": [
+    {
+      "expression": "12 * 3 + 4",
+      "result": 40
+    },
+    {
+      "expression": "100 / 4 - 5",
+      "result": 20
+    },
+    {
+      "expression": "25 + 15.50",
+      "result": 40.5
+    },
+    {
+      "expression": "(10 + 20) * 3",
+      "result": 90
+    },
+    {
+      "expression": "12 / 0",
+      "result": null
+    },
+    {
+      "expression": "invalid * expression",
+      "result": null
+    },
+    {
+      "expression": "",
+      "result": null
+    }
+  ]
+}

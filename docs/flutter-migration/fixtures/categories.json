@@ -1,0 +1,70 @@
+{
+  "suggestions": [
+    {
+      "keyword": "Starbucks",
+      "suggestedCategory": "cat-food"
+    },
+    {
+      "keyword": "Uber",
+      "suggestedCategory": "cat-travel"
+    },
+    {
+      "keyword": "Hilton",
+      "suggestedCategory": "cat-stay"
+    },
+    {
+      "keyword": "Museum",
+      "suggestedCategory": null
+    },
+    {
+      "keyword": "Dinner",
+      "suggestedCategory": "cat-food"
+    },
+    {
+      "keyword": "Metro",
+      "suggestedCategory": "cat-travel"
+    },
+    {
+      "keyword": "Pharmacy",
+      "suggestedCategory": "cat-health"
+    }
+  ],
+  "iconParses": [
+    {
+      "input": "🍴",
+      "parsed": {
+        "color": "var(--border-color)",
+        "iconName": "🍴",
+        "isEmoji": true
+      },
+      "serialized": "[object Object]:undefined"
+    },
+    {
+      "input": "lucide:coffee",
+      "parsed": {
+        "color": "lucide",
+        "iconName": "coffee",
+        "isEmoji": false
+      },
+      "serialized": "[object Object]:undefined"
+    },
+    {
+      "input": "🏷️",
+      "parsed": {
+        "color": "var(--border-color)",
+        "iconName": "🏷️",
+        "isEmoji": true
+      },
+      "serialized": "[object Object]:undefined"
+    },
+    {
+      "input": "",
+      "parsed": {
+        "color": "var(--primary-accent)",
+        "iconName": "Compass",
+        "isEmoji": false
+      },
+      "serialized": "[object Object]:undefined"
+    }
+  ]
+}

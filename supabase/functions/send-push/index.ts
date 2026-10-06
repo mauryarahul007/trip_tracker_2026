@@ -322,6 +322,25 @@ async function handleSendPush(req: Request): Promise<Response> {
   const accessToken = await auth.getAccessToken();
   const { title: pushTitle, body: pushBody } = renderNotification(type, tripName, notificationParams);
 
+function resolveNotificationRoute(type: string, tripId?: string): string {
+  if (!tripId) return '/';
+  if (type === 'chat_message') return `/trip/${tripId}/chat`;
+  if (type.startsWith('expense_')) return `/trip/${tripId}/expenses`;
+  if (type.startsWith('settlement_')) return `/trip/${tripId}/ledger`;
+  if (type.startsWith('member_')) return `/trip/${tripId}/members`;
+  return `/trip/${tripId}/expenses`;
+}
+
+  const targetTripId = tripId || notificationParams.tripId || '';
+  const deepLinkRoute = resolveNotificationRoute(type, targetTripId);
+  const dataPayload: Record<string, string> = {
+    type,
+    tripId: targetTripId,
+    route: deepLinkRoute,
+    click_action: 'FLUTTER_NOTIFICATION_CLICK',
+    ...notificationParams,
+  };
+
   let sent = 0;
   for (const { id, fcm_token } of tokens) {
     const res = await fetch(
@@ -336,13 +355,43 @@ async function handleSendPush(req: Request): Promise<Response> {
           message: {
             token: fcm_token,
             notification: { title: pushTitle, body: pushBody },
-            data: { type, ...notificationParams },
+            data: dataPayload,
+            android: {
+              priority: 'high',
+              notification: {
+                click_action: 'FLUTTER_NOTIFICATION_CLICK',
+                sound: 'default',
+                channel_id: 'trip_tracker_high_importance',
+              },
+            },
+            apns: {
+              headers: {
+                'apns-priority': '10',
+                'apns-push-type': 'alert',
+              },
+              payload: {
+                aps: {
+                  alert: {
+                    title: pushTitle,
+                    body: pushBody,
+                  },
+                  sound: 'default',
+                  badge: 1,
+                  'content-available': 1,
+                  'mutable-content': 1,
+                },
+              },
+            },
           },
         }),
       }
     );
     if (res.ok) {
       sent++;
+      await supabaseAdmin
+        .from('device_push_tokens')
+        .update({ last_seen_at: new Date().toISOString() })
+        .eq('id', id);
     } else {
       const errorBody = await res.json().catch(() => null);
       const fcmStatus = errorBody?.error?.status;
