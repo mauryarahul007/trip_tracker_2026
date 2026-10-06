@@ -364,9 +364,9 @@ This document records phase completion, architectural resolutions, deviations fr
 
 ---
 
-## Phase 7 (FE): Expenses, ledger, settlements: slices A-D done (core)
+## Phase 7 (FE): Expenses, ledger, settlements: slices A-G done
 
-- **Status:** **PARTIAL** (data path, pure logic, Expenses tab, expense form and the core Ledger tab built and widget-tested; the rest of the ledger, categories, import/export, analytics and quick-add UI are in BACKLOG B-066..B-068). ADR 264, 265.
+- **Status:** **DONE** for the money loop, categories, and file tools. Analytics charts, voice, OCR, geotag, and push stay later (B-064, B-055, B-070). Presets tip (B-065) was not ported. ADR 264, 265, 266.
 - **Date:** 2026-10-06
 
 ### Delivered
@@ -379,8 +379,13 @@ This document records phase completion, architectural resolutions, deviations fr
 - **Expense form (slice C):** `expense_form_controller.dart` + `expense_form_screen.dart` (math input, currency/FX, single/multi payer, all split modes, itemized, preview + explain, duplicate warning, drafts, same-as-last, quick fill, receipt capture); 32 widget tests.
 - **Ledger (slice D core):** `ledger_tab.dart`, `settle_up.dart` (web `handleSettle` parity); 11 widget tests + 3 logic tests.
 
-### Remaining (see BACKLOG B-066..B-068)
-UPI, share card, close-out, cross-trip balances, conflict resolver UI; categories/CSV/backup/Splitwise/analytics/quick-add UI; goldens and perf. See BACKLOG for everything deferred so far (B-050..B-061).
+### Slices E-G
+- Ledger: receipt preview (local file, http path, or 1 h signed URL), live FX cache, conflict resolver, UPI (id stored in prefs, not on the member row), settlement PNG share, close-out, sticky balance, collapsible sections, cross-trip nets.
+- Files: category create/rename/delete/reorder, CSV and JSON backup via the share sheet, Splitwise import (flag off), text quick-add. Voice stays a stub.
+- Exit bar: balance-string widget test, 200% text scale, 500-row list builds and offers Load more. Device fps and TalkBack/VoiceOver are manual (`## FLUTTER-P7-LOOP`).
+
+### Still later
+Voice, OCR, geotag (B-064, Phase 9). Push on expense/settlement (B-055, Phase 10). Analytics charts (B-070). Presets tip (B-065). Accepted diffs B-056, B-059, B-062 stay.
 
 ### Test harness (important)
 Drift runs outside `FakeAsync`. In widget tests use `real(tester, ...)` for every DB call and `settle(tester)` to pump; never put two writes in one `real` block, and don't use bare `pumpAndSettle` on DB-backed screens.

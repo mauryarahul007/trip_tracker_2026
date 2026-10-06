@@ -18,12 +18,20 @@ final tripMembersProvider = StreamProvider.family<List<Member>, String>(
   (ref, tripId) => ref.watch(memberRepositoryProvider).watchMembers(tripId),
 );
 
+final allMembersProvider = StreamProvider<List<Member>>(
+  (ref) => ref.watch(memberRepositoryProvider).watchAll(),
+);
+
 final tripGroupsProvider = StreamProvider.family<List<Group>, String>(
   (ref, tripId) => ref.watch(memberRepositoryProvider).watchGroups(tripId),
 );
 
 final tripExpensesProvider = StreamProvider.family<List<Expense>, String>(
   (ref, tripId) => ref.watch(expenseRepositoryProvider).watchActive(tripId),
+);
+
+final allActiveExpensesProvider = StreamProvider<List<Expense>>(
+  (ref) => ref.watch(expenseRepositoryProvider).watchAllActive(),
 );
 
 final recycledExpensesProvider = StreamProvider.family<List<Expense>, String>(

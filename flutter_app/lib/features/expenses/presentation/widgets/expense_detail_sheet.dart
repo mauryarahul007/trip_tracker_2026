@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,6 +15,7 @@ import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../trip_details/application/trip_nav.dart';
 import '../../application/expenses_providers.dart';
+import '../../application/money_providers.dart';
 
 final expenseProvider = StreamProvider.family<Expense?, String>((ref, id) => ref.watch(expenseRepositoryProvider).watchExpense(id));
 
@@ -98,6 +101,7 @@ class ExpenseDetailSheet extends ConsumerWidget {
         Text(e.title, key: const Key('detail-title'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: tokens.textPrimary)),
         const SizedBox(height: 4),
         Text(formatMoney(context, e.amount, base), key: const Key('detail-amount'), style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: tokens.textPrimary)),
+        _ReceiptPreview(expenseId: e.id, remotePath: e.receiptPath),
         if (e.currency != base) Text(e.currency, style: TextStyle(color: tokens.textMuted, fontSize: 12)),
         const SizedBox(height: 12),
         if (e.disputedAt != null)
@@ -163,6 +167,28 @@ class ExpenseDetailSheet extends ConsumerWidget {
           ]),
         ],
       ]),
+    );
+  }
+}
+
+class _ReceiptPreview extends ConsumerWidget {
+  const _ReceiptPreview({required this.expenseId, required this.remotePath});
+  final String expenseId;
+  final String? remotePath;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final preview = ref.watch(receiptPreviewProvider((expenseId, remotePath))).value;
+    if (preview == null) return const SizedBox.shrink();
+    final net = preview.startsWith('http');
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: net
+            ? Image.network(preview, key: const Key('detail-receipt'), height: 160, width: double.infinity, fit: BoxFit.cover)
+            : Image.file(File(preview), key: const Key('detail-receipt'), height: 160, width: double.infinity, fit: BoxFit.cover),
+      ),
     );
   }
 }

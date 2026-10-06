@@ -83,5 +83,14 @@
 	<string>Trip Tracker lets you pick a receipt photo from your library.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Trip Tracker uses Face ID to unlock the app.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>upi</string>
+		<string>tez</string>
+		<string>phonepe</string>
+		<string>paytmmp</string>
+		<string>cred</string>
+		<string>bhim</string>
+	</array>
 </dict>
 </plist>

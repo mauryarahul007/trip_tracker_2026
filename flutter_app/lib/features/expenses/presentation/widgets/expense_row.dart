@@ -24,6 +24,7 @@ class ExpenseRow extends StatefulWidget {
     required this.myMemberId,
     required this.onTap,
     this.compact = false,
+    this.colorRings = false,
     this.isDirty = false,
     this.isConflict = false,
     super.key,
@@ -36,6 +37,7 @@ class ExpenseRow extends StatefulWidget {
   final String? myMemberId;
   final VoidCallback onTap;
   final bool compact;
+  final bool colorRings;
   final bool isDirty;
   final bool isConflict;
 
@@ -94,7 +96,11 @@ class _ExpenseRowState extends State<ExpenseRow> {
                   width: widget.compact ? 24 : 32,
                   height: widget.compact ? 24 : 32,
                   alignment: Alignment.center,
-                  decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                    border: widget.colorRings ? Border.all(color: accent, width: 2) : null,
+                  ),
                   child: Text(cat?.icon?.isNotEmpty == true && !cat!.icon!.contains(':') ? cat.icon! : '🏷️', style: TextStyle(fontSize: widget.compact ? 12 : 16)),
                 ),
                 const SizedBox(width: 10),

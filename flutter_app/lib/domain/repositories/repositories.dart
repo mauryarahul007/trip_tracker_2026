@@ -77,10 +77,17 @@ abstract class ExpenseRepository {
   Future<void> resolveDispute(String id, {required String userId, bool postChatCard = false});
   Future<void> confirmSettlement(String id, {required String userId});
   Future<void> approve(String id, {required String userId});
+
+  /// Every active expense on this device (cross-trip search).
+  Stream<List<Expense>> watchAllActive();
+
+  /// Conflict: keep the server copy and drop the queued local edit.
+  Future<void> adoptServerCopy(Expense server);
 }
 
 abstract class MemberRepository {
   Stream<List<Member>> watchMembers(String tripId);
+  Stream<List<Member>> watchAll();
   Stream<List<Group>> watchGroups(String tripId);
   Future<String> addMember(String tripId, String name, {String? linkedUserId});
   Future<void> updateMember(String id, {String? name, String? joinDate, String? leaveDate});
@@ -96,6 +103,7 @@ abstract class MemberRepository {
 abstract class CategoryRepository {
   Stream<List<Category>> watch(String tripId);
   Future<String> add(String tripId, String name, {String? icon});
+  Future<void> rename(String id, String name);
   Future<void> delete(String id);
 }
 

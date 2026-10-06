@@ -703,5 +703,73 @@
         "type": "String"
       }
     }
-  }
+  },
+  "ledYou": "You",
+  "ledAcrossTrips": "Across your trips",
+  "ledAcrossLine": "{currency}: {amount}",
+  "@ledAcrossLine": {
+    "placeholders": {
+      "currency": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "detailReceipt": "Receipt",
+  "conflictTitle": "Sync conflict",
+  "conflictBody": "This expense changed on another device while you still had a local edit.",
+  "conflictKeepMine": "Keep mine",
+  "conflictKeepTheirs": "Keep theirs",
+  "conflictLocal": "On this phone",
+  "conflictServer": "On the server",
+  "conflictEmpty": "No conflicts to resolve.",
+  "upiPay": "Pay with UPI",
+  "upiHint": "Payee UPI id",
+  "upiInvalid": "Enter a UPI id like name@bank.",
+  "upiCopied": "UPI id copied",
+  "upiUnavailable": "No UPI app opened. The id is copied.",
+  "shareCard": "Share card",
+  "closeoutTitle": "Close out {name}",
+  "@closeoutTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "closeoutSettled": "Everyone is settled. Lock the trip so nobody adds more expenses.",
+  "closeoutOutstanding": "{amount} still outstanding across {count} transfers.",
+  "@closeoutOutstanding": {
+    "placeholders": {
+      "amount": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "closeoutReview": "Review and settle",
+  "closeoutLock": "Lock trip",
+  "closeoutLockAnyway": "Lock anyway",
+  "closeoutNotNow": "Not now",
+  "closeoutLocked": "Trip locked",
+  "closeoutPulse": "Would you use Trip Tracker for the next trip with this group?",
+  "closeoutYes": "Yes",
+  "closeoutNo": "Not this group",
+  "catTitle": "Categories",
+  "catAdd": "Add category",
+  "catName": "Name",
+  "expCategories": "Categories",
+  "expTools": "Export and import",
+  "expOtherTrips": "Other trips",
+  "toolsTitle": "Export and import",
+  "toolsExportCsv": "Export CSV",
+  "toolsExportJson": "Export backup",
+  "toolsImportJson": "Import backup",
+  "toolsSplitwise": "Import Splitwise CSV",
+  "toolsQuickAdd": "Quick add",
+  "quickAddHint": "e.g. lunch 240",
+  "quickAddEmpty": "Type an amount to add.",
+  "quickAddConfirm": "Add expense",
+  "quickAddFallback": "Expense",
+  "importDone": "Imported {count} expenses",
+  "@importDone": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "importNone": "Nothing to import."
 }

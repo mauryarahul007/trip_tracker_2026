@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/auth_state.dart';
+import '../../../core/clock.dart';
 import '../../../core/format/money.dart';
+import '../../../domain/logic/expense_form_logic.dart';
 import '../../../core/storage/prefs.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/expense_list_logic.dart';
@@ -23,6 +25,11 @@ import '../../../shared/widgets/undo_snackbar.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../../trips/application/trips_providers.dart';
 import '../application/expenses_providers.dart';
+import '../application/money_providers.dart';
+import 'closeout_sheet.dart';
+import 'conflict_sheet.dart';
+import 'quick_add_sheet.dart';
+import 'trip_tools_sheet.dart';
 import 'widgets/expense_detail_sheet.dart';
 import 'widgets/expense_filter_sheet.dart';
 import 'widgets/expense_row.dart';
@@ -189,6 +196,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         };
 
     void chipTap(AttentionChip c) {
+      if (c.id == 'closeout') {
+        AppSheet.show<void>(context: context, builder: (_) => CloseoutSheet(tripId: id));
+        return;
+      }
       final target = c.id == 'invites' ? 'members' : 'ledger';
       context.go('/trip/$id/$target');
     }
@@ -201,6 +212,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         categories: categories,
         myMemberId: myMember,
         compact: compactActive,
+        colorRings: _flag(ref, 'enableCategoryColorRings', id),
         isDirty: dirty.contains(e.id),
         isConflict: conflicts.contains(e.id),
         onTap: () => _openDetail(e),
@@ -218,33 +230,37 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       );
     }
 
+    final sticky = _flag(ref, 'enableStickyDayHeaders', id);
     List<Widget> section(List<DayGroup> groups, {required bool collapsible}) {
+      SliverPersistentHeader headerFor(DayGroup g, {required bool expanded}) => SliverPersistentHeader(
+            pinned: sticky && expanded,
+            delegate: _DayHeader(
+              date: g.date,
+              total: formatMoney(context, g.total, trip.baseCurrency),
+              count: g.expenses.length,
+              expanded: expanded,
+              collapsible: collapsible,
+              semantics: l10n.expDaySemantics(g.date, g.expenses.length, formatMoney(context, g.total, trip.baseCurrency)),
+              onTap: () => setState(() => _expandedDays.contains(g.date) ? _expandedDays.remove(g.date) : _expandedDays.add(g.date)),
+              background: tokens.bgSurface,
+              textColor: tokens.textPrimary,
+              mutedColor: tokens.textMuted,
+            ),
+          );
+      SliverList listFor(DayGroup g) => SliverList.builder(
+            itemCount: g.expenses.length,
+            itemBuilder: (_, i) => rowFor(g.expenses[i], lastInGroup: i == g.expenses.length - 1),
+          );
       return [
         for (final g in groups) ...[
-          SliverMainAxisGroup(slivers: [
-            SliverPersistentHeader(
-              // Pinning a header whose day is collapsed trips Flutter's sliver-group geometry
-              // asserts (nothing follows it to stay above), so only open days stick.
-              pinned: false, // sticky headers: see BACKLOG B-053
-              delegate: _DayHeader(
-                date: g.date,
-                total: formatMoney(context, g.total, trip.baseCurrency),
-                count: g.expenses.length,
-                expanded: !collapsible || _expandedDays.contains(g.date),
-                collapsible: collapsible,
-                semantics: l10n.expDaySemantics(g.date, g.expenses.length, formatMoney(context, g.total, trip.baseCurrency)),
-                onTap: () => setState(() => _expandedDays.contains(g.date) ? _expandedDays.remove(g.date) : _expandedDays.add(g.date)),
-                background: tokens.bgSurface,
-                textColor: tokens.textPrimary,
-                mutedColor: tokens.textMuted,
-              ),
-            ),
-            if (!collapsible || _expandedDays.contains(g.date))
-              SliverList.builder(
-                itemCount: g.expenses.length,
-                itemBuilder: (_, i) => rowFor(g.expenses[i], lastInGroup: i == g.expenses.length - 1),
-              ),
-          ]),
+          if (sticky) ...[
+            headerFor(g, expanded: !collapsible || _expandedDays.contains(g.date)),
+            if (!collapsible || _expandedDays.contains(g.date)) listFor(g),
+          ] else
+            SliverMainAxisGroup(slivers: [
+              headerFor(g, expanded: !collapsible || _expandedDays.contains(g.date)),
+              if (!collapsible || _expandedDays.contains(g.date)) listFor(g),
+            ]),
         ],
       ];
     }
@@ -262,13 +278,19 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                   label: Text(l10n.syncPending(sync.pending)),
                   onPressed: () => unawaited(ref.read(refreshTripsProvider)()),
                 ),
+              if (conflicts.isNotEmpty)
+                ActionChip(
+                  key: const Key('open-conflicts'),
+                  label: Text(l10n.conflictTitle),
+                  onPressed: () => AppSheet.show<void>(context: context, builder: (_) => ConflictSheet(tripId: id)),
+                ),
               for (final c in chips) ActionChip(key: Key('chip-${c.id}'), label: Text(chipLabel(c)), onPressed: () => chipTap(c)),
             ]),
           ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
           child: Container(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(_flag(ref, 'enableCompactSummary', id) ? 10 : 14),
             decoration: BoxDecoration(color: tokens.bgSurface, borderRadius: BorderRadius.circular(tokens.radiusMd), border: Border.all(color: tokens.borderColor)),
             child: Row(children: [
               Expanded(child: _Stat(label: l10n.expTotalSpent, value: formatMoney(context, totals.totalSpent, trip.baseCurrency), valueKey: const Key('stat-total'))),
@@ -302,6 +324,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
               icon: const Icon(AppIcons.more),
               onSelected: (v) {
                 if (v == 'bin') context.push('/trip/$id/recycle-bin');
+                if (v == 'categories') context.push('/trip/$id/categories');
+                if (v == 'tools') AppSheet.show<void>(context: context, builder: (_) => TripToolsSheet(tripId: id));
+                if (v == 'quick') AppSheet.show<void>(context: context, builder: (_) => QuickAddSheet(tripId: id));
                 if (v == 'compact') _toggleCompact();
                 if (v == 'expand') {
                   setState(() {
@@ -315,6 +340,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
               },
               itemBuilder: (_) => [
                 PopupMenuItem(value: 'expand', child: Text(allExpanded ? l10n.expCollapseAll : l10n.expExpandAll)),
+                PopupMenuItem(value: 'quick', child: Text(l10n.toolsQuickAdd)),
+                PopupMenuItem(value: 'categories', child: Text(l10n.expCategories)),
+                PopupMenuItem(value: 'tools', child: Text(l10n.expTools)),
                 if (_flag(ref, 'enableCompactLedgerView', id)) PopupMenuItem(value: 'compact', child: Text(l10n.expCompactView)),
                 if (binOn) PopupMenuItem(value: 'bin', child: Text(l10n.expRecycleBin)),
               ],
@@ -384,6 +412,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                   ),
                 ),
             ],
+            if (_flag(ref, 'enableCrossTripSearch', id) && filters.query.trim().length >= 2)
+              SliverToBoxAdapter(child: _OtherTrips(tripId: id, query: filters.query.trim())),
             const SliverToBoxAdapter(child: SizedBox(height: 96)),
           ],
         ),
@@ -401,9 +431,39 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     ]);
   }
 
-  String _today(WidgetRef ref) {
-    final n = DateTime.now();
-    return '${n.year.toString().padLeft(4, '0')}-${n.month.toString().padLeft(2, '0')}-${n.day.toString().padLeft(2, '0')}';
+  String _today(WidgetRef ref) => todayDateString(ref.read(nowProvider)());
+}
+
+class _OtherTrips extends ConsumerWidget {
+  const _OtherTrips({required this.tripId, required this.query});
+  final String tripId;
+  final String query;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final q = query.toLowerCase();
+    final rows = (ref.watch(allActiveExpensesProvider).value ?? const <Expense>[])
+        .where((e) => e.tripId != tripId && e.deletedAt == null && e.title.toLowerCase().contains(q))
+        .take(20)
+        .toList();
+    if (rows.isEmpty) return const SizedBox.shrink();
+    final trips = <String, String>{};
+    for (final t in ref.watch(allTripsProvider).value ?? const []) {
+      trips['${t.id}'] = '${t.name}';
+    }
+    final l10n = context.l10n;
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+        child: Text(l10n.expOtherTrips, key: const Key('other-trips'), style: const TextStyle(fontWeight: FontWeight.w700)),
+      ),
+      for (final e in rows)
+        ListTile(
+          key: Key('other-${e.id}'),
+          title: Text(e.title),
+          subtitle: Text(trips[e.tripId] ?? e.tripId),
+        ),
+    ]);
   }
 }
 
@@ -465,13 +525,16 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
           child: InkWell(
             key: Key('day-$date'),
             onTap: collapsible ? onTap : null,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(children: [
-                Expanded(child: Text(date, style: TextStyle(fontWeight: FontWeight.w700, color: textColor))),
-                Text('$total · $count', style: TextStyle(color: mutedColor, fontSize: 13)),
-                if (collapsible) Icon(expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: mutedColor),
-              ]),
+            child: SizedBox(
+              height: _h,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(children: [
+                  Expanded(child: Text(date, style: TextStyle(fontWeight: FontWeight.w700, color: textColor))),
+                  Text('$total · $count', style: TextStyle(color: mutedColor, fontSize: 13)),
+                  if (collapsible) Icon(expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: mutedColor),
+                ]),
+              ),
             ),
           ),
         ),

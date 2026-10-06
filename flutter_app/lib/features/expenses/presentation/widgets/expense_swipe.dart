@@ -29,7 +29,8 @@ class ExpenseSwipe extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final tokens = context.tokens;
-    return Dismissible(
+    return Stack(children: [
+      Dismissible(
       key: itemKey,
       direction: onEdit == null ? DismissDirection.endToStart : DismissDirection.horizontal,
       background: _bg(context, tokens.primaryAccent, Icons.edit_outlined, l10n.rowEdit, Alignment.centerLeft),
@@ -44,6 +45,23 @@ class ExpenseSwipe extends StatelessWidget {
       },
       onDismissed: (_) => onDelete(),
       child: child,
-    );
+    ),
+      // 28px edges: horizontal drags here change tabs (web EDGE_ZONE_PX).
+      // An opaque tap target wins the hit test so the row's dismiss gesture
+      // does not compete; the drag itself still reaches the trip PageView.
+      const Positioned(left: 0, top: 0, bottom: 0, width: 28, child: _EdgeZone()),
+      const Positioned(right: 0, top: 0, bottom: 0, width: 28, child: _EdgeZone()),
+    ]);
   }
 }
+
+class _EdgeZone extends StatelessWidget {
+  const _EdgeZone();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(behavior: HitTestBehavior.opaque, onTap: _noop);
+  }
+}
+
+void _noop() {}

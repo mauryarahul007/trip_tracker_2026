@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-06 | flutter 3.44 | FLUTTER-P7-LOOP | [Flutter: ledger loop, files, and exit bar](#flutter-p7-loop--flutter-ledger-loop-files-and-exit-bar) |
 | 2026-10-06 | flutter 3.44 | FLUTTER-P7-FORM-LEDGER | [Flutter: expense form and balances tab](#flutter-p7-form-ledger--flutter-expense-form-and-balances-tab) |
 | 2026-10-06 | flutter 3.44 | FLUTTER-P7-EXPENSES | [Flutter: Expenses tab (list, filters, recycle bin)](#flutter-p7-expenses--flutter-expenses-tab-list-filters-recycle-bin) |
 | 2026-10-06 | flutter 3.44 | FLUTTER-P6 | [Flutter app: auth, trips list, trip shell, join & share](#flutter-p6--flutter-app-auth-trips-list-trip-shell-join--share) |
@@ -1871,6 +1872,53 @@ Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, ne
 
 ### Pass
 - Every step above behaves as written on one Android device and (when a Mac is available) one iPhone; anything that deviates is filed as a bug.
+
+---
+
+## FLUTTER-P7-LOOP — Flutter: ledger loop, files, and exit bar
+
+**Scope:** Phase 7 slices E–G in `flutter_app/`. No new flags. Use a staging project, never prod. ADR 266.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Pay with UPI on the settle sheet | `enableUpiPayments` | ON |
+| Share settlement card | `enableWhatsAppSettlementShare` | ON |
+| Close out trip chip (after the end date) | `enableTripCloseout` | ON |
+| Mood question after lock | `enableCloseoutPulse` | OFF |
+| Live FX (Frankfurter, 24h cache) | `enableCurrencyFx` | ON |
+| Sticky day headers | `enableStickyDayHeaders` | OFF |
+| Category color rings | `enableCategoryColorRings` | OFF |
+| Compact ledger | `enableCompactLedgerView` | OFF |
+| Compact summary padding | `enableCompactSummary` | ON |
+| Category drag-reorder | `enableCategoryReorder` | OFF |
+| Splitwise import button | `enableSplitwiseImport` | OFF |
+| Other-trips search hits | `enableCrossTripSearch` | OFF |
+
+### Steps
+1. Add a 90 expense paid by you, split three ways. Balances shows you "is owed ₹60.00" and the other two "owes ₹30.00". The same "is owed" line stays pinned above the list. Sections collapse when their titles are tapped.
+2. Settle the first payment. Enter `name@bank` and Pay with UPI. If no UPI app opens, a snackbar says the id was copied. Share card opens the share sheet with a PNG and a caption that names both people.
+3. With two trips that share your account, Balances shows an "Across trips" line per currency. It is hidden when you have only one trip.
+4. After a pull that conflicts, open Conflicts. Keep mine leaves your copy. Keep theirs replaces the row with the server amount and clears the badge.
+5. Set the device date after the trip end date. Expenses shows "Close out trip". Lock trip marks the trip closed. With the pulse flag on, Yes / Not this group appears and is not saved.
+6. Open an expense that has a receipt. The detail sheet shows the photo (local file, or a signed link that lasts about an hour).
+7. Expenses menu → Quick add. Type `lunch 240` and Add expense. The row title is "Lunch" and the amount is 240.
+8. Menu → Categories. Add "Snacks". Rename and delete work on that custom category. Built-ins have no delete. With reorder on, drag changes the order.
+9. Menu → Export and import. Export CSV shares a sheet whose text starts with "TRIP TRACKER — LEDGER EXPORT". Export JSON shares a backup. Import JSON asks you to confirm a valid file. With Splitwise on, pick a CSV, preview, confirm; payment rows are skipped.
+10. Turn sticky day headers on, expand a day, and scroll: the day title stays pinned. A horizontal drag that starts in the outer 28px of a row changes tabs; a drag that starts on the title still edits or deletes.
+11. Turn cross-trip search on and search two or more letters that match an expense on another trip. "Other trips" lists that row.
+12. Accessibility: at 200% text size, the expense form and the balances list still show "who pays whom" without a crash. With TalkBack or VoiceOver, focus "Add expense" and "Settle" and confirm each button's name is spoken.
+13. On a device, open a trip with about 500 expenses. Scrolling the expenses list should stay near 55 fps, and the balances tab should appear within about 300 ms after the rows are on disk.
+
+### Negative checks
+- UPI flag off: no UPI field on the settle sheet. Share flag off: no Share card button.
+- Close-out flag off, or the trip end date is still in the future: no Close out chip.
+- Sticky headers off: day titles scroll away. Color rings off: category icons have no colored border. Compact ledger off: the menu has no compact switch.
+- Splitwise flag off: the tools sheet has no Splitwise button. Cross-trip search off: a query never shows "Other trips".
+- Voice, receipt OCR, geotag, and analytics charts are absent.
+
+### Pass
+- Balances match the web for the same expenses. UPI and the share PNG are confirmed on one Android device; iOS UPI query schemes are declared but need a device with a UPI app. The 500-row fps check is a device step (the widget test only checks that Load more appears).
 
 ---
 

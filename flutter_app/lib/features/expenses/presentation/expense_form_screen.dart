@@ -11,6 +11,7 @@ import '../../../data/platform/receipt_picker.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/category_color.dart';
 import '../../../domain/logic/currency.dart';
+import '../application/money_providers.dart';
 import '../../../domain/logic/expense_form_logic.dart';
 import '../../../domain/models/category.dart';
 import '../../../domain/models/expense.dart';
@@ -134,8 +135,10 @@ class _FormBodyState extends ConsumerState<_FormBody> {
     final status = splitConfigStatus(input);
     final dup = c.duplicate(_initialExpenseIds);
     final dupShown = dup != null && dup.matchedExpense.id != s.ignoredDuplicateId;
+    final live = flags.currencyFx ? liveRatesOf(ref) : const <String, double>{};
+    final customRates = ref.watch(tripProvider(id)).value?.fxConfig?.customRates;
     final conversion = flags.currencyFx && foreign && (amountVal ?? 0) > 0
-        ? convertCurrency(amountVal!, s.currency, base, ref.watch(tripProvider(id)).value?.fxConfig?.customRates)
+        ? convertCurrency(amountVal!, s.currency, base, fxOverlay(live: live, custom: customRates))
         : null;
     final modes = <(String, String)>[
       ('equal', l10n.formModeEqual),
@@ -193,7 +196,7 @@ class _FormBodyState extends ConsumerState<_FormBody> {
         Expanded(
           child: SingleChildScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+            padding: EdgeInsets.fromLTRB(16, flags.compactForm ? 0 : 4, 16, flags.compactForm ? 16 : 24),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               if (s.draftRestored)
                 Container(
@@ -280,6 +283,7 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                               code: s.currency,
                               base: base,
                               customRates: trip.fxConfig?.customRates ?? const {},
+                              liveRates: live,
                               onSave: (rates) => ref.read(tripRepositoryProvider).setFxConfig(
                                     id,
                                     (trip.fxConfig ?? const TripFxConfigDefaults().value).copyWithRates(rates),

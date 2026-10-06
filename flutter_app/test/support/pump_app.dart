@@ -6,7 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trip_tracker/app/deep_link_listener.dart';
 import 'package:trip_tracker/core/network/connectivity_provider.dart';
+import 'package:trip_tracker/core/platform/external_launcher.dart';
 import 'package:trip_tracker/core/platform/share_service.dart';
+import 'package:trip_tracker/features/expenses/application/money_providers.dart';
+import 'package:trip_tracker/features/expenses/presentation/trip_tools_sheet.dart';
 import 'package:trip_tracker/features/trips/application/join_controller.dart';
 import 'package:trip_tracker/core/storage/prefs.dart';
 import 'package:trip_tracker/data/auth/biometric_service.dart';
@@ -116,6 +119,9 @@ Future<TestApp> pumpApp(
         joinRepositoryProvider.overrideWithValue(t.join),
         shareRepositoryProvider.overrideWithValue(t.share),
         shareServiceProvider.overrideWithValue(t.shareService),
+        rateFetchProvider.overrideWithValue(() async => null),
+        externalLauncherProvider.overrideWithValue((_) async => false),
+        textFilePickerProvider.overrideWithValue(({required extensions}) async => null),
         deepLinkSourceProvider.overrideWithValue(t.links),
         afterJoinSyncProvider.overrideWithValue((tripId) async {}),
         ...overrides,

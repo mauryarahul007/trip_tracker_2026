@@ -1219,4 +1219,153 @@ class AppLocalizationsEn extends AppLocalizations {
   String ledTransfer(String from, String to) {
     return '$from pays $to';
   }
+
+  @override
+  String get ledYou => 'You';
+
+  @override
+  String get ledAcrossTrips => 'Across your trips';
+
+  @override
+  String ledAcrossLine(String currency, String amount) {
+    return '$currency: $amount';
+  }
+
+  @override
+  String get detailReceipt => 'Receipt';
+
+  @override
+  String get conflictTitle => 'Sync conflict';
+
+  @override
+  String get conflictBody =>
+      'This expense changed on another device while you still had a local edit.';
+
+  @override
+  String get conflictKeepMine => 'Keep mine';
+
+  @override
+  String get conflictKeepTheirs => 'Keep theirs';
+
+  @override
+  String get conflictLocal => 'On this phone';
+
+  @override
+  String get conflictServer => 'On the server';
+
+  @override
+  String get conflictEmpty => 'No conflicts to resolve.';
+
+  @override
+  String get upiPay => 'Pay with UPI';
+
+  @override
+  String get upiHint => 'Payee UPI id';
+
+  @override
+  String get upiInvalid => 'Enter a UPI id like name@bank.';
+
+  @override
+  String get upiCopied => 'UPI id copied';
+
+  @override
+  String get upiUnavailable => 'No UPI app opened. The id is copied.';
+
+  @override
+  String get shareCard => 'Share card';
+
+  @override
+  String closeoutTitle(String name) {
+    return 'Close out $name';
+  }
+
+  @override
+  String get closeoutSettled =>
+      'Everyone is settled. Lock the trip so nobody adds more expenses.';
+
+  @override
+  String closeoutOutstanding(String amount, int count) {
+    return '$amount still outstanding across $count transfers.';
+  }
+
+  @override
+  String get closeoutReview => 'Review and settle';
+
+  @override
+  String get closeoutLock => 'Lock trip';
+
+  @override
+  String get closeoutLockAnyway => 'Lock anyway';
+
+  @override
+  String get closeoutNotNow => 'Not now';
+
+  @override
+  String get closeoutLocked => 'Trip locked';
+
+  @override
+  String get closeoutPulse =>
+      'Would you use Trip Tracker for the next trip with this group?';
+
+  @override
+  String get closeoutYes => 'Yes';
+
+  @override
+  String get closeoutNo => 'Not this group';
+
+  @override
+  String get catTitle => 'Categories';
+
+  @override
+  String get catAdd => 'Add category';
+
+  @override
+  String get catName => 'Name';
+
+  @override
+  String get expCategories => 'Categories';
+
+  @override
+  String get expTools => 'Export and import';
+
+  @override
+  String get expOtherTrips => 'Other trips';
+
+  @override
+  String get toolsTitle => 'Export and import';
+
+  @override
+  String get toolsExportCsv => 'Export CSV';
+
+  @override
+  String get toolsExportJson => 'Export backup';
+
+  @override
+  String get toolsImportJson => 'Import backup';
+
+  @override
+  String get toolsSplitwise => 'Import Splitwise CSV';
+
+  @override
+  String get toolsQuickAdd => 'Quick add';
+
+  @override
+  String get quickAddHint => 'e.g. lunch 240';
+
+  @override
+  String get quickAddEmpty => 'Type an amount to add.';
+
+  @override
+  String get quickAddConfirm => 'Add expense';
+
+  @override
+  String get quickAddFallback => 'Expense';
+
+  @override
+  String importDone(int count) {
+    return 'Imported $count expenses';
+  }
+
+  @override
+  String get importNone => 'Nothing to import.';
 }

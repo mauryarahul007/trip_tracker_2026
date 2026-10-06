@@ -18,6 +18,13 @@ class ConflictStore extends Notifier<Map<String, List<ExpenseConflict>>> {
     }
     state = next;
   }
+
+  /// User picked a side. The row stays until the next pull reports it again.
+  void dismiss(String tripId, String expenseId) {
+    final list = state[tripId];
+    if (list == null) return;
+    setForTrip(tripId, [for (final c in list) if (c.expenseId != expenseId) c]);
+  }
 }
 
 final conflictStoreProvider = NotifierProvider<ConflictStore, Map<String, List<ExpenseConflict>>>(ConflictStore.new);

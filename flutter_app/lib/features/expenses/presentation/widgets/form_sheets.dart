@@ -62,12 +62,14 @@ class FxRateSheet extends StatefulWidget {
     required this.code,
     required this.base,
     required this.customRates,
+    this.liveRates = const {},
     required this.onSave,
     super.key,
   });
   final String code;
   final String base;
   final Map<String, double> customRates;
+  final Map<String, double> liveRates;
 
   /// Receives the new full map of custom rates.
   final ValueChanged<Map<String, double>> onSave;
@@ -83,7 +85,7 @@ class _FxRateSheetState extends State<FxRateSheet> {
 
   /// 1 [code] in [base] under the rates in force (custom rates win).
   double? get _current {
-    final r = convertCurrency(1, widget.code, widget.base, widget.customRates);
+    final r = convertCurrency(1, widget.code, widget.base, fxOverlay(live: widget.liveRates, custom: widget.customRates));
     return r.rate;
   }
 
@@ -98,7 +100,7 @@ class _FxRateSheetState extends State<FxRateSheet> {
   void _save() {
     final v = jsParseFloat(_c.text);
     if (v.isNaN || v <= 0) return;
-    final rates = {...defaultExchangeRates, ...widget.customRates};
+    final rates = {...defaultExchangeRates, ...widget.liveRates, ...widget.customRates};
     final baseRate = rates[widget.base] ?? 1.0;
     // 1 code = v base  =>  codeRate(per USD) = baseRate / v
     final next = {...widget.customRates, widget.code: baseRate / v};

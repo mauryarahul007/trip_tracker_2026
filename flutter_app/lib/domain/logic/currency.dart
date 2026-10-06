@@ -73,6 +73,12 @@ String formatAmount(dynamic amount, String currencySymbol, [String locale = 'en_
   return '$currencySymbol$amount';
 }
 
+/// Live USD-based rates overlaid by trip custom rates. Custom wins.
+Map<String, double> fxOverlay({Map<String, double>? live, Map<String, double>? custom}) => {
+      ...?live,
+      ...?custom,
+    };
+
 const Map<String, double> defaultExchangeRates = {
   'USD': 1.0,
   'INR': 87.25,

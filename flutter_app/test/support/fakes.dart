@@ -213,10 +213,16 @@ class FakeShareRepository implements ShareRepository {
 class FakeShareService implements ShareService {
   final copied = <String>[];
   final shared = <String>[];
+  final pngs = <String>[];
   @override
   Future<void> copy(String text) async => copied.add(text);
   @override
   Future<void> share(String text, {String? subject}) async => shared.add(text);
+  @override
+  Future<void> sharePng(List<int> bytes, {required String fileName, String? text}) async {
+    pngs.add(fileName);
+    if (text != null) shared.add(text);
+  }
 }
 
 class FakeDeepLinks implements DeepLinkSource {

@@ -15,6 +15,7 @@ import '../features/travel/presentation/live_screen.dart';
 import '../features/expenses/presentation/expense_form_screen.dart';
 import '../features/expenses/presentation/expenses_tab.dart';
 import '../features/expenses/presentation/ledger_tab.dart';
+import '../features/expenses/presentation/category_screen.dart';
 import '../features/expenses/presentation/recycle_bin_screen.dart';
 import '../features/trip_details/application/trip_nav.dart';
 import '../features/trip_details/domain/trip_tabs.dart';
@@ -195,6 +196,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'recycle-bin',
             name: 'trip-recycle-bin',
             builder: (context, state) => RecycleBinScreen(tripId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: 'categories',
+            name: 'trip-categories',
+            builder: (context, state) => CategoryScreen(tripId: state.pathParameters['id']!),
           ),
           GoRoute(
             path: 'settings',

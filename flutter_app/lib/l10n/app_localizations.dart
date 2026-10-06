@@ -2175,6 +2175,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{from} pays {to}'**
   String ledTransfer(String from, String to);
+
+  /// No description provided for @ledYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get ledYou;
+
+  /// No description provided for @ledAcrossTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'Across your trips'**
+  String get ledAcrossTrips;
+
+  /// No description provided for @ledAcrossLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{currency}: {amount}'**
+  String ledAcrossLine(String currency, String amount);
+
+  /// No description provided for @detailReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get detailReceipt;
+
+  /// No description provided for @conflictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync conflict'**
+  String get conflictTitle;
+
+  /// No description provided for @conflictBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This expense changed on another device while you still had a local edit.'**
+  String get conflictBody;
+
+  /// No description provided for @conflictKeepMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep mine'**
+  String get conflictKeepMine;
+
+  /// No description provided for @conflictKeepTheirs.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep theirs'**
+  String get conflictKeepTheirs;
+
+  /// No description provided for @conflictLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone'**
+  String get conflictLocal;
+
+  /// No description provided for @conflictServer.
+  ///
+  /// In en, this message translates to:
+  /// **'On the server'**
+  String get conflictServer;
+
+  /// No description provided for @conflictEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No conflicts to resolve.'**
+  String get conflictEmpty;
+
+  /// No description provided for @upiPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay with UPI'**
+  String get upiPay;
+
+  /// No description provided for @upiHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Payee UPI id'**
+  String get upiHint;
+
+  /// No description provided for @upiInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a UPI id like name@bank.'**
+  String get upiInvalid;
+
+  /// No description provided for @upiCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'UPI id copied'**
+  String get upiCopied;
+
+  /// No description provided for @upiUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No UPI app opened. The id is copied.'**
+  String get upiUnavailable;
+
+  /// No description provided for @shareCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Share card'**
+  String get shareCard;
+
+  /// No description provided for @closeoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Close out {name}'**
+  String closeoutTitle(String name);
+
+  /// No description provided for @closeoutSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone is settled. Lock the trip so nobody adds more expenses.'**
+  String get closeoutSettled;
+
+  /// No description provided for @closeoutOutstanding.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} still outstanding across {count} transfers.'**
+  String closeoutOutstanding(String amount, int count);
+
+  /// No description provided for @closeoutReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review and settle'**
+  String get closeoutReview;
+
+  /// No description provided for @closeoutLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock trip'**
+  String get closeoutLock;
+
+  /// No description provided for @closeoutLockAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock anyway'**
+  String get closeoutLockAnyway;
+
+  /// No description provided for @closeoutNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get closeoutNotNow;
+
+  /// No description provided for @closeoutLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip locked'**
+  String get closeoutLocked;
+
+  /// No description provided for @closeoutPulse.
+  ///
+  /// In en, this message translates to:
+  /// **'Would you use Trip Tracker for the next trip with this group?'**
+  String get closeoutPulse;
+
+  /// No description provided for @closeoutYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get closeoutYes;
+
+  /// No description provided for @closeoutNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Not this group'**
+  String get closeoutNo;
+
+  /// No description provided for @catTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get catTitle;
+
+  /// No description provided for @catAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add category'**
+  String get catAdd;
+
+  /// No description provided for @catName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get catName;
+
+  /// No description provided for @expCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get expCategories;
+
+  /// No description provided for @expTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Export and import'**
+  String get expTools;
+
+  /// No description provided for @expOtherTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'Other trips'**
+  String get expOtherTrips;
+
+  /// No description provided for @toolsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export and import'**
+  String get toolsTitle;
+
+  /// No description provided for @toolsExportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get toolsExportCsv;
+
+  /// No description provided for @toolsExportJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Export backup'**
+  String get toolsExportJson;
+
+  /// No description provided for @toolsImportJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Import backup'**
+  String get toolsImportJson;
+
+  /// No description provided for @toolsSplitwise.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Splitwise CSV'**
+  String get toolsSplitwise;
+
+  /// No description provided for @toolsQuickAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick add'**
+  String get toolsQuickAdd;
+
+  /// No description provided for @quickAddHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. lunch 240'**
+  String get quickAddHint;
+
+  /// No description provided for @quickAddEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Type an amount to add.'**
+  String get quickAddEmpty;
+
+  /// No description provided for @quickAddConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add expense'**
+  String get quickAddConfirm;
+
+  /// No description provided for @quickAddFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense'**
+  String get quickAddFallback;
+
+  /// No description provided for @importDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {count} expenses'**
+  String importDone(int count);
+
+  /// No description provided for @importNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to import.'**
+  String get importNone;
 }
 
 class _AppLocalizationsDelegate

@@ -218,6 +218,18 @@ class DriftExpenseRepository extends _DriftRepo implements ExpenseRepository {
   Stream<Expense?> watchExpense(String id) =>
       (db.select(db.expensesTable)..where((t) => t.id.equals(id))).watchSingleOrNull().map((e) => e == null ? null : entryToExpense(e));
 
+  @override
+  Stream<List<Expense>> watchAllActive() {
+    final q = db.select(db.expensesTable)..where((t) => t.archived.equals(false));
+    return q.watch().map((rows) => [for (final r in rows) ?entryToExpense(r)]);
+  }
+
+  @override
+  Future<void> adoptServerCopy(Expense server) => write(() async {
+        await _put(server);
+        await outbox.discardForEntity(server.id);
+      });
+
   Future<Expense?> _get(String id) async {
     final e = await (db.select(db.expensesTable)..where((t) => t.id.equals(id))).getSingleOrNull();
     return e == null ? null : entryToExpense(e);
@@ -434,6 +446,9 @@ class DriftMemberRepository extends _DriftRepo implements MemberRepository {
       (db.select(db.membersTable)..where((t) => t.tripId.equals(tripId))).watch().map((r) => r.map(entryToMember).toList());
 
   @override
+  Stream<List<Member>> watchAll() => db.select(db.membersTable).watch().map((r) => r.map(entryToMember).toList());
+
+  @override
   Stream<List<Group>> watchGroups(String tripId) =>
       db.customSelect('SELECT 1', readsFrom: {db.groupsTable, db.groupMembersTable}).watch().asyncMap((_) => _groups(tripId));
 
@@ -568,6 +583,18 @@ class DriftCategoryRepository extends _DriftRepo implements CategoryRepository {
           'row': {'id': id, 'trip_id': tripId, 'name': name, 'icon': icon, 'is_custom': true},
         }, tripId: tripId);
         return id;
+      });
+
+  @override
+  Future<void> rename(String id, String name) => write(() async {
+        final c = await (db.select(db.categoriesTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+        if (c == null || c.tripId == null) return;
+        final tripId = c.tripId!;
+        final next = entryToCategory(c).copyWith(name: name.trim());
+        await db.into(db.categoriesTable).insertOnConflictUpdate(categoryToCompanion(next, tripId));
+        await outbox.enqueue(OutboxType.addCategory, {
+          'row': <String, dynamic>{'id': id, 'trip_id': tripId, 'name': next.name, 'icon': next.icon, 'is_custom': next.isCustom},
+        }, tripId: tripId);
       });
 
   @override

@@ -4611,3 +4611,20 @@ This document logs all meaningful technical decisions, library choices, design p
   - Unbuilt ledger/categories/import/analytics pieces are tracked in `docs/flutter-migration/BACKLOG.md` (B-066..B-068) rather than half-built.
 * **Verification:** `flutter analyze` clean; full Flutter test suite passes; manual steps in `docs/FEATURE_TEST_STEPS.md` (FLUTTER-P7-FORM-LEDGER).
 * **Bugs found by tests and fixed:** form receipt row overflowed on phone width; currency list hid ListTile ink under the sheet's decoration; draft flush on dispose read provider state.
+
+## 266. Flutter Phase 7 (slices E-G): ledger loop, files, exit bar (v3.44.2)
+
+* **Date:** 2026-10-06
+* **Context:** Slices A-D left the settle-and-pay loop, category/file screens, and the phase exit checks unbuilt. The pure helpers (UPI URI, share-card layout, CSV/Splitwise, quick parser) already existed.
+* **Decisions:**
+  - **No new flags.** Every new control reads `flagProvider` and the existing defaults. Analytics (`fl_chart`) is deferred (B-070) instead of shipping a chart behind a default-on flag.
+  - **UPI ids live in SharedPreferences** (`member_upi:<memberId>`). The members table has no UPI column, so this avoids a schema bump. If `url_launcher` cannot open the URI, the id is copied.
+  - **Share card PNG is drawn with dart:ui** from `settlementShareCardLayout`, then handed to `share_plus`. Widget tests record the caption through `FakeShareService.sharePng`.
+  - **Live FX** fetches Frankfurter `from=USD`, caches 24h, and falls back to `defaultExchangeRates`. Custom trip rates overlay the live map and win. Tests stub the fetcher so the form never hits the network.
+  - **Conflicts:** keep mine only dismisses the badge (the outbox row stays). Keep theirs writes the server expense and discards the queued edit.
+  - **Close-out** sets `closed` the same way as the web. The pulse question is not stored; `Trip` has no pulse field.
+  - **Sticky day headers** are sibling slivers, and the header child is exactly 48px so a pinned header's layout extent matches its paint extent. The flag stays off.
+  - **Edge zone** is a 28px hit target on both sides of a row so a horizontal drag there reaches the trip `PageView` instead of `Dismissible`.
+  - **`validateAndSanitizeBackup` is unchanged** (fixture-locked). Backup import uses a separate `summarizeBackup`.
+* **Verification:** `flutter analyze` clean on the expense tree; expense and domain widget tests pass, including balance strings, UPI/share, close-out, quick add, categories, CSV, sticky headers, cross-trip search, 500 rows, and 200% text scale. Device fps, TalkBack/VoiceOver, and a real UPI app are manual steps in `docs/FEATURE_TEST_STEPS.md` (FLUTTER-P7-LOOP).
+* **Left for later:** voice, OCR, geotag (Phase 9), push (Phase 10), analytics charts, presets tip (B-065).
