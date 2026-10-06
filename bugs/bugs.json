@@ -7880,5 +7880,33 @@
     "resolvedBy": "rahul",
     "resolvedAt": "2026-10-02T18:24:36.705Z",
     "resolutionNote": "Fixed in commit 112d02e (v3.43.10). The coach click only adds an expense, because it no longer renders on Members."
+  },
+  {
+    "id": "BUG-269",
+    "title": "Flutter ledger could not show a receipt, pay, share, or close a trip",
+    "description": "Phase 7 slices A-D shipped the expense list, form, and balances, but the settle-and-pay loop had no screen: receipts stayed invisible, there was no UPI or share card, and Close out trip had no action. Categories, CSV, and quick add were also missing.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "flutter",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open a Flutter trip with an expense and a receipt",
+      "Open the expense detail",
+      "Open Balances and settle",
+      "Look for Close out trip after the end date"
+    ],
+    "expectedBehavior": "The receipt is visible, settle can pay with UPI or share a card, and the trip can be locked.",
+    "actualBehavior": "The photo, UPI sheet, share card, and close-out screen were absent.",
+    "diagnostics": {},
+    "createdAt": "2026-10-06T09:06:08.136Z",
+    "updatedAt": "2026-10-06T09:06:08.447Z",
+    "resolvedBy": "rahul",
+    "resolvedAt": "2026-10-06T09:06:08.447Z",
+    "resolutionNote": "Fixed in commit 6011605 (v3.44.2). The Flutter ledger shows the receipt, pays or shares a settlement, and locks the trip. Categories, CSV, and text quick-add are included."
   }
 ]

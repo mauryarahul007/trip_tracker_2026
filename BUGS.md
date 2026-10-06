@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **268** | All recorded bugs across sessions |
+| **Total Tracked** | **269** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **241** | Verified & closed |
+| **✅ Resolved** | **242** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -272,6 +272,7 @@
 | **BUG-266** | Trip members cannot see each other's packing, notes, or passes | `p2p-sync` | `high` | `rahul` | `rahul` | Fixed in commit 01f7333 (v3.43.8, migration 0109). Members can save packing, notes, and passes, and an open trip refetches them. |
 | **BUG-267** | Members tab looks like luggage tags | `ui-ux` | `low` | `rahul` | `rahul` | Fixed in commit c303812 (v3.43.9). One solid row per person, a single role control, and no airplane coach on Members. |
 | **BUG-268** | v3.43.9 failed to build | `general` | `high` | `rahul` | `rahul` | Fixed in commit 112d02e (v3.43.10). The coach click only adds an expense, because it no longer renders on Members. |
+| **BUG-269** | Flutter ledger could not show a receipt, pay, share, or close a trip | `ui-ux` | `medium` | `rahul` | `rahul` | Fixed in commit 6011605 (v3.44.2). The Flutter ledger shows the receipt, pays or shares a settlement, and locks the trip. Categories, CSV, and text quick-add are included. |
 
 ---
 
