@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **269** | All recorded bugs across sessions |
+| **Total Tracked** | **270** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **242** | Verified & closed |
+| **✅ Resolved** | **243** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -273,6 +273,7 @@
 | **BUG-267** | Members tab looks like luggage tags | `ui-ux` | `low` | `rahul` | `rahul` | Fixed in commit c303812 (v3.43.9). One solid row per person, a single role control, and no airplane coach on Members. |
 | **BUG-268** | v3.43.9 failed to build | `general` | `high` | `rahul` | `rahul` | Fixed in commit 112d02e (v3.43.10). The coach click only adds an expense, because it no longer renders on Members. |
 | **BUG-269** | Flutter ledger could not show a receipt, pay, share, or close a trip | `ui-ux` | `medium` | `rahul` | `rahul` | Fixed in commit 6011605 (v3.44.2). The Flutter ledger shows the receipt, pays or shares a settlement, and locks the trip. Categories, CSV, and text quick-add are included. |
+| **BUG-270** | Flutter Members, Notes, and Chat tabs were empty placeholders | `ui-ux` | `medium` | `rahul` | `rahul` | Fixed in commit 012c03a (v3.44.3). The Flutter Members, Notes, and Chat tabs now work: roster, roles, groups, checklist, notes, packing suggestions, manual passes, and offline text chat with unread mark. |
 
 ---
 

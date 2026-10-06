@@ -7908,5 +7908,31 @@
     "resolvedBy": "rahul",
     "resolvedAt": "2026-10-06T09:06:08.447Z",
     "resolutionNote": "Fixed in commit 6011605 (v3.44.2). The Flutter ledger shows the receipt, pays or shares a settlement, and locks the trip. Categories, CSV, and text quick-add are included."
+  },
+  {
+    "id": "BUG-270",
+    "title": "Flutter Members, Notes, and Chat tabs were empty placeholders",
+    "description": "Flutter Members, Notes, and Chat tabs were empty placeholders",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-06T09:38:07.890Z",
+    "updatedAt": "2026-10-06T09:38:13.243Z",
+    "resolvedBy": "rahul",
+    "resolvedAt": "2026-10-06T09:38:13.243Z",
+    "resolutionNote": "Fixed in commit 012c03a (v3.44.3). The Flutter Members, Notes, and Chat tabs now work: roster, roles, groups, checklist, notes, packing suggestions, manual passes, and offline text chat with unread mark."
   }
 ]
