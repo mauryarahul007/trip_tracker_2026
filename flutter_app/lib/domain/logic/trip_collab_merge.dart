@@ -95,56 +95,39 @@ class TripRoster {
   });
 }
 
-Map<String, dynamic> mergeTripRoster(
-  dynamic tripsOrRoster,
-  dynamic remoteRoster, [
-  Map<String, Group>? groups,
-  String? tripId,
-  TripRoster? roster,
-  bool keepLocalCollab = false,
-]) {
-  // Overload 1: Golden fixture test vector call: mergeTripRoster(localRoster, remoteRoster)
-  if (tripsOrRoster is List && remoteRoster is List && tripId == null) {
-    return {
-      'trips': tripsOrRoster,
-      'members': remoteRoster,
-    };
-  }
+class MergedRoster {
+  final List<Trip> trips;
+  final Map<String, Member> members;
+  final Map<String, Group> groups;
+  const MergedRoster(this.trips, this.members, this.groups);
+}
 
-  final trips = tripsOrRoster as List<Trip>;
-  final members = remoteRoster as Map<String, Member>;
-  final groupMap = groups ?? <String, Group>{};
-
+/// Port of `mergeTripRoster`: drops local members/groups the remote roster no
+/// longer lists, overlays the remote ones, and applies the remote trip.
+MergedRoster mergeTripRoster(
+  List<Trip> trips,
+  Map<String, Member> members,
+  Map<String, Group> groups,
+  String tripId,
+  TripRoster roster,
+  bool keepLocalCollab,
+) {
   final local = trips.where((t) => t.id == tripId).firstOrNull;
-  if (local == null || roster == null) {
-    return {
-      'trips': trips,
-      'members': members,
-      'groups': groupMap,
-    };
-  }
+  if (local == null) return MergedRoster(trips, members, groups);
 
   final remoteMemberIds = roster.trip.memberIds.toSet();
-  final nextMembers = Map<String, Member>.from(members);
-  for (final id in local.memberIds) {
-    if (!remoteMemberIds.contains(id)) nextMembers.remove(id);
-  }
-  nextMembers.addAll(roster.members);
+  final nextMembers = Map<String, Member>.from(members)
+    ..removeWhere((id, _) => local.memberIds.contains(id) && !remoteMemberIds.contains(id))
+    ..addAll(roster.members);
 
   final remoteGroupIds = roster.trip.groupIds.toSet();
-  final nextGroups = Map<String, Group>.from(groupMap);
-  for (final id in local.groupIds) {
-    if (!remoteGroupIds.contains(id)) nextGroups.remove(id);
-  }
-  nextGroups.addAll(roster.groups);
+  final nextGroups = Map<String, Group>.from(groups)
+    ..removeWhere((id, _) => local.groupIds.contains(id) && !remoteGroupIds.contains(id))
+    ..addAll(roster.groups);
 
-  final updatedTrips = trips.map((t) {
-    return t.id == tripId ? applyRemoteTrip(t, roster.trip, keepLocalCollab) : t;
-  }).toList();
-
-  return {
-    'trips': updatedTrips,
-    'members': nextMembers,
-    'groups': nextGroups,
-  };
+  return MergedRoster(
+    [for (final t in trips) t.id == tripId ? applyRemoteTrip(t, roster.trip, keepLocalCollab) : t],
+    nextMembers,
+    nextGroups,
+  );
 }

@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 const Set<String> zeroDecimalCodes = {
   'BIF', 'CLP', 'DJF', 'GNF', 'ISK', 'JPY', 'KMF', 'KRW',
   'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF',
@@ -25,38 +27,48 @@ String getCurrencySymbol(String code) {
   }
 }
 
-String _insertCommas(String intStr) {
-  final isNegative = intStr.startsWith('-');
-  final digits = isNegative ? intStr.substring(1) : intStr;
-  final buffer = StringBuffer();
-  for (int i = 0; i < digits.length; i++) {
-    if (i > 0 && (digits.length - i) % 3 == 0) {
-      buffer.write(',');
-    }
-    buffer.write(digits[i]);
-  }
-  return isNegative ? '-$buffer' : buffer.toString();
+
+/// Rounds like ICU/`toLocaleString`: half away from zero on the *shortest
+/// decimal representation* (so 1234.565 -> 1234.57), not on the binary value.
+double _roundHalfExpand(double v, int decimals) {
+  final s = v.abs().toString();
+  if (s.contains('e') || s.contains('E')) return double.parse(v.toStringAsFixed(decimals));
+  final parts = s.split('.');
+  final frac = parts.length > 1 ? parts[1] : '';
+  if (frac.length <= decimals) return v;
+  final keep = BigInt.parse(parts[0] + frac.substring(0, decimals).padRight(decimals, '0'));
+  final up = frac.codeUnitAt(decimals) >= 0x35 ? BigInt.one : BigInt.zero;
+  final total = (keep + up).toString().padLeft(decimals + 1, '0');
+  final cut = total.length - decimals;
+  final out = decimals == 0 ? total : '${total.substring(0, cut)}.${total.substring(cut)}';
+  final r = double.parse(out);
+  return v < 0 ? -r : r;
 }
 
-String formatMoneyNumber(double amount, [String currencyOrSymbol = '']) {
+/// Display number for an amount, grouped for [locale] (BCP-47 or ICU style,
+/// default en-US). The web uses the device locale; callers pass theirs.
+/// Verified against Node ICU for 8 locales (test/domain/locale_money_test.dart).
+String formatMoneyNumber(double amount, [String currencyOrSymbol = '', String locale = 'en_US']) {
   final clean = currencyOrSymbol.trim();
   final decimals = clean == '¥' ? 0 : getCurrencyDecimals(clean);
-  final validAmount = amount.isFinite ? amount : 0.0;
-
-  if (decimals == 0) {
-    final rounded = validAmount.round();
-    return _insertCommas(rounded.toString());
-  } else {
-    final fixed = validAmount.toStringAsFixed(decimals);
-    final parts = fixed.split('.');
-    final intPart = _insertCommas(parts[0]);
-    return '$intPart.${parts[1]}';
+  final valid = amount.isFinite ? amount : 0.0;
+  final fmt = NumberFormat.decimalPatternDigits(locale: locale.replaceAll('-', '_'), decimalDigits: decimals);
+  final rounded = _roundHalfExpand(valid, decimals);
+  final out = fmt.format(rounded);
+  // ICU "minimum grouping digits = 2": these locales leave 4-digit integers
+  // ungrouped (1234,50 not 1.234,50); Dart intl does not implement that rule.
+  // ponytail: only es/pt-PT/pl listed; extend if ICU diffs surface for other locales.
+  final lang = locale.replaceAll('-', '_').split('_').first;
+  final minGroup2 = lang == 'es' || lang == 'pl' || locale.replaceAll('-', '_') == 'pt_PT';
+  if (minGroup2 && rounded.abs().truncate().toString().length == 4) {
+    return out.replaceAll(fmt.symbols.GROUP_SEP, '');
   }
+  return out;
 }
 
-String formatAmount(dynamic amount, String currencySymbol) {
+String formatAmount(dynamic amount, String currencySymbol, [String locale = 'en_US']) {
   if (amount is num) {
-    return '$currencySymbol${formatMoneyNumber(amount.toDouble(), currencySymbol)}';
+    return '$currencySymbol${formatMoneyNumber(amount.toDouble(), currencySymbol, locale)}';
   }
   return '$currencySymbol$amount';
 }

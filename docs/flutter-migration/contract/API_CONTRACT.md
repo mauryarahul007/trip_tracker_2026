@@ -84,37 +84,39 @@ Participants in a trip, either unclaimed or claimed by a registered user.
 | `created_at` | `timestamptz` | No | `now()` | | `createdAt` | ISO 8601 string |
 
 ### 2.4 `expenses`
-Financial transactions and settlement payments within a trip.
+Financial transactions and settlement payments within a trip. **Column names verified against `src/types/database.ts` and `mapExpense()` in `src/services/tripApi.ts` (corrected in Phase 5; earlier drafts of this table used wrong names).** Soft delete is `deleted_at` (24 h recycle bin), not `archived`.
 
-| Column | SQL Type | Nullable | Default | FK / Constraint | App Field (camelCase) | Notes |
-|---|---|---|---|---|---|---|
-| `id` | `uuid` | No | `gen_random_uuid()` | PK | `id` | Client-generated UUID |
-| `trip_id` | `uuid` | No | None | FK -> `trips(id)` ON DELETE CASCADE | `tripId` | Parent trip ID |
-| `title` | `text` | No | None | Length >= 1 | `title` | Expense description |
-| `amount` | `numeric` | No | None | > 0, <= 10,000,000 | `amount` | Transaction monetary value |
-| `currency` | `text` | No | `'USD'` | 3-char code | `currency` | Original currency code |
-| `category_id` | `text` | No | None | | `categoryId` | Built-in slug or custom UUID |
-| `paid_by_member_id` | `uuid` | No | None | FK -> `members(id)` | `paidByMemberId` | Primary payer ID |
-| `split_mode` | `text` | No | `'equal'` | `'equal'\|'custom'\|'exact'\|'percent'\|'itemized'` | `splitMode` | Split calculation mode |
-| `split_data` | `jsonb` | Yes | `'{}'::jsonb` | | `splitData` | Mode-specific split payload |
-| `date` | `date` | No | `current_date` | | `date` | YYYY-MM-DD |
-| `receipt_url` | `text` | Yes | `null` | | `receiptUrl` | Storage object key or URL |
-| `notes` | `text` | Yes | `null` | | `notes` | Optional notes |
-| `is_reimbursement`| `boolean`| No | `false` | | `isReimbursement` | True if settlement transfer |
-| `reimbursement_to_member_id` | `uuid` | Yes | `null` | FK -> `members(id)` | `reimbursementToMemberId` | Payee ID for settlements |
-| `archived` | `boolean` | No | `false` | | `archived` | Soft-deleted / in recycle bin |
-| `recycled_at` | `timestamptz` | Yes | `null` | | `recycledAt` | Timestamp moved to recycle bin |
-| `payer_weights` | `jsonb` | Yes | `null` | | `payerWeights` | Multi-payer breakdown map |
-| `exchange_rate` | `numeric` | Yes | `null` | > 0 | `exchangeRate` | FX rate against base currency |
-| `dispute_status`| `text` | Yes | `null` | `'flagged'\|'resolved'` | `disputeStatus` | Dispute state |
-| `dispute_note` | `text` | Yes | `null` | | `disputeNote` | Reason for dispute |
-| `disputed_by_member_id`| `uuid` | Yes | `null` | FK -> `members(id)` | `disputedByMemberId` | Member who flagged dispute |
-| `settlement_confirmed`| `boolean`| No | `false` | | `settlementConfirmed` | Receiver confirmation state |
-| `settlement_confirmed_at`| `timestamptz`| Yes| `null` | | `settlementConfirmedAt` | Confirmation timestamp |
-| `approval_status`| `text` | Yes | `null` | `'pending'\|'approved'` | `approvalStatus` | Approval threshold status |
-| `approved_by_member_id`| `uuid` | Yes | `null` | FK -> `members(id)` | `approvedByMemberId` | Member who approved expense |
-| `approved_at` | `timestamptz` | Yes | `null` | | `approvedAt` | Approval timestamp |
-| `created_at` | `timestamptz` | No | `now()` | | `createdAt` | ISO 8601 string |
+| Column | SQL Type | Null | App Field | Notes |
+|---|---|---|---|---|
+| `id` | `uuid` | No | `id` | Client-generated UUID (PK) |
+| `trip_id` | `uuid` | No | `tripId` | FK -> `trips(id)` ON DELETE CASCADE |
+| `title` | `text` | No | `title` | |
+| `amount` | `numeric` | No | `amount` | > 0; arrives as number |
+| `currency` | `text` | No | `currency` | 3-char code |
+| `category` | `text` | No | `category` | Built-in name or custom category UUID |
+| `date` | `date` | No | `date` | YYYY-MM-DD |
+| `paid_by` | `uuid` | No | `paidBy` | Primary payer member id |
+| `paid_by_shares` | `jsonb` | Yes | `paidByShares` | Multi-payer map `{memberId: amount}` |
+| `split_mode` | `text` | No | `splitMode` | `equal\|equalUnit\|custom\|exact\|percentage\|itemized` |
+| `split_member_ids` | `uuid[]` | No | `splitMemberIds` | |
+| `split_config` | `jsonb` | Yes | `splitConfig` | Mode-specific weights |
+| `itemized_config` | `jsonb` | Yes | `itemizedConfig` | Itemized receipt |
+| `resolved_shares` | `jsonb` | No | `resolvedShares` | `{memberId: amount}` summing to `amount` |
+| `receipt_path` | `text` | Yes | `receiptPath` | Storage key `{tripId}/{expenseId}.{ext}` |
+| `photo_paths` | `text[]` | Yes | `photoPaths` | |
+| `is_settlement` | `boolean` | No | `isSettlement` | True for settlement transfers (title starts `Settlement:`) |
+| `settlement_confirmed_at` | `timestamptz` | Yes | `settlementConfirmedAt` (ms) | |
+| `settlement_confirmed_by_user_id` | `uuid` | Yes | `settlementConfirmedByUserId` | |
+| `disputed_at` | `timestamptz` | Yes | `disputedAt` (ms) | Non-null = flagged |
+| `disputed_by_user_id` | `uuid` | Yes | `disputedByUserId` | |
+| `dispute_note` | `text` | Yes | `disputeNote` | |
+| `approval_status` | `text` | No | `approvalStatus` | `confirmed\|pending_approval` |
+| `approved_by_user_id` | `uuid` | Yes | `approvedByUserId` | |
+| `created_by_user_id` | `uuid` | Yes | `createdByUserId` | |
+| `location` | `jsonb` | Yes | `location` | `{lat, lng}` only; place names are client-side |
+| `deleted_at` | `timestamptz` | Yes | `deletedAt` (ms) | Soft delete / recycle bin |
+| `deleted_by_user_id` | `uuid` | Yes | `deletedByUserId` | |
+| `created_at` / `updated_at` | `timestamptz` | No | `createdAt` / `updatedAt` (ms) | `updated_at` auto-set by trigger (0114) |
 
 ### 2.5 `categories`
 Trip-specific custom expense categories.
@@ -148,19 +150,22 @@ Member groupings for bulk split selections.
 | Primary Key: `(group_id, member_id)` | | | | | |
 
 ### 2.7 `trip_messages`
-Realtime trip chat messages, system cards, and media attachments.
+Realtime trip chat messages, system cards, and media attachments. **Column names verified against `src/types/database.ts` / `mapTripMessage()` (corrected in Phase 5).**
 
-| Column | SQL Type | Nullable | Default | FK / Constraint | App Field (camelCase) | Notes |
-|---|---|---|---|---|---|---|
-| `id` | `uuid` | No | `gen_random_uuid()` | PK | `id` | Client-generated UUID |
-| `trip_id` | `uuid` | No | None | FK -> `trips(id)` ON DELETE CASCADE | `tripId` | Parent trip ID |
-| `member_id` | `uuid` | No | None | FK -> `members(id)` | `memberId` | Author member ID |
-| `body` | `text` | No | `''` | Length <= 2000 | `body` | Message text content |
-| `kind` | `text` | No | `'text'` | Check kind list | `kind` | Message event kind (see below) |
-| `metadata` | `jsonb` | No | `'{}'::jsonb` | | `metadata` | Kind-specific payload |
-| `edited_at` | `timestamptz` | Yes | `null` | | `editedAt` | Last edit timestamp |
-| `deleted_at`| `timestamptz` | Yes | `null` | | `deletedAt` | Soft-deletion tombstone |
-| `created_at` | `timestamptz` | No | `now()` | | `createdAt` | ISO 8601 string |
+| Column | SQL Type | Null | App Field | Notes |
+|---|---|---|---|---|
+| `id` | `uuid` | No | `id` | Client-generated UUID |
+| `trip_id` | `uuid` | No | `tripId` | FK -> `trips(id)` ON DELETE CASCADE |
+| `member_id` | `uuid` | No | `memberId` | Author member |
+| `body` | `text` | No | `body` | <= 2000 chars |
+| `kind` | `text` | No | `eventKind` | See kinds below |
+| `payload` | `jsonb` | Yes | `payload` | Kind-specific payload (not `metadata`) |
+| `created_at` | `timestamptz` | No | `createdAt` (ms) | |
+| `edited_at` | `timestamptz` | Yes | `editedAt` (ms) | |
+| `deleted_at` | `timestamptz` | Yes | `deletedAt` (ms) | Soft delete |
+| `reply_to_id` | `uuid` | Yes | `replyToId` | |
+| `reactions` | `jsonb` | Yes | `reactions` | `{emoji: [memberId]}` |
+| `is_pinned` | `boolean` | Yes | `isPinned` | |
 
 *Allowed `kind` values:* `'text'`, `'expense_added'`, `'settlement_recorded'`, `'expense_disputed'`, `'expense_dispute_resolved'`, `'image'`, `'expense_link'`, `'voice_note'`.
 

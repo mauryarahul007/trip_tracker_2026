@@ -15,14 +15,14 @@
 
 | Web Route / Surface | Web Source File(s) | Feature Flag Key | Pack | Tier | Flutter Phase | Status | Test-Steps Anchor in `FEATURE_TEST_STEPS.md` |
 |---|---|---|---|---|---|---|---|
-| `/login` | `src/components/LoginScreen.tsx` | `boardingPassLogin` | `core` | T1 | Phase 6 | `todo` | `## FEAT-BOARDINGPASS` |
-| `/reset-password` | `src/components/ResetPasswordModal.tsx` | `(none - core)` | `core` | T1 | Phase 6 | `todo` | `## Shared prep` |
-| `/delete-account` | `src/components/DeleteAccountModal.tsx` | `(none - core)` | `core` | T1 | Phase 6 | `todo` | `## Shared prep` |
-| `/join/:code` | `src/components/JoinTripPreviewModal.tsx` | `enableInviteConversion` | `core` | T1 | Phase 6 | `todo` | `## FEAT-GROWTH2` |
-| `/share/:token` | `src/components/TripShareView.tsx` | `enableTripShareLink` | `core` | T1 | Phase 6 | `todo` | `## FEAT-078` |
+| `/login` | `src/components/LoginScreen.tsx` | `boardingPassLogin` | `core` | T1 | Phase 6 | `partial` (tests only; Google/Apple need client IDs; no on-device run) | `## FEAT-BOARDINGPASS` |
+| `/reset-password` | `src/components/ResetPasswordModal.tsx` | `(none - core)` | `core` | T1 | Phase 6 | `partial` (tests only) | `## Shared prep` |
+| `/delete-account` | `src/components/DeleteAccountModal.tsx` | `(none - core)` | `core` | T1 | Phase 6 | `partial` (calls delete_own_account; unverified against staging) | `## Shared prep` |
+| `/join/:code` | `src/components/JoinTripPreviewModal.tsx` | `enableInviteConversion` | `core` | T1 | Phase 6 | `partial` (tests only; universal links need domain) | `## FEAT-GROWTH2` |
+| `/share/:token` | `src/components/TripShareView.tsx` | `enableTripShareLink` | `core` | T1 | Phase 6 | `partial` (tests only) | `## FEAT-078` |
 | `/live/:token` | `src/components/LiveLocationShareModal.tsx` | `enableLiveLocationShare` | `travel` | T2 | Phase 9 | `todo` | `## FEAT-076` |
-| App Shell / Router | `src/App.tsx`, `src/components/NavTabs.tsx` | `enableTabBackHistory`, `enableDeepLinkedTabs` | `core` | T1 | Phase 2, 6 | `todo` | `## Navigation, dialogs & sync UX pass` |
-| Bottom Nav Tabs | `src/components/NavTabs.tsx`, `src/utils/tripTabs.ts` | `enableChatFirstNav` | `trip` | T1 | Phase 2, 6 | `todo` | `## Chat placement flags` |
+| App Shell / Router | `src/App.tsx`, `src/components/NavTabs.tsx` | `enableTabBackHistory`, `enableDeepLinkedTabs` | `core` | T1 | Phase 2, 6 | `partial` | `## Navigation, dialogs & sync UX pass` |
+| Bottom Nav Tabs | `src/components/NavTabs.tsx`, `src/utils/tripTabs.ts` | `enableChatFirstNav` | `trip` | T1 | Phase 2, 6 | `partial` (tabs are placeholders until Ph 7-8) | `## Chat placement flags` |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Feature / Screen | Web Source File(s) | Feature Flag Key | Pack | Tier | Flutter Phase | Status | Test-Steps Anchor in `FEATURE_TEST_STEPS.md` |
 |---|---|---|---|---|---|---|---|
-| Trips List & Stack | `src/components/TripsListScreen.tsx`, `TripStack.tsx` | `enableMotionPolish` | `core` | T1 | Phase 6 | `todo` | `## UX-MOTION` |
-| Quick Trip Creation | `src/components/NewTripModal.tsx` | `enableQuickTripCreate` | `core` | T1 | Phase 6 | `todo` | `## UX-POLISH3` |
+| Trips List & Stack | `src/components/TripsListScreen.tsx`, `TripStack.tsx` | `enableMotionPolish` | `core` | T1 | Phase 6 | `partial` (list + Hero, no 3D stack) | `## UX-MOTION` |
+| Quick Trip Creation | `src/components/NewTripModal.tsx` | `enableQuickTripCreate` | `core` | T1 | Phase 6 | `partial` | `## UX-POLISH3` |
 | Destination Suggest | `src/components/DestinationAutocomplete.tsx` | `enableDestinationAutocomplete` | `core` | T1 | Phase 6 | `todo` | `## DEST-SUGGEST` |
 | Destination Covers | `src/components/TripStack.tsx` | `cycleDestinationCovers` | `core` | T1 | Phase 6 | `todo` | `## FEAT-COVER-CYCLE` |
 | Traveler Pass Back | `src/components/TravelPassHeroCard.tsx` | `enableTravelerPassBack` | `core` | T1 | Phase 6 | `todo` | `## PASS-STUB-SIMPLIFY` |

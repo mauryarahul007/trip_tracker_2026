@@ -1,168 +1,338 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/env/app_env.dart';
-import '../../../../shared/theme/app_icons.dart';
-import '../../../../shared/theme/app_tokens.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_scaffold.dart';
-import '../../../../shared/widgets/empty_state.dart';
-import '../../../../shared/widgets/offline_banner.dart';
+import '../../../app/auth_state.dart';
+import '../../../core/clock.dart';
+import '../../../core/env/app_env.dart';
+import '../../../data/providers.dart';
+import '../../../domain/logic/back_exit.dart';
+import '../../../domain/models/trip.dart';
+import '../../../l10n/l10n_ext.dart';
+import '../../../shared/theme/app_icons.dart';
+import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_scaffold.dart';
+import '../../../shared/widgets/app_sheet.dart';
+import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/confirm_dialog.dart';
+import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/offline_banner.dart';
+import '../../../shared/widgets/pull_to_refresh.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
+import '../../../shared/widgets/swipeable_row.dart';
+import '../../../shared/widgets/undo_snackbar.dart';
+import '../application/trips_providers.dart';
+import 'widgets/create_trip_sheet.dart';
+import 'widgets/join_code_sheet.dart';
+import 'widgets/sync_chip.dart';
+import 'widgets/trip_card.dart';
 
-class TripsScreen extends ConsumerWidget {
-  const TripsScreen({super.key});
+class TripsScreen extends ConsumerStatefulWidget {
+  const TripsScreen({this.now, super.key});
+
+  /// Injectable clock for deterministic tests/goldens.
+  final DateTime Function()? now;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tokens = context.tokens;
-    final env = AppEnv.current;
+  ConsumerState<TripsScreen> createState() => _TripsScreenState();
+}
 
-    return AppScaffold(
-      appBar: AppBar(
-        title: const Text('My Trips'),
-        actions: [
-          if (env.flavor != AppFlavor.prod)
-            IconButton(
-              icon: const Icon(Icons.bug_report_outlined),
-              tooltip: 'Staging Smoke Test',
-              onPressed: () => context.push('/smoke-test'),
-            ),
-          IconButton(
-            icon: const Icon(AppIcons.settings),
-            tooltip: 'Settings',
-            onPressed: () => context.push('/trip/demo-trip-123/settings'),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          const OfflineBanner(),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16.0),
-              children: [
-                _buildTripCard(
-                  context,
-                  id: 'demo-trip-123',
-                  name: 'Kyoto & Tokyo Autumn 2026',
-                  dates: 'Oct 12 – Oct 24, 2026',
-                  membersCount: 4,
-                  totalExpenses: '¥ 428,500',
-                ),
-                const SizedBox(height: 12),
-                _buildTripCard(
-                  context,
-                  id: 'demo-trip-456',
-                  name: 'Alps Ski Week',
-                  dates: 'Dec 18 – Dec 26, 2026',
-                  membersCount: 6,
-                  totalExpenses: '€ 3,120',
-                ),
-                const SizedBox(height: 24),
-                EmptyState(
-                  icon: AppIcons.expenses,
-                  title: 'Ready for another adventure?',
-                  subtitle: 'Create a new trip or join a group with an invitation link.',
-                  action: AppButton(
-                    label: 'Join with Code',
-                    variant: AppButtonVariant.secondary,
-                    onPressed: () => context.push('/join/TESTCODE'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          context.push('/trip/demo-trip-123/expenses');
-        },
-        backgroundColor: tokens.primaryAccent,
-        foregroundColor: Colors.white,
-        icon: const Icon(AppIcons.add),
-        label: const Text('New Trip'),
-      ),
+class _TripsScreenState extends ConsumerState<TripsScreen> {
+  /// Trips removed from view the instant the user acts, so a dismissed row
+  /// never lingers while the local write streams back.
+  final _hidden = <String>{};
+  DateTime? _lastBackPress;
+
+  DateTime get _now => widget.now?.call() ?? ref.read(nowProvider)();
+
+  void _open(Trip t) => context.push('/trip/${t.id}/expenses');
+
+  Future<void> _create() async {
+    final id = await AppSheet.show<String>(
+      context: context,
+      title: context.l10n.createTripTitle,
+      builder: (_) => const CreateTripSheet(),
+    );
+    if (id != null && mounted) unawaited(context.push('/trip/$id/expenses'));
+  }
+
+  Future<void> _setArchived(Trip t, bool archived) async {
+    final l10n = context.l10n;
+    final repo = ref.read(tripRepositoryProvider);
+    setState(() => _hidden.add(t.id));
+    await repo.setTripState(t.id, archived: archived);
+    if (!mounted) return;
+    setState(() => _hidden.remove(t.id));
+    UndoSnackbar.show(
+      context: context,
+      message: archived ? l10n.tripArchived : l10n.tripUnarchived,
+      onUndo: () => unawaited(repo.setTripState(t.id, archived: !archived)),
     );
   }
 
-  Widget _buildTripCard(
-    BuildContext context, {
-    required String id,
-    required String name,
-    required String dates,
-    required int membersCount,
-    required String totalExpenses,
-  }) {
-    final tokens = context.tokens;
+  Future<void> _delete(Trip t) async {
+    final l10n = context.l10n;
+    final ok = await ConfirmDialog.show(
+      context: context,
+      title: l10n.tripDeleteTitle,
+      message: l10n.tripDeleteBody(t.name),
+      confirmLabel: l10n.actionDelete,
+      cancelLabel: l10n.actionCancel,
+      isDestructive: true,
+    );
+    if (!ok || !mounted) return;
+    final repo = ref.read(
+      tripRepositoryProvider,
+    ); // captured: screen may be gone when the snackbar closes
+    setState(() => _hidden.add(t.id));
+    unawaited(
+      UndoSnackbar.show(
+        context: context,
+        message: l10n.tripDeleted,
+        onUndo: () {},
+      ).closed.then((reason) {
+        // Only an explicit UNDO keeps the trip; timeout/dismiss/replace commits.
+        if (reason == SnackBarClosedReason.action) {
+          if (mounted) setState(() => _hidden.remove(t.id));
+        } else {
+          unawaited(repo.deleteTrip(t.id));
+        }
+      }),
+    );
+  }
 
-    return InkWell(
-      onTap: () => context.push('/trip/$id/expenses'),
-      borderRadius: BorderRadius.circular(tokens.radiusLg),
-      child: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: tokens.bgSurface,
-          borderRadius: BorderRadius.circular(tokens.radiusLg),
-          border: Border.all(color: tokens.borderColor),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+  Widget _card(Trip t, bool isOwner) {
+    final card = TripCard(
+      trip: t,
+      now: _now,
+      onTap: () => _open(t),
+      onMenu: isOwner ? () => _delete(t) : null,
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: isOwner
+          ? SwipeableRow(
+              itemKey: ValueKey('trip-${t.id}'),
+              actionIcon: t.archived ? AppIcons.undo : Icons.archive_outlined,
+              actionLabel: t.archived
+                  ? context.l10n.tripUnarchive
+                  : context.l10n.tripArchive,
+              backgroundColor: context.tokens.secondaryAccent,
+              onDismissed: () => _setArchived(t, !t.archived),
+              child: card,
+            )
+          : card,
+    );
+  }
+
+  /// Root back press: exit only on a second press inside the window.
+  void _onRootBack() {
+    final now = _now;
+    if (isSecondBackPress(_lastBackPress, now)) {
+      unawaited(SystemNavigator.pop());
+      return;
+    }
+    _lastBackPress = now;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.backAgainToExit),
+          duration: exitWindow,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final tokens = context.tokens;
+    final lists = ref.watch(tripListsProvider);
+    final auth = ref.watch(authStateProvider);
+    final sort = ref.watch(tripSortProvider);
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onRootBack();
+      },
+      child: AppScaffold(
+        appBar: AppBar(
+          title: Text(l10n.tripsTitle),
+          actions: [
+            PopupMenuButton<TripSort>(
+              tooltip: l10n.tripsSortDate,
+              icon: const Icon(AppIcons.filter),
+              initialValue: sort,
+              onSelected: ref.read(tripSortProvider.notifier).set,
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: TripSort.date,
+                  child: Text(l10n.tripsSortDate),
+                ),
+                PopupMenuItem(
+                  value: TripSort.name,
+                  child: Text(l10n.tripsSortName),
+                ),
+              ],
+            ),
+            PopupMenuButton<String>(
+              tooltip: l10n.navSettings,
+              icon: const Icon(AppIcons.settings),
+              onSelected: (v) {
+                if (v == 'signout') ref.read(authRepositoryProvider).signOut();
+                if (v == 'join') showJoinCodeSheet(context);
+              if (v == 'delete') context.push('/delete-account');
+                if (v == 'smoke') context.push('/smoke-test');
+              },
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: 'signout',
+                  child: Text(l10n.actionSignOut),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text(l10n.authDeleteAccount),
+                ),
+                if (!AppEnv.current.isProd)
+                  PopupMenuItem(
+                    value: 'smoke',
+                    child: Text(l10n.smokeTestTitle),
+                  ),
+              ],
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        body: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    name,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: tokens.textPrimary,
-                    ),
-                  ),
-                ),
-                const Icon(AppIcons.chevronRight, size: 18),
-              ],
+            const OfflineBanner(),
+            const SyncChip(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: AppTextField(
+                hint: l10n.tripsSearchHint,
+                prefixIcon: const Icon(AppIcons.search),
+                onChanged: ref.read(tripSearchProvider.notifier).set,
+              ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              dates,
-              style: TextStyle(fontSize: 13, color: tokens.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(AppIcons.members, size: 16, color: tokens.textMuted),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$membersCount members',
-                      style: TextStyle(fontSize: 13, color: tokens.textMuted),
-                    ),
-                  ],
-                ),
-                Text(
-                  totalExpenses,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: tokens.textPrimary,
+            Expanded(
+              child: AppPullToRefresh(
+                onRefresh: ref.read(refreshTripsProvider),
+                child: lists.when(
+                  loading: () => ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      for (var i = 0; i < 3; i++)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: SkeletonLoader(
+                            child: Container(
+                              height: 96,
+                              decoration: BoxDecoration(
+                                color: tokens.bgSurface,
+                                borderRadius: BorderRadius.circular(
+                                  tokens.radiusMd,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
+                  error: (_, _) => ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      EmptyState(
+                        icon: AppIcons.alert,
+                        title: l10n.tripsLoadError,
+                        subtitle: l10n.errorGenericMessage,
+                        action: AppButton(
+                          label: l10n.actionRetry,
+                          onPressed: () => ref.invalidate(tripsProvider),
+                        ),
+                      ),
+                    ],
+                  ),
+                  data: (data) {
+                    final active = data.active
+                        .where((t) => !_hidden.contains(t.id))
+                        .toList();
+                    final archived = data.archived
+                        .where((t) => !_hidden.contains(t.id))
+                        .toList();
+                    if (data.total == 0) {
+                      return ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          EmptyState(
+                            icon: AppIcons.expenses,
+                            title: l10n.emptyTripsTitle,
+                            subtitle: l10n.emptyTripsSubtitle,
+                            action: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                AppButton(
+                                  label: l10n.actionCreateTrip,
+                                  onPressed: _create,
+                                ),
+                                const SizedBox(height: 8),
+                                AppButton(
+                                  label: l10n.tripsJoinWithCode,
+                                  variant: AppButtonVariant.secondary,
+                                  onPressed: () => showJoinCodeSheet(context),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                    if (active.isEmpty && archived.isEmpty) {
+                      return ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Center(child: Text(l10n.tripsNoMatches)),
+                          ),
+                        ],
+                      );
+                    }
+                    bool owner(Trip t) => t.ownerId == auth.userId;
+                    return ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+                      children: [
+                        for (final t in active) _card(t, owner(t)),
+                        if (archived.isNotEmpty)
+                          ExpansionTile(
+                            tilePadding: EdgeInsets.zero,
+                            title: Text(
+                              l10n.tripsArchivedSection(archived.length),
+                              style: TextStyle(color: tokens.textSecondary),
+                            ),
+                            children: [
+                              for (final t in archived) _card(t, owner(t)),
+                            ],
+                          ),
+                      ],
+                    );
+                  },
                 ),
-              ],
+              ),
             ),
           ],
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: _create,
+          icon: const Icon(AppIcons.add),
+          label: Text(l10n.tripsNewTrip),
         ),
       ),
     );

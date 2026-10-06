@@ -4,11 +4,21 @@ import 'package:go_router/go_router.dart';
 
 import '../features/account/presentation/delete_account_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
+import '../features/auth/application/onboarding_state.dart';
+import '../features/auth/presentation/onboarding_screen.dart';
 import '../features/auth/presentation/reset_password_screen.dart';
+import '../features/auth/presentation/splash_screen.dart';
 import '../features/legal/presentation/privacy_screen.dart';
 import '../features/legal/presentation/terms_screen.dart';
 import '../features/smoke_test/presentation/smoke_test_screen.dart';
 import '../features/travel/presentation/live_screen.dart';
+import '../features/expenses/presentation/expense_form_screen.dart';
+import '../features/expenses/presentation/expenses_tab.dart';
+import '../features/expenses/presentation/ledger_tab.dart';
+import '../features/expenses/presentation/recycle_bin_screen.dart';
+import '../features/trip_details/application/trip_nav.dart';
+import '../features/trip_details/domain/trip_tabs.dart';
+import '../features/trip_details/presentation/trip_settings_stub.dart';
 import '../features/trip_details/presentation/trip_shell_screen.dart';
 import '../features/trips/presentation/join_screen.dart';
 import '../features/trips/presentation/share_screen.dart';
@@ -17,37 +27,66 @@ import 'auth_state.dart';
 
 final routerKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
+/// Only app-internal invite return paths are honoured (no open redirects).
+String? _safeNext(String? next) =>
+    next != null && RegExp(r'^/join/[A-Za-z0-9._-]{3,64}$').hasMatch(next) ? next : null;
+
+/// Locations reachable without a session.
+bool _isPublic(String loc) =>
+    loc == '/login' ||
+    loc == '/reset-password' ||
+    loc == '/privacy' ||
+    loc == '/terms' ||
+    loc.startsWith('/join') ||
+    loc.startsWith('/share') ||
+    loc.startsWith('/live');
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  // One router for the app's lifetime: auth changes re-run `redirect` via
+  // the listenable instead of rebuilding (and resetting) the navigation stack.
+  final refresh = ValueNotifier<int>(0);
+  ref.listen(authStateProvider, (_, _) => refresh.value++);
+  ref.listen(onboardedProvider, (_, _) => refresh.value++);
+  ref.onDispose(refresh.dispose);
 
   return GoRouter(
     navigatorKey: routerKey,
     initialLocation: '/',
+    refreshListenable: refresh,
     debugLogDiagnostics: false,
     redirect: (context, state) {
-      final isLoggingIn = state.matchedLocation == '/login';
-      final isResetting = state.matchedLocation == '/reset-password';
-      final isPrivacy = state.matchedLocation == '/privacy';
-      final isTerms = state.matchedLocation == '/terms';
-      final isJoin = state.matchedLocation.startsWith('/join');
-      final isPublic =
-          isLoggingIn || isResetting || isPrivacy || isTerms || isJoin;
+      final auth = ref.read(authStateProvider);
+      final loc = state.matchedLocation;
 
-      if (!authState.isAuthenticated && !isPublic) {
-        return '/login';
+      if (auth.isLoading) return loc == '/splash' ? null : '/splash';
+      if (loc == '/splash') return auth.isAuthenticated ? '/' : '/login';
+      if (!auth.isAuthenticated && !_isPublic(loc)) return '/login';
+      if (auth.isAuthenticated) {
+        // An invite flow finishes first; the intro carousel can wait.
+        if (loc.startsWith('/join')) return null;
+        final next = loc == '/login' ? _safeNext(state.uri.queryParameters['next']) : null;
+        if (next != null) return next;
+        final onboarded = ref.read(onboardedProvider);
+        if (!onboarded) return loc == '/onboarding' ? null : '/onboarding';
+        if (loc == '/onboarding' || loc == '/login') return '/';
       }
-
-      if (authState.isAuthenticated && isLoggingIn) {
-        return '/';
-      }
-
       return null;
     },
     routes: [
       GoRoute(
+        path: '/splash',
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
         path: '/',
         name: 'trips',
         builder: (context, state) => const TripsScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        name: 'onboarding',
+        builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(
         path: '/login',
@@ -98,14 +137,71 @@ final routerProvider = Provider<GoRouter>((ref) {
           return ShareScreen(token: token);
         },
       ),
+      // Everything under /trip/:id lives in one parent route, so each trip gets its
+      // own shell (no tab state leaks between trips) and branch default
+      // locations stay free of path parameters, which go_router requires.
       GoRoute(
-        path: '/trip/:id/:tab',
-        name: 'trip-tab',
-        builder: (context, state) {
-          final tripId = state.pathParameters['id'] ?? '';
-          final tab = state.pathParameters['tab'] ?? 'expenses';
-          return TripShellScreen(tripId: tripId, currentTab: tab);
+        path: '/trip/:id',
+        // Bare /trip/:id opens the first visible tab (Chat when chat-first nav is on).
+        redirect: (context, state) {
+          final id = state.pathParameters['id']!;
+          final path = state.uri.path;
+          if (path != '/trip/$id' && path != '/trip/$id/') return null;
+          final tabs = ref.read(visibleTabsProvider(id));
+          return '/trip/$id/${(tabs.isEmpty ? TripNavTab.expenses : tabs.first).name}';
         },
+        routes: [
+          StatefulShellRoute(
+            builder: (context, state, shell) =>
+                TripShellScreen(tripId: state.pathParameters['id']!, body: shell, navigationShell: shell),
+            navigatorContainerBuilder: (context, shell, children) => TripTabPager(
+              tripId: GoRouterState.of(context).pathParameters['id']!,
+              navigationShell: shell,
+              branches: children,
+            ),
+            // One branch per TripNavTab, same order as the enum (the pager maps by index).
+            branches: [
+              for (final tab in TripNavTab.values)
+                StatefulShellBranch(routes: [
+                  GoRoute(
+                    path: tab.name,
+                    name: 'trip-${tab.name}',
+                    builder: (context, state) => switch (tab) {
+                      TripNavTab.expenses => ExpensesTab(tripId: state.pathParameters['id']!),
+                      TripNavTab.ledger => LedgerTab(tripId: state.pathParameters['id']!),
+                      _ => TripTabPlaceholder(tab: tab),
+                    },
+                    routes: [
+                      if (tab == TripNavTab.expenses) ...[
+                        // Full-screen: must cover the tab bar, so they live on the root navigator.
+                        GoRoute(
+                          path: 'new',
+                          parentNavigatorKey: routerKey,
+                          builder: (context, state) => ExpenseFormScreen(tripId: state.pathParameters['id']!),
+                        ),
+                        GoRoute(
+                          path: ':eid/edit',
+                          parentNavigatorKey: routerKey,
+                          builder: (context, state) =>
+                              ExpenseFormScreen(tripId: state.pathParameters['id']!, expenseId: state.pathParameters['eid']),
+                        ),
+                      ],
+                    ],
+                  ),
+                ]),
+            ],
+          ),
+          GoRoute(
+            path: 'recycle-bin',
+            name: 'trip-recycle-bin',
+            builder: (context, state) => RecycleBinScreen(tripId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: 'settings',
+            name: 'trip-settings',
+            builder: (context, state) => const TripSettingsStub(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/smoke-test',

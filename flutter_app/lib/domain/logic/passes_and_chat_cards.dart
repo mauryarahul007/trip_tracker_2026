@@ -1,32 +1,4 @@
-const Map<String, String> cityToIata = {
-  'bangalore': 'BLR',
-  'bengaluru': 'BLR',
-  'hyderabad': 'HYD',
-  'bagdogra': 'IXB',
-  'delhi': 'DEL',
-  'new delhi': 'DEL',
-  'mumbai': 'BOM',
-  'bombay': 'BOM',
-  'kolkata': 'CCU',
-  'calcutta': 'CCU',
-  'chennai': 'MAA',
-  'madras': 'MAA',
-  'goa': 'GOI',
-  'dabolim': 'GOI',
-  'mopa': 'GOX',
-  'pune': 'PNQ',
-  'jaipur': 'JAI',
-  'ahmedabad': 'AMD',
-  'kochi': 'COK',
-  'cochin': 'COK',
-  'srinagar': 'SXR',
-  'chandigarh': 'IXC',
-  'tokyo': 'HND',
-  'new_york': 'JFK',
-  'new york': 'JFK',
-  'san_francisco': 'SFO',
-  'san francisco': 'SFO',
-};
+import 'city_iata.g.dart';
 
 String resolveAirportCode(String input) {
   if (input.isEmpty) return '';
@@ -119,8 +91,38 @@ class PassStubGroup {
   });
 }
 
+const _even = 0.01;
+
+String _firstName(String name) {
+  final parts = name.trim().split(RegExp(r'\s+'));
+  return parts.first.isEmpty ? 'your partner' : parts.first;
+}
+
+String _insideCaption(double inside, String groupName, List<String> others) {
+  if (inside.abs() < _even) return 'Square inside $groupName';
+  if (others.length == 1) {
+    final who = _firstName(others.first);
+    return inside > 0 ? '$who owes you' : 'You owe $who';
+  }
+  if (others.length > 1) {
+    return inside > 0 ? 'The rest of $groupName owes you' : 'You owe the rest of $groupName';
+  }
+  return inside > 0 ? 'Your group owes you' : 'You owe your group';
+}
+
+String _outsideCaption(double outside, String groupName) {
+  if (outside.abs() < _even) return 'Square with the trip';
+  return outside > 0 ? '$groupName receives' : '$groupName pays';
+}
+
+String _summaryLine(double myNet, String Function(double amount) format) {
+  if (myNet.abs() < _even) return 'You are square';
+  final amount = format(myNet.abs());
+  return myNet > 0 ? 'You are ahead $amount' : 'You are short $amount';
+}
+
 String toneFor(double amount) {
-  if (amount.abs() < 0.01) return 'even';
+  if (amount.abs() < _even) return 'even';
   return amount > 0 ? 'receive' : 'pay';
 }
 
@@ -142,16 +144,16 @@ PassStub buildPassStub(
         amount: inside,
         signed: true,
         tone: toneFor(inside),
-        caption: inside > 0 ? 'Your group owes you' : 'You owe your group',
+        caption: _insideCaption(inside, group.name, group.otherMemberNames),
       ),
       right: PassStubCell(
         label: 'Outside ${group.name}',
         amount: outside,
         signed: true,
         tone: toneFor(outside),
-        caption: outside > 0 ? '${group.name} receives' : '${group.name} pays',
+        caption: _outsideCaption(outside, group.name),
       ),
-      summary: myNet > 0 ? 'You are ahead ${format(myNet.abs())}' : 'You are short ${format(myNet.abs())}',
+      summary: _summaryLine(myNet, format),
     );
   }
 

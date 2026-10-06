@@ -1,5 +1,7 @@
 {
   "APP_ENV": "dev",
   "SUPABASE_URL": "https://your-dev-project.supabase.co",
-  "SUPABASE_ANON_KEY": "your-dev-anon-key-here"
+  "SUPABASE_ANON_KEY": "your-dev-anon-key-here",
+  "GOOGLE_SERVER_CLIENT_ID": "your-WEB-oauth-client-id.apps.googleusercontent.com",
+  "GOOGLE_IOS_CLIENT_ID": "your-IOS-oauth-client-id.apps.googleusercontent.com"
 }

@@ -1,85 +1,57 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:trip_tracker/data/dto/trip_dto.dart';
-import 'package:trip_tracker/data/dto/expense_dto.dart';
-import 'package:trip_tracker/data/dto/member_dto.dart';
+import 'package:trip_tracker/data/mappers/row_mappers.dart';
 
+/// Real DB row -> domain, checked against rows/objects generated from the
+/// TS mappers' shapes (docs/flutter-migration/fixtures/database_mappings.json).
 void main() {
-  group('Database Mappings Golden Fixture Tests', () {
-    late Map<String, dynamic> fixtures;
+  late Map<String, dynamic> fx;
+  setUpAll(() {
+    fx = jsonDecode(File('../docs/flutter-migration/fixtures/database_mappings.json').readAsStringSync()) as Map<String, dynamic>;
+  });
 
-    setUpAll(() {
-      final file = File('../docs/flutter-migration/fixtures/database_mappings.json');
-      expect(file.existsSync(), isTrue, reason: 'database_mappings.json fixture must exist');
-      fixtures = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
-    });
+  Map<String, dynamic> row(String k) => Map<String, dynamic>.from(fx[k]['dbRow'] as Map);
+  Map<String, dynamic> app(String k) => Map<String, dynamic>.from(fx[k]['appObject'] as Map);
 
-    test('Trips mapping matches golden fixture', () {
-      final tripFixture = fixtures['trips'] as Map<String, dynamic>;
-      final dbRow = tripFixture['dbRow'] as Map<String, dynamic>;
-      final appObject = tripFixture['appObject'] as Map<String, dynamic>;
+  test('trip row -> domain', () {
+    final t = tripFromRow(row('trips')).toJson();
+    final a = app('trips');
+    for (final k in ['id', 'name', 'startDate', 'endDate', 'baseCurrency', 'ownerId', 'joinCode', 'archived', 'destination']) {
+      expect(t[k], a[k], reason: k);
+    }
+  });
 
-      final dto = TripDto.fromPostgresJson(dbRow);
-      expect(dto.id, appObject['id']);
-      expect(dto.name, appObject['name']);
-      expect(dto.startDate, appObject['startDate']);
-      expect(dto.endDate, appObject['endDate']);
-      expect(dto.baseCurrency, appObject['baseCurrency']);
-      expect(dto.ownerId, appObject['ownerId']);
-      expect(dto.joinCode, appObject['joinCode']);
-      expect(dto.archived, appObject['archived']);
-      expect(dto.destination, appObject['destination']);
+  test('member row -> domain', () {
+    final m = memberFromRow(row('members')).toJson();
+    final a = app('members');
+    for (final k in ['id', 'tripId', 'name', 'linkedUserId', 'archived', 'joinDate']) {
+      expect(m[k], a[k], reason: k);
+    }
+  });
 
-      final domain = dto.toDomain();
-      expect(domain.id, appObject['id']);
-      expect(domain.name, appObject['name']);
-      expect(domain.startDate, appObject['startDate']);
-      expect(domain.endDate, appObject['endDate']);
-    });
+  test('expense row -> domain matches mapExpense()', () {
+    final e = expenseFromRow(row('expenses')).toJson();
+    final a = app('expenses')..removeWhere((_, v) => v == null);
+    for (final k in a.keys) {
+      expect(e[k], a[k], reason: k);
+    }
+  });
 
-    test('Expenses mapping matches golden fixture', () {
-      final expenseFixture = fixtures['expenses'] as Map<String, dynamic>;
-      final dbRow = expenseFixture['dbRow'] as Map<String, dynamic>;
-      final appObject = expenseFixture['appObject'] as Map<String, dynamic>;
+  test('expense domain -> upsert args uses real RPC params', () {
+    final args = expenseToUpsertArgs(expenseFromRow(row('expenses')));
+    expect(args['p_category'], 'Entertainment');
+    expect(args['p_paid_by'], row('expenses')['paid_by']);
+    expect(args['p_split_member_ids'], row('expenses')['split_member_ids']);
+    expect(args['p_receipt_path'], 'receipts/t1/e1.jpg');
+  });
 
-      final dto = ExpenseDto.fromPostgresJson(dbRow);
-      expect(dto.id, appObject['id']);
-      expect(dto.tripId, appObject['tripId']);
-      expect(dto.title, appObject['title']);
-      expect(dto.amount, appObject['amount']);
-      expect(dto.currency, appObject['currency']);
-      expect(dto.categoryId, appObject['categoryId']);
-      expect(dto.paidByMemberId, appObject['paidByMemberId']);
-      expect(dto.splitMode, appObject['splitMode']);
-      expect(dto.date, appObject['date']);
-      expect(dto.receiptUrl, appObject['receiptUrl']);
-      expect(dto.notes, appObject['notes']);
-      expect(dto.isReimbursement, appObject['isReimbursement']);
-      expect(dto.exchangeRate, appObject['exchangeRate']);
-
-      final domain = dto.toDomain();
-      expect(domain.id, appObject['id']);
-      expect(domain.title, appObject['title']);
-      expect(domain.amount, appObject['amount']);
-    });
-
-    test('Members mapping matches golden fixture', () {
-      final memberFixture = fixtures['members'] as Map<String, dynamic>;
-      final dbRow = memberFixture['dbRow'] as Map<String, dynamic>;
-      final appObject = memberFixture['appObject'] as Map<String, dynamic>;
-
-      final dto = MemberDto.fromPostgresJson(dbRow);
-      expect(dto.id, appObject['id']);
-      expect(dto.tripId, appObject['tripId']);
-      expect(dto.name, appObject['name']);
-      expect(dto.linkedUserId, appObject['linkedUserId']);
-      expect(dto.archived, appObject['archived']);
-      expect(dto.joinDate, appObject['joinDate']);
-
-      final domain = dto.toDomain();
-      expect(domain.id, appObject['id']);
-      expect(domain.name, appObject['name']);
-    });
+  test('message row -> domain', () {
+    final m = messageFromRow(row('messages')).toJson();
+    final a = app('messages');
+    for (final k in ['id', 'tripId', 'memberId', 'body', 'eventKind', 'createdAt', 'reactions', 'isPinned']) {
+      expect(m[k], a[k], reason: k);
+    }
   });
 }

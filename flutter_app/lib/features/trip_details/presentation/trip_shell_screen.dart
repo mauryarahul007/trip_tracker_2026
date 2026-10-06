@@ -1,229 +1,276 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/flags/feature_flags.dart';
-import '../../../../core/platform/haptics.dart';
-import '../../../../shared/theme/app_icons.dart';
-import '../../../../shared/theme/app_tokens.dart';
-import '../../../../shared/widgets/app_scaffold.dart';
-import '../../../../shared/widgets/offline_banner.dart';
+import '../../../core/platform/haptics.dart';
+import '../../../domain/logic/tab_trail.dart';
+import '../../../l10n/l10n_ext.dart';
+import '../../../shared/theme/app_icons.dart';
+import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/widgets/app_scaffold.dart';
+import '../../../shared/widgets/offline_banner.dart';
+import '../../../shared/widgets/app_sheet.dart';
+import '../../trips/presentation/widgets/share_trip_sheet.dart';
+import '../application/trip_nav.dart';
 import '../domain/trip_tabs.dart';
 
-class TripShellScreen extends ConsumerWidget {
-  const TripShellScreen({
-    super.key,
-    required this.tripId,
-    required this.currentTab,
-  });
+/// Branch order == [TripNavTab] order (chat, expenses, ledger, members, notes).
+String tripTabLabel(BuildContext context, TripNavTab tab) {
+  final l10n = context.l10n;
+  return switch (tab) {
+    TripNavTab.chat => l10n.navChat,
+    TripNavTab.expenses => l10n.navExpenses,
+    TripNavTab.ledger => l10n.navBalances,
+    TripNavTab.members => l10n.navMembers,
+    TripNavTab.notes => l10n.navNotes,
+  };
+}
+
+IconData tripTabIcon(TripNavTab tab) => switch (tab) {
+      TripNavTab.chat => AppIcons.chat,
+      TripNavTab.expenses => AppIcons.expenses,
+      TripNavTab.ledger => AppIcons.ledger,
+      TripNavTab.members => AppIcons.members,
+      TripNavTab.notes => AppIcons.notes,
+    };
+
+/// Header + bottom nav + swipeable tab pager. Per-tab state is kept by the
+/// [StatefulNavigationShell]; Back walks a short tab trail before leaving.
+class TripShellScreen extends ConsumerStatefulWidget {
+  const TripShellScreen({required this.tripId, required this.body, required this.navigationShell, super.key});
 
   final String tripId;
-  final String currentTab;
+  final Widget body;
+  final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final flags = ref.watch(featureFlagsProvider);
+  ConsumerState<TripShellScreen> createState() => _TripShellScreenState();
+}
+
+class _TripShellScreenState extends ConsumerState<TripShellScreen> {
+  var _trail = <int>[];
+  late int _current;
+
+  @override
+  void initState() {
+    super.initState();
+    // Eager: a lazy `late` initialiser would first run after the first tab change.
+    _current = widget.navigationShell.currentIndex;
+  }
+
+  @override
+  void didUpdateWidget(TripShellScreen old) {
+    super.didUpdateWidget(old);
+    final next = widget.navigationShell.currentIndex;
+    if (next != _current) {
+      _trail = pushTab(_trail, _current, next);
+      _current = next;
+    }
+  }
+
+  void _goTab(int branch) {
+    unawaited(AppHaptics.selection());
+    widget.navigationShell.goBranch(branch);
+  }
+
+  /// Back: previous tab from the trail, else leave the trip.
+  void _onBack() {
+    final popped = popTab(_trail);
+    if (popped.tab != null) {
+      _trail = popped.trail;
+      _current = popped.tab!;
+      widget.navigationShell.goBranch(popped.tab!);
+    } else {
+      context.go('/');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final tokens = context.tokens;
+    final tabs = ref.watch(visibleTabsProvider(widget.tripId));
+    final trip = ref.watch(tripProvider(widget.tripId)).value;
+    final currentTab = TripNavTab.values[widget.navigationShell.currentIndex];
+    final activeIndex = tabs.indexOf(currentTab);
 
-    final shouldShowNotes = showNotesNavTab(
-      isNotesEnabled: flags.isNotesEnabled,
-      isPassesEnabled: flags.isPassesEnabled,
-      isTripChatEnabled: flags.isTripChatEnabled,
-      isChatFirstNav: flags.isChatFirstNav,
-    );
+    // A tab hidden by flags (e.g. chat when chat-first is off) must not be
+    // left showing: fall back to the first visible tab.
+    if (activeIndex < 0 && tabs.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.navigationShell.goBranch(tabs.first.index);
+      });
+    }
 
-    final tabs = visibleTripTabs(
-      isChatFirstNav: flags.isChatFirstNav,
-      showNotesTab: shouldShowNotes,
-    );
-
-    final isSettings = currentTab == 'settings';
-
-    // Map tab name to index in visible tabs
-    final activeTabIndex = tabs.indexWhere((t) => t.name == currentTab);
-
-    return AppScaffold(
-      appBar: AppBar(
-        title: Text(
-          isSettings ? 'Trip Settings' : 'Kyoto & Tokyo Autumn',
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
-        ),
-        leading: IconButton(
-          icon: const Icon(AppIcons.back, size: 20),
-          onPressed: () {
-            if (isSettings) {
-              context.go('/trip/$tripId/expenses');
-            } else {
-              context.go('/');
-            }
-          },
-        ),
-        actions: [
-          if (!isSettings) ...[
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onBack();
+      },
+      child: AppScaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            tooltip: l10n.actionBack,
+            icon: const Icon(AppIcons.back, size: 20),
+            onPressed: () => context.go('/'),
+          ),
+          title: Hero(
+            tag: 'trip-title-${widget.tripId}',
+            child: Material(
+              type: MaterialType.transparency,
+              child: Text(
+                trip?.name ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+              ),
+            ),
+          ),
+          actions: [
             IconButton(
               icon: const Icon(AppIcons.share),
-              tooltip: 'Share',
-              onPressed: () => context.push('/share/INVITE-$tripId'),
+              tooltip: l10n.shareTripTitle,
+              onPressed: () => AppSheet.show<void>(
+                context: context,
+                title: l10n.inviteSheetTitle,
+                builder: (_) => ShareTripSheet(tripId: widget.tripId),
+              ),
             ),
             IconButton(
               icon: const Icon(AppIcons.settings),
-              tooltip: 'Settings',
-              onPressed: () => context.go('/trip/$tripId/settings'),
-            ),
-          ],
-        ],
-      ),
-      body: Column(
-        children: [
-          const OfflineBanner(),
-          Expanded(child: _buildTabContent(context, currentTab)),
-        ],
-      ),
-      bottomNavigationBar: isSettings
-          ? null
-          : BottomNavigationBar(
-              currentIndex: activeTabIndex >= 0 ? activeTabIndex : 0,
-              type: BottomNavigationBarType.fixed,
-              backgroundColor: tokens.bgSurface,
-              selectedItemColor: tokens.primaryAccent,
-              unselectedItemColor: tokens.textMuted,
-              selectedFontSize: 12,
-              unselectedFontSize: 12,
-              elevation: 8,
-              onTap: (index) async {
-                await AppHaptics.selection();
-                final targetTab = tabs[index];
-                if (context.mounted) {
-                  context.go('/trip/$tripId/${targetTab.name}');
-                }
-              },
-              items: tabs.map((tab) => _buildNavItem(tab)).toList(),
-            ),
-    );
-  }
-
-  BottomNavigationBarItem _buildNavItem(TripNavTab tab) {
-    switch (tab) {
-      case TripNavTab.chat:
-        return const BottomNavigationBarItem(
-          icon: Icon(AppIcons.chat),
-          label: 'Chat',
-        );
-      case TripNavTab.expenses:
-        return const BottomNavigationBarItem(
-          icon: Icon(AppIcons.expenses),
-          label: 'Expenses',
-        );
-      case TripNavTab.ledger:
-        return const BottomNavigationBarItem(
-          icon: Icon(AppIcons.ledger),
-          label: 'Balances',
-        );
-      case TripNavTab.members:
-        return const BottomNavigationBarItem(
-          icon: Icon(AppIcons.members),
-          label: 'Members',
-        );
-      case TripNavTab.notes:
-        return const BottomNavigationBarItem(
-          icon: Icon(AppIcons.notes),
-          label: 'Notes',
-        );
-    }
-  }
-
-  Widget _buildTabContent(BuildContext context, String tab) {
-    final tokens = context.tokens;
-
-    switch (tab) {
-      case 'expenses':
-        return _buildPlaceholder(
-          tokens,
-          icon: AppIcons.expenses,
-          title: 'Expenses & Transactions',
-          subtitle:
-              'Phase 7: Full offline-first expense ledger & receipt camera.',
-        );
-      case 'ledger':
-        return _buildPlaceholder(
-          tokens,
-          icon: AppIcons.ledger,
-          title: 'Balances & Settlements',
-          subtitle: 'Phase 7: Multi-currency split settlements and debt simplification.',
-        );
-      case 'members':
-        return _buildPlaceholder(
-          tokens,
-          icon: AppIcons.members,
-          title: 'Squad & Members',
-          subtitle:
-              'Phase 8: Trip members, role permissions, and contact invites.',
-        );
-      case 'notes':
-        return _buildPlaceholder(
-          tokens,
-          icon: AppIcons.notes,
-          title: 'Notes & Checklists',
-          subtitle: 'Phase 8: Shared packing lists, itinerary notes, and travel passes.',
-        );
-      case 'chat':
-        return _buildPlaceholder(
-          tokens,
-          icon: AppIcons.chat,
-          title: 'Trip Chat',
-          subtitle: 'Phase 8: Realtime squad messaging and media attachments.',
-        );
-      case 'settings':
-        return _buildPlaceholder(
-          tokens,
-          icon: AppIcons.settings,
-          title: 'Trip & App Settings',
-          subtitle: 'Phase 10: Currencies, category configuration, and account preferences.',
-        );
-      default:
-        return Center(child: Text('Unknown tab: $tab'));
-    }
-  }
-
-  Widget _buildPlaceholder(
-    AppTokens tokens, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: tokens.primaryAccent.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 32, color: tokens.primaryAccent),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w700,
-                color: tokens.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: tokens.textSecondary),
+              tooltip: l10n.navSettings,
+              onPressed: () => context.push('/trip/${widget.tripId}/settings'),
             ),
           ],
         ),
+        body: Column(children: [const OfflineBanner(), Expanded(child: widget.body)]),
+        bottomNavigationBar: tabs.length < 2
+            ? null
+            : BottomNavigationBar(
+                currentIndex: activeIndex < 0 ? 0 : activeIndex,
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: tokens.bgSurface,
+                selectedItemColor: tokens.primaryAccent,
+                unselectedItemColor: tokens.textMuted,
+                selectedFontSize: 12,
+                unselectedFontSize: 12,
+                elevation: 8,
+                onTap: (i) => _goTab(tabs[i].index),
+                items: [
+                  for (final t in tabs) BottomNavigationBarItem(icon: Icon(tripTabIcon(t)), label: tripTabLabel(context, t)),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+/// Horizontally swipeable container for the tab navigators. Pages are the
+/// *visible* tabs only; swiping calls `goBranch`, and external tab changes
+/// (bottom bar, back) animate the pager. Navigators are kept alive so each
+/// tab keeps its scroll/state.
+class TripTabPager extends ConsumerStatefulWidget {
+  const TripTabPager({required this.tripId, required this.navigationShell, required this.branches, super.key});
+
+  final String tripId;
+  final StatefulNavigationShell navigationShell;
+  final List<Widget> branches;
+
+  @override
+  ConsumerState<TripTabPager> createState() => _TripTabPagerState();
+}
+
+class _TripTabPagerState extends ConsumerState<TripTabPager> {
+  PageController? _controller;
+  bool _programmatic = false;
+
+  List<TripNavTab> get _tabs => ref.read(visibleTabsProvider(widget.tripId));
+
+  int get _page {
+    final i = _tabs.indexOf(TripNavTab.values[widget.navigationShell.currentIndex]);
+    return i < 0 ? 0 : i;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController(initialPage: _page);
+  }
+
+  @override
+  void didUpdateWidget(TripTabPager old) {
+    super.didUpdateWidget(old);
+    final c = _controller;
+    if (c == null || !c.hasClients) return;
+    final target = _page;
+    if ((c.page ?? target.toDouble()).round() != target) {
+      _programmatic = true;
+      c.animateToPage(target, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic).whenComplete(() => _programmatic = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tabs = ref.watch(visibleTabsProvider(widget.tripId));
+    return PageView(
+      controller: _controller,
+      onPageChanged: (page) {
+        if (_programmatic || page >= tabs.length) return;
+        final branch = tabs[page].index;
+        if (branch != widget.navigationShell.currentIndex) {
+          unawaited(AppHaptics.selection());
+          widget.navigationShell.goBranch(branch);
+        }
+      },
+      children: [for (final t in tabs) _KeepAlive(child: widget.branches[t.index])],
+    );
+  }
+}
+
+class _KeepAlive extends StatefulWidget {
+  const _KeepAlive({required this.child});
+  final Widget child;
+
+  @override
+  State<_KeepAlive> createState() => _KeepAliveState();
+}
+
+class _KeepAliveState extends State<_KeepAlive> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
+  }
+}
+
+/// Stand-in for a tab body until its phase lands (7: expenses/ledger, 8: members/chat/notes).
+class TripTabPlaceholder extends StatelessWidget {
+  const TripTabPlaceholder({required this.tab, super.key});
+  final TripNavTab tab;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    return Center(
+      key: Key('tab-${tab.name}'),
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(tripTabIcon(tab), size: 40, color: tokens.primaryAccent),
+          const SizedBox(height: 16),
+          Text(tripTabLabel(context, tab), style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: tokens.textPrimary)),
+        ]),
       ),
     );
   }

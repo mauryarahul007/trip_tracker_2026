@@ -66,5 +66,22 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.triptracker.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.triptracker.app</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Trip Tracker uses the camera to attach receipt photos to expenses.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Trip Tracker lets you pick a receipt photo from your library.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Trip Tracker uses Face ID to unlock the app.</string>
 </dict>
 </plist>

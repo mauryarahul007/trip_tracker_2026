@@ -237,6 +237,17 @@ class $TripsTableTable extends TripsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _domainJsonMeta = const VerificationMeta(
+    'domainJson',
+  );
+  @override
+  late final GeneratedColumn<String> domainJson = GeneratedColumn<String>(
+    'domain_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -259,6 +270,7 @@ class $TripsTableTable extends TripsTable
     closed,
     createdAt,
     updatedAt,
+    domainJson,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -419,6 +431,12 @@ class $TripsTableTable extends TripsTable
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
+    if (data.containsKey('domain_json')) {
+      context.handle(
+        _domainJsonMeta,
+        domainJson.isAcceptableOrUnknown(data['domain_json']!, _domainJsonMeta),
+      );
+    }
     return context;
   }
 
@@ -508,6 +526,10 @@ class $TripsTableTable extends TripsTable
         DriftSqlType.string,
         data['${effectivePrefix}updated_at'],
       ),
+      domainJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}domain_json'],
+      ),
     );
   }
 
@@ -538,6 +560,9 @@ class TripEntry extends DataClass implements Insertable<TripEntry> {
   final bool closed;
   final String? createdAt;
   final String? updatedAt;
+
+  /// Full-fidelity domain `Trip.toJson()` (schema v2); columns above are for querying.
+  final String? domainJson;
   const TripEntry({
     required this.id,
     required this.name,
@@ -559,6 +584,7 @@ class TripEntry extends DataClass implements Insertable<TripEntry> {
     required this.closed,
     this.createdAt,
     this.updatedAt,
+    this.domainJson,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -602,6 +628,9 @@ class TripEntry extends DataClass implements Insertable<TripEntry> {
     }
     if (!nullToAbsent || updatedAt != null) {
       map['updated_at'] = Variable<String>(updatedAt);
+    }
+    if (!nullToAbsent || domainJson != null) {
+      map['domain_json'] = Variable<String>(domainJson);
     }
     return map;
   }
@@ -648,6 +677,9 @@ class TripEntry extends DataClass implements Insertable<TripEntry> {
       updatedAt: updatedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(updatedAt),
+      domainJson: domainJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(domainJson),
     );
   }
 
@@ -677,6 +709,7 @@ class TripEntry extends DataClass implements Insertable<TripEntry> {
       closed: serializer.fromJson<bool>(json['closed']),
       createdAt: serializer.fromJson<String?>(json['createdAt']),
       updatedAt: serializer.fromJson<String?>(json['updatedAt']),
+      domainJson: serializer.fromJson<String?>(json['domainJson']),
     );
   }
   @override
@@ -703,6 +736,7 @@ class TripEntry extends DataClass implements Insertable<TripEntry> {
       'closed': serializer.toJson<bool>(closed),
       'createdAt': serializer.toJson<String?>(createdAt),
       'updatedAt': serializer.toJson<String?>(updatedAt),
+      'domainJson': serializer.toJson<String?>(domainJson),
     };
   }
 
@@ -727,6 +761,7 @@ class TripEntry extends DataClass implements Insertable<TripEntry> {
     bool? closed,
     Value<String?> createdAt = const Value.absent(),
     Value<String?> updatedAt = const Value.absent(),
+    Value<String?> domainJson = const Value.absent(),
   }) => TripEntry(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -752,6 +787,7 @@ class TripEntry extends DataClass implements Insertable<TripEntry> {
     closed: closed ?? this.closed,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    domainJson: domainJson.present ? domainJson.value : this.domainJson,
   );
   TripEntry copyWithCompanion(TripsTableCompanion data) {
     return TripEntry(
@@ -789,6 +825,9 @@ class TripEntry extends DataClass implements Insertable<TripEntry> {
       closed: data.closed.present ? data.closed.value : this.closed,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      domainJson: data.domainJson.present
+          ? data.domainJson.value
+          : this.domainJson,
     );
   }
 
@@ -814,13 +853,14 @@ class TripEntry extends DataClass implements Insertable<TripEntry> {
           ..write('frozen: $frozen, ')
           ..write('closed: $closed, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('domainJson: $domainJson')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     name,
     startDate,
@@ -841,7 +881,8 @@ class TripEntry extends DataClass implements Insertable<TripEntry> {
     closed,
     createdAt,
     updatedAt,
-  );
+    domainJson,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -865,7 +906,8 @@ class TripEntry extends DataClass implements Insertable<TripEntry> {
           other.frozen == this.frozen &&
           other.closed == this.closed &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.domainJson == this.domainJson);
 }
 
 class TripsTableCompanion extends UpdateCompanion<TripEntry> {
@@ -889,6 +931,7 @@ class TripsTableCompanion extends UpdateCompanion<TripEntry> {
   final Value<bool> closed;
   final Value<String?> createdAt;
   final Value<String?> updatedAt;
+  final Value<String?> domainJson;
   final Value<int> rowid;
   const TripsTableCompanion({
     this.id = const Value.absent(),
@@ -911,6 +954,7 @@ class TripsTableCompanion extends UpdateCompanion<TripEntry> {
     this.closed = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.domainJson = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TripsTableCompanion.insert({
@@ -934,6 +978,7 @@ class TripsTableCompanion extends UpdateCompanion<TripEntry> {
     this.closed = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.domainJson = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -962,6 +1007,7 @@ class TripsTableCompanion extends UpdateCompanion<TripEntry> {
     Expression<bool>? closed,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
+    Expression<String>? domainJson,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -985,6 +1031,7 @@ class TripsTableCompanion extends UpdateCompanion<TripEntry> {
       if (closed != null) 'closed': closed,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (domainJson != null) 'domain_json': domainJson,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1010,6 +1057,7 @@ class TripsTableCompanion extends UpdateCompanion<TripEntry> {
     Value<bool>? closed,
     Value<String?>? createdAt,
     Value<String?>? updatedAt,
+    Value<String?>? domainJson,
     Value<int>? rowid,
   }) {
     return TripsTableCompanion(
@@ -1033,6 +1081,7 @@ class TripsTableCompanion extends UpdateCompanion<TripEntry> {
       closed: closed ?? this.closed,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      domainJson: domainJson ?? this.domainJson,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1100,6 +1149,9 @@ class TripsTableCompanion extends UpdateCompanion<TripEntry> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<String>(updatedAt.value);
     }
+    if (domainJson.present) {
+      map['domain_json'] = Variable<String>(domainJson.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1129,6 +1181,7 @@ class TripsTableCompanion extends UpdateCompanion<TripEntry> {
           ..write('closed: $closed, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('domainJson: $domainJson, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2999,6 +3052,17 @@ class $ExpensesTableTable extends ExpensesTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _domainJsonMeta = const VerificationMeta(
+    'domainJson',
+  );
+  @override
+  late final GeneratedColumn<String> domainJson = GeneratedColumn<String>(
+    'domain_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3029,6 +3093,7 @@ class $ExpensesTableTable extends ExpensesTable
     approvedAt,
     createdAt,
     updatedAt,
+    domainJson,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3262,6 +3327,12 @@ class $ExpensesTableTable extends ExpensesTable
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
+    if (data.containsKey('domain_json')) {
+      context.handle(
+        _domainJsonMeta,
+        domainJson.isAcceptableOrUnknown(data['domain_json']!, _domainJsonMeta),
+      );
+    }
     return context;
   }
 
@@ -3383,6 +3454,10 @@ class $ExpensesTableTable extends ExpensesTable
         DriftSqlType.string,
         data['${effectivePrefix}updated_at'],
       ),
+      domainJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}domain_json'],
+      ),
     );
   }
 
@@ -3421,6 +3496,9 @@ class ExpenseEntry extends DataClass implements Insertable<ExpenseEntry> {
   final String? approvedAt;
   final String? createdAt;
   final String? updatedAt;
+
+  /// Full-fidelity domain `Expense.toJson()` (schema v2); columns above are for querying.
+  final String? domainJson;
   const ExpenseEntry({
     required this.id,
     required this.tripId,
@@ -3450,6 +3528,7 @@ class ExpenseEntry extends DataClass implements Insertable<ExpenseEntry> {
     this.approvedAt,
     this.createdAt,
     this.updatedAt,
+    this.domainJson,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3518,6 +3597,9 @@ class ExpenseEntry extends DataClass implements Insertable<ExpenseEntry> {
     if (!nullToAbsent || updatedAt != null) {
       map['updated_at'] = Variable<String>(updatedAt);
     }
+    if (!nullToAbsent || domainJson != null) {
+      map['domain_json'] = Variable<String>(domainJson);
+    }
     return map;
   }
 
@@ -3585,6 +3667,9 @@ class ExpenseEntry extends DataClass implements Insertable<ExpenseEntry> {
       updatedAt: updatedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(updatedAt),
+      domainJson: domainJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(domainJson),
     );
   }
 
@@ -3632,6 +3717,7 @@ class ExpenseEntry extends DataClass implements Insertable<ExpenseEntry> {
       approvedAt: serializer.fromJson<String?>(json['approvedAt']),
       createdAt: serializer.fromJson<String?>(json['createdAt']),
       updatedAt: serializer.fromJson<String?>(json['updatedAt']),
+      domainJson: serializer.fromJson<String?>(json['domainJson']),
     );
   }
   @override
@@ -3670,6 +3756,7 @@ class ExpenseEntry extends DataClass implements Insertable<ExpenseEntry> {
       'approvedAt': serializer.toJson<String?>(approvedAt),
       'createdAt': serializer.toJson<String?>(createdAt),
       'updatedAt': serializer.toJson<String?>(updatedAt),
+      'domainJson': serializer.toJson<String?>(domainJson),
     };
   }
 
@@ -3702,6 +3789,7 @@ class ExpenseEntry extends DataClass implements Insertable<ExpenseEntry> {
     Value<String?> approvedAt = const Value.absent(),
     Value<String?> createdAt = const Value.absent(),
     Value<String?> updatedAt = const Value.absent(),
+    Value<String?> domainJson = const Value.absent(),
   }) => ExpenseEntry(
     id: id ?? this.id,
     tripId: tripId ?? this.tripId,
@@ -3747,6 +3835,7 @@ class ExpenseEntry extends DataClass implements Insertable<ExpenseEntry> {
     approvedAt: approvedAt.present ? approvedAt.value : this.approvedAt,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    domainJson: domainJson.present ? domainJson.value : this.domainJson,
   );
   ExpenseEntry copyWithCompanion(ExpensesTableCompanion data) {
     return ExpenseEntry(
@@ -3812,6 +3901,9 @@ class ExpenseEntry extends DataClass implements Insertable<ExpenseEntry> {
           : this.approvedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      domainJson: data.domainJson.present
+          ? data.domainJson.value
+          : this.domainJson,
     );
   }
 
@@ -3845,7 +3937,8 @@ class ExpenseEntry extends DataClass implements Insertable<ExpenseEntry> {
           ..write('approvedByMemberId: $approvedByMemberId, ')
           ..write('approvedAt: $approvedAt, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('domainJson: $domainJson')
           ..write(')'))
         .toString();
   }
@@ -3880,6 +3973,7 @@ class ExpenseEntry extends DataClass implements Insertable<ExpenseEntry> {
     approvedAt,
     createdAt,
     updatedAt,
+    domainJson,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -3912,7 +4006,8 @@ class ExpenseEntry extends DataClass implements Insertable<ExpenseEntry> {
           other.approvedByMemberId == this.approvedByMemberId &&
           other.approvedAt == this.approvedAt &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.domainJson == this.domainJson);
 }
 
 class ExpensesTableCompanion extends UpdateCompanion<ExpenseEntry> {
@@ -3944,6 +4039,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpenseEntry> {
   final Value<String?> approvedAt;
   final Value<String?> createdAt;
   final Value<String?> updatedAt;
+  final Value<String?> domainJson;
   final Value<int> rowid;
   const ExpensesTableCompanion({
     this.id = const Value.absent(),
@@ -3974,6 +4070,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpenseEntry> {
     this.approvedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.domainJson = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExpensesTableCompanion.insert({
@@ -4005,6 +4102,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpenseEntry> {
     this.approvedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.domainJson = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        tripId = Value(tripId),
@@ -4043,6 +4141,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpenseEntry> {
     Expression<String>? approvedAt,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
+    Expression<String>? domainJson,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4079,6 +4178,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpenseEntry> {
       if (approvedAt != null) 'approved_at': approvedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (domainJson != null) 'domain_json': domainJson,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4112,6 +4212,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpenseEntry> {
     Value<String?>? approvedAt,
     Value<String?>? createdAt,
     Value<String?>? updatedAt,
+    Value<String?>? domainJson,
     Value<int>? rowid,
   }) {
     return ExpensesTableCompanion(
@@ -4145,6 +4246,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpenseEntry> {
       approvedAt: approvedAt ?? this.approvedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      domainJson: domainJson ?? this.domainJson,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4240,6 +4342,9 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpenseEntry> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<String>(updatedAt.value);
     }
+    if (domainJson.present) {
+      map['domain_json'] = Variable<String>(domainJson.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4277,6 +4382,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpenseEntry> {
           ..write('approvedAt: $approvedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('domainJson: $domainJson, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4369,6 +4475,17 @@ class $TripMessagesTableTable extends TripMessagesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _domainJsonMeta = const VerificationMeta(
+    'domainJson',
+  );
+  @override
+  late final GeneratedColumn<String> domainJson = GeneratedColumn<String>(
+    'domain_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4379,6 +4496,7 @@ class $TripMessagesTableTable extends TripMessagesTable
     message,
     expensePayloadJson,
     createdAt,
+    domainJson,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4454,6 +4572,12 @@ class $TripMessagesTableTable extends TripMessagesTable
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
+    if (data.containsKey('domain_json')) {
+      context.handle(
+        _domainJsonMeta,
+        domainJson.isAcceptableOrUnknown(data['domain_json']!, _domainJsonMeta),
+      );
+    }
     return context;
   }
 
@@ -4495,6 +4619,10 @@ class $TripMessagesTableTable extends TripMessagesTable
         DriftSqlType.string,
         data['${effectivePrefix}created_at'],
       )!,
+      domainJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}domain_json'],
+      ),
     );
   }
 
@@ -4514,6 +4642,10 @@ class TripMessageEntry extends DataClass
   final String message;
   final String? expensePayloadJson;
   final String createdAt;
+
+  /// Full-fidelity domain `TripMessage.toJson()` (schema v2). Legacy columns
+  /// map: user_id <- memberId, message <- body, sender_name unused ('').
+  final String? domainJson;
   const TripMessageEntry({
     required this.id,
     required this.tripId,
@@ -4523,6 +4655,7 @@ class TripMessageEntry extends DataClass
     required this.message,
     this.expensePayloadJson,
     required this.createdAt,
+    this.domainJson,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4537,6 +4670,9 @@ class TripMessageEntry extends DataClass
       map['expense_payload_json'] = Variable<String>(expensePayloadJson);
     }
     map['created_at'] = Variable<String>(createdAt);
+    if (!nullToAbsent || domainJson != null) {
+      map['domain_json'] = Variable<String>(domainJson);
+    }
     return map;
   }
 
@@ -4552,6 +4688,9 @@ class TripMessageEntry extends DataClass
           ? const Value.absent()
           : Value(expensePayloadJson),
       createdAt: Value(createdAt),
+      domainJson: domainJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(domainJson),
     );
   }
 
@@ -4571,6 +4710,7 @@ class TripMessageEntry extends DataClass
         json['expensePayloadJson'],
       ),
       createdAt: serializer.fromJson<String>(json['createdAt']),
+      domainJson: serializer.fromJson<String?>(json['domainJson']),
     );
   }
   @override
@@ -4585,6 +4725,7 @@ class TripMessageEntry extends DataClass
       'message': serializer.toJson<String>(message),
       'expensePayloadJson': serializer.toJson<String?>(expensePayloadJson),
       'createdAt': serializer.toJson<String>(createdAt),
+      'domainJson': serializer.toJson<String?>(domainJson),
     };
   }
 
@@ -4597,6 +4738,7 @@ class TripMessageEntry extends DataClass
     String? message,
     Value<String?> expensePayloadJson = const Value.absent(),
     String? createdAt,
+    Value<String?> domainJson = const Value.absent(),
   }) => TripMessageEntry(
     id: id ?? this.id,
     tripId: tripId ?? this.tripId,
@@ -4608,6 +4750,7 @@ class TripMessageEntry extends DataClass
         ? expensePayloadJson.value
         : this.expensePayloadJson,
     createdAt: createdAt ?? this.createdAt,
+    domainJson: domainJson.present ? domainJson.value : this.domainJson,
   );
   TripMessageEntry copyWithCompanion(TripMessagesTableCompanion data) {
     return TripMessageEntry(
@@ -4623,6 +4766,9 @@ class TripMessageEntry extends DataClass
           ? data.expensePayloadJson.value
           : this.expensePayloadJson,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      domainJson: data.domainJson.present
+          ? data.domainJson.value
+          : this.domainJson,
     );
   }
 
@@ -4636,7 +4782,8 @@ class TripMessageEntry extends DataClass
           ..write('kind: $kind, ')
           ..write('message: $message, ')
           ..write('expensePayloadJson: $expensePayloadJson, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('domainJson: $domainJson')
           ..write(')'))
         .toString();
   }
@@ -4651,6 +4798,7 @@ class TripMessageEntry extends DataClass
     message,
     expensePayloadJson,
     createdAt,
+    domainJson,
   );
   @override
   bool operator ==(Object other) =>
@@ -4663,7 +4811,8 @@ class TripMessageEntry extends DataClass
           other.kind == this.kind &&
           other.message == this.message &&
           other.expensePayloadJson == this.expensePayloadJson &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.domainJson == this.domainJson);
 }
 
 class TripMessagesTableCompanion extends UpdateCompanion<TripMessageEntry> {
@@ -4675,6 +4824,7 @@ class TripMessagesTableCompanion extends UpdateCompanion<TripMessageEntry> {
   final Value<String> message;
   final Value<String?> expensePayloadJson;
   final Value<String> createdAt;
+  final Value<String?> domainJson;
   final Value<int> rowid;
   const TripMessagesTableCompanion({
     this.id = const Value.absent(),
@@ -4685,6 +4835,7 @@ class TripMessagesTableCompanion extends UpdateCompanion<TripMessageEntry> {
     this.message = const Value.absent(),
     this.expensePayloadJson = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.domainJson = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TripMessagesTableCompanion.insert({
@@ -4696,6 +4847,7 @@ class TripMessagesTableCompanion extends UpdateCompanion<TripMessageEntry> {
     required String message,
     this.expensePayloadJson = const Value.absent(),
     required String createdAt,
+    this.domainJson = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        tripId = Value(tripId),
@@ -4713,6 +4865,7 @@ class TripMessagesTableCompanion extends UpdateCompanion<TripMessageEntry> {
     Expression<String>? message,
     Expression<String>? expensePayloadJson,
     Expression<String>? createdAt,
+    Expression<String>? domainJson,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4725,6 +4878,7 @@ class TripMessagesTableCompanion extends UpdateCompanion<TripMessageEntry> {
       if (expensePayloadJson != null)
         'expense_payload_json': expensePayloadJson,
       if (createdAt != null) 'created_at': createdAt,
+      if (domainJson != null) 'domain_json': domainJson,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4738,6 +4892,7 @@ class TripMessagesTableCompanion extends UpdateCompanion<TripMessageEntry> {
     Value<String>? message,
     Value<String?>? expensePayloadJson,
     Value<String>? createdAt,
+    Value<String?>? domainJson,
     Value<int>? rowid,
   }) {
     return TripMessagesTableCompanion(
@@ -4749,6 +4904,7 @@ class TripMessagesTableCompanion extends UpdateCompanion<TripMessageEntry> {
       message: message ?? this.message,
       expensePayloadJson: expensePayloadJson ?? this.expensePayloadJson,
       createdAt: createdAt ?? this.createdAt,
+      domainJson: domainJson ?? this.domainJson,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4780,6 +4936,9 @@ class TripMessagesTableCompanion extends UpdateCompanion<TripMessageEntry> {
     if (createdAt.present) {
       map['created_at'] = Variable<String>(createdAt.value);
     }
+    if (domainJson.present) {
+      map['domain_json'] = Variable<String>(domainJson.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4797,6 +4956,7 @@ class TripMessagesTableCompanion extends UpdateCompanion<TripMessageEntry> {
           ..write('message: $message, ')
           ..write('expensePayloadJson: $expensePayloadJson, ')
           ..write('createdAt: $createdAt, ')
+          ..write('domainJson: $domainJson, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7206,6 +7366,7 @@ typedef $$TripsTableTableCreateCompanionBuilder = TripsTableCompanion Function({
   Value<bool> closed,
   Value<String?> createdAt,
   Value<String?> updatedAt,
+  Value<String?> domainJson,
   Value<int> rowid,
 });
 typedef $$TripsTableTableUpdateCompanionBuilder = TripsTableCompanion Function({
@@ -7229,6 +7390,7 @@ typedef $$TripsTableTableUpdateCompanionBuilder = TripsTableCompanion Function({
   Value<bool> closed,
   Value<String?> createdAt,
   Value<String?> updatedAt,
+  Value<String?> domainJson,
   Value<int> rowid,
 });
 
@@ -7338,6 +7500,11 @@ class $$TripsTableTableFilterComposer
 
   ColumnFilters<String> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get domainJson => $composableBuilder(
+    column: $table.domainJson,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7450,6 +7617,11 @@ class $$TripsTableTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get domainJson => $composableBuilder(
+    column: $table.domainJson,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TripsTableTableAnnotationComposer
@@ -7534,6 +7706,11 @@ class $$TripsTableTableAnnotationComposer
 
   GeneratedColumn<String> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get domainJson => $composableBuilder(
+    column: $table.domainJson,
+    builder: (column) => column,
+  );
 }
 
 class $$TripsTableTableTableManager
@@ -7587,6 +7764,7 @@ class $$TripsTableTableTableManager
                 Value<bool> closed = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 Value<String?> updatedAt = const Value.absent(),
+                Value<String?> domainJson = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TripsTableCompanion(
                 id: id,
@@ -7609,6 +7787,7 @@ class $$TripsTableTableTableManager
                 closed: closed,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                domainJson: domainJson,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7633,6 +7812,7 @@ class $$TripsTableTableTableManager
                 Value<bool> closed = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 Value<String?> updatedAt = const Value.absent(),
+                Value<String?> domainJson = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TripsTableCompanion.insert(
                 id: id,
@@ -7655,6 +7835,7 @@ class $$TripsTableTableTableManager
                 closed: closed,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                domainJson: domainJson,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -8609,6 +8790,7 @@ typedef $$ExpensesTableTableCreateCompanionBuilder =
       Value<String?> approvedAt,
       Value<String?> createdAt,
       Value<String?> updatedAt,
+      Value<String?> domainJson,
       Value<int> rowid,
     });
 typedef $$ExpensesTableTableUpdateCompanionBuilder =
@@ -8641,6 +8823,7 @@ typedef $$ExpensesTableTableUpdateCompanionBuilder =
       Value<String?> approvedAt,
       Value<String?> createdAt,
       Value<String?> updatedAt,
+      Value<String?> domainJson,
       Value<int> rowid,
     });
 
@@ -8790,6 +8973,11 @@ class $$ExpensesTableTableFilterComposer
 
   ColumnFilters<String> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get domainJson => $composableBuilder(
+    column: $table.domainJson,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -8942,6 +9130,11 @@ class $$ExpensesTableTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get domainJson => $composableBuilder(
+    column: $table.domainJson,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ExpensesTableTableAnnotationComposer
@@ -9070,6 +9263,11 @@ class $$ExpensesTableTableAnnotationComposer
 
   GeneratedColumn<String> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get domainJson => $composableBuilder(
+    column: $table.domainJson,
+    builder: (column) => column,
+  );
 }
 
 class $$ExpensesTableTableTableManager
@@ -9131,6 +9329,7 @@ class $$ExpensesTableTableTableManager
                 Value<String?> approvedAt = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 Value<String?> updatedAt = const Value.absent(),
+                Value<String?> domainJson = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpensesTableCompanion(
                 id: id,
@@ -9161,6 +9360,7 @@ class $$ExpensesTableTableTableManager
                 approvedAt: approvedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                domainJson: domainJson,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -9193,6 +9393,7 @@ class $$ExpensesTableTableTableManager
                 Value<String?> approvedAt = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 Value<String?> updatedAt = const Value.absent(),
+                Value<String?> domainJson = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpensesTableCompanion.insert(
                 id: id,
@@ -9223,6 +9424,7 @@ class $$ExpensesTableTableTableManager
                 approvedAt: approvedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                domainJson: domainJson,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -9269,6 +9471,7 @@ typedef $$TripMessagesTableTableCreateCompanionBuilder =
       required String message,
       Value<String?> expensePayloadJson,
       required String createdAt,
+      Value<String?> domainJson,
       Value<int> rowid,
     });
 typedef $$TripMessagesTableTableUpdateCompanionBuilder =
@@ -9281,6 +9484,7 @@ typedef $$TripMessagesTableTableUpdateCompanionBuilder =
       Value<String> message,
       Value<String?> expensePayloadJson,
       Value<String> createdAt,
+      Value<String?> domainJson,
       Value<int> rowid,
     });
 
@@ -9330,6 +9534,11 @@ class $$TripMessagesTableTableFilterComposer
 
   ColumnFilters<String> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get domainJson => $composableBuilder(
+    column: $table.domainJson,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -9382,6 +9591,11 @@ class $$TripMessagesTableTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get domainJson => $composableBuilder(
+    column: $table.domainJson,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TripMessagesTableTableAnnotationComposer
@@ -9420,6 +9634,11 @@ class $$TripMessagesTableTableAnnotationComposer
 
   GeneratedColumn<String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get domainJson => $composableBuilder(
+    column: $table.domainJson,
+    builder: (column) => column,
+  );
 }
 
 class $$TripMessagesTableTableTableManager
@@ -9470,6 +9689,7 @@ class $$TripMessagesTableTableTableManager
                 Value<String> message = const Value.absent(),
                 Value<String?> expensePayloadJson = const Value.absent(),
                 Value<String> createdAt = const Value.absent(),
+                Value<String?> domainJson = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TripMessagesTableCompanion(
                 id: id,
@@ -9480,6 +9700,7 @@ class $$TripMessagesTableTableTableManager
                 message: message,
                 expensePayloadJson: expensePayloadJson,
                 createdAt: createdAt,
+                domainJson: domainJson,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -9492,6 +9713,7 @@ class $$TripMessagesTableTableTableManager
                 required String message,
                 Value<String?> expensePayloadJson = const Value.absent(),
                 required String createdAt,
+                Value<String?> domainJson = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TripMessagesTableCompanion.insert(
                 id: id,
@@ -9502,6 +9724,7 @@ class $$TripMessagesTableTableTableManager
                 message: message,
                 expensePayloadJson: expensePayloadJson,
                 createdAt: createdAt,
+                domainJson: domainJson,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

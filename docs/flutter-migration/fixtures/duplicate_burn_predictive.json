@@ -1,4 +1,298 @@
 {
+  "detectorMatrix": {
+    "existing": [
+      {
+        "id": "x1",
+        "title": "Dinner at Chalet",
+        "amount": 100,
+        "currency": "EUR",
+        "date": "2026-10-01",
+        "paidBy": "m1",
+        "category": "cat-food"
+      },
+      {
+        "id": "x2",
+        "title": "Museum tickets",
+        "amount": 60,
+        "currency": "EUR",
+        "date": "2026-10-02",
+        "paidBy": "m2",
+        "category": "cat-fun"
+      },
+      {
+        "id": "x3",
+        "title": "Train",
+        "amount": 40,
+        "currency": "EUR",
+        "date": "2026-10-03",
+        "paidBy": "m1",
+        "category": "cat-travel"
+      },
+      {
+        "id": "x4",
+        "title": "Deleted thing",
+        "amount": 77,
+        "currency": "EUR",
+        "date": "2026-10-01",
+        "paidBy": "m1",
+        "category": "cat-food",
+        "deletedAt": 5
+      },
+      {
+        "id": "x5",
+        "title": "Settlement: A to B",
+        "amount": 88,
+        "currency": "EUR",
+        "date": "2026-10-01",
+        "paidBy": "m1",
+        "category": "cat-food",
+        "isSettlement": true
+      },
+      {
+        "id": "x6",
+        "title": "Bad date",
+        "amount": 33,
+        "currency": "EUR",
+        "date": "garbage",
+        "paidBy": "m1",
+        "category": "cat-food"
+      }
+    ],
+    "categories": [
+      {
+        "id": "cat-food",
+        "name": "Food & Dining"
+      },
+      {
+        "id": "cat-fun",
+        "name": "Fun"
+      }
+    ],
+    "members": [
+      {
+        "id": "m1",
+        "name": "Alice"
+      },
+      {
+        "id": "m2",
+        "name": "Bob"
+      }
+    ],
+    "cases": [
+      {
+        "candidate": {
+          "amount": 100,
+          "title": "dinner at chalet!",
+          "date": "2026-10-01"
+        },
+        "result": {
+          "isDuplicate": true,
+          "confidence": "high",
+          "reason": "A matching \"Dinner at Chalet\" (100) was already logged today by Alice.",
+          "matchedExpense": {
+            "id": "x1",
+            "title": "Dinner at Chalet",
+            "amount": 100,
+            "currency": "EUR",
+            "date": "2026-10-01",
+            "paidBy": "m1",
+            "category": "cat-food"
+          },
+          "matchedPayerName": "Alice"
+        }
+      },
+      {
+        "candidate": {
+          "amount": 101.5,
+          "title": "Pizza",
+          "date": "2026-10-01",
+          "categoryId": "cat-food",
+          "paidById": "m1"
+        },
+        "result": {
+          "isDuplicate": true,
+          "confidence": "high",
+          "reason": "Alice already logged an identical 100 Food & Dining today (\"Dinner at Chalet\").",
+          "matchedExpense": {
+            "id": "x1",
+            "title": "Dinner at Chalet",
+            "amount": 100,
+            "currency": "EUR",
+            "date": "2026-10-01",
+            "paidBy": "m1",
+            "category": "cat-food"
+          },
+          "matchedPayerName": "Alice"
+        }
+      },
+      {
+        "candidate": {
+          "amount": 100,
+          "title": "Lunch",
+          "date": "2026-10-01",
+          "categoryId": "cat-food",
+          "paidById": "m1"
+        },
+        "result": {
+          "isDuplicate": true,
+          "confidence": "high",
+          "reason": "Alice already logged an identical 100 Food & Dining today (\"Dinner at Chalet\").",
+          "matchedExpense": {
+            "id": "x1",
+            "title": "Dinner at Chalet",
+            "amount": 100,
+            "currency": "EUR",
+            "date": "2026-10-01",
+            "paidBy": "m1",
+            "category": "cat-food"
+          },
+          "matchedPayerName": "Alice"
+        }
+      },
+      {
+        "candidate": {
+          "amount": 100,
+          "title": "Other",
+          "date": "2026-10-01",
+          "categoryId": "cat-food",
+          "paidById": "m2"
+        },
+        "result": {
+          "isDuplicate": true,
+          "confidence": "medium",
+          "reason": "Alice already logged a Food & Dining expense for 100 today (\"Dinner at Chalet\"). Did you both pay, or is this a duplicate?",
+          "matchedExpense": {
+            "id": "x1",
+            "title": "Dinner at Chalet",
+            "amount": 100,
+            "currency": "EUR",
+            "date": "2026-10-01",
+            "paidBy": "m1",
+            "category": "cat-food"
+          },
+          "matchedPayerName": "Alice"
+        }
+      },
+      {
+        "candidate": {
+          "amount": 100,
+          "title": "Dinner at Chalet",
+          "date": "2026-10-02"
+        },
+        "result": {
+          "isDuplicate": true,
+          "confidence": "medium",
+          "reason": "A similar \"Dinner at Chalet\" (100) was logged on 2026-10-01 by Alice.",
+          "matchedExpense": {
+            "id": "x1",
+            "title": "Dinner at Chalet",
+            "amount": 100,
+            "currency": "EUR",
+            "date": "2026-10-01",
+            "paidBy": "m1",
+            "category": "cat-food"
+          },
+          "matchedPayerName": "Alice"
+        }
+      },
+      {
+        "candidate": {
+          "amount": 60,
+          "title": "Museum",
+          "date": "2026-10-05"
+        },
+        "result": null
+      },
+      {
+        "candidate": {
+          "amount": 60,
+          "title": "Museum tickets",
+          "date": "2026-10-02",
+          "paidById": "m9"
+        },
+        "result": {
+          "isDuplicate": true,
+          "confidence": "high",
+          "reason": "A matching \"Museum tickets\" (60) was already logged today by Bob.",
+          "matchedExpense": {
+            "id": "x2",
+            "title": "Museum tickets",
+            "amount": 60,
+            "currency": "EUR",
+            "date": "2026-10-02",
+            "paidBy": "m2",
+            "category": "cat-fun"
+          },
+          "matchedPayerName": "Bob"
+        }
+      },
+      {
+        "candidate": {
+          "amount": 40,
+          "title": "Train",
+          "date": "2026-10-03",
+          "id": "x3"
+        },
+        "result": null
+      },
+      {
+        "candidate": {
+          "amount": 77,
+          "title": "Deleted thing",
+          "date": "2026-10-01"
+        },
+        "result": null
+      },
+      {
+        "candidate": {
+          "amount": 88,
+          "title": "Settlement: A to B",
+          "date": "2026-10-01"
+        },
+        "result": null
+      },
+      {
+        "candidate": {
+          "amount": 33,
+          "title": "Bad date",
+          "date": "2026-10-01"
+        },
+        "result": null
+      },
+      {
+        "candidate": {
+          "amount": 0,
+          "title": "Zero",
+          "date": "2026-10-01"
+        },
+        "result": null
+      },
+      {
+        "candidate": {
+          "amount": 10,
+          "title": "No date",
+          "date": ""
+        },
+        "result": null
+      },
+      {
+        "candidate": {
+          "amount": 10,
+          "title": "Bad candidate date",
+          "date": "nope"
+        },
+        "result": null
+      },
+      {
+        "candidate": {
+          "amount": 5000,
+          "title": "Nothing like it",
+          "date": "2026-10-01"
+        },
+        "result": null
+      }
+    ]
+  },
   "duplicateExact": {
     "isDuplicate": true,
     "confidence": "high",

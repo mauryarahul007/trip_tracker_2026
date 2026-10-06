@@ -3,7 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'app/deep_link_listener.dart';
 import 'app/router.dart';
+import 'core/storage/prefs.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'features/auth/presentation/app_lock_gate.dart';
+import 'app/sync_lifecycle.dart';
 import 'core/env/app_env.dart';
 import 'core/errors/error_boundary.dart';
 import 'core/logging/app_logger.dart';
@@ -39,7 +44,7 @@ void main() {
       AppLogger.info('Starting ${env.appName} [Flavor: ${env.flavor.name}]');
 
       // Initialize Supabase gateway if configured
-      if (env.supabaseUrl.isNotEmpty) {
+      if (env.hasBackend) {
         try {
           await AppSupabaseGateway.initialize(env);
         } catch (e, st) {
@@ -47,11 +52,19 @@ void main() {
         }
       } else {
         AppLogger.warn(
-          'Supabase URL not provided; running with mock/offline defaults.',
+          'No Supabase backend configured; running local-only (guest/demo).',
         );
       }
 
-      runApp(const ProviderScope(child: TripTrackerApp()));
+      final prefs = await SharedPreferences.getInstance();
+      runApp(
+        ProviderScope(
+          // Surface failures to the UI (explicit Retry buttons) instead of Riverpod 3's silent auto-retry.
+          retry: (_, _) => null,
+          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+          child: const TripTrackerApp(),
+        ),
+      );
     },
     (error, stack) {
       AppLogger.error('Unhandled zone error: $error', error, stack);
@@ -77,7 +90,13 @@ class TripTrackerApp extends ConsumerWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,
       builder: (context, child) {
-        return ErrorBoundary(child: child ?? const SizedBox.shrink());
+        return ErrorBoundary(
+          child: DeepLinkListener(
+            child: SyncLifecycle(
+              child: AppLockGate(child: child ?? const SizedBox.shrink()),
+            ),
+          ),
+        );
       },
     );
   }

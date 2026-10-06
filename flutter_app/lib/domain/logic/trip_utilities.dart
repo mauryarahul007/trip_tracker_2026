@@ -1,9 +1,38 @@
 const String canonicalAppOrigin = 'https://trip-tracker.blackmaroon.in';
 
+// Approximates JS `localeCompare(b, undefined, {sensitivity: 'base', numeric: true})`:
+// case- and accent-insensitive, digit runs compared as numbers.
+// ponytail: folds Latin letters only; non-Latin scripts compare by code unit
+// (ICU collation differs). Add a collation package if such trip names matter.
+const _accentFrom = 'àáâãäåāçćčďèéêëēěìíîïīñňòóôõöøōřšśťùúûüūůýÿžźż';
+const _accentTo = 'aaaaaaa' 'ccc' 'd' 'eeeeee' 'iiiii' 'nn' 'ooooooo' 'rss' 't' 'uuuuuu' 'yy' 'zzz';
+
+String _fold(String s) {
+  final b = StringBuffer();
+  for (final r in s.toLowerCase().runes) {
+    final c = String.fromCharCode(r);
+    final i = _accentFrom.indexOf(c);
+    b.write(i >= 0 ? _accentTo[i] : c);
+  }
+  return b.toString();
+}
+
+int _localeCompareBase(String a, String b) {
+  final ra = RegExp(r'\d+|\D+').allMatches(_fold(a)).map((m) => m.group(0)!).toList();
+  final rb = RegExp(r'\d+|\D+').allMatches(_fold(b)).map((m) => m.group(0)!).toList();
+  for (var i = 0; i < ra.length && i < rb.length; i++) {
+    final x = ra[i], y = rb[i];
+    final nx = int.tryParse(x), ny = int.tryParse(y);
+    final c = (nx != null && ny != null) ? nx.compareTo(ny) : x.compareTo(y);
+    if (c != 0) return c;
+  }
+  return ra.length.compareTo(rb.length);
+}
+
 List<Map<String, dynamic>> sortTrips(List<Map<String, dynamic>> trips, String mode) {
   final list = List<Map<String, dynamic>>.from(trips);
   if (mode == 'name') {
-    list.sort((a, b) => ((a['name'] as String?) ?? '').compareTo((b['name'] as String?) ?? ''));
+    list.sort((a, b) => _localeCompareBase((a['name'] as String?) ?? '', (b['name'] as String?) ?? ''));
   } else {
     list.sort((a, b) {
       final dateA = (a['startDate'] as String?) ?? '';
@@ -132,7 +161,9 @@ String formatRelativeTime(dynamic timestamp, [int? nowMs]) {
   if (timestamp is num) {
     then = timestamp.toInt();
   } else {
-    then = DateTime.tryParse(timestamp.toString())?.millisecondsSinceEpoch ?? 0;
+    final parsed = DateTime.tryParse(timestamp.toString())?.millisecondsSinceEpoch;
+    if (parsed == null) return timestamp.toString(); // TS echoes unparseable input
+    then = parsed;
   }
   final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
   final diffMs = now - then;

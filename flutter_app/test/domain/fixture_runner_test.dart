@@ -172,7 +172,7 @@ void main() {
           [],
           members,
           null,
-          DateTime(2026, 10, 5),
+          DateTime(2026, 10, 6),
         );
         expect(parsed?.toJson(), pc['output']);
       }
@@ -194,11 +194,53 @@ void main() {
       expect(merged.notes.length, (json['tripMerge']['mergedTrip']['notes'] as List).length);
       expect(merged.passes.length, (json['tripMerge']['mergedTrip']['passes'] as List).length);
 
-      final localRoster = json['rosterMerge']['localRoster'] as List;
-      final remoteRoster = json['rosterMerge']['remoteRoster'] as List;
-      final mergedRoster = mergeTripRoster(localRoster, remoteRoster);
-      expect(mergedRoster['trips'], localRoster);
-      expect(mergedRoster['members'], remoteRoster);
+      // Real mergeTripRoster signature
+      final args = json['rosterMerge']['args'] as Map<String, dynamic>;
+      final trips = [for (final t in args['trips'] as List) Trip.fromJson(t as Map<String, dynamic>)];
+      Map<String, Member> members(Map<String, dynamic> m) => {for (final e in m.entries) e.key: Member.fromJson(e.value as Map<String, dynamic>)};
+      Map<String, Group> groups(Map<String, dynamic> m) => {for (final e in m.entries) e.key: Group.fromJson(e.value as Map<String, dynamic>)};
+      final r = args['roster'] as Map<String, dynamic>;
+      final roster = TripRoster(
+        trip: Trip.fromJson(r['trip'] as Map<String, dynamic>),
+        members: members(r['members'] as Map<String, dynamic>),
+        groups: groups(r['groups'] as Map<String, dynamic>),
+      );
+      void expectTrip(Trip actual, Map<String, dynamic> want, String why) {
+        final j = actual.toJson();
+        for (final k in ['id', 'name', 'memberIds', 'groupIds', 'expenseCount', 'updatedAt']) {
+          expect(j[k], want[k], reason: '$why: $k');
+        }
+        expect((j['checklist'] as List).map((c) => (c as Map)['id']), (want['checklist'] as List).map((c) => c['id']), reason: '$why: checklist');
+      }
+
+      for (final c in json['rosterMerge']['cases'] as List) {
+        final want = c['result'] as Map<String, dynamic>;
+        final got = mergeTripRoster(trips, members(args['members'] as Map<String, dynamic>), groups(args['groups'] as Map<String, dynamic>), 't1', roster, c['keepLocalCollab'] as bool);
+        final why = 'keep=${c['keepLocalCollab']}';
+        expect(got.members.keys.toSet(), (want['members'] as Map).keys.toSet(), reason: why);
+        expect(got.members['m1']!.name, want['members']['m1']['name'], reason: why);
+        expect(got.groups.keys.toSet(), (want['groups'] as Map).keys.toSet(), reason: why);
+        expect(got.trips.length, (want['trips'] as List).length, reason: why);
+        for (var i = 0; i < got.trips.length; i++) {
+          expectTrip(got.trips[i], (want['trips'] as List)[i] as Map<String, dynamic>, why);
+        }
+      }
+      final missing = mergeTripRoster(trips, members(args['members'] as Map<String, dynamic>), groups(args['groups'] as Map<String, dynamic>), 'nope', roster, false);
+      expect(missing.members.keys.toSet(), (json['rosterMerge']['missingTrip']['members'] as Map).keys.toSet());
+
+      // applyLiveCollabRow
+      final liveBase = Trip.fromJson(json['liveRow']['baseTrip'] as Map<String, dynamic>);
+      for (final c in json['liveRow']['cases'] as List) {
+        final want = c['result'] as Map<String, dynamic>;
+        final got = applyLiveCollabRow(liveBase, Map<String, dynamic>.from(c['row'] as Map), c['keepLocalCollab'] as bool).toJson();
+        final why = '${jsonEncode(c['row'])} keep=${c['keepLocalCollab']}';
+        expect(got['name'], want['name'], reason: why);
+        expect(got['updatedAt'], want['updatedAt'], reason: why);
+        expect((got['checklist'] as List).map((x) => (x as Map)['id']), (want['checklist'] as List).map((x) => x['id']), reason: why);
+        expect((got['notes'] as List).length, (want['notes'] as List).length, reason: why);
+        expect((got['passes'] as List).length, (want['passes'] as List).length, reason: why);
+        expect(got['fxConfig'] != null, want['fxConfig'] != null, reason: why);
+      }
     });
 
     test('6. duplicate_burn_predictive.json matches detector, burn rate & chips', () {
@@ -378,7 +420,7 @@ void main() {
 
       expect(formatDateRange('2026-10-01', '2026-10-08'), json['dates']['dateRange']);
       expect(tripDayNumber('2026-10-01', '2026-10-03'), json['dates']['tripDay']);
-      expect(formatRelativeTime(1791244800000 - 3600000, 1791244800000 - 4000000), json['dates']['relativeTime']);
+      expect(formatRelativeTime(1791244800000 - 3600000, 1791244800000), json['dates']['relativeTime']);
 
       expect(buildCanonicalJoinLink('ABC123'), json['deepLink']['canonicalJoin']);
       expect(parseJoinDeepLink('com.triptracker.app://join/ABC123'), json['deepLink']['parsedJoin']);

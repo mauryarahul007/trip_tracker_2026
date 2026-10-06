@@ -17,10 +17,17 @@ import path from 'node:path';
 process.env.TZ = 'UTC';
 const MOCK_TIMESTAMP = 1791244800000; // 2026-10-06T00:00:00.000Z
 const MOCK_DATE = new Date(MOCK_TIMESTAMP);
+// Pin the wall clock so every util that calls Date.now() is deterministic.
+Date.now = () => MOCK_TIMESTAMP;
 
 // Register resolver for extensionless TypeScript imports in src/
 register(
-  'data:text/javascript,export async function resolve(s, c, n){ try { return await n(s, c); } catch(e){ if (s.startsWith(".")) try { return await n(s + ".ts", c); } catch{} throw e; } }',
+  'data:text/javascript,' +
+    encodeURIComponent(`
+export async function resolve(s, c, n){ try { return await n(s, c); } catch(e){ if (s.startsWith(".")) try { return await n(s + ".ts", c); } catch{} throw e; } }
+// Modules that read Vite's import.meta.env (e.g. the supabase client) must load in plain Node.
+export async function load(url, ctx, next){ const r = await next(url, ctx); if (url.includes('/src/') && r.source) { r.source = Buffer.from(String(r.source).replace(/import\\.meta\\.env/g, '({})')); } return r; }
+`),
   pathToFileURL('./')
 );
 
@@ -366,20 +373,58 @@ console.log('--- Generating Golden Fixtures ---');
 
   const mergedTrip = tripCollabMergeMod.applyRemoteTrip(localTrip, remoteTrip);
 
-  const localRoster = [
-    { id: 'm1', name: 'Alice', linkedUserId: 'u1' },
-    { id: 'm2', name: 'Bob', linkedUserId: null }
+  // Real mergeTripRoster(trips, members, groups, tripId, roster, keepLocalCollab)
+  const baseTrip = (over) => ({
+    id: 't1', name: 'Alps', startDate: '2026-10-01', endDate: '2026-10-08', baseCurrency: 'EUR', ownerId: 'u1',
+    joinCode: 'ABC123', memberIds: [], groupIds: [], archived: false, frozen: false, closed: false,
+    stops: [], checklist: [], notes: [], passes: [], expenseCount: 3, updatedAt: 1000, ...over
+  });
+  const rosterLocalTrip = baseTrip({
+    memberIds: ['m1', 'm2'], groupIds: ['g1'], expenseCount: 7,
+    checklist: [{ id: 'c1', text: 'Local item', done: false, updatedAt: 1 }]
+  });
+  const rosterRemoteTrip = baseTrip({
+    name: 'Alps Remote', memberIds: ['m1', 'm3'], groupIds: ['g2'], updatedAt: 2000,
+    checklist: [{ id: 'c9', text: 'Remote item', done: true, updatedAt: 2 }]
+  });
+  const rosterArgs = {
+    trips: [rosterLocalTrip, baseTrip({ id: 't2', name: 'Other' })],
+    members: { m1: { id: 'm1', name: 'Alice' }, m2: { id: 'm2', name: 'Bob' }, mx: { id: 'mx', name: 'Elsewhere' } },
+    groups: { g1: { id: 'g1', name: 'Old group', memberIds: ['m1', 'm2'] } },
+    roster: {
+      trip: rosterRemoteTrip,
+      members: { m1: { id: 'm1', name: 'Alice Cooper' }, m3: { id: 'm3', name: 'Charlie' } },
+      groups: { g2: { id: 'g2', name: 'New group', memberIds: ['m1', 'm3'] } }
+    }
+  };
+  const rosterCases = [false, true].map((keep) => ({
+    keepLocalCollab: keep,
+    result: tripCollabMergeMod.mergeTripRoster(rosterArgs.trips, rosterArgs.members, rosterArgs.groups, 't1', rosterArgs.roster, keep)
+  }));
+  const rosterMissingTrip = tripCollabMergeMod.mergeTripRoster(rosterArgs.trips, rosterArgs.members, rosterArgs.groups, 'nope', rosterArgs.roster, false);
+
+  // applyLiveCollabRow
+  const liveBase = baseTrip({ checklist: [{ id: 'c1', text: 'Old', done: false, updatedAt: 1 }] });
+  const liveRows = [
+    { name: 'Renamed', updated_at: '2026-10-05T00:00:00.000Z',
+      checklist: [{ id: 'c2', text: 'New', done: true, updatedAt: 2 }],
+      notes: [{ id: 'n1', title: 'N', content: 'x', updatedAt: 2 }],
+      passes: [{ id: 'p1', title: 'P', updatedAt: 2 }],
+      fx_config: { customRates: { USD: 1.1 }, markupPercent: 2 } },
+    { name: 'Partial only' },
+    { updated_at: 'not-a-date', checklist: 'not-a-list', fx_config: [] }
   ];
-  const remoteRoster = [
-    { id: 'm1', name: 'Alice Cooper', linkedUserId: 'u1' },
-    { id: 'm2', name: 'Bob', linkedUserId: 'u2' },
-    { id: 'm3', name: 'Charlie', linkedUserId: null }
-  ];
-  const mergedRoster = tripCollabMergeMod.mergeTripRoster(localRoster, remoteRoster);
+  const liveCases = [];
+  for (const keep of [false, true]) {
+    for (const row of liveRows) {
+      liveCases.push({ keepLocalCollab: keep, row, result: tripCollabMergeMod.applyLiveCollabRow(liveBase, row, keep) });
+    }
+  }
 
   writeFixture('collab_merge.json', {
     tripMerge: { localTrip, remoteTrip, mergedTrip },
-    rosterMerge: { localRoster, remoteRoster, mergedRoster }
+    rosterMerge: { args: rosterArgs, cases: rosterCases, missingTrip: rosterMissingTrip },
+    liveRow: { baseTrip: liveBase, cases: liveCases }
   });
 }
 
@@ -416,7 +461,44 @@ console.log('--- Generating Golden Fixtures ---');
     new Date('2026-10-04T13:00:00Z')
   );
 
+  // Matrix covering every detector branch (cases A-D, tolerance, bad input, self-exclusion).
+  const mxExisting = [
+    { id: 'x1', title: 'Dinner at Chalet', amount: 100, currency: 'EUR', date: '2026-10-01', paidBy: 'm1', category: 'cat-food' },
+    { id: 'x2', title: 'Museum tickets', amount: 60, currency: 'EUR', date: '2026-10-02', paidBy: 'm2', category: 'cat-fun' },
+    { id: 'x3', title: 'Train', amount: 40, currency: 'EUR', date: '2026-10-03', paidBy: 'm1', category: 'cat-travel' },
+    { id: 'x4', title: 'Deleted thing', amount: 77, currency: 'EUR', date: '2026-10-01', paidBy: 'm1', category: 'cat-food', deletedAt: 5 },
+    { id: 'x5', title: 'Settlement: A to B', amount: 88, currency: 'EUR', date: '2026-10-01', paidBy: 'm1', category: 'cat-food', isSettlement: true },
+    { id: 'x6', title: 'Bad date', amount: 33, currency: 'EUR', date: 'garbage', paidBy: 'm1', category: 'cat-food' }
+  ];
+  const mxCategories = [{ id: 'cat-food', name: 'Food & Dining' }, { id: 'cat-fun', name: 'Fun' }];
+  const mxMembers = [{ id: 'm1', name: 'Alice' }, { id: 'm2', name: 'Bob' }];
+  const mxCandidates = [
+    { amount: 100, title: 'dinner at chalet!', date: '2026-10-01' },
+    { amount: 101.5, title: 'Pizza', date: '2026-10-01', categoryId: 'cat-food', paidById: 'm1' },
+    { amount: 100, title: 'Lunch', date: '2026-10-01', categoryId: 'cat-food', paidById: 'm1' },
+    { amount: 100, title: 'Other', date: '2026-10-01', categoryId: 'cat-food', paidById: 'm2' },
+    { amount: 100, title: 'Dinner at Chalet', date: '2026-10-02' },
+    { amount: 60, title: 'Museum', date: '2026-10-05' },
+    { amount: 60, title: 'Museum tickets', date: '2026-10-02', paidById: 'm9' },
+    { amount: 40, title: 'Train', date: '2026-10-03', id: 'x3' },
+    { amount: 77, title: 'Deleted thing', date: '2026-10-01' },
+    { amount: 88, title: 'Settlement: A to B', date: '2026-10-01' },
+    { amount: 33, title: 'Bad date', date: '2026-10-01' },
+    { amount: 0, title: 'Zero', date: '2026-10-01' },
+    { amount: 10, title: 'No date', date: '' },
+    { amount: 10, title: 'Bad candidate date', date: 'nope' },
+    { amount: 5000, title: 'Nothing like it', date: '2026-10-01' }
+  ];
+  const detectorMatrix = {
+    existing: mxExisting, categories: mxCategories, members: mxMembers,
+    cases: mxCandidates.map((candidate) => ({
+      candidate,
+      result: duplicateDetectorMod.detectDuplicateExpense(candidate, mxExisting, mxCategories, mxMembers)
+    }))
+  };
+
   writeFixture('duplicate_burn_predictive.json', {
+    detectorMatrix,
     duplicateExact: duplicateCheckExact,
     duplicateDifferent: duplicateCheckDifferent,
     burnRate,
@@ -528,7 +610,35 @@ console.log('--- Generating Golden Fixtures ---');
     currency: 'EUR'
   });
 
+  // Matrices exercising every branch of the ported helpers.
+  const airportInputs = ['', 'JFK', ' jfk ', 'New York', 'new york!', 'Londo', 'delhi', 'Atlantis', 'xyz'];
+  const passengerInputs = ['DOE/JOHN MR', 'MR RAHUL MAURYA', 'Mrs. Jane Smith', 'dr  Who', 'JANE (Adult)', 'alice  b', '', '123'];
+  const stubFmt = (amt) => `$${amt.toFixed(2)}`;
+  const stubInputs = [
+    { myNet: 60, paid: 120, share: 60, group: null },
+    { myNet: -45.5, paid: 10, share: 55.5, group: null },
+    { myNet: 0, paid: 0, share: 0, group: null },
+    { myNet: 0.004, paid: 5, share: 5, group: null },
+    { myNet: 100, paid: 200, share: 100, group: { name: 'Couple', balance: 30, otherMemberNames: ['Bob'] } },
+    { myNet: -40, paid: 0, share: 40, group: { name: 'Squad', balance: -15, otherMemberNames: ['A', 'B'] } }
+  ];
+  const kinds = ['expense_added', 'settlement_recorded', 'expense_disputed', 'expense_dispute_resolved',
+    'expense_link', 'expense_deleted', 'expense_restored', 'settlement_confirmed', 'text'];
+  const matrices = {
+    airports: airportInputs.map((input) => ({ input, result: passParserMod.resolveAirportCode(input) })),
+    passengers: passengerInputs.map((input) => ({ input, result: passParserMod.cleanPassengerName(input) })),
+    stubs: stubInputs.map((input) => ({ input, result: passBackStubMod.buildPassStub(input, stubFmt) })),
+    cards: kinds.flatMap((kind) => [true, false].map((isMine) => ({
+      kind, isMine, result: chatExpenseCardsMod.getChatExpenseCardPresentation(kind, isMine, 'Alice')
+    }))),
+    bodies: kinds.filter((k) => k !== 'expense_link' && k !== 'text').flatMap((kind) => [
+      { kind, expense: { title: 'Ski Pass', amount: 150, currency: 'EUR' } },
+      { kind, expense: { title: 'Ski Pass', amount: 150, currency: 'EUR', note: 'too much' } }
+    ].map((c) => ({ ...c, result: chatExpenseCardsMod.expenseEventBody(kind, c.expense) })))
+  };
+
   writeFixture('passes_chat_cards.json', {
+    matrices,
     cleanedPassenger,
     resolvedAirport,
     passStub,
@@ -589,7 +699,7 @@ console.log('--- Generating Golden Fixtures ---');
 
   const dateRange = dateRangeMod.formatDateRange('2026-10-01', '2026-10-08');
   const tripDay = dateRangeMod.tripDayNumber('2026-10-01', '2026-10-03');
-  const relativeTime = relativeTimeMod.formatRelativeTime(MOCK_TIMESTAMP - 3600000, MOCK_TIMESTAMP);
+  const relativeTime = relativeTimeMod.formatRelativeTime(new Date(MOCK_TIMESTAMP - 3600000).toISOString());
 
   const canonicalJoin = joinDeepLinkMod.buildCanonicalJoinLink('ABC123');
   const parsedJoin = joinDeepLinkMod.parseJoinDeepLink('com.triptracker.app://join/ABC123');
@@ -638,7 +748,55 @@ console.log('--- Generating Golden Fixtures ---');
     payload: { title: 'Dinner', amount: 45 }
   });
 
+  // Matrices for every branch of the ported utilities.
+  const sortTrips = [
+    { id: 'a', name: 'alpha', startDate: '2026-01-01', createdAt: 1 },
+    { id: 'b', name: 'Beta', startDate: '2026-01-01', createdAt: 5 },
+    { id: 'c', name: 'gamma10', startDate: '2026-03-01', createdAt: 2 },
+    { id: 'd', name: 'gamma2', startDate: '', createdAt: 9 },
+    { id: 'e', name: 'Émile', startDate: '2025-12-01', updatedAt: 7, createdAt: 3 }
+  ];
+  const utilMatrix = {
+    sortTrips: ['name', 'date'].map((mode) => ({
+      mode, result: tripSortMod.sortTrips(sortTrips, mode).map((t) => t.id)
+    })),
+    sortTripsInput: sortTrips,
+    cities: [['Paris, France'], ['Tokyo'], [''], ['Goa', [{ name: 'Panjim' }, { name: 'Margao' }]], [undefined, [{ name: 'Rome' }]], [undefined]]
+      .map(([destination, stops]) => ({ destination: destination ?? null, stops: stops ?? null, result: tripDestinationMod.extractPrimaryCity(destination, stops) })),
+    dateRanges: [['2026-10-01', '2026-10-08'], ['2026-10-28', '2026-11-03'], ['2026-12-28', '2027-01-03'], ['2026-10-05', '2026-10-05'], ['bad', 'worse']]
+      .map(([a, b]) => ({ a, b, result: dateRangeMod.formatDateRange(a, b) })),
+    tripDays: [['2026-10-01', '2026-10-03'], ['2026-10-05', '2026-10-01'], ['x', '2026-10-01']]
+      .map(([a, b]) => ({ a, b, result: dateRangeMod.tripDayNumber(a, b) })),
+    relative: [0, 30000, 90000, 7200000, 86400000 * 3, 86400000 * 45, 86400000 * 400, -5000].map((ago) => ({
+      ago, result: relativeTimeMod.formatRelativeTime(new Date(MOCK_TIMESTAMP - ago).toISOString())
+    })).concat([{ ago: 'invalid', result: relativeTimeMod.formatRelativeTime('not-a-date') }]),
+    joinLinks: ['com.triptracker.app://join/ABC123', 'https://trip-tracker.blackmaroon.in/join/xyz789', 'https://trip-tracker.blackmaroon.in/join/xyz789?x=1',
+      'https://evil.example/join/ABC123', 'com.triptracker.app://other/ABC', 'garbage', '']
+      .map((url) => ({ url, result: joinDeepLinkMod.parseJoinDeepLink(url) })),
+    upiIds: ['a@b', 'traveler@okhdfcbank', 'bad', '@x', 'x@', ''].map((id) => ({ id, result: upiLinksMod.isValidUpiId(id) })),
+    upiUris: ['gpay', 'phonepe', 'paytm', 'cred', 'upi', undefined].map((scheme) => ({
+      scheme: scheme ?? null,
+      result: upiLinksMod.generateUpiUri({ payeeUpiId: 'a@okaxis', payeeName: 'Al Ice', amount: 12.5, note: 'Trip & fun' }, scheme)
+    })),
+    groupNames: [[], ['Alice'], ['Alice Smith', 'Bob'], ['A', 'B', 'C'], ['  Zed  ', 'Y', 'X', 'W']]
+      .map((names) => ({ names, result: groupNamingMod.buildAutoGroupName(names) })),
+    climates: [['Iceland', '2026-01-15'], ['Switzerland', '2026-10-01'], ['India', '2026-05-10'], ['Australia', '2026-12-20'], ['Goa', '2026-07-01'], ['Nowhere', undefined]]
+      .map(([destination, startDate]) => ({ destination, startDate: startDate ?? null, result: packingSuggestionsMod.inferSeasonalClimate(destination, startDate) })),
+    syncLabels: [
+      { id: '1', type: 'addExpense', payload: { title: 'Dinner', amount: 45 } },
+      { id: '2', type: 'updateExpense', payload: { expenseData: { title: 'Lunch' } } },
+      { id: '3', type: 'deleteExpense', payload: { id: 'e1' } },
+      { id: '4', type: 'createTrip', payload: { name: 'Goa' } },
+      { id: '5', type: 'addMember', payload: { name: 'Bob' } },
+      { id: '6', type: 'deleteMember', payload: { id: 'm1' } },
+      { id: '7', type: 'createGroup', payload: { name: 'Squad' } },
+      { id: '8', type: 'addCategory', payload: { name: 'Fuel' } },
+      { id: '9', type: 'weird', payload: {} }
+    ].map((item) => ({ item, result: syncQueueLabelMod.describeSyncItem(item) }))
+  };
+
   writeFixture('utilities.json', {
+    matrix: utilMatrix,
     sort: { sortedByName, sortedByDate },
     suggestions: { suggestedName, guessedCurr, extractedCity },
     dates: { dateRange, tripDay, relativeTime },
@@ -718,64 +876,91 @@ console.log('--- Generating Golden Fixtures ---');
     createdAt: dbTripRow.created_at
   };
 
+  // Real `expenses` columns (src/types/database.ts, mapExpense in tripApi.ts).
   const dbExpenseRow = {
     id: 'e29b41d4-550e-4400-a716-446655440001',
     trip_id: dbTripRow.id,
     title: 'Blue Lagoon Spa',
     amount: 180.5,
     currency: 'EUR',
-    category_id: 'cat-entertainment',
-    paid_by_member_id: '550e8400-e29b-41d4-a716-446655440002',
-    split_mode: 'equal',
-    split_data: {},
+    category: 'Entertainment',
     date: '2026-10-02',
-    receipt_url: 'receipts/t1/e1.jpg',
-    notes: 'Relaxing afternoon',
-    is_reimbursement: false,
-    reimbursement_to_member_id: null,
-    archived: false,
-    recycled_at: null,
-    payer_weights: null,
-    exchange_rate: 1.08,
-    dispute_status: null,
+    paid_by: '550e8400-e29b-41d4-a716-446655440002',
+    paid_by_shares: null,
+    split_mode: 'equal',
+    split_member_ids: ['550e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440003'],
+    split_config: null,
+    itemized_config: null,
+    resolved_shares: {
+      '550e8400-e29b-41d4-a716-446655440002': 90.25,
+      '550e8400-e29b-41d4-a716-446655440003': 90.25
+    },
+    receipt_path: 'receipts/t1/e1.jpg',
+    photo_paths: null,
+    disputed_at: null,
+    disputed_by_user_id: null,
     dispute_note: null,
-    disputed_by_member_id: null,
-    settlement_confirmed: false,
     settlement_confirmed_at: null,
-    approval_status: null,
-    approved_by_member_id: null,
-    approved_at: null,
-    created_at: '2026-10-02T12:00:00.000Z'
+    settlement_confirmed_by_user_id: null,
+    approval_status: 'confirmed',
+    approved_by_user_id: null,
+    is_settlement: false,
+    created_by_user_id: 'd9b2d63d-a233-4f24-9b22-e42a9a7a9741',
+    location: { lat: 63.88, lng: -22.45 },
+    deleted_at: '2026-10-03T08:00:00.000Z',
+    deleted_by_user_id: 'd9b2d63d-a233-4f24-9b22-e42a9a7a9741',
+    created_at: '2026-10-02T12:00:00.000Z',
+    updated_at: '2026-10-02T12:30:00.000Z'
   };
 
+  // Mirrors mapExpense() in src/services/tripApi.ts
   const appExpenseObject = {
     id: dbExpenseRow.id,
     tripId: dbExpenseRow.trip_id,
     title: dbExpenseRow.title,
     amount: dbExpenseRow.amount,
     currency: dbExpenseRow.currency,
-    categoryId: dbExpenseRow.category_id,
-    paidByMemberId: dbExpenseRow.paid_by_member_id,
-    splitMode: dbExpenseRow.split_mode,
-    splitData: dbExpenseRow.split_data,
+    category: dbExpenseRow.category,
     date: dbExpenseRow.date,
-    receiptUrl: dbExpenseRow.receipt_url,
-    notes: dbExpenseRow.notes,
-    isReimbursement: dbExpenseRow.is_reimbursement,
-    reimbursementToMemberId: dbExpenseRow.reimbursement_to_member_id,
-    archived: dbExpenseRow.archived,
-    recycledAt: dbExpenseRow.recycled_at,
-    payerWeights: dbExpenseRow.payer_weights,
-    exchangeRate: dbExpenseRow.exchange_rate,
-    disputeStatus: dbExpenseRow.dispute_status,
-    disputeNote: dbExpenseRow.dispute_note,
-    disputedByMemberId: dbExpenseRow.disputed_by_member_id,
-    settlementConfirmed: dbExpenseRow.settlement_confirmed,
-    settlementConfirmedAt: dbExpenseRow.settlement_confirmed_at,
+    paidBy: dbExpenseRow.paid_by,
+    splitMode: dbExpenseRow.split_mode,
+    splitMemberIds: dbExpenseRow.split_member_ids,
+    resolvedShares: dbExpenseRow.resolved_shares,
+    receiptPath: dbExpenseRow.receipt_path,
+    isSettlement: dbExpenseRow.is_settlement,
     approvalStatus: dbExpenseRow.approval_status,
-    approvedByMemberId: dbExpenseRow.approved_by_member_id,
-    approvedAt: dbExpenseRow.approved_at,
-    createdAt: dbExpenseRow.created_at
+    createdByUserId: dbExpenseRow.created_by_user_id,
+    location: dbExpenseRow.location,
+    deletedAt: new Date(dbExpenseRow.deleted_at).getTime(),
+    deletedByUserId: dbExpenseRow.deleted_by_user_id,
+    createdAt: new Date(dbExpenseRow.created_at).getTime(),
+    updatedAt: new Date(dbExpenseRow.updated_at).getTime()
+  };
+
+  // Real `trip_messages` columns; payload/kind passthrough.
+  const dbMessageRow = {
+    id: 'a1b2c3d4-0000-4000-8000-000000000001',
+    trip_id: dbTripRow.id,
+    member_id: '550e8400-e29b-41d4-a716-446655440002',
+    body: 'Dinner at 8?',
+    kind: 'text',
+    payload: null,
+    created_at: '2026-10-02T12:00:00.000Z',
+    edited_at: null,
+    deleted_at: null,
+    reply_to_id: null,
+    reactions: { '👍': ['550e8400-e29b-41d4-a716-446655440003'] },
+    is_pinned: true
+  };
+  const appMessageObject = {
+    id: dbMessageRow.id,
+    tripId: dbMessageRow.trip_id,
+    memberId: dbMessageRow.member_id,
+    body: dbMessageRow.body,
+    eventKind: 'text',
+    createdAt: new Date(dbMessageRow.created_at).getTime(),
+    reactions: dbMessageRow.reactions,
+    isPinned: true
   };
 
   const dbMemberRow = {
@@ -803,8 +988,206 @@ console.log('--- Generating Golden Fixtures ---');
   writeFixture('database_mappings.json', {
     trips: { dbRow: dbTripRow, appObject: appTripObject },
     expenses: { dbRow: dbExpenseRow, appObject: appExpenseObject },
+    messages: { dbRow: dbMessageRow, appObject: appMessageObject },
     members: { dbRow: dbMemberRow, appObject: appMemberObject }
   });
+}
+
+// 12c. Split resolver (`resolveShares` lives in the zustand store module, which reads
+// import.meta.env and window at import time; stub both just for this import).
+{
+  globalThis.window = globalThis;
+  globalThis.localStorage = { getItem() { return null; }, setItem() {}, removeItem() {} };
+  const storeMod = await import('../src/store/tripStore.ts');
+  delete globalThis.window;
+  delete globalThis.localStorage;
+  const resolveShares = storeMod.resolveShares;
+  const ids = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+  const cases = [];
+  const add = (label, expense, participants) =>
+    cases.push({ label, expense, participants, result: resolveShares(expense, participants) });
+
+  // Equal: remainders, payer inside/outside, zero-decimal currencies.
+  for (const currency of ['USD', 'JPY', 'KWD', 'INR']) {
+    for (const amount of [100, 100.01, 0.01, 1, 10, 999.99, 1234.57, 5000]) {
+      for (const n of [1, 2, 3, 7]) {
+        add(`equal ${currency} ${amount} /${n} payer-in`, { amount, splitMode: 'equal', paidBy: ids[Math.min(1, n - 1)], currency }, ids.slice(0, n));
+      }
+    }
+    add(`equal ${currency} payer-out`, { amount: 100, splitMode: 'equal', paidBy: 'zz', currency }, ids.slice(0, 7));
+  }
+  // Custom weights (0 weight behaves like missing = 1, a JS `||` quirk), missing keys.
+  add('custom 1:2:3', { amount: 100, splitMode: 'custom', splitConfig: { a: 1, b: 2, c: 3 }, paidBy: 'a', currency: 'USD' }, ['a', 'b', 'c']);
+  add('custom zero weight', { amount: 100, splitMode: 'custom', splitConfig: { a: 0, b: 2 }, paidBy: 'b', currency: 'USD' }, ['a', 'b']);
+  add('custom missing config', { amount: 99.99, splitMode: 'custom', paidBy: 'a', currency: 'USD' }, ['a', 'b', 'c']);
+  add('custom JPY', { amount: 1001, splitMode: 'custom', splitConfig: { a: 1, b: 1, c: 1 }, paidBy: 'c', currency: 'JPY' }, ['a', 'b', 'c']);
+  add('custom 7 way', { amount: 100, splitMode: 'custom', splitConfig: { a: 3, b: 1, c: 1, d: 1, e: 1, f: 1, g: 1 }, paidBy: 'g', currency: 'USD' }, ids);
+  // Exact: sums that match, undershoot, overshoot (rounding diff lands on payer / first).
+  add('exact matches', { amount: 100, splitMode: 'exact', splitConfig: { a: 60, b: 40 }, paidBy: 'a', currency: 'USD' }, ['a', 'b']);
+  add('exact short', { amount: 100, splitMode: 'exact', splitConfig: { a: 60, b: 30 }, paidBy: 'b', currency: 'USD' }, ['a', 'b']);
+  add('exact over', { amount: 100, splitMode: 'exact', splitConfig: { a: 70, b: 50 }, paidBy: 'zz', currency: 'USD' }, ['a', 'b']);
+  add('exact decimals', { amount: 33.33, splitMode: 'exact', splitConfig: { a: 11.11, b: 11.11, c: 11.11 }, paidBy: 'a', currency: 'USD' }, ['a', 'b', 'c']);
+  add('exact JPY', { amount: 1000, splitMode: 'exact', splitConfig: { a: 333.4, b: 333.3 }, paidBy: 'a', currency: 'JPY' }, ['a', 'b']);
+  // Percentage.
+  add('percent 50/50', { amount: 100, splitMode: 'percentage', splitConfig: { a: 50, b: 50 }, paidBy: 'a', currency: 'USD' }, ['a', 'b']);
+  add('percent thirds', { amount: 100, splitMode: 'percentage', splitConfig: { a: 33.33, b: 33.33, c: 33.34 }, paidBy: 'c', currency: 'USD' }, ['a', 'b', 'c']);
+  add('percent under 100', { amount: 100, splitMode: 'percentage', splitConfig: { a: 40, b: 40 }, paidBy: 'a', currency: 'USD' }, ['a', 'b']);
+  add('percent missing', { amount: 100, splitMode: 'percentage', paidBy: 'a', currency: 'USD' }, ['a', 'b']);
+  // Itemized.
+  const item = (id, name, amount, assigned) => ({ id, name, amount, assignedMemberIds: assigned });
+  add('itemized basic', { amount: 90, splitMode: 'itemized', paidBy: 'a', currency: 'USD', itemizedConfig: { items: [item('1', 'x', 30, ['a']), item('2', 'y', 60, ['b', 'c'])] } }, ['a', 'b', 'c']);
+  add('itemized tax tip discount', { amount: 120, splitMode: 'itemized', paidBy: 'b', currency: 'USD', itemizedConfig: { items: [item('1', 'x', 40, ['a']), item('2', 'y', 60, ['b']), item('3', 'z', 20, [])], tax: 10, tip: 12, discount: 22 } }, ['a', 'b', 'c']);
+  add('itemized unassigned goes to all', { amount: 30, splitMode: 'itemized', paidBy: 'a', currency: 'USD', itemizedConfig: { items: [item('1', 'x', 30, [])] } }, ['a', 'b', 'c']);
+  add('itemized assignee not a participant', { amount: 30, splitMode: 'itemized', paidBy: 'a', currency: 'USD', itemizedConfig: { items: [item('1', 'x', 30, ['zz'])] } }, ['a', 'b']);
+  add('itemized zero total with tax', { amount: 10, splitMode: 'itemized', paidBy: 'a', currency: 'USD', itemizedConfig: { items: [item('1', 'x', 0, ['a'])], tax: 10 } }, ['a', 'b']);
+  add('itemized empty items falls through', { amount: 50, splitMode: 'itemized', paidBy: 'a', currency: 'USD', itemizedConfig: { items: [] } }, ['a', 'b']);
+  add('itemized JPY', { amount: 1000, splitMode: 'itemized', paidBy: 'a', currency: 'JPY', itemizedConfig: { items: [item('1', 'x', 333, ['a']), item('2', 'y', 667, ['b', 'c'])] } }, ['a', 'b', 'c']);
+  // Unknown mode and no currency.
+  add('unknown mode', { amount: 10, splitMode: 'weird', paidBy: 'a', currency: 'USD' }, ['a']);
+  add('no currency defaults to 2 decimals', { amount: 10, splitMode: 'equal', paidBy: 'a' }, ['a', 'b', 'c']);
+  writeFixture('split_resolver.json', { cases });
+}
+
+// 12d. Small expense-form helpers: last expense, draft TTL, settlement share card.
+{
+  const lastExpenseMod = await import('../src/utils/lastExpense.ts');
+  const draftMod = await import('../src/utils/expenseDraft.ts');
+  const cardMod = await import('../src/utils/settlementShareCard.ts');
+
+  const exp = (id, over) => ({ id, tripId: 't1', title: 'Lunch', amount: 10, currency: 'INR', category: 'Food', date: '2026-10-01', paidBy: 'a', splitMode: 'equal', splitMemberIds: ['a'], resolvedShares: { a: 10 }, createdAt: 1, updatedAt: 1, ...over });
+  const lastInput = [
+    exp('e1', { createdAt: 10 }),
+    exp('e2', { createdAt: 30, isSettlement: true }),
+    exp('e3', { createdAt: 20 }),
+    exp('e4', { createdAt: 40, title: 'Settlement: A to B' }),
+    exp('e5', { createdAt: 50, deletedAt: 5 }),
+    exp('e6', { createdAt: 20, tripId: 't2' }),
+    exp('e7', { createdAt: 20 })
+  ];
+  const last = {
+    expenses: lastInput,
+    cases: [
+      { tripId: 't1', result: lastExpenseMod.getLatestNonSettlementExpense(lastInput, 't1')?.id ?? null },
+      { tripId: 't2', result: lastExpenseMod.getLatestNonSettlementExpense(lastInput, 't2')?.id ?? null },
+      { tripId: null, result: lastExpenseMod.getLatestNonSettlementExpense(lastInput, null)?.id ?? null },
+      { tripId: 'nope', result: lastExpenseMod.getLatestNonSettlementExpense(lastInput, 'nope')?.id ?? null },
+      { tripId: 't1', empty: true, result: lastExpenseMod.getLatestNonSettlementExpense([], 't1')?.id ?? null }
+    ]
+  };
+
+  const mem = {};
+  const store = { getItem: (k) => (k in mem ? mem[k] : null), setItem: (k, v) => { mem[k] = v; }, removeItem: (k) => { delete mem[k]; } };
+  const T0 = 1000000;
+  draftMod.saveDraft(store, 'k', { title: 'Taxi', amount: '12' }, T0);
+  const draft = {
+    ttl: draftMod.DRAFT_TTL_MS,
+    saved: JSON.parse(mem.k),
+    loads: [0, 1000, draftMod.DRAFT_TTL_MS, draftMod.DRAFT_TTL_MS + 1].map((dt) => {
+      draftMod.saveDraft(store, 'k', { title: 'Taxi', amount: '12' }, T0);
+      return { elapsed: dt, result: draftMod.loadDraft(store, 'k', T0 + dt), removed: !('k' in mem) };
+    }),
+    malformed: [
+      '{not json', '{"savedAt":"x","data":{}}', '{"savedAt":5}', '{"savedAt":5,"data":null}', '{"savedAt":5,"data":"str"}'
+    ].map((raw) => { mem.m = raw; const r = draftMod.loadDraft(store, 'm', 6); return { raw, result: r, removed: !('m' in mem) }; }),
+    missing: draftMod.loadDraft(store, 'absent', T0)
+  };
+
+  const cardInputs = [
+    { tripName: 'Goa Weekend', fromLabel: 'Ben', toLabel: 'Asha', amount: 1234.5, currencySymbol: '₹' },
+    { tripName: '', fromLabel: 'A', toLabel: 'B', amount: 0.005, currencySymbol: '$', upiId: 'asha@okhdfc' },
+    { tripName: 'Trip/with: odd*chars? & spaces', fromLabel: 'X', toLabel: 'Y', amount: NaN, currencySymbol: '€' },
+    { tripName: 'Big', fromLabel: 'P', toLabel: 'Q', amount: 1234567.891, currencySymbol: '£', upiId: null }
+  ];
+  const shareCard = cardInputs.map((input) => ({
+    input: { ...input, amount: Number.isNaN(input.amount) ? 'NaN' : input.amount },
+    layout: cardMod.getSettlementShareCardLayout(input)
+  }));
+
+  writeFixture('expense_helpers.json', { last, draft, shareCard });
+}
+
+// 12e. Default categories (generated into Dart) and category colours.
+{
+  const colorMod = await import('../src/utils/categoryColor.ts');
+  const storeMod2 = await import('../src/store/tripStore.ts').catch(() => null);
+  const cats = storeMod2 ? storeMod2.DEFAULT_CATEGORIES : [];
+  const q = (v) => `'${String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+  const dart = [
+    '// GENERATED by scripts/export-golden-fixtures.mjs from DEFAULT_CATEGORIES in src/store/tripStore.ts. Do not edit.',
+    "import '../models/category.dart';",
+    '',
+    'const List<Category> defaultCategories = [',
+    ...cats.map((c) => `  Category(id: ${q(c.id)}, name: ${q(c.name)}, icon: ${q(c.icon)}, isCustom: ${c.isCustom}),`),
+    '];',
+    ''
+  ].join('\n');
+  fs.writeFileSync(path.resolve('flutter_app/lib/domain/logic/default_categories.g.dart'), dart, 'utf8');
+  const ids = ['cat-food', 'cat-stay', 'cat-travel', 'cat-activities', 'cat-shopping', 'cat-misc', 'a', 'custom-1', '3f2b8c1e-9a77-4c1d-8e2a-0a1b2c3d4e5f', 'Fuel 🚗', 'ZZZZZZZZZZZZZZZZZZZZZZZZZZ', '', 'é'];
+  writeFixture('category_colors.json', { cases: ids.map((id) => ({ id, color: colorMod.getCatColor(id, 0) })), defaults: cats });
+}
+
+// 12a. Locale-aware money formatting (TS uses the device locale via toLocaleString).
+{
+  const locales = ['en-US', 'en-IN', 'de-DE', 'fr-FR', 'ja-JP', 'ar-EG', 'hi-IN', 'es-ES'];
+  const amounts = [0, 5, 0.005, 1234.5, 1234.565, 99999.995, 123450, 1234567.891, -9876.5, 100000000];
+  const currencies = ['USD', 'JPY', 'KWD'];
+  const cases = [];
+  for (const locale of locales) {
+    for (const currency of currencies) {
+      const decimals = currencyMod.getCurrencyDecimals(currency);
+      for (const amount of amounts) {
+        cases.push({
+          locale, currency, amount,
+          result: amount.toLocaleString(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+        });
+      }
+    }
+  }
+  writeFixture('locale_money.json', { note: 'Mirrors formatMoneyNumber() with an explicit locale', cases });
+}
+
+// 12b. City -> IATA map generated into Dart (cannot drift from passParser.ts).
+{
+  const entries = Object.entries(passParserMod.CITY_TO_IATA);
+  const dart = [
+    '// GENERATED by scripts/export-golden-fixtures.mjs from CITY_TO_IATA in src/utils/passParser.ts. Do not edit.',
+    'const Map<String, String> cityToIata = {',
+    ...entries.map(([k, v]) => `  '${k.replace(/'/g, "\\'")}': '${v}',`),
+    '};',
+    ''
+  ].join('\n');
+  fs.writeFileSync(path.resolve('flutter_app/lib/domain/logic/city_iata.g.dart'), dart, 'utf8');
+}
+
+// 13. Feature flag registry (keys + defaults + packs) and the generated Dart const,
+// so the Flutter flag set cannot drift from src/utils/featureFlags.ts.
+{
+  const flagsMod = await import('../src/utils/featureFlags.ts');
+  const defaults = flagsMod.DEFAULT_FEATURE_FLAGS;
+  const metaDefaults = Object.fromEntries(
+    Object.keys(defaults).map((k) => [k, flagsMod.FEATURE_FLAGS_META[k]?.defaultEnabledForUsers ?? false])
+  );
+  const packs = flagsMod.CONSUMER_PACKS.map((p) => ({ id: p.id, flagKeys: p.flagKeys }));
+  writeFixture('flags.json', { defaults, metaDefaults, packs });
+
+  const keys = Object.keys(defaults).sort();
+  const dart = [
+    '// GENERATED by scripts/export-golden-fixtures.mjs from src/utils/featureFlags.ts. Do not edit.',
+    '// Run: node scripts/export-golden-fixtures.mjs',
+    '',
+    '/// Offline defaults, identical to `DEFAULT_FEATURE_FLAGS`.',
+    'const Map<String, bool> defaultFeatureFlags = {',
+    ...keys.map((k) => `  '${k}': ${defaults[k]},`),
+    '};',
+    '',
+    '/// Consumer pack -> flag keys (`CONSUMER_PACKS`).',
+    'const Map<String, List<String>> consumerPacks = {',
+    ...packs.map((p) => `  '${p.id}': [${p.flagKeys.map((k) => `'${k}'`).join(', ')}],`),
+    '};',
+    '',
+  ].join('\n');
+  fs.writeFileSync(path.resolve('flutter_app/lib/domain/logic/flag_defaults.g.dart'), dart, 'utf8');
+  console.log('Generated: flutter_app/lib/domain/logic/flag_defaults.g.dart');
 }
 
 console.log('--- Golden Fixtures Successfully Exported ---');

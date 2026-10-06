@@ -1,0 +1,3 @@
+tags:
+  staging:
+    description: needs a real staging Supabase project (nightly CI only)

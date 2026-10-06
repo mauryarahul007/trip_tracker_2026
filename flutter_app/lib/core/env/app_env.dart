@@ -6,12 +6,18 @@ class AppEnv {
     required this.appName,
     required this.supabaseUrl,
     required this.supabaseAnonKey,
+    this.googleServerClientId = '',
+    this.googleIosClientId = '',
   });
 
   final AppFlavor flavor;
   final String appName;
   final String supabaseUrl;
   final String supabaseAnonKey;
+
+  /// OAuth client ids (public identifiers, passed via --dart-define-from-file).
+  final String googleServerClientId;
+  final String googleIosClientId;
 
   static const String _env = String.fromEnvironment(
     'APP_ENV',
@@ -29,6 +35,9 @@ class AppEnv {
     'SUPABASE_ANON_KEY',
     defaultValue: 'dev-anon-key-placeholder',
   );
+
+  static const String _googleServer = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
+  static const String _googleIos = String.fromEnvironment('GOOGLE_IOS_CLIENT_ID');
 
   static AppFlavor _parseFlavor(String env) {
     switch (env.toLowerCase()) {
@@ -55,9 +64,18 @@ class AppEnv {
       appName: _name,
       supabaseUrl: _url,
       supabaseAnonKey: _anonKey,
+      googleServerClientId: _googleServer,
+      googleIosClientId: _googleIos,
     );
     return _current!;
   }
+
+  /// False for the built-in placeholder URL/key: the app then runs local-only
+  /// (guest/demo + Drift) and never touches Supabase.
+  bool get hasBackend =>
+      supabaseUrl.isNotEmpty &&
+      !supabaseUrl.contains('triptracker.internal') &&
+      supabaseAnonKey != 'dev-anon-key-placeholder';
 
   bool get isDev => flavor == AppFlavor.dev;
   bool get isStaging => flavor == AppFlavor.staging;

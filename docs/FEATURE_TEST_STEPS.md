@@ -21,6 +21,9 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-06 | flutter 3.44 | FLUTTER-P7-FORM-LEDGER | [Flutter: expense form and balances tab](#flutter-p7-form-ledger--flutter-expense-form-and-balances-tab) |
+| 2026-10-06 | flutter 3.44 | FLUTTER-P7-EXPENSES | [Flutter: Expenses tab (list, filters, recycle bin)](#flutter-p7-expenses--flutter-expenses-tab-list-filters-recycle-bin) |
+| 2026-10-06 | flutter 3.44 | FLUTTER-P6 | [Flutter app: auth, trips list, trip shell, join & share](#flutter-p6--flutter-app-auth-trips-list-trip-shell-join--share) |
 | 2026-10-02 | 3.43.9 | MEMBERS-ROSTER | [Members roster](#members-roster--members-roster) |
 | 2026-10-02 | 3.43.8 | COLLAB-SYNC | [Shared packing, notes, and passes](#collab-sync--shared-packing-notes-and-passes) |
 | 2026-10-02 | unreleased | PASS-STUB-SIMPLIFY | [Simplified pass back (balance hero)](#pass-stub-simplify--simplified-pass-back-balance-hero) |
@@ -1716,6 +1719,158 @@ No new flag. Role changes, reminders, and group create stay on the existing Memb
 
 ### Pass
 - The Members tab reads as a list: one role per person, the balance on the right, and groups in the same quiet card style.
+
+---
+
+## FLUTTER-P7-FORM-LEDGER — Flutter: expense form and balances tab
+
+**Scope:** Phase 7 slices C+D in `flutter_app/`. Use a staging project, never prod.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Percent / Exact / Shares splits | `enableAdvancedSplits` | ON |
+| Itemized split | `enableItemizedSplit` | OFF |
+| Several payers | `enableMultiPayerExpenses` | OFF |
+| Currency picker + conversion | `enableCurrencyFx` | ON |
+| Receipt photo | `enableReceiptUpload` | ON |
+| "More details" fold | `enableCompactExpenseForm` | ON |
+| Duplicate warning | `enableDuplicateDetector` | ON |
+| Same as last time | `enableCloneLastExpense` | ON |
+| Explain this number | `enableExplainThisNumber` | ON |
+| Simplify-debts switch (admins) | `enableSimplifyDebtsToggle` | OFF |
+| Settlement history | `enableSettlementHistory` | OFF |
+| Date + note when settling | `enableSettlementDateNote` | OFF |
+
+### Steps
+1. Expenses tab → add. Type `12*3+4` in Amount → "= 40.00" appears; save stores 40. Letters are ignored in the field.
+2. Leave amount or title empty and Save → the web's messages ("Please enter a valid amount greater than 0.", "Please enter a title for the expense."). Untick everyone → "Please select at least one member to split the expense with."
+3. Title "Hotel" → category auto-picks (note shown) until you tap a category yourself.
+4. Percent with 60/30 → "90.0% of 100%" and Save is refused ("Split percentages sum (90.00) must equal 100%."); add 10 → saves. Exact must equal the total. Shares 2/1/1 on 100 → 50/25/25 and re-opening the expense shows the weights.
+5. Presets: Only payer, Everyone but payer, Everyone, 50% payer; a group chip selects exactly that group.
+6. Multi-payer: toggle, amounts must equal the total ("Multi-payer sum ... must equal total expense ..."); the larger payer becomes the main payer.
+7. Foreign currency: pick USD, enter 10 → "≈ ₹872.50 at 87.25" (default rates); "Set rate" changes it for this trip and syncs.
+8. Attach a receipt (camera/gallery), remove it, attach again, Save; offline it uploads later.
+9. Type the same amount + title as an existing expense today → duplicate card; "Not a duplicate" hides it.
+10. Leave the form half-typed, come back → draft banner restores it; Discard clears it. Saving clears it.
+11. Edit an expense → loads values, saves as an update, one row remains.
+12. Balances tab: each traveler shows "is owed"/"owes"; "Who pays whom" lists payments. Settle → confirm (partial amount shows "Remaining" and the partial wording; 0 is refused). With the date/note flag a date and note appear and the note joins the title.
+13. Simplify debts switch (admin, flag on) changes the list of payments. History (flag on) lists settlements as Awaiting confirmation / Confirmed; tap one to confirm if you are the receiver.
+
+### Negative checks
+- Advanced-splits off: only Equal. Multi-payer/FX/receipt/duplicate flags off: those controls are absent.
+- Closed or frozen trip: Save is refused with "This trip is closed. Reopen it to add expenses."
+- Not built yet (see BACKLOG): UPI sheet, settlement share card, close-out, cross-trip balances, categories/CSV/backup/analytics screens.
+
+### Pass
+- Shares and balances match the web for the same data.
+
+---
+## FLUTTER-P7-EXPENSES — Flutter: Expenses tab (list, filters, recycle bin)
+
+**Scope:** Phase 7 slices A+B in `flutter_app/`. The add/edit form is not built yet (the buttons open a placeholder). Use a staging project, never prod.
+
+### Flags (Ops Deck; Flutter only reads them)
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Recycle bin entry | `enableRecycleBin` | ON |
+| Dispute actions in the expense sheet | `enableExpenseDisputes` | OFF |
+| Approve pending expenses | `enableExpenseApprovalThreshold` | OFF |
+| Confirm a received settlement | `enableSettlementConfirmation` | OFF |
+| Quick filter chips (All / Paid by me / Involves me) | `enableExpenseQuickFilterChips` | OFF |
+| Compact rows toggle | `enableCompactLedgerView` | OFF |
+| Chat cards after expense events | `enableInChatEventCards` + `enableTripChat` | OFF / ON |
+
+### Steps
+1. Open a trip with expenses → Expenses tab. Top card shows Total spent, Per person, Top category. Settlements and expenses waiting for approval are **not** in the total.
+2. Days start collapsed. Tap a day header (or ⋯ → Expand all days). Settlements appear in their own section.
+3. Row shows: category tile, title, amount, "your share" (only when different), payer → split avatars (max 4 then +N), badges: receipt, disputed, pending approval, pending sync, sync conflict. A foreign-currency row has a ⇄ chip that flips between trip currency and the original currency.
+4. Remove a member who paid/was in a split → that row shows the amber "Payer was removed…" / "A split member was removed…" warning.
+5. Search a word from a title (list narrows after a moment); a nonsense word → "No expenses match these filters." Filters (icon): traveler, category, date range, min/max amount; the button shows the live count ("Show 3 expenses"); a dot appears on the icon while filters are active; "Clear filters" resets.
+6. Swipe a row **left** → deleted with 5 s UNDO; **right** → opens Edit. Rows you can't manage (not the author, not an admin) don't swipe.
+7. ⋯ → Recycle bin: restore, delete forever (asks first), Empty recycle bin (asks first, admins only). Deleted items from another device also appear within the 24 h window.
+8. Tap a row → sheet with the amount, who paid, and who owes what (shares add up to the total; the payer gets any spare cent). With the flags on: Flag as disputed (optional note) / Resolve dispute; Approve (never on your own expense); Confirm payment received (only the person who received the settlement).
+9. Airplane mode, then flag a dispute → "You're offline. Connect to the internet to do this." and nothing changes. (Same as the web: these need the server's rules.)
+10. A trip with more than 50 rows shows "Load more" at the bottom.
+11. Chips under the header: "You owe · settle up" / "You're owed · see who", "N disputes", "N invites pending", "Close out trip" (after the end date). Tapping goes to Balances / Members.
+
+### Negative checks
+- Flags off: no dispute/approve/confirm buttons, no filter chips, no compact toggle.
+- Frozen or closed trip: saving an expense (once the form exists) is refused with the web wording.
+- Guest account: the tab works locally and never syncs.
+
+### Pass
+- Numbers match the web for the same trip (total, per person, shares). Anything else is a bug.
+
+---
+
+## FLUTTER-P6 — Flutter app: auth, trips list, trip shell, join & share
+
+**Scope:** the native Flutter app (`flutter_app/`, Phase 6). Same Supabase project as the web app. **Migrations:** none. **ADR:** 262, 263.
+
+Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, never prod). Google sign-in needs the client IDs from `docs/flutter-migration/contract/GOOGLE_OAUTH_SETUP.md`. iOS items need a Mac / Codemagic build.
+
+### Flags (Ops Deck → Flags; the Flutter app only reads them)
+| Behavior | Flag | Default |
+|----------|------|---------|
+| App lock (biometrics) | `enableBiometricAuth` | OFF |
+| Chat tab first | `enableChatFirstNav` | OFF |
+| Notes tab | `enableNotesAndChecklist` / `enableTravelPasses` / `enableTripChat` | ON |
+| View-only share link section | `enableTripShareLink` | ON |
+| Sync queue review sheet | `enableSyncQueueInspector` | OFF |
+
+### A. Sign-in and session
+1. Fresh install, signed out: you see the sign-in screen (no flash of anything else). Buttons: Continue with Google; Continue with Apple **on iOS only**; email + password; Continue as guest; Try the demo (non-prod builds only).
+2. Sign in with Google. First time ever: the 3-step intro appears (Next, Next, Get started); Skip also works. Land on **My Trips**.
+3. Force-quit and reopen: splash briefly, then **My Trips** directly (no login, no intro).
+4. Sign out (⚙ menu → Sign Out), sign back in as the same user: no intro again. Sign in as a different user: intro shows once for them.
+5. Wrong password → "Invalid email or password." Airplane mode + sign in → "Can't reach the server…". Empty fields → "Enter your email and password."
+6. Ops Deck: set `signup_gate` ON → sign-in screen shows "New sign-ins are temporarily paused…", Google/Apple/sign-up disabled. Turn it off again.
+7. Forgot Password → enter email → "Check your email". Open the emailed link on the device (opens the app) → choose a new password (min 8 chars) → saved, lands on trips.
+8. ⚙ → Delete Account → confirm → account removed, back on sign-in. (Use a throwaway account.)
+
+### B. App lock (needs a device with Face ID / Touch ID / fingerprint)
+1. Ops Deck: `enableBiometricAuth` ON. In the app, enable the lock (Settings arrives in Phase 10; until then set the stored preference via a debug build).
+2. Cold start → lock screen with auto prompt. Fail twice → "Biometric verification failed. Tap to try again." and the app stays covered. Pass → app visible.
+3. Background the app 10 s and return → no prompt. Background > 30 s and return → prompt again.
+4. Lock screen → Sign Out signs out cleanly. Flag OFF → never prompts even if the preference is on.
+
+### C. Trips list
+1. Empty account: "No trips yet" with **Create Trip** and **Join with Code**.
+2. New Trip → name, destination (typing "Tokyo" suggests JPY), pick dates, Create. Leaving name blank with destination + dates fills a suggested name. Missing name/dates show inline errors. You land inside the trip.
+3. List shows newest trip first; filter icon → Name (A–Z) reorders (numbers sort naturally: Trip 2 before Trip 10; accents ignored). Search matches name or destination; no match → "No trips match your search."
+4. Card headline: "Starts in N days" / "Starts tomorrow" / "Day X of Y" / "Ended". Archived, Closed, Frozen badges.
+5. Swipe a trip you own left → Archive; snackbar with UNDO (5 s). Archived trips sit under "Archived (n)". UNDO restores.
+6. Trip ⋯ menu → Delete trip → confirm → trip disappears; UNDO within 5 s keeps it; after 5 s it is deleted for everyone. Trips owned by others show no menu/swipe.
+7. Airplane mode: create a trip, add/archive; chip says "N changes waiting to sync". Reconnect: chip clears within seconds. A rejected change shows "Sync issue: tap to review" (sheet only with `enableSyncQueueInspector`).
+8. Pull to refresh. Android back on the list: "Press back again to exit"; second press within 2 s exits.
+
+### D. Trip shell
+1. Open a trip: header has the trip name, back arrow, Share, Settings. Bottom bar: Expenses, Balances, Members, Notes (Chat only when `enableChatFirstNav` is ON, then it's first and the landing tab).
+2. Tap tabs and **swipe left/right** on the content: tab changes and the bar follows. iOS: swipe from the very left edge on the first tab still goes back; on later tabs use the arrow (known conflict, ADR 263).
+3. Android back: walks back through tabs you visited (up to 5), then leaves the trip.
+4. Turn off `enableNotesAndChecklist`, `enableTravelPasses`, `enableTripChat` → Notes tab disappears.
+5. iOS keyboard/viewport items from `contract/IOS_DEFECTS.md` that apply here (no keyboard in this screen yet; recheck in Phase 7).
+
+### E. Invite, join and share
+1. Trip → Share: shows the 6-character join code, QR, Share invite, Copy code, Copy link. A brand-new trip that hasn't synced shows "Your join code appears after this trip finishes syncing."
+2. Scan the QR / open the link on another device: signed out → invite preview ("You're invited to …", dates, who's on it) **without signing in**. Continue with Google → "Which traveler are you?" → "I'm Ben" → you land in the trip.
+3. Two phones claim the same member at once: the loser sees "That member was just claimed by someone else. Pick another."
+4. Open the invite while already a member → "You're already in …" + Open trip. Everyone claimed → "Everyone's already joined".
+5. Bad code → "Invite not found". Many wrong codes → "Too many attempts. Try again in 30s." with a countdown.
+6. Manual entry: My Trips ⚙ → Join with Code (or the box on the sign-in screen): 6 characters, otherwise "Enter the 6-character code from your invite."
+7. Guest mode opening an invite: "Guest mode can't join shared trips…".
+8. View-only link (owner/admin): Create view-only link → Share/Copy → open in a browser or the app signed out: summary with travelers, expenses, spend per currency. Turn off link → same URL shows "This link has ended". Non-owners see "Only the trip owner or an admin can manage this link." With `enableTripShareLink` OFF the whole section is hidden.
+9. Offline: creating/turning off the view-only link shows "Connect to the internet to change the view-only link."
+10. Universal links (`https://trip-tracker.blackmaroon.in/join/CODE`, `/share/TOKEN`) open the app only once the domain serves `/.well-known/` files (see `contract/DEEPLINKS.md`); the custom scheme `com.triptracker.app://join/CODE` works today.
+
+### Negative checks
+- Signed out, open `/trip/<id>` or the trips list → redirected to sign-in; `/join`, `/share`, `/live`, `/reset-password`, `/privacy`, `/terms` stay reachable.
+- No screen allows a guest to create view-only links or claim members.
+- Dark mode and 200% text size: no clipped buttons or overflow on sign-in, trips list, invite sheet.
+
+### Pass
+- Every step above behaves as written on one Android device and (when a Mac is available) one iPhone; anything that deviates is filed as a bug.
 
 ---
 

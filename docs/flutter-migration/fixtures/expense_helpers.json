@@ -1,0 +1,330 @@
+{
+  "last": {
+    "expenses": [
+      {
+        "id": "e1",
+        "tripId": "t1",
+        "title": "Lunch",
+        "amount": 10,
+        "currency": "INR",
+        "category": "Food",
+        "date": "2026-10-01",
+        "paidBy": "a",
+        "splitMode": "equal",
+        "splitMemberIds": [
+          "a"
+        ],
+        "resolvedShares": {
+          "a": 10
+        },
+        "createdAt": 10,
+        "updatedAt": 1
+      },
+      {
+        "id": "e2",
+        "tripId": "t1",
+        "title": "Lunch",
+        "amount": 10,
+        "currency": "INR",
+        "category": "Food",
+        "date": "2026-10-01",
+        "paidBy": "a",
+        "splitMode": "equal",
+        "splitMemberIds": [
+          "a"
+        ],
+        "resolvedShares": {
+          "a": 10
+        },
+        "createdAt": 30,
+        "updatedAt": 1,
+        "isSettlement": true
+      },
+      {
+        "id": "e3",
+        "tripId": "t1",
+        "title": "Lunch",
+        "amount": 10,
+        "currency": "INR",
+        "category": "Food",
+        "date": "2026-10-01",
+        "paidBy": "a",
+        "splitMode": "equal",
+        "splitMemberIds": [
+          "a"
+        ],
+        "resolvedShares": {
+          "a": 10
+        },
+        "createdAt": 20,
+        "updatedAt": 1
+      },
+      {
+        "id": "e4",
+        "tripId": "t1",
+        "title": "Settlement: A to B",
+        "amount": 10,
+        "currency": "INR",
+        "category": "Food",
+        "date": "2026-10-01",
+        "paidBy": "a",
+        "splitMode": "equal",
+        "splitMemberIds": [
+          "a"
+        ],
+        "resolvedShares": {
+          "a": 10
+        },
+        "createdAt": 40,
+        "updatedAt": 1
+      },
+      {
+        "id": "e5",
+        "tripId": "t1",
+        "title": "Lunch",
+        "amount": 10,
+        "currency": "INR",
+        "category": "Food",
+        "date": "2026-10-01",
+        "paidBy": "a",
+        "splitMode": "equal",
+        "splitMemberIds": [
+          "a"
+        ],
+        "resolvedShares": {
+          "a": 10
+        },
+        "createdAt": 50,
+        "updatedAt": 1,
+        "deletedAt": 5
+      },
+      {
+        "id": "e6",
+        "tripId": "t2",
+        "title": "Lunch",
+        "amount": 10,
+        "currency": "INR",
+        "category": "Food",
+        "date": "2026-10-01",
+        "paidBy": "a",
+        "splitMode": "equal",
+        "splitMemberIds": [
+          "a"
+        ],
+        "resolvedShares": {
+          "a": 10
+        },
+        "createdAt": 20,
+        "updatedAt": 1
+      },
+      {
+        "id": "e7",
+        "tripId": "t1",
+        "title": "Lunch",
+        "amount": 10,
+        "currency": "INR",
+        "category": "Food",
+        "date": "2026-10-01",
+        "paidBy": "a",
+        "splitMode": "equal",
+        "splitMemberIds": [
+          "a"
+        ],
+        "resolvedShares": {
+          "a": 10
+        },
+        "createdAt": 20,
+        "updatedAt": 1
+      }
+    ],
+    "cases": [
+      {
+        "tripId": "t1",
+        "result": "e3"
+      },
+      {
+        "tripId": "t2",
+        "result": "e6"
+      },
+      {
+        "tripId": null,
+        "result": "e3"
+      },
+      {
+        "tripId": "nope",
+        "result": null
+      },
+      {
+        "tripId": "t1",
+        "empty": true,
+        "result": null
+      }
+    ]
+  },
+  "draft": {
+    "ttl": 86400000,
+    "saved": {
+      "savedAt": 1000000,
+      "data": {
+        "title": "Taxi",
+        "amount": "12"
+      }
+    },
+    "loads": [
+      {
+        "elapsed": 0,
+        "result": {
+          "title": "Taxi",
+          "amount": "12"
+        },
+        "removed": false
+      },
+      {
+        "elapsed": 1000,
+        "result": {
+          "title": "Taxi",
+          "amount": "12"
+        },
+        "removed": false
+      },
+      {
+        "elapsed": 86400000,
+        "result": {
+          "title": "Taxi",
+          "amount": "12"
+        },
+        "removed": false
+      },
+      {
+        "elapsed": 86400001,
+        "result": null,
+        "removed": true
+      }
+    ],
+    "malformed": [
+      {
+        "raw": "{not json",
+        "result": null,
+        "removed": true
+      },
+      {
+        "raw": "{\"savedAt\":\"x\",\"data\":{}}",
+        "result": null,
+        "removed": true
+      },
+      {
+        "raw": "{\"savedAt\":5}",
+        "result": null,
+        "removed": true
+      },
+      {
+        "raw": "{\"savedAt\":5,\"data\":null}",
+        "result": null,
+        "removed": true
+      },
+      {
+        "raw": "{\"savedAt\":5,\"data\":\"str\"}",
+        "result": null,
+        "removed": true
+      }
+    ],
+    "missing": null
+  },
+  "shareCard": [
+    {
+      "input": {
+        "tripName": "Goa Weekend",
+        "fromLabel": "Ben",
+        "toLabel": "Asha",
+        "amount": 1234.5,
+        "currencySymbol": "₹"
+      },
+      "layout": {
+        "width": 1080,
+        "height": 640,
+        "amountText": "₹1,234.50",
+        "caption": "Hey Ben, just a reminder to settle ₹1,234.50 to Asha for our trip \"Goa Weekend\".",
+        "fileName": "Goa_Weekend_settle.png",
+        "lines": [
+          "Goa Weekend",
+          "Settle up",
+          "Ben → Asha",
+          "₹1,234.50",
+          "Tracked with Trip Tracker"
+        ]
+      }
+    },
+    {
+      "input": {
+        "tripName": "",
+        "fromLabel": "A",
+        "toLabel": "B",
+        "amount": 0.005,
+        "currencySymbol": "$",
+        "upiId": "asha@okhdfc"
+      },
+      "layout": {
+        "width": 1080,
+        "height": 720,
+        "amountText": "$0.01",
+        "caption": "Hey A, just a reminder to settle $0.01 to B for our trip \"Trip\".",
+        "fileName": "trip_settle.png",
+        "lines": [
+          "Trip",
+          "Settle up",
+          "A → B",
+          "$0.01",
+          "UPI asha@okhdfc",
+          "Tracked with Trip Tracker"
+        ]
+      }
+    },
+    {
+      "input": {
+        "tripName": "Trip/with: odd*chars? & spaces",
+        "fromLabel": "X",
+        "toLabel": "Y",
+        "amount": "NaN",
+        "currencySymbol": "€"
+      },
+      "layout": {
+        "width": 1080,
+        "height": 640,
+        "amountText": "€0.00",
+        "caption": "Hey X, just a reminder to settle €0.00 to Y for our trip \"Trip/with: odd*chars? & spaces\".",
+        "fileName": "Tripwith_oddchars__spaces_settle.png",
+        "lines": [
+          "Trip/with: odd*chars? & spaces",
+          "Settle up",
+          "X → Y",
+          "€0.00",
+          "Tracked with Trip Tracker"
+        ]
+      }
+    },
+    {
+      "input": {
+        "tripName": "Big",
+        "fromLabel": "P",
+        "toLabel": "Q",
+        "amount": 1234567.891,
+        "currencySymbol": "£",
+        "upiId": null
+      },
+      "layout": {
+        "width": 1080,
+        "height": 640,
+        "amountText": "£1,234,567.89",
+        "caption": "Hey P, just a reminder to settle £1,234,567.89 to Q for our trip \"Big\".",
+        "fileName": "Big_settle.png",
+        "lines": [
+          "Big",
+          "Settle up",
+          "P → Q",
+          "£1,234,567.89",
+          "Tracked with Trip Tracker"
+        ]
+      }
+    }
+  ]
+}

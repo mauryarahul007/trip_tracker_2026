@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.44.1',
+    date: '2026-10-06',
+    changes: [
+      'Behind the scenes: groundwork for the upcoming native mobile app (expense form and balances screens). No change to the web app.',
+    ],
+  },
+  {
     version: '3.43.11',
     date: '2026-10-05',
     changes: [

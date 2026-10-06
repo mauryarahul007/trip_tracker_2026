@@ -1,5 +1,7 @@
 # Flutter Migration Handoff Log
 
+> **Open items live in [`BACKLOG.md`](BACKLOG.md)** (not done / not verified). Add to it whenever something is deferred or unverified.
+
 This document records phase completion, architectural resolutions, deviations from baseline assumptions, and context required for the next phase agents. Every phase must append an entry upon reaching its exit criteria.
 
 ---
@@ -270,7 +272,7 @@ This document records phase completion, architectural resolutions, deviations fr
 
 ## Phase 5 (FE): Domain core, Drift data layer, outbox sync, realtime (Progress Milestone)
 
-- **Status:** **MILESTONE COMPLETE (Domain, Fixtures, Mappings & Drift SQLite Schema)**
+- **Status:** **ENGINE COMPLETE; exit criteria partly open (see section 4)**
 - **Date:** 2026-10-06
 - **Release Version:** `v3.44.0` (ADR 260)
 - **Agent:** Antigravity
@@ -297,3 +299,88 @@ This document records phase completion, architectural resolutions, deviations fr
 
 
 
+
+### 3. Engine Completion (ADR 261)
+- `lib/data/sync/`: `OutboxStore`, `SyncEngine`, `SupabaseOutboxRemote`, `TripPullSync` (initial + delta, dirty protection, conflicts), `SyncCoordinator`.
+- `lib/data/repositories/`: Trip, Expense, Member/Group, Category (optimistic local write + outbox in one transaction), Flags, Auth. Interfaces in `lib/domain/repositories/`.
+- `lib/data/realtime/`: `RealtimeManager` + `SupabaseRealtimeSource`.
+- `lib/data/providers.dart`: Riverpod wiring. Schema v2 migration (`domain_json`).
+- Flags: generated `flag_defaults.g.dart` + `fixtures/flags.json`, drift-check test.
+- Verification: `flutter analyze` 0 issues; `flutter test` 84 passed, 1 skipped (staging).
+
+### 4. Exit Criteria Status (after follow-up pass)
+- [x] domain/logic coverage 91.5% (target 90%), measured with `flutter test --coverage`.
+- [x] Locale fixtures: `locale_money.json` (en-US, en-IN, de, fr, ja, ar-EG Arabic-Indic digits, hi-IN, es) vs Node ICU; `formatMoneyNumber` now takes a locale. Dates use fixed `en-US` month names in the web too, so no date-locale gap.
+- [x] Fixtures deterministic: exporter pins `Date.now`; regenerating twice is byte-identical.
+- [x] Contract fixed: `API_CONTRACT.md` §2.4/§2.7 and `database_mappings.json` now use the real column names; wrong DTOs deleted; mappers tested against the fixture.
+- [ ] **Staging sync suite green twice: NOT DONE.** `test/staging/sync_staging_test.dart` is written (skips without `STAGING_*` dart-defines) but has never executed: no staging Supabase project, Docker, or Supabase CLI in this environment. Run it against the seeded staging project (personas in `contract/STAGING_SETUP.md`), never prod.
+- [ ] Headless CLI harness: covered only by that staging test.
+- [ ] Deferred by decision (ADR 261): SQLCipher vault, background sync, passes/profile/locations/receipts/bugs repositories.
+
+### 5. Port bugs found by the new matrix fixtures (fixed)
+- `mergeTripRoster` was written to satisfy a mis-called fixture; now the real 6-argument signature, with `applyLiveCollabRow` covered.
+- `buildPassStub` group branch lacked the inside/outside/summary caption rules and the "square" cases.
+- `cityToIata` was a hand-copied partial map; now generated from `CITY_TO_IATA`.
+- `sortTrips('name')` was case/accent/number-sensitive; now matches `localeCompare(base, numeric)` for Latin text (non-Latin falls back to code-unit order).
+- `formatRelativeTime` returned "57y ago" for unparseable input instead of echoing it.
+- `formatMoneyNumber` hard-coded en-US grouping; web uses the device locale (en-IN groups as 1,23,450.00). Added ICU half-expand rounding and es/pl/pt-PT 4-digit grouping rule.
+- Duplicate `buildAutoGroupName` removed.
+- Messages/notifications still have no repository (realtime writes them to Drift); Phase 8 adds the read side.
+
+
+---
+
+## Phase 6 (FE): Auth, onboarding, trips list, trip shell, join/share
+
+- **Status:** **BUILT AND WIDGET-TESTED; NOT VERIFIED ON A DEVICE.** Exit criteria below are open.
+- **Date:** 2026-10-06
+- **ADRs:** 262, 263. **QA:** `docs/FEATURE_TEST_STEPS.md` -> FLUTTER-P6. **Setup:** `contract/GOOGLE_OAUTH_SETUP.md`.
+
+### 1. Delivered
+- `lib/app/`: single redirect-driven router, session providers, splash, sync lifecycle (start/foreground/connectivity/realtime pause), deep-link listener.
+- `features/auth`: login (email, Google, Apple on iOS, guest/demo, trip code), reset password (+recovery link), onboarding, app lock (flag + preference, 30 s timeout), delete account.
+- `features/trips`: trips list (sort, search, archive/delete with undo, sync chip + review sheet, create-trip sheet), join flow, public share page, invite sheet (code, QR, share, view-only link).
+- `features/trip_details`: shell with per-tab state, swipeable tabs, flag-driven bottom bar, tab trail back, Hero title; tab bodies are placeholders (Phase 7-8); settings is a stub (Phase 10).
+- Backend-facing: outbox types `updateTripState`, `deleteTrip`; join/share repositories; first-touch signup attribution via `record_signup_source`.
+- Native config: Android intent filters (custom scheme + App Links for `trip-tracker.blackmaroon.in`), iOS URL scheme.
+- New deps: google_sign_in, sign_in_with_apple, local_auth, qr_flutter, share_plus, app_links, shared_preferences, crypto.
+
+### 2. Exit criteria
+- [ ] T1 parity rows `done`: they are `partial` (see PARITY_MATRIX): no device run, 3D trip stack not built, tab bodies are Phase 7-8.
+- [ ] iOS keyboard/viewport items verified on a device or Codemagic video: **not done** (no Mac/Android SDK here).
+- [ ] Cold start < 2 s and >= 55 fps scroll with a 20-trip account: **not measured**.
+- [ ] Logged-out `/join` and `/share` open from a real universal link: **blocked** on the custom domain + `.well-known` hosting + iOS Associated Domains entitlement.
+- [ ] `integration_test` flows on staging: **not written** (no staging project, no emulator here).
+- [x] `flutter analyze` clean; widget/unit tests green. [ ] Android build and Codemagic iOS build: not run here.
+
+### 3. Things the next agent must know
+- Google/Apple sign-in cannot work until the OAuth clients exist and `GOOGLE_SERVER_CLIENT_ID` / `GOOGLE_IOS_CLIENT_ID` are passed; Apple also needs the Developer account setup. Both buttons fail at runtime without them.
+- Android SDK is not installed on the dev machine: only `flutter test` is available locally.
+- Test helpers: `testApp` + `pumpApp` + `settle` (test/support/pump_app.dart). Drift runs outside FakeAsync, so DB-backed UI tests must use `settle`/`real`, never bare `pumpAndSettle`.
+- The lock preference has no UI yet (Phase 10 Settings).
+- List archive/delete are owner-only; trip admins can't yet (Phase 10).
+- Contact-picker invites are deferred (add `flutter_contacts` + permission strings if wanted).
+
+
+---
+
+## Phase 7 (FE): Expenses, ledger, settlements: slices A-D done (core)
+
+- **Status:** **PARTIAL** (data path, pure logic, Expenses tab, expense form and the core Ledger tab built and widget-tested; the rest of the ledger, categories, import/export, analytics and quick-add UI are in BACKLOG B-066..B-068). ADR 264, 265.
+- **Date:** 2026-10-06
+
+### Delivered
+- **Pure logic (fixture-verified):** `split_resolver.dart` (155 cases), `category_color.dart`, `default_categories.g.dart` (generated), `last_expense`, `expense_draft`, `settlement_share_card`.
+- **Pure logic (hand-transcribed, see B-050/051):** `expense_form_logic.dart`, `expense_list_logic.dart`, `chat_event_row.dart`.
+- **Data:** `ExpenseRepository.submit` + online-only dispute/approve/confirm, receipt staging (`ReceiptStore`) and upload (`ExpenseSideEffects`), chat-card riding on the outbox, trip money settings, recycle bin mirroring, derived `expenseCount`, `ConflictStore` fed by pull results.
+- **UI:** `features/expenses/` (tab, row, swipe, filter sheet, detail sheet, recycle bin) and routes `/trip/:id/expenses/new`, `.../:eid/edit` , `/trip/:id/recycle-bin`.
+- Tests: ~400 total passing at this point; new suites cover resolver, form logic, list logic, submit/online actions/receipt store, trip settings and 25 Expenses-tab widget flows.
+
+- **Expense form (slice C):** `expense_form_controller.dart` + `expense_form_screen.dart` (math input, currency/FX, single/multi payer, all split modes, itemized, preview + explain, duplicate warning, drafts, same-as-last, quick fill, receipt capture); 32 widget tests.
+- **Ledger (slice D core):** `ledger_tab.dart`, `settle_up.dart` (web `handleSettle` parity); 11 widget tests + 3 logic tests.
+
+### Remaining (see BACKLOG B-066..B-068)
+UPI, share card, close-out, cross-trip balances, conflict resolver UI; categories/CSV/backup/Splitwise/analytics/quick-add UI; goldens and perf. See BACKLOG for everything deferred so far (B-050..B-061).
+
+### Test harness (important)
+Drift runs outside `FakeAsync`. In widget tests use `real(tester, ...)` for every DB call and `settle(tester)` to pump; never put two writes in one `real` block, and don't use bare `pumpAndSettle` on DB-backed screens.

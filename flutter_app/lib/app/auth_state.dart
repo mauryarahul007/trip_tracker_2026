@@ -1,63 +1,45 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Represents the global authentication state of the application.
+import '../data/providers.dart';
+import '../domain/repositories/repositories.dart';
+
+/// Live session from the auth repository (Supabase, or a local guest/demo).
+final sessionProvider = StreamProvider<AuthUser?>(
+  (ref) => ref.watch(authRepositoryProvider).watchUser(),
+);
+
+/// What the router and screens need to know about the session.
 class AuthState {
   const AuthState({
     required this.isAuthenticated,
     required this.isLoading,
-    this.userId,
-    this.userEmail,
+    this.user,
   });
 
   final bool isAuthenticated;
   final bool isLoading;
-  final String? userId;
-  final String? userEmail;
+  final AuthUser? user;
 
-  factory AuthState.initial() => const AuthState(
-    isAuthenticated: true, // Stubbed as true for Phase 2 navigation testing
-    isLoading: false,
-    userId: 'stub-user-id',
-    userEmail: 'pilot@triptracker.app',
-  );
+  String? get userId => user?.id;
+  String? get userEmail => user?.email;
 
-  factory AuthState.unauthenticated() =>
-      const AuthState(isAuthenticated: false, isLoading: false);
+  /// Guest/demo identities have no Supabase session, so nothing syncs.
+  bool get isLocalOnly => user?.isLocalOnly ?? false;
 
-  AuthState copyWith({
-    bool? isAuthenticated,
-    bool? isLoading,
-    String? userId,
-    String? userEmail,
-  }) {
-    return AuthState(
-      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-      isLoading: isLoading ?? this.isLoading,
-      userId: userId ?? this.userId,
-      userEmail: userEmail ?? this.userEmail,
-    );
-  }
+  const AuthState.loading() : this(isAuthenticated: false, isLoading: true);
+  const AuthState.unauthenticated()
+    : this(isAuthenticated: false, isLoading: false);
+  AuthState.signedIn(AuthUser u)
+    : this(isAuthenticated: true, isLoading: false, user: u);
 }
 
-/// Notifier managing authentication state transitions.
-class AuthStateNotifier extends Notifier<AuthState> {
-  @override
-  AuthState build() => AuthState.initial();
-
-  void setAuthenticated({required String userId, required String email}) {
-    state = AuthState(
-      isAuthenticated: true,
-      isLoading: false,
-      userId: userId,
-      userEmail: email,
-    );
-  }
-
-  void signOut() {
-    state = AuthState.unauthenticated();
-  }
-}
-
-final authStateProvider = NotifierProvider<AuthStateNotifier, AuthState>(
-  () => AuthStateNotifier(),
-);
+final authStateProvider = Provider<AuthState>((ref) {
+  return ref
+      .watch(sessionProvider)
+      .when(
+        data: (u) =>
+            u == null ? const AuthState.unauthenticated() : AuthState.signedIn(u),
+        loading: () => const AuthState.loading(),
+        error: (_, _) => const AuthState.unauthenticated(),
+      );
+});

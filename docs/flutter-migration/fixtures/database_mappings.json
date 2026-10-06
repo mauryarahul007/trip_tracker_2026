@@ -70,28 +70,40 @@
       "title": "Blue Lagoon Spa",
       "amount": 180.5,
       "currency": "EUR",
-      "category_id": "cat-entertainment",
-      "paid_by_member_id": "550e8400-e29b-41d4-a716-446655440002",
-      "split_mode": "equal",
-      "split_data": {},
+      "category": "Entertainment",
       "date": "2026-10-02",
-      "receipt_url": "receipts/t1/e1.jpg",
-      "notes": "Relaxing afternoon",
-      "is_reimbursement": false,
-      "reimbursement_to_member_id": null,
-      "archived": false,
-      "recycled_at": null,
-      "payer_weights": null,
-      "exchange_rate": 1.08,
-      "dispute_status": null,
+      "paid_by": "550e8400-e29b-41d4-a716-446655440002",
+      "paid_by_shares": null,
+      "split_mode": "equal",
+      "split_member_ids": [
+        "550e8400-e29b-41d4-a716-446655440002",
+        "550e8400-e29b-41d4-a716-446655440003"
+      ],
+      "split_config": null,
+      "itemized_config": null,
+      "resolved_shares": {
+        "550e8400-e29b-41d4-a716-446655440002": 90.25,
+        "550e8400-e29b-41d4-a716-446655440003": 90.25
+      },
+      "receipt_path": "receipts/t1/e1.jpg",
+      "photo_paths": null,
+      "disputed_at": null,
+      "disputed_by_user_id": null,
       "dispute_note": null,
-      "disputed_by_member_id": null,
-      "settlement_confirmed": false,
       "settlement_confirmed_at": null,
-      "approval_status": null,
-      "approved_by_member_id": null,
-      "approved_at": null,
-      "created_at": "2026-10-02T12:00:00.000Z"
+      "settlement_confirmed_by_user_id": null,
+      "approval_status": "confirmed",
+      "approved_by_user_id": null,
+      "is_settlement": false,
+      "created_by_user_id": "d9b2d63d-a233-4f24-9b22-e42a9a7a9741",
+      "location": {
+        "lat": 63.88,
+        "lng": -22.45
+      },
+      "deleted_at": "2026-10-03T08:00:00.000Z",
+      "deleted_by_user_id": "d9b2d63d-a233-4f24-9b22-e42a9a7a9741",
+      "created_at": "2026-10-02T12:00:00.000Z",
+      "updated_at": "2026-10-02T12:30:00.000Z"
     },
     "appObject": {
       "id": "e29b41d4-550e-4400-a716-446655440001",
@@ -99,28 +111,64 @@
       "title": "Blue Lagoon Spa",
       "amount": 180.5,
       "currency": "EUR",
-      "categoryId": "cat-entertainment",
-      "paidByMemberId": "550e8400-e29b-41d4-a716-446655440002",
-      "splitMode": "equal",
-      "splitData": {},
+      "category": "Entertainment",
       "date": "2026-10-02",
-      "receiptUrl": "receipts/t1/e1.jpg",
-      "notes": "Relaxing afternoon",
-      "isReimbursement": false,
-      "reimbursementToMemberId": null,
-      "archived": false,
-      "recycledAt": null,
-      "payerWeights": null,
-      "exchangeRate": 1.08,
-      "disputeStatus": null,
-      "disputeNote": null,
-      "disputedByMemberId": null,
-      "settlementConfirmed": false,
-      "settlementConfirmedAt": null,
-      "approvalStatus": null,
-      "approvedByMemberId": null,
-      "approvedAt": null,
-      "createdAt": "2026-10-02T12:00:00.000Z"
+      "paidBy": "550e8400-e29b-41d4-a716-446655440002",
+      "splitMode": "equal",
+      "splitMemberIds": [
+        "550e8400-e29b-41d4-a716-446655440002",
+        "550e8400-e29b-41d4-a716-446655440003"
+      ],
+      "resolvedShares": {
+        "550e8400-e29b-41d4-a716-446655440002": 90.25,
+        "550e8400-e29b-41d4-a716-446655440003": 90.25
+      },
+      "receiptPath": "receipts/t1/e1.jpg",
+      "isSettlement": false,
+      "approvalStatus": "confirmed",
+      "createdByUserId": "d9b2d63d-a233-4f24-9b22-e42a9a7a9741",
+      "location": {
+        "lat": 63.88,
+        "lng": -22.45
+      },
+      "deletedAt": 1791014400000,
+      "deletedByUserId": "d9b2d63d-a233-4f24-9b22-e42a9a7a9741",
+      "createdAt": 1790942400000,
+      "updatedAt": 1790944200000
+    }
+  },
+  "messages": {
+    "dbRow": {
+      "id": "a1b2c3d4-0000-4000-8000-000000000001",
+      "trip_id": "550e8400-e29b-41d4-a716-446655440000",
+      "member_id": "550e8400-e29b-41d4-a716-446655440002",
+      "body": "Dinner at 8?",
+      "kind": "text",
+      "payload": null,
+      "created_at": "2026-10-02T12:00:00.000Z",
+      "edited_at": null,
+      "deleted_at": null,
+      "reply_to_id": null,
+      "reactions": {
+        "👍": [
+          "550e8400-e29b-41d4-a716-446655440003"
+        ]
+      },
+      "is_pinned": true
+    },
+    "appObject": {
+      "id": "a1b2c3d4-0000-4000-8000-000000000001",
+      "tripId": "550e8400-e29b-41d4-a716-446655440000",
+      "memberId": "550e8400-e29b-41d4-a716-446655440002",
+      "body": "Dinner at 8?",
+      "eventKind": "text",
+      "createdAt": 1790942400000,
+      "reactions": {
+        "👍": [
+          "550e8400-e29b-41d4-a716-446655440003"
+        ]
+      },
+      "isPinned": true
     }
   },
   "members": {

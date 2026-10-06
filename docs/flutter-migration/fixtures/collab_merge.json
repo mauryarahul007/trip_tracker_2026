@@ -98,65 +98,699 @@
     }
   },
   "rosterMerge": {
-    "localRoster": [
-      {
-        "id": "m1",
-        "name": "Alice",
-        "linkedUserId": "u1"
-      },
-      {
-        "id": "m2",
-        "name": "Bob",
-        "linkedUserId": null
-      }
-    ],
-    "remoteRoster": [
-      {
-        "id": "m1",
-        "name": "Alice Cooper",
-        "linkedUserId": "u1"
-      },
-      {
-        "id": "m2",
-        "name": "Bob",
-        "linkedUserId": "u2"
-      },
-      {
-        "id": "m3",
-        "name": "Charlie",
-        "linkedUserId": null
-      }
-    ],
-    "mergedRoster": {
+    "args": {
       "trips": [
         {
-          "id": "m1",
-          "name": "Alice",
-          "linkedUserId": "u1"
+          "id": "t1",
+          "name": "Alps",
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-08",
+          "baseCurrency": "EUR",
+          "ownerId": "u1",
+          "joinCode": "ABC123",
+          "memberIds": [
+            "m1",
+            "m2"
+          ],
+          "groupIds": [
+            "g1"
+          ],
+          "archived": false,
+          "frozen": false,
+          "closed": false,
+          "stops": [],
+          "checklist": [
+            {
+              "id": "c1",
+              "text": "Local item",
+              "done": false,
+              "updatedAt": 1
+            }
+          ],
+          "notes": [],
+          "passes": [],
+          "expenseCount": 7,
+          "updatedAt": 1000
         },
         {
-          "id": "m2",
-          "name": "Bob",
-          "linkedUserId": null
+          "id": "t2",
+          "name": "Other",
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-08",
+          "baseCurrency": "EUR",
+          "ownerId": "u1",
+          "joinCode": "ABC123",
+          "memberIds": [],
+          "groupIds": [],
+          "archived": false,
+          "frozen": false,
+          "closed": false,
+          "stops": [],
+          "checklist": [],
+          "notes": [],
+          "passes": [],
+          "expenseCount": 3,
+          "updatedAt": 1000
         }
       ],
-      "members": [
-        {
+      "members": {
+        "m1": {
           "id": "m1",
-          "name": "Alice Cooper",
-          "linkedUserId": "u1"
+          "name": "Alice"
         },
-        {
+        "m2": {
           "id": "m2",
-          "name": "Bob",
-          "linkedUserId": "u2"
+          "name": "Bob"
+        },
+        "mx": {
+          "id": "mx",
+          "name": "Elsewhere"
+        }
+      },
+      "groups": {
+        "g1": {
+          "id": "g1",
+          "name": "Old group",
+          "memberIds": [
+            "m1",
+            "m2"
+          ]
+        }
+      },
+      "roster": {
+        "trip": {
+          "id": "t1",
+          "name": "Alps Remote",
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-08",
+          "baseCurrency": "EUR",
+          "ownerId": "u1",
+          "joinCode": "ABC123",
+          "memberIds": [
+            "m1",
+            "m3"
+          ],
+          "groupIds": [
+            "g2"
+          ],
+          "archived": false,
+          "frozen": false,
+          "closed": false,
+          "stops": [],
+          "checklist": [
+            {
+              "id": "c9",
+              "text": "Remote item",
+              "done": true,
+              "updatedAt": 2
+            }
+          ],
+          "notes": [],
+          "passes": [],
+          "expenseCount": 3,
+          "updatedAt": 2000
+        },
+        "members": {
+          "m1": {
+            "id": "m1",
+            "name": "Alice Cooper"
+          },
+          "m3": {
+            "id": "m3",
+            "name": "Charlie"
+          }
+        },
+        "groups": {
+          "g2": {
+            "id": "g2",
+            "name": "New group",
+            "memberIds": [
+              "m1",
+              "m3"
+            ]
+          }
+        }
+      }
+    },
+    "cases": [
+      {
+        "keepLocalCollab": false,
+        "result": {
+          "trips": [
+            {
+              "id": "t1",
+              "name": "Alps Remote",
+              "startDate": "2026-10-01",
+              "endDate": "2026-10-08",
+              "baseCurrency": "EUR",
+              "ownerId": "u1",
+              "joinCode": "ABC123",
+              "memberIds": [
+                "m1",
+                "m3"
+              ],
+              "groupIds": [
+                "g2"
+              ],
+              "archived": false,
+              "frozen": false,
+              "closed": false,
+              "stops": [],
+              "checklist": [
+                {
+                  "id": "c9",
+                  "text": "Remote item",
+                  "done": true,
+                  "updatedAt": 2
+                }
+              ],
+              "notes": [],
+              "passes": [],
+              "expenseCount": 7,
+              "updatedAt": 2000
+            },
+            {
+              "id": "t2",
+              "name": "Other",
+              "startDate": "2026-10-01",
+              "endDate": "2026-10-08",
+              "baseCurrency": "EUR",
+              "ownerId": "u1",
+              "joinCode": "ABC123",
+              "memberIds": [],
+              "groupIds": [],
+              "archived": false,
+              "frozen": false,
+              "closed": false,
+              "stops": [],
+              "checklist": [],
+              "notes": [],
+              "passes": [],
+              "expenseCount": 3,
+              "updatedAt": 1000
+            }
+          ],
+          "members": {
+            "m1": {
+              "id": "m1",
+              "name": "Alice Cooper"
+            },
+            "mx": {
+              "id": "mx",
+              "name": "Elsewhere"
+            },
+            "m3": {
+              "id": "m3",
+              "name": "Charlie"
+            }
+          },
+          "groups": {
+            "g2": {
+              "id": "g2",
+              "name": "New group",
+              "memberIds": [
+                "m1",
+                "m3"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "keepLocalCollab": true,
+        "result": {
+          "trips": [
+            {
+              "id": "t1",
+              "name": "Alps Remote",
+              "startDate": "2026-10-01",
+              "endDate": "2026-10-08",
+              "baseCurrency": "EUR",
+              "ownerId": "u1",
+              "joinCode": "ABC123",
+              "memberIds": [
+                "m1",
+                "m3"
+              ],
+              "groupIds": [
+                "g2"
+              ],
+              "archived": false,
+              "frozen": false,
+              "closed": false,
+              "stops": [],
+              "checklist": [
+                {
+                  "id": "c1",
+                  "text": "Local item",
+                  "done": false,
+                  "updatedAt": 1
+                }
+              ],
+              "notes": [],
+              "passes": [],
+              "expenseCount": 7,
+              "updatedAt": 2000
+            },
+            {
+              "id": "t2",
+              "name": "Other",
+              "startDate": "2026-10-01",
+              "endDate": "2026-10-08",
+              "baseCurrency": "EUR",
+              "ownerId": "u1",
+              "joinCode": "ABC123",
+              "memberIds": [],
+              "groupIds": [],
+              "archived": false,
+              "frozen": false,
+              "closed": false,
+              "stops": [],
+              "checklist": [],
+              "notes": [],
+              "passes": [],
+              "expenseCount": 3,
+              "updatedAt": 1000
+            }
+          ],
+          "members": {
+            "m1": {
+              "id": "m1",
+              "name": "Alice Cooper"
+            },
+            "mx": {
+              "id": "mx",
+              "name": "Elsewhere"
+            },
+            "m3": {
+              "id": "m3",
+              "name": "Charlie"
+            }
+          },
+          "groups": {
+            "g2": {
+              "id": "g2",
+              "name": "New group",
+              "memberIds": [
+                "m1",
+                "m3"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "missingTrip": {
+      "trips": [
+        {
+          "id": "t1",
+          "name": "Alps",
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-08",
+          "baseCurrency": "EUR",
+          "ownerId": "u1",
+          "joinCode": "ABC123",
+          "memberIds": [
+            "m1",
+            "m2"
+          ],
+          "groupIds": [
+            "g1"
+          ],
+          "archived": false,
+          "frozen": false,
+          "closed": false,
+          "stops": [],
+          "checklist": [
+            {
+              "id": "c1",
+              "text": "Local item",
+              "done": false,
+              "updatedAt": 1
+            }
+          ],
+          "notes": [],
+          "passes": [],
+          "expenseCount": 7,
+          "updatedAt": 1000
         },
         {
-          "id": "m3",
-          "name": "Charlie",
-          "linkedUserId": null
+          "id": "t2",
+          "name": "Other",
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-08",
+          "baseCurrency": "EUR",
+          "ownerId": "u1",
+          "joinCode": "ABC123",
+          "memberIds": [],
+          "groupIds": [],
+          "archived": false,
+          "frozen": false,
+          "closed": false,
+          "stops": [],
+          "checklist": [],
+          "notes": [],
+          "passes": [],
+          "expenseCount": 3,
+          "updatedAt": 1000
         }
-      ]
+      ],
+      "members": {
+        "m1": {
+          "id": "m1",
+          "name": "Alice"
+        },
+        "m2": {
+          "id": "m2",
+          "name": "Bob"
+        },
+        "mx": {
+          "id": "mx",
+          "name": "Elsewhere"
+        }
+      },
+      "groups": {
+        "g1": {
+          "id": "g1",
+          "name": "Old group",
+          "memberIds": [
+            "m1",
+            "m2"
+          ]
+        }
+      }
     }
+  },
+  "liveRow": {
+    "baseTrip": {
+      "id": "t1",
+      "name": "Alps",
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-08",
+      "baseCurrency": "EUR",
+      "ownerId": "u1",
+      "joinCode": "ABC123",
+      "memberIds": [],
+      "groupIds": [],
+      "archived": false,
+      "frozen": false,
+      "closed": false,
+      "stops": [],
+      "checklist": [
+        {
+          "id": "c1",
+          "text": "Old",
+          "done": false,
+          "updatedAt": 1
+        }
+      ],
+      "notes": [],
+      "passes": [],
+      "expenseCount": 3,
+      "updatedAt": 1000
+    },
+    "cases": [
+      {
+        "keepLocalCollab": false,
+        "row": {
+          "name": "Renamed",
+          "updated_at": "2026-10-05T00:00:00.000Z",
+          "checklist": [
+            {
+              "id": "c2",
+              "text": "New",
+              "done": true,
+              "updatedAt": 2
+            }
+          ],
+          "notes": [
+            {
+              "id": "n1",
+              "title": "N",
+              "content": "x",
+              "updatedAt": 2
+            }
+          ],
+          "passes": [
+            {
+              "id": "p1",
+              "title": "P",
+              "updatedAt": 2
+            }
+          ],
+          "fx_config": {
+            "customRates": {
+              "USD": 1.1
+            },
+            "markupPercent": 2
+          }
+        },
+        "result": {
+          "id": "t1",
+          "name": "Renamed",
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-08",
+          "baseCurrency": "EUR",
+          "ownerId": "u1",
+          "joinCode": "ABC123",
+          "memberIds": [],
+          "groupIds": [],
+          "archived": false,
+          "frozen": false,
+          "closed": false,
+          "stops": [],
+          "checklist": [
+            {
+              "id": "c2",
+              "text": "New",
+              "done": true,
+              "updatedAt": 2
+            }
+          ],
+          "notes": [
+            {
+              "id": "n1",
+              "title": "N",
+              "content": "x",
+              "updatedAt": 2
+            }
+          ],
+          "passes": [
+            {
+              "id": "p1",
+              "title": "P",
+              "updatedAt": 2
+            }
+          ],
+          "expenseCount": 3,
+          "updatedAt": 1791158400000,
+          "fxConfig": {
+            "customRates": {
+              "USD": 1.1
+            },
+            "markupPercent": 2
+          }
+        }
+      },
+      {
+        "keepLocalCollab": false,
+        "row": {
+          "name": "Partial only"
+        },
+        "result": {
+          "id": "t1",
+          "name": "Partial only",
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-08",
+          "baseCurrency": "EUR",
+          "ownerId": "u1",
+          "joinCode": "ABC123",
+          "memberIds": [],
+          "groupIds": [],
+          "archived": false,
+          "frozen": false,
+          "closed": false,
+          "stops": [],
+          "checklist": [
+            {
+              "id": "c1",
+              "text": "Old",
+              "done": false,
+              "updatedAt": 1
+            }
+          ],
+          "notes": [],
+          "passes": [],
+          "expenseCount": 3,
+          "updatedAt": 1000
+        }
+      },
+      {
+        "keepLocalCollab": false,
+        "row": {
+          "updated_at": "not-a-date",
+          "checklist": "not-a-list",
+          "fx_config": []
+        },
+        "result": {
+          "id": "t1",
+          "name": "Alps",
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-08",
+          "baseCurrency": "EUR",
+          "ownerId": "u1",
+          "joinCode": "ABC123",
+          "memberIds": [],
+          "groupIds": [],
+          "archived": false,
+          "frozen": false,
+          "closed": false,
+          "stops": [],
+          "checklist": [
+            {
+              "id": "c1",
+              "text": "Old",
+              "done": false,
+              "updatedAt": 1
+            }
+          ],
+          "notes": [],
+          "passes": [],
+          "expenseCount": 3,
+          "updatedAt": 1000
+        }
+      },
+      {
+        "keepLocalCollab": true,
+        "row": {
+          "name": "Renamed",
+          "updated_at": "2026-10-05T00:00:00.000Z",
+          "checklist": [
+            {
+              "id": "c2",
+              "text": "New",
+              "done": true,
+              "updatedAt": 2
+            }
+          ],
+          "notes": [
+            {
+              "id": "n1",
+              "title": "N",
+              "content": "x",
+              "updatedAt": 2
+            }
+          ],
+          "passes": [
+            {
+              "id": "p1",
+              "title": "P",
+              "updatedAt": 2
+            }
+          ],
+          "fx_config": {
+            "customRates": {
+              "USD": 1.1
+            },
+            "markupPercent": 2
+          }
+        },
+        "result": {
+          "id": "t1",
+          "name": "Renamed",
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-08",
+          "baseCurrency": "EUR",
+          "ownerId": "u1",
+          "joinCode": "ABC123",
+          "memberIds": [],
+          "groupIds": [],
+          "archived": false,
+          "frozen": false,
+          "closed": false,
+          "stops": [],
+          "checklist": [
+            {
+              "id": "c1",
+              "text": "Old",
+              "done": false,
+              "updatedAt": 1
+            }
+          ],
+          "notes": [],
+          "passes": [],
+          "expenseCount": 3,
+          "updatedAt": 1791158400000
+        }
+      },
+      {
+        "keepLocalCollab": true,
+        "row": {
+          "name": "Partial only"
+        },
+        "result": {
+          "id": "t1",
+          "name": "Partial only",
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-08",
+          "baseCurrency": "EUR",
+          "ownerId": "u1",
+          "joinCode": "ABC123",
+          "memberIds": [],
+          "groupIds": [],
+          "archived": false,
+          "frozen": false,
+          "closed": false,
+          "stops": [],
+          "checklist": [
+            {
+              "id": "c1",
+              "text": "Old",
+              "done": false,
+              "updatedAt": 1
+            }
+          ],
+          "notes": [],
+          "passes": [],
+          "expenseCount": 3,
+          "updatedAt": 1000
+        }
+      },
+      {
+        "keepLocalCollab": true,
+        "row": {
+          "updated_at": "not-a-date",
+          "checklist": "not-a-list",
+          "fx_config": []
+        },
+        "result": {
+          "id": "t1",
+          "name": "Alps",
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-08",
+          "baseCurrency": "EUR",
+          "ownerId": "u1",
+          "joinCode": "ABC123",
+          "memberIds": [],
+          "groupIds": [],
+          "archived": false,
+          "frozen": false,
+          "closed": false,
+          "stops": [],
+          "checklist": [
+            {
+              "id": "c1",
+              "text": "Old",
+              "done": false,
+              "updatedAt": 1
+            }
+          ],
+          "notes": [],
+          "passes": [],
+          "expenseCount": 3,
+          "updatedAt": 1000
+        }
+      }
+    ]
   }
 }

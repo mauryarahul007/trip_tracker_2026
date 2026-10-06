@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_tokens.dart';
 
 class UndoSnackbar {
-  static void show({
+  static ScaffoldFeatureController<SnackBar, SnackBarClosedReason> show({
     required BuildContext context,
     required String message,
     required VoidCallback onUndo,
@@ -12,9 +12,10 @@ class UndoSnackbar {
     final tokens = context.tokens;
 
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
+    return ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         duration: duration,
+        persist: false, // snackbars with an action persist by default; the undo window must end
         behavior: SnackBarBehavior.floating,
         backgroundColor: tokens.secondaryAccent,
         shape: RoundedRectangleBorder(

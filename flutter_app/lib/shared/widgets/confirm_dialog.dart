@@ -74,15 +74,17 @@ class ConfirmDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            // Wrap, not Row: long labels or large text must flow onto a second line.
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 AppButton(
                   label: cancelLabel,
                   variant: AppButtonVariant.ghost,
                   onPressed: () => Navigator.of(context).pop(false),
                 ),
-                const SizedBox(width: 8),
                 AppButton(
                   label: confirmLabel,
                   variant: isDestructive

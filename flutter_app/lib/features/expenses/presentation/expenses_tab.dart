@@ -1,0 +1,483 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../app/auth_state.dart';
+import '../../../core/format/money.dart';
+import '../../../core/storage/prefs.dart';
+import '../../../data/providers.dart';
+import '../../../domain/logic/expense_list_logic.dart';
+import '../../../domain/models/expense.dart';
+import '../../../domain/models/member.dart';
+import '../../../l10n/l10n_ext.dart';
+import '../../../shared/theme/app_icons.dart';
+import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_sheet.dart';
+import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/pull_to_refresh.dart';
+import '../../../shared/widgets/undo_snackbar.dart';
+import '../../trip_details/application/trip_nav.dart';
+import '../../trips/application/trips_providers.dart';
+import '../application/expenses_providers.dart';
+import 'widgets/expense_detail_sheet.dart';
+import 'widgets/expense_filter_sheet.dart';
+import 'widgets/expense_row.dart';
+import 'widgets/expense_swipe.dart';
+
+const _pageSize = 50;
+const _compactPrefKey = 'tt-compact-ledger';
+
+bool _flag(WidgetRef ref, String key, String tripId) => ref.watch(flagProvider((key, tripId))).value ?? false;
+
+/// Expenses tab: summary, search/filters, day-grouped list with swipe actions,
+/// settlements section, pending-sync / dispute / approval badges.
+class ExpensesTab extends ConsumerStatefulWidget {
+  const ExpensesTab({required this.tripId, super.key});
+  final String tripId;
+
+  @override
+  ConsumerState<ExpensesTab> createState() => _ExpensesTabState();
+}
+
+class _ExpensesTabState extends ConsumerState<ExpensesTab> {
+  final _search = TextEditingController();
+  Timer? _debounce;
+  int _visible = _pageSize;
+
+  /// Days the user toggled away from the default (collapsed, like the web).
+  final _expandedDays = <String>{};
+  final _hidden = <String>{}; // rows removed from view the instant they are swiped
+  bool _compact = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _compact = ref.read(sharedPreferencesProvider).getBool(_compactPrefKey) ?? false;
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _search.dispose();
+    super.dispose();
+  }
+
+  String get id => widget.tripId;
+
+  void _onSearch(String q) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 200), () {
+      final f = ref.read(expenseFiltersProvider(id));
+      ref.read(expenseFiltersProvider(id).notifier).set(f.copyWith(query: q));
+      if (mounted) setState(() => _visible = _pageSize);
+    });
+  }
+
+  void _setFilters(ExpenseFilters f) {
+    ref.read(expenseFiltersProvider(id).notifier).set(f);
+    setState(() => _visible = _pageSize);
+  }
+
+  Future<void> _delete(Expense e) async {
+    final l10n = context.l10n;
+    final repo = ref.read(expenseRepositoryProvider);
+    final uid = ref.read(authStateProvider).userId ?? '';
+    setState(() => _hidden.add(e.id));
+    await repo.delete(e.id, userId: uid);
+    if (!mounted) return;
+    setState(() => _hidden.remove(e.id));
+    UndoSnackbar.show(
+      context: context,
+      message: l10n.expDeleted,
+      onUndo: () => unawaited(repo.restore(e.id)),
+    );
+  }
+
+  void _edit(Expense e) => context.push('/trip/$id/expenses/${e.id}/edit');
+
+  void _openDetail(Expense e) {
+    AppSheet.show<void>(
+      context: context,
+      builder: (sheetCtx) => ExpenseDetailSheet(
+        tripId: id,
+        expenseId: e.id,
+        onEdit: () {
+          Navigator.of(sheetCtx).pop();
+          _edit(e);
+        },
+        onDelete: () {
+          Navigator.of(sheetCtx).pop();
+          unawaited(_delete(e));
+        },
+      ),
+    );
+  }
+
+  Future<void> _openFilters() async {
+    final all = ref.read(tripExpensesProvider(id)).value ?? const <Expense>[];
+    await AppSheet.show<void>(
+      context: context,
+      title: context.l10n.expFilters,
+      builder: (_) => ExpenseFilterSheet(
+        initial: ref.read(expenseFiltersProvider(id)),
+        all: all,
+        members: ref.read(tripMembersProvider(id)).value ?? const <Member>[],
+        categories: ref.read(tripCategoriesProvider(id)),
+        myMemberId: ref.read(myMemberIdProvider(id)),
+        onApply: _setFilters,
+      ),
+    );
+  }
+
+  void _toggleCompact() {
+    setState(() => _compact = !_compact);
+    unawaited(ref.read(sharedPreferencesProvider).setBool(_compactPrefKey, _compact));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final tokens = context.tokens;
+    final trip = ref.watch(tripProvider(id)).value;
+    final all = ref.watch(tripExpensesProvider(id));
+    if (trip == null || all.isLoading) return const Center(child: CircularProgressIndicator());
+
+    final members = {for (final m in ref.watch(tripMembersProvider(id)).value ?? const <Member>[]) m.id: m};
+    final categories = ref.watch(tripCategoriesProvider(id));
+    final filters = ref.watch(expenseFiltersProvider(id));
+    final filtered = ref.watch(filteredExpensesProvider(id)).where((e) => !_hidden.contains(e.id)).toList();
+    final active = (all.value ?? const <Expense>[]).where((e) => !_hidden.contains(e.id)).toList();
+    final myMember = ref.watch(myMemberIdProvider(id));
+    final uid = ref.watch(authStateProvider).userId;
+    final isAdmin = ref.watch(isTripAdminProvider(id));
+    final dirty = ref.watch(dirtyIdsProvider).value ?? const <String>{};
+    final conflicts = ref.watch(conflictIdsProvider(id));
+    final visibleMembers = ref.watch(visibleMembersProvider(id));
+    final totals = computeTotals(active, visibleMemberCount: visibleMembers.length, categories: categories);
+    final compactActive = _flag(ref, 'enableCompactLedgerView', id) && _compact;
+    final quickChips = _flag(ref, 'enableExpenseQuickFilterChips', id);
+    final binOn = _flag(ref, 'enableRecycleBin', id);
+
+    final shown = filtered.take(_visible).toList();
+    final dayGroups = groupByDay(shown.where(isActualExpense).toList());
+    final settlementGroups = groupByDay(shown.where((e) => !isActualExpense(e)).toList());
+    final allExpanded = dayGroups.isNotEmpty && dayGroups.every((g) => _expandedDays.contains(g.date));
+
+    final settlement = ref.watch(tripSettlementProvider(id));
+    final chips = attentionChips(
+      trip: trip,
+      myMemberId: myMember,
+      balances: settlement?.balances ?? const [],
+      expenses: active,
+      members: ref.watch(tripMembersProvider(id)).value ?? const <Member>[],
+      disputesEnabled: _flag(ref, 'enableExpenseDisputes', id),
+      closeoutEnabled: _flag(ref, 'enableTripCloseout', id),
+      today: _today(ref),
+    );
+    final sync = ref.watch(syncStatusProvider).value;
+
+    String chipLabel(AttentionChip c) => switch (c.id) {
+          'owe' => l10n.chipOwe,
+          'owed' => l10n.chipOwed,
+          'disputes' => l10n.chipDisputes(c.count),
+          'invites' => l10n.chipInvites(c.count),
+          _ => l10n.chipCloseout,
+        };
+
+    void chipTap(AttentionChip c) {
+      final target = c.id == 'invites' ? 'members' : 'ledger';
+      context.go('/trip/$id/$target');
+    }
+
+    Widget rowFor(Expense e, {required bool lastInGroup}) {
+      final row = ExpenseRow(
+        expense: e,
+        trip: trip,
+        members: members,
+        categories: categories,
+        myMemberId: myMember,
+        compact: compactActive,
+        isDirty: dirty.contains(e.id),
+        isConflict: conflicts.contains(e.id),
+        onTap: () => _openDetail(e),
+      );
+      final body = DecoratedBox(
+        decoration: BoxDecoration(border: lastInGroup ? null : Border(bottom: BorderSide(color: tokens.borderColor))),
+        child: row,
+      );
+      if (!canManageExpense(e, isAdmin: isAdmin, userId: uid)) return body;
+      return ExpenseSwipe(
+        itemKey: ValueKey('swipe-${e.id}'),
+        onEdit: isActualExpense(e) ? () => _edit(e) : null,
+        onDelete: () => unawaited(_delete(e)),
+        child: body,
+      );
+    }
+
+    List<Widget> section(List<DayGroup> groups, {required bool collapsible}) {
+      return [
+        for (final g in groups) ...[
+          SliverMainAxisGroup(slivers: [
+            SliverPersistentHeader(
+              // Pinning a header whose day is collapsed trips Flutter's sliver-group geometry
+              // asserts (nothing follows it to stay above), so only open days stick.
+              pinned: false, // sticky headers: see BACKLOG B-053
+              delegate: _DayHeader(
+                date: g.date,
+                total: formatMoney(context, g.total, trip.baseCurrency),
+                count: g.expenses.length,
+                expanded: !collapsible || _expandedDays.contains(g.date),
+                collapsible: collapsible,
+                semantics: l10n.expDaySemantics(g.date, g.expenses.length, formatMoney(context, g.total, trip.baseCurrency)),
+                onTap: () => setState(() => _expandedDays.contains(g.date) ? _expandedDays.remove(g.date) : _expandedDays.add(g.date)),
+                background: tokens.bgSurface,
+                textColor: tokens.textPrimary,
+                mutedColor: tokens.textMuted,
+              ),
+            ),
+            if (!collapsible || _expandedDays.contains(g.date))
+              SliverList.builder(
+                itemCount: g.expenses.length,
+                itemBuilder: (_, i) => rowFor(g.expenses[i], lastInGroup: i == g.expenses.length - 1),
+              ),
+          ]),
+        ],
+      ];
+    }
+
+    final header = SliverToBoxAdapter(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        if ((sync != null && !sync.idle) || chips.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Wrap(spacing: 8, runSpacing: 4, children: [
+              if (sync != null && !sync.idle)
+                ActionChip(
+                  key: const Key('strip-sync'),
+                  avatar: const Icon(AppIcons.sync, size: 16),
+                  label: Text(l10n.syncPending(sync.pending)),
+                  onPressed: () => unawaited(ref.read(refreshTripsProvider)()),
+                ),
+              for (final c in chips) ActionChip(key: Key('chip-${c.id}'), label: Text(chipLabel(c)), onPressed: () => chipTap(c)),
+            ]),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: tokens.bgSurface, borderRadius: BorderRadius.circular(tokens.radiusMd), border: Border.all(color: tokens.borderColor)),
+            child: Row(children: [
+              Expanded(child: _Stat(label: l10n.expTotalSpent, value: formatMoney(context, totals.totalSpent, trip.baseCurrency), valueKey: const Key('stat-total'))),
+              Expanded(child: _Stat(label: l10n.expPerPerson, value: formatMoney(context, totals.averageCost, trip.baseCurrency), valueKey: const Key('stat-avg'))),
+              if (totals.top != null)
+                Expanded(child: _Stat(label: l10n.expTopCategory, value: '${totals.top!.name} ${totals.top!.percentage.round()}%', valueKey: const Key('stat-top'))),
+            ]),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+          child: Row(children: [
+            Expanded(
+              child: AppTextField(
+                controller: _search,
+                hint: l10n.expSearchHint,
+                prefixIcon: const Icon(AppIcons.search),
+                onChanged: _onSearch,
+              ),
+            ),
+            IconButton(
+              key: const Key('open-filters'),
+              tooltip: l10n.expFilters,
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              icon: Badge(isLabelVisible: filters.hasActive, child: const Icon(AppIcons.filter)),
+              onPressed: _openFilters,
+            ),
+            PopupMenuButton<String>(
+              key: const Key('tab-menu'),
+              tooltip: l10n.rowEdit,
+              icon: const Icon(AppIcons.more),
+              onSelected: (v) {
+                if (v == 'bin') context.push('/trip/$id/recycle-bin');
+                if (v == 'compact') _toggleCompact();
+                if (v == 'expand') {
+                  setState(() {
+                    if (allExpanded) {
+                      _expandedDays.clear();
+                    } else {
+                      _expandedDays.addAll(dayGroups.map((g) => g.date));
+                    }
+                  });
+                }
+              },
+              itemBuilder: (_) => [
+                PopupMenuItem(value: 'expand', child: Text(allExpanded ? l10n.expCollapseAll : l10n.expExpandAll)),
+                if (_flag(ref, 'enableCompactLedgerView', id)) PopupMenuItem(value: 'compact', child: Text(l10n.expCompactView)),
+                if (binOn) PopupMenuItem(value: 'bin', child: Text(l10n.expRecycleBin)),
+              ],
+            ),
+          ]),
+        ),
+        if (quickChips && myMember != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+            child: Wrap(spacing: 8, children: [
+              ChoiceChip(label: Text(l10n.expAll), selected: filters.relation == null, onSelected: (_) => _setFilters(filters.copyWith(clearRelation: true))),
+              ChoiceChip(label: Text(l10n.expPaidByMe), selected: filters.relation == ExpenseRelation.paidByMe, onSelected: (_) => _setFilters(filters.copyWith(relation: ExpenseRelation.paidByMe))),
+              ChoiceChip(label: Text(l10n.expInvolvesMe), selected: filters.relation == ExpenseRelation.involvesMe, onSelected: (_) => _setFilters(filters.copyWith(relation: ExpenseRelation.involvesMe))),
+            ]),
+          ),
+        if (filters.hasActive)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              key: const Key('clear-filters'),
+              onPressed: () {
+                _search.clear();
+                ref.read(expenseFiltersProvider(id).notifier).clear();
+                setState(() => _visible = _pageSize);
+              },
+              child: Text(l10n.expClearFilters),
+            ),
+          ),
+        const SizedBox(height: 4),
+      ]),
+    );
+
+    final Widget empty = active.isEmpty
+        ? EmptyState(
+            icon: AppIcons.expenses,
+            title: l10n.expNone,
+            subtitle: l10n.expNoneBody,
+            action: AppButton(label: l10n.expAdd, onPressed: () => context.push('/trip/$id/expenses/new')),
+          )
+        : Padding(padding: const EdgeInsets.all(32), child: Center(child: Text(l10n.expNoMatches)));
+
+    return Stack(children: [
+      AppPullToRefresh(
+        onRefresh: ref.read(refreshTripsProvider),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            header,
+            if (shown.isEmpty)
+              SliverToBoxAdapter(child: empty)
+            else ...[
+              ...section(dayGroups, collapsible: true),
+              if (settlementGroups.isNotEmpty) ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                    child: Text(l10n.expSettlements, style: TextStyle(fontWeight: FontWeight.w700, color: tokens.textSecondary)),
+                  ),
+                ),
+                ...section(settlementGroups, collapsible: false),
+              ],
+              if (filtered.length > _visible)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: AppButton(label: l10n.expLoadMore, variant: AppButtonVariant.secondary, onPressed: () => setState(() => _visible += _pageSize)),
+                  ),
+                ),
+            ],
+            const SliverToBoxAdapter(child: SizedBox(height: 96)),
+          ],
+        ),
+      ),
+      Positioned(
+        right: 16,
+        bottom: 16,
+        child: FloatingActionButton.extended(
+          heroTag: 'add-expense-$id',
+          onPressed: () => context.push('/trip/$id/expenses/new'),
+          icon: const Icon(AppIcons.add),
+          label: Text(l10n.expAdd),
+        ),
+      ),
+    ]);
+  }
+
+  String _today(WidgetRef ref) {
+    final n = DateTime.now();
+    return '${n.year.toString().padLeft(4, '0')}-${n.month.toString().padLeft(2, '0')}-${n.day.toString().padLeft(2, '0')}';
+  }
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat({required this.label, required this.value, required this.valueKey});
+  final String label;
+  final String value;
+  final Key valueKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(label, style: TextStyle(fontSize: 11, color: tokens.textMuted)),
+      const SizedBox(height: 2),
+      Text(value, key: valueKey, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: tokens.textPrimary)),
+    ]);
+  }
+}
+
+class _DayHeader extends SliverPersistentHeaderDelegate {
+  _DayHeader({
+    required this.date,
+    required this.total,
+    required this.count,
+    required this.expanded,
+    required this.collapsible,
+    required this.semantics,
+    required this.onTap,
+    required this.background,
+    required this.textColor,
+    required this.mutedColor,
+  });
+
+  final String date;
+  final String total;
+  final int count;
+  final bool expanded;
+  final bool collapsible;
+  final String semantics;
+  final VoidCallback onTap;
+  final Color background;
+  final Color textColor;
+  final Color mutedColor;
+
+  static const _h = 48.0;
+
+  @override
+  double get minExtent => _h;
+  @override
+  double get maxExtent => _h;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => Material(
+        color: background,
+        child: Semantics(
+          button: collapsible,
+          label: semantics,
+          child: InkWell(
+            key: Key('day-$date'),
+            onTap: collapsible ? onTap : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(children: [
+                Expanded(child: Text(date, style: TextStyle(fontWeight: FontWeight.w700, color: textColor))),
+                Text('$total · $count', style: TextStyle(color: mutedColor, fontSize: 13)),
+                if (collapsible) Icon(expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: mutedColor),
+              ]),
+            ),
+          ),
+        ),
+      );
+
+  @override
+  bool shouldRebuild(_DayHeader old) =>
+      old.date != date || old.total != total || old.count != count || old.expanded != expanded || old.background != background;
+}

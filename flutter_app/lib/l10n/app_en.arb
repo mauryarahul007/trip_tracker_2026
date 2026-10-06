@@ -11,7 +11,6 @@
   "navMembers": "Members",
   "navNotes": "Notes",
   "navSettings": "Settings",
-  
   "actionCancel": "Cancel",
   "actionConfirm": "Confirm",
   "actionSave": "Save",
@@ -23,32 +22,686 @@
   "actionSignOut": "Sign Out",
   "actionClose": "Close",
   "actionCreateTrip": "Create Trip",
-
   "statusOffline": "You are offline",
   "statusOfflineSubtitle": "Changes will be queued and synced when reconnected",
   "statusConnected": "Connected",
-
   "errorGenericTitle": "Something went wrong",
   "errorGenericMessage": "An unexpected error occurred. Please try again.",
   "errorBoundaryTitle": "Application Error",
   "errorBoundarySubtitle": "We encountered an unexpected problem. You can retry or return home.",
-
   "emptyTripsTitle": "No trips yet",
   "emptyTripsSubtitle": "Start by creating a trip or joining an existing one with an invite code.",
-
   "authWelcome": "Welcome to Trip Tracker",
   "authSubtitle": "Plan trips, split expenses, and travel seamlessly together.",
   "authResetPassword": "Reset Password",
   "authTerms": "Terms of Service",
   "authPrivacy": "Privacy Policy",
   "authDeleteAccount": "Delete Account",
-
   "joinTripTitle": "Join Trip",
   "shareTripTitle": "Share Trip",
   "liveLocationTitle": "Live Location",
-
   "smokeTestTitle": "Staging Smoke Test",
   "smokeTestStatusConnecting": "Connecting to Supabase staging...",
   "smokeTestStatusSuccess": "Successfully connected and verified row read.",
-  "smokeTestStatusError": "Smoke test failed: "
+  "smokeTestStatusError": "Smoke test failed: ",
+  "authContinueGoogle": "Continue with Google",
+  "authContinueApple": "Continue with Apple",
+  "authSignInsPaused": "New sign-ins are temporarily paused. Please check back shortly.",
+  "authEmail": "Email",
+  "authEmailHint": "you@example.com",
+  "authPassword": "Password",
+  "authForgotPassword": "Forgot Password?",
+  "authSignUp": "Create Account",
+  "authToggleToSignUp": "New here? Create an account",
+  "authToggleToSignIn": "Already have an account? Sign in",
+  "authOr": "or",
+  "authGuest": "Continue as guest",
+  "authDemo": "Try the demo",
+  "authErrorInvalid": "Invalid email or password.",
+  "authErrorBanned": "This account has been suspended.",
+  "authErrorNetwork": "Can't reach the server. Check your connection and try again.",
+  "authErrorGeneric": "Sign-in failed. Please try again.",
+  "authErrorEmailRequired": "Enter your email and password.",
+  "authLegal": "By continuing you agree to our Terms of Service and Privacy Policy.",
+  "resetRequestSubtitle": "Enter your account email and we'll send you a reset link.",
+  "resetSendLink": "Send Reset Link",
+  "resetCheckEmail": "Check your email",
+  "resetSentTo": "We sent a reset link to {email}",
+  "@resetSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "resetNewPasswordTitle": "Choose a new password",
+  "resetNewPassword": "New password",
+  "resetSavePassword": "Save Password",
+  "resetPasswordTooShort": "Use at least 8 characters.",
+  "resetPasswordUpdated": "Password updated.",
+  "lockTitle": "Trip Tracker is Locked",
+  "lockSubtitle": "Authenticate with Face ID, Touch ID or your device passcode to continue.",
+  "lockUnlock": "Unlock",
+  "lockFailed": "Biometric verification failed. Tap to try again.",
+  "lockReason": "Unlock Trip Tracker",
+  "onboardingWelcomeTitle": "Welcome to Trip Tracker",
+  "onboardingWelcomeBody": "Plan trips, track shared expenses, and settle up — all offline-first.",
+  "onboardingTripTitle": "Create Your First Trip",
+  "onboardingTripBody": "Add a destination, dates, and members. Everyone can log expenses in real time.",
+  "onboardingExpenseTitle": "Log & Split Expenses",
+  "onboardingExpenseBody": "Snap receipts, auto-suggest categories, and split bills equally or by exact amounts.",
+  "onboardingNext": "Next",
+  "onboardingSkip": "Skip",
+  "onboardingGetStarted": "Get started",
+  "authTripCodeHint": "Enter 6-digit trip code",
+  "tripsTitle": "My Trips",
+  "tripsSearchHint": "Search trips",
+  "tripsSortDate": "Newest first",
+  "tripsSortName": "Name (A–Z)",
+  "tripsNewTrip": "New Trip",
+  "tripsJoinWithCode": "Join with Code",
+  "tripsArchivedSection": "Archived ({count})",
+  "@tripsArchivedSection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripsNoMatches": "No trips match your search.",
+  "tripsLoadError": "Couldn't load your trips.",
+  "tripStartsIn": "Starts in {days} days",
+  "@tripStartsIn": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "tripStartsTomorrow": "Starts tomorrow",
+  "tripDayOf": "Day {day} of {total}",
+  "@tripDayOf": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "tripEnded": "Ended",
+  "tripBadgeArchived": "Archived",
+  "tripBadgeClosed": "Closed",
+  "tripBadgeFrozen": "Frozen",
+  "tripTravelers": "{count, plural, =1{1 traveler} other{{count} travelers}}",
+  "@tripTravelers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripExpenseCount": "{count, plural, =0{No expenses} =1{1 expense} other{{count} expenses}}",
+  "@tripExpenseCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripArchive": "Archive",
+  "tripUnarchive": "Unarchive",
+  "tripArchived": "Trip archived",
+  "tripUnarchived": "Trip restored",
+  "tripDelete": "Delete trip",
+  "tripDeleteTitle": "Delete this trip?",
+  "tripDeleteBody": "This permanently deletes {name} for everyone, including all expenses and chat.",
+  "@tripDeleteBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tripDeleted": "Trip deleted",
+  "syncPending": "{count, plural, =1{1 change waiting to sync} other{{count} changes waiting to sync}}",
+  "@syncPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncIssue": "Sync issue: tap to review",
+  "syncSheetTitle": "Sync queue",
+  "syncRetry": "Retry",
+  "syncDiscard": "Discard",
+  "createTripTitle": "Create Trip",
+  "fieldTripName": "Trip name",
+  "fieldTripNameHint": "Goa weekend",
+  "fieldDestination": "Destination",
+  "fieldDates": "Dates",
+  "fieldCurrency": "Currency",
+  "createTripNameRequired": "Give your trip a name.",
+  "createTripDatesRequired": "Pick the trip dates.",
+  "createTripCreating": "Creating…",
+  "backAgainToExit": "Press back again to exit",
+  "tripSettingsComingSoon": "Trip settings arrive in a later update.",
+  "joinInvitedTitle": "You're invited to \"{trip}\"",
+  "@joinInvitedTitle": {
+    "placeholders": {
+      "trip": {
+        "type": "String"
+      }
+    }
+  },
+  "joinAlreadyOnTrip": "{names} is already on this trip.",
+  "@joinAlreadyOnTrip": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "joinAlreadyOnTripPlural": "{names} are already on this trip.",
+  "@joinAlreadyOnTripPlural": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "joinSignInPrompt": "Sign in to join this trip.",
+  "joinGuestsCantJoin": "Guest mode can't join shared trips. Sign in with an account to continue.",
+  "joinMoreSignIn": "More sign-in options",
+  "joinPickTitle": "Join \"{trip}\"",
+  "@joinPickTitle": {
+    "placeholders": {
+      "trip": {
+        "type": "String"
+      }
+    }
+  },
+  "joinPickSubtitle": "Which traveler are you?",
+  "joinImMember": "I'm {name}",
+  "@joinImMember": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "joinClaimedByOther": "That member was just claimed by someone else. Pick another.",
+  "joinAlreadyInTitle": "You're already in \"{trip}\"",
+  "@joinAlreadyInTitle": {
+    "placeholders": {
+      "trip": {
+        "type": "String"
+      }
+    }
+  },
+  "joinYoureAdmin": "You're the admin of this trip.",
+  "joinAlreadyClaimed": "You've already claimed your spot on this trip.",
+  "joinOpenTrip": "Open trip",
+  "joinEveryoneTitle": "Everyone's already joined",
+  "joinEveryoneBody": "All members of \"{trip}\" have already claimed their spot. Ask the trip admin if you think this is a mistake.",
+  "@joinEveryoneBody": {
+    "placeholders": {
+      "trip": {
+        "type": "String"
+      }
+    }
+  },
+  "joinInvalidTitle": "Invite not found",
+  "joinInvalidBody": "This invite code doesn't match any trip. Double-check the link, or ask the trip admin to resend it.",
+  "joinGoToTrips": "Go to my trips",
+  "joinBackToSignIn": "Back to sign in",
+  "joinErrorTitle": "Couldn't load this invite",
+  "joinTooManyAttempts": "Too many attempts. Try again in {time}.",
+  "@joinTooManyAttempts": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "joinEnterCodeTitle": "Join with a trip code",
+  "joinEnterCodeAction": "Join",
+  "joinCodeInvalid": "Enter the 6-character code from your invite.",
+  "shareEyebrow": "Trip Tracker · Trip summary",
+  "shareTravelers": "Travelers",
+  "shareExpenses": "Expenses",
+  "shareTotalSpend": "Total spend",
+  "shareEndedTitle": "This link has ended",
+  "shareEndedBody": "It was turned off or has expired. Ask the trip organizer for a fresh link.",
+  "shareLoadError": "Couldn't load this trip summary.",
+  "inviteSheetTitle": "Invite travelers",
+  "inviteJoinCode": "Join code",
+  "inviteCopyCode": "Copy code",
+  "inviteCopyLink": "Copy link",
+  "inviteShare": "Share invite",
+  "inviteCodePending": "Your join code appears after this trip finishes syncing.",
+  "inviteCopied": "Copied",
+  "inviteShareText": "Join my trip \"{trip}\" on Trip Tracker: {link} (code {code})",
+  "@inviteShareText": {
+    "placeholders": {
+      "trip": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "viewOnlyTitle": "View-only link",
+  "viewOnlyBody": "Anyone with this link can see a read-only summary. It expires after 30 days and you can turn it off any time.",
+  "viewOnlyCreate": "Create view-only link",
+  "viewOnlyRevoke": "Turn off link",
+  "viewOnlyActiveUntil": "Active until {date}",
+  "@viewOnlyActiveUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "viewOnlyOffline": "Connect to the internet to change the view-only link.",
+  "viewOnlyOwnerOnly": "Only the trip owner or an admin can manage this link.",
+  "viewOnlyShareText": "Trip summary for \"{trip}\": {link}",
+  "@viewOnlyShareText": {
+    "placeholders": {
+      "trip": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "expAdd": "Add expense",
+  "expSearchHint": "Search expenses",
+  "expFilters": "Filters",
+  "expClearFilters": "Clear filters",
+  "expNone": "No expenses yet",
+  "expNoneBody": "Add the first expense to start splitting costs.",
+  "expNoMatches": "No expenses match these filters.",
+  "expLoadMore": "Load more",
+  "expTotalSpent": "Total spent",
+  "expPerPerson": "Per person",
+  "expTopCategory": "Top category",
+  "expSettlements": "Settlements",
+  "expExpandAll": "Expand all days",
+  "expCollapseAll": "Collapse all days",
+  "expRecycleBin": "Recycle bin",
+  "expCompactView": "Compact rows",
+  "expAll": "All",
+  "expPaidByMe": "Paid by me",
+  "expInvolvesMe": "Involves me",
+  "expDayTotal": "{amount}",
+  "@expDayTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "expDaySemantics": "{date}, {count, plural, =1{1 expense} other{{count} expenses}}, total {amount}",
+  "@expDaySemantics": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "filterTraveler": "Traveler",
+  "filterCategory": "Category",
+  "filterFrom": "From",
+  "filterTo": "To",
+  "filterMin": "Min amount",
+  "filterMax": "Max amount",
+  "filterApply": "Apply",
+  "filterAny": "Any",
+  "filterShow": "Show",
+  "filterResults": "{count, plural, =1{Show 1 expense} other{Show {count} expenses}}",
+  "@filterResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rowYourShare": "your share {amount}",
+  "@rowYourShare": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "rowPayers": "{count} payers",
+  "@rowPayers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rowPaidBy": "Paid by {name}",
+  "@rowPaidBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "rowRemovedMember": "Removed member",
+  "rowReceipt": "Receipt attached",
+  "rowDisputed": "Disputed",
+  "rowPendingApproval": "Pending approval",
+  "rowPendingApprovalTip": "Pending approval — excluded from balances until a second member approves it",
+  "rowSyncPending": "Pending sync",
+  "rowConflict": "Sync conflict",
+  "rowEdit": "Edit",
+  "rowDelete": "Delete",
+  "rowSwitchCurrency": "Switch between {base} and {foreign}",
+  "@rowSwitchCurrency": {
+    "placeholders": {
+      "base": {
+        "type": "String"
+      },
+      "foreign": {
+        "type": "String"
+      }
+    }
+  },
+  "expDeleted": "Expense deleted",
+  "expRestored": "Expense restored",
+  "detailPaidBy": "Paid by",
+  "detailSplit": "Split between",
+  "detailDate": "Date",
+  "detailCategory": "Category",
+  "detailNote": "Note",
+  "detailFlag": "Flag as disputed",
+  "detailResolve": "Resolve dispute",
+  "detailApprove": "Approve",
+  "detailConfirm": "Confirm payment received",
+  "detailDisputeTitle": "Flag this expense",
+  "detailDisputeHint": "What looks wrong? (optional)",
+  "detailDisputeSend": "Flag",
+  "detailDisputedBy": "Flagged: {note}",
+  "@detailDisputedBy": {
+    "placeholders": {
+      "note": {
+        "type": "String"
+      }
+    }
+  },
+  "detailDisputedNoNote": "Flagged as disputed",
+  "detailConfirmed": "Payment confirmed",
+  "detailOfflineAction": "You're offline. Connect to the internet to do this.",
+  "detailActionFailed": "Couldn't complete that: {reason}",
+  "@detailActionFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "detailShares": "Who owes what",
+  "binTitle": "Recycle bin",
+  "binBody": "Deleted expenses stay here for 24 hours.",
+  "binEmpty": "The recycle bin is empty",
+  "binRestore": "Restore",
+  "binDeleteForever": "Delete forever",
+  "binEmptyAll": "Empty recycle bin",
+  "binEmptyConfirm": "{count, plural, =1{Permanently delete 1 expense?} other{Permanently delete {count} expenses?}}",
+  "@binEmptyConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "binDeleteConfirm": "Delete \"{title}\" forever? This can't be undone.",
+  "@binDeleteConfirm": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "chipOwe": "You owe · settle up",
+  "chipOwed": "You're owed · see who",
+  "chipInvites": "{count, plural, =1{1 invite pending} other{{count} invites pending}}",
+  "@chipInvites": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chipDisputes": "{count, plural, =1{1 dispute} other{{count} disputes}}",
+  "@chipDisputes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chipCloseout": "Close out trip",
+  "expFormComingSoon": "The expense form is the next piece of Phase 7.",
+  "formTitleAdd": "Add expense",
+  "formTitleEdit": "Edit expense",
+  "formSave": "Save",
+  "formSaving": "Saving…",
+  "formAmount": "Amount",
+  "formAmountHint": "0.00 or 12*3+4",
+  "formAmountEquals": "= {value}",
+  "@formAmountEquals": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "formWhat": "What was it for?",
+  "formWhatHint": "Dinner, taxi…",
+  "formCategory": "Category",
+  "formAutoCategory": "Auto-picked: {name}",
+  "@formAutoCategory": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "formDate": "Date",
+  "formToday": "Today",
+  "formPaidBy": "Paid by",
+  "formMultiplePayers": "Multiple payers",
+  "formOnePayer": "One payer",
+  "formAllocated": "Allocated {paid} of {total}",
+  "@formAllocated": {
+    "placeholders": {
+      "paid": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "formSplitBetween": "Split between",
+  "formEveryone": "Everyone",
+  "formOnlyPayer": "Only payer",
+  "formExcludePayer": "Everyone but payer",
+  "formPayerHalf": "Payer 50%",
+  "formModeEqual": "Equal",
+  "formModeShares": "Shares",
+  "formModeExact": "Exact",
+  "formModePercent": "Percent",
+  "formModeItemized": "Itemized",
+  "formShareHint": "e.g. 2",
+  "formPercentHint": "%",
+  "formExactHint": "Amount",
+  "formSumStatus": "{sum} of {target}",
+  "@formSumStatus": {
+    "placeholders": {
+      "sum": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "formSharesWeights": "Relative shares: 2 pays double 1",
+  "formWhoOwes": "Who owes what",
+  "formExplain": "Explain",
+  "formExplainTitle": "How each share is worked out",
+  "formExplainRounding": "Cents that don't divide evenly go to whoever has the largest remainder; ties go to the payer first.",
+  "formReceipt": "Receipt",
+  "formReceiptCamera": "Take photo",
+  "formReceiptGallery": "Choose photo",
+  "formReceiptRemove": "Remove photo",
+  "formReceiptAttached": "Photo attached",
+  "formMoreDetails": "More details",
+  "formDraftRestored": "Restored your unsent draft",
+  "formDiscardDraft": "Discard draft",
+  "formSameAsLast": "Same as last time",
+  "formQuickFill": "Quick fill",
+  "formQuickFillHint": "Coffee 4.50 Alice yesterday",
+  "formQuickFillApply": "Fill",
+  "formQuickFillFailed": "Couldn't understand that.",
+  "formDuplicateTitle": "Possible duplicate",
+  "formDuplicateDetails": "Details",
+  "formDuplicateIgnore": "Not a duplicate",
+  "formCurrency": "Currency",
+  "formConverted": "≈ {amount} at {rate}",
+  "@formConverted": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "formFxSet": "Set rate",
+  "formFxTitle": "{code} → {base} rate",
+  "@formFxTitle": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "base": {
+        "type": "String"
+      }
+    }
+  },
+  "formFxLabel": "Your rate (1 {code} = ? {base})",
+  "@formFxLabel": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "base": {
+        "type": "String"
+      }
+    }
+  },
+  "formFxDefault": "Use default rate",
+  "formFxCurrent": "Current rate: {rate}",
+  "@formFxCurrent": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "formAddItem": "Add item",
+  "formItemName": "Item",
+  "formItemAmount": "Amount",
+  "formItemSharedBy": "Shared by",
+  "formTax": "Tax",
+  "formTip": "Tip",
+  "formDiscount": "Discount",
+  "formUseTotal": "Use {total} as the amount",
+  "@formUseTotal": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "formNoMembers": "This trip has no active travelers to split with.",
+  "ledBalances": "Balances",
+  "ledAllSettled": "All settled up",
+  "ledAllSettledHint": "Nobody owes anything.",
+  "ledOwed": "is owed {amount}",
+  "@ledOwed": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ledOwes": "owes {amount}",
+  "@ledOwes": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ledEven": "settled",
+  "ledWhoPays": "Who pays whom",
+  "ledSettle": "Settle",
+  "ledSimplify": "Simplify debts",
+  "ledSimplifyHint": "Fewer, larger payments instead of one per expense.",
+  "ledSettleTitle": "Confirm settlement",
+  "ledSettlePartialTitle": "Confirm partial settlement",
+  "ledSettleBody": "Record this payment as settled?",
+  "ledSettlePartialBody": "Record part of this payment? The rest stays pending.",
+  "ledAmount": "Amount",
+  "ledDate": "Date",
+  "ledNote": "Note (optional)",
+  "ledMarkSettled": "Mark settled",
+  "ledMarkPartial": "Mark partial settlement",
+  "ledRemaining": "Remaining {amount}",
+  "@ledRemaining": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ledAmountInvalid": "Enter an amount greater than 0.",
+  "ledHistory": "Settlement history",
+  "ledNoHistory": "No payments recorded yet.",
+  "ledConfirmed": "Confirmed",
+  "ledAwaiting": "Awaiting confirmation",
+  "ledSettledToast": "Settlement recorded",
+  "ledTransfer": "{from} pays {to}",
+  "@ledTransfer": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  }
 }

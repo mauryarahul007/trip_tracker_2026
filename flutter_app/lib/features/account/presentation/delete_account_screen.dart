@@ -7,7 +7,7 @@ import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/confirm_dialog.dart';
-import '../../../app/auth_state.dart';
+import '../../../data/providers.dart';
 
 class DeleteAccountScreen extends ConsumerStatefulWidget {
   const DeleteAccountScreen({super.key});
@@ -35,12 +35,17 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       _isDeleting = true;
     });
 
-    // In Phase 6, calls Supabase delete_user / rpc
-    await Future<void>.delayed(const Duration(milliseconds: 800));
-
-    if (!mounted) return;
-    ref.read(authStateProvider.notifier).signOut();
-    context.go('/login');
+    try {
+      await ref.read(authRepositoryProvider).deleteAccount();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isDeleting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not delete your account. Check your connection and try again.')),
+      );
+      return;
+    }
+    // The router redirects to /login once the session is gone.
   }
 
   @override

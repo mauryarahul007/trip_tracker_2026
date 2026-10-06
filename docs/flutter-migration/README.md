@@ -2,6 +2,8 @@
 
 Migrate the Trip Tracker **UI** from React + Capacitor (WebView) to **Flutter** for iOS and Android. Keep the **existing Supabase backend** and the **existing web app**. Plans only: no code is written by this document.
 
+> **Deferred / unverified work is tracked in [`BACKLOG.md`](BACKLOG.md): add to it, never silently skip.**
+>
 > Every AI agent: read THIS file first (it is the shared contract), then open **only your phase file**. Do not load other phase files unless your phase says so.
 
 ---

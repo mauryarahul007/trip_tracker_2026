@@ -1,0 +1,3187 @@
+{
+  "cases": [
+    {
+      "label": "equal USD 100 /1 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 100
+      }
+    },
+    {
+      "label": "equal USD 100 /2 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 50,
+        "b": 50
+      }
+    },
+    {
+      "label": "equal USD 100 /3 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 33.33,
+        "b": 33.34,
+        "c": 33.33
+      }
+    },
+    {
+      "label": "equal USD 100 /7 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 14.29,
+        "b": 14.29,
+        "c": 14.29,
+        "d": 14.29,
+        "e": 14.28,
+        "f": 14.28,
+        "g": 14.28
+      }
+    },
+    {
+      "label": "equal USD 100.01 /1 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 100.01
+      }
+    },
+    {
+      "label": "equal USD 100.01 /2 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 50,
+        "b": 50.01
+      }
+    },
+    {
+      "label": "equal USD 100.01 /3 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 33.34,
+        "b": 33.34,
+        "c": 33.33
+      }
+    },
+    {
+      "label": "equal USD 100.01 /7 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 14.29,
+        "b": 14.29,
+        "c": 14.29,
+        "d": 14.29,
+        "e": 14.29,
+        "f": 14.28,
+        "g": 14.28
+      }
+    },
+    {
+      "label": "equal USD 0.01 /1 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 0.01
+      }
+    },
+    {
+      "label": "equal USD 0.01 /2 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 0,
+        "b": 0.01
+      }
+    },
+    {
+      "label": "equal USD 0.01 /3 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 0,
+        "b": 0.01,
+        "c": 0
+      }
+    },
+    {
+      "label": "equal USD 0.01 /7 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 0,
+        "b": 0.01,
+        "c": 0,
+        "d": 0,
+        "e": 0,
+        "f": 0,
+        "g": 0
+      }
+    },
+    {
+      "label": "equal USD 1 /1 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 1
+      }
+    },
+    {
+      "label": "equal USD 1 /2 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 0.5,
+        "b": 0.5
+      }
+    },
+    {
+      "label": "equal USD 1 /3 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 0.33,
+        "b": 0.34,
+        "c": 0.33
+      }
+    },
+    {
+      "label": "equal USD 1 /7 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 0.15,
+        "b": 0.15,
+        "c": 0.14,
+        "d": 0.14,
+        "e": 0.14,
+        "f": 0.14,
+        "g": 0.14
+      }
+    },
+    {
+      "label": "equal USD 10 /1 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 10
+      }
+    },
+    {
+      "label": "equal USD 10 /2 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 5,
+        "b": 5
+      }
+    },
+    {
+      "label": "equal USD 10 /3 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 3.33,
+        "b": 3.34,
+        "c": 3.33
+      }
+    },
+    {
+      "label": "equal USD 10 /7 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 1.43,
+        "b": 1.43,
+        "c": 1.43,
+        "d": 1.43,
+        "e": 1.43,
+        "f": 1.43,
+        "g": 1.42
+      }
+    },
+    {
+      "label": "equal USD 999.99 /1 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 999.99
+      }
+    },
+    {
+      "label": "equal USD 999.99 /2 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 499.99,
+        "b": 500
+      }
+    },
+    {
+      "label": "equal USD 999.99 /3 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 333.33,
+        "b": 333.33,
+        "c": 333.33
+      }
+    },
+    {
+      "label": "equal USD 999.99 /7 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 142.86,
+        "b": 142.86,
+        "c": 142.86,
+        "d": 142.86,
+        "e": 142.85,
+        "f": 142.85,
+        "g": 142.85
+      }
+    },
+    {
+      "label": "equal USD 1234.57 /1 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 1234.57
+      }
+    },
+    {
+      "label": "equal USD 1234.57 /2 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 617.28,
+        "b": 617.29
+      }
+    },
+    {
+      "label": "equal USD 1234.57 /3 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 411.52,
+        "b": 411.53,
+        "c": 411.52
+      }
+    },
+    {
+      "label": "equal USD 1234.57 /7 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 176.37,
+        "b": 176.37,
+        "c": 176.37,
+        "d": 176.37,
+        "e": 176.37,
+        "f": 176.36,
+        "g": 176.36
+      }
+    },
+    {
+      "label": "equal USD 5000 /1 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 5000
+      }
+    },
+    {
+      "label": "equal USD 5000 /2 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 2500,
+        "b": 2500
+      }
+    },
+    {
+      "label": "equal USD 5000 /3 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 1666.67,
+        "b": 1666.67,
+        "c": 1666.66
+      }
+    },
+    {
+      "label": "equal USD 5000 /7 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 714.29,
+        "b": 714.29,
+        "c": 714.29,
+        "d": 714.29,
+        "e": 714.28,
+        "f": 714.28,
+        "g": 714.28
+      }
+    },
+    {
+      "label": "equal USD payer-out",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "zz",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 14.29,
+        "b": 14.29,
+        "c": 14.29,
+        "d": 14.29,
+        "e": 14.28,
+        "f": 14.28,
+        "g": 14.28
+      }
+    },
+    {
+      "label": "equal JPY 100 /1 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 100
+      }
+    },
+    {
+      "label": "equal JPY 100 /2 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 50,
+        "b": 50
+      }
+    },
+    {
+      "label": "equal JPY 100 /3 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 33,
+        "b": 34,
+        "c": 33
+      }
+    },
+    {
+      "label": "equal JPY 100 /7 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 15,
+        "b": 15,
+        "c": 14,
+        "d": 14,
+        "e": 14,
+        "f": 14,
+        "g": 14
+      }
+    },
+    {
+      "label": "equal JPY 100.01 /1 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 100
+      }
+    },
+    {
+      "label": "equal JPY 100.01 /2 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 50,
+        "b": 50
+      }
+    },
+    {
+      "label": "equal JPY 100.01 /3 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 33,
+        "b": 34,
+        "c": 33
+      }
+    },
+    {
+      "label": "equal JPY 100.01 /7 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 15,
+        "b": 15,
+        "c": 14,
+        "d": 14,
+        "e": 14,
+        "f": 14,
+        "g": 14
+      }
+    },
+    {
+      "label": "equal JPY 0.01 /1 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 0
+      }
+    },
+    {
+      "label": "equal JPY 0.01 /2 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 0,
+        "b": 0
+      }
+    },
+    {
+      "label": "equal JPY 0.01 /3 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 0,
+        "b": 0,
+        "c": 0
+      }
+    },
+    {
+      "label": "equal JPY 0.01 /7 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 0,
+        "b": 0,
+        "c": 0,
+        "d": 0,
+        "e": 0,
+        "f": 0,
+        "g": 0
+      }
+    },
+    {
+      "label": "equal JPY 1 /1 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 1
+      }
+    },
+    {
+      "label": "equal JPY 1 /2 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 0,
+        "b": 1
+      }
+    },
+    {
+      "label": "equal JPY 1 /3 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 0,
+        "b": 1,
+        "c": 0
+      }
+    },
+    {
+      "label": "equal JPY 1 /7 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 0,
+        "b": 1,
+        "c": 0,
+        "d": 0,
+        "e": 0,
+        "f": 0,
+        "g": 0
+      }
+    },
+    {
+      "label": "equal JPY 10 /1 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 10
+      }
+    },
+    {
+      "label": "equal JPY 10 /2 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 5,
+        "b": 5
+      }
+    },
+    {
+      "label": "equal JPY 10 /3 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 3,
+        "b": 4,
+        "c": 3
+      }
+    },
+    {
+      "label": "equal JPY 10 /7 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 2,
+        "b": 2,
+        "c": 2,
+        "d": 1,
+        "e": 1,
+        "f": 1,
+        "g": 1
+      }
+    },
+    {
+      "label": "equal JPY 999.99 /1 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 1000
+      }
+    },
+    {
+      "label": "equal JPY 999.99 /2 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 500,
+        "b": 500
+      }
+    },
+    {
+      "label": "equal JPY 999.99 /3 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 333,
+        "b": 334,
+        "c": 333
+      }
+    },
+    {
+      "label": "equal JPY 999.99 /7 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 143,
+        "b": 143,
+        "c": 143,
+        "d": 143,
+        "e": 143,
+        "f": 143,
+        "g": 142
+      }
+    },
+    {
+      "label": "equal JPY 1234.57 /1 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 1235
+      }
+    },
+    {
+      "label": "equal JPY 1234.57 /2 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 617,
+        "b": 618
+      }
+    },
+    {
+      "label": "equal JPY 1234.57 /3 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 412,
+        "b": 412,
+        "c": 411
+      }
+    },
+    {
+      "label": "equal JPY 1234.57 /7 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 177,
+        "b": 177,
+        "c": 177,
+        "d": 176,
+        "e": 176,
+        "f": 176,
+        "g": 176
+      }
+    },
+    {
+      "label": "equal JPY 5000 /1 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 5000
+      }
+    },
+    {
+      "label": "equal JPY 5000 /2 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 2500,
+        "b": 2500
+      }
+    },
+    {
+      "label": "equal JPY 5000 /3 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 1667,
+        "b": 1667,
+        "c": 1666
+      }
+    },
+    {
+      "label": "equal JPY 5000 /7 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 715,
+        "b": 715,
+        "c": 714,
+        "d": 714,
+        "e": 714,
+        "f": 714,
+        "g": 714
+      }
+    },
+    {
+      "label": "equal JPY payer-out",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "zz",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 15,
+        "b": 15,
+        "c": 14,
+        "d": 14,
+        "e": 14,
+        "f": 14,
+        "g": 14
+      }
+    },
+    {
+      "label": "equal KWD 100 /1 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 100
+      }
+    },
+    {
+      "label": "equal KWD 100 /2 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 50,
+        "b": 50
+      }
+    },
+    {
+      "label": "equal KWD 100 /3 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 33.33,
+        "b": 33.34,
+        "c": 33.33
+      }
+    },
+    {
+      "label": "equal KWD 100 /7 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 14.29,
+        "b": 14.29,
+        "c": 14.29,
+        "d": 14.29,
+        "e": 14.28,
+        "f": 14.28,
+        "g": 14.28
+      }
+    },
+    {
+      "label": "equal KWD 100.01 /1 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 100.01
+      }
+    },
+    {
+      "label": "equal KWD 100.01 /2 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 50,
+        "b": 50.01
+      }
+    },
+    {
+      "label": "equal KWD 100.01 /3 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 33.34,
+        "b": 33.34,
+        "c": 33.33
+      }
+    },
+    {
+      "label": "equal KWD 100.01 /7 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 14.29,
+        "b": 14.29,
+        "c": 14.29,
+        "d": 14.29,
+        "e": 14.29,
+        "f": 14.28,
+        "g": 14.28
+      }
+    },
+    {
+      "label": "equal KWD 0.01 /1 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 0.01
+      }
+    },
+    {
+      "label": "equal KWD 0.01 /2 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 0,
+        "b": 0.01
+      }
+    },
+    {
+      "label": "equal KWD 0.01 /3 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 0,
+        "b": 0.01,
+        "c": 0
+      }
+    },
+    {
+      "label": "equal KWD 0.01 /7 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 0,
+        "b": 0.01,
+        "c": 0,
+        "d": 0,
+        "e": 0,
+        "f": 0,
+        "g": 0
+      }
+    },
+    {
+      "label": "equal KWD 1 /1 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 1
+      }
+    },
+    {
+      "label": "equal KWD 1 /2 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 0.5,
+        "b": 0.5
+      }
+    },
+    {
+      "label": "equal KWD 1 /3 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 0.33,
+        "b": 0.34,
+        "c": 0.33
+      }
+    },
+    {
+      "label": "equal KWD 1 /7 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 0.15,
+        "b": 0.15,
+        "c": 0.14,
+        "d": 0.14,
+        "e": 0.14,
+        "f": 0.14,
+        "g": 0.14
+      }
+    },
+    {
+      "label": "equal KWD 10 /1 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 10
+      }
+    },
+    {
+      "label": "equal KWD 10 /2 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 5,
+        "b": 5
+      }
+    },
+    {
+      "label": "equal KWD 10 /3 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 3.33,
+        "b": 3.34,
+        "c": 3.33
+      }
+    },
+    {
+      "label": "equal KWD 10 /7 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 1.43,
+        "b": 1.43,
+        "c": 1.43,
+        "d": 1.43,
+        "e": 1.43,
+        "f": 1.43,
+        "g": 1.42
+      }
+    },
+    {
+      "label": "equal KWD 999.99 /1 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 999.99
+      }
+    },
+    {
+      "label": "equal KWD 999.99 /2 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 499.99,
+        "b": 500
+      }
+    },
+    {
+      "label": "equal KWD 999.99 /3 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 333.33,
+        "b": 333.33,
+        "c": 333.33
+      }
+    },
+    {
+      "label": "equal KWD 999.99 /7 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 142.86,
+        "b": 142.86,
+        "c": 142.86,
+        "d": 142.86,
+        "e": 142.85,
+        "f": 142.85,
+        "g": 142.85
+      }
+    },
+    {
+      "label": "equal KWD 1234.57 /1 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 1234.57
+      }
+    },
+    {
+      "label": "equal KWD 1234.57 /2 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 617.28,
+        "b": 617.29
+      }
+    },
+    {
+      "label": "equal KWD 1234.57 /3 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 411.52,
+        "b": 411.53,
+        "c": 411.52
+      }
+    },
+    {
+      "label": "equal KWD 1234.57 /7 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 176.37,
+        "b": 176.37,
+        "c": 176.37,
+        "d": 176.37,
+        "e": 176.37,
+        "f": 176.36,
+        "g": 176.36
+      }
+    },
+    {
+      "label": "equal KWD 5000 /1 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 5000
+      }
+    },
+    {
+      "label": "equal KWD 5000 /2 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 2500,
+        "b": 2500
+      }
+    },
+    {
+      "label": "equal KWD 5000 /3 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 1666.67,
+        "b": 1666.67,
+        "c": 1666.66
+      }
+    },
+    {
+      "label": "equal KWD 5000 /7 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 714.29,
+        "b": 714.29,
+        "c": 714.29,
+        "d": 714.29,
+        "e": 714.28,
+        "f": 714.28,
+        "g": 714.28
+      }
+    },
+    {
+      "label": "equal KWD payer-out",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "zz",
+        "currency": "KWD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 14.29,
+        "b": 14.29,
+        "c": 14.29,
+        "d": 14.29,
+        "e": 14.28,
+        "f": 14.28,
+        "g": 14.28
+      }
+    },
+    {
+      "label": "equal INR 100 /1 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "INR"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 100
+      }
+    },
+    {
+      "label": "equal INR 100 /2 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 50,
+        "b": 50
+      }
+    },
+    {
+      "label": "equal INR 100 /3 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 33.33,
+        "b": 33.34,
+        "c": 33.33
+      }
+    },
+    {
+      "label": "equal INR 100 /7 payer-in",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 14.29,
+        "b": 14.29,
+        "c": 14.29,
+        "d": 14.29,
+        "e": 14.28,
+        "f": 14.28,
+        "g": 14.28
+      }
+    },
+    {
+      "label": "equal INR 100.01 /1 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "INR"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 100.01
+      }
+    },
+    {
+      "label": "equal INR 100.01 /2 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 50,
+        "b": 50.01
+      }
+    },
+    {
+      "label": "equal INR 100.01 /3 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 33.34,
+        "b": 33.34,
+        "c": 33.33
+      }
+    },
+    {
+      "label": "equal INR 100.01 /7 payer-in",
+      "expense": {
+        "amount": 100.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 14.29,
+        "b": 14.29,
+        "c": 14.29,
+        "d": 14.29,
+        "e": 14.29,
+        "f": 14.28,
+        "g": 14.28
+      }
+    },
+    {
+      "label": "equal INR 0.01 /1 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "INR"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 0.01
+      }
+    },
+    {
+      "label": "equal INR 0.01 /2 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 0,
+        "b": 0.01
+      }
+    },
+    {
+      "label": "equal INR 0.01 /3 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 0,
+        "b": 0.01,
+        "c": 0
+      }
+    },
+    {
+      "label": "equal INR 0.01 /7 payer-in",
+      "expense": {
+        "amount": 0.01,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 0,
+        "b": 0.01,
+        "c": 0,
+        "d": 0,
+        "e": 0,
+        "f": 0,
+        "g": 0
+      }
+    },
+    {
+      "label": "equal INR 1 /1 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "INR"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 1
+      }
+    },
+    {
+      "label": "equal INR 1 /2 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 0.5,
+        "b": 0.5
+      }
+    },
+    {
+      "label": "equal INR 1 /3 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 0.33,
+        "b": 0.34,
+        "c": 0.33
+      }
+    },
+    {
+      "label": "equal INR 1 /7 payer-in",
+      "expense": {
+        "amount": 1,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 0.15,
+        "b": 0.15,
+        "c": 0.14,
+        "d": 0.14,
+        "e": 0.14,
+        "f": 0.14,
+        "g": 0.14
+      }
+    },
+    {
+      "label": "equal INR 10 /1 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "INR"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 10
+      }
+    },
+    {
+      "label": "equal INR 10 /2 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 5,
+        "b": 5
+      }
+    },
+    {
+      "label": "equal INR 10 /3 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 3.33,
+        "b": 3.34,
+        "c": 3.33
+      }
+    },
+    {
+      "label": "equal INR 10 /7 payer-in",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 1.43,
+        "b": 1.43,
+        "c": 1.43,
+        "d": 1.43,
+        "e": 1.43,
+        "f": 1.43,
+        "g": 1.42
+      }
+    },
+    {
+      "label": "equal INR 999.99 /1 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "INR"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 999.99
+      }
+    },
+    {
+      "label": "equal INR 999.99 /2 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 499.99,
+        "b": 500
+      }
+    },
+    {
+      "label": "equal INR 999.99 /3 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 333.33,
+        "b": 333.33,
+        "c": 333.33
+      }
+    },
+    {
+      "label": "equal INR 999.99 /7 payer-in",
+      "expense": {
+        "amount": 999.99,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 142.86,
+        "b": 142.86,
+        "c": 142.86,
+        "d": 142.86,
+        "e": 142.85,
+        "f": 142.85,
+        "g": 142.85
+      }
+    },
+    {
+      "label": "equal INR 1234.57 /1 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "INR"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 1234.57
+      }
+    },
+    {
+      "label": "equal INR 1234.57 /2 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 617.28,
+        "b": 617.29
+      }
+    },
+    {
+      "label": "equal INR 1234.57 /3 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 411.52,
+        "b": 411.53,
+        "c": 411.52
+      }
+    },
+    {
+      "label": "equal INR 1234.57 /7 payer-in",
+      "expense": {
+        "amount": 1234.57,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 176.37,
+        "b": 176.37,
+        "c": 176.37,
+        "d": 176.37,
+        "e": 176.37,
+        "f": 176.36,
+        "g": 176.36
+      }
+    },
+    {
+      "label": "equal INR 5000 /1 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "a",
+        "currency": "INR"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {
+        "a": 5000
+      }
+    },
+    {
+      "label": "equal INR 5000 /2 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 2500,
+        "b": 2500
+      }
+    },
+    {
+      "label": "equal INR 5000 /3 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 1666.67,
+        "b": 1666.67,
+        "c": 1666.66
+      }
+    },
+    {
+      "label": "equal INR 5000 /7 payer-in",
+      "expense": {
+        "amount": 5000,
+        "splitMode": "equal",
+        "paidBy": "b",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 714.29,
+        "b": 714.29,
+        "c": 714.29,
+        "d": 714.29,
+        "e": 714.28,
+        "f": 714.28,
+        "g": 714.28
+      }
+    },
+    {
+      "label": "equal INR payer-out",
+      "expense": {
+        "amount": 100,
+        "splitMode": "equal",
+        "paidBy": "zz",
+        "currency": "INR"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 14.29,
+        "b": 14.29,
+        "c": 14.29,
+        "d": 14.29,
+        "e": 14.28,
+        "f": 14.28,
+        "g": 14.28
+      }
+    },
+    {
+      "label": "custom 1:2:3",
+      "expense": {
+        "amount": 100,
+        "splitMode": "custom",
+        "splitConfig": {
+          "a": 1,
+          "b": 2,
+          "c": 3
+        },
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 16.67,
+        "b": 33.33,
+        "c": 50
+      }
+    },
+    {
+      "label": "custom zero weight",
+      "expense": {
+        "amount": 100,
+        "splitMode": "custom",
+        "splitConfig": {
+          "a": 0,
+          "b": 2
+        },
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 33.33,
+        "b": 66.67
+      }
+    },
+    {
+      "label": "custom missing config",
+      "expense": {
+        "amount": 99.99,
+        "splitMode": "custom",
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 33.33,
+        "b": 33.33,
+        "c": 33.33
+      }
+    },
+    {
+      "label": "custom JPY",
+      "expense": {
+        "amount": 1001,
+        "splitMode": "custom",
+        "splitConfig": {
+          "a": 1,
+          "b": 1,
+          "c": 1
+        },
+        "paidBy": "c",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 334,
+        "b": 333,
+        "c": 334
+      }
+    },
+    {
+      "label": "custom 7 way",
+      "expense": {
+        "amount": 100,
+        "splitMode": "custom",
+        "splitConfig": {
+          "a": 3,
+          "b": 1,
+          "c": 1,
+          "d": 1,
+          "e": 1,
+          "f": 1,
+          "g": 1
+        },
+        "paidBy": "g",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g"
+      ],
+      "result": {
+        "a": 33.34,
+        "b": 11.11,
+        "c": 11.11,
+        "d": 11.11,
+        "e": 11.11,
+        "f": 11.11,
+        "g": 11.11
+      }
+    },
+    {
+      "label": "exact matches",
+      "expense": {
+        "amount": 100,
+        "splitMode": "exact",
+        "splitConfig": {
+          "a": 60,
+          "b": 40
+        },
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 60,
+        "b": 40
+      }
+    },
+    {
+      "label": "exact short",
+      "expense": {
+        "amount": 100,
+        "splitMode": "exact",
+        "splitConfig": {
+          "a": 60,
+          "b": 30
+        },
+        "paidBy": "b",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 60,
+        "b": 40
+      }
+    },
+    {
+      "label": "exact over",
+      "expense": {
+        "amount": 100,
+        "splitMode": "exact",
+        "splitConfig": {
+          "a": 70,
+          "b": 50
+        },
+        "paidBy": "zz",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 50,
+        "b": 50
+      }
+    },
+    {
+      "label": "exact decimals",
+      "expense": {
+        "amount": 33.33,
+        "splitMode": "exact",
+        "splitConfig": {
+          "a": 11.11,
+          "b": 11.11,
+          "c": 11.11
+        },
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 11.11,
+        "b": 11.11,
+        "c": 11.11
+      }
+    },
+    {
+      "label": "exact JPY",
+      "expense": {
+        "amount": 1000,
+        "splitMode": "exact",
+        "splitConfig": {
+          "a": 333.4,
+          "b": 333.3
+        },
+        "paidBy": "a",
+        "currency": "JPY"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 667,
+        "b": 333
+      }
+    },
+    {
+      "label": "percent 50/50",
+      "expense": {
+        "amount": 100,
+        "splitMode": "percentage",
+        "splitConfig": {
+          "a": 50,
+          "b": 50
+        },
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 50,
+        "b": 50
+      }
+    },
+    {
+      "label": "percent thirds",
+      "expense": {
+        "amount": 100,
+        "splitMode": "percentage",
+        "splitConfig": {
+          "a": 33.33,
+          "b": 33.33,
+          "c": 33.34
+        },
+        "paidBy": "c",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 33.33,
+        "b": 33.33,
+        "c": 33.34
+      }
+    },
+    {
+      "label": "percent under 100",
+      "expense": {
+        "amount": 100,
+        "splitMode": "percentage",
+        "splitConfig": {
+          "a": 40,
+          "b": 40
+        },
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 40.01,
+        "b": 40.01
+      }
+    },
+    {
+      "label": "percent missing",
+      "expense": {
+        "amount": 100,
+        "splitMode": "percentage",
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 0.01,
+        "b": 0.01
+      }
+    },
+    {
+      "label": "itemized basic",
+      "expense": {
+        "amount": 90,
+        "splitMode": "itemized",
+        "paidBy": "a",
+        "currency": "USD",
+        "itemizedConfig": {
+          "items": [
+            {
+              "id": "1",
+              "name": "x",
+              "amount": 30,
+              "assignedMemberIds": [
+                "a"
+              ]
+            },
+            {
+              "id": "2",
+              "name": "y",
+              "amount": 60,
+              "assignedMemberIds": [
+                "b",
+                "c"
+              ]
+            }
+          ]
+        }
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 30,
+        "b": 30,
+        "c": 30
+      }
+    },
+    {
+      "label": "itemized tax tip discount",
+      "expense": {
+        "amount": 120,
+        "splitMode": "itemized",
+        "paidBy": "b",
+        "currency": "USD",
+        "itemizedConfig": {
+          "items": [
+            {
+              "id": "1",
+              "name": "x",
+              "amount": 40,
+              "assignedMemberIds": [
+                "a"
+              ]
+            },
+            {
+              "id": "2",
+              "name": "y",
+              "amount": 60,
+              "assignedMemberIds": [
+                "b"
+              ]
+            },
+            {
+              "id": "3",
+              "name": "z",
+              "amount": 20,
+              "assignedMemberIds": []
+            }
+          ],
+          "tax": 10,
+          "tip": 12,
+          "discount": 22
+        }
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 46.66,
+        "b": 66.67,
+        "c": 6.67
+      }
+    },
+    {
+      "label": "itemized unassigned goes to all",
+      "expense": {
+        "amount": 30,
+        "splitMode": "itemized",
+        "paidBy": "a",
+        "currency": "USD",
+        "itemizedConfig": {
+          "items": [
+            {
+              "id": "1",
+              "name": "x",
+              "amount": 30,
+              "assignedMemberIds": []
+            }
+          ]
+        }
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 10,
+        "b": 10,
+        "c": 10
+      }
+    },
+    {
+      "label": "itemized assignee not a participant",
+      "expense": {
+        "amount": 30,
+        "splitMode": "itemized",
+        "paidBy": "a",
+        "currency": "USD",
+        "itemizedConfig": {
+          "items": [
+            {
+              "id": "1",
+              "name": "x",
+              "amount": 30,
+              "assignedMemberIds": [
+                "zz"
+              ]
+            }
+          ]
+        }
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 15,
+        "b": 15
+      }
+    },
+    {
+      "label": "itemized zero total with tax",
+      "expense": {
+        "amount": 10,
+        "splitMode": "itemized",
+        "paidBy": "a",
+        "currency": "USD",
+        "itemizedConfig": {
+          "items": [
+            {
+              "id": "1",
+              "name": "x",
+              "amount": 0,
+              "assignedMemberIds": [
+                "a"
+              ]
+            }
+          ],
+          "tax": 10
+        }
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {
+        "a": 5,
+        "b": 5
+      }
+    },
+    {
+      "label": "itemized empty items falls through",
+      "expense": {
+        "amount": 50,
+        "splitMode": "itemized",
+        "paidBy": "a",
+        "currency": "USD",
+        "itemizedConfig": {
+          "items": []
+        }
+      },
+      "participants": [
+        "a",
+        "b"
+      ],
+      "result": {}
+    },
+    {
+      "label": "itemized JPY",
+      "expense": {
+        "amount": 1000,
+        "splitMode": "itemized",
+        "paidBy": "a",
+        "currency": "JPY",
+        "itemizedConfig": {
+          "items": [
+            {
+              "id": "1",
+              "name": "x",
+              "amount": 333,
+              "assignedMemberIds": [
+                "a"
+              ]
+            },
+            {
+              "id": "2",
+              "name": "y",
+              "amount": 667,
+              "assignedMemberIds": [
+                "b",
+                "c"
+              ]
+            }
+          ]
+        }
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 333,
+        "b": 334,
+        "c": 333
+      }
+    },
+    {
+      "label": "unknown mode",
+      "expense": {
+        "amount": 10,
+        "splitMode": "weird",
+        "paidBy": "a",
+        "currency": "USD"
+      },
+      "participants": [
+        "a"
+      ],
+      "result": {}
+    },
+    {
+      "label": "no currency defaults to 2 decimals",
+      "expense": {
+        "amount": 10,
+        "splitMode": "equal",
+        "paidBy": "a"
+      },
+      "participants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "result": {
+        "a": 3.34,
+        "b": 3.33,
+        "c": 3.33
+      }
+    }
+  ]
+}

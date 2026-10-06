@@ -1,4 +1,542 @@
 {
+  "matrices": {
+    "airports": [
+      {
+        "input": "",
+        "result": ""
+      },
+      {
+        "input": "JFK",
+        "result": "JFK"
+      },
+      {
+        "input": " jfk ",
+        "result": "jfk"
+      },
+      {
+        "input": "New York",
+        "result": "JFK"
+      },
+      {
+        "input": "new york!",
+        "result": "JFK"
+      },
+      {
+        "input": "Londo",
+        "result": "LHR"
+      },
+      {
+        "input": "delhi",
+        "result": "DEL"
+      },
+      {
+        "input": "Atlantis",
+        "result": "Atlantis"
+      },
+      {
+        "input": "xyz",
+        "result": "xyz"
+      }
+    ],
+    "passengers": [
+      {
+        "input": "DOE/JOHN MR",
+        "result": "Doe/john Mr"
+      },
+      {
+        "input": "MR RAHUL MAURYA",
+        "result": "Rahul Maurya"
+      },
+      {
+        "input": "Mrs. Jane Smith",
+        "result": "Jane Smith"
+      },
+      {
+        "input": "dr  Who",
+        "result": "Who"
+      },
+      {
+        "input": "JANE (Adult)",
+        "result": "Jane"
+      },
+      {
+        "input": "alice  b",
+        "result": "alice b"
+      },
+      {
+        "input": "",
+        "result": ""
+      },
+      {
+        "input": "123",
+        "result": "123"
+      }
+    ],
+    "stubs": [
+      {
+        "input": {
+          "myNet": 60,
+          "paid": 120,
+          "share": 60,
+          "group": null
+        },
+        "result": {
+          "left": {
+            "label": "You get",
+            "amount": 60,
+            "signed": true,
+            "tone": "receive",
+            "caption": "To receive"
+          },
+          "right": {
+            "label": "You paid",
+            "amount": 120,
+            "signed": false,
+            "tone": "ink",
+            "caption": "Your share $60.00"
+          },
+          "summary": null
+        }
+      },
+      {
+        "input": {
+          "myNet": -45.5,
+          "paid": 10,
+          "share": 55.5,
+          "group": null
+        },
+        "result": {
+          "left": {
+            "label": "You owe",
+            "amount": -45.5,
+            "signed": true,
+            "tone": "pay",
+            "caption": "To pay"
+          },
+          "right": {
+            "label": "You paid",
+            "amount": 10,
+            "signed": false,
+            "tone": "ink",
+            "caption": "Your share $55.50"
+          },
+          "summary": null
+        }
+      },
+      {
+        "input": {
+          "myNet": 0,
+          "paid": 0,
+          "share": 0,
+          "group": null
+        },
+        "result": {
+          "left": {
+            "label": "You",
+            "amount": 0,
+            "signed": true,
+            "tone": "even",
+            "caption": "Square"
+          },
+          "right": {
+            "label": "You paid",
+            "amount": 0,
+            "signed": false,
+            "tone": "ink",
+            "caption": "Your share $0.00"
+          },
+          "summary": null
+        }
+      },
+      {
+        "input": {
+          "myNet": 0.004,
+          "paid": 5,
+          "share": 5,
+          "group": null
+        },
+        "result": {
+          "left": {
+            "label": "You",
+            "amount": 0,
+            "signed": true,
+            "tone": "even",
+            "caption": "Square"
+          },
+          "right": {
+            "label": "You paid",
+            "amount": 5,
+            "signed": false,
+            "tone": "ink",
+            "caption": "Your share $5.00"
+          },
+          "summary": null
+        }
+      },
+      {
+        "input": {
+          "myNet": 100,
+          "paid": 200,
+          "share": 100,
+          "group": {
+            "name": "Couple",
+            "balance": 30,
+            "otherMemberNames": [
+              "Bob"
+            ]
+          }
+        },
+        "result": {
+          "left": {
+            "label": "Inside Couple",
+            "amount": 70,
+            "signed": true,
+            "tone": "receive",
+            "caption": "Bob owes you"
+          },
+          "right": {
+            "label": "Outside Couple",
+            "amount": 30,
+            "signed": true,
+            "tone": "receive",
+            "caption": "Couple receives"
+          },
+          "summary": "You are ahead $100.00"
+        }
+      },
+      {
+        "input": {
+          "myNet": -40,
+          "paid": 0,
+          "share": 40,
+          "group": {
+            "name": "Squad",
+            "balance": -15,
+            "otherMemberNames": [
+              "A",
+              "B"
+            ]
+          }
+        },
+        "result": {
+          "left": {
+            "label": "Inside Squad",
+            "amount": -25,
+            "signed": true,
+            "tone": "pay",
+            "caption": "You owe the rest of Squad"
+          },
+          "right": {
+            "label": "Outside Squad",
+            "amount": -15,
+            "signed": true,
+            "tone": "pay",
+            "caption": "Squad pays"
+          },
+          "summary": "You are short $40.00"
+        }
+      }
+    ],
+    "cards": [
+      {
+        "kind": "expense_added",
+        "isMine": true,
+        "result": {
+          "variant": "expense",
+          "icon": "💳",
+          "whoLabel": "You added"
+        }
+      },
+      {
+        "kind": "expense_added",
+        "isMine": false,
+        "result": {
+          "variant": "expense",
+          "icon": "💳",
+          "whoLabel": "Alice added"
+        }
+      },
+      {
+        "kind": "settlement_recorded",
+        "isMine": true,
+        "result": {
+          "variant": "settlement",
+          "icon": "🤝",
+          "whoLabel": "You recorded settlement"
+        }
+      },
+      {
+        "kind": "settlement_recorded",
+        "isMine": false,
+        "result": {
+          "variant": "settlement",
+          "icon": "🤝",
+          "whoLabel": "Alice recorded settlement"
+        }
+      },
+      {
+        "kind": "expense_disputed",
+        "isMine": true,
+        "result": {
+          "variant": "dispute",
+          "icon": "⚠️",
+          "whoLabel": "You disputed"
+        }
+      },
+      {
+        "kind": "expense_disputed",
+        "isMine": false,
+        "result": {
+          "variant": "dispute",
+          "icon": "⚠️",
+          "whoLabel": "Alice disputed"
+        }
+      },
+      {
+        "kind": "expense_dispute_resolved",
+        "isMine": true,
+        "result": {
+          "variant": "resolved",
+          "icon": "✅",
+          "whoLabel": "Dispute resolved"
+        }
+      },
+      {
+        "kind": "expense_dispute_resolved",
+        "isMine": false,
+        "result": {
+          "variant": "resolved",
+          "icon": "✅",
+          "whoLabel": "Dispute resolved"
+        }
+      },
+      {
+        "kind": "expense_link",
+        "isMine": true,
+        "result": {
+          "variant": "link",
+          "icon": "🔗",
+          "whoLabel": "You linked"
+        }
+      },
+      {
+        "kind": "expense_link",
+        "isMine": false,
+        "result": {
+          "variant": "link",
+          "icon": "🔗",
+          "whoLabel": "Alice linked"
+        }
+      },
+      {
+        "kind": "expense_deleted",
+        "isMine": true,
+        "result": {
+          "variant": "deleted",
+          "icon": "🗑️",
+          "whoLabel": "You deleted"
+        }
+      },
+      {
+        "kind": "expense_deleted",
+        "isMine": false,
+        "result": {
+          "variant": "deleted",
+          "icon": "🗑️",
+          "whoLabel": "Alice deleted"
+        }
+      },
+      {
+        "kind": "expense_restored",
+        "isMine": true,
+        "result": {
+          "variant": "restored",
+          "icon": "♻️",
+          "whoLabel": "You restored"
+        }
+      },
+      {
+        "kind": "expense_restored",
+        "isMine": false,
+        "result": {
+          "variant": "restored",
+          "icon": "♻️",
+          "whoLabel": "Alice restored"
+        }
+      },
+      {
+        "kind": "settlement_confirmed",
+        "isMine": true,
+        "result": {
+          "variant": "confirmed",
+          "icon": "✅",
+          "whoLabel": "You confirmed settlement"
+        }
+      },
+      {
+        "kind": "settlement_confirmed",
+        "isMine": false,
+        "result": {
+          "variant": "confirmed",
+          "icon": "✅",
+          "whoLabel": "Alice confirmed settlement"
+        }
+      },
+      {
+        "kind": "text",
+        "isMine": true,
+        "result": {
+          "variant": "expense",
+          "icon": "💳",
+          "whoLabel": "You added"
+        }
+      },
+      {
+        "kind": "text",
+        "isMine": false,
+        "result": {
+          "variant": "expense",
+          "icon": "💳",
+          "whoLabel": "Alice added"
+        }
+      }
+    ],
+    "bodies": [
+      {
+        "kind": "expense_added",
+        "expense": {
+          "title": "Ski Pass",
+          "amount": 150,
+          "currency": "EUR"
+        },
+        "result": "Added Ski Pass · EUR 150.00"
+      },
+      {
+        "kind": "expense_added",
+        "expense": {
+          "title": "Ski Pass",
+          "amount": 150,
+          "currency": "EUR",
+          "note": "too much"
+        },
+        "result": "Added Ski Pass · EUR 150.00"
+      },
+      {
+        "kind": "settlement_recorded",
+        "expense": {
+          "title": "Ski Pass",
+          "amount": 150,
+          "currency": "EUR"
+        },
+        "result": "Settlement Ski Pass · EUR 150.00"
+      },
+      {
+        "kind": "settlement_recorded",
+        "expense": {
+          "title": "Ski Pass",
+          "amount": 150,
+          "currency": "EUR",
+          "note": "too much"
+        },
+        "result": "Settlement Ski Pass · EUR 150.00"
+      },
+      {
+        "kind": "expense_disputed",
+        "expense": {
+          "title": "Ski Pass",
+          "amount": 150,
+          "currency": "EUR"
+        },
+        "result": "Disputed Ski Pass"
+      },
+      {
+        "kind": "expense_disputed",
+        "expense": {
+          "title": "Ski Pass",
+          "amount": 150,
+          "currency": "EUR",
+          "note": "too much"
+        },
+        "result": "Disputed Ski Pass — too much"
+      },
+      {
+        "kind": "expense_dispute_resolved",
+        "expense": {
+          "title": "Ski Pass",
+          "amount": 150,
+          "currency": "EUR"
+        },
+        "result": "Dispute resolved: Ski Pass"
+      },
+      {
+        "kind": "expense_dispute_resolved",
+        "expense": {
+          "title": "Ski Pass",
+          "amount": 150,
+          "currency": "EUR",
+          "note": "too much"
+        },
+        "result": "Dispute resolved: Ski Pass"
+      },
+      {
+        "kind": "expense_deleted",
+        "expense": {
+          "title": "Ski Pass",
+          "amount": 150,
+          "currency": "EUR"
+        },
+        "result": "Deleted Ski Pass · EUR 150.00"
+      },
+      {
+        "kind": "expense_deleted",
+        "expense": {
+          "title": "Ski Pass",
+          "amount": 150,
+          "currency": "EUR",
+          "note": "too much"
+        },
+        "result": "Deleted Ski Pass · EUR 150.00"
+      },
+      {
+        "kind": "expense_restored",
+        "expense": {
+          "title": "Ski Pass",
+          "amount": 150,
+          "currency": "EUR"
+        },
+        "result": "Restored Ski Pass · EUR 150.00"
+      },
+      {
+        "kind": "expense_restored",
+        "expense": {
+          "title": "Ski Pass",
+          "amount": 150,
+          "currency": "EUR",
+          "note": "too much"
+        },
+        "result": "Restored Ski Pass · EUR 150.00"
+      },
+      {
+        "kind": "settlement_confirmed",
+        "expense": {
+          "title": "Ski Pass",
+          "amount": 150,
+          "currency": "EUR"
+        },
+        "result": "Confirmed settlement Ski Pass · EUR 150.00"
+      },
+      {
+        "kind": "settlement_confirmed",
+        "expense": {
+          "title": "Ski Pass",
+          "amount": 150,
+          "currency": "EUR",
+          "note": "too much"
+        },
+        "result": "Confirmed settlement Ski Pass · EUR 150.00"
+      }
+    ]
+  },
   "cleanedPassenger": "Doe/john Mr",
   "resolvedAirport": "JFK",
   "passStub": {
