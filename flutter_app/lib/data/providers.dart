@@ -109,6 +109,8 @@ final expenseRepositoryProvider = Provider<ExpenseRepository>((ref) => DriftExpe
 final receiptStoreProvider = Provider<ReceiptStore>((ref) => ReceiptStore(ref.watch(appDatabaseProvider)));
 final memberRepositoryProvider = Provider<MemberRepository>(
     (ref) => DriftMemberRepository(ref.watch(appDatabaseProvider), ref.watch(outboxStoreProvider), _requestSync(ref)));
+final messageRepositoryProvider = Provider<MessageRepository>(
+    (ref) => DriftMessageRepository(ref.watch(appDatabaseProvider), ref.watch(outboxStoreProvider), _requestSync(ref)));
 final categoryRepositoryProvider = Provider<CategoryRepository>(
     (ref) => DriftCategoryRepository(ref.watch(appDatabaseProvider), ref.watch(outboxStoreProvider), _requestSync(ref)));
 

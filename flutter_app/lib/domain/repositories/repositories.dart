@@ -1,11 +1,15 @@
 import '../models/category.dart';
 import '../logic/expense_form_logic.dart' show ExpenseSubmission;
+import '../models/checklist_item.dart';
 import '../models/expense.dart';
 import '../models/expense_io.dart';
 import '../models/group.dart';
 import '../models/join_share.dart';
 import '../models/member.dart';
+import '../models/travel_pass.dart';
 import '../models/trip.dart';
+import '../models/trip_message.dart';
+import '../models/trip_note.dart';
 
 /// UI reads only these streams (backed by local storage); writes are
 /// optimistic: they update local state and queue a sync mutation atomically.
@@ -40,6 +44,21 @@ abstract class TripRepository {
   /// Per-trip FX overrides + markup. Any participant may write (collab RPC).
   Future<void> setFxConfig(String id, TripFxConfig config);
   Future<void> setSplitExclusionDefaults(String id, Map<String, List<String>> defaults);
+
+  /// Organizer / contributor / viewer. Owner/admin write (trips.member_roles).
+  Future<void> setMemberRole(String id, String memberId, String role);
+
+  /// Checklist, notes, and passes. Any participant may write (collab RPC).
+  Future<void> setChecklist(String id, List<ChecklistItem> items);
+  Future<void> setNotes(String id, List<TripNote> notes);
+  Future<void> setPasses(String id, List<TravelPass> passes);
+}
+
+abstract class MessageRepository {
+  Stream<List<TripMessage>> watch(String tripId);
+  Future<void> send({required String tripId, required String memberId, required String senderName, required String body});
+  Future<void> edit(String id, String body);
+  Future<void> delete(String id);
 }
 
 abstract class ExpenseRepository {

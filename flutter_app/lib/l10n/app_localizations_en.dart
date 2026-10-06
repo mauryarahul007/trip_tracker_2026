@@ -1368,4 +1368,99 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importNone => 'Nothing to import.';
+
+  @override
+  String get memAdd => 'Add person';
+
+  @override
+  String get memName => 'Name';
+
+  @override
+  String get memInvite => 'Invite';
+
+  @override
+  String get memArchived => 'Archived';
+
+  @override
+  String get memGroups => 'Groups';
+
+  @override
+  String get memAddGroup => 'Add group';
+
+  @override
+  String get memRoleOrganizer => 'Organizer';
+
+  @override
+  String get memRoleContributor => 'Contributor';
+
+  @override
+  String get memRoleViewer => 'Viewer';
+
+  @override
+  String get notesCheck => 'Checklist';
+
+  @override
+  String get notesNotes => 'Notes';
+
+  @override
+  String get notesChat => 'Chat';
+
+  @override
+  String get notesAddItem => 'Add item';
+
+  @override
+  String get notesAddNote => 'Add note';
+
+  @override
+  String get notesNoteTitle => 'Title';
+
+  @override
+  String get notesEmptyNotes => 'No notes yet.';
+
+  @override
+  String get notesPacking => 'Suggest packing';
+
+  @override
+  String get notesPasses => 'Passes';
+
+  @override
+  String get notesAddPass => 'Add pass';
+
+  @override
+  String get notesPassTitle => 'Title';
+
+  @override
+  String get notesPassFlight => 'Flight';
+
+  @override
+  String get notesPassTrain => 'Train';
+
+  @override
+  String get notesPassHotel => 'Hotel';
+
+  @override
+  String get notesPassFrom => 'From';
+
+  @override
+  String get notesPassTo => 'To';
+
+  @override
+  String notesProgress(int done, int total) {
+    return '$done of $total';
+  }
+
+  @override
+  String get chatHint => 'Message';
+
+  @override
+  String get chatEmpty => 'No messages yet.';
+
+  @override
+  String get chatPending => 'Pending';
+
+  @override
+  String get chatDeleted => 'Message deleted';
+
+  @override
+  String get chatEdit => 'Edit message';
 }

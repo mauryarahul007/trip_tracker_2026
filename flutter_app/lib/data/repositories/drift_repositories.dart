@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
@@ -6,11 +8,15 @@ import '../../domain/logic/expense_form_logic.dart';
 import '../../domain/logic/split_resolver.dart';
 import '../../domain/logic/trip_utilities.dart' show buildAutoGroupName;
 import '../../domain/models/category.dart';
+import '../../domain/models/checklist_item.dart';
 import '../../domain/models/expense_io.dart';
 import '../../domain/models/expense.dart';
 import '../../domain/models/group.dart';
 import '../../domain/models/member.dart';
+import '../../domain/models/travel_pass.dart';
 import '../../domain/models/trip.dart';
+import '../../domain/models/trip_message.dart';
+import '../../domain/models/trip_note.dart';
 import '../../domain/repositories/repositories.dart';
 import '../local/app_database.dart';
 import '../local/entity_codec.dart';
@@ -176,6 +182,31 @@ class DriftTripRepository extends _DriftRepo implements TripRepository {
         if (await _patchTrip(id, {'fxConfig': config.toJson()}) == null) return;
         await outbox.enqueue(OutboxType.setTripCollabField, {'id': id, 'field': 'fx_config', 'value': config.toJson()}, tripId: id);
       });
+
+  @override
+  Future<void> setMemberRole(String id, String memberId, String role) => write(() async {
+        final e = await (db.select(db.tripsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+        final trip = e == null ? null : entryToTrip(e);
+        if (trip == null) return;
+        final roles = {...trip.memberRoles, memberId: role};
+        if (await _patchTrip(id, {'memberRoles': roles}) == null) return;
+        await outbox.enqueue(OutboxType.updateTripState, {'id': id, 'patch': {'member_roles': roles}}, tripId: id);
+      });
+
+  Future<void> _collab(String id, String jsonKey, Object value, String field) => write(() async {
+        if (await _patchTrip(id, {jsonKey: value}) == null) return;
+        await outbox.enqueue(OutboxType.setTripCollabField, {'id': id, 'field': field, 'value': value}, tripId: id);
+      });
+
+  @override
+  Future<void> setChecklist(String id, List<ChecklistItem> items) =>
+      _collab(id, 'checklist', [for (final i in items) i.toJson()], 'checklist');
+
+  @override
+  Future<void> setNotes(String id, List<TripNote> notes) => _collab(id, 'notes', [for (final n in notes) n.toJson()], 'notes');
+
+  @override
+  Future<void> setPasses(String id, List<TravelPass> passes) => _collab(id, 'passes', [for (final p in passes) p.toJson()], 'passes');
 
   @override
   Future<void> deleteTrip(String id) => write(() async {
@@ -602,5 +633,85 @@ class DriftCategoryRepository extends _DriftRepo implements CategoryRepository {
         final c = await (db.select(db.categoriesTable)..where((t) => t.id.equals(id))).getSingleOrNull();
         await (db.delete(db.categoriesTable)..where((t) => t.id.equals(id))).go();
         await outbox.enqueue(OutboxType.deleteCategory, {'id': id}, tripId: c?.tripId);
+      });
+}
+
+class DriftMessageRepository extends _DriftRepo implements MessageRepository {
+  DriftMessageRepository(super.db, super.outbox, super.requestSync, {super.now, super.uuid});
+
+  TripMessage _decode(TripMessageEntry r) {
+    final raw = r.domainJson;
+    if (raw != null && raw.isNotEmpty) {
+      return TripMessage.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    }
+    return TripMessage(
+      id: r.id,
+      tripId: r.tripId,
+      memberId: r.userId,
+      body: r.message,
+      eventKind: r.kind,
+      createdAt: DateTime.tryParse(r.createdAt)?.millisecondsSinceEpoch ?? 0,
+    );
+  }
+
+  Future<void> _put(TripMessage m, String senderName) => db.into(db.tripMessagesTable).insertOnConflictUpdate(
+        TripMessagesTableCompanion.insert(
+          id: m.id,
+          tripId: m.tripId,
+          userId: m.memberId,
+          senderName: senderName,
+          kind: m.eventKind ?? 'text',
+          message: m.body,
+          createdAt: DateTime.fromMillisecondsSinceEpoch(m.createdAt, isUtc: true).toIso8601String(),
+          domainJson: Value(jsonEncode(m.toJson())),
+        ),
+      );
+
+  @override
+  Stream<List<TripMessage>> watch(String tripId) => (db.select(db.tripMessagesTable)..where((t) => t.tripId.equals(tripId))).watch().map((rows) {
+        final out = [for (final r in rows) _decode(r)]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        return out;
+      });
+
+  @override
+  Future<void> send({required String tripId, required String memberId, required String senderName, required String body}) => write(() async {
+        final m = TripMessage(
+          id: uuid.v4(),
+          tripId: tripId,
+          memberId: memberId,
+          body: body.trim(),
+          eventKind: 'text',
+          createdAt: nowMs,
+        );
+        await _put(m, senderName);
+        await outbox.enqueue(OutboxType.addMessage, {
+          'id': m.id,
+          'trip_id': tripId,
+          'member_id': memberId,
+          'body': m.body,
+          'kind': 'text',
+        }, tripId: tripId);
+      });
+
+  @override
+  Future<void> edit(String id, String body) => write(() async {
+        final row = await (db.select(db.tripMessagesTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+        if (row == null) return;
+        final next = _decode(row).copyWith(body: body.trim(), editedAt: nowMs);
+        await _put(next, row.senderName);
+        await outbox.enqueue(OutboxType.editMessage, {'id': id, 'body': next.body}, tripId: row.tripId);
+      });
+
+  @override
+  Future<void> delete(String id) => write(() async {
+        final row = await (db.select(db.tripMessagesTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+        if (row == null) return;
+        final deletedAt = nowMs;
+        final next = _decode(row).copyWith(deletedAt: deletedAt);
+        await _put(next, row.senderName);
+        await outbox.enqueue(OutboxType.deleteMessage, {
+          'id': id,
+          'deleted_at': DateTime.fromMillisecondsSinceEpoch(deletedAt, isUtc: true).toIso8601String(),
+        }, tripId: row.tripId);
       });
 }

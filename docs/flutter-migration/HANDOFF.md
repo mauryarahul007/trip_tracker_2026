@@ -340,7 +340,7 @@ This document records phase completion, architectural resolutions, deviations fr
 - `lib/app/`: single redirect-driven router, session providers, splash, sync lifecycle (start/foreground/connectivity/realtime pause), deep-link listener.
 - `features/auth`: login (email, Google, Apple on iOS, guest/demo, trip code), reset password (+recovery link), onboarding, app lock (flag + preference, 30 s timeout), delete account.
 - `features/trips`: trips list (sort, search, archive/delete with undo, sync chip + review sheet, create-trip sheet), join flow, public share page, invite sheet (code, QR, share, view-only link).
-- `features/trip_details`: shell with per-tab state, swipeable tabs, flag-driven bottom bar, tab trail back, Hero title; tab bodies are placeholders (Phase 7-8); settings is a stub (Phase 10).
+- `features/trip_details`: shell with per-tab state, swipeable tabs, flag-driven bottom bar, tab trail back, Hero title. Expenses, ledger, members, notes, and chat are built (Phases 7-8). Settings is a stub (Phase 10).
 - Backend-facing: outbox types `updateTripState`, `deleteTrip`; join/share repositories; first-touch signup attribution via `record_signup_source`.
 - Native config: Android intent filters (custom scheme + App Links for `trip-tracker.blackmaroon.in`), iOS URL scheme.
 - New deps: google_sign_in, sign_in_with_apple, local_auth, qr_flutter, share_plus, app_links, shared_preferences, crypto.
@@ -389,3 +389,19 @@ Voice, OCR, geotag (B-064, Phase 9). Push on expense/settlement (B-055, Phase 10
 
 ### Test harness (important)
 Drift runs outside `FakeAsync`. In widget tests use `real(tester, ...)` for every DB call and `settle(tester)` to pump; never put two writes in one `real` block, and don't use bare `pumpAndSettle` on DB-backed screens.
+
+---
+
+## Phase 8 (FE): Members, notes, text chat, manual passes
+
+- **Status:** **DONE** for slices A–D. Voice, media, reactions, Tripbot, scanner, PDF, brightness, and the document vault stay out. ADR 267.
+- **Date:** 2026-10-06
+
+### Delivered
+- **Members:** roster, add by name, rename, roles (`member_roles`), archive (history stays, new splits drop them), groups, invite via the Phase 6 share sheet, balance line when `enableMemberMoneyRow` is on.
+- **Notes:** checklist (five categories, assignee, complete, reorder, progress) and notes with link detection. Writes go through `setTripCollabField`. A focused note does not take a remote cursor jump. Packing suggestions sit behind `enablePackingAssistant`.
+- **Chat:** `MessageRepository` watches `trip_messages` and queues send/edit/delete. Quiet chat is a Notes segment unless `enableChatFirstNav` is on. Day groups, text bubbles, expense cards that open the expense, local unread dot.
+- **Passes:** manual flight, train, or hotel. The card list stays empty until a pass exists. `enableTravelPasses` gates the add control.
+
+### Still later
+Logged in [`BACKLOG.md`](BACKLOG.md): contacts (B-038), date ranges (B-083), typing (B-023), reactions (B-084), attachments (B-085), voice notes (B-086), read receipts (B-087), Tripbot (B-088), last seen (B-089), scanner/PDF/brightness (B-090), full packing modal (B-091), vault (B-020). Two-account proof (B-080), 1,000-message fps (B-081), and the iOS keyboard (B-082) are unverified. Maps, OCR, and voice expense entry are Phase 9 (B-064, B-100). Push and the notification bell are Phase 10 (B-035, B-055, B-120).

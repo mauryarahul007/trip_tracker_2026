@@ -771,5 +771,42 @@
       "count": {"type": "int"}
     }
   },
-  "importNone": "Nothing to import."
+  "importNone": "Nothing to import.",
+  "memAdd": "Add person",
+  "memName": "Name",
+  "memInvite": "Invite",
+  "memArchived": "Archived",
+  "memGroups": "Groups",
+  "memAddGroup": "Add group",
+  "memRoleOrganizer": "Organizer",
+  "memRoleContributor": "Contributor",
+  "memRoleViewer": "Viewer",
+  "notesCheck": "Checklist",
+  "notesNotes": "Notes",
+  "notesChat": "Chat",
+  "notesAddItem": "Add item",
+  "notesAddNote": "Add note",
+  "notesNoteTitle": "Title",
+  "notesEmptyNotes": "No notes yet.",
+  "notesPacking": "Suggest packing",
+  "notesPasses": "Passes",
+  "notesAddPass": "Add pass",
+  "notesPassTitle": "Title",
+  "notesPassFlight": "Flight",
+  "notesPassTrain": "Train",
+  "notesPassHotel": "Hotel",
+  "notesPassFrom": "From",
+  "notesPassTo": "To",
+  "notesProgress": "{done} of {total}",
+  "@notesProgress": {
+    "placeholders": {
+      "done": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "chatHint": "Message",
+  "chatEmpty": "No messages yet.",
+  "chatPending": "Pending",
+  "chatDeleted": "Message deleted",
+  "chatEdit": "Edit message"
 }

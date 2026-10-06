@@ -92,6 +92,18 @@ class SupabaseOutboxRemote implements OutboxRemote {
         await db.from('categories').upsert(p['row'] as Map<String, dynamic>);
       case OutboxType.deleteCategory:
         await db.from('categories').delete().eq('id', p['id'] as String);
+      case OutboxType.addMessage:
+        await db.from('trip_messages').upsert({
+          'id': p['id'],
+          'trip_id': p['trip_id'],
+          'member_id': p['member_id'],
+          'body': p['body'],
+          'kind': p['kind'] ?? 'text',
+        });
+      case OutboxType.editMessage:
+        await db.rpc<dynamic>('edit_trip_message', params: {'p_message_id': p['id'], 'p_body': p['body']});
+      case OutboxType.deleteMessage:
+        await db.from('trip_messages').update({'deleted_at': p['deleted_at']}).eq('id', p['id'] as String);
       default:
         throw RemoteFailure(FailureKind.permanent, 'unknown outbox type ${item.type}');
     }

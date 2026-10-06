@@ -1,6 +1,6 @@
 # Flutter migration backlog (not done / not verified)
 
-Living list of everything that was **deferred, skipped, or built but never verified** during the Flutter migration. Add an entry the moment something is left open; tick it (and note the commit/ADR) when closed. Phase `HANDOFF.md` entries describe what shipped; this file is the single place to find what is still owed.
+Living list of everything that was **deferred, skipped, or built but never verified** during the Flutter migration. Add an entry the moment something is left out of a build or is not being worked on, for every phase (including phases that have not started). Tick it (and note the commit/ADR) when closed. Phase `HANDOFF.md` entries describe what shipped; this file is the single place to find what is still owed.
 
 **How to read:** `Status` = `open` (nothing done), `unverified` (built, not run on a real device/staging), `deferred` (deliberately postponed). `Blocker` says what you need before it can be closed. `Owner phase` = where it naturally gets done.
 
@@ -30,11 +30,11 @@ Living list of everything that was **deferred, skipped, or built but never verif
 
 | ID | From | Item | Status | Why deferred | How to close | Owner phase |
 |----|------|------|--------|--------------|--------------|-------------|
-| B-020 | P5 | SQLCipher / encrypted storage for document vault and pass attachments | deferred | Needs the vault/passes UI to exist (ADR 261) | Decide SQLCipher vs key-in-secure-storage, implement with passes | 8 |
+| B-020 | P5 | SQLCipher / encrypted storage for document vault and pass attachments | deferred | Manual passes shipped in Phase 8 without attachments (ADR 267). Vault stays off. | Decide SQLCipher vs key-in-secure-storage when the vault flag is built | 9 |
 | B-021 | P5 | Background sync (`workmanager`: iOS BGAppRefresh / Android WorkManager) | deferred | Foreground sync is the contract; best-effort only | Add plugin, document platform limits | 11/12 |
-| B-022 | P5 | Repositories not built yet: passes, profile, locations, receipts/storage, growth telemetry, bugs/feedback, messages (read side), notifications (read side), push tokens, settlements | deferred | Built by the UI phase that needs each | Add with their phases | 7-10 |
-| B-023 | P5 | Realtime: typing/presence channels (`trip_chat_typing`, `trip_presence`) | deferred | Ephemeral chat UX | Add with chat | 8 |
-| B-024 | P5 | Sync conflict resolver UI (data is exposed as a stream) | deferred | UI belongs with expenses | Build `ConflictResolverModal` equivalent | 7 |
+| B-022 | P5 | Repositories not built yet: profile, locations, growth telemetry, bugs/feedback, notifications (read side), push tokens | deferred | Messages (text) and passes (collab JSON) shipped in Phase 8. Receipts and settlements shipped in Phase 7. | Add the rest with their phases | 9-10 |
+| B-023 | P5 | Realtime: typing/presence channels (`trip_chat_typing`, `trip_presence`) | deferred | Text chat shipped without typing or presence (ADR 267) | Add when those labs flags are turned on | later |
+| B-024 | P5 | ~~Sync conflict resolver UI (data is exposed as a stream)~~ | **closed (P7 slice E)** | Ledger sheet: keep mine dismisses; keep theirs calls `adoptServerCopy` (B-060) | n/a | 7 |
 | B-025 | P5 | ~~Tombstones hard-delete expenses, so the 24 h recycle bin is not mirrored to other devices~~ | **closed (P7 slice A)** | Pull sync now also reads soft-deleted rows (`recycledExpenses`) and keeps them restorable; covered by a pull test | n/a | 7 |
 | B-026 | P5 | Outbox payload compaction (add then edit of the same pending expense stays as two items) | deferred | Works, just chattier | Coalesce per entity in `OutboxStore.enqueue` | 11 |
 | B-027 | P5 | Domain-layer purity lint is a test, not an analyzer rule | deferred | Test enforces it | Optional custom lint | 12 |
@@ -45,8 +45,8 @@ Living list of everything that was **deferred, skipped, or built but never verif
 | B-034 | P6 | Trip settings screen is a stub | deferred | Phase 10 | Build settings | 10 |
 | B-035 | P6 | Notification bell in the trip header | deferred | Notifications UI is Phase 10 | Add bell + unread badge | 10 |
 | B-036 | P6 | App-lock enable/disable toggle has no UI (preference is only readable) | deferred | Settings screen | Add toggle calling `BiometricLockEnabled.setEnabled` | 10 |
-| B-037 | P6 | QR scanner for joining a trip | deferred | Needs `mobile_scanner` + camera permission | Add scanner, route result to `/join/:code` | 8/9 |
-| B-038 | P6 | Contacts picker in the invite sheet (`flutter_contacts` removed for now) | deferred | Permission plumbing | Add package + iOS/Android permission strings + rationale | 8 |
+| B-037 | P6 | QR scanner for joining a trip | deferred | Needs `mobile_scanner` + camera permission. Not in the Phase 8 build. | Add scanner, route result to `/join/:code` | 9 |
+| B-038 | P6 | Contacts picker in the invite sheet (`flutter_contacts` removed for now) | deferred | Phase 8 invite reuses the share sheet. Contacts stay out. | Add package + iOS/Android permission strings + rationale | later |
 | B-039 | P6 | `/live/:token` read-only live-location page is a shell | deferred | Map is Phase 9 | Implement with MapLibre | 9 |
 | B-040 | P6 | Invite-conversion growth behaviour (`enableInviteConversion` default attribution on join, `get_public_growth_flags`) | deferred | Growth flag plumbing not ported | Port `fetchPublicGrowthFlags` + attribution default | 10 |
 | B-041 | P6 | Share-link/invite push notification to existing members when someone joins (`member_joined`) | deferred | Push sending is Phase 10 | Call `send-push` after claim | 10 |
@@ -79,6 +79,96 @@ Living list of everything that was **deferred, skipped, or built but never verif
 | B-068 | No screen-level golden-fixture balance test, no golden images, no 200%-text-scale pass, no 500-expense performance profile | done | Widget test asserts ₹60/₹30 strings, 200% text scale, and a 500-row list that offers Load more. Device fps is a manual step in FLUTTER-P7-LOOP | 7 |
 | B-069 | `ReceiptStore.stage` uses synchronous file copy (<= 5 MB cap) because async file I/O never completes under the widget-test fake clock | accepted | Revisit if large photos cause jank | 7 |
 | B-070 | Burn-rate and multi-trip analytics charts (`fl_chart`) were not built in Phase 7 | deferred | T3; add charts in a later slice if the pack is turned on | 9 |
+| B-071 | Device checks still open after the widget tests: 500-row scroll fps, ledger open under 300 ms, TalkBack/VoiceOver on add-expense and settle | unverified | Needs a device. Widget coverage is B-068. Steps are in FLUTTER-P7-LOOP | 7, 12 |
+
+## Phase 8 additions
+
+Text chat, roster, checklist, notes, and manual passes shipped (ADR 267). These were left out of that build.
+
+| ID | Item | Status | Why / how to close | Owner phase |
+|----|------|--------|--------------------|-------------|
+| B-080 | Two-account staging: chat lines and concurrent checklist edits converge like the web; 20 offline sends do not duplicate | unverified | Needs a staging project (same limit as B-001). Steps in FLUTTER-P8 | 8, 11 |
+| B-081 | A 1,000-message thread scrolls at about 55 fps | unverified | Device profile build. The widget test only checks a short thread | 8, 12 |
+| B-082 | iOS chat composer stays above the keyboard (`IOS_DEFECTS.md`) | unverified | iPhone or Codemagic simulator video. B-005 covers login and the trips list, not chat | 8, 12 |
+| B-083 | Per-member date ranges (`enableDateRangeMembership`, default off) | deferred | Flag stays off. No date modal on the roster | 8 |
+| B-084 | Chat reactions and replies (`enableChatReactionsAndReplies`) | deferred | Flag stays off. Text send/edit/delete only | 8 |
+| B-085 | Chat image attachments (`enableChatAttachments`) | deferred | Flag stays off. No camera or gallery attach, no upload progress | 8 |
+| B-086 | Chat voice notes (`enableChatVoiceNotes`) | deferred | Needs `record` / playback and a device. Flag stays off | 8 |
+| B-087 | Server read receipts (`enableChatReadReceipts`) | deferred | Unread is a local last-seen id. No `trip_chat_read_cursors` write | 8 |
+| B-088 | Tripbot natural-language expenses (`enableTripbotNlExpenses`) | deferred | Flag stays off. No parser in the composer | 8 |
+| B-089 | Member last seen (`enableMemberLastSeen`) | deferred | Not on the roster or in chat | 8 |
+| B-090 | Pass scanner, PDF import, and screen-brightness boost | deferred | Manual flight/train/hotel add shipped. No `mobile_scanner`, `pdfrx`, or brightness API. Boarding-gate scan is B-101 | 8, 9 |
+| B-091 | Full packing assistant modal | deferred | Suggest packing adds the local suggestion list only. The web modal and any remote/LLM path are not ported | 8, 9 |
+
+## Phase 9 (not started)
+
+Travel, Pro, and Labs beyond what Phases 7–8 already shipped. Each item stays behind its existing flag. Do not rebuild server calendar sync.
+
+| ID | Item | Status | Why / how to close | Owner phase |
+|----|------|--------|--------------------|-------------|
+| B-100 | Maps and journey: trip map, route stops, geotagged expense pins, destination photos, offline tiles, map collapsed by default | open | Phase 9A. MapLibre. Place search overlaps B-032 | 9 |
+| B-101 | Boarding-pass gate scanner (`enableGateScanner`) | open | Camera scan into the pass wallet. Join-trip QR is B-037, not this | 9 |
+| B-102 | Flight radar status (`enableFlightRadar`) | open | Phase 9 travel status | 9 |
+| B-103 | Add-to-calendar / ICS export (`enableIcsExport`) | open | Share an `.ics` file. Do not rebuild the removed server calendar sync | 9 |
+| B-104 | Live location share, heartbeat, member map, and a finished `/live/:token` page (`enableLiveLocationShare`) | open | Phase 9B. The page is still a shell (B-039). Background location and the privacy indicator are part of this | 9 |
+| B-105 | Weather itinerary nudges (`enableWeatherItineraryNudges`) | open | Port `weatherService` with cache. No location permission | 9 |
+| B-106 | Offline trip snapshot (`enableOfflineSnapshot`) | open | Export/import a snapshot and show the offline banner | 9 |
+| B-107 | Trip Wrapped slides and share image (`enableTripWrapped`) | open | Phase 9D. Flag is default on in the registry; there is no screen | 9 |
+| B-108 | Achievements and badges (`enableAchievements`) | open | Labs. Port only if the owner turns the flag on | 9 |
+| B-109 | Traveler passport (`enableTravelerPassport`) | open | Labs. Same gate as B-108 | 9 |
+| B-110 | Next Up capsule and progressive Next Up (`enableNextUpCapsule`, `enableProgressiveNextUp`) | open | Trip cards still lack this (also B-031) | 9 |
+| B-111 | Keyword tagging (`enableKeywordTagging`) | open | Labs. Category keywords from the web util | 9 |
+| B-112 | Auto currency detection (`enableAutoCurrencyDetection`) | open | Pro. Country map exists in domain logic; the form does not use it | 9 |
+| B-113 | Expense photo linking (`enableExpensePhotoLinking`) | open | Pro. Receipt upload exists; linking a photo as the web does is not built | 9 |
+| B-114 | Command palette | deferred | Phase 9D says omit on mobile unless the parity matrix requires it. No matrix row today | 9 |
+| B-115 | Trip media gallery extras | open | Phase 9D. Image attach in chat is B-085 | 9 |
+
+## Phase 10 (not started)
+
+Settings, notifications, push, flags in the UI, feedback, and profile. Pieces already owed: settings stub (B-034), notification bell (B-035), app-lock toggle (B-036), expense/join push (B-055, B-041), profile and push-token repositories (B-022).
+
+| ID | Item | Status | Why / how to close | Owner phase |
+|----|------|--------|--------------------|-------------|
+| B-120 | Push end to end: FCM/APNs, token register and unregister, tap-through deep link, foreground banner | open | Phase 10.1. Device matrix in the phase file | 10 |
+| B-121 | In-app notification list, grouping (`enableNotificationGrouping`), mark read | open | Read repository is B-022 | 10 |
+| B-122 | Quiet hours, digest, and per-trip mute (`enableQuietHours`, `enableDigestNotifications`) | open | Server prefs, same as web | 10 |
+| B-123 | Local pass and settlement reminders | open | `flutter_local_notifications`, reschedule on boot, honour quiet hours | 10 |
+| B-124 | Full settings tree: profile, appearance, haptics, currency, storage, trip tools, about, diagnostics | open | Replaces the settings stub (B-034) | 10 |
+| B-125 | AMOLED theme (`enableAmoledTheme`) | open | Pro. Tokens exist; the theme is not wired | 10 |
+| B-126 | Data saver mode (`enableDataSaverMode`) | open | Pro. Settings row | 10 |
+| B-127 | Min-version gate and maintenance banner (fail open offline) | open | Phase 10.4 | 10 |
+| B-128 | Bug report and feature request (`enableFeatureSuggestions`), including screenshot and log attach | open | Phase 10.5. PII scrub required | 10 |
+| B-129 | What's New hub (`enableWhatsNewHub`) | open | Labs. Changelog content from the web | 10 |
+| B-130 | Growth telemetry and lifecycle nudges (`enableGrowthTelemetry`, `enableLifecycleNudges`) | open | Consent and flag gated. Buffered offline | 10 |
+| B-131 | Sync queue inspector (`enableSyncQueueInspector`) | open | Pro. Debug/staging surface for the outbox | 10 |
+| B-132 | Demo data seeding (`enableDemoSeeding`) | open | Labs. Ops-style seed, not a traveler default | 10 |
+| B-133 | Trip stack alphabetical sort (`enableTripStackSort`) | open | Pro. The 3D stack itself is B-030 | 10 |
+| B-134 | Extended undo (`enableExtendedUndo`) | open | Core flag default on; the longer undo window is not ported | 10 |
+| B-135 | Motion polish (`enableMotionPolish`) | deferred | B-058 shipped the other presentation flags. This visual pass was left | 12 |
+
+## Phase 11 (not started)
+
+Cutover ops. Nothing in this phase has been written yet.
+
+| ID | Item | Status | Why / how to close | Owner phase |
+|----|------|--------|--------------------|-------------|
+| B-140 | Legacy-data inventory (`contract/LEGACY_DATA.md`): unsynced Capacitor queue, guest trips, vault, local prefs | open | Phase 11.1 | 11 |
+| B-141 | Final Capacitor release spec: flush queue, migration banner, export for guest/vault data | open | Spec only until the owner approves the web change | 11 |
+| B-142 | Backup import contract for Flutter (id collisions, idempotent re-import) | open | Phase 10 builds the UI; this phase defines the contract | 11 |
+| B-143 | Observability by client (capacitor / flutter / web) and alert thresholds | open | Phase 11.4 | 11 |
+| B-144 | Staged rollout and rollback plan (`ROLLOUT.md`), including the contract-freeze window | open | Phase 11.5 | 11 |
+
+## Phase 12 (not started)
+
+Release gate. Device checks already listed above (B-004, B-005, B-007, B-043, B-071, B-081, B-082) close here if they are still open.
+
+| ID | Item | Status | Why / how to close | Owner phase |
+|----|------|--------|--------------------|-------------|
+| B-150 | Parity report: every T1/T2 row done or skipped with owner sign-off | open | Phase 12.1 | 12 |
+| B-151 | Full manual QA on the device matrix, failures filed in the bug tracker | open | Phase 12.2 | 12 |
+| B-152 | Performance budget recorded in `flutter_app/docs/PERF.md` | open | Phase 12.3 | 12 |
+| B-153 | Store listing, privacy labels, and release CI (TestFlight and Play internal) | open | Phase 12.6–12.7. Owner holds the store accounts | 12 |
+| B-154 | Capacitor sunset candidates list. Do not delete the wrapper without owner approval | open | Phase 12.9. The web app stays | 12 |
 
 ## Known limitations to remember
 

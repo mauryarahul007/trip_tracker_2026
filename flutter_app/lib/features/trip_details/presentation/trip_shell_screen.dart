@@ -12,6 +12,7 @@ import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/app_sheet.dart';
+import '../../chat/application/chat_providers.dart';
 import '../../trips/presentation/widgets/share_trip_sheet.dart';
 import '../application/trip_nav.dart';
 import '../domain/trip_tabs.dart';
@@ -159,7 +160,13 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 elevation: 8,
                 onTap: (i) => _goTab(tabs[i].index),
                 items: [
-                  for (final t in tabs) BottomNavigationBarItem(icon: Icon(tripTabIcon(t)), label: tripTabLabel(context, t)),
+                  for (final t in tabs)
+                    BottomNavigationBarItem(
+                      icon: t == TripNavTab.chat && ref.watch(chatUnreadProvider(widget.tripId))
+                          ? Badge(key: const Key('chat-tab-unread'), child: Icon(tripTabIcon(t)))
+                          : Icon(tripTabIcon(t)),
+                      label: tripTabLabel(context, t),
+                    ),
                 ],
               ),
       ),
@@ -254,7 +261,7 @@ class _KeepAliveState extends State<_KeepAlive> with AutomaticKeepAliveClientMix
   }
 }
 
-/// Stand-in for a tab body until its phase lands (7: expenses/ledger, 8: members/chat/notes).
+/// Stand-in kept for a tab that has no screen yet. Trip tabs no longer use it.
 class TripTabPlaceholder extends StatelessWidget {
   const TripTabPlaceholder({required this.tab, super.key});
   final TripNavTab tab;

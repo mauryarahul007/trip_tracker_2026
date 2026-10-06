@@ -19,6 +19,11 @@ class OutboxType {
   static const deleteGroup = 'deleteGroup';
   static const addCategory = 'addCategory';
   static const deleteCategory = 'deleteCategory';
+  // Flutter offline queue for the same trip_messages insert / edit RPC / soft
+  // delete the web calls online. Not part of the web SyncQueueItemType list.
+  static const addMessage = 'addMessage';
+  static const editMessage = 'editMessage';
+  static const deleteMessage = 'deleteMessage';
 
   static const all = [
     addExpense, updateExpense, deleteExpense, restoreExpense,
@@ -26,6 +31,7 @@ class OutboxType {
     deleteTrip, setTripCollabField, addMember,
     updateMember, toggleArchiveMember, deleteMember, createGroup,
     updateGroup, deleteGroup, addCategory, deleteCategory,
+    addMessage, editMessage, deleteMessage,
   ];
 }
 

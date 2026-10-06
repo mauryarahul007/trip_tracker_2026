@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-06 | flutter 3.44 | FLUTTER-P8 | [Flutter: members, notes, text chat, manual passes](#flutter-p8--flutter-members-notes-text-chat-manual-passes) |
 | 2026-10-06 | flutter 3.44 | FLUTTER-P7-LOOP | [Flutter: ledger loop, files, and exit bar](#flutter-p7-loop--flutter-ledger-loop-files-and-exit-bar) |
 | 2026-10-06 | flutter 3.44 | FLUTTER-P7-FORM-LEDGER | [Flutter: expense form and balances tab](#flutter-p7-form-ledger--flutter-expense-form-and-balances-tab) |
 | 2026-10-06 | flutter 3.44 | FLUTTER-P7-EXPENSES | [Flutter: Expenses tab (list, filters, recycle bin)](#flutter-p7-expenses--flutter-expenses-tab-list-filters-recycle-bin) |
@@ -1919,6 +1920,47 @@ Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, ne
 
 ### Pass
 - Balances match the web for the same expenses. UPI and the share PNG are confirmed on one Android device; iOS UPI query schemes are declared but need a device with a UPI app. The 500-row fps check is a device step (the widget test only checks that Load more appears).
+
+---
+
+## FLUTTER-P8 — Flutter: members, notes, text chat, manual passes
+
+**Scope:** Phase 8 slices A–D in `flutter_app/`. No new flags. No `record`, `just_audio`, `pdfrx`, `mobile_scanner`, or SQLCipher. Use a staging project for the two-account check. ADR 267.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Member balance line | `enableMemberMoneyRow` | ON |
+| Notes tab (checklist and notes) | `enableNotesAndChecklist` | ON |
+| Suggest packing | `enablePackingAssistant` | ON |
+| Text chat (quiet chat on Notes, or its own tab) | `enableTripChat` | ON |
+| Chat as the first tab | `enableChatFirstNav` | OFF |
+| Add-pass button and pass cards | `enableTravelPasses` | ON |
+| Date ranges, reactions, attachments, voice, typing, read receipts, Tripbot, document vault | matching labs/pro flags | OFF |
+
+### Steps
+1. Open a trip with three people and one expense you paid. Members lists everyone. Your row says "is owed" and the others say "owes". Turn `enableMemberMoneyRow` off and those amounts disappear; names stay.
+2. Add a person by name. Rename them. Set someone to Viewer. Archive them: they move under Archived and are not offered on a new split. They still appear in old expenses.
+3. Add a group of two people. Rename it. Delete it. Invite opens the same share sheet as the header (join code and share), not a contacts picker.
+4. Notes → Checklist. Add an item, assign it, mark it done, and move it up. "n of n" matches. Suggest packing adds the document and power-bank lines, and a second tap does not duplicate them.
+5. Notes → Notes. Add a note and type a sentence that includes `https://example.com`. The link is tappable. Keep typing while another phone updates the same note: the cursor does not jump.
+6. With chat-first off, Notes shows a Chat segment. A message from someone else shows an unread mark until you open Chat. Send a message while offline: it stays on screen with Pending, and leaves Pending after sync. Day headers group by date. Long-press your own message to edit it, or clear it to delete it.
+7. An expense, settlement, or dispute card in chat opens that expense.
+8. Turn chat-first on. Chat is its own tab and shows the same unread dot. Notes no longer has a Chat segment.
+9. With `enableTravelPasses` on and no passes, Notes shows Add pass and no pass cards. Add a flight (title, from, to). A card appears. Train and Hotel are the other types.
+10. Two accounts on staging: A adds a checklist item and a chat line; B sees both without restarting. This step needs a staging project (same limit as B-001 and B-005).
+11. On a device, open a chat with about 1,000 messages and scroll. It should stay near 55 fps. iOS keyboard: the composer stays above the keyboard. Neither check can be proven on this Linux machine.
+
+### Negative checks
+- Notes flag off and passes flag off and chat flag off: no Notes tab.
+- Packing flag off: no Suggest packing button.
+- Chat flag off: no Chat segment and no chat tab.
+- Chat-first off: Chat is not in the bottom bar.
+- Travel passes off: no Add pass control.
+- Date-range membership, contacts picker, voice notes, image attach, reactions, typing, read receipts, Tripbot, scanner, PDF import, screen brightness, and the document vault are absent.
+
+### Pass
+- Roster, roles, archive, and groups match the steps. Checklist and notes save for a non-owner member via the collab write. Chat text survives offline. Pass cards appear only after one is saved. The 1,000-message scroll and the two-account check are device/staging steps.
 
 ---
 

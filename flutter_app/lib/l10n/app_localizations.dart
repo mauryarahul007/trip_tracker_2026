@@ -2451,6 +2451,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nothing to import.'**
   String get importNone;
+
+  /// No description provided for @memAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add person'**
+  String get memAdd;
+
+  /// No description provided for @memName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get memName;
+
+  /// No description provided for @memInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite'**
+  String get memInvite;
+
+  /// No description provided for @memArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get memArchived;
+
+  /// No description provided for @memGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get memGroups;
+
+  /// No description provided for @memAddGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Add group'**
+  String get memAddGroup;
+
+  /// No description provided for @memRoleOrganizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer'**
+  String get memRoleOrganizer;
+
+  /// No description provided for @memRoleContributor.
+  ///
+  /// In en, this message translates to:
+  /// **'Contributor'**
+  String get memRoleContributor;
+
+  /// No description provided for @memRoleViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewer'**
+  String get memRoleViewer;
+
+  /// No description provided for @notesCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist'**
+  String get notesCheck;
+
+  /// No description provided for @notesNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notesNotes;
+
+  /// No description provided for @notesChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get notesChat;
+
+  /// No description provided for @notesAddItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add item'**
+  String get notesAddItem;
+
+  /// No description provided for @notesAddNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Add note'**
+  String get notesAddNote;
+
+  /// No description provided for @notesNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get notesNoteTitle;
+
+  /// No description provided for @notesEmptyNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes yet.'**
+  String get notesEmptyNotes;
+
+  /// No description provided for @notesPacking.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggest packing'**
+  String get notesPacking;
+
+  /// No description provided for @notesPasses.
+  ///
+  /// In en, this message translates to:
+  /// **'Passes'**
+  String get notesPasses;
+
+  /// No description provided for @notesAddPass.
+  ///
+  /// In en, this message translates to:
+  /// **'Add pass'**
+  String get notesAddPass;
+
+  /// No description provided for @notesPassTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get notesPassTitle;
+
+  /// No description provided for @notesPassFlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Flight'**
+  String get notesPassFlight;
+
+  /// No description provided for @notesPassTrain.
+  ///
+  /// In en, this message translates to:
+  /// **'Train'**
+  String get notesPassTrain;
+
+  /// No description provided for @notesPassHotel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotel'**
+  String get notesPassHotel;
+
+  /// No description provided for @notesPassFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get notesPassFrom;
+
+  /// No description provided for @notesPassTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get notesPassTo;
+
+  /// No description provided for @notesProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total}'**
+  String notesProgress(int done, int total);
+
+  /// No description provided for @chatHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get chatHint;
+
+  /// No description provided for @chatEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet.'**
+  String get chatEmpty;
+
+  /// No description provided for @chatPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get chatPending;
+
+  /// No description provided for @chatDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Message deleted'**
+  String get chatDeleted;
+
+  /// No description provided for @chatEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit message'**
+  String get chatEdit;
 }
 
 class _AppLocalizationsDelegate

@@ -4628,3 +4628,18 @@ This document logs all meaningful technical decisions, library choices, design p
   - **`validateAndSanitizeBackup` is unchanged** (fixture-locked). Backup import uses a separate `summarizeBackup`.
 * **Verification:** `flutter analyze` clean on the expense tree; expense and domain widget tests pass, including balance strings, UPI/share, close-out, quick add, categories, CSV, sticky headers, cross-trip search, 500 rows, and 200% text scale. Device fps, TalkBack/VoiceOver, and a real UPI app are manual steps in `docs/FEATURE_TEST_STEPS.md` (FLUTTER-P7-LOOP).
 * **Left for later:** voice, OCR, geotag (Phase 9), push (Phase 10), analytics charts, presets tip (B-065).
+
+## 267. Flutter Phase 8: members, notes, text chat, manual passes (v3.44.3)
+
+* **Date:** 2026-10-06
+* **Context:** Chat, members, and notes were still placeholders. The member repository, collab merge, and `trip_messages` table already existed. Voice, scanners, the vault, and a second device were out of this build.
+* **Decisions:**
+  - **No new flags and no new packages.** Roster, notes, chat, and passes read `flagProvider`. `record`, `just_audio`, `pdfrx`, `mobile_scanner`, and SQLCipher stay out.
+  - **Roles** patch `trips.member_roles` through `updateTripState` (owner/admin). Checklist, notes, and passes use `setTripCollabField`, same as FX, so any member can save.
+  - **Typing:** a note keeps a local draft. A remote copy does not replace the field while it is focused or while that draft has not been saved yet.
+  - **Chat lives on Notes** unless `enableChatFirstNav` is on. Unread is a local last-seen id in SharedPreferences, gated by `enableTripChat`. Read receipts stay off.
+  - **Text sends** are optimistic rows plus outbox types `addMessage`, `editMessage`, and `deleteMessage`. The web calls those table/RPC paths online and does not queue them. Edit uses `edit_trip_message`. Delete sets `deleted_at`.
+  - **Passes** are manual flight, train, or hotel cards. The card list stays empty until one pass exists. Scanner, PDF, brightness, and the vault stay deferred (B-020).
+  - **Left out:** contacts picker (B-038), date ranges, previous-member suggestions, images, voice, reactions, typing (B-023), Tripbot, live map, OCR, and push.
+* **Verification:** `flutter analyze` on the new screens is clean. `test/features/phase8_test.dart` covers the roster (including the money line, archive, group, and invite sheet), checklist, packing suggestions, a detected link, a manual pass, the unread mark, a text bubble, and an expense card. Two-account staging, 1,000-message fps, and the iOS keyboard are manual steps in `docs/FEATURE_TEST_STEPS.md` (FLUTTER-P8).
+* **Release:** v3.44.3 (patch bump). Flutter only; the web app is untouched.
