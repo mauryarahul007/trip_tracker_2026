@@ -4,11 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/auth_state.dart';
 import '../../../../data/providers.dart';
 import '../../../../domain/logic/currency.dart' show defaultExchangeRates;
+import '../../../../domain/models/trip.dart' show Trip;
+import '../../../../domain/logic/place_suggest.dart' show PlaceSuggestion, currencyForCountry;
 import '../../../../core/settings/app_settings.dart';
 import '../../../../domain/logic/trip_utilities.dart' show formatDateRange, guessTripCurrency, suggestTripName;
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../application/trips_providers.dart' show tripsProvider;
+import 'destination_field.dart';
 
 /// Seam so tests can pick dates without driving the Material picker.
 final dateRangePickerProvider = Provider<Future<DateTimeRange?> Function(BuildContext, DateTime, DateTimeRange?)>(
@@ -41,6 +45,7 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
   DateTimeRange? _range;
   String _currency = 'INR';
   bool _currencyTouched = false;
+  bool _nameTouched = false;
   bool _busy = false;
   String? _nameError;
   String? _dateError;
@@ -70,6 +75,13 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
       final guess = guessTripCurrency(v);
       if (guess != null && defaultExchangeRates.containsKey(guess)) setState(() => _currency = guess);
     }
+    // Suggest a trip name from the destination until the traveler types their own.
+    if (!_nameTouched) _name.text = suggestTripName(v);
+  }
+
+  void _onPlacePicked(PlaceSuggestion s) {
+    final code = currencyForCountry(s.countryCode);
+    if (!_currencyTouched && code != null && defaultExchangeRates.containsKey(code)) setState(() => _currency = code);
   }
 
   Future<void> _pickDates() async {
@@ -125,14 +137,20 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
               label: l10n.fieldTripName,
               hint: l10n.fieldTripNameHint,
               errorText: _nameError,
+              onChanged: (_) => _nameTouched = true,
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
-            AppTextField(
+            DestinationField(
               controller: _destination,
               label: l10n.fieldDestination,
+              enabled: ref.watch(flagProvider(('enableDestinationAutocomplete', null))).value ?? true,
+              pastDestinations: [
+                for (final t in ref.watch(tripsProvider).value ?? const <Trip>[])
+                  if ((t.destination ?? '').trim().isNotEmpty) t.destination!.trim(),
+              ],
               onChanged: _onDestinationChanged,
-              textInputAction: TextInputAction.next,
+              onPicked: _onPlacePicked,
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(

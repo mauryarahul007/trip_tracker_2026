@@ -92,6 +92,18 @@ final syncStatusProvider = StreamProvider<SyncStatus>((ref) {
       );
 });
 
+/// True while the coordinator is pulling. Local-only/guest sessions never sync.
+final tripsSyncingProvider = StreamProvider<bool>((ref) async* {
+  final a = ref.watch(authStateProvider);
+  if (!AppEnv.current.hasBackend || !a.isAuthenticated || a.isLocalOnly) {
+    yield false;
+    return;
+  }
+  final c = ref.watch(syncCoordinatorProvider);
+  yield c.isPulling;
+  yield* c.pullingChanges;
+});
+
 final syncItemsProvider = StreamProvider<List<OutboxItem>>((ref) => ref.watch(outboxStoreProvider).watchAll());
 
 /// Pull-to-refresh: push then pull when this account syncs; no-op otherwise.

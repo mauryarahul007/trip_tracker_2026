@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.48.2', '2026-10-08', [
+    'Behind the scenes: Flutter app now shows trips right after sign-in, suggests destinations while typing, and the Horizon navigation and Spend Insights are on by default. No change to the web app.',
+  ]),
   ChangelogEntry('3.48.1', '2026-10-08', [
     'Behind the scenes: fixed the Flutter CI fixtures-drift check. No change to the web app.',
   ]),
@@ -42,9 +45,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.43.10', '2026-10-02', [
     'The Members list and live packing updates from the previous release now reach the site. That build had stopped on a type error.',
-  ]),
-  ChangelogEntry('3.43.9', '2026-10-02', [
-    'Packing, notes, and passes now show up for everyone immediately, the same way a Talk message does.',
-    'The Members tab is a simple list: one role per person, the balance on the right, and groups in the same quiet style.',
   ]),
 ];

@@ -15,7 +15,7 @@ import '../core/telemetry/growth_telemetry.dart';
 import '../core/version/version_gate.dart';
 import '../data/sync/sync_engine.dart' show FlushResult;
 import '../features/feedback/application/feedback_providers.dart';
-import '../features/trips/application/trips_providers.dart' show SyncStatus, syncStatusProvider;
+import '../features/trips/application/trips_providers.dart' show SyncStatus, syncStatusProvider, tripsProvider;
 import '../features/notifications/application/notification_providers.dart';
 import '../data/supabase/supabase_gateway.dart';
 import '../data/providers.dart';
@@ -105,7 +105,7 @@ class _SyncLifecycleState extends ConsumerState<SyncLifecycle> with WidgetsBindi
   void _start(AuthState a) {
     _identify(a);
     if (!(AppEnv.current.hasBackend && a.isAuthenticated && !a.isLocalOnly)) return;
-    ref.read(syncCoordinatorProvider).start();
+    unawaited(ref.read(syncCoordinatorProvider).start().whenComplete(() => ref.invalidate(tripsProvider)));
     ref.read(realtimeManagerProvider).watchNotifications(a.userId!);
     unawaited(ref.read(notificationRepositoryProvider).refresh(a.userId!));
     _flagsAt = DateTime.now();

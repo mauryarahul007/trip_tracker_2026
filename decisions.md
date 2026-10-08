@@ -4895,3 +4895,11 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Context:** Flutter CI failed at the drift step: Node deps were not installed and generated Dart files were compared unformatted.
 * **Decision:** Run `npm ci --ignore-scripts` and `dart format` on `flutter_app/lib/domain/logic` before the diff; regenerate `changelog.g.dart`.
 * **Release Cut:** version bumped to `3.48.1` via `npm run release:patch`.
+
+---
+
+## 279. Flutter: first-sync fix, destination autocomplete, Horizon flags default ON
+* **Context:** On a phone the Trips list stayed blank after sign-in until the user left and returned; the create-trip form had no destination suggestions (the web app does); the Horizon UI sat behind off-by-default flags, so a fresh install looked unlike the mockups.
+* **Decision:** Coordinator exposes a pulling state and re-pulls once if the first pull finds no trips; the list reloads when the first pull lands and shows "Syncing your trips" meanwhile. Ported `placeSuggest` (gazetteer, fuzzy match, Photon, did-you-mean) to Dart behind `enableDestinationAutocomplete`. `enableHorizonNav` and `enableSpendInsights` are default ON and moved from the Pro to the Core pack (Pro must stay off by default).
+* **Trade-offs Accepted:** New strings are English-only until ARB regeneration; the gazetteer is copied by hand from the web list.
+* **Release Cut:** version bumped to `3.48.2` via `npm run release:patch`.

@@ -92,6 +92,29 @@ void main() {
     c.dispose();
     await db.close();
   });
+
+  test('pulling state toggles, and a first pull that finds no trips is retried exactly once', () async {
+    log.clear();
+    final db = AppDatabase.memory();
+    final store = OutboxStore(db);
+    final c = SyncCoordinator(
+      engine: SyncEngine(store: store, remote: _Remote(), isOnline: () async => true, ensureSession: () async => true),
+      pull: TripPullSync(db, store, _Reader()),
+      realtime: RealtimeManager(source: _Source(), db: db, onResync: (_) async {}),
+      retryEmptyAfter: const Duration(milliseconds: 20),
+    );
+    final states = <bool>[];
+    final sub = c.pullingChanges.listen(states.add);
+    expect(c.isPulling, isFalse);
+    await c.start();
+    expect(c.isPulling, isFalse);
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    expect(log.where((e) => e == 'pull'), hasLength(2));
+    expect(states, [true, false, true, false]);
+    await sub.cancel();
+    c.dispose();
+    await db.close();
+  });
 }
 
 class _ThrowingReader extends TripRemoteReader {

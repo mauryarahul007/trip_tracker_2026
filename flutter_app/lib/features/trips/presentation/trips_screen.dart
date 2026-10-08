@@ -154,6 +154,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     final l10n = context.l10n;
     final tokens = context.tokens;
     final lists = ref.watch(tripListsProvider);
+    final syncing = ref.watch(tripsSyncingProvider).value ?? false;
     final auth = ref.watch(authStateProvider);
     final sort = ref.watch(tripSortProvider);
     final horizon = ref.watch(horizonNavProvider);
@@ -282,6 +283,33 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                     data: (data) {
                       final active = data.active.where((t) => !_hidden.contains(t.id) && _matchesFilter(t)).toList();
                       final archived = data.archived.where((t) => !_hidden.contains(t.id)).toList();
+                      if (data.total == 0 && syncing) {
+                        return ListView(
+                          key: const Key('trips-syncing'),
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(16),
+                          children: [
+                            // ponytail: English-only until the ARB files are regenerated.
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Text('Syncing your trips…', style: TextStyle(color: tokens.textSecondary)),
+                            ),
+                            for (var i = 0; i < 3; i++)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: SkeletonLoader(
+                                  child: Container(
+                                    height: 96,
+                                    decoration: BoxDecoration(
+                                      color: tokens.bgSurface,
+                                      borderRadius: BorderRadius.circular(tokens.radiusMd),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      }
                       if (data.total == 0) {
                         return ListView(
                           physics: const AlwaysScrollableScrollPhysics(),

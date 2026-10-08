@@ -72,6 +72,31 @@ void main() {
       expect(find.text('My Trips'), findsNothing);
     });
 
+    testApp('destination autocomplete: suggests, picks, sets name and currency', (tester) async {
+      await pumpApp(tester, user: asha, overrides: [picker]);
+      await tester.tap(find.text('New Trip'));
+      await settle(tester);
+      await tester.enterText(find.byType(TextField).at(2), 'Toky');
+      await settle(tester);
+      expect(find.byKey(const Key('destination-suggestions')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('destination-option-Tokyo')));
+      await settle(tester);
+      expect(find.widgetWithText(TextField, 'Tokyo'), findsWidgets);
+      expect(find.widgetWithText(TextField, 'Tokyo trip'), findsOneWidget);
+      expect(find.text('JPY'), findsOneWidget);
+    });
+
+    testApp('destination autocomplete: offers a did-you-mean fix', (tester) async {
+      await pumpApp(tester, user: asha, overrides: [picker]);
+      await tester.tap(find.text('New Trip'));
+      await settle(tester);
+      await tester.enterText(find.byType(TextField).at(2), 'Munar');
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('destination-fix')));
+      await settle(tester);
+      expect(find.widgetWithText(TextField, 'Munnar'), findsOneWidget);
+    });
+
     testApp('blank name falls back to a suggestion from destination + dates', (tester) async {
       await pumpApp(tester, user: asha, overrides: [picker]);
       await tester.tap(find.text('New Trip'));

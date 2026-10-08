@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-08 | flutter 3.48.2 | FLUTTER-FIRSTSYNC | [Flutter: first sync, destination autocomplete, Horizon defaults](#flutter-firstsync--trips-after-sign-in-destination-autocomplete-horizon-defaults-v3482) |
 | 2026-10-08 | flutter 3.48 | FLUTTER-HORIZON | [Flutter: Horizon nav and spend insights](#flutter-horizon--horizon-nav-and-spend-insights-v3480) |
 | 2026-10-07 | flutter 3.45 | FLUTTER-P12 | [Flutter: accessibility, hardening, release checks](#flutter-p12--flutter-accessibility-hardening-release-checks) |
 | 2026-10-06 | flutter 3.45 | FLUTTER-P10E | [Flutter: push, tap routing, pass reminders](#flutter-p10e--flutter-push-tap-routing-pass-reminders) |
@@ -2196,3 +2197,17 @@ Then add a row to the **Index** table.
 
 ### Pass
 - Each step matches; no overflow at 430, 900, 1100, 1280 widths.
+
+## FLUTTER-FIRSTSYNC — Trips after sign-in, destination autocomplete, Horizon defaults (v3.48.2)
+
+**Flags:** `enableDestinationAutocomplete`, `enableHorizonNav`, `enableSpendInsights` (all default ON, Core pack).
+
+1. Sign in with Google on a fresh install. The Trips screen shows "Syncing your trips…" and then your trips, with no need to leave the screen.
+2. Tap New Trip, type "gok" in Destination: suggestions appear (Gokarna). Pick one: the trip name fills as "Gokarna trip" and the currency follows the country.
+3. Type "Munar": a "Did you mean Munnar?" chip appears; tapping it fixes the text.
+4. The bottom dock (Trips, Balances, +, Activity, Me) is visible without touching any flag.
+
+**Flag-OFF checks:** turn `enableDestinationAutocomplete` OFF: Destination is a plain field. Turn `enableHorizonNav` OFF: the older Trips menu returns.
+
+### Pass
+- Each step matches; no blank Trips screen after sign-in.

@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.48.2',
+    date: '2026-10-08',
+    changes: [
+      'Behind the scenes: Flutter app now shows trips right after sign-in, suggests destinations while typing, and the Horizon navigation and Spend Insights are on by default. No change to the web app.',
+    ],
+  },
+  {
     version: '3.48.1',
     date: '2026-10-08',
     changes: [

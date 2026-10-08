@@ -9,7 +9,13 @@ import 'trip_pull_sync.dart';
 /// pull, then (re)open realtime. Triggers: app start, foreground,
 /// connectivity regained, after enqueue, and the engine's own backoff timer.
 class SyncCoordinator {
-  SyncCoordinator({required this.engine, required this.pull, required this.realtime, this.onPulled});
+  SyncCoordinator({
+    required this.engine,
+    required this.pull,
+    required this.realtime,
+    this.onPulled,
+    this.retryEmptyAfter = const Duration(seconds: 3),
+  });
 
   final SyncEngine engine;
   final TripPullSync pull;
@@ -18,22 +24,51 @@ class SyncCoordinator {
   /// Called with every pull's per-trip result (conflicts, etc.).
   final void Function(Map<String, PullResult> results)? onPulled;
 
+  /// Wait before the single re-pull after a first pull that found no trips.
+  final Duration retryEmptyAfter;
+
   Timer? _retryTimer;
   bool _active = true;
 
   /// Called by repositories after every local write.
   void requestFlush() => unawaited(_flush());
 
-  Future<void> start() => syncNow();
+  final _pulling = StreamController<bool>.broadcast();
+  bool _isPulling = false;
+  bool _retriedEmpty = false;
+
+  /// True while a pull is running. The Trips screen shows "Syncing" instead of
+  /// an empty state for a signed-in user whose first pull has not landed yet.
+  bool get isPulling => _isPulling;
+  Stream<bool> get pullingChanges => _pulling.stream;
+
+  void _setPulling(bool v) {
+    _isPulling = v;
+    if (!_pulling.isClosed) _pulling.add(v);
+  }
+
+  Future<void> start() {
+    _retriedEmpty = false;
+    return syncNow();
+  }
 
   Future<void> syncNow() async {
-    await _flush();
+    _setPulling(true);
     try {
+      await _flush();
       // Await first: `onPulled?.call(await ...)` would skip the pull when no callback is set.
       final results = await pull.syncAll();
       onPulled?.call(results);
+      // The session token can lag right after sign-in and RLS then shows nothing: look once more.
+      if (results.isEmpty && !_retriedEmpty) {
+        _retriedEmpty = true;
+        _retryTimer?.cancel();
+        _retryTimer = Timer(retryEmptyAfter, () => unawaited(syncNow()));
+      }
     } catch (e) {
       AppLogger.warn('Pull sync failed: $e');
+    } finally {
+      _setPulling(false);
     }
   }
 
@@ -60,5 +95,8 @@ class SyncCoordinator {
     }
   }
 
-  void dispose() => _retryTimer?.cancel();
+  void dispose() {
+    _retryTimer?.cancel();
+    unawaited(_pulling.close());
+  }
 }

@@ -67,8 +67,8 @@
     "enableSplitwiseImport": false,
     "enableCrossTripSearch": false,
     "enableExpenseQuickFilterChips": false,
-    "enableHorizonNav": false,
-    "enableSpendInsights": false,
+    "enableHorizonNav": true,
+    "enableSpendInsights": true,
     "enableCompactLedgerView": false,
     "enableStickyDayHeaders": false,
     "enableCategoryColorRings": false,
@@ -172,8 +172,8 @@
     "enableSplitwiseImport": false,
     "enableCrossTripSearch": false,
     "enableExpenseQuickFilterChips": false,
-    "enableHorizonNav": false,
-    "enableSpendInsights": false,
+    "enableHorizonNav": true,
+    "enableSpendInsights": true,
     "enableCompactLedgerView": false,
     "enableStickyDayHeaders": false,
     "enableCategoryColorRings": false,
@@ -239,7 +239,9 @@
         "enableQuickTripCreate",
         "enableDestinationAutocomplete",
         "cycleDestinationCovers",
-        "enableTravelerPassBack"
+        "enableTravelerPassBack",
+        "enableHorizonNav",
+        "enableSpendInsights"
       ]
     },
     {
@@ -295,8 +297,6 @@
         "enableSplitwiseImport",
         "enableCrossTripSearch",
         "enableExpenseQuickFilterChips",
-        "enableHorizonNav",
-        "enableSpendInsights",
         "enableCompactLedgerView",
         "enableStickyDayHeaders",
         "enableCategoryColorRings",
