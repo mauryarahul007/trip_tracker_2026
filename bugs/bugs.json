@@ -7986,5 +7986,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-08T13:59:09.705Z",
     "resolutionNote": "Fixed in commit df20847 (v3.48.0): parseQuickExpense takes injectable now; fixture generator pins MOCK_DATE"
+  },
+  {
+    "id": "BUG-273",
+    "title": "Flutter CI fixtures-drift step fails: deps not installed, generated Dart unformatted",
+    "description": "Flutter CI fixtures-drift step fails: deps not installed, generated Dart unformatted",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-08T14:37:29.078Z",
+    "updatedAt": "2026-10-08T14:37:33.524Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-08T14:37:33.522Z",
+    "resolutionNote": "Fixed in commit 5badf99 (v3.48.1): workflow runs npm ci and dart format before drift diff"
   }
 ]
