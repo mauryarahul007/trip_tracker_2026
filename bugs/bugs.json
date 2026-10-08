@@ -8012,5 +8012,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-08T14:37:33.522Z",
     "resolutionNote": "Fixed in commit 5badf99 (v3.48.1): workflow runs npm ci and dart format before drift diff"
+  },
+  {
+    "id": "BUG-276",
+    "title": "Vite dev server crashes on Windows with EBUSY watching flutter_app build cache",
+    "description": "Vite dev server crashes on Windows with EBUSY watching flutter_app build cache",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-08T18:05:33.801Z",
+    "updatedAt": "2026-10-08T18:06:03.767Z",
+    "resolvedBy": "rahul",
+    "resolvedAt": "2026-10-08T18:06:03.766Z",
+    "resolutionNote": "Ignore flutter_app directory in vite.config.ts server.watch to avoid EBUSY on Windows"
   }
 ]
