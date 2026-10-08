@@ -8,6 +8,12 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.48.1', '2026-10-08', [
+    'Behind the scenes: fixed the Flutter CI fixtures-drift check. No change to the web app.',
+  ]),
+  ChangelogEntry('3.48.0', '2026-10-08', [
+    'Behind the scenes: Flutter Horizon redesign across all screens, desktop layouts, Balances and Spend Insights behind new flags. No change to the web app.',
+  ]),
   ChangelogEntry('3.47.0', '2026-10-08', [
     'Behind the scenes: Flutter migration Horizon redesign, Web platform compilation with Wasm SQLite, and Google-only + Superadmin authentication gate. No change to the web app.',
   ]),
@@ -40,15 +46,5 @@ const List<ChangelogEntry> changelogEntries = [
   ChangelogEntry('3.43.9', '2026-10-02', [
     'Packing, notes, and passes now show up for everyone immediately, the same way a Talk message does.',
     'The Members tab is a simple list: one role per person, the balance on the right, and groups in the same quiet style.',
-  ]),
-  ChangelogEntry('3.43.8', '2026-10-02', [
-    'Packing lists, notes, and passes now stay in sync for everyone on the trip. An add, edit, or delete by one member shows up for the others without a reload.',
-    'Expenses, members, and the summary refresh the same way while the trip is open.',
-  ]),
-  ChangelogEntry('3.43.7', '2026-10-02', [
-    'Small labels and captions across the app are now at least 11px, so they are easier to read.',
-    'Small icon buttons are easier to tap, and screen readers now announce more pop-ups as dialogs.',
-    'Marking a payment as settled now shows a clear card with who pays whom and how much.',
-    'New: the Summary pass shows a one-time hint that it flips to your own balance.',
   ]),
 ];

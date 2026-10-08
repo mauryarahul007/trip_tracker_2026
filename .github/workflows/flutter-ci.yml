@@ -64,7 +64,9 @@ jobs:
       - name: Fixtures still match the web source (no drift)
         working-directory: .
         run: |
+          npm ci --ignore-scripts
           node scripts/export-golden-fixtures.mjs
+          dart format flutter_app/lib/domain/logic
           git diff --exit-code -- docs/flutter-migration/fixtures flutter_app/lib/domain/logic
 
       - name: Dependency report (informational)

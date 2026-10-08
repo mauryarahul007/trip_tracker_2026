@@ -4888,3 +4888,10 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Release Cut:** version bumped to `3.48.0` via `npm run release:minor`.
 
 ---
+
+---
+
+## 278. Flutter CI fixtures-drift step fix
+* **Context:** Flutter CI failed at the drift step: Node deps were not installed and generated Dart files were compared unformatted.
+* **Decision:** Run `npm ci --ignore-scripts` and `dart format` on `flutter_app/lib/domain/logic` before the diff; regenerate `changelog.g.dart`.
+* **Release Cut:** version bumped to `3.48.1` via `npm run release:patch`.
