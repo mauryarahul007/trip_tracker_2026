@@ -7960,5 +7960,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-06T18:54:16.641Z",
     "resolutionNote": "Fixed in commit cfe5b04 (v3.46.1): enabled core library desugaring in flutter_app/android/app/build.gradle.kts"
+  },
+  {
+    "id": "BUG-272",
+    "title": "Flutter quick_parser_math fixture failed: TS parseQuickExpense used real clock",
+    "description": "Flutter quick_parser_math fixture failed: TS parseQuickExpense used real clock",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-08T13:58:36.292Z",
+    "updatedAt": "2026-10-08T13:59:09.706Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-08T13:59:09.705Z",
+    "resolutionNote": "Fixed in commit df20847 (v3.48.0): parseQuickExpense takes injectable now; fixture generator pins MOCK_DATE"
   }
 ]
