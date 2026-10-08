@@ -9,6 +9,7 @@ import '../../../data/providers.dart';
 import '../../../domain/models/member.dart';
 import '../../../domain/models/trip_message.dart';
 import '../../../l10n/l10n_ext.dart';
+import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/ask_text.dart';
 import '../../expenses/application/expenses_providers.dart';
@@ -137,21 +138,33 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
         onLongPress: mine ? () => _edit(m) : null,
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           constraints: const BoxConstraints(maxWidth: 280),
           decoration: BoxDecoration(
-            color: mine
-                ? Theme.of(context).colorScheme.primaryContainer
-                : Theme.of(context).colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(12),
+            gradient: mine ? AppTokens.ctaGradient : null,
+            color: mine ? null : context.tokens.bgSurface,
+            boxShadow: mine ? null : context.tokens.shadowSm,
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(20),
+              topRight: const Radius.circular(20),
+              bottomLeft: Radius.circular(mine ? 20 : 6),
+              bottomRight: Radius.circular(mine ? 6 : 20),
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!mine) Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-              Text(m.body),
-              if (pending) Text(l10n.chatPending, style: const TextStyle(fontSize: 11)),
-            ],
+          child: DefaultTextStyle.merge(
+            style: TextStyle(color: mine ? Colors.white : context.tokens.textPrimary),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!mine)
+                  Text(
+                    name,
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: context.tokens.primaryAccent),
+                  ),
+                Text(m.body),
+                if (pending) Text(l10n.chatPending, style: const TextStyle(fontSize: 11)),
+              ],
+            ),
           ),
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_tokens.dart';
+import '../theme/app_typography.dart';
 
 class AppSheet extends StatelessWidget {
   final String? title;
@@ -31,7 +32,7 @@ class AppSheet extends StatelessWidget {
             color: tokens.bgSurface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(tokens.radiusLg)),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 20, offset: const Offset(0, -4)),
+              BoxShadow(color: tokens.shadowBase.withValues(alpha: 0.22), blurRadius: 40, offset: const Offset(0, -10)),
             ],
           ),
           child: SafeArea(
@@ -55,7 +56,7 @@ class AppSheet extends StatelessWidget {
         Center(
           child: Container(
             margin: const EdgeInsets.only(top: 10, bottom: 8),
-            width: 36,
+            width: 40,
             height: 4,
             decoration: BoxDecoration(color: tokens.borderColor, borderRadius: BorderRadius.circular(2)),
           ),
@@ -69,7 +70,13 @@ class AppSheet extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title!,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: tokens.textPrimary),
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontTitle,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                      color: tokens.textPrimary,
+                    ),
                   ),
                 ),
                 if (trailing != null)
@@ -85,7 +92,6 @@ class AppSheet extends StatelessWidget {
               ],
             ),
           ),
-          Divider(color: tokens.borderColor, height: 1),
         ],
         Flexible(child: child),
       ],

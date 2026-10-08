@@ -1,5 +1,7 @@
 import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,7 +13,9 @@ import '../platform/external_launcher.dart';
 import '../settings/app_settings.dart';
 
 /// 'ios' | 'android' | '' (anything else is never gated). Tests override this.
-final gatePlatformProvider = Provider<String>((ref) => Platform.isIOS ? 'ios' : (Platform.isAndroid ? 'android' : ''));
+final gatePlatformProvider = Provider<String>(
+  (ref) => kIsWeb ? '' : (Platform.isIOS ? 'ios' : (Platform.isAndroid ? 'android' : '')),
+);
 
 /// Fetches the gate once; `ref.invalidate` on app resume re-checks it. Any failure = ok.
 final versionGateProvider = FutureProvider<VersionGateDecision>((ref) async {

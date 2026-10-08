@@ -1,0 +1,119 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Horizon · 07 Mobile — Me, Settings &amp; support</title>
+<link rel="stylesheet" href="kit.css"><script src="kit.js"></script>
+<style>.w60{color:rgba(255,255,255,.6)}
+.opt{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px;border-radius:20px;border:2px solid transparent;background:var(--card2);flex:1;font:600 13px var(--body);color:var(--ink2)}
+.opt.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+.sev{display:flex;gap:8px}.sev span{flex:1;text-align:center;padding:11px 0;border-radius:14px;background:var(--card2);font:600 12.5px var(--body);color:var(--ink2)}
+.sev span.on{background:var(--neg-soft);color:var(--neg);box-shadow:inset 0 0 0 1.5px var(--neg)}
+.logline{font:500 11px/1.7 var(--mono);color:var(--ink2)}</style></head><body><div class="board">
+<span class="tile" style="display:none"></span>
+<span class="tag">07 · Mobile · Me, Settings &amp; support</span>
+<h1>Me tab, settings and the quiet screens</h1>
+<p class="lede">Settings moves out of the Trips overflow menu into a proper “Me” tab with a profile header, grouped inset lists (iOS) and the same list language on Android. Appearance gets visual pickers instead of text radios.</p>
+
+<h2>Me · Settings</h2>
+<div class="grid">
+<div class="cell" data-n="01" data-cap="Me" data-sub="iOS · light">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="large-title" style="padding-top:16px">Me</div>
+ <div class="card hrow gap14" style="padding:16px"><span class="avatar xl a1" style="width:64px;height:64px;font-size:22px">R</span><div class="grow"><div class="h-md">Rahul Maurya</div><div class="t-sm mt4">rahul@tripsquad.in</div></div><span class="icon-btn sm" style="box-shadow:none;background:var(--card2)"><i data-i="edit" data-c="s18"></i></span></div>
+ <div class="hrow gap8 mt12"><div class="card sm grow stack" style="align-items:center"><div class="amt-lg" style="font-size:22px">12</div><div class="t-xs mt4">Trips</div></div><div class="card sm grow stack" style="align-items:center"><div class="amt-lg" style="font-size:22px">6</div><div class="t-xs mt4">Stamps</div></div><div class="card sm grow stack" style="align-items:center"><div class="amt-lg" style="font-size:22px">4</div><div class="t-xs mt4">Badges</div></div></div>
+ <div class="sect">Appearance</div>
+ <div class="card" style="padding:14px"><div class="hrow gap8"><div class="opt on"><i data-i="sun"></i>Light</div><div class="opt"><i data-i="moon"></i>Dark</div><div class="opt"><i data-i="sliders"></i>Auto</div></div>
+ <div class="hrow sp mt16"><div><div class="tt" style="font:600 15px var(--body)">Pure black dark mode</div><div class="t-xs mt4">Saves battery on OLED</div></div><span class="toggle"></span></div></div>
+ <div class="sect">Preferences</div>
+ <div class="list"><div class="li"><span class="tile sm c-green"><i data-i="fx"></i></span><div class="grow tt">Default currency</div><span class="t-sm">INR ₹</span><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div><div class="li"><span class="tile sm c-act"><i data-i="spark"></i></span><div class="grow tt">Haptic feedback</div><span class="toggle on"></span></div></div>
+</div><div class="dock"><div class="it"><i data-i="home"></i>Trips</div><div class="it"><i data-i="swap"></i>Balances</div><div class="fab"><i data-i="plus" data-c="s28"></i></div><div class="it"><i data-i="bell"></i>Activity</div><div class="it on"><i data-i="user"></i>Me</div></div></div></div></div>
+
+<div class="cell" data-n="02" data-cap="Settings · more" data-sub="Android · dark">
+<div class="phone android" data-dark="1" data-sb="light"><div class="scr"><div class="body">
+ <div class="hrow sp" style="height:60px"><div class="hrow gap14"><i data-i="arrl"></i><div class="h-md" style="font-size:19px">Settings</div></div></div>
+ <div class="sect" style="padding-top:6px">Notifications</div>
+ <div class="list"><div class="li"><span class="tile sm c-stay"><i data-i="bell"></i></span><div class="grow"><div class="tt">Push notifications</div><div class="ss">Quiet hours 10 PM – 7 AM</div></div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div><div class="li"><span class="tile sm c-act"><i data-i="plane"></i></span><div class="grow tt">Travel pass reminders</div><span class="toggle on"></span></div></div>
+ <div class="sect">Security</div>
+ <div class="list"><div class="li"><span class="tile sm c-green"><i data-i="lock"></i></span><div class="grow"><div class="tt">Unlock with fingerprint</div><div class="ss">Ask every time the app opens</div></div><span class="toggle on"></span></div></div>
+ <div class="sect">Data</div>
+ <div class="list"><div class="li"><span class="tile sm c-trans"><i data-i="download"></i></span><div class="grow tt">Export backup</div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div><div class="li"><span class="tile sm c-food"><i data-i="upload"></i></span><div class="grow tt">Restore from backup</div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div></div>
+ <div class="sect">Help</div>
+ <div class="list"><div class="li"><span class="tile sm c-shop"><i data-i="bug"></i></span><div class="grow tt">Report a problem</div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div><div class="li"><span class="tile sm c-food"><i data-i="bulb"></i></span><div class="grow tt">Suggest a feature</div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div></div>
+</div><div data-os="m3" class="m3dock"><div class="it"><span class="pill"><i data-i="home"></i></span>Trips</div><div class="it"><span class="pill"><i data-i="swap"></i></span>Balances</div><div class="it"><span class="pill"><i data-i="bell"></i></span>Activity</div><div class="it on"><span class="pill"><i data-i="user"></i></span>Me</div></div></div></div></div>
+
+<div class="cell" data-n="03" data-cap="About &amp; account" data-sub="iOS · scrolled">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="hrow" style="height:58px"><span class="icon-btn sm"><i data-i="cl"></i></span></div>
+ <div class="sect" style="padding-top:0">About</div>
+ <div class="list"><div class="li"><div class="grow tt">Version</div><span class="t-sm" style="font-family:var(--mono)">1.4.0 (212)</span></div><div class="li"><span class="tile sm c-act"><i data-i="spark"></i></span><div class="grow tt">What’s new</div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div><div class="li"><div class="grow tt">Privacy policy</div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div><div class="li"><div class="grow tt">Terms of service</div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div></div>
+ <div class="sect">Account</div>
+ <div class="list"><div class="li"><span class="tile sm c-misc"><i data-i="logout"></i></span><div class="grow tt">Sign out</div></div><div class="li"><span class="tile sm c-shop"><i data-i="trash"></i></span><div class="grow tt neg">Delete account</div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div></div>
+ <div class="stack mt32" style="align-items:center"><span class="orb" style="width:40px;height:40px;border-radius:14px"><i data-i="plane" data-c="s20"></i></span><div class="t-xs mt12">Trip Tracker · made for people who travel together</div></div>
+</div></div></div></div>
+
+<div class="cell" data-n="04" data-cap="Notification preferences" data-sub="iOS">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="hrow" style="height:58px"><span class="icon-btn sm"><i data-i="cl"></i></span></div>
+ <div class="large-title" style="padding-top:0;font-size:30px">Notifications</div>
+ <div class="list"><div class="li"><span class="tile sm c-stay"><i data-i="bell"></i></span><div class="grow"><div class="tt">Push notifications</div><div class="ss">On · alerts for money &amp; trip changes</div></div><span class="toggle on"></span></div></div>
+ <div class="sect">Quiet hours</div>
+ <div class="card"><div class="hrow sp"><div><div class="tt" style="font:600 15px var(--body)">Pause push alerts overnight</div></div><span class="toggle on"></span></div><div class="hrow gap10 mt16"><div class="field grow"><label>From</label><div class="v">10:00 PM</div></div><div class="field grow"><label>Until</label><div class="v">7:00 AM</div></div></div></div>
+ <div class="sect">Digest</div>
+ <div class="list"><div class="li"><span class="tile sm c-food"><i data-i="mail"></i></span><div class="grow"><div class="tt">Daily digest</div><div class="ss">One summary at 8 PM during a trip</div></div><span class="toggle"></span></div></div>
+ <div class="sect">Muted trips</div>
+ <div class="list"><div class="li"><span class="stamp" style="color:#16A34A;width:40px;height:40px;font-size:9px">KUU</span><div class="grow tt">Manali Winter</div><span class="btn xs soft">Unmute</span></div></div>
+</div></div></div></div>
+</div>
+
+<h2>Support &amp; danger zone</h2>
+<div class="grid">
+<div class="cell" data-n="05" data-cap="Report a problem" data-sub="iOS">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="hrow sp" style="height:58px"><span class="icon-btn sm"><i data-i="x"></i></span><div class="h-sm" style="font-size:17px">Report a problem</div><span style="width:38px"></span></div>
+ <div class="stack gap10"><div class="field focus"><label>What went wrong?</label><div class="v">Expense won’t save offline<span style="color:var(--primary)">|</span></div></div><div class="field" style="min-height:90px;justify-content:flex-start"><label>Steps to reproduce</label><div class="v ph" style="font-size:14.5px">1. Turn on airplane mode…</div></div></div>
+ <div class="eyebrow mt16">How bad is it?</div><div class="sev mt8"><span>Annoying</span><span class="on">Blocking</span><span>Data loss</span></div>
+ <div class="eyebrow mt16">Area</div><div class="hrow gap8 mt8 wrap"><span class="chip on">Expenses</span><span class="chip">Balances</span><span class="chip">Sync</span><span class="chip">Other</span></div>
+ <div class="card sm flat mt16 hrow gap12"><i data-i="layers" data-c="prim"></i><div class="grow t-sm" style="color:var(--ink)">Attach recent app logs</div><span class="toggle on"></span></div>
+ <div style="position:absolute;left:20px;right:20px;bottom:36px"><span class="btn primary block">Send report</span></div>
+</div></div></div></div>
+
+<div class="cell" data-n="06" data-cap="Suggest a feature" data-sub="Android">
+<div class="phone android"><div class="scr"><div class="body">
+ <div class="hrow" style="height:60px;gap:14px"><i data-i="x"></i><div class="h-md" style="font-size:19px">Suggest a feature</div></div>
+ <div class="stack" style="align-items:center;margin:12px 0 18px"><span class="orb o2" style="width:64px;height:64px"><i data-i="bulb" data-c="s28"></i></span></div>
+ <div class="stack gap10"><div class="field focus" style="min-height:100px;justify-content:flex-start"><label>Your idea</label><div class="v">Let me split a bill by what each person ordered<span style="color:var(--primary)">|</span></div></div><div class="field" style="min-height:80px;justify-content:flex-start"><label>Why would it help?</label><div class="v ph" style="font-size:14.5px">Tell us the moment it would save you…</div></div></div>
+ <div class="hrow gap8 mt16 wrap"><span class="chip on">Expenses</span><span class="chip">Travel</span><span class="chip">Design</span></div>
+ <div style="position:absolute;left:20px;right:20px;bottom:36px"><span class="btn primary block">Send idea</span></div>
+</div></div></div></div>
+
+<div class="cell" data-n="07" data-cap="Diagnostics" data-sub="iOS · support">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="hrow" style="height:58px"><span class="icon-btn sm"><i data-i="cl"></i></span></div>
+ <div class="large-title" style="padding-top:0;font-size:30px">Diagnostics</div>
+ <div class="hrow gap8"><div class="card sm grow"><div class="t-xs">Version</div><div class="amt mt4" style="font-size:15px">1.4.0</div></div><div class="card sm grow"><div class="t-xs">Env</div><div class="amt mt4" style="font-size:15px">prod</div></div><div class="card sm grow"><div class="t-xs">Queue</div><div class="amt mt4 pos" style="font-size:15px">0 pending</div></div></div>
+ <div class="sect">Recent logs</div>
+ <div class="card" style="background:#0B0F1A;box-shadow:none"><div class="logline" style="color:#9AA1AF"><span style="color:#4ADE80">09:12:04</span> sync ok · 3 pushed<br><span style="color:#4ADE80">09:12:01</span> auth refresh ok<br><span style="color:#F5A623">09:11:47</span> fx cache stale (INR→USD)<br><span style="color:#4ADE80">09:11:40</span> trip goa-weekend loaded<br><span style="color:#4ADE80">09:11:39</span> offline db opened</div></div>
+ <div class="hrow gap10 mt16"><span class="btn soft grow sm"><i data-i="copy" data-c="s16"></i>Copy logs</span><span class="btn sm grow"><i data-i="share" data-c="s16"></i>Share</span></div>
+</div></div></div></div>
+
+<div class="cell" data-n="08" data-cap="Delete account" data-sub="Confirm · iOS">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="hrow" style="height:58px"><span class="icon-btn sm"><i data-i="cl"></i></span></div>
+ <div class="stack" style="align-items:center;text-align:center;margin-top:30px"><div style="width:84px;height:84px;border-radius:28px;background:var(--neg-soft);color:var(--neg);display:flex;align-items:center;justify-content:center"><i data-i="trash" data-c="s32" style="width:38px;height:38px"></i></div><div class="h-lg mt20">Delete your<br>account?</div><p class="t-body muted mt12" style="max-width:290px">This permanently removes your profile and personal data. Trips you organize stay for other travelers.</p></div>
+ <div class="card sm flat mt24"><div class="stack gap10"><div class="hrow gap10 t-sm"><i data-i="x" data-c="s18 neg"></i>12 trips will be removed from your account</div><div class="hrow gap10 t-sm"><i data-i="x" data-c="s18 neg"></i>Passport stamps &amp; badges are lost</div><div class="hrow gap10 t-sm"><i data-i="check" data-c="s18 pos"></i>Export a backup first — takes 10 seconds</div></div></div>
+ <div class="field focus mt16"><label>Type DELETE to confirm</label><div class="v">DELE<span style="color:var(--primary)">|</span></div></div>
+ <div style="position:absolute;left:20px;right:20px;bottom:36px" class="stack gap8"><span class="btn danger block" style="opacity:.5">Delete forever</span><span class="btn block" style="background:transparent">Keep my account</span></div>
+</div></div></div></div>
+</div>
+
+<div class="grid mt32">
+<div class="cell" data-n="09" data-cap="Privacy / Terms reader" data-sub="iOS">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="hrow sp" style="height:58px"><span class="icon-btn sm"><i data-i="cl"></i></span><span class="chip sm tint">Updated Oct 2026</span></div>
+ <div class="h-lg">Privacy policy</div>
+ <div class="t-body muted mt16" style="line-height:1.6"><b style="color:var(--ink);font:700 16px var(--display);display:block;margin:0 0 6px">What we collect</b>Your name, email and the trip data you enter. We never sell it.<b style="color:var(--ink);font:700 16px var(--display);display:block;margin:20px 0 6px">Location</b>Only while you choose to share live location, and only with travelers in that trip.<b style="color:var(--ink);font:700 16px var(--display);display:block;margin:20px 0 6px">Your controls</b>Export or delete everything from Me → Settings at any time.</div>
+</div></div></div></div>
+
+<div class="cell" data-n="10" data-cap="What’s new" data-sub="Sheet · Dusk accent">
+<div class="phone ios" data-sb="light"><div class="scr" style="background:var(--dusk)"><div class="dim" style="background:rgba(7,10,18,.2)"></div><div class="sheet" style="top:150px;padding-bottom:26px"><div class="grab"></div><div class="eyebrow">Version 1.4</div><div class="h mt8">What’s new</div>
+ <div class="stack gap16 mt20"><div class="hrow gap12"><span class="tile sm c-act"><i data-i="spark"></i></span><div><div class="tt" style="font:700 15px var(--display)">Trip Wrapped</div><div class="t-sm mt4">A shareable story of your trip, in Dusk.</div></div></div><div class="hrow gap12"><span class="tile sm c-stay"><i data-i="mic"></i></span><div><div class="tt" style="font:700 15px var(--display)">Voice quick-add</div><div class="t-sm mt4">Say “lunch 240” and you’re done.</div></div></div><div class="hrow gap12"><span class="tile sm c-green"><i data-i="moon"></i></span><div><div class="tt" style="font:700 15px var(--display)">New look</div><div class="t-sm mt4">Calmer, bigger, easier to read — light and dark.</div></div></div></div>
+ <span class="btn primary block mt24">Continue</span></div></div></div></div>
+</div>
+</div></body></html>

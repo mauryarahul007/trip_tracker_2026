@@ -45,8 +45,9 @@ class AppButton extends StatelessWidget {
 
     switch (variant) {
       case AppButtonVariant.primary:
-        bg = tokens.primaryAccent;
-        fg = _readableOn(bg);
+        // Horizon cobalt gradient (AppTokens.ctaGradient); white label is >= 5:1 on every stop.
+        bg = AppTokens.ctaGradient.colors.last;
+        fg = Colors.white;
         break;
       case AppButtonVariant.secondary:
         bg = tokens.bgSurface;
@@ -93,28 +94,46 @@ class AppButton extends StatelessWidget {
       ],
     );
 
+    final isPrimary = variant == AppButtonVariant.primary;
+
+    Widget button = FilledButton(
+      onPressed: isEnabled ? onPressed : null,
+      style: FilledButton.styleFrom(
+        backgroundColor: isPrimary ? Colors.transparent : bg,
+        foregroundColor: fg,
+        disabledBackgroundColor: isPrimary ? Colors.transparent : bg.withValues(alpha: 0.5),
+        disabledForegroundColor: fg.withValues(alpha: 0.5),
+        shadowColor: Colors.transparent,
+        shape: StadiumBorder(side: border),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        elevation: 0,
+      ),
+      child: content,
+    );
+
+    if (isPrimary) {
+      button = Opacity(
+        opacity: isEnabled ? 1 : 0.5,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: AppTokens.ctaGradient,
+            borderRadius: BorderRadius.circular(tokens.radiusFull),
+            boxShadow: isEnabled
+                ? [BoxShadow(color: bg.withValues(alpha: 0.28), blurRadius: 16, offset: const Offset(0, 6))]
+                : null,
+          ),
+          child: button,
+        ),
+      );
+    }
+
     return Semantics(
       button: true,
       enabled: isEnabled,
       label: label,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
-        child: SizedBox(
-          width: isFullWidth ? double.infinity : null,
-          child: FilledButton(
-            onPressed: isEnabled ? onPressed : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: bg,
-              foregroundColor: fg,
-              disabledBackgroundColor: bg.withValues(alpha: 0.5),
-              disabledForegroundColor: fg.withValues(alpha: 0.5),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(tokens.radiusMd), side: border),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              elevation: 0,
-            ),
-            child: content,
-          ),
-        ),
+        child: SizedBox(width: isFullWidth ? double.infinity : null, child: button),
       ),
     );
   }

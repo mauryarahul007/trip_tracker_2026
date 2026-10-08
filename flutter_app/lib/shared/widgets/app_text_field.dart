@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_tokens.dart';
+import '../theme/app_typography.dart';
 
 class AppTextField extends StatelessWidget {
   final TextEditingController? controller;
@@ -45,9 +46,16 @@ class AppTextField extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (label != null) ...[
+          // .form-label: mono, uppercase, 11px, 0.08em tracking.
           Text(
-            label!,
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: tokens.textSecondary),
+            label!.toUpperCase(),
+            style: TextStyle(
+              fontFamily: AppTypography.fontMono,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.88,
+              color: tokens.textSecondary,
+            ),
           ),
           const SizedBox(height: 6),
         ],
@@ -72,19 +80,19 @@ class AppTextField extends StatelessWidget {
             fillColor: tokens.bgSurface,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(tokens.radiusMd),
+              borderRadius: BorderRadius.circular(tokens.radiusSm + 4),
               borderSide: BorderSide(color: tokens.borderColor),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(tokens.radiusMd),
+              borderRadius: BorderRadius.circular(tokens.radiusSm + 4),
               borderSide: BorderSide(color: tokens.borderColor),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(tokens.radiusMd),
+              borderRadius: BorderRadius.circular(tokens.radiusSm + 4),
               borderSide: BorderSide(color: tokens.primaryAccent, width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(tokens.radiusMd),
+              borderRadius: BorderRadius.circular(tokens.radiusSm + 4),
               borderSide: BorderSide(color: tokens.colorDanger),
             ),
           ),

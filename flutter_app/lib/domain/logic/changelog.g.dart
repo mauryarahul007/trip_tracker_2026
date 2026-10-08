@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.47.0', '2026-10-08', [
+    'Behind the scenes: Flutter migration Horizon redesign, Web platform compilation with Wasm SQLite, and Google-only + Superadmin authentication gate. No change to the web app.',
+  ]),
   ChangelogEntry('3.46.1', '2026-10-07', [
     'Behind the scenes: fixed the Flutter Android build (core library desugaring for local notifications). No change to the web app.',
   ]),
@@ -47,11 +50,5 @@ const List<ChangelogEntry> changelogEntries = [
     'Small icon buttons are easier to tap, and screen readers now announce more pop-ups as dialogs.',
     'Marking a payment as settled now shows a clear card with who pays whom and how much.',
     'New: the Summary pass shows a one-time hint that it flips to your own balance.',
-  ]),
-  ChangelogEntry('3.43.6', '2026-10-02', [
-    'Summary now labels your own balance and the group total separately, so the two numbers are no longer confused.',
-    'If you are in a couple or group, the flipped pass shows how your balance splits inside and outside the group.',
-    'The bottom bar is more solid, so cards no longer show through it, and the top chips are easier to tap.',
-    'The "You’re owed" chip says "see who" instead of promising a reminder it did not send.',
   ]),
 ];

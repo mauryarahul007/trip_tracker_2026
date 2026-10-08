@@ -24,6 +24,11 @@ class AppTokens extends ThemeExtension<AppTokens> {
   final Color textSecondary;
   final Color textMuted;
 
+  // Elevation base + header gradient (index.css --glass-shadow / --header-gradient-solid)
+  final Color shadowBase;
+  final Color headerStart;
+  final Color headerEnd;
+
   // Radii
   final double radiusSm;
   final double radiusMd;
@@ -57,9 +62,12 @@ class AppTokens extends ThemeExtension<AppTokens> {
     required this.textPrimary,
     required this.textSecondary,
     required this.textMuted,
-    this.radiusSm = 10.0,
-    this.radiusMd = 14.0,
-    this.radiusLg = 20.0,
+    this.shadowBase = const Color(0xFF0B0F1A),
+    this.headerStart = const Color(0xFF17354F),
+    this.headerEnd = const Color(0xFF05080F),
+    this.radiusSm = 14.0,
+    this.radiusMd = 20.0,
+    this.radiusLg = 28.0,
     this.radiusFull = 999.0,
     this.dur1 = const Duration(milliseconds: 120),
     this.dur2 = const Duration(milliseconds: 200),
@@ -68,6 +76,102 @@ class AppTokens extends ThemeExtension<AppTokens> {
     this.easeDecel = const Cubic(0.16, 1.0, 0.3, 1.0),
     this.easeBounce = const Cubic(0.34, 1.4, 0.64, 1.0),
   });
+
+  LinearGradient get headerGradient =>
+      LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [headerStart, headerEnd]);
+
+  /// Horizon primary-CTA gradient: cobalt #2F66F8 -> #2250E6 (white label >= 5:1).
+  static const LinearGradient ctaGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF2F66F8), Color(0xFF2250E6)],
+  );
+
+  static LinearGradient _vertical(List<Color> c, [List<double>? stops]) =>
+      LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: c, stops: stops);
+
+  /// Context surfaces (see design/new-app-ui/01-foundations.html).
+  /// Night Sky = travel / trip hero, Ember = money, Slate = insights, Dusk = dark mode / Wrapped.
+  static const LinearGradient nightSkyGradient = LinearGradient(
+    begin: Alignment(-0.3, -1),
+    end: Alignment(0.3, 1),
+    colors: AppColors.nightSky,
+    stops: [0, 0.52, 1],
+  );
+  static final LinearGradient emberGradient = _vertical(AppColors.ember, const [0, 0.55, 1]);
+  static final LinearGradient slateGradient = _vertical(AppColors.slate, const [0, 0.7, 1]);
+  static final LinearGradient duskGradient = _vertical(AppColors.dusk, const [0, 0.42, 0.82, 1]);
+
+  bool get _isDark => shadowBase == const Color(0xFF000000);
+  double get _a => _isDark ? 1.6 : 1.0;
+
+  /// --shadow-sm: default resting card lift.
+  List<BoxShadow> get shadowSm => [
+    BoxShadow(
+      color: shadowBase.withValues(alpha: 0.04 * _a),
+      blurRadius: 2,
+      offset: const Offset(0, 1),
+    ),
+    BoxShadow(
+      color: shadowBase.withValues(alpha: 0.08 * _a),
+      blurRadius: 12,
+      spreadRadius: -4,
+      offset: const Offset(0, 4),
+    ),
+  ];
+
+  /// --shadow-md: raised / hover.
+  List<BoxShadow> get shadowMd => [
+    BoxShadow(
+      color: shadowBase.withValues(alpha: 0.08 * _a),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
+    ),
+    BoxShadow(
+      color: shadowBase.withValues(alpha: 0.14 * _a),
+      blurRadius: 32,
+      spreadRadius: -8,
+      offset: const Offset(0, 12),
+    ),
+  ];
+
+  /// --shadow-lg: modals, sheets.
+  List<BoxShadow> get shadowLg => [
+    BoxShadow(
+      color: shadowBase.withValues(alpha: 0.12 * _a),
+      blurRadius: 24,
+      offset: const Offset(0, 8),
+    ),
+    BoxShadow(
+      color: shadowBase.withValues(alpha: 0.2 * _a),
+      blurRadius: 48,
+      spreadRadius: -12,
+      offset: const Offset(0, 20),
+    ),
+  ];
+
+  /// --glass-shadow: card / popup default (.glass-card).
+  List<BoxShadow> get shadowGlass => [
+    BoxShadow(
+      color: shadowBase.withValues(alpha: 0.06 * _a),
+      blurRadius: 3,
+      offset: const Offset(0, 1),
+    ),
+    BoxShadow(
+      color: shadowBase.withValues(alpha: 0.12 * _a),
+      blurRadius: 20,
+      spreadRadius: -6,
+      offset: const Offset(0, 6),
+    ),
+  ];
+
+  /// Standard `.glass-card` decoration: surface, 1px border, md radius, glass shadow.
+  BoxDecoration cardDecoration({Color? color}) => BoxDecoration(
+    color: color ?? bgSurface,
+    borderRadius: BorderRadius.circular(radiusMd),
+    border: Border.all(color: borderColor.withValues(alpha: 0.5)),
+    boxShadow: shadowSm,
+  );
 
   Color get successColor => colorSuccess;
   Color get dangerColor => colorDanger;
@@ -113,6 +217,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
     textPrimary: AppColors.darkTextPrimary,
     textSecondary: AppColors.darkTextSecondary,
     textMuted: AppColors.darkTextMuted,
+    shadowBase: Color(0xFF000000),
+    headerStart: Color(0xFF17354F),
+    headerEnd: Color(0xFF010203),
   );
 
   static const AppTokens amoled = AppTokens(
@@ -132,6 +239,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
     textPrimary: AppColors.darkTextPrimary,
     textSecondary: AppColors.darkTextSecondary,
     textMuted: AppColors.darkTextMuted,
+    shadowBase: Color(0xFF000000),
+    headerStart: Color(0xFF17354F),
+    headerEnd: Color(0xFF010203),
   );
 
   @override
@@ -152,6 +262,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
     Color? textPrimary,
     Color? textSecondary,
     Color? textMuted,
+    Color? shadowBase,
+    Color? headerStart,
+    Color? headerEnd,
     double? radiusSm,
     double? radiusMd,
     double? radiusLg,
@@ -180,6 +293,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
       textPrimary: textPrimary ?? this.textPrimary,
       textSecondary: textSecondary ?? this.textSecondary,
       textMuted: textMuted ?? this.textMuted,
+      shadowBase: shadowBase ?? this.shadowBase,
+      headerStart: headerStart ?? this.headerStart,
+      headerEnd: headerEnd ?? this.headerEnd,
       radiusSm: radiusSm ?? this.radiusSm,
       radiusMd: radiusMd ?? this.radiusMd,
       radiusLg: radiusLg ?? this.radiusLg,
@@ -213,6 +329,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t) ?? textPrimary,
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t) ?? textSecondary,
       textMuted: Color.lerp(textMuted, other.textMuted, t) ?? textMuted,
+      shadowBase: Color.lerp(shadowBase, other.shadowBase, t) ?? shadowBase,
+      headerStart: Color.lerp(headerStart, other.headerStart, t) ?? headerStart,
+      headerEnd: Color.lerp(headerEnd, other.headerEnd, t) ?? headerEnd,
       radiusSm: radiusSm,
       radiusMd: radiusMd,
       radiusLg: radiusLg,

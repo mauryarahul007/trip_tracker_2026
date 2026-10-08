@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **100** |
+| **Total Tracked** | **101** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **98** |
+| **✅ Shipped** | **99** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -150,6 +150,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-098** | Cycling destination photos on the home stack and list | `ui-ux` | `rahul` | `rahul` | Shipped in v3.43.1. ADR 246. Flag cycleDestinationCovers (Core, default ON). |
 | **FEAT-099** | Simplified pass back: one balance hero | `ui-ux` | `rahul` | `claude-cli` | Shipped in commit 1cf0b67 (v3.43.3). decisions.md #248. QA steps in FEATURE_TEST_STEPS.md: PASS-STUB-SIMPLIFY. |
 | **FEAT-100** | Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12) | `native` | `claude-cli` | `claude-cli` | Shipped in commit 42ef52a (v3.46.0). Headless-verified only; device, Firebase and store checks open (see docs/flutter-migration/BACKLOG.md). |
+| **FEAT-101** | Flutter app: Horizon redesign, Web platform Wasm SQLite, and Google + Superadmin auth gate | `native` | `rahul` | `rahul` | Shipped |
 
 ---
 

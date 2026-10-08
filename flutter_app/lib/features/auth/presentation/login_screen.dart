@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/env/app_env.dart';
 import '../../../data/auth/social_auth.dart';
 import '../../../data/providers.dart';
 import '../../../domain/repositories/repositories.dart';
 import '../../../l10n/l10n_ext.dart';
-import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/brand_mark.dart';
 import '../../../shared/widgets/app_scaffold.dart';
+import '../../../shared/widgets/app_surface.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../application/auth_messages.dart';
 import '../application/social_sign_in.dart';
@@ -31,7 +32,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _code = TextEditingController();
-  bool _signUp = false;
+  bool _showAdmin = false;
   bool _busy = false;
   String? _error;
 
@@ -61,16 +62,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _submitEmail() async {
+  Future<void> _submitSuperadmin() async {
     final email = _email.text.trim();
     if (email.isEmpty || _password.text.isEmpty) {
       setState(() => _error = context.l10n.authErrorEmailRequired);
       return;
     }
     final repo = ref.read(authRepositoryProvider);
-    await _run(
-      () => _signUp ? repo.signUpWithEmail(email, _password.text) : repo.signInWithEmail(email, _password.text),
-    );
+    await _run(() => repo.signInAsSuperadmin(email, _password.text));
   }
 
   Future<void> _google() => _run(() => signInWithGoogle(ref));
@@ -88,8 +87,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final tokens = context.tokens;
     final paused = ref.watch(signInsPausedProvider).value ?? false;
     final apple = ref.watch(socialAuthProvider).appleAvailable;
-    final repo = ref.read(authRepositoryProvider);
-
     return AppScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -98,26 +95,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    color: tokens.primaryAccent.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(AppIcons.expenses, size: 36, color: tokens.primaryAccent),
-                ),
-              ),
+              const Center(child: BrandMark()),
               const SizedBox(height: 20),
               Text(
                 l10n.authWelcome,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w700,
+                  fontFamily: AppTypography.fontTitle,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
                   color: tokens.textPrimary,
-                  letterSpacing: -0.5,
+                  letterSpacing: -0.9,
                 ),
               ),
               const SizedBox(height: 8),
@@ -147,77 +135,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   onPressed: (paused || _busy) ? null : _apple,
                 ),
               ],
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(child: Divider(color: tokens.borderColor)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(l10n.authOr, style: TextStyle(color: tokens.textMuted)),
-                  ),
-                  Expanded(child: Divider(color: tokens.borderColor)),
-                ],
-              ),
-              const SizedBox(height: 20),
-              AutofillGroup(
-                child: Column(
-                  children: [
-                    AppTextField(
-                      controller: _email,
-                      label: l10n.authEmail,
-                      hint: l10n.authEmailHint,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      prefixIcon: const Icon(Icons.mail_outline_rounded),
-                    ),
-                    const SizedBox(height: 16),
-                    AppTextField(
-                      controller: _password,
-                      label: l10n.authPassword,
-                      obscureText: true,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _submitEmail(),
-                      prefixIcon: const Icon(Icons.lock_outline_rounded),
-                    ),
-                  ],
-                ),
-              ),
-              if (!_signUp)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => context.push('/reset-password'),
-                    child: Text(
-                      l10n.authForgotPassword,
-                      style: TextStyle(color: tokens.primaryAccent, fontSize: 13, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                )
-              else
-                const SizedBox(height: 12),
-              AppButton(
-                label: _signUp ? l10n.authSignUp : l10n.actionSignIn,
-                isLoading: _busy,
-                isFullWidth: true,
-                onPressed: (_busy || (_signUp && paused)) ? null : _submitEmail,
-              ),
-              TextButton(
-                onPressed: () => setState(() {
-                  _signUp = !_signUp;
+              const SizedBox(height: 12),
+              _SuperadminSection(
+                expanded: _showAdmin,
+                busy: _busy,
+                email: _email,
+                password: _password,
+                onToggle: () => setState(() {
+                  _showAdmin = !_showAdmin;
                   _error = null;
                 }),
-                child: Text(_signUp ? l10n.authToggleToSignIn : l10n.authToggleToSignUp),
+                onSubmit: _submitSuperadmin,
               ),
-              const SizedBox(height: 8),
-              Wrap(
-                alignment: WrapAlignment.center,
-                children: [
-                  TextButton(onPressed: _busy ? null : () => repo.signInAsGuest(), child: Text(l10n.authGuest)),
-                  if (!AppEnv.current.isProd)
-                    TextButton(onPressed: _busy ? null : () => repo.signInAsDemo(), child: Text(l10n.authDemo)),
-                ],
-              ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
               AppTextField(
                 controller: _code,
                 hint: l10n.authTripCodeHint,
@@ -268,4 +198,96 @@ class _Banner extends StatelessWidget {
     ),
     child: Text(text, style: TextStyle(color: color, fontSize: 13, height: 1.4)),
   );
+}
+
+/// Collapsed by default so normal users only ever see Google; admins expand it.
+class _SuperadminSection extends StatelessWidget {
+  const _SuperadminSection({
+    required this.expanded,
+    required this.busy,
+    required this.email,
+    required this.password,
+    required this.onToggle,
+    required this.onSubmit,
+  });
+
+  final bool expanded;
+  final bool busy;
+  final TextEditingController email;
+  final TextEditingController password;
+  final VoidCallback onToggle;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final tokens = context.tokens;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Center(
+          child: TextButton.icon(
+            key: const Key('superadmin-toggle'),
+            onPressed: busy ? null : onToggle,
+            icon: Icon(
+              expanded ? Icons.expand_less_rounded : Icons.admin_panel_settings_outlined,
+              size: 18,
+              color: tokens.textSecondary,
+            ),
+            label: Text(
+              l10n.authSuperadminLogin,
+              style: TextStyle(color: tokens.textSecondary, fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+        if (expanded)
+          AppCard(
+            key: const Key('superadmin-form'),
+            child: AutofillGroup(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(l10n.authSuperadminHint, style: TextStyle(color: tokens.textSecondary, fontSize: 13)),
+                  const SizedBox(height: 14),
+                  AppTextField(
+                    controller: email,
+                    label: l10n.authEmail,
+                    hint: l10n.authEmailHint,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    prefixIcon: const Icon(Icons.mail_outline_rounded),
+                  ),
+                  const SizedBox(height: 14),
+                  AppTextField(
+                    controller: password,
+                    label: l10n.authPassword,
+                    obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => onSubmit(),
+                    prefixIcon: const Icon(Icons.lock_outline_rounded),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => context.push('/reset-password'),
+                      child: Text(
+                        l10n.authForgotPassword,
+                        style: TextStyle(color: tokens.primaryAccent, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  AppButton(
+                    label: l10n.actionSignIn,
+                    isLoading: busy,
+                    isFullWidth: true,
+                    onPressed: busy ? null : onSubmit,
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }

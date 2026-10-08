@@ -4862,3 +4862,19 @@ This document logs all meaningful technical decisions, library choices, design p
   - A large mechanical formatting diff (268 files) is mixed into this phase's changes.
 * **Release Cut:** version bumped to `3.46.0` via `npm run release:minor` (Flutter Phases 10-12 and the Phase 11 cutover documents).
 
+## 276. Flutter Horizon Redesign, Web Platform Support, and Superadmin Authentication Gate
+
+* **Date:** 2026-10-08
+* **Context:** The Flutter application required a full modern visual overhaul across all screens (Horizon blue palette, custom typography, dark/AMOLED modes, responsive layout with wide navigation rail, and custom surface cards). Additionally, the Flutter app was ported to run on Web with WebAssembly SQLite (IndexedDB/OPFS) and Google OAuth redirect support, plus a secure Superadmin-gated authentication barrier.
+* **Decisions:**
+  - **Horizon Design System:** Adopted Plus Jakarta Sans for titles/numbers, IBM Plex Sans for body, and IBM Plex Mono for eyebrows and amounts. Implemented token-driven theming across light (#2559E6 contrast-adjusted primary), dark (#5C8DFF primary, #080B12 background), and AMOLED surfaces with contextual color gradients (Night Sky, Ember, Slate, Dusk).
+  - **Shared Widget Suite:** Reusable `AppBottomNav` (floating dock for iOS/Web, M3 NavigationBar for Android), `AppSideNav` rail for width >= 900px, `HeroSurface`, `AppCard`, and `BrandMark`.
+  - **Web Platform Drift Support:** Split database connection via conditional imports: native SQLite via `dart:io` on mobile/desktop, and `WasmDatabase` (`sqlite3.wasm` + `drift_worker.js`) on web.
+  - **Authentication Gate:** Standard users are restricted to Google sign-in (plus Apple on iOS). Replaced public email/password and guest/demo links with a collapsed, authenticated "Superadmin login" flow that queries `is_superadmin()` in Supabase and signs non-admin accounts straight back out.
+  - **WCAG Accessibility & Quality:** Zero analysis warnings on `dart analyze lib test`, 576 automated Flutter unit, widget, and accessibility tests passing.
+* **Trade-offs Accepted:**
+  - Web receipt photo attachments and file export remain stubbed/pending web-safe file pickers.
+  - Push notifications and scheduled local notifications disabled on Web.
+* **Release Cut:** version bumped to `3.47.0` via `npm run release:minor`. Logged as `FEAT-101`.
+
+

@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../logging/app_logger.dart';
@@ -111,4 +112,28 @@ class FirebasePushGateway implements PushGateway {
   }
 }
 
-final pushGatewayProvider = Provider<PushGateway>((ref) => FirebasePushGateway());
+/// Browser build: no FCM (needs a web Firebase config + service worker). Push is simply off.
+class NoPushGateway implements PushGateway {
+  @override
+  Future<bool> initialize() async => false;
+  @override
+  Future<PushPermission> permission() async => PushPermission.unavailable;
+  @override
+  Future<PushPermission> requestPermission() async => PushPermission.unavailable;
+  @override
+  Future<String?> token() async => null;
+  @override
+  Stream<String> get tokenRefreshes => const Stream.empty();
+  @override
+  Future<void> deleteToken() async {}
+  @override
+  Stream<PushMessage> get onForeground => const Stream.empty();
+  @override
+  Stream<PushMessage> get onOpened => const Stream.empty();
+  @override
+  Future<PushMessage?> initialMessage() async => null;
+  @override
+  String get platform => 'web';
+}
+
+final pushGatewayProvider = Provider<PushGateway>((ref) => kIsWeb ? NoPushGateway() : FirebasePushGateway());

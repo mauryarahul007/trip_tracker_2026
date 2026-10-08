@@ -42,7 +42,7 @@ void main() {
         _buildThemedApp(AppTextField(controller: controller, label: 'Trip Destination', hint: 'e.g. Kyoto, Japan')),
       );
 
-      expect(find.text('Trip Destination'), findsOneWidget);
+      expect(find.text('TRIP DESTINATION'), findsOneWidget);
       expect(find.text('e.g. Kyoto, Japan'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField), 'Kyoto');

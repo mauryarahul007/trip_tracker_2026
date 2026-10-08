@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,6 +11,8 @@ import '../../../domain/logic/tab_trail.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
+import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/app_sheet.dart';
@@ -112,13 +115,30 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
       });
     }
 
+    final wide = MediaQuery.sizeOf(context).width >= kSideNavBreakpoint && tabs.length >= 2;
+    final navItems = [
+      for (final t in tabs)
+        AppNavItem(
+          icon: tripTabIcon(t),
+          label: tripTabLabel(context, t),
+          badge: t == TripNavTab.chat && ref.watch(chatUnreadProvider(widget.tripId)),
+          badgeKey: const Key('chat-tab-unread'),
+        ),
+    ];
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _onBack();
       },
       child: AppScaffold(
+        maxContentWidth: null,
         appBar: AppBar(
+          // Horizon Night Sky header band with light text.
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          flexibleSpace: Container(decoration: BoxDecoration(gradient: tokens.headerGradient)),
+          systemOverlayStyle: SystemUiOverlayStyle.light,
           leading: IconButton(
             tooltip: l10n.actionBack,
             icon: const Icon(AppIcons.back, size: 20),
@@ -132,7 +152,12 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 trip?.name ?? '',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+                style: const TextStyle(
+                  fontFamily: AppTypography.fontTitle,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -176,43 +201,48 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
             ),
           ],
         ),
-        body: Column(
+        body: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const OfflineBanner(),
-            if (_mapExpanded && trip != null)
-              GestureDetector(
-                onTap: () => showModalBottomSheet<void>(
-                  context: context,
-                  isScrollControlled: true,
-                  useSafeArea: true,
-                  builder: (_) => TripRouteModal(trip: trip),
-                ),
-                child: DeferredTripMapHero(trip: trip, height: 160),
+            if (wide)
+              AppSideNav(
+                items: navItems,
+                currentIndex: activeIndex < 0 ? 0 : activeIndex,
+                onTap: (i) => _goTab(tabs[i].index),
+                extended: MediaQuery.sizeOf(context).width >= kSideNavExtendedBreakpoint,
               ),
-            Expanded(child: widget.body),
+            Expanded(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1040),
+                  child: Column(
+                    children: [
+                      const OfflineBanner(),
+                      if (_mapExpanded && trip != null)
+                        GestureDetector(
+                          onTap: () => showModalBottomSheet<void>(
+                            context: context,
+                            isScrollControlled: true,
+                            useSafeArea: true,
+                            builder: (_) => TripRouteModal(trip: trip),
+                          ),
+                          child: DeferredTripMapHero(trip: trip, height: 160),
+                        ),
+                      Expanded(child: widget.body),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
-        bottomNavigationBar: tabs.length < 2
+        bottomNavigationBar: tabs.length < 2 || wide
             ? null
-            : BottomNavigationBar(
+            : AppBottomNav(
                 currentIndex: activeIndex < 0 ? 0 : activeIndex,
-                type: BottomNavigationBarType.fixed,
-                backgroundColor: tokens.bgSurface,
-                selectedItemColor: tokens.primaryAccent,
-                unselectedItemColor: tokens.textMuted,
-                selectedFontSize: 12,
-                unselectedFontSize: 12,
-                elevation: 8,
                 onTap: (i) => _goTab(tabs[i].index),
-                items: [
-                  for (final t in tabs)
-                    BottomNavigationBarItem(
-                      icon: t == TripNavTab.chat && ref.watch(chatUnreadProvider(widget.tripId))
-                          ? Badge(key: const Key('chat-tab-unread'), child: Icon(tripTabIcon(t)))
-                          : Icon(tripTabIcon(t)),
-                      label: tripTabLabel(context, t),
-                    ),
-                ],
+                items: navItems,
               ),
       ),
     );

@@ -1,0 +1,128 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Horizon · 03 Mobile — Trips hub</title>
+<link rel="stylesheet" href="kit.css"><script src="kit.js"></script>
+<style>.qr{width:168px;height:168px;border-radius:24px;background:#fff;padding:14px;box-shadow:var(--shadow)}.qr i{display:block;width:100%;height:100%;background:
+ conic-gradient(from 90deg at 50% 50%,#0B0F1A 25%,#fff 0 50%,#0B0F1A 0 75%,#fff 0) 0 0/14px 14px;-webkit-mask:linear-gradient(#000,#000);border-radius:8px;opacity:.9}</style>
+</head><body><div class="board">
+<span class="tag">03 · Mobile · Trips hub</span>
+<h1>My Trips — the home screen</h1>
+<p class="lede">The home screen becomes a <b>boarding-pass dashboard</b>: today’s trip as a Night Sky hero with the flight arc showing which day you’re on, then the rest of your trips as passport cards. The global dock (Trips · Balances · + New trip · Activity · Me) is a proposed new top-level IA — settings and notifications stop living in an overflow menu.</p>
+
+<h2>Home — iOS, Android, dark</h2>
+<div class="grid">
+
+<div class="cell" data-n="01" data-cap="My Trips" data-sub="iOS · light">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="hrow sp" style="height:58px"><div class="hrow gap12"><span class="avatar lg a1" style="width:44px;height:44px;font-size:16px">R</span><div><div class="t-xs">Thu, 8 Oct</div><div class="h-sm" style="font-size:17px">Good morning, Rahul</div></div></div><div class="hrow gap8"><span class="icon-btn sm"><i data-i="search"></i></span><span class="icon-btn sm"><i data-i="bell"></i><i class="pip"></i></span></div></div>
+ <div data-hero class="mt8"></div>
+ <div class="hrow sp" style="margin-top:22px"><div class="h-md">My trips</div><div class="hrow gap8"><span class="chip sm">Newest<i data-i="cd" data-c="s14"></i></span></div></div>
+ <div data-trip="bali" class="mt12"></div>
+</div>
+<div class="dock"><div class="it on"><i data-i="home"></i>Trips</div><div class="it"><i data-i="swap"></i>Balances</div><div class="fab"><i data-i="plus" data-c="s28"></i></div><div class="it"><i data-i="bell"></i>Activity<span class="bd">3</span></div><div class="it"><i data-i="user"></i>Me</div></div></div></div></div>
+
+<div class="cell" data-n="02" data-cap="My Trips" data-sub="Android · Material 3">
+<div class="phone android"><div class="scr"><div class="body">
+ <div class="hrow sp" style="height:60px"><div class="h-lg" style="font-size:26px">My Trips</div><div class="hrow gap8"><span class="icon-btn sm"><i data-i="bell"></i><i class="pip"></i></span><span class="avatar a1" style="width:38px;height:38px">R</span></div></div>
+ <div class="field row" style="border-radius:99px;min-height:52px;background:var(--card);box-shadow:var(--shadow)"><i data-i="search" style="color:var(--ink3)"></i><div class="v ph grow">Search trips</div><i data-i="sliders" style="color:var(--ink3)"></i></div>
+ <div class="hrow gap8 mt12"><span class="chip on">All</span><span class="chip">Active</span><span class="chip">Upcoming</span><span class="chip">Past</span></div>
+ <div data-trip="goa" class="mt16"></div><div data-trip="bali" class="mt12"></div><div data-trip="manali" class="mt12"></div>
+</div>
+<div class="extfab" style="bottom:100px"><i data-i="plus"></i>New trip</div>
+<div class="m3dock"><div class="it on"><span class="pill"><i data-i="home"></i></span>Trips</div><div class="it"><span class="pill"><i data-i="swap"></i></span>Balances</div><div class="it"><span class="pill"><i data-i="bell"></i></span>Activity</div><div class="it"><span class="pill"><i data-i="user"></i></span>Me</div></div></div></div></div>
+
+<div class="cell" data-n="03" data-cap="My Trips" data-sub="iOS · dark (dusk accents)">
+<div class="phone ios" data-dark="1" data-sb="light"><div class="scr"><div class="body">
+ <div class="hrow sp" style="height:58px"><div class="hrow gap12"><span class="avatar a1" style="width:44px;height:44px;font-size:16px">R</span><div><div class="t-xs">Thu, 8 Oct</div><div class="h-sm" style="font-size:17px">Good evening, Rahul</div></div></div><div class="hrow gap8"><span class="icon-btn sm"><i data-i="search"></i></span><span class="icon-btn sm"><i data-i="bell"></i><i class="pip" style="border-color:var(--card)"></i></span></div></div>
+ <div data-hero class="mt8"></div>
+ <div class="hrow sp" style="margin-top:22px"><div class="h-md">My trips</div><span class="chip sm">Newest<i data-i="cd" data-c="s14"></i></span></div>
+ <div data-trip="bali" class="mt12"></div>
+</div>
+<div class="dock"><div class="it on"><i data-i="home"></i>Trips</div><div class="it"><i data-i="swap"></i>Balances</div><div class="fab"><i data-i="plus" data-c="s28"></i></div><div class="it"><i data-i="bell"></i>Activity<span class="bd">3</span></div><div class="it"><i data-i="user"></i>Me</div></div></div></div></div>
+
+<div class="cell" data-n="04" data-cap="Trips list — scrolled" data-sub="Search · sort · archived">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="large-title" style="padding-top:16px">My Trips</div>
+ <div class="field row" style="border-radius:99px;min-height:50px;background:var(--card);box-shadow:var(--shadow)"><i data-i="search" style="color:var(--ink3)"></i><div class="v grow">Ba<span style="color:var(--primary)">|</span></div><i data-i="x" data-c="s18" style="color:var(--ink3)"></i></div>
+ <div class="hrow sp mt16"><div class="hrow gap8"><span class="chip on">All · 3</span><span class="chip">Active</span><span class="chip">Past</span></div><span class="chip sm"><i data-i="sliders" data-c="s14"></i>A–Z</span></div>
+ <div data-trip="bali" class="mt16"></div><div data-trip="manali" class="mt12"></div>
+ <div class="hrow sp" style="margin-top:18px;padding:0 4px"><span class="eyebrow">Archived · 1</span><i data-i="cd" data-c="s18" style="color:var(--ink3)"></i></div>
+</div>
+<div class="dock"><div class="it on"><i data-i="home"></i>Trips</div><div class="it"><i data-i="swap"></i>Balances</div><div class="fab"><i data-i="plus" data-c="s28"></i></div><div class="it"><i data-i="bell"></i>Activity<span class="bd">3</span></div><div class="it"><i data-i="user"></i>Me</div></div></div></div></div>
+</div>
+
+<h2>Empty, offline, create, join, share</h2>
+<div class="grid">
+
+<div class="cell" data-n="05" data-cap="No trips yet" data-sub="Helpful empty space">
+<div class="phone ios"><div class="scr"><div style="position:absolute;inset:0;height:460px" class="pattern"></div><div style="position:absolute;inset:0;height:460px;background:linear-gradient(180deg,transparent 25%,var(--bg))"></div>
+ <div class="body"><div class="hrow sp" style="height:58px"><div class="h-sm" style="font-size:17px">Good morning, Rahul</div><span class="icon-btn sm"><i data-i="bell"></i></span></div>
+ <div class="stack" style="align-items:center;text-align:center;margin-top:70px"><div style="position:relative;width:200px;height:170px"><span class="orb" style="position:absolute;left:46px;top:6px;width:110px;height:110px"><i data-i="plane" data-c="s32" style="width:54px;height:54px"></i></span><span class="orb o2" style="position:absolute;left:2px;top:92px;width:56px;height:56px"><i data-i="pin" data-c="s24"></i></span><span class="orb o3" style="position:absolute;right:6px;top:100px;width:48px;height:48px"><i data-i="receipt" data-c="s20"></i></span></div>
+ <div class="h-lg mt20">No trips yet</div><p class="t-body muted mt8" style="max-width:280px">Start a trip for your next getaway, or hop into a friend’s with a code.</p>
+ <span class="btn primary mt24" style="width:260px"><i data-i="plus" data-c="s20"></i>Create trip</span><span class="btn soft mt12" style="width:260px">Join with code</span></div></div>
+ <div class="dock"><div class="it on"><i data-i="home"></i>Trips</div><div class="it"><i data-i="swap"></i>Balances</div><div class="fab"><i data-i="plus" data-c="s28"></i></div><div class="it"><i data-i="bell"></i>Activity</div><div class="it"><i data-i="user"></i>Me</div></div></div></div></div>
+
+<div class="cell" data-n="06" data-cap="Offline + syncing" data-sub="Banner · sync chip">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="hrow sp" style="height:58px"><div class="h-lg" style="font-size:26px">My Trips</div><span class="chip sm" style="background:var(--warn-soft);color:var(--warn);box-shadow:none"><i data-i="refresh" data-c="s14"></i>2 pending</span></div>
+ <div class="card sm hrow gap12" style="background:var(--ink);color:var(--bg);box-shadow:var(--shadow-lg)"><span class="tile sm" style="background:rgba(255,255,255,.12);color:#fff;width:36px;height:36px"><i data-i="wifioff" data-c="s20"></i></span><div class="grow"><div class="h-sm" style="font-size:14px;color:#fff">You’re offline</div><div style="font-size:12px;opacity:.65;margin-top:2px">Everything is saved on this phone and syncs when you’re back.</div></div></div>
+ <div data-trip="goa" class="mt16"></div><div data-trip="bali" class="mt12"></div>
+</div>
+<div class="dock"><div class="it on"><i data-i="home"></i>Trips</div><div class="it"><i data-i="swap"></i>Balances</div><div class="fab"><i data-i="plus" data-c="s28"></i></div><div class="it"><i data-i="bell"></i>Activity</div><div class="it"><i data-i="user"></i>Me</div></div></div></div></div>
+
+<div class="cell" data-n="07" data-cap="Create trip" data-sub="Bottom sheet · iOS">
+<div class="phone ios"><div class="scr"><div class="body"><div class="large-title" style="padding-top:16px">My Trips</div><div data-trip="goa"></div></div><div class="dim"></div>
+ <div class="sheet" style="padding-bottom:30px"><div class="grab"></div><div class="hrow sp"><div class="h">New trip</div><span class="icon-btn sm" style="box-shadow:none;background:var(--card2)"><i data-i="x" data-c="s18"></i></span></div>
+ <div class="stack gap10 mt16"><div class="field focus"><label>Trip name</label><div class="v">Goa weekend<span style="color:var(--primary)">|</span></div></div><div class="field row"><div class="grow stack gap4"><label style="font:600 10.5px var(--mono);letter-spacing:.1em;color:var(--ink3)">DESTINATION</label><div class="v">Goa, India</div></div><i data-i="pin" style="color:var(--ink3)"></i></div>
+ <div class="hrow gap10"><div class="field grow row"><div class="grow stack gap4"><label style="font:600 10.5px var(--mono);letter-spacing:.1em;color:var(--ink3)">DATES</label><div class="v">12 – 16 Nov</div></div><i data-i="cal" data-c="s20" style="color:var(--ink3)"></i></div><div class="field" style="width:120px"><label>Currency</label><div class="v">INR ₹ ▾</div></div></div></div>
+ <div class="hrow gap6 mt12"><i data-i="spark" data-c="s16 prim"></i><span class="t-xs">Currency picked from your destination. Change any time.</span></div>
+ <span class="btn primary block mt16">Create trip</span></div></div></div></div>
+
+<div class="cell" data-n="08" data-cap="Pick dates" data-sub="Android · M3 range picker">
+<div class="phone android"><div class="scr"><div class="dim"></div><div style="position:absolute;left:18px;right:18px;top:120px;background:var(--card);border-radius:28px;padding:22px 18px;z-index:30;box-shadow:var(--shadow-lg)">
+ <div class="eyebrow">Select dates</div><div class="h-lg mt8" style="font-size:24px">12 – 16 Nov</div><div class="hrow sp mt16"><span class="h-sm">November 2026</span><div class="hrow gap8"><i data-i="cl"></i><i data-i="cr"></i></div></div>
+ <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px 0;margin-top:14px;text-align:center;font:600 13px var(--body)">
+ <span class="faint">S</span><span class="faint">M</span><span class="faint">T</span><span class="faint">W</span><span class="faint">T</span><span class="faint">F</span><span class="faint">S</span>
+ <span style="color:var(--ink3)">1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span>
+ <span style="background:var(--primary);color:#fff;border-radius:50% 0 0 50%;padding:9px 0">12</span><span style="background:var(--primary-soft);color:var(--primary);padding:9px 0">13</span><span style="background:var(--primary-soft);color:var(--primary);padding:9px 0">14</span><span style="background:var(--primary-soft);color:var(--primary);padding:9px 0">15</span>
+ <span style="background:var(--primary);color:#fff;border-radius:0 50% 50% 0;padding:9px 0;margin-left:-0px">16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span>30</span></div>
+ <div class="hrow ctr gap10 mt20" style="justify-content:flex-end"><span class="btn sm" style="background:transparent;color:var(--primary)">Cancel</span><span class="btn sm primary">Save</span></div></div></div></div></div>
+</div>
+
+<div class="grid mt32">
+<div class="cell" data-n="09" data-cap="Invite travelers" data-sub="Share sheet · iOS">
+<div class="phone ios"><div class="scr"><div class="dim"></div><div class="sheet" style="padding-bottom:28px;top:130px"><div class="grab"></div>
+ <div class="stack" style="align-items:center;text-align:center"><div class="eyebrow">Join code</div><div class="amt-lg mt8" style="letter-spacing:.18em;font-size:40px">482 913</div>
+ <div class="qr mt16" data-qr style="width:158px;height:158px"></div></div>
+ <div class="hrow gap10 mt20"><span class="btn primary grow"><i data-i="share" data-c="s20"></i>Share invite</span><span class="btn soft grow"><i data-i="copy" data-c="s20"></i>Copy code</span></div>
+ <div class="card sm mt16 flat"><div class="hrow gap12"><span class="tile sm c-stay"><i data-i="eye"></i></span><div class="grow"><div class="h-sm" style="font-size:14px">View-only link</div><div class="t-xs mt4">Friends &amp; family see totals, never editing.</div></div><span class="toggle"></span></div></div></div></div></div></div>
+
+<div class="cell" data-n="10" data-cap="Activity" data-sub="Notifications · iOS">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="large-title" style="padding-top:16px">Activity</div>
+ <div class="seg"><span class="on">All trips</span><span>This trip</span></div>
+ <div class="hrow gap8 mt12"><span class="chip on">All</span><span class="chip">Money</span><span class="chip sm end flat">Mark all read</span></div>
+ <div class="sect">Today</div>
+ <div class="list"><div class="li"><span class="tile sm c-food"><i data-i="receipt"></i></span><div class="grow"><div class="tt">Aarav added “Beach shack dinner”</div><div class="ss">Goa Weekend · your share ₹728</div></div><div class="stack" style="align-items:flex-end;gap:6px"><span class="t-xs">12m</span><i style="width:9px;height:9px;border-radius:50%;background:var(--primary)"></i></div></div>
+ <div class="li"><span class="tile sm c-green"><i data-i="check"></i></span><div class="grow"><div class="tt">Meera settled ₹1,200 with you</div><div class="ss">Goa Weekend · confirm received</div></div><div class="stack" style="align-items:flex-end;gap:6px"><span class="t-xs">1h</span><i style="width:9px;height:9px;border-radius:50%;background:var(--primary)"></i></div></div>
+ <div class="li"><span class="tile sm c-stay"><i data-i="users"></i></span><div class="grow"><div class="tt">Isha joined Goa Weekend</div><div class="ss">5 travelers now</div></div><span class="t-xs">3h</span></div></div>
+ <div class="sect">Yesterday</div>
+ <div class="list"><div class="li"><span class="tile sm c-act"><i data-i="plane"></i></span><div class="grow"><div class="tt">Flight reminder · BOM → GOI</div><div class="ss">Boarding pass is ready in Notes</div></div><span class="t-xs">1d</span></div></div>
+</div>
+<div class="dock"><div class="it"><i data-i="home"></i>Trips</div><div class="it"><i data-i="swap"></i>Balances</div><div class="fab"><i data-i="plus" data-c="s28"></i></div><div class="it on"><i data-i="bell"></i>Activity</div><div class="it"><i data-i="user"></i>Me</div></div></div></div></div>
+
+<div class="cell" data-n="11" data-cap="Across your trips" data-sub="Global Balances tab · Ember">
+<div class="phone ios" data-sb="light"><div class="scr"><div class="body">
+ <div class="large-title" style="padding-top:16px">Balances</div>
+ <div class="hero ember" style="padding:22px"><div class="dots"></div><div class="eyebrow" style="color:rgba(255,255,255,.6)">Net across all trips</div><div class="amt-xl mt8" style="font-size:46px">−₹1,250<span class="dec">.00</span></div><div class="hrow gap8 mt12"><span class="badge neg"><i data-i="uprt" data-c="s14"></i>You owe ₹3,650</span><span class="badge pos"><i data-i="dnlt" data-c="s14"></i>Owed ₹2,400</span></div></div>
+ <div class="sect">By trip</div>
+ <div class="list"><div class="li"><span class="stamp" style="color:#2F6BFF;width:42px;height:42px;font-size:10px">GOI</span><div class="grow"><div class="tt">Goa Weekend</div><div class="ss">Pay Aarav ₹2,450</div></div><div class="amt neg">−₹2,450</div></div>
+ <div class="li"><span class="stamp" style="color:#16A34A;width:42px;height:42px;font-size:10px">KUU</span><div class="grow"><div class="tt">Manali Winter</div><div class="ss">Meera owes you</div></div><div class="amt pos">+₹1,200</div></div>
+ <div class="li"><span class="stamp" style="color:#8B3CF7;width:42px;height:42px;font-size:10px">DPS</span><div class="grow"><div class="tt">Bali Escape</div><div class="ss">No expenses yet</div></div><div class="amt faint">₹0</div></div></div>
+</div>
+<div class="dock"><div class="it"><i data-i="home"></i>Trips</div><div class="it on"><i data-i="swap"></i>Balances</div><div class="fab"><i data-i="plus" data-c="s28"></i></div><div class="it"><i data-i="bell"></i>Activity</div><div class="it"><i data-i="user"></i>Me</div></div></div></div></div>
+
+<div class="cell" data-n="12" data-cap="Trip menu · long-press / ⋯" data-sub="Context sheet">
+<div class="phone ios"><div class="scr"><div class="body"><div class="large-title" style="padding-top:16px">My Trips</div><div data-trip="goa"></div><div data-trip="bali" class="mt12"></div></div><div class="dim"></div>
+ <div class="sheet" style="padding-bottom:30px"><div class="grab"></div><div class="hrow gap12"><span class="stamp" style="color:#2F6BFF;width:44px;height:44px;font-size:10px">GOI</span><div><div class="h-sm">Goa Weekend</div><div class="t-xs">12–16 Nov · 5 travelers</div></div></div>
+ <div class="list mt16" style="box-shadow:none;background:var(--card2)"><div class="li"><i data-i="share" data-c="prim"></i><div class="tt grow">Invite travelers</div></div><div class="li"><i data-i="download" data-c="prim"></i><div class="tt grow">Export CSV / backup</div></div><div class="li"><i data-i="archive" data-c="prim"></i><div class="tt grow">Archive trip</div></div><div class="li"><i data-i="trash" data-c="neg"></i><div class="tt grow neg">Delete trip</div></div></div></div></div></div></div>
+</div>
+</div></body></html>

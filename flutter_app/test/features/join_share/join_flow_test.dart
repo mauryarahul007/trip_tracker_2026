@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:trip_tracker/data/auth/social_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trip_tracker/domain/models/join_share.dart';
 import 'package:trip_tracker/shared/widgets/app_button.dart';
@@ -77,15 +78,14 @@ void main() {
       expect(tester.widget<AppButton>(button('Retry')).onPressed, isNotNull);
     });
 
-    testApp('"More sign-in options" returns to the invite after email sign-in', (tester) async {
+    testApp('"More sign-in options" returns to the invite after Google sign-in', (tester) async {
       final app = await pumpApp(tester, launchLink: Uri.parse('com.triptracker.app://join/ABC123'));
       await tester.tap(find.text('More sign-in options'));
       await settle(tester);
-      await tester.enterText(find.byType(TextField).at(0), 'a@b.c');
-      await tester.enterText(find.byType(TextField).at(1), 'pw');
-      await tester.tap(find.widgetWithText(AppButton, 'Sign In').first);
+      app.social.googleResult = const SocialCredential(idToken: 'g-token');
+      await tester.tap(find.widgetWithText(AppButton, 'Continue with Google'));
       await settle(tester, rounds: 12);
-      expect(app.auth.calls, contains('email:a@b.c'));
+      expect(app.auth.calls, contains('google'));
       expect(where(tester), '/join/ABC123');
       expect(find.text('Which traveler are you?'), findsOneWidget);
     });

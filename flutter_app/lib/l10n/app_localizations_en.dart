@@ -175,6 +175,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrorInvalid => 'Invalid email or password.';
 
   @override
+  String get authSuperadminLogin => 'Superadmin login';
+
+  @override
+  String get authSuperadminHint => 'Admins only. Everyone else continues with Google.';
+
+  @override
+  String get authErrorNotSuperadmin => 'This account is not a superadmin. Please continue with Google.';
+
+  @override
   String get authErrorBanned => 'This account has been suspended.';
 
   @override

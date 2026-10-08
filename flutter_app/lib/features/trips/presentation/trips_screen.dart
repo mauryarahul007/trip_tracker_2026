@@ -10,6 +10,7 @@ import '../../../core/clock.dart';
 import '../../../core/env/app_env.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/back_exit.dart';
+import '../../../domain/logic/trip_status.dart';
 import '../../../domain/models/trip.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
@@ -99,8 +100,14 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     );
   }
 
-  Widget _card(Trip t, bool isOwner) {
-    final card = TripCard(trip: t, now: _now, onTap: () => _open(t), onMenu: isOwner ? () => _delete(t) : null);
+  Widget _card(Trip t, bool isOwner, {bool featured = false}) {
+    final card = TripCard(
+      trip: t,
+      now: _now,
+      onTap: () => _open(t),
+      onMenu: isOwner ? () => _delete(t) : null,
+      featured: featured,
+    );
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: isOwner
@@ -266,11 +273,16 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                       );
                     }
                     bool owner(Trip t) => t.ownerId == auth.userId;
+                    // The first trip happening today becomes the Night Sky hero.
+                    final heroId = active
+                        .where((t) => tripStatus(t.startDate, t.endDate, _now).phase == TripPhase.active)
+                        .map((t) => t.id)
+                        .firstOrNull;
                     return ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                       children: [
-                        for (final t in active) _card(t, owner(t)),
+                        for (final t in active) _card(t, owner(t), featured: t.id == heroId),
                         if (archived.isNotEmpty)
                           ExpansionTile(
                             tilePadding: EdgeInsets.zero,

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:trip_tracker/shared/widgets/app_bottom_nav.dart';
 import 'package:trip_tracker/core/clock.dart';
 import 'package:trip_tracker/data/providers.dart';
 import 'package:trip_tracker/domain/logic/back_exit.dart';
@@ -41,12 +42,23 @@ String location(WidgetTester tester) => GoRouterState.of(tester.element(find.byT
 Finder tabBody(String tab) => find.byKey(Key('tab-$tab'));
 
 void main() {
+  testApp('wide window swaps the bottom bar for a side rail', (tester) async {
+    await pumpApp(tester, user: asha);
+    tester.view.physicalSize = const Size(1400, 900);
+    addTearDown(tester.view.reset);
+    await openTrip(tester);
+    expect(find.byType(AppBottomNav), findsNothing);
+    expect(find.byType(AppSideNav), findsOneWidget);
+    expect(find.descendant(of: find.byType(AppSideNav), matching: find.text('Balances')), findsOneWidget);
+    expect(find.byType(ExpensesTab), findsOneWidget);
+  });
+
   testApp('opening a trip shows its name, default tabs and the Expenses tab', (tester) async {
     await pumpApp(tester, user: asha);
     final id = await openTrip(tester);
     expect(location(tester), '/trip/$id/expenses');
     expect(find.descendant(of: find.byType(AppBar), matching: find.text('Goa Weekend')), findsOneWidget);
-    final bar = find.byType(BottomNavigationBar);
+    final bar = find.byType(AppBottomNav);
     for (final label in ['Expenses', 'Balances', 'Members', 'Notes']) {
       expect(
         find.descendant(of: bar, matching: find.text(label)),
@@ -61,9 +73,9 @@ void main() {
   testApp('chat-first flag puts Chat first and makes it the landing tab', (tester) async {
     await pumpApp(tester, user: asha, flagsOn: {'enableChatFirstNav'});
     final id = await openTrip(tester);
-    final bar = find.byType(BottomNavigationBar);
+    final bar = find.byType(AppBottomNav);
     expect(find.descendant(of: bar, matching: find.text('Chat')), findsOneWidget);
-    final items = tester.widget<BottomNavigationBar>(bar).items.map((i) => i.label).toList();
+    final items = tester.widget<AppBottomNav>(bar).items.map((i) => i.label).toList();
     expect(items.first, 'Chat');
     expect(id, isNotEmpty);
   });
@@ -71,13 +83,13 @@ void main() {
   testApp('notes/passes/chat all off hides the Notes tab', (tester) async {
     await pumpApp(tester, user: asha, flagsOff: {'enableNotesAndChecklist', 'enableTravelPasses', 'enableTripChat'});
     await openTrip(tester);
-    expect(find.descendant(of: find.byType(BottomNavigationBar), matching: find.text('Notes')), findsNothing);
+    expect(find.descendant(of: find.byType(AppBottomNav), matching: find.text('Notes')), findsNothing);
   });
 
   testApp('tapping a tab switches content and the route', (tester) async {
     await pumpApp(tester, user: asha);
     final id = await openTrip(tester);
-    await tester.tap(find.descendant(of: find.byType(BottomNavigationBar), matching: find.text('Members')));
+    await tester.tap(find.descendant(of: find.byType(AppBottomNav), matching: find.text('Members')));
     await settle(tester, rounds: 12);
     expect(location(tester), '/trip/$id/members');
     expect(tabBody('members'), findsOneWidget);
@@ -98,7 +110,7 @@ void main() {
   testApp('system back walks the tab trail, then leaves the trip', (tester) async {
     await pumpApp(tester, user: asha);
     final id = await openTrip(tester);
-    final bar = find.byType(BottomNavigationBar);
+    final bar = find.byType(AppBottomNav);
     await tester.tap(find.descendant(of: bar, matching: find.text('Balances')));
     await settle(tester, rounds: 10);
     await tester.tap(find.descendant(of: bar, matching: find.text('Members')));

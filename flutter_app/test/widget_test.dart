@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:trip_tracker/data/auth/social_auth.dart';
 import 'package:trip_tracker/shared/widgets/app_button.dart';
 
 import 'support/pump_app.dart';
@@ -13,7 +14,7 @@ void main() {
 
   testApp('signed out: redirected to login', (tester) async {
     await pumpApp(tester);
-    expect(find.text('Sign In'), findsWidgets);
+    expect(find.text('Continue with Google'), findsWidgets);
     expect(find.text('My Trips'), findsNothing);
   });
 
@@ -22,16 +23,15 @@ void main() {
     await app.auth.signOut();
     await tester.pumpAndSettle();
     expect(find.text('My Trips'), findsNothing);
-    expect(find.text('Sign In'), findsWidgets);
+    expect(find.text('Continue with Google'), findsWidgets);
   });
 
   testApp('first sign-in goes through onboarding, then trips', (tester) async {
     final app = await pumpApp(tester);
-    await tester.enterText(field(0), 'a@b.c');
-    await tester.enterText(field(1), 'pw');
-    await tester.tap(find.widgetWithText(AppButton, 'Sign In').first);
+    app.social.googleResult = const SocialCredential(idToken: 'g-token');
+    await tester.tap(find.widgetWithText(AppButton, 'Continue with Google'));
     await tester.pumpAndSettle();
-    expect(app.auth.calls, contains('email:a@b.c'));
+    expect(app.auth.calls, contains('google'));
     expect(find.text('Skip'), findsOneWidget);
     await tester.tap(find.text('Skip'));
     await tester.pumpAndSettle();

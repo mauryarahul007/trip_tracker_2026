@@ -161,7 +161,7 @@ class AuthUser {
   bool get isLocalOnly => provider == 'guest' || provider == 'demo';
 }
 
-enum AuthFailure { signInsPaused, banned, invalidCredentials, network, unknown }
+enum AuthFailure { signInsPaused, banned, invalidCredentials, notSuperadmin, network, unknown }
 
 class AuthException implements Exception {
   final AuthFailure failure;
@@ -179,6 +179,10 @@ abstract class AuthRepository {
   Future<bool> signInsPaused();
 
   Future<void> signInWithEmail(String email, String password);
+
+  /// Email + password sign-in that only succeeds for accounts listed in `superadmins`.
+  /// Any other account is signed straight back out and rejected with [AuthFailure.notSuperadmin].
+  Future<void> signInAsSuperadmin(String email, String password);
   Future<void> signUpWithEmail(String email, String password, {String? displayName});
   Future<void> resetPassword(String email);
 
@@ -186,6 +190,10 @@ abstract class AuthRepository {
   Stream<bool> watchPasswordRecovery();
   Future<void> updatePassword(String newPassword);
   Future<void> signInWithGoogleIdToken(String idToken, {String? nonce});
+
+  /// Browser only: full-page redirect through Supabase's Google OAuth (the native
+  /// id-token flow is not available on web). Returns once the redirect is launched.
+  Future<void> signInWithGoogleOAuth({required String redirectTo});
   Future<void> signInWithAppleIdToken(String idToken, {String? nonce, String? fullName});
   Future<void> signInAsGuest({String displayName = 'Traveler'});
   Future<void> signInAsDemo();

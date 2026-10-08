@@ -1,0 +1,165 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Horizon · 04 Mobile — Expenses</title>
+<link rel="stylesheet" href="kit.css"><script src="kit.js"></script>
+<style>
+.w60{color:rgba(255,255,255,.6)}
+.gl{padding:9px 14px;font:600 12.5px var(--body)}
+.scroll-h{display:flex;gap:8px;overflow:hidden;margin:0 -20px;padding:0 20px}
+.receipt{background:#fff;color:#111;border-radius:6px;padding:16px 16px 22px;font:500 11px/1.9 var(--mono);box-shadow:0 20px 30px -14px rgba(0,0,0,.5);position:relative}
+.receipt b{display:flex;justify-content:space-between;font-weight:500}
+.corner{position:absolute;width:26px;height:26px;border:3px solid var(--primary)}
+.wave{display:flex;gap:4px;align-items:center;height:56px}.wave i{width:5px;border-radius:5px;background:var(--primary)}
+</style></head><body><div class="board">
+<span class="tag">04 · Mobile · Trip workspace · Expenses</span>
+<h1>Expenses — log fast, read at a glance</h1>
+<p class="lede">The Expenses tab leads with an <b>Ember money hero</b> (total, per-person, top category), a row of context actions, then days of expenses with big readable rows. The centre dock FAB opens Add expense; the same FAB morphs into Quick add on long-press.</p>
+
+<h2>List &amp; detail</h2>
+<div class="grid">
+
+<div class="cell" data-n="01" data-cap="Expenses tab" data-sub="iOS · light">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div data-thead></div>
+ <div class="hero ember" style="padding:20px"><div class="dots"></div>
+  <div class="hrow sp"><span class="eyebrow w60">Total spent</span><span class="badge"><i data-i="uprt" data-c="s14"></i>₹12,940 today</span></div>
+  <div class="amt-xl mt8">₹84,320<span class="dec">.00</span></div>
+  <div class="hrow gap8 mt16"><span class="glass gl">Per person ₹16,864</span><span class="glass gl">Top · Stay 38%</span></div></div>
+ <div class="scroll-h mt12"><span class="chip on" style="background:var(--ink)"><i data-i="swap" data-c="s16"></i>You owe ₹2,450 · Settle up</span><span class="chip"><i data-i="flag" data-c="s16"></i>1 dispute</span></div>
+ <div class="hrow gap8 mt12"><div class="field row grow" style="min-height:44px;border-radius:99px;padding:0 16px;background:var(--card);box-shadow:var(--shadow)"><i data-i="search" data-c="s18" style="color:var(--ink3)"></i><div class="v ph" style="font-size:14px">Search expenses</div></div><span class="icon-btn sm"><i data-i="filter"></i></span></div>
+ <div class="hrow gap8 mt12"><span class="chip on">All</span><span class="chip">Paid by me</span><span class="chip">Involves me</span></div>
+ <div class="sect" style="padding-top:16px">Fri 14 Nov · Today<span style="color:var(--ink2)">₹12,940</span></div>
+ <div class="list"><div class="li"><span class="tile sm c-food"><i data-i="food"></i></span><div class="grow"><div class="tt">Beach shack dinner</div><div class="ss">Paid by Aarav · your share ₹728</div></div><div class="end"><div class="amt">₹3,640</div></div></div>
+ <div class="li"><span class="tile sm c-trans"><i data-i="car"></i></span><div class="grow"><div class="tt">Scooter rental × 3</div><div class="ss">Paid by you · you’re owed ₹1,440</div></div><div class="end"><div class="amt">₹1,800</div></div></div></div>
+</div><div data-tdock="exp"></div></div></div></div>
+
+<div class="cell" data-n="02" data-cap="Expenses tab · compact" data-sub="Android · Material 3">
+<div class="phone android"><div class="scr"><div class="body" style="padding:0 16px">
+ <div class="hrow sp" style="height:60px"><div class="hrow gap12"><i data-i="arrl"></i><div><div class="h-md" style="font-size:19px">Goa Weekend</div><div class="t-xs">Day 3 of 5 · 5 travelers</div></div></div><div class="hrow gap14"><i data-i="bell"></i><i data-i="dots"></i></div></div>
+ <div class="card" style="padding:16px 18px;border-radius:24px"><div class="hrow sp"><div><div class="t-xs">Total spent</div><div class="amt-lg mt4">₹84,320<span class="dec">.00</span></div></div><div class="donut" style="--s:76px"></div></div><div class="hrow gap8 mt12"><span class="badge">Per person ₹16,864</span><span class="badge prim">Stay 38%</span></div></div>
+ <div class="hrow gap8 mt12"><span class="chip on">All</span><span class="chip">Paid by me</span><span class="chip">Involves me</span></div>
+ <div class="sect" style="padding-top:14px">Today<span>₹12,940</span></div>
+ <div class="list"><div class="li" style="min-height:54px;padding:9px 14px"><span class="tile sm c-food" style="width:34px;height:34px"><i data-i="food" data-c="s18"></i></span><div class="grow"><div class="tt" style="font-size:14px">Beach shack dinner</div><div class="ss">Aarav · ₹728 yours</div></div><div class="amt" style="font-size:15px">₹3,640</div></div>
+ <div class="li" style="min-height:54px;padding:9px 14px"><span class="tile sm c-trans" style="width:34px;height:34px"><i data-i="car" data-c="s18"></i></span><div class="grow"><div class="tt" style="font-size:14px">Scooter rental × 3</div><div class="ss">You · owed ₹1,440</div></div><div class="amt" style="font-size:15px">₹1,800</div></div>
+ <div class="li" style="min-height:54px;padding:9px 14px"><span class="tile sm c-act" style="width:34px;height:34px"><i data-i="ticket" data-c="s18"></i></span><div class="grow"><div class="tt" style="font-size:14px">Sunset cruise</div><div class="ss">Meera · ₹1,500 yours</div></div><div class="amt" style="font-size:15px">₹7,500</div></div></div>
+</div><div class="m3fab"><i data-i="plus"></i>Add expense</div><div data-tdock="exp" data-os="m3"></div></div></div></div>
+
+<div class="cell" data-n="03" data-cap="Expenses tab" data-sub="iOS · dark">
+<div class="phone ios" data-dark="1" data-sb="light"><div class="scr"><div class="body">
+ <div data-thead></div>
+ <div class="hero ember" style="padding:20px"><div class="dots"></div><div class="hrow sp"><span class="eyebrow w60">Total spent</span><span class="badge"><i data-i="uprt" data-c="s14"></i>₹12,940 today</span></div><div class="amt-xl mt8">₹84,320<span class="dec">.00</span></div><div class="hrow gap8 mt16"><span class="glass gl">Per person ₹16,864</span><span class="glass gl">Top · Stay 38%</span></div></div>
+ <div class="scroll-h mt12"><span class="chip on"><i data-i="swap" data-c="s16"></i>You owe ₹2,450 · Settle up</span><span class="chip"><i data-i="flag" data-c="s16"></i>1 dispute</span></div>
+ <div class="sect" style="padding-top:18px">Fri 14 Nov · Today<span style="color:var(--ink2)">₹12,940</span></div>
+ <div class="list"><div class="li"><span class="tile sm c-food"><i data-i="food"></i></span><div class="grow"><div class="tt">Beach shack dinner</div><div class="ss">Paid by Aarav · your share ₹728</div></div><div class="end"><div class="amt">₹3,640</div></div></div>
+ <div class="li"><span class="tile sm c-trans"><i data-i="car"></i></span><div class="grow"><div class="tt">Scooter rental × 3</div><div class="ss">Paid by you · you’re owed ₹1,440</div></div><div class="end"><div class="amt">₹1,800</div></div></div>
+ <div class="li"><span class="tile sm c-act"><i data-i="ticket"></i></span><div class="grow"><div class="tt">Sunset cruise</div><div class="ss">Paid by Meera · your share ₹1,500</div></div><div class="end"><div class="amt">₹7,500</div></div></div></div>
+</div><div data-tdock="exp"></div></div></div></div>
+
+<div class="cell" data-n="04" data-cap="Expense detail" data-sub="Sheet · iOS">
+<div class="phone ios"><div class="scr"><div class="body"><div data-thead></div></div><div class="dim"></div>
+ <div class="sheet" style="top:96px;padding-bottom:26px"><div class="grab"></div>
+ <div class="hrow sp"><span class="tile lg c-food"><i data-i="food" data-c="s28"></i></span><div class="hrow gap8"><span class="badge"><i data-i="image" data-c="s14"></i>Receipt</span><span class="icon-btn sm" style="box-shadow:none;background:var(--card2)"><i data-i="dots"></i></span></div></div>
+ <div class="h-md mt16">Beach shack dinner</div><div class="amt-lg mt8">₹3,640<span class="dec">.00</span></div><div class="t-sm mt4">≈ $43.20 · 14 Nov · Food</div>
+ <div class="card sm flat mt16" style="padding:4px 14px"><div class="li" style="padding:11px 0;min-height:0"><span class="t-sm grow">Paid by</span><span class="hrow gap8"><span class="avatar xs a2">A</span><b class="tt">Aarav</b></span></div><div class="li" style="padding:11px 0;min-height:0"><span class="t-sm grow">Split between</span><span class="hrow gap8"><div class="avs"><span class="avatar xs a1">R</span><span class="avatar xs a2">A</span><span class="avatar xs a3">M</span><span class="avatar xs a4">K</span><span class="avatar xs a5">I</span></div><b class="tt">Equal</b></span></div></div>
+ <div class="sect" style="padding-top:16px">Who owes what</div>
+ <div class="stack gap10"><div class="hrow gap10"><span class="avatar sm a1">R</span><span class="t-sm grow" style="color:var(--ink)">You owe Aarav</span><b class="amt neg" style="font-size:15px">₹728</b></div><div class="hrow gap10"><span class="avatar sm a3">M</span><span class="t-sm grow" style="color:var(--ink)">Meera owes Aarav</span><b class="amt" style="font-size:15px">₹728</b></div></div>
+ <div class="hrow gap10 mt20"><span class="btn soft grow sm"><i data-i="edit" data-c="s16"></i>Edit</span><span class="btn sm grow"><i data-i="flag" data-c="s16"></i>Dispute</span><span class="btn sm grow" style="color:var(--neg)"><i data-i="trash" data-c="s16"></i>Delete</span></div></div></div></div></div>
+</div>
+
+<h2>Add expense</h2>
+<div class="grid">
+<div class="cell" data-n="05" data-cap="Add expense" data-sub="iOS · full screen">
+<div class="phone ios"><div class="scr"><div class="body" style="padding-bottom:0">
+ <div class="hrow sp" style="height:56px"><span class="icon-btn sm"><i data-i="x"></i></span><div class="h-sm" style="font-size:17px">Add expense</div><span class="icon-btn sm"><i data-i="camera"></i></span></div>
+ <div class="stack" style="align-items:center;margin-top:8px"><span class="eyebrow">Amount</span><div class="hrow gap8 mt8"><span class="h-lg" style="font-size:30px;color:var(--ink3)">₹</span><span class="amt-xl" style="font-size:62px">3,640<span style="color:var(--primary);font-weight:300">|</span></span></div><div class="hrow gap8 mt8"><span class="chip sm tint">INR ▾</span><span class="t-xs">≈ $43.20 · <b class="prim">set rate</b></span></div></div>
+ <div class="field mt20"><label>What was it for?</label><div class="v">Beach shack dinner</div></div>
+ <div class="scroll-h mt12"><span class="chip on" style="background:var(--primary);color:#fff"><i data-i="food" data-c="s16"></i>Food</span><span class="chip"><i data-i="bed" data-c="s16"></i>Stay</span><span class="chip"><i data-i="car" data-c="s16"></i>Transport</span><span class="chip"><i data-i="ticket" data-c="s16"></i>Fun</span></div>
+ <div class="hrow gap10 mt12"><div class="field row grow" style="min-height:54px"><i data-i="cal" data-c="s18 prim"></i><div class="v" style="font-size:14.5px">Today</div></div><div class="field row grow" style="min-height:54px"><span class="avatar xs a2" style="border:0">A</span><div class="v" style="font-size:14.5px">Paid by Aarav</div></div></div>
+ <div class="hrow sp mt20"><span class="h-sm">Split between</span><span class="t-sm prim" style="font-weight:600">Everyone</span></div>
+ <div class="seg mt12"><span class="on">Equal</span><span>Shares</span><span>Exact</span><span>%</span><span>Items</span></div>
+ <div class="hrow sp mt12"><div class="avs"><span class="avatar a1">R</span><span class="avatar a2">A</span><span class="avatar a3">M</span><span class="avatar a4">K</span><span class="avatar a5">I</span></div><div style="text-align:right"><div class="amt">₹728.00</div><div class="t-xs">each · 5 people</div></div></div>
+ <div style="position:absolute;left:20px;right:20px;bottom:36px"><span class="btn primary block">Save expense</span></div>
+</div></div></div></div>
+
+<div class="cell" data-n="06" data-cap="Add expense · exact split" data-sub="Android · scrolled">
+<div class="phone android"><div class="scr"><div class="body" style="padding-bottom:0">
+ <div class="hrow sp" style="height:56px"><div class="hrow gap14"><i data-i="x"></i><div class="h-md" style="font-size:19px">Add expense</div></div><span class="btn sm primary">Save</span></div>
+ <div class="hrow sp"><span class="h-sm">Split between</span><div class="ring" style="--p:100;--s:44px"><b style="font-size:11px;color:var(--pos)">✓</b></div></div>
+ <div class="seg mt12"><span>Equal</span><span>Shares</span><span class="on">Exact</span><span>%</span><span>Items</span></div>
+ <div class="list mt12">
+ <div class="li"><span class="check on round"><i data-i="check" data-c="s14"></i></span><span class="avatar sm a1">R</span><div class="grow tt">You</div><div class="field" style="min-height:40px;padding:6px 12px;width:104px;border-radius:12px"><div class="v" style="font-size:15px;text-align:right">1,000</div></div></div>
+ <div class="li"><span class="check on round"><i data-i="check" data-c="s14"></i></span><span class="avatar sm a2">A</span><div class="grow tt">Aarav</div><div class="field" style="min-height:40px;padding:6px 12px;width:104px;border-radius:12px"><div class="v" style="font-size:15px;text-align:right">900</div></div></div>
+ <div class="li"><span class="check on round"><i data-i="check" data-c="s14"></i></span><span class="avatar sm a3">M</span><div class="grow tt">Meera</div><div class="field focus" style="min-height:40px;padding:6px 12px;width:104px;border-radius:12px"><div class="v" style="font-size:15px;text-align:right">700</div></div></div>
+ <div class="li"><span class="check on round"><i data-i="check" data-c="s14"></i></span><span class="avatar sm a4">K</span><div class="grow tt">Kabir</div><div class="field" style="min-height:40px;padding:6px 12px;width:104px;border-radius:12px"><div class="v" style="font-size:15px;text-align:right">540</div></div></div>
+ <div class="li"><span class="check on round"><i data-i="check" data-c="s14"></i></span><span class="avatar sm a5">I</span><div class="grow tt">Isha</div><div class="field" style="min-height:40px;padding:6px 12px;width:104px;border-radius:12px"><div class="v" style="font-size:15px;text-align:right">500</div></div></div></div>
+ <div class="card sm mt12" style="background:var(--pos-soft);box-shadow:none"><div class="hrow sp"><span class="t-sm" style="color:var(--pos)">Allocated ₹3,640 of ₹3,640</span><b class="pos">₹0 left</b></div></div>
+ <div class="card sm flat mt12 hrow gap12"><span class="tile sm c-misc" style="width:38px;height:38px"><i data-i="image"></i></span><div class="grow"><div class="tt" style="font-size:14px">Receipt</div><div class="t-xs">Camera or gallery</div></div><i data-i="cr" style="color:var(--ink3)"></i></div>
+</div><div class="kbd" style="height:230px;grid-template-columns:repeat(4,1fr)"><span>1</span><span>2</span><span>3</span><span>⌫</span><span>4</span><span>5</span><span>6</span><span>.</span><span>7</span><span>8</span><span>9</span><span>✓</span></div></div></div></div>
+
+<div class="cell" data-n="07" data-cap="Quick add · type" data-sub="Sheet · iOS">
+<div class="phone ios"><div class="scr"><div class="body"><div data-thead></div></div><div class="dim"></div>
+ <div class="sheet" style="padding-bottom:26px"><div class="grab"></div><div class="hrow sp"><div class="h">Quick add</div><span class="chip sm tint"><i data-i="spark" data-c="s14"></i>Smart</span></div>
+ <div class="field focus row mt16" style="min-height:64px"><div class="grow v" style="font-size:18px">lunch 240 split with Meera<span style="color:var(--primary)">|</span></div><span class="icon-btn sm" style="background:var(--primary);color:#fff;box-shadow:none"><i data-i="mic" data-c="s18"></i></span></div>
+ <div class="card sm flat mt12"><div class="eyebrow">We understood</div><div class="hrow gap10 mt12"><span class="tile sm c-food"><i data-i="food"></i></span><div class="grow"><div class="h-sm">Lunch</div><div class="t-xs">Food · Today</div></div><div class="amt">₹240</div></div><div class="hrow gap8 mt12"><span class="badge prim">Paid by you</span><span class="badge">You + Meera · ₹120 each</span></div></div>
+ <span class="btn primary block mt16">Add expense</span><p class="t-xs ctr hrow mt12" style="justify-content:center">Try “taxi 450 everyone” or “dinner 1800 paid by Aarav”</p></div></div></div></div>
+
+<div class="cell" data-n="08" data-cap="Quick add · listening" data-sub="Voice · Android">
+<div class="phone android" data-dark="1" data-sb="light"><div class="scr"><div class="dim" style="background:rgba(0,0,0,.2)"></div>
+ <div class="sheet" style="padding-bottom:26px"><div class="grab"></div><div class="stack" style="align-items:center;text-align:center"><span class="eyebrow">Listening…</span>
+ <div class="wave mt16"><i style="height:14px;opacity:.4"></i><i style="height:26px;opacity:.55"></i><i style="height:40px"></i><i style="height:22px"></i><i style="height:52px"></i><i style="height:34px"></i><i style="height:48px"></i><i style="height:20px"></i><i style="height:36px"></i><i style="height:16px;opacity:.5"></i><i style="height:10px;opacity:.35"></i></div>
+ <div class="h-md mt16" style="font-weight:600">“dinner eighteen hundred, Aarav paid”</div>
+ <div style="width:76px;height:76px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;margin-top:16px;box-shadow:0 0 0 12px color-mix(in srgb,var(--primary) 22%,transparent),0 0 0 26px color-mix(in srgb,var(--primary) 10%,transparent)"><i data-i="mic" data-c="s32"></i></div><span class="t-sm" style="margin-top:34px">Tap to stop</span></div></div></div></div>
+</div>
+
+<div class="grid mt32">
+<div class="cell" data-n="09" data-cap="Filters" data-sub="Sheet · iOS">
+<div class="phone ios"><div class="scr"><div class="body"><div data-thead></div></div><div class="dim"></div>
+ <div class="sheet" style="top:84px;padding-bottom:26px"><div class="grab"></div><div class="hrow sp"><div class="h">Filters</div><span class="t-sm prim" style="font-weight:600">Reset</span></div>
+ <div class="eyebrow mt16">Traveler</div><div class="hrow gap8 mt8"><span class="avatar a1" style="outline:3px solid var(--primary);outline-offset:2px">R</span><span class="avatar a2">A</span><span class="avatar a3">M</span><span class="avatar a4">K</span><span class="avatar a5">I</span></div>
+ <div class="eyebrow mt16">Category</div><div class="hrow gap8 mt8 wrap"><span class="chip on" style="background:var(--primary);color:#fff">Food</span><span class="chip">Stay</span><span class="chip">Transport</span><span class="chip on" style="background:var(--primary);color:#fff">Fun</span><span class="chip">Shopping</span></div>
+ <div class="eyebrow mt16">Dates</div><div class="hrow gap10 mt8"><div class="field row grow" style="min-height:50px"><div class="v" style="font-size:14px">12 Nov</div></div><i data-i="arrr" data-c="s18" style="color:var(--ink3)"></i><div class="field row grow" style="min-height:50px"><div class="v" style="font-size:14px">16 Nov</div></div></div>
+ <div class="hrow sp mt16"><div class="eyebrow">Amount</div><b class="t-sm" style="color:var(--ink)">₹500 – ₹10,000</b></div><div style="height:6px;border-radius:9px;background:var(--line);margin-top:14px;position:relative"><i style="position:absolute;left:12%;right:30%;top:0;bottom:0;background:var(--primary);border-radius:9px"></i><i style="position:absolute;left:12%;top:-7px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.3);margin-left:-10px"></i><i style="position:absolute;left:70%;top:-7px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.3);margin-left:-10px"></i></div>
+ <span class="btn primary block" style="margin-top:28px">Show 12 expenses</span></div></div></div></div>
+
+<div class="cell" data-n="10" data-cap="Scan &amp; itemize receipt" data-sub="Night Sky · iOS">
+<div class="phone ios" data-sb="light"><div class="scr" style="background:var(--night)"><div class="body" style="color:#fff">
+ <div class="hrow sp" style="height:56px"><span class="icon-btn sm glassy"><i data-i="x"></i></span><div class="h-sm" style="font-size:17px">Scan receipt</div><span class="icon-btn sm glassy"><i data-i="spark"></i></span></div>
+ <div style="position:relative;margin:8px 22px 0"><div class="receipt"><div style="text-align:center;font-weight:600;font-size:12px">BLUE WAVE SHACK · CALANGUTE</div><div style="text-align:center;opacity:.6">14/11/2026 · 20:41</div><div style="border-top:1px dashed #bbb;margin:6px 0"></div><b><span>Grilled fish ×2</span><span>1,400.00</span></b><b><span>Prawn curry</span><span>780.00</span></b><b><span>Garlic naan ×6</span><span>540.00</span></b><b><span>Feni shots ×5</span><span>600.00</span></b><b style="border-top:1px dashed #bbb;margin-top:6px"><span>GST 5%</span><span>173.00</span></b><b style="font-weight:700"><span>TOTAL</span><span>3,493.00</span></b></div>
+ <i class="corner" style="left:-10px;top:-10px;border-right:0;border-bottom:0;border-radius:12px 0 0 0"></i><i class="corner" style="right:-10px;top:-10px;border-left:0;border-bottom:0;border-radius:0 12px 0 0"></i><i class="corner" style="left:-10px;bottom:-10px;border-right:0;border-top:0;border-radius:0 0 0 12px"></i><i class="corner" style="right:-10px;bottom:-10px;border-left:0;border-top:0;border-radius:0 0 12px 0"></i></div>
+ <div class="glass-card mt24" style="padding:14px 16px"><div class="hrow sp"><span class="eyebrow w60">5 items found</span><span class="badge pos">Total matches</span></div>
+ <div class="hrow sp mt12"><span style="font-size:14px">Grilled fish ×2</span><div class="avs"><span class="avatar xs a1">R</span><span class="avatar xs a2">A</span></div></div><div class="hrow sp mt12"><span style="font-size:14px">Feni shots ×5</span><div class="avs"><span class="avatar xs a3">M</span><span class="avatar xs a4">K</span><span class="avatar xs a5">I</span></div></div></div>
+ <div style="position:absolute;left:20px;right:20px;bottom:36px"><span class="btn block" style="background:#fff;color:#0B0F1A">Apply to expense · ₹3,493</span></div>
+</div></div></div></div>
+
+<div class="cell" data-n="11" data-cap="Spend insights" data-sub="Slate · tap the hero to open">
+<div class="phone ios" data-sb="light"><div class="scr" style="background:var(--bg)"><div class="body" style="padding:0">
+ <div style="background:var(--slate);border-radius:0 0 36px 36px;padding:0 20px 22px;margin-top:-50px;padding-top:50px;color:#fff;position:relative">
+ <div class="hrow sp" style="height:56px"><span class="icon-btn sm glassy"><i data-i="cl"></i></span><div class="h-sm" style="font-size:17px">Insights</div><span class="icon-btn sm glassy"><i data-i="share"></i></span></div>
+ <div class="hrow gap10 mt8"><div class="glass-card grow" style="padding:14px"><div class="hrow gap6 w60" style="font-size:12px"><i data-i="wallet" data-c="s16"></i>Daily avg</div><div class="amt-lg mt8" style="font-size:26px">₹16.8K</div><span class="badge pos mt8" style="height:20px">+12%</span></div><div class="glass-card grow" style="padding:14px"><div class="hrow gap6 w60" style="font-size:12px"><i data-i="fire" data-c="s16"></i>Biggest day</div><div class="amt-lg mt8" style="font-size:26px">₹32K</div><span class="badge mt8" style="height:20px">Nov 13</span></div></div>
+ <svg viewBox="0 0 330 120" style="width:100%;margin-top:16px;overflow:visible"><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#8B7CFF"/><stop offset=".5" stop-color="#4AA3FF"/><stop offset="1" stop-color="#3FC6FF"/></linearGradient><filter id="gw"><feGaussianBlur stdDeviation="3"/></filter></defs><path d="M0 80 C25 20 45 100 70 70 S105 10 130 55 S165 95 190 50 S235 15 260 45 S305 20 330 30" stroke="url(#lg)" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M0 80 C25 20 45 100 70 70 S105 10 130 55 S165 95 190 50 S235 15 260 45 S305 20 330 30" stroke="#4AA3FF" stroke-width="7" fill="none" opacity=".35" filter="url(#gw)"/><circle cx="190" cy="50" r="6" fill="#fff"/><circle cx="190" cy="50" r="12" fill="#4AA3FF" opacity=".3"/></svg>
+ <div class="hrow sp mt12" style="font-size:12.5px"><span class="w60">12</span><span class="w60">13</span><span style="background:rgba(255,255,255,.18);padding:4px 11px;border-radius:9px;font-weight:600">14</span><span class="w60">15</span><span class="w60">16</span></div></div>
+ <div style="padding:0 20px"><div class="card mt16"><div class="hrow gap16"><div style="position:relative"><div class="donut" style="--s:116px"></div><div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><b class="amt" style="font-size:18px">₹84K</b><span class="t-xs">total</span></div></div>
+ <div class="stack gap10 grow"><div class="hrow sp t-sm"><span class="hrow gap8"><i style="width:9px;height:9px;border-radius:50%;background:var(--cyan)"></i>Stay</span><b style="color:var(--ink)">₹32,000</b></div><div class="hrow sp t-sm"><span class="hrow gap8"><i style="width:9px;height:9px;border-radius:50%;background:var(--primary2)"></i>Food</span><b style="color:var(--ink)">₹20,100</b></div><div class="hrow sp t-sm"><span class="hrow gap8"><i style="width:9px;height:9px;border-radius:50%;background:var(--violet)"></i>Fun</span><b style="color:var(--ink)">₹16,900</b></div><div class="hrow sp t-sm"><span class="hrow gap8"><i style="width:9px;height:9px;border-radius:50%;background:var(--amber)"></i>Other</span><b style="color:var(--ink)">₹15,320</b></div></div></div></div></div>
+</div></div></div></div>
+
+<div class="cell" data-n="12" data-cap="No expenses yet" data-sub="Helpful empty space">
+<div class="phone ios"><div class="scr"><div style="position:absolute;inset:0;height:430px" class="pattern"></div><div style="position:absolute;inset:0;height:430px;background:linear-gradient(180deg,transparent 25%,var(--bg))"></div><div class="body"><div data-thead></div>
+ <div class="stack" style="align-items:center;text-align:center;margin-top:90px"><div style="position:relative;width:150px;height:130px"><span class="orb o2" style="position:absolute;left:25px;top:0;width:100px;height:100px;border-radius:34px"><i data-i="receipt" data-c="s32" style="width:46px;height:46px"></i></span></div>
+ <div class="h-lg mt16">No expenses yet</div><p class="t-body muted mt8" style="max-width:270px">The first one’s the hardest. Add it now and everyone sees it instantly.</p>
+ <span class="btn primary mt24" style="width:240px"><i data-i="plus" data-c="s20"></i>Add expense</span><span class="btn soft mt12" style="width:240px"><i data-i="mic" data-c="s18"></i>Quick add · “lunch 240”</span></div></div><div data-tdock="exp"></div></div></div></div>
+</div>
+
+<div class="grid mt32">
+<div class="cell" data-n="13" data-cap="Sync conflict" data-sub="Sheet · iOS">
+<div class="phone ios"><div class="scr"><div class="body"><div data-thead></div></div><div class="dim"></div>
+ <div class="sheet" style="padding-bottom:26px"><div class="grab"></div><div class="hrow gap10"><span class="tile sm c-shop" style="background:var(--warn-soft);color:var(--warn)"><i data-i="refresh"></i></span><div class="h">Two edits, one expense</div></div><p class="t-sm mt8">You and Aarav changed “Beach shack dinner” while offline. Pick the version to keep.</p>
+ <div class="hrow gap10 mt16"><div class="card sm flat grow" style="border:2px solid var(--primary);background:var(--primary-soft)"><div class="eyebrow">Yours · 9:12</div><div class="amt mt8">₹3,640</div><div class="t-xs mt4">Food · split 5</div></div><div class="card sm flat grow"><div class="eyebrow">Aarav · 9:20</div><div class="amt mt8">₹3,490</div><div class="t-xs mt4">Food · split 4</div></div></div>
+ <span class="btn primary block mt20">Keep mine</span><span class="btn block mt8">Use Aarav’s</span></div></div></div></div>
+
+<div class="cell" data-n="14" data-cap="Recycle bin" data-sub="Android">
+<div class="phone android"><div class="scr"><div class="body">
+ <div class="hrow sp" style="height:60px"><div class="hrow gap14"><i data-i="arrl"></i><div class="h-md" style="font-size:19px">Recycle bin</div></div><span class="t-sm" style="color:var(--neg);font-weight:600">Empty</span></div>
+ <div class="card sm flat hrow gap10" style="background:var(--warn-soft);border:0"><i data-i="clock" data-c="s20" style="color:var(--warn)"></i><span class="t-sm" style="color:var(--warn)">Deleted items are removed for good after 24 hours.</span></div>
+ <div class="list mt16"><div class="li"><span class="tile sm c-shop"><i data-i="bag"></i></span><div class="grow"><div class="tt">Souvenirs</div><div class="ss">Deleted 2h ago · ₹1,250</div></div><span class="btn xs soft">Restore</span></div><div class="li"><span class="tile sm c-misc"><i data-i="tag"></i></span><div class="grow"><div class="tt">Test entry</div><div class="ss">Deleted 5h ago · ₹10</div></div><span class="btn xs soft">Restore</span></div></div>
+ <div class="hrow gap10 mt16"><span class="btn danger sm grow">Delete forever</span></div>
+</div></div></div></div>
+</div>
+</div></body></html>

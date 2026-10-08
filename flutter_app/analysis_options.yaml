@@ -11,6 +11,7 @@ analyzer:
     - ios/**
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+    - web/**
 
 linter:
   rules:

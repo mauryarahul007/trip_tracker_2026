@@ -795,7 +795,7 @@ class _CategoryChip extends StatelessWidget {
       key: Key('cat-${category.id}'),
       label: Text('$icon${category.name}'),
       selected: selected,
-      selectedColor: color.withValues(alpha: 0.2),
+      selectedColor: color.withValues(alpha: 0.12),
       side: BorderSide(color: selected ? color : Colors.transparent),
       onSelected: (_) => onTap(),
     );

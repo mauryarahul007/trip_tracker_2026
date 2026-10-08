@@ -1,0 +1,166 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Horizon · 02 Mobile — Entry &amp; Auth</title>
+<link rel="stylesheet" href="kit.css"><script src="kit.js"></script>
+<style>
+.ob-art{height:330px;position:relative;margin:0 -20px}
+.floatcard{position:absolute;background:var(--card);border-radius:22px;padding:12px 14px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:10px}
+.dots-i{display:flex;gap:6px;justify-content:center}.dots-i i{width:7px;height:7px;border-radius:50%;background:var(--line)}.dots-i i.on{width:24px;border-radius:9px;background:var(--primary)}
+</style></head><body><div class="board">
+<span class="tag">02 · Mobile · Entry &amp; Auth</span>
+<h1>First 60 seconds</h1>
+<p class="lede">Splash → 3-step onboarding → sign-in → invite / join. Dusk + Night Sky surfaces set the “travel” mood immediately; after sign-in the app switches to the light canvas.</p>
+
+<h2>Splash · Onboarding</h2>
+<div class="grid">
+
+<div class="cell" data-n="01" data-cap="Splash" data-sub="Night Sky · iOS">
+<div class="phone ios" data-sb="light"><div class="scr" style="background:var(--night)">
+ <div style="position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.16) 1.1px,transparent 1.2px);background-size:10px 10px;-webkit-mask-image:radial-gradient(circle at 50% 45%,#000,transparent 70%)"></div>
+ <svg viewBox="0 0 390 300" style="position:absolute;left:0;top:300px;width:100%"><defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".6" stop-color="#8FB8FF"/><stop offset="1" stop-color="#fff" stop-opacity=".15"/></linearGradient></defs><path d="M-10 190 Q190 40 400 150" stroke="url(#g1)" stroke-width="3" fill="none"/></svg>
+ <div style="position:absolute;left:226px;top:362px;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,rgba(80,150,255,.55),transparent 70%);display:flex;align-items:center;justify-content:center;color:#6FA8FF;transform:rotate(30deg)"><i data-i="plane" data-c="s32 fill"></i></div>
+ <div style="position:absolute;left:0;right:0;top:230px;text-align:center;color:#fff"><div class="orb" style="width:84px;height:84px;margin:0 auto 18px;border-radius:28px"><i data-i="plane" data-c="s32"></i></div><div class="h-lg">Trip Tracker</div><div style="opacity:.6;font-size:14px;margin-top:6px">Plan it. Split it. Remember it.</div></div>
+ <div style="position:absolute;bottom:70px;left:0;right:0;text-align:center;color:#fff;opacity:.5;font:600 10.5px var(--mono);letter-spacing:.2em">LOADING YOUR TRIPS</div>
+</div></div></div>
+
+<div class="cell" data-n="02" data-cap="Onboarding 1 · Welcome" data-sub="iOS">
+<div class="phone ios"><div class="scr"><div class="body nodock">
+ <div class="hrow sp" style="height:46px"><span class="eyebrow">1 / 3</span><span class="t-sm" style="font-weight:600">Skip</span></div>
+ <div class="ob-art"><div class="orb" style="position:absolute;left:105px;top:50px;width:180px;height:180px"><i data-i="plane" data-c="s32" style="width:84px;height:84px"></i></div>
+  <div class="floatcard" style="left:14px;top:20px"><span class="tile sm c-act"><i data-i="pin"></i></span><div><div class="h-sm" style="font-size:14px">Goa</div><div class="t-xs">12–16 Nov</div></div></div>
+  <div class="floatcard" style="right:10px;top:190px"><div class="avs"><span class="avatar xs a1">R</span><span class="avatar xs a2">A</span><span class="avatar xs a3">M</span></div><div class="h-sm" style="font-size:13px">5 travelers</div></div>
+  <div class="floatcard" style="left:28px;top:232px"><span class="tile sm c-green"><i data-i="check"></i></span><div class="h-sm" style="font-size:13px">All settled</div></div></div>
+ <div class="h-lg mt24">Welcome to<br>Trip Tracker</div>
+ <p class="t-body muted mt12">One place for the whole group — plan the trip, log what everyone spends and see exactly who owes whom.</p>
+ <div style="position:absolute;left:20px;right:20px;bottom:44px" class="stack gap20"><div class="dots-i"><i class="on"></i><i></i><i></i></div><span class="btn primary block">Next<i data-i="arrr" data-c="s20"></i></span></div>
+</div></div></div></div>
+
+<div class="cell" data-n="03" data-cap="Onboarding 2 · Create a trip" data-sub="Android">
+<div class="phone android"><div class="scr"><div class="body nodock">
+ <div class="hrow sp" style="height:46px"><span class="eyebrow">2 / 3</span><span class="t-sm" style="font-weight:600">Skip</span></div>
+ <div class="ob-art"><div class="floatcard" style="left:26px;top:30px;right:26px;flex-direction:column;align-items:stretch;gap:12px;padding:18px"><div class="field" style="min-height:52px"><label>Trip name</label><div class="v">Goa weekend</div></div><div class="hrow gap10"><div class="field grow" style="min-height:52px"><label>Dates</label><div class="v">12–16 Nov</div></div><div class="field grow" style="min-height:52px"><label>Currency</label><div class="v">INR ₹</div></div></div><span class="btn primary sm">Create Trip</span></div>
+  <div class="orb o2" style="position:absolute;right:20px;top:250px;width:84px;height:84px"><i data-i="globe" data-c="s28"></i></div><div class="orb o4" style="position:absolute;left:30px;top:268px;width:56px;height:56px"><i data-i="pin" data-c="s24"></i></div></div>
+ <div class="h-lg mt24">Create your<br>first trip</div>
+ <p class="t-body muted mt12">Name it, pick the dates and currency, then invite friends with a 6-digit code or QR.</p>
+ <div style="position:absolute;left:20px;right:20px;bottom:44px" class="stack gap20"><div class="dots-i"><i></i><i class="on"></i><i></i></div><span class="btn primary block">Next<i data-i="arrr" data-c="s20"></i></span></div>
+</div></div></div></div>
+
+<div class="cell" data-n="04" data-cap="Onboarding 3 · Log &amp; split" data-sub="Dusk · iOS">
+<div class="phone ios" data-sb="light"><div class="scr" style="background:var(--dusk)"><div class="body nodock" style="color:#fff">
+ <div class="hrow sp" style="height:46px"><span class="eyebrow" style="color:rgba(255,255,255,.7)">3 / 3</span><span style="font:600 13px var(--body);opacity:.8">Skip</span></div>
+ <div style="position:absolute;left:36px;top:70px;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#D8D9F2 60%,#9FA2D8);box-shadow:0 0 40px rgba(255,255,255,.5)"></div>
+ <div style="position:relative;height:300px;margin:34px -20px 0"><div class="glass-card" style="position:absolute;left:30px;right:30px;top:40px;padding:18px"><div class="hrow sp"><div class="hrow gap10"><span class="tile sm" style="background:rgba(255,255,255,.16);color:#fff"><i data-i="food"></i></span><div><div style="font:700 15px var(--display)">Beach shack dinner</div><div style="font-size:12px;opacity:.7">Paid by Aarav</div></div></div><div style="font:700 17px var(--display)">₹3,640</div></div><div class="dash" style="margin:14px 0"></div><div class="hrow sp"><span style="font-size:12px;opacity:.7">Split 5 ways</span><div class="avs"><span class="avatar xs a1">R</span><span class="avatar xs a2">A</span><span class="avatar xs a3">M</span><span class="avatar xs a4">K</span><span class="avatar xs a5">I</span></div></div></div>
+ <div class="glass-card" style="position:absolute;left:60px;right:0;top:190px;padding:14px 16px;transform:rotate(3deg)"><div class="hrow sp"><div><div style="font-size:11px;opacity:.7">You owe Aarav</div><div style="font:700 22px var(--display)">₹728<span style="opacity:.5">.00</span></div></div><span class="badge" style="background:rgba(255,255,255,.2);color:#fff">Settle</span></div></div></div>
+ <div class="h-lg mt24" style="color:#fff">Log &amp; split<br>expenses</div>
+ <p style="font:400 15px/1.45 var(--body);opacity:.8;margin-top:12px">Type “lunch 240”, scan a receipt or add it by hand. Equal, shares, exact — it all adds up.</p>
+ <div style="position:absolute;left:20px;right:20px;bottom:44px" class="stack gap20"><div class="dots-i"><i style="background:rgba(255,255,255,.35)"></i><i style="background:rgba(255,255,255,.35)"></i><i class="on" style="background:#fff"></i></div><span class="btn block" style="background:#fff;color:#0B0F1A">Get started</span></div>
+</div></div></div></div>
+</div>
+
+<h2>Sign in · Create account · Reset</h2>
+<div class="grid">
+
+<div class="cell" data-n="05" data-cap="Login" data-sub="iOS">
+<div class="phone ios"><div class="scr"><div class="body nodock">
+ <div class="orb" style="width:52px;height:52px;border-radius:18px;margin-top:26px"><i data-i="plane" data-c="s24"></i></div>
+ <div class="h-lg mt16">Welcome to<br>Trip Tracker</div><p class="t-sm mt8">Plan, split and travel together.</p>
+ <div class="stack gap10 mt20"><span class="btn ink block"><i data-i="apple" data-c="s20"></i>Continue with Apple</span><span class="btn block" style="background:var(--card);box-shadow:var(--shadow)"><i data-i="google" data-c="s20"></i>Continue with Google</span></div>
+ <div class="hrow gap12 mt16"><div class="grow div" style="margin:0"></div><span class="t-xs">or</span><div class="grow div" style="margin:0"></div></div>
+ <div class="stack gap10 mt16"><div class="field"><label>Email</label><div class="v ph">you@example.com</div></div><div class="field focus row"><div class="grow stack gap4"><label style="font:600 10.5px var(--mono);letter-spacing:.1em;color:var(--ink3)">PASSWORD</label><div class="v">••••••••••</div></div><i data-i="eye" style="color:var(--ink3)"></i></div></div>
+ <div class="hrow sp mt12"><span></span><span class="t-sm prim" style="font-weight:600">Forgot password?</span></div>
+ <span class="btn primary block mt12">Sign in</span>
+ <p class="t-sm ctr hrow mt16">New here?&nbsp;<b class="prim">Create account</b></p>
+ <div class="hrow gap10 ctr mt12"><span class="chip flat sm">Continue as guest</span><span class="chip flat sm">Try the demo</span></div>
+ <p class="t-xs ctr hrow mt16" style="text-align:center">By continuing you agree to the Terms of Service and Privacy Policy</p>
+</div></div></div></div>
+
+<div class="cell" data-n="06" data-cap="Login · typing / error" data-sub="Android + keyboard">
+<div class="phone android"><div class="scr"><div class="body nodock">
+ <div class="appbar left"><span class="icon-btn sm"><i data-i="cl"></i></span></div>
+ <div class="h-lg">Sign in</div><p class="t-sm mt8">Welcome back — your trips are waiting.</p>
+ <div class="card sm mt16" style="background:var(--neg-soft);box-shadow:none"><div class="hrow gap10"><i data-i="help" data-c="s20 neg"></i><div class="t-sm" style="color:var(--neg)">Wrong email or password. Try again or reset it.</div></div></div>
+ <div class="stack gap10 mt16"><div class="field" style="border-color:var(--neg)"><label>Email</label><div class="v">rahul@tripsquad.in</div></div><div class="field focus"><label>Password</label><div class="v">••••••<span style="color:var(--primary)">|</span></div></div></div>
+ <span class="btn primary block mt20">Sign in</span>
+ <div class="kbd"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span></span><span>0</span><span>⌫</span></div>
+</div></div></div></div>
+
+<div class="cell" data-n="07" data-cap="Create account" data-sub="iOS">
+<div class="phone ios"><div class="scr"><div class="body nodock">
+ <div class="appbar"><span class="icon-btn sm"><i data-i="cl"></i></span><span class="ttl"></span><span style="width:38px"></span></div>
+ <div class="h-lg">Create your<br>account</div><p class="t-sm mt8">Takes 20 seconds. No card needed.</p>
+ <div class="stack gap10 mt20"><div class="field"><label>Your name</label><div class="v">Rahul Maurya</div></div><div class="field"><label>Email</label><div class="v">rahul@tripsquad.in</div></div><div class="field focus"><label>Password</label><div class="v">••••••••</div></div></div>
+ <div class="hrow gap6 mt12"><i style="flex:1;height:5px;border-radius:9px;background:var(--pos)"></i><i style="flex:1;height:5px;border-radius:9px;background:var(--pos)"></i><i style="flex:1;height:5px;border-radius:9px;background:var(--pos)"></i><i style="flex:1;height:5px;border-radius:9px;background:var(--line)"></i></div><p class="t-xs mt8">Strong password · 8+ characters</p>
+ <span class="btn primary block mt24">Create account</span>
+ <div class="hrow gap12 mt16"><div class="grow div" style="margin:0"></div><span class="t-xs">or</span><div class="grow div" style="margin:0"></div></div>
+ <div class="hrow gap10 mt16"><span class="btn ink grow"><i data-i="apple" data-c="s20"></i>Apple</span><span class="btn grow" style="background:var(--card);box-shadow:var(--shadow)"><i data-i="google" data-c="s20"></i>Google</span></div>
+</div></div></div></div>
+
+<div class="cell" data-n="08" data-cap="Reset password · request" data-sub="iOS">
+<div class="phone ios"><div class="scr"><div class="body nodock">
+ <div class="appbar"><span class="icon-btn sm"><i data-i="cl"></i></span></div>
+ <div class="orb o4" style="width:64px;height:64px;border-radius:22px;margin-top:10px"><i data-i="lock" data-c="s28"></i></div>
+ <div class="h-lg mt20">Forgot your<br>password?</div><p class="t-body muted mt12">Enter your email and we’ll send a link to choose a new one.</p>
+ <div class="field focus mt24"><label>Email</label><div class="v">rahul@tripsquad.in<span style="color:var(--primary)">|</span></div></div>
+ <span class="btn primary block mt16">Send reset link</span>
+ <p class="t-sm ctr hrow mt20 prim" style="font-weight:600">Back to sign in</p>
+</div></div></div></div>
+</div>
+
+<div class="grid mt32">
+<div class="cell" data-n="09" data-cap="Reset · check your email" data-sub="Helpful empty space · iOS">
+<div class="phone ios"><div class="scr"><div style="position:absolute;inset:0;height:420px" class="pattern"></div><div style="position:absolute;inset:0;height:420px;background:linear-gradient(180deg,transparent 30%,var(--bg))"></div>
+ <div class="body nodock"><div class="stack" style="align-items:center;margin-top:150px;text-align:center">
+ <div style="width:108px;height:108px;border-radius:34px;background:color-mix(in srgb,var(--card) 75%,transparent);border:1.5px solid #fff;box-shadow:0 20px 40px -14px rgba(47,107,255,.45),inset 0 1px 0 #fff;display:flex;align-items:center;justify-content:center;color:var(--primary)"><i data-i="mail" data-c="s32" style="width:52px;height:52px"></i></div>
+ <div class="h-md mt24">Check your email</div><p class="t-body muted mt8" style="max-width:290px">We sent a reset link to <b style="color:var(--ink)">rahul@tripsquad.in</b>. It’s valid for 30 minutes.</p>
+ <span class="btn ink mt24">Open mail app</span><p class="t-sm mt20">Didn’t get it? <b class="prim">Click to resend</b></p></div></div></div></div></div>
+
+<div class="cell" data-n="10" data-cap="Reset · choose new password" data-sub="Android">
+<div class="phone android"><div class="scr"><div class="body nodock">
+ <div class="appbar left"><span class="icon-btn sm"><i data-i="x"></i></span></div>
+ <div class="h-lg">Choose a<br>new password</div><p class="t-sm mt8">Make it something you’ll remember on the road.</p>
+ <div class="stack gap10 mt24"><div class="field focus"><label>New password</label><div class="v">••••••••••</div></div><div class="field"><label>Confirm password</label><div class="v ph">Repeat password</div></div></div>
+ <div class="card sm mt16 flat"><div class="stack gap8"><div class="hrow gap8 t-sm"><span class="check on round" style="width:18px;height:18px"><i data-i="check" data-c="s14"></i></span>8+ characters</div><div class="hrow gap8 t-sm"><span class="check on round" style="width:18px;height:18px"><i data-i="check" data-c="s14"></i></span>One number</div><div class="hrow gap8 t-sm faint"><span class="check round" style="width:18px;height:18px"></span>Matches confirmation</div></div></div>
+ <span class="btn primary block mt24" style="opacity:.55">Save password</span>
+</div></div></div></div>
+
+<div class="cell" data-n="11" data-cap="Enter 6-digit trip code" data-sub="Frosted boxes · iOS">
+<div class="phone ios"><div class="scr"><div style="position:absolute;inset:0;height:380px" class="pattern"></div><div style="position:absolute;inset:0;height:380px;background:linear-gradient(180deg,transparent 30%,var(--bg))"></div>
+ <div class="body nodock"><div class="appbar"><span class="icon-btn sm"><i data-i="x"></i></span></div>
+ <div class="stack" style="align-items:center;text-align:center;margin-top:60px"><div style="color:var(--primary)"><i data-i="qr" data-c="s32" style="width:72px;height:72px;stroke-width:1.3"></i></div>
+ <div class="h-md mt20">Join with a trip code</div><p class="t-sm mt8" style="max-width:280px">Ask the organizer for the 6-digit code or scan their QR.</p>
+ <div class="otp mt24" style="gap:8px"><span style="width:46px;height:58px">4</span><span style="width:46px;height:58px">8</span><span style="width:46px;height:58px">1</span><span class="act" style="width:46px;height:58px"></span><span style="width:46px;height:58px"></span><span style="width:46px;height:58px"></span></div>
+ <span class="btn primary mt24" style="width:100%;opacity:.55">Join trip</span><span class="btn soft mt12"><i data-i="camera" data-c="s20"></i>Scan QR instead</span></div></div></div></div></div>
+
+<div class="cell" data-n="12" data-cap="Invite landing · pick who you are" data-sub="iOS">
+<div class="phone ios"><div class="scr"><div class="body nodock">
+ <div class="hero night mt16" style="padding:22px"><div class="dots"></div><div class="eyebrow" style="color:rgba(255,255,255,.6)">You’re invited</div><div class="h-lg mt8" style="color:#fff">Goa Weekend</div><div class="hrow gap8 mt12" style="font-size:13px;opacity:.8"><i data-i="pin" data-c="s16"></i>Goa, India<span>·</span>12–16 Nov</div><div class="hrow sp mt20"><div class="avs"><span class="avatar a1">R</span><span class="avatar a2">A</span><span class="avatar a3">M</span><span class="avatar a4">K</span></div><span class="badge">4 of 5 joined</span></div></div>
+ <div class="h-md mt24">Which traveler are you?</div><p class="t-sm mt4">Pick your name so your expenses line up.</p>
+ <div class="list mt16"><div class="li"><span class="avatar a5">I</span><div class="grow tt">Isha</div><span class="check round"></span></div><div class="li"><span class="avatar a4">K</span><div class="grow tt">Kabir</div><span class="check round on"><i data-i="check" data-c="s14"></i></span></div></div>
+ <p class="t-sm mt12 prim" style="font-weight:600">+ I’m not on the list</p>
+ <div style="position:absolute;left:20px;right:20px;bottom:44px"><span class="btn primary block">I’m Kabir · Open trip</span></div>
+</div></div></div></div>
+</div>
+
+<div class="grid mt32">
+<div class="cell" data-n="13" data-cap="Public trip summary (view-only link)" data-sub="iOS · Safari / in-app">
+<div class="phone ios"><div class="scr"><div class="body nodock">
+ <div class="hrow gap8 mt16"><span class="orb" style="width:26px;height:26px;border-radius:9px"><i data-i="plane" data-c="s14"></i></span><span class="eyebrow">Trip Tracker · Trip summary</span></div>
+ <div class="h-xl mt16">Goa Weekend</div><div class="t-sm mt8">Goa, India · 12–16 Nov 2026</div>
+ <div class="hero ember mt20" style="padding:22px"><div class="eyebrow" style="color:rgba(255,255,255,.6)">Total spend</div><div class="amt-xl mt8">₹84,320<span class="dec">.00</span></div><div class="hrow gap10 mt16"><span class="glass" style="padding:8px 14px;font:600 13px var(--body)">5 travelers</span><span class="glass" style="padding:8px 14px;font:600 13px var(--body)">38 expenses</span></div></div>
+ <div class="card mt16"><div class="hrow gap16"><div class="donut" style="--s:104px"></div><div class="stack gap8 grow"><div class="hrow sp t-sm"><span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--cyan)"></i>&nbsp; Stay</span><b>38%</b></div><div class="hrow sp t-sm"><span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--primary2)"></i>&nbsp; Food</span><b>24%</b></div><div class="hrow sp t-sm"><span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--violet)"></i>&nbsp; Fun</span><b>20%</b></div><div class="hrow sp t-sm"><span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--amber)"></i>&nbsp; Other</span><b>18%</b></div></div></div></div>
+ <div class="card sm mt16 flat hrow gap12"><i data-i="eye" data-c="prim"></i><div class="t-sm">Read-only link. Amounts only — no personal details.</div></div>
+ <span class="btn ink block mt16">Open in Trip Tracker</span>
+</div></div></div></div>
+
+<div class="cell" data-n="14" data-cap="Public link · ended / error" data-sub="Empty state">
+<div class="phone ios"><div class="scr"><div style="position:absolute;inset:0;height:420px" class="pattern"></div><div style="position:absolute;inset:0;height:420px;background:linear-gradient(180deg,transparent 30%,var(--bg))"></div>
+ <div class="body nodock"><div class="stack" style="align-items:center;text-align:center;margin-top:170px">
+ <div style="width:96px;height:96px;border-radius:30px;background:color-mix(in srgb,var(--card) 75%,transparent);border:1.5px solid #fff;box-shadow:0 20px 40px -14px rgba(229,72,77,.35);display:flex;align-items:center;justify-content:center;color:var(--neg)"><i data-i="link" data-c="s32" style="width:44px;height:44px"></i></div>
+ <div class="h-md mt24">This link has ended</div><p class="t-body muted mt8" style="max-width:280px">The organizer turned off sharing. Ask them for a new link.</p><span class="btn ink mt24">Go to my trips</span></div></div></div></div></div>
+
+<div class="cell" data-n="15" data-cap="Biometric lock" data-sub="App-lock gate · Night Sky">
+<div class="phone ios" data-sb="light"><div class="scr" style="background:var(--night)"><div style="position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.12) 1.1px,transparent 1.2px);background-size:10px 10px;-webkit-mask-image:radial-gradient(circle at 50% 40%,#000,transparent 65%)"></div>
+ <div class="body nodock" style="color:#fff"><div class="stack" style="align-items:center;text-align:center;margin-top:210px"><div class="glass" style="width:88px;height:88px;display:flex;align-items:center;justify-content:center;border-radius:30px"><i data-i="lock" data-c="s32" style="width:40px;height:40px"></i></div><div class="h-md mt24" style="color:#fff">Trip Tracker is locked</div><p style="opacity:.65;margin-top:8px;font-size:14px">Use Face ID to continue</p><span class="btn mt24" style="background:#fff;color:#0B0F1A">Unlock</span></div></div></div></div></div>
+
+<div class="cell" data-n="16" data-cap="Push-notification prompt" data-sub="Sheet · Android">
+<div class="phone android"><div class="scr"><div class="dim"></div><div class="sheet" style="padding-bottom:26px"><div class="grab"></div><div class="stack" style="align-items:center;text-align:center"><span class="orb o2" style="width:76px;height:76px"><i data-i="bell" data-c="s32"></i></span><div class="h mt20">Never miss a settle-up</div><p class="t-body muted mt8">Get a nudge when someone adds an expense or when it’s time to pay back. Quiet hours are on by default.</p></div><span class="btn primary block mt24">Turn on notifications</span><span class="btn block mt8" style="background:transparent;color:var(--ink2)">Not now</span></div></div></div></div>
+</div>
+</div></body></html>

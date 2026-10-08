@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -111,6 +112,16 @@ class PlatformLocalNotificationsGateway implements LocalNotificationsGateway {
   Future<List<int>> pendingIds() async => [for (final p in await _plugin.pendingNotificationRequests()) p.id];
 }
 
+/// Browser build: scheduled local reminders are not supported.
+class NoLocalNotificationsGateway implements LocalNotificationsGateway {
+  @override
+  Future<bool> requestPermission() async => false;
+  @override
+  Future<void> replaceAll(List<PlannedReminder> reminders) async {}
+  @override
+  Future<List<int>> pendingIds() async => const [];
+}
+
 final localNotificationsGatewayProvider = Provider<LocalNotificationsGateway>(
-  (ref) => PlatformLocalNotificationsGateway(),
+  (ref) => kIsWeb ? NoLocalNotificationsGateway() : PlatformLocalNotificationsGateway(),
 );

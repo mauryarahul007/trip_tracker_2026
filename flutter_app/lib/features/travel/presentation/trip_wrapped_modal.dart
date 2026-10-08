@@ -97,15 +97,15 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
     final rhythm = getTripRhythm(expenses, trip);
     final leaderboard = getMemberSpendLeaderboard(members, expenses);
 
-    final bgCardColor = _isDark ? const Color(0xFF0F1E24) : Colors.white;
+    final bgCardColor = _isDark ? const Color(0xFF121826) : Colors.white;
     final textPrimary = _isDark ? Colors.white : const Color(0xFF0F172A);
     final textSecondary = _isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-    final accentColor = _isDark ? const Color(0xFF3FCBBD) : const Color(0xFF0F6F63);
+    final accentColor = _isDark ? const Color(0xFF5C8DFF) : const Color(0xFF2559E6);
 
     return Container(
       constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.92),
       decoration: BoxDecoration(
-        color: _isDark ? const Color(0xFF071115) : const Color(0xFFF8FAFC),
+        color: _isDark ? const Color(0xFF080B12) : const Color(0xFFF8FAFC),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
@@ -798,7 +798,7 @@ class _ThemeTab extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF0F6F63) : Colors.transparent,
+          color: selected ? const Color(0xFF2559E6) : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(

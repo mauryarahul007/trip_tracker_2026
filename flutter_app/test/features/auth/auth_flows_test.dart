@@ -10,6 +10,12 @@ import '../../support/pump_app.dart';
 
 Finder button(String label) => find.widgetWithText(AppButton, label);
 
+Future<void> openSuperadmin(WidgetTester tester) async {
+  await tester.ensureVisible(find.byKey(const Key('superadmin-toggle')));
+  await tester.tap(find.byKey(const Key('superadmin-toggle')));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   group('login', () {
     testApp('shows Google, hides Apple off-iOS, shows Apple on iOS', (tester) async {
@@ -44,18 +50,44 @@ void main() {
       expect(tester.widget<AppButton>(button('Continue with Google')).onPressed, isNull);
     });
 
-    testApp('wrong password shows the invalid-credentials message and stays on login', (tester) async {
+    testApp('normal users only see Google: no email form, sign-up, guest or demo', (tester) async {
+      await pumpApp(tester);
+      expect(find.byType(TextField), findsOneWidget); // only the trip-code box
+      expect(find.byKey(const Key('superadmin-form')), findsNothing);
+      expect(find.text('Continue as guest'), findsNothing);
+      expect(find.text('Try the demo'), findsNothing);
+      expect(find.text('New here? Create an account'), findsNothing);
+      expect(find.text('Superadmin login'), findsOneWidget);
+    });
+
+    testApp('superadmin section expands, signs in and rejects empty fields', (tester) async {
       final app = await pumpApp(tester);
-      app.auth.failNext = const AuthException(AuthFailure.invalidCredentials, 'x');
-      await tester.enterText(field(0), 'a@b.c');
-      await tester.enterText(field(1), 'bad');
+      await openSuperadmin(tester);
       await tester.tap(button('Sign In'));
       await tester.pumpAndSettle();
-      expect(find.text('Invalid email or password.'), findsOneWidget);
+      expect(find.text('Enter your email and password.'), findsOneWidget);
+      expect(app.auth.calls, isEmpty);
+      await tester.enterText(field(0), 'root@b.c');
+      await tester.enterText(field(1), 'pw');
+      await tester.tap(button('Sign In'));
+      await tester.pumpAndSettle();
+      expect(app.auth.calls, ['superadmin:root@b.c']);
+    });
+
+    testApp('a non-superadmin account is rejected with Google guidance', (tester) async {
+      final app = await pumpApp(tester);
+      await openSuperadmin(tester);
+      app.auth.failNext = const AuthException(AuthFailure.notSuperadmin, 'x');
+      await tester.enterText(field(0), 'user@b.c');
+      await tester.enterText(field(1), 'pw');
+      await tester.tap(button('Sign In'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('not a superadmin'), findsOneWidget);
     });
 
     testApp('banned and offline errors have their own copy', (tester) async {
       final app = await pumpApp(tester);
+      await openSuperadmin(tester);
       await tester.enterText(field(0), 'a@b.c');
       await tester.enterText(field(1), 'pw');
       app.auth.failNext = const AuthException(AuthFailure.banned, 'x');
@@ -66,32 +98,6 @@ void main() {
       await tester.tap(button('Sign In'));
       await tester.pumpAndSettle();
       expect(find.textContaining("Can't reach the server"), findsOneWidget);
-    });
-
-    testApp('empty fields are rejected locally', (tester) async {
-      final app = await pumpApp(tester);
-      await tester.tap(button('Sign In'));
-      await tester.pumpAndSettle();
-      expect(find.text('Enter your email and password.'), findsOneWidget);
-      expect(app.auth.calls, isEmpty);
-    });
-
-    testApp('sign-up mode creates an account', (tester) async {
-      final app = await pumpApp(tester);
-      await tester.tap(find.text('New here? Create an account'));
-      await tester.pump();
-      await tester.enterText(field(0), 'new@b.c');
-      await tester.enterText(field(1), 'password1');
-      await tester.tap(button('Create Account'));
-      await tester.pumpAndSettle();
-      expect(app.auth.calls, ['signup:new@b.c']);
-    });
-
-    testApp('guest entry signs in locally', (tester) async {
-      final app = await pumpApp(tester, onboarded: false);
-      await tester.tap(find.text('Continue as guest'));
-      await tester.pumpAndSettle();
-      expect(app.auth.calls, ['guest']);
     });
 
     testApp('6-digit trip code opens the join screen logged out', (tester) async {
@@ -137,6 +143,7 @@ void main() {
   group('reset password', () {
     testApp('request sends the link and confirms', (tester) async {
       final app = await pumpApp(tester);
+      await openSuperadmin(tester);
       await tester.tap(find.text('Forgot Password?'));
       await tester.pumpAndSettle();
       await tester.enterText(field(0), 'a@b.c');
@@ -148,6 +155,7 @@ void main() {
 
     testApp('recovery link switches to set-new-password with validation', (tester) async {
       final app = await pumpApp(tester);
+      await openSuperadmin(tester);
       await tester.tap(find.text('Forgot Password?'));
       await tester.pumpAndSettle();
       app.auth.recovery.add(true);

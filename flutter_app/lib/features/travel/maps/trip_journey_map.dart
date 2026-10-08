@@ -83,7 +83,7 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
           title: exp.title,
           subtitle: loc.placeName ?? exp.date,
           icon: emoji,
-          color: const Color(0xFF2F6FED),
+          color: const Color(0xFF2559E6),
           onTap: () {
             setState(() => _selectedExpense = exp);
           },
@@ -93,7 +93,7 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
 
     final routes = <MapRouteLine>[
       if (waypoints.length >= 2)
-        MapRouteLine(id: 'journey_path', coordinates: waypoints, color: const Color(0xFF17B6A6), strokeWidth: 3.0),
+        MapRouteLine(id: 'journey_path', coordinates: waypoints, color: const Color(0xFF2DD4E0), strokeWidth: 3.0),
     ];
 
     final firstLoc = geotagged.first.location!;
@@ -126,7 +126,7 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2F6FED).withValues(alpha: 0.1),
+                          color: const Color(0xFF2559E6).withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Text(

@@ -10,6 +10,7 @@ import '../../../../domain/models/member.dart';
 import '../../../../domain/models/trip.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_tokens.dart';
+import '../../../../shared/theme/app_typography.dart';
 import '../../../../shared/widgets/app_avatar.dart';
 
 /// One expense line, same information as the web row: category tile, title with
@@ -98,26 +99,23 @@ class _ExpenseRowState extends State<ExpenseRow> {
           child: Container(
             constraints: BoxConstraints(minHeight: widget.compact ? 48 : 64),
             padding: EdgeInsets.fromLTRB(12, vPad, 14, vPad),
-            decoration: BoxDecoration(
-              border: Border(left: BorderSide(color: accent, width: 3.5)),
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
                   children: [
                     Container(
-                      width: widget.compact ? 24 : 32,
-                      height: widget.compact ? 24 : 32,
+                      width: widget.compact ? 28 : 42,
+                      height: widget.compact ? 28 : 42,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: accent.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(widget.compact ? 10 : 14),
                         border: widget.colorRings ? Border.all(color: accent, width: 2) : null,
                       ),
                       child: Text(
                         cat?.icon?.isNotEmpty == true && !cat!.icon!.contains(':') ? cat.icon! : '🏷️',
-                        style: TextStyle(fontSize: widget.compact ? 12 : 16),
+                        style: TextStyle(fontSize: widget.compact ? 13 : 20),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -161,12 +159,10 @@ class _ExpenseRowState extends State<ExpenseRow> {
                             Text(
                               formatMoney(context, shownAmount, shownCode),
                               key: const Key('row-amount'),
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
+                              style: AppTypography.moneyDisplay(
+                                fontSize: 16,
                                 color: tokens.textPrimary,
-                                fontFeatures: const [FontFeature.tabularFigures()],
-                              ),
+                              ).copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.3),
                             ),
                             if (isForeign)
                               Padding(

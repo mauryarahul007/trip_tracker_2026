@@ -1,11 +1,7 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
+import 'connection/connection.dart';
 import 'tables.dart';
 
 part 'app_database.g.dart';
@@ -28,12 +24,12 @@ part 'app_database.g.dart';
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase() : super(openAppConnection());
 
   AppDatabase.forTesting(super.e);
 
   factory AppDatabase.memory({bool logStatements = false}) {
-    return AppDatabase.forTesting(NativeDatabase.memory(logStatements: logStatements));
+    return AppDatabase.forTesting(openMemoryConnection(logStatements: logStatements));
   }
 
   @override
@@ -53,14 +49,6 @@ class AppDatabase extends _$AppDatabase {
       }
     },
   );
-}
-
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'trip_tracker.sqlite'));
-    return NativeDatabase.createInBackground(file);
-  });
 }
 
 /// Global provider for the Drift AppDatabase

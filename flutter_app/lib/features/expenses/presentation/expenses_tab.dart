@@ -16,7 +16,9 @@ import '../../../domain/models/member.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_surface.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -303,37 +305,53 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Container(
-              padding: EdgeInsets.all(_flag(ref, 'enableCompactSummary', id) ? 10 : 14),
-              decoration: BoxDecoration(
-                color: tokens.bgSurface,
-                borderRadius: BorderRadius.circular(tokens.radiusMd),
-                border: Border.all(color: tokens.borderColor),
-              ),
-              child: Row(
+            child: HeroSurface(
+              kind: SurfaceKind.ember,
+              padding: EdgeInsets.all(_flag(ref, 'enableCompactSummary', id) ? 14 : 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: _Stat(
-                      label: l10n.expTotalSpent,
-                      value: formatMoney(context, totals.totalSpent, trip.baseCurrency),
-                      valueKey: const Key('stat-total'),
+                  Text(
+                    l10n.expTotalSpent,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontMono,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.0,
+                      color: Colors.white.withValues(alpha: 0.65),
                     ),
                   ),
-                  Expanded(
-                    child: _Stat(
-                      label: l10n.expPerPerson,
-                      value: formatMoney(context, totals.averageCost, trip.baseCurrency),
-                      valueKey: const Key('stat-avg'),
+                  const SizedBox(height: 4),
+                  Text(
+                    formatMoney(context, totals.totalSpent, trip.baseCurrency),
+                    key: const Key('stat-total'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.moneyDisplay(
+                      fontSize: _flag(ref, 'enableCompactSummary', id) ? 30 : 40,
+                      color: Colors.white,
                     ),
                   ),
-                  if (totals.top != null)
-                    Expanded(
-                      child: _Stat(
-                        label: l10n.expTopCategory,
-                        value: '${totals.top!.name} ${totals.top!.percentage.round()}%',
-                        valueKey: const Key('stat-top'),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _Stat(
+                          label: l10n.expPerPerson,
+                          value: formatMoney(context, totals.averageCost, trip.baseCurrency),
+                          valueKey: const Key('stat-avg'),
+                        ),
                       ),
-                    ),
+                      if (totals.top != null)
+                        Expanded(
+                          child: _Stat(
+                            label: l10n.expTopCategory,
+                            value: '${totals.top!.name} ${totals.top!.percentage.round()}%',
+                            valueKey: const Key('stat-top'),
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -559,18 +577,17 @@ class _Stat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = context.tokens;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 11, color: tokens.textMuted)),
+        Text(label, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.6))),
         const SizedBox(height: 2),
         Text(
           value,
           key: valueKey,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: tokens.textPrimary),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
         ),
       ],
     );

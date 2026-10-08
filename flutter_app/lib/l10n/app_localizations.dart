@@ -421,6 +421,24 @@ abstract class AppLocalizations {
   /// **'Invalid email or password.'**
   String get authErrorInvalid;
 
+  /// No description provided for @authSuperadminLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Superadmin login'**
+  String get authSuperadminLogin;
+
+  /// No description provided for @authSuperadminHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Admins only. Everyone else continues with Google.'**
+  String get authSuperadminHint;
+
+  /// No description provided for @authErrorNotSuperadmin.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is not a superadmin. Please continue with Google.'**
+  String get authErrorNotSuperadmin;
+
   /// No description provided for @authErrorBanned.
   ///
   /// In en, this message translates to:

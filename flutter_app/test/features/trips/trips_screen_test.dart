@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:trip_tracker/shared/widgets/app_bottom_nav.dart';
 import 'package:trip_tracker/data/providers.dart';
 import 'package:trip_tracker/data/sync/outbox_types.dart';
 import 'package:trip_tracker/shared/widgets/app_button.dart';
@@ -165,7 +166,7 @@ void main() {
     await settle(tester);
     await tester.tap(find.text('Goa Weekend'));
     await settle(tester);
-    expect(find.byType(BottomNavigationBar), findsOneWidget); // now inside the trip shell
+    expect(find.byType(AppBottomNav), findsOneWidget); // now inside the trip shell
     expect(find.text('My Trips'), findsNothing);
     expect(id, isNotEmpty);
   });

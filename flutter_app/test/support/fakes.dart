@@ -57,6 +57,8 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<void> signInWithEmail(String email, String password) => _auth('email:$email', _u);
   @override
+  Future<void> signInAsSuperadmin(String email, String password) => _auth('superadmin:$email', _u);
+  @override
   Future<void> signUpWithEmail(String email, String password, {String? displayName}) => _auth('signup:$email', _u);
   @override
   Future<void> resetPassword(String email) async => calls.add('reset:$email');
@@ -69,6 +71,8 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> signInWithGoogleIdToken(String idToken, {String? nonce}) => _auth('google', _u);
+  @override
+  Future<void> signInWithGoogleOAuth({required String redirectTo}) => _auth('google', _u);
   @override
   Future<void> signInWithAppleIdToken(String idToken, {String? nonce, String? fullName}) => _auth('apple', _u);
   @override

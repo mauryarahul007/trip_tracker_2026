@@ -140,6 +140,21 @@ class SupabaseAuthRepository implements AuthRepository {
   });
 
   @override
+  Future<void> signInAsSuperadmin(String email, String password) => _guarded(() async {
+    await _api.auth.signInWithPassword(email: email, password: password);
+    var isSuper = false;
+    try {
+      isSuper = await _api.rpc<dynamic>('is_superadmin') == true;
+    } catch (_) {
+      isSuper = false; // fail closed: if we cannot prove it, they are not a superadmin
+    }
+    if (!isSuper) {
+      await signOut();
+      throw const AuthException(AuthFailure.notSuperadmin, 'Not a superadmin account.');
+    }
+  });
+
+  @override
   Future<void> signUpWithEmail(String email, String password, {String? displayName}) => _guarded(() async {
     await _requireOpen();
     await _api.auth.signUp(email: email, password: password, data: {'full_name': ?displayName});
@@ -161,6 +176,12 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<void> signInWithGoogleIdToken(String idToken, {String? nonce}) => _guarded(() async {
     await _requireOpen();
     await _api.auth.signInWithIdToken(provider: sb.OAuthProvider.google, idToken: idToken, nonce: nonce);
+  });
+
+  @override
+  Future<void> signInWithGoogleOAuth({required String redirectTo}) => _guarded(() async {
+    await _requireOpen();
+    await _api.auth.signInWithOAuth(sb.OAuthProvider.google, redirectTo: redirectTo);
   });
 
   @override

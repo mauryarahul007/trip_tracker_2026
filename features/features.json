@@ -1596,5 +1596,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-06T18:41:42.168Z",
     "shippedNote": "Shipped in commit 42ef52a (v3.46.0). Headless-verified only; device, Firebase and store checks open (see docs/flutter-migration/BACKLOG.md)."
+  },
+  {
+    "id": "FEAT-101",
+    "title": "Flutter app: Horizon redesign, Web platform Wasm SQLite, and Google + Superadmin auth gate",
+    "description": "Flutter app: Horizon redesign, Web platform Wasm SQLite, and Google + Superadmin auth gate",
+    "category": "native",
+    "status": "shipped",
+    "requestedBy": "rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-08T09:59:59.747Z",
+    "updatedAt": "2026-10-08T09:59:59.747Z",
+    "shippedAt": "2026-10-08T09:59:59.747Z",
+    "shippedBy": "rahul",
+    "shippedNote": "Shipped"
   }
 ]

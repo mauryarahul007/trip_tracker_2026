@@ -21,8 +21,10 @@ import '../../../domain/models/expense.dart';
 import '../../../domain/models/member.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
+import '../../../shared/widgets/app_surface.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../trip_details/application/trip_nav.dart';
@@ -122,7 +124,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                   Expanded(
                     child: Text(
                       title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
                   ),
                   Icon(open ? Icons.expand_less : Icons.expand_more, color: tokens.textMuted),
@@ -130,7 +132,12 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
               ),
             ),
           ),
-          if (open) ...children,
+          if (open)
+            AppCard(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+            ),
+          const SizedBox(height: 12),
         ],
       );
     }
@@ -138,22 +145,40 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     return Column(
       children: [
         if (myBalance != null)
-          Material(
-            color: tokens.bgSurface,
-            child: ListTile(
-              key: const Key('sticky-balance'),
-              dense: compact,
-              title: Text(l10n.ledYou),
-              trailing: Text(
-                myBalance.balance.abs() < 0.01
-                    ? l10n.ledEven
-                    : myBalance.balance > 0
-                    ? l10n.ledOwed(formatMoney(context, myBalance.balance, cur))
-                    : l10n.ledOwes(formatMoney(context, -myBalance.balance, cur)),
-                style: TextStyle(
-                  color: myBalance.balance > 0.01 ? tokens.colorSuccess : tokens.colorDanger,
-                  fontWeight: FontWeight.w700,
-                ),
+          Padding(
+            key: const Key('sticky-balance'),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: HeroSurface(
+              kind: SurfaceKind.ember,
+              padding: EdgeInsets.all(compact ? 14 : 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.ledYou,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontMono,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.0,
+                      color: Colors.white.withValues(alpha: 0.65),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    myBalance.balance.abs() < 0.01
+                        ? l10n.ledEven
+                        : myBalance.balance > 0
+                        ? l10n.ledOwed(formatMoney(context, myBalance.balance, cur))
+                        : l10n.ledOwes(formatMoney(context, -myBalance.balance, cur)),
+                    style: AppTypography.moneyDisplay(
+                      fontSize: compact ? 24 : 30,
+                      color: myBalance.balance.abs() < 0.01
+                          ? Colors.white
+                          : (myBalance.balance > 0 ? const Color(0xFF4ADE80) : const Color(0xFFFF9A9D)),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

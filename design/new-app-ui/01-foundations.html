@@ -1,0 +1,164 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Trip Tracker — Horizon · 01 Foundations</title>
+<link rel="stylesheet" href="kit.css"><script src="kit.js"></script>
+<style>
+.refs{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+.ref{width:232px;background:#fff;border-radius:22px;padding:10px;box-shadow:0 8px 24px -10px rgba(11,15,26,.18)}
+.ref img{width:100%;border-radius:14px;display:block}
+.ref p{font-size:12.5px;line-height:1.45;color:#3C4252;padding:10px 6px 4px}
+.ref p b{display:block;font:700 13px var(--display);color:#0B0F1A;margin-bottom:3px}
+.sw{width:150px}.sw .c{height:92px;border-radius:22px;box-shadow:inset 0 0 0 1px rgba(11,15,26,.07)}
+.sw b{display:block;font:700 13px var(--display);margin-top:9px}.sw span{font:500 11.5px var(--mono);color:#6B7385}.sw small{display:block;font-size:11.5px;color:#7A8190;margin-top:2px;line-height:1.35}
+.swrow{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+.surf{width:222px;height:150px;border-radius:26px;color:#fff;padding:16px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden}
+.surf b{font:700 15px var(--display)}.surf span{font-size:12px;opacity:.75;margin-top:3px;line-height:1.35}
+.panel{background:#fff;border-radius:30px;padding:28px;box-shadow:0 8px 24px -12px rgba(11,15,26,.18)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.tscale>div{display:flex;align-items:baseline;gap:20px;padding:12px 0;border-bottom:1px solid #EEF0F4}
+.tscale small{width:150px;font:500 11.5px var(--mono);color:#7A8190;flex:none}
+.shp{display:flex;gap:20px;flex-wrap:wrap}.shp div{width:110px;height:84px;background:#F1F2F5;display:flex;align-items:flex-end;padding:10px;font:600 11.5px var(--mono);color:#5A6173;border:1.5px solid #DADDE4}
+.rule{background:#fff;border-radius:22px;padding:18px 20px;width:290px;font-size:13.5px;line-height:1.5;color:#3C4252;box-shadow:0 8px 24px -12px rgba(11,15,26,.14)}
+.rule b{display:block;font:700 14.5px var(--display);color:#0B0F1A;margin-bottom:5px}
+.compo{display:flex;flex-direction:column;gap:18px}
+.compo .rowx{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.stage{background:var(--bg);border-radius:26px;padding:22px}
+.stage.dark{background:#080B12}
+</style></head><body>
+<div class="board">
+<span class="tag">Trip Tracker · New App UI · Design only</span>
+<h1>“Horizon” design system<br>for iOS, Android &amp; Web</h1>
+<p class="lede">A calm, light-gray canvas with big white rounded cards, one confident electric blue for action, and four cinematic dark “context surfaces” that tell you what you’re looking at — <b>Night Sky</b> for travel, <b>Ember</b> for money, <b>Slate</b> for insights, <b>Dusk</b> for night mode &amp; celebrations. Everything below is lifted from your reference set (Iconly cards, wallet, charts, dusk dark-mode, empty states, bottom-menu styles) and adapted to Trip Tracker’s real screens.</p>
+
+<h2>1 · What I took from your references</h2>
+<p class="sub">Seven Iconly shots + the bottom-menu video. Each one maps to a specific part of the app.</p>
+<div class="refs">
+  <div class="ref"><img src="../../Images%20reference/IMG_iconlypro_20261005_183044_c8e.jpg"><p><b>Progress at a Glance</b>Black boarding-pass card with glowing flight arc, big white codes, a white “details” strip below. → Trip hero, Next-Up pass, Trip card.</p></div>
+  <div class="ref"><img src="../../Images%20reference/IMG_iconlypro_20261005_183044_d67.jpg"><p><b>Compact Data Views</b>Warm brown→black wallet, huge amount with muted decimals, glass pill chips, tinted green “Received”. → Expenses summary &amp; Balances hero.</p></div>
+  <div class="ref"><img src="../../Images%20reference/IMG_iconlypro_20261005_183044_181.jpg"><p><b>Interactive Data Cards</b>Light card, tri-colour donut, trend chip, small ring-progress pills. → Spend-by-category, category chips.</p></div>
+  <div class="ref"><img src="../../Images%20reference/IMG_iconlypro_20261005_183044_c17.jpg"><p><b>Visualize Your Numbers</b>Dark slate glass cards + glowing blue line + month selector pills. → Daily-spend insights.</p></div>
+  <div class="ref"><img src="../../Images%20reference/IMG_iconlypro_20261005_183044_b95.jpg"><p><b>Dark Mode Done Right</b>Indigo→lilac dusk gradient, soft moon, glass player bar. → Dark mode, Trip Wrapped, onboarding.</p></div>
+  <div class="ref"><img src="../../Images%20reference/IMG_iconlypro_20261005_183044_f7c.jpg"><p><b>Helpful Empty Spaces</b>Dotted fade, frosted-glass squares, soft blue glow icon, calm centred copy. → Empty states, join-code entry, reset-email.</p></div>
+  <div class="ref"><img src="../../Images%20reference/IMG_iconlypro_20261005_183044_a67.jpg"><p><b>Iconly library</b>Thin-line 24px icon set + glossy 3D objects. → Line icons everywhere; 3D orbs only for onboarding/empty/achievements.</p></div>
+  <div class="ref"><img src="ref-nav-styles.png"><p><b>Bottom-menu styles (video)</b>11 styles. Picked <b style="display:inline">03 Floating + 06 Center FAB + 05 Pill highlight</b> for iOS, M3 indicator bar for Android.</p></div>
+</div>
+
+<h2>2 · Colour — recommended palette “Horizon”</h2>
+<p class="sub">Replaces teal + orange. One action colour (blue), everything else neutral; colour is spent on <i>surfaces</i>, not on random accents. Blue is the only CTA colour; green/red are reserved strictly for money direction.</p>
+<div class="swrow">
+  <div class="sw"><div class="c" style="background:#F1F2F5"></div><b>Canvas</b><span>#F1F2F5</span><small>App background, like the refs</small></div>
+  <div class="sw"><div class="c" style="background:#fff"></div><b>Card</b><span>#FFFFFF</span><small>Big 28px-radius cards</small></div>
+  <div class="sw"><div class="c" style="background:#0B0F1A"></div><b>Ink</b><span>#0B0F1A</span><small>Titles, amounts, “on” chips</small></div>
+  <div class="sw"><div class="c" style="background:#5A6173"></div><b>Ink 2</b><span>#5A6173</span><small>Secondary text</small></div>
+  <div class="sw"><div class="c" style="background:#9AA1AF"></div><b>Ink 3</b><span>#9AA1AF</span><small>Eyebrows, placeholders</small></div>
+  <div class="sw"><div class="c" style="background:#2F6BFF"></div><b>Horizon Blue</b><span>#2F6BFF</span><small>Primary action, active tab, links</small></div>
+  <div class="sw"><div class="c" style="background:#E8EFFF"></div><b>Blue tint</b><span>#E8EFFF</span><small>Active pill, selected</small></div>
+  <div class="sw"><div class="c" style="background:#16A34A"></div><b>Owed to you</b><span>#16A34A</span><small>Received / positive</small></div>
+  <div class="sw"><div class="c" style="background:#E5484D"></div><b>You owe</b><span>#E5484D</span><small>Owe / destructive</small></div>
+  <div class="sw"><div class="c" style="background:#F5A623"></div><b>Amber</b><span>#F5A623</span><small>Warnings, pending, streak</small></div>
+</div>
+<div class="swrow">
+  <div class="surf" style="background:var(--night)"><div style="position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.14) 1.1px,transparent 1.2px);background-size:9px 9px;-webkit-mask-image:linear-gradient(#000,transparent 70%)"></div><b>Night Sky</b><span>#17354F → #0A121C → #010203<br>Trips, boarding passes, scanner, live map</span></div>
+  <div class="surf" style="background:var(--ember)"><b>Ember</b><span>#7E4529 → #2C1810 → #0C0706<br>Money: totals, balances, settle</span></div>
+  <div class="surf" style="background:var(--slate)"><b>Slate</b><span>#2D4759 → #0F161B → #05080A<br>Charts &amp; insights</span></div>
+  <div class="surf" style="background:var(--dusk)"><b>Dusk</b><span>#4B50AA → #C8A0D3 → #0F1446<br>Dark mode, Trip Wrapped, onboarding</span></div>
+  <div class="surf" style="background:conic-gradient(from 200deg,#2DD4E0,#6A7CFF,#8B3CF7,#F5A623,#2DD4E0)"><b>Aurora data ramp</b><span>Cyan → Blue → Violet → Amber<br>Donuts, category colours</span></div>
+</div>
+<div class="note" style="max-width:none">Dark mode canvas <b>#080B12</b> · card <b>#121826</b> · raised <b>#1A2132</b> · line <b>#232B3C</b> · primary lifts to <b>#5C8DFF</b>. Never pure black except the AMOLED toggle (kept from the current app). Every context surface already is dark, so they stay identical in dark mode — only cards flip.</div>
+
+<h2>3 · Typography</h2>
+<p class="sub">Keep Plus Jakarta Sans (already bundled) — it is the closest match to the geometric grotesk in the references. Use it for <i>numbers too</i>, with muted decimals. IBM Plex Sans for body, IBM Plex Mono only for tiny eyebrows/codes.</p>
+<div class="panel two">
+  <div class="tscale">
+    <div><small>Display · 34/800</small><span class="h-xl">My Trips</span></div>
+    <div><small>Title · 28/800</small><span class="h-lg">Goa Weekend</span></div>
+    <div><small>Heading · 20/700</small><span class="h-md">Beach shack dinner</span></div>
+    <div><small>Subhead · 16/700</small><span class="h-sm">Who pays whom</span></div>
+    <div><small>Body · 15/400</small><span class="t-body">Paid by Aarav · split between 5</span></div>
+    <div><small>Caption · 13/400</small><span class="t-sm">Your share ₹728.00</span></div>
+    <div><small>Eyebrow · mono 10.5</small><span class="eyebrow">Goa · India · 12–16 Nov</span></div>
+  </div>
+  <div class="tscale">
+    <div style="align-items:flex-end"><small>Amount XL · 52/700</small><span class="amt-xl">₹84,320<span class="dec">.00</span></span></div>
+    <div style="align-items:flex-end"><small>Amount L · 34/700</small><span class="amt-lg">₹2,450<span class="dec">.00</span></span></div>
+    <div><small>Amount row · 17/700</small><span class="amt">₹3,640.00</span></div>
+    <div><small>Positive / negative</small><span class="amt pos">+ ₹1,200.00</span><span class="amt neg">− ₹2,450.00</span></div>
+    <div><small>Rule</small><span class="t-sm" style="max-width:300px">Every amount: Jakarta 700, tabular-nums, decimals at 45% opacity. Mono is no longer used for money.</span></div>
+  </div>
+</div>
+
+<h2>4 · Shape, elevation, spacing</h2>
+<div class="panel" style="display:flex;gap:46px;flex-wrap:wrap">
+  <div><div class="eyebrow" style="margin-bottom:12px">Radius</div><div class="shp"><div style="border-radius:14px">14 · inputs</div><div style="border-radius:20px">20 · small cards</div><div style="border-radius:28px">28 · cards</div><div style="border-radius:36px">36 · sheets</div><div style="border-radius:99px;align-items:center;justify-content:center">pill · btn/chip</div></div></div>
+  <div><div class="eyebrow" style="margin-bottom:12px">Elevation (soft, never hard borders)</div><div class="shp">
+    <div style="background:#fff;border:0;box-shadow:0 1px 2px rgba(11,15,26,.04),0 8px 24px -8px rgba(11,15,26,.10);border-radius:20px">rest</div>
+    <div style="background:#fff;border:0;box-shadow:0 12px 34px -8px rgba(11,15,26,.28);border-radius:20px">floating dock</div>
+    <div style="background:#fff;border:0;box-shadow:0 12px 40px -10px rgba(11,15,26,.28);border-radius:20px">hero / sheet</div></div></div>
+  <div><div class="eyebrow" style="margin-bottom:12px">Spacing</div><div style="font:500 13.5px/1.7 var(--body);color:#3C4252">4 · 8 · 12 · 16 · 20 · 24 · 32<br>Screen side padding 20 (mobile) / 36 (web)<br>Card padding 18 · row height ≥ 62<br>Tap target ≥ 44 (iOS) / 48 (Android)</div></div>
+</div>
+
+<h2>5 · Components</h2>
+<div class="panel two">
+  <div class="stage compo">
+    <div class="eyebrow">Buttons</div>
+    <div class="rowx"><span class="btn primary">Add expense</span><span class="btn ink">Settle up</span><span class="btn soft">Invite</span><span class="btn ghost">Cancel</span></div>
+    <div class="rowx"><span class="btn primary sm"><i data-i="plus" data-c="s16"></i>New trip</span><span class="btn sm">Edit</span><span class="btn danger sm">Delete forever</span><span class="btn xs soft">Settle</span></div>
+    <div class="eyebrow">Chips &amp; badges</div>
+    <div class="rowx"><span class="chip on">All</span><span class="chip">Paid by me</span><span class="chip">Involves me</span><span class="chip tint"><i data-i="filter" data-c="s16"></i>Filters · 2</span></div>
+    <div class="rowx"><span class="badge pos">Settled</span><span class="badge neg">You owe ₹2,450</span><span class="badge warn">Pending approval</span><span class="badge prim">Day 3 of 5</span><span class="badge">Archived</span></div>
+    <div class="eyebrow">Inputs</div>
+    <div class="field"><label>Trip name</label><div class="v ph">Goa weekend</div></div>
+    <div class="field focus"><label>Amount</label><div class="v">₹ 3,640<span style="color:var(--primary)">|</span></div></div>
+    <div class="seg"><span>Equal</span><span class="on">Shares</span><span>Exact</span><span>Percent</span></div>
+  </div>
+  <div class="stage compo">
+    <div class="eyebrow">List row · Expense</div>
+    <div class="list"><div class="li"><span class="tile c-food"><i data-i="food"></i></span><div class="grow"><div class="tt">Beach shack dinner</div><div class="ss">Paid by Aarav · your share ₹728</div></div><div class="end"><div class="amt">₹3,640</div><span class="badge warn" style="height:20px;font-size:10.5px">Receipt</span></div></div>
+    <div class="li"><span class="tile c-trans"><i data-i="car"></i></span><div class="grow"><div class="tt">Scooter rental × 3</div><div class="ss">Paid by you · you’re owed ₹1,440</div></div><div class="end"><div class="amt">₹1,800</div></div></div></div>
+    <div class="eyebrow">Avatars, rings, toggles</div>
+    <div class="rowx"><div class="avs"><span class="avatar a1">R</span><span class="avatar a2">A</span><span class="avatar a3">M</span><span class="avatar a4">K</span><span class="avatar a5">I</span></div><span class="ring" style="--p:72;--s:56px"><b>72%</b></span><span class="toggle on"></span><span class="toggle"></span><span class="check on"><i data-i="check" data-c="s14"></i></span><span class="check"></span></div>
+    <div class="eyebrow">Category tiles (aurora ramp, tinted)</div>
+    <div class="rowx"><span class="tile c-food"><i data-i="food"></i></span><span class="tile c-stay"><i data-i="bed"></i></span><span class="tile c-trans"><i data-i="car"></i></span><span class="tile c-act"><i data-i="ticket"></i></span><span class="tile c-shop"><i data-i="bag"></i></span><span class="tile c-misc"><i data-i="tag"></i></span></div>
+    <div class="eyebrow">3D orbs (onboarding · empty · achievements only)</div>
+    <div class="rowx"><span class="orb" style="width:58px;height:58px"><i data-i="plane" data-c="s28"></i></span><span class="orb o2" style="width:58px;height:58px"><i data-i="receipt" data-c="s28"></i></span><span class="orb o3" style="width:58px;height:58px"><i data-i="check" data-c="s28"></i></span><span class="orb o4" style="width:58px;height:58px"><i data-i="trophy" data-c="s28"></i></span></div>
+  </div>
+</div>
+
+<h2>6 · Navigation — one pattern per platform</h2>
+<p class="sub">Inside a trip: <b>Expenses · Balances · (+ Add) · Members · Notes</b>. The centre FAB is the single “primary action per screen” (add expense) — it replaces the floating extended FAB on the Expenses tab. When Chat-first is on, Chat replaces Notes’ slot and Notes moves into the trip ⋯ menu (max 4 tabs + FAB).</p>
+<div class="grid">
+  <div class="cell" data-cap="iOS · floating dock" data-sub="Style 03 + 05 + 06">
+    <div class="phone ios" style="height:300px"><div class="scr"><div class="dock"><div class="it on"><i data-i="receipt"></i>Expenses</div><div class="it"><i data-i="swap"></i>Balances</div><div class="fab"><i data-i="plus" data-c="s28"></i></div><div class="it"><i data-i="users"></i>Members</div><div class="it"><i data-i="note"></i>Notes</div></div></div></div></div>
+  <div class="cell" data-cap="Android · Material 3 bar" data-sub="Indicator pill + extended FAB">
+    <div class="phone android" style="height:300px"><div class="scr"><div class="m3fab" style="bottom:98px"><i data-i="plus"></i>Add expense</div><div class="m3dock"><div class="it on"><span class="pill"><i data-i="receipt"></i></span>Expenses</div><div class="it"><span class="pill"><i data-i="swap"></i></span>Balances</div><div class="it"><span class="pill"><i data-i="users"></i></span>Members</div><div class="it"><span class="pill"><i data-i="note"></i></span>Notes</div></div></div></div></div>
+  <div class="cell" data-cap="Dark floating dock">
+    <div class="phone ios" data-dark="1" style="height:300px"><div class="scr"><div class="dock"><div class="it on"><i data-i="receipt"></i>Expenses</div><div class="it"><i data-i="swap"></i>Balances</div><div class="fab"><i data-i="plus" data-c="s28"></i></div><div class="it"><i data-i="users"></i>Members</div><div class="it"><i data-i="note"></i>Notes</div></div></div></div></div>
+  <div class="cell" data-cap="Web · sidebar ≥1024 · rail 600–1024"><div style="display:flex;gap:18px">
+    <div class="stage" style="width:268px;padding:0;overflow:hidden;height:300px"><div class="side" style="width:auto;height:100%;border:0"><div class="logo"><span class="mk"><i data-i="plane" data-c="s18"></i></span>Trip Tracker</div><div class="nv on"><i data-i="home" data-c="s20"></i>Trips</div><div class="nv"><i data-i="swap" data-c="s20"></i>Balances</div><div class="nv"><i data-i="bell" data-c="s20"></i>Activity<span class="bd">3</span></div><div class="nv"><i data-i="sliders" data-c="s20"></i>Settings</div></div></div>
+    <div class="stage" style="width:92px;padding:0;overflow:hidden;height:300px"><div class="side rail" style="height:100%;border:0"><div class="logo" style="padding:0 0 14px"><span class="mk"><i data-i="plane" data-c="s18"></i></span></div><div class="nv on" style="padding:0;width:48px;justify-content:center"><i data-i="home" data-c="s22"></i></div><div class="nv" style="padding:0;width:48px;justify-content:center"><i data-i="swap"></i></div><div class="nv" style="padding:0;width:48px;justify-content:center"><i data-i="bell"></i></div></div></div></div></div>
+</div>
+
+<h2>7 · iOS vs Android — what actually differs</h2>
+<div class="grid">
+  <div class="rule"><b>Titles &amp; back</b>iOS: large collapsing title, “‹ Trips” back chip, edge-swipe back. Android: 28px title on the left, arrow back, predictive-back animation.</div>
+  <div class="rule"><b>Sheets</b>iOS: 36px radius, grabber, detents (½ / full). Android: 28px radius, drag handle, full-width actions.</div>
+  <div class="rule"><b>Nav</b>iOS: floating glass dock with raised centre FAB. Android: flat M3 bar with indicator pill + extended FAB above it.</div>
+  <div class="rule"><b>Controls</b>iOS toggles (51×31) &amp; wheel date picker. Android M3 switch with thumb icon &amp; calendar-dialog picker. Same colours either way.</div>
+  <div class="rule"><b>Status / system</b>iOS Dynamic Island safe-area 54px, home-indicator 34px. Android edge-to-edge, punch-hole camera, 3-button/gesture bar aware.</div>
+  <div class="rule"><b>Haptics &amp; sound</b>iOS light impact on tab change, success notification on “Settled”. Android tick on toggle, confirm on settle. (Setting already exists.)</div>
+</div>
+
+<h2>8 · Responsive rules for Flutter Web</h2>
+<div class="grid">
+  <div class="rule"><b>&lt; 600 · Phone</b>Single column, floating dock, sheets from bottom.</div>
+  <div class="rule"><b>600–1023 · Tablet</b>Navigation rail (84px), 2-column cards, sheets become centred 520px dialogs.</div>
+  <div class="rule"><b>≥ 1024 · Desktop</b>248px sidebar, content max-width 1120, optional 340px right rail (Balances, Activity). Expense detail opens in a side panel instead of a sheet.</div>
+  <div class="rule"><b>≥ 1440 · Wide</b>Content centred, trip workspace gains the right rail permanently.</div>
+</div>
+
+<h2>9 · Motion &amp; delight</h2>
+<div class="grid">
+  <div class="rule"><b>Flight arc</b>On Trips home the plane glides along the arc to today’s progress when the card first appears (600ms, decel).</div>
+  <div class="rule"><b>Number roll</b>Totals and balances count up/odometer-roll when data changes (200ms).</div>
+  <div class="rule"><b>Dock</b>Active pill slides between tabs (spring); FAB rotates 90° into × while the quick-add sheet is open.</div>
+  <div class="rule"><b>Stamp</b>When a trip is fully settled the passport stamp “thumps” onto the card (scale 1.3→1, rotate −12°).</div>
+</div>
+</div></body></html>

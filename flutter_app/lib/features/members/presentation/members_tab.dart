@@ -9,6 +9,8 @@ import '../../../domain/models/group.dart';
 import '../../../domain/models/member.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n_ext.dart';
+import '../../../shared/widgets/app_avatar.dart';
+import '../../../shared/widgets/app_surface.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/ask_text.dart';
@@ -129,39 +131,46 @@ class MembersTab extends ConsumerWidget {
       final amount = formatMoney(context, balance.abs(), currency);
       moneyText = balance > 0 ? l10n.ledOwed(amount) : l10n.ledOwes(amount);
     }
-    return ListTile(
-      key: Key('member-${m.id}'),
-      contentPadding: EdgeInsets.zero,
-      title: Text(m.name),
-      subtitle: Text(moneyText == null ? _roleLabel(l10n, role) : '${_roleLabel(l10n, role)} · $moneyText'),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (canManage)
-            PopupMenuButton<String>(
-              key: Key('member-role-${m.id}'),
-              initialValue: role,
-              onSelected: (v) => ref.read(tripRepositoryProvider).setMemberRole(tripId, m.id, v),
-              itemBuilder: (_) => [
-                PopupMenuItem(value: 'organizer', child: Text(l10n.memRoleOrganizer)),
-                PopupMenuItem(value: 'contributor', child: Text(l10n.memRoleContributor)),
-                PopupMenuItem(value: 'viewer', child: Text(l10n.memRoleViewer)),
-              ],
-              child: const Icon(Icons.badge_outlined),
-            ),
-          IconButton(
-            tooltip: 'Rename',
-            key: Key('member-rename-${m.id}'),
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () => _rename(context, ref, m),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: AppCard(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        child: ListTile(
+          key: Key('member-${m.id}'),
+          contentPadding: EdgeInsets.zero,
+          leading: AppAvatar(name: m.name, size: 40),
+          title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+          subtitle: Text(moneyText == null ? _roleLabel(l10n, role) : '${_roleLabel(l10n, role)} · $moneyText'),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (canManage)
+                PopupMenuButton<String>(
+                  key: Key('member-role-${m.id}'),
+                  initialValue: role,
+                  onSelected: (v) => ref.read(tripRepositoryProvider).setMemberRole(tripId, m.id, v),
+                  itemBuilder: (_) => [
+                    PopupMenuItem(value: 'organizer', child: Text(l10n.memRoleOrganizer)),
+                    PopupMenuItem(value: 'contributor', child: Text(l10n.memRoleContributor)),
+                    PopupMenuItem(value: 'viewer', child: Text(l10n.memRoleViewer)),
+                  ],
+                  child: const Icon(Icons.badge_outlined),
+                ),
+              IconButton(
+                tooltip: 'Rename',
+                key: Key('member-rename-${m.id}'),
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () => _rename(context, ref, m),
+              ),
+              IconButton(
+                tooltip: (m.archived ? 'Restore' : 'Archive'),
+                key: Key('member-archive-${m.id}'),
+                icon: Icon(m.archived ? Icons.unarchive_outlined : Icons.archive_outlined),
+                onPressed: () => ref.read(memberRepositoryProvider).setArchived(m.id, !m.archived),
+              ),
+            ],
           ),
-          IconButton(
-            tooltip: (m.archived ? 'Restore' : 'Archive'),
-            key: Key('member-archive-${m.id}'),
-            icon: Icon(m.archived ? Icons.unarchive_outlined : Icons.archive_outlined),
-            onPressed: () => ref.read(memberRepositoryProvider).setArchived(m.id, !m.archived),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_tokens.dart';
+import '../theme/app_typography.dart';
 
 class EmptyState extends StatelessWidget {
   final IconData? icon;
@@ -25,16 +26,36 @@ class EmptyState extends StatelessWidget {
               Text(emoji!, style: const TextStyle(fontSize: 48))
             else if (icon != null)
               Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(color: tokens.borderColor.withValues(alpha: 0.5), shape: BoxShape.circle),
-                child: Icon(icon, size: 32, color: tokens.textSecondary),
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [tokens.primaryAccentLight, tokens.primaryAccent],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: tokens.primaryAccent.withValues(alpha: 0.35),
+                      blurRadius: 24,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Icon(icon, size: 40, color: Colors.white),
               ),
             const SizedBox(height: 16),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: tokens.textPrimary),
+              style: TextStyle(
+                fontFamily: AppTypography.fontTitle,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
+                color: tokens.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             Text(

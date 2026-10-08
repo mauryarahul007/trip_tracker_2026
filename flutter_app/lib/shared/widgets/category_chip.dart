@@ -14,7 +14,7 @@ class CategoryChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.tokens;
 
-    final bg = isSelected ? tokens.primaryAccent.withValues(alpha: 0.15) : tokens.bgSurface;
+    final bg = isSelected ? tokens.primaryAccent.withValues(alpha: 0.1) : tokens.bgSurface;
     final border = isSelected ? tokens.primaryAccent : tokens.borderColor;
     final textColor = isSelected ? tokens.primaryAccent : tokens.textPrimary;
 

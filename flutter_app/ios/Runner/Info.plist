@@ -74,6 +74,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.triptracker.app</string>
+				<string>com.googleusercontent.apps.762323268291-6oj9n7500grc40fbes4oauim51ju7dd3</string>
 			</array>
 		</dict>
 	</array>
