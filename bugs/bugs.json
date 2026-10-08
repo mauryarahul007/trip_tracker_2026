@@ -8038,5 +8038,31 @@
     "resolvedBy": "rahul",
     "resolvedAt": "2026-10-08T18:06:03.766Z",
     "resolutionNote": "Ignore flutter_app directory in vite.config.ts server.watch to avoid EBUSY on Windows"
+  },
+  {
+    "id": "BUG-277",
+    "title": "Flutter Notes tab overflows by 531px on trips with many passes, hiding Checklist/Notes/Chat selector",
+    "description": "Notes tab Column held the Next Up capsule and a non-scrollable passes list above an Expanded pane. Trips with ~10 passes (Sikkim Bagpacking) overflowed the screen, pushing the Checklist/Notes/Chat selector and bottom content off-screen.",
+    "severity": "high",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-08T19:05:31.435Z",
+    "updatedAt": "2026-10-08T19:05:31.532Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-08T19:05:31.532Z",
+    "resolutionNote": "Fixed in commit 7bfeccb (v3.49.0): capsule + passes capped to 35% screen height inside a scroll view. Regression widget test added; manual QA in docs/FEATURE_TEST_STEPS.md (FLUTTER-NOTES-OVERFLOW). Not yet verified on a device."
   }
 ]

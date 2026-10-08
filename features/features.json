@@ -1628,5 +1628,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-08T17:55:54.187Z",
     "shippedNote": "Shipped in commit 09966ab (v3.48.2): first-sync fix, destination autocomplete, Horizon flags default ON (Core pack)"
+  },
+  {
+    "id": "FEAT-103",
+    "title": "Pass list sorting by time, flight leg, or traveler name (Flutter Notes tab)",
+    "description": "Time / Leg / Name sort control above the Passes list for trips with 3+ passes; Leg groups passes under flight/route headers. Not persisted.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-08T19:05:31.581Z",
+    "updatedAt": "2026-10-08T19:05:31.581Z",
+    "shippedAt": "2026-10-08T19:05:31.581Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped in commit 7bfeccb (v3.49.0) behind enablePassSorting (Travel pack, default ON). Headless-verified only; device check pending."
   }
 ]

@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **102** |
+| **Total Tracked** | **103** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **100** |
+| **✅ Shipped** | **101** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -32,7 +32,7 @@
 ### FEAT-002: Test
 
 - **Category**: `ui-ux` | **Status**: `requested`
-- **Requested By**: `mauryarahul007@gmail.com` on 21/8/2026 (web)
+- **Requested By**: `mauryarahul007@gmail.com` on 8/21/2026 (web)
 - **Route**: `#nav-3`
 
 Test
@@ -42,7 +42,7 @@ Test
 ### FEAT-024: CI pipeline for lint, build, and test on push/PR
 
 - **Category**: `admin` | **Status**: `requested`
-- **Requested By**: `claude-cli` on 1/9/2026 (web)
+- **Requested By**: `claude-cli` on 9/1/2026 (web)
 
 CI pipeline for lint, build, and test on push/PR
 
@@ -152,6 +152,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-100** | Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12) | `native` | `claude-cli` | `claude-cli` | Shipped in commit 42ef52a (v3.46.0). Headless-verified only; device, Firebase and store checks open (see docs/flutter-migration/BACKLOG.md). |
 | **FEAT-101** | Flutter app: Horizon redesign, Web platform Wasm SQLite, and Google + Superadmin auth gate | `native` | `rahul` | `rahul` | Shipped |
 | **FEAT-102** | Flutter app: instant trips after sign-in, destination autocomplete, Horizon nav and Spend Insights on by default | `native` | `claude-cli` | `claude-cli` | Shipped in commit 09966ab (v3.48.2): first-sync fix, destination autocomplete, Horizon flags default ON (Core pack) |
+| **FEAT-103** | Pass list sorting by time, flight leg, or traveler name (Flutter Notes tab) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7bfeccb (v3.49.0) behind enablePassSorting (Travel pack, default ON). Headless-verified only; device check pending. |
 
 ---
 

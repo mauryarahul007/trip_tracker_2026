@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **274** | All recorded bugs across sessions |
+| **Total Tracked** | **275** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **247** | Verified & closed |
+| **✅ Resolved** | **248** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -278,6 +278,7 @@
 | **BUG-272** | Flutter quick_parser_math fixture failed: TS parseQuickExpense used real clock | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit df20847 (v3.48.0): parseQuickExpense takes injectable now; fixture generator pins MOCK_DATE |
 | **BUG-273** | Flutter CI fixtures-drift step fails: deps not installed, generated Dart unformatted | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 5badf99 (v3.48.1): workflow runs npm ci and dart format before drift diff |
 | **BUG-276** | Vite dev server crashes on Windows with EBUSY watching flutter_app build cache | `general` | `medium` | `rahul` | `rahul` | Ignore flutter_app directory in vite.config.ts server.watch to avoid EBUSY on Windows |
+| **BUG-277** | Flutter Notes tab overflows by 531px on trips with many passes, hiding Checklist/Notes/Chat selector | `general` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 7bfeccb (v3.49.0): capsule + passes capped to 35% screen height inside a scroll view. Regression widget test added; manual QA in docs/FEATURE_TEST_STEPS.md (FLUTTER-NOTES-OVERFLOW). Not yet verified on a device. |
 
 ---
 
