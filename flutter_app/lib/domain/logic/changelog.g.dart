@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.49.0', '2026-10-09', [
+    'Behind the scenes: Flutter Notes tab no longer overflows on trips with many passes, and passes can be sorted by time, flight leg, or traveler name. No change to the web app.',
+  ]),
   ChangelogEntry('3.48.2', '2026-10-08', [
     'Behind the scenes: Flutter app now shows trips right after sign-in, suggests destinations while typing, and the Horizon navigation and Spend Insights are on by default. No change to the web app.',
   ]),
@@ -42,8 +45,5 @@ const List<ChangelogEntry> changelogEntries = [
     'The Amount box in Add Expense now sits immediately below its label for faster entry, with currency suggestions underneath.',
     'Split presets, quick amount additions, stepper dots, and currency toggles now have enlarged 44px tap targets for easier mobile tapping.',
     'Restored draft notices are calmer, and the bottom save bar has subtle elevation above scrolling form content.',
-  ]),
-  ChangelogEntry('3.43.10', '2026-10-02', [
-    'The Members list and live packing updates from the previous release now reach the site. That build had stopped on a type error.',
   ]),
 ];

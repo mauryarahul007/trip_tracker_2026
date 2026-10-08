@@ -42,6 +42,7 @@
     "enableMapCollapsedByDefault": true,
     "enableTravelerPassport": true,
     "enableTravelPasses": true,
+    "enablePassSorting": true,
     "enableNextUpCapsule": true,
     "enableGateScanner": true,
     "enableFlightRadar": true,
@@ -147,6 +148,7 @@
     "enableMapCollapsedByDefault": true,
     "enableTravelerPassport": true,
     "enableTravelPasses": true,
+    "enablePassSorting": true,
     "enableNextUpCapsule": true,
     "enableGateScanner": true,
     "enableFlightRadar": true,
@@ -267,6 +269,7 @@
       "id": "travel",
       "flagKeys": [
         "enableTravelPasses",
+        "enablePassSorting",
         "enableNextUpCapsule",
         "enableGateScanner",
         "enableFlightRadar",

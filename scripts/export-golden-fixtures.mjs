@@ -324,10 +324,19 @@ console.log('--- Generating Golden Fixtures ---');
     'Invalid input without any amount'
   ];
 
+  // Pin "now" (noon UTC, matches DateTime(2026, 10, 6) in fixture_runner_test.dart) so relative
+  // dates like "yesterday" don't drift with the wall clock or timezone.
+  const RealDate = Date;
+  const pinned = RealDate.UTC(2026, 9, 6, 12);
+  globalThis.Date = class extends RealDate {
+    constructor(...args) { args.length ? super(...args) : super(pinned); }
+    static now() { return pinned; }
+  };
   const parseCases = parserInputs.map((input) => ({
     input,
     output: expenseQuickParserMod.parseQuickExpense(input, parserCategories, [], members, null, MOCK_DATE)
   }));
+  globalThis.Date = RealDate;
 
   const mathInputs = [
     '12 * 3 + 4',

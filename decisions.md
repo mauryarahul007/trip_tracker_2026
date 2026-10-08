@@ -4903,3 +4903,16 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** Coordinator exposes a pulling state and re-pulls once if the first pull finds no trips; the list reloads when the first pull lands and shows "Syncing your trips" meanwhile. Ported `placeSuggest` (gazetteer, fuzzy match, Photon, did-you-mean) to Dart behind `enableDestinationAutocomplete`. `enableHorizonNav` and `enableSpendInsights` are default ON and moved from the Pro to the Core pack (Pro must stay off by default).
 * **Trade-offs Accepted:** New strings are English-only until ARB regeneration; the gazetteer is copied by hand from the web list.
 * **Release Cut:** version bumped to `3.48.2` via `npm run release:patch`.
+
+## 280. Flutter Notes Tab Pass Overflow Fix and Pass Sorting
+
+* **Date:** 2026-10-09
+* **Context:** On trips with many passes (Sikkim Bagpacking, ~10) the Notes tab Column overflowed by 531px, pushing the Checklist/Notes/Chat selector off-screen. Travelers also had no way to find a person's or a flight's passes in a long list.
+* **Decisions:**
+  - **Capped, scrollable header:** the Next Up capsule and passes list sit in a `ConstrainedBox` (35% of screen height) with a `SingleChildScrollView`, so the selector and the `Expanded` pane stay visible. The whole tab is not made scrollable because the chat pane relies on `Expanded`.
+  - **Pass sorting:** Time (default) / Leg / Name control for 3+ passes, via the pure `sortPasses` in `domain/logic/pass_sort.dart` (stable, blanks last, input never mutated). Leg mode groups by `legIdentifier` (fallback origin → destination) with headers. Sort is not persisted.
+  - **Flag:** `enablePassSorting` (Travel pack, default ON); flag-count assertion bumped to 102.
+* **Trade-offs Accepted:**
+  - On small screens the passes area scrolls inside a fixed share of the height instead of using the full screen.
+  - Sort choice resets each visit.
+* **Release Cut:** version bumped to `3.49.0` via `npm run release:minor`.

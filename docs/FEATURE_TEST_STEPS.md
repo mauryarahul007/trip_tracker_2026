@@ -23,6 +23,8 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 |--------|---------|-----|---------|
 | 2026-10-08 | flutter 3.48.2 | FLUTTER-FIRSTSYNC | [Flutter: first sync, destination autocomplete, Horizon defaults](#flutter-firstsync--trips-after-sign-in-destination-autocomplete-horizon-defaults-v3482) |
 | 2026-10-08 | flutter 3.48 | FLUTTER-HORIZON | [Flutter: Horizon nav and spend insights](#flutter-horizon--horizon-nav-and-spend-insights-v3480) |
+| 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
+| 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
 | 2026-10-07 | flutter 3.45 | FLUTTER-P12 | [Flutter: accessibility, hardening, release checks](#flutter-p12--flutter-accessibility-hardening-release-checks) |
 | 2026-10-06 | flutter 3.45 | FLUTTER-P10E | [Flutter: push, tap routing, pass reminders](#flutter-p10e--flutter-push-tap-routing-pass-reminders) |
 | 2026-10-06 | flutter 3.45 | FLUTTER-P10D | [Flutter: feedback, diagnostics, legal, telemetry](#flutter-p10d--flutter-feedback-diagnostics-legal-telemetry) |
@@ -2154,6 +2156,49 @@ Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, ne
 - Roster, roles, archive, and groups match the steps. Checklist and notes save for a non-owner member via the collab write. Chat text survives offline. Pass cards appear only after one is saved. The 1,000-message scroll and the two-account check are device/staging steps.
 
 ---
+
+## FLUTTER-NOTES-OVERFLOW — Flutter: Notes tab many-passes overflow fix
+
+### Flags
+- `enableTravelPasses` ON (default for Trip pack); `enableTripChat` ON to see the Chat segment.
+
+### Steps
+1. Open a trip with 8+ passes (e.g. Sikkim Bagpacking) on a phone-size screen.
+2. Open the **Notes** bottom tab.
+3. Confirm no yellow/black "BOTTOM OVERFLOWED" stripe appears.
+4. Confirm the Checklist / Notes / Chat selector is visible below the passes area.
+5. Scroll inside the Next Up + Passes area; all passes and "Add pass" are reachable.
+6. Tap **Chat**, then **Notes**, then **Checklist**; each pane fills the remaining space.
+7. Open a trip with 0 passes (e.g. Switzerland); layout is unchanged.
+
+### Negative checks
+- `enableTravelPasses` OFF → no passes list; selector and panes still render.
+
+### Pass
+- No overflow stripe at any pass count; selector always on screen; passes scroll within a capped area (~35% of screen height).
+
+## FLUTTER-PASS-SORT — Flutter: pass list sorting (Time / Leg / Name)
+
+### Flags
+- `enablePassSorting` ON (default, Travel pack) and `enableTravelPasses` ON.
+
+### Steps
+1. Open a trip with 3+ passes across 2+ flights and several travelers (e.g. Sikkim Bagpacking) → Notes tab.
+2. Above the passes, confirm a **Time | Leg | Name** control (Time selected).
+3. Time: passes run earliest → latest; undated passes are last.
+4. Tap **Leg**: passes are grouped under a header per flight/route (e.g. `6E445 · IXB · BLR`), earliest leg first, travelers A→Z within each group; passes with no leg info sit last under `—`.
+5. Tap **Name**: passes group by passenger A→Z, each person's legs in time order; no leg headers.
+6. Leave the tab and return: sort resets to Time (not remembered).
+7. Open a trip with 1–2 passes: no sort control.
+8. Tap a pass / QR / live-status icon in each mode; each opens the correct pass.
+
+### Negative checks
+- `enablePassSorting` OFF (Ops Deck → Flags / Travel pack) → no sort control, no leg headers, passes in stored order.
+- `enableTravelPasses` OFF → no passes list at all.
+- Sorting never changes stored order (reload app with Time mode: unchanged).
+
+### Pass
+- Each mode orders as above, headers only in Leg mode, flag OFF restores the plain list.
 
 ## Template for the next feature
 

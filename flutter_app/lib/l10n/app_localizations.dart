@@ -2581,6 +2581,24 @@ abstract class AppLocalizations {
   /// **'Add pass'**
   String get notesAddPass;
 
+  /// No description provided for @notesSortTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get notesSortTime;
+
+  /// No description provided for @notesSortLeg.
+  ///
+  /// In en, this message translates to:
+  /// **'Leg'**
+  String get notesSortLeg;
+
+  /// No description provided for @notesSortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get notesSortName;
+
   /// No description provided for @notesPassTitle.
   ///
   /// In en, this message translates to:

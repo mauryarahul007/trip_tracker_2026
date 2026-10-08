@@ -72,6 +72,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableOfflineMapTiles': false,
   'enableOfflineSnapshot': false,
   'enablePackingAssistant': true,
+  'enablePassSorting': true,
   'enablePersistentExpenseDraft': true,
   'enablePredictiveChips': true,
   'enableProgressiveNextUp': true,
@@ -159,6 +160,7 @@ const Map<String, List<String>> consumerPacks = {
   ],
   'travel': [
     'enableTravelPasses',
+    'enablePassSorting',
     'enableNextUpCapsule',
     'enableGateScanner',
     'enableFlightRadar',

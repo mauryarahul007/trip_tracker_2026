@@ -33,6 +33,7 @@ export type FeatureFlagKey =
   | 'enableExpenseApprovalThreshold'
   // Phase 3: Smart Travel Navigator & Pass Hub
   | 'enableTravelPasses'
+  | 'enablePassSorting'
   | 'enableNextUpCapsule'
   | 'enableProgressiveNextUp'
   | 'enableGateScanner'

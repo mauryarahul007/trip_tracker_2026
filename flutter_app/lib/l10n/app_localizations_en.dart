@@ -1391,6 +1391,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesAddPass => 'Add pass';
 
   @override
+  String get notesSortTime => 'Time';
+
+  @override
+  String get notesSortLeg => 'Leg';
+
+  @override
+  String get notesSortName => 'Name';
+
+  @override
   String get notesPassTitle => 'Title';
 
   @override

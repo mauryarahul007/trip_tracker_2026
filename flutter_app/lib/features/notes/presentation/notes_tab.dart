@@ -9,6 +9,7 @@ import '../../../core/platform/share_service.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/flag_defaults.g.dart';
 import '../../../domain/logic/ics_export_service.dart';
+import '../../../domain/logic/pass_sort.dart';
 import '../../../domain/logic/travel_status_service.dart';
 import '../../../domain/logic/trip_utilities.dart';
 import '../../../domain/models/checklist_item.dart';
@@ -43,6 +44,7 @@ class NotesTab extends ConsumerStatefulWidget {
 }
 
 class _NotesTabState extends ConsumerState<NotesTab> {
+  PassSort _passSort = PassSort.time;
   var _pane = 'checklist';
   var _category = 'all';
 
@@ -63,8 +65,19 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     final content = Column(
       key: const Key('tab-notes'),
       children: [
-        if (trip != null) NextUpTravelCapsule(trip: trip, passes: trip.passes),
-        if (passesOn) _passes(context, trip?.passes ?? const []),
+        // Cap header height so many passes scroll here instead of pushing the pane selector off-screen.
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.35),
+          child: SingleChildScrollView(
+            key: const Key('notes-passes-scroll'),
+            child: Column(
+              children: [
+                if (trip != null) NextUpTravelCapsule(trip: trip, passes: trip.passes),
+                if (passesOn) _passes(context, trip?.passes ?? const []),
+              ],
+            ),
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           child: SegmentedButton<String>(
@@ -119,13 +132,45 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     final trip = ref.watch(tripProvider(widget.tripId)).value;
     final gateScannerOn = _flag('enableGateScanner');
     final icsOn = _flag('enableIcsExport');
+    final sortOn = _flag('enablePassSorting');
+    final shown = sortOn ? sortPasses(passes, _passSort) : passes;
+    // Previous pass's leg in `shown`, so a header prints only when the leg changes.
+    String? lastLeg(TravelPass p) {
+      final i = shown.indexOf(p);
+      return i == 0 ? null : passLeg(shown[i - 1]);
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (passes.isNotEmpty) Text(l10n.notesPasses, style: const TextStyle(fontWeight: FontWeight.w700)),
-          for (final p in passes)
+          if (sortOn && passes.length >= 3)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: SegmentedButton<PassSort>(
+                key: const Key('pass-sort'),
+                showSelectedIcon: false,
+                segments: [
+                  ButtonSegment(value: PassSort.time, label: Text(l10n.notesSortTime)),
+                  ButtonSegment(value: PassSort.leg, label: Text(l10n.notesSortLeg)),
+                  ButtonSegment(value: PassSort.name, label: Text(l10n.notesSortName)),
+                ],
+                selected: {_passSort},
+                onSelectionChanged: (v) => setState(() => _passSort = v.first),
+              ),
+            ),
+          for (final p in shown) ...[
+            if (sortOn && _passSort == PassSort.leg && passLeg(p) != lastLeg(p))
+              Padding(
+                key: Key('pass-leg-${passLeg(p)}'),
+                padding: const EdgeInsets.only(top: 10, bottom: 2),
+                child: Text(
+                  passLeg(p).isEmpty ? '—' : passLeg(p).replaceAll('_', ' · '),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
             Builder(
               builder: (ctx) {
                 final statusInfo = getTravelStatusInfo(p);
@@ -175,6 +220,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                 );
               },
             ),
+          ],
           Wrap(
             spacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,

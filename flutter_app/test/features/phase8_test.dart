@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trip_tracker/data/local/app_database.dart';
 import 'package:trip_tracker/data/providers.dart';
+import 'package:trip_tracker/domain/models/travel_pass.dart';
 import 'package:trip_tracker/domain/models/trip_message.dart';
 import 'package:trip_tracker/features/expenses/application/expenses_providers.dart';
 import 'package:trip_tracker/features/trip_details/application/trip_nav.dart';
@@ -123,6 +124,33 @@ void main() {
     await settle(tester, rounds: 8);
     expect(find.text('6E 204'), findsOneWidget);
     expect(find.text('Passes'), findsOneWidget);
+  });
+
+  testApp('notes: many passes scroll in their own area and keep the pane selector visible', (tester) async {
+    tester.view.physicalSize = const Size(411, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await containerOf(tester).read(tripRepositoryProvider).setPasses(s.tripId, [
+      for (var i = 0; i < 12; i++)
+        TravelPass(id: 'p$i', tripId: s.tripId, type: 'flight', title: 'Pass $i', createdAt: 1, updatedAt: 1),
+    ]);
+    await openTab(tester, s, 'notes');
+
+    expect(tester.takeException(), isNull);
+    expect(key('notes-passes-scroll'), findsOneWidget);
+    expect(tester.getTopLeft(key('notes-panes')).dy, lessThan(900));
+
+    // Sort control: Leg mode groups by leg header; Name mode drops headers.
+    expect(key('pass-sort'), findsOneWidget);
+    await tester.tap(find.descendant(of: key('pass-sort'), matching: find.text('Leg')));
+    await settle(tester, rounds: 4);
+    expect(key('pass-leg-'), findsOneWidget); // no legIdentifier/route → one blank-leg group
+    await tester.tap(find.descendant(of: key('pass-sort'), matching: find.text('Name')));
+    await settle(tester, rounds: 4);
+    expect(key('pass-leg-'), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testApp('chat: unread on notes, a text bubble, and an expense card', (tester) async {

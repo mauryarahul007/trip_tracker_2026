@@ -76,6 +76,7 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
     targetAudience: 'Air and rail travelers who add a boarding pass or ticket.',
     flagKeys: [
       'enableTravelPasses',
+      'enablePassSorting',
       'enableNextUpCapsule',
       'enableGateScanner',
       'enableFlightRadar',
@@ -435,6 +436,15 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     key: 'enableTravelPasses',
     label: 'Universal Travel Pass Wallet',
     description: 'Central wallet for airline boarding passes, train tickets, and hotel vouchers.',
+    category: 'transit',
+    pack: 'travel',
+    defaultEnabledForUsers: true,
+  },
+  enablePassSorting: {
+    key: 'enablePassSorting',
+    label: 'Pass List Sorting (Time / Leg / Name)',
+    description:
+      'ON: when a trip has 3+ travel passes, travelers get a Time / Leg / Name sort control above the Passes list on the Notes tab (Leg groups passes under a flight/route header). OFF: the list shows in stored order with no sort control. Does not change stored pass order or the Next Up capsule, and has no effect while Travel Pass Wallet is OFF.',
     category: 'transit',
     pack: 'travel',
     defaultEnabledForUsers: true,
@@ -1073,6 +1083,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
 
   // Travel — pass holders (chrome gated; route stops / tiles / data-saver OFF)
   enableTravelPasses: true,
+  enablePassSorting: true,
   enableNextUpCapsule: true,
   enableGateScanner: true,
   enableFlightRadar: true,
