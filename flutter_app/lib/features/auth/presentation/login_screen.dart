@@ -88,93 +88,97 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final paused = ref.watch(signInsPausedProvider).value ?? false;
     final apple = ref.watch(socialAuthProvider).appleAvailable;
     return AppScaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Center(child: BrandMark()),
-              const SizedBox(height: 20),
-              Text(
-                l10n.authWelcome,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: AppTypography.fontTitle,
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
-                  color: tokens.textPrimary,
-                  letterSpacing: -0.9,
+      maxContentWidth: MediaQuery.sizeOf(context).width >= _kSplitBreakpoint ? null : 960,
+      body: _splitOnWide(
+        context,
+        SafeArea(
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Center(child: BrandMark()),
+                const SizedBox(height: 20),
+                Text(
+                  l10n.authWelcome,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontTitle,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                    color: tokens.textPrimary,
+                    letterSpacing: -0.9,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.authSubtitle,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, color: tokens.textSecondary),
-              ),
-              const SizedBox(height: 24),
-              if (paused)
-                _Banner(key: const Key('paused-banner'), text: l10n.authSignInsPaused, color: tokens.warningColor),
-              if (_error != null) _Banner(key: const Key('error-banner'), text: _error!, color: tokens.colorDanger),
-              AppButton(
-                label: l10n.authContinueGoogle,
-                icon: Icons.g_mobiledata_rounded,
-                variant: AppButtonVariant.secondary,
-                isFullWidth: true,
-                onPressed: (paused || _busy) ? null : _google,
-              ),
-              if (apple) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.authSubtitle,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 15, color: tokens.textSecondary),
+                ),
+                const SizedBox(height: 24),
+                if (paused)
+                  _Banner(key: const Key('paused-banner'), text: l10n.authSignInsPaused, color: tokens.warningColor),
+                if (_error != null) _Banner(key: const Key('error-banner'), text: _error!, color: tokens.colorDanger),
                 AppButton(
-                  label: l10n.authContinueApple,
-                  icon: Icons.apple,
+                  label: l10n.authContinueGoogle,
+                  icon: Icons.g_mobiledata_rounded,
                   variant: AppButtonVariant.secondary,
                   isFullWidth: true,
-                  onPressed: (paused || _busy) ? null : _apple,
+                  onPressed: (paused || _busy) ? null : _google,
                 ),
-              ],
-              const SizedBox(height: 12),
-              _SuperadminSection(
-                expanded: _showAdmin,
-                busy: _busy,
-                email: _email,
-                password: _password,
-                onToggle: () => setState(() {
-                  _showAdmin = !_showAdmin;
-                  _error = null;
-                }),
-                onSubmit: _submitSuperadmin,
-              ),
-              const SizedBox(height: 20),
-              AppTextField(
-                controller: _code,
-                hint: l10n.authTripCodeHint,
-                textInputAction: TextInputAction.go,
-                onSubmitted: _goJoin,
-                prefixIcon: const Icon(Icons.confirmation_number_outlined),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.authLegal,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: tokens.textMuted, fontSize: 12),
-              ),
-              Wrap(
-                alignment: WrapAlignment.center,
-                children: [
-                  TextButton(
-                    onPressed: () => context.push('/terms'),
-                    child: Text(l10n.authTerms, style: TextStyle(color: tokens.textMuted, fontSize: 12)),
-                  ),
-                  TextButton(
-                    onPressed: () => context.push('/privacy'),
-                    child: Text(l10n.authPrivacy, style: TextStyle(color: tokens.textMuted, fontSize: 12)),
+                if (apple) ...[
+                  const SizedBox(height: 12),
+                  AppButton(
+                    label: l10n.authContinueApple,
+                    icon: Icons.apple,
+                    variant: AppButtonVariant.secondary,
+                    isFullWidth: true,
+                    onPressed: (paused || _busy) ? null : _apple,
                   ),
                 ],
-              ),
-            ],
+                const SizedBox(height: 12),
+                _SuperadminSection(
+                  expanded: _showAdmin,
+                  busy: _busy,
+                  email: _email,
+                  password: _password,
+                  onToggle: () => setState(() {
+                    _showAdmin = !_showAdmin;
+                    _error = null;
+                  }),
+                  onSubmit: _submitSuperadmin,
+                ),
+                const SizedBox(height: 20),
+                AppTextField(
+                  controller: _code,
+                  hint: l10n.authTripCodeHint,
+                  textInputAction: TextInputAction.go,
+                  onSubmitted: _goJoin,
+                  prefixIcon: const Icon(Icons.confirmation_number_outlined),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.authLegal,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: tokens.textMuted, fontSize: 12),
+                ),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: () => context.push('/terms'),
+                      child: Text(l10n.authTerms, style: TextStyle(color: tokens.textMuted, fontSize: 12)),
+                    ),
+                    TextButton(
+                      onPressed: () => context.push('/privacy'),
+                      child: Text(l10n.authPrivacy, style: TextStyle(color: tokens.textMuted, fontSize: 12)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -290,4 +294,46 @@ class _SuperadminSection extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Window width from which sign-in becomes a two-pane landing (board 08).
+const double _kSplitBreakpoint = 1024;
+
+/// Desktop landing: Night Sky pitch on the left, the sign-in form on the right.
+Widget _splitOnWide(BuildContext context, Widget form) {
+  if (MediaQuery.sizeOf(context).width < _kSplitBreakpoint) return form;
+  return Row(
+    children: [
+      const Expanded(
+        child: DecoratedBox(
+          key: Key('login-hero'),
+          decoration: BoxDecoration(gradient: AppTokens.nightSkyGradient),
+          child: Padding(
+            padding: EdgeInsets.all(56),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ponytail: English-only pitch until the ARB files are regenerated.
+                Text(
+                  'Plan it.\nSplit it.\nRemember it.',
+                  style: TextStyle(fontSize: 56, height: 1.02, fontWeight: FontWeight.w800, color: Colors.white),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'The shared wallet for every trip with friends: expenses, passes and memories in one place.',
+                  style: TextStyle(fontSize: 17, color: Colors.white70, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      Expanded(
+        child: Center(
+          child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 460), child: form),
+        ),
+      ),
+    ],
+  );
 }

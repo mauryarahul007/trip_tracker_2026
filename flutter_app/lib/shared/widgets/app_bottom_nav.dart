@@ -20,18 +20,42 @@ class AppNavItem {
 /// selected item. Android: Material 3 [NavigationBar] (pill indicator). Pass [forceDock] to
 /// pick a style explicitly (used by tests and previews).
 class AppBottomNav extends StatelessWidget {
-  const AppBottomNav({required this.items, required this.currentIndex, required this.onTap, this.forceDock, super.key});
+  const AppBottomNav({
+    required this.items,
+    required this.currentIndex,
+    required this.onTap,
+    this.forceDock,
+    this.centerAction,
+    this.centerLabel,
+    super.key,
+  });
 
   final List<AppNavItem> items;
   final int currentIndex;
   final ValueChanged<int> onTap;
   final bool? forceDock;
 
-  bool get _useDock => forceDock ?? (kIsWeb || defaultTargetPlatform != TargetPlatform.android);
+  /// Raised round button between the two halves of the dock (iOS / web only; Material 3 keeps
+  /// the screen's own extended FAB instead).
+  final VoidCallback? centerAction;
+  final String? centerLabel;
+
+  /// True when the frosted dock (not the Material 3 bar) is used on this platform.
+  static bool get dockByDefault => kIsWeb || defaultTargetPlatform != TargetPlatform.android;
+
+  bool get _useDock => forceDock ?? dockByDefault;
 
   @override
   Widget build(BuildContext context) {
-    return _useDock ? _Dock(items: items, currentIndex: currentIndex, onTap: onTap) : _M3Bar(this);
+    return _useDock
+        ? _Dock(
+            items: items,
+            currentIndex: currentIndex,
+            onTap: onTap,
+            centerAction: centerAction,
+            centerLabel: centerLabel,
+          )
+        : _M3Bar(this);
   }
 }
 
@@ -55,11 +79,19 @@ class _M3Bar extends StatelessWidget {
 }
 
 class _Dock extends StatelessWidget {
-  const _Dock({required this.items, required this.currentIndex, required this.onTap});
+  const _Dock({
+    required this.items,
+    required this.currentIndex,
+    required this.onTap,
+    this.centerAction,
+    this.centerLabel,
+  });
 
   final List<AppNavItem> items;
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final VoidCallback? centerAction;
+  final String? centerLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -84,16 +116,46 @@ class _Dock extends StatelessWidget {
                   padding: const EdgeInsets.all(6),
                   child: Row(
                     children: [
-                      for (var i = 0; i < items.length; i++)
+                      for (var i = 0; i < items.length; i++) ...[
+                        if (centerAction != null && i == items.length ~/ 2)
+                          _DockCenter(label: centerLabel, onTap: centerAction!),
                         Expanded(
                           child: _DockItem(item: items[i], selected: i == currentIndex, onTap: () => onTap(i)),
                         ),
+                      ],
                     ],
                   ),
                 ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DockCenter extends StatelessWidget {
+  const _DockCenter({required this.onTap, this.label});
+
+  final VoidCallback onTap;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: InkWell(
+        key: const Key('dock-center'),
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 56,
+          height: 56,
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          decoration: const BoxDecoration(shape: BoxShape.circle, gradient: AppTokens.ctaGradient),
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
         ),
       ),
     );

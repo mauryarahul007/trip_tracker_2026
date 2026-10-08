@@ -31,6 +31,29 @@ void main() {
     expect(find.byType(Badge), findsOneWidget);
   });
 
+  testWidgets('dock centre button fires its action and keeps item indexes', (tester) async {
+    var tapped = -1;
+    var centre = 0;
+    await tester.pumpWidget(
+      host(
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: AppBottomNav(
+            items: items,
+            currentIndex: 0,
+            onTap: (i) => tapped = i,
+            forceDock: true,
+            centerAction: () => centre++,
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('dock-center')));
+    expect(centre, 1);
+    await tester.tap(find.text('Members'));
+    expect(tapped, 2);
+  });
+
   testWidgets('M3 bar renders the same items', (tester) async {
     var tapped = -1;
     await tester.pumpWidget(

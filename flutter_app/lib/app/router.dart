@@ -25,12 +25,14 @@ import '../features/expenses/presentation/expenses_tab.dart';
 import '../features/expenses/presentation/ledger_tab.dart';
 import '../features/expenses/presentation/category_screen.dart';
 import '../features/expenses/presentation/recycle_bin_screen.dart';
+import '../features/expenses/presentation/spend_insights_screen.dart';
 import '../features/members/presentation/members_tab.dart';
 import '../features/notes/presentation/notes_tab.dart';
 import '../features/trip_details/application/trip_nav.dart';
 import '../features/trip_details/domain/trip_tabs.dart';
 import '../features/trip_details/presentation/trip_settings_screen.dart';
 import '../features/trip_details/presentation/trip_shell_screen.dart';
+import '../features/trips/presentation/balances_screen.dart';
 import '../features/trips/presentation/join_screen.dart';
 import '../features/trips/presentation/share_screen.dart';
 import '../features/trips/presentation/trips_screen.dart';
@@ -85,6 +87,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/splash', name: 'splash', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/', name: 'trips', builder: (context, state) => const TripsScreen()),
+      GoRoute(path: '/balances', name: 'balances', builder: (context, state) => const BalancesScreen()),
       GoRoute(path: '/onboarding', name: 'onboarding', builder: (context, state) => const OnboardingScreen()),
       GoRoute(path: '/login', name: 'login', builder: (context, state) => const LoginScreen()),
       GoRoute(
@@ -187,6 +190,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'recycle-bin',
             name: 'trip-recycle-bin',
             builder: (context, state) => RecycleBinScreen(tripId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: 'insights',
+            name: 'trip-insights',
+            builder: (context, state) => SpendInsightsScreen(tripId: state.pathParameters['id']!),
           ),
           GoRoute(
             path: 'categories',

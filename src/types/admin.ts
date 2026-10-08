@@ -82,6 +82,8 @@ export type FeatureFlagKey =
   | 'enableCloneTripSquad'
   | 'enableContactInvite'
   | 'enableExpenseQuickFilterChips'
+  | 'enableHorizonNav'
+  | 'enableSpendInsights'
   // Phase 6: WhatsApp Social & Chat Hub
   | 'enableChatFirstNav'
   | 'enableChatReactionsAndReplies'

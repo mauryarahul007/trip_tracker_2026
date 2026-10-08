@@ -24,8 +24,10 @@ import '../../../domain/models/member.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
+import '../../../shared/widgets/app_surface.dart' show AppCard;
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../trip_details/application/trip_nav.dart';
@@ -52,7 +54,13 @@ class ExpenseFormScreen extends ConsumerWidget {
     final flags = ref.watch(formFlagsProvider(tripId));
     final membersReady = ref.watch(tripMembersProvider(tripId)).hasValue;
     final ready = trip != null && expenses.hasValue && flags.hasValue && membersReady;
+    // Desktop (board 08): the form floats as a centred card instead of a stretched page.
+    final wide = MediaQuery.sizeOf(context).width >= 900;
+    final form = ready
+        ? _FormBody(args: ExpenseFormArgs(tripId, expenseId))
+        : const Center(child: CircularProgressIndicator());
     return AppScaffold(
+      maxContentWidth: wide ? 760 : 960,
       appBar: AppBar(
         title: Text(expenseId == null ? l10n.formTitleAdd : l10n.formTitleEdit),
         leading: IconButton(
@@ -61,9 +69,15 @@ class ExpenseFormScreen extends ConsumerWidget {
           onPressed: () => context.pop(),
         ),
       ),
-      body: ready
-          ? _FormBody(args: ExpenseFormArgs(tripId, expenseId))
-          : const Center(child: CircularProgressIndicator()),
+      body: wide
+          ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(context.tokens.radiusLg),
+                child: ColoredBox(color: context.tokens.bgSurface, child: form),
+              ),
+            )
+          : form,
     );
   }
 }
@@ -179,7 +193,13 @@ class _FormBodyState extends ConsumerState<_FormBody> {
         children: [
           Text(
             title,
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
+            style: TextStyle(
+              fontFamily: AppTypography.fontMono,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.0,
+              color: tokens.textMuted,
+            ),
           ),
           const SizedBox(height: 8),
           child,
@@ -339,86 +359,108 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                   // Amount (+ currency)
                   section(
                     l10n.formAmount,
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            if (flags.currencyFx || foreign)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: OutlinedButton(
-                                  key: const Key('currency-chip'),
-                                  onPressed: () => AppSheet.show<void>(
-                                    context: context,
-                                    title: l10n.formCurrency,
-                                    builder: (_) =>
-                                        CurrencyPickerSheet(selected: s.currency, base: base, onPick: c.setCurrency),
+                    AppCard(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              if (flags.currencyFx || foreign)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: OutlinedButton(
+                                    key: const Key('currency-chip'),
+                                    style: OutlinedButton.styleFrom(shape: const StadiumBorder()),
+                                    onPressed: () => AppSheet.show<void>(
+                                      context: context,
+                                      title: l10n.formCurrency,
+                                      builder: (_) =>
+                                          CurrencyPickerSheet(selected: s.currency, base: base, onPick: c.setCurrency),
+                                    ),
+                                    child: Text('${getCurrencySymbol(s.currency)} ${s.currency}'),
                                   ),
-                                  child: Text('${getCurrencySymbol(s.currency)} ${s.currency}'),
+                                ),
+                              Expanded(
+                                child: TextField(
+                                  key: const Key('amount-field'),
+                                  controller: _amount,
+                                  autofocus: !c.editing,
+                                  // Operators are typeable (12*3+4), so a plain text keyboard with a character whitelist.
+                                  keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-*/().,xX×÷\s]'))],
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontTitle,
+                                    fontSize: 44,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -1,
+                                    color: tokens.textPrimary,
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: l10n.formAmountHint,
+                                    filled: false,
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                  ),
+                                  onChanged: c.setAmount,
                                 ),
                               ),
-                            Expanded(
-                              child: TextField(
-                                key: const Key('amount-field'),
-                                controller: _amount,
-                                autofocus: !c.editing,
-                                // Operators are typeable (12*3+4), so a plain text keyboard with a character whitelist.
-                                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-*/().,xX×÷\s]'))],
-                                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
-                                decoration: InputDecoration(hintText: l10n.formAmountHint),
-                                onChanged: c.setAmount,
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (c.amountIsExpression && amountVal != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              l10n.formAmountEquals(_fmt(context, amountVal, s.currency)),
-                              key: const Key('amount-eval'),
-                              style: TextStyle(color: tokens.primaryAccent, fontWeight: FontWeight.w600),
-                            ),
+                            ],
                           ),
-                        if (conversion != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Row(
-                              children: [
-                                Text(
-                                  l10n.formConverted(
-                                    _fmt(context, conversion.convertedAmount, base),
-                                    conversion.rate.toString(),
-                                  ),
-                                  key: const Key('conversion'),
-                                  style: TextStyle(color: tokens.textSecondary),
-                                ),
-                                TextButton(
-                                  key: const Key('fx-set'),
-                                  onPressed: () => AppSheet.show<void>(
-                                    context: context,
-                                    title: l10n.formFxTitle(s.currency, base),
-                                    builder: (_) => FxRateSheet(
-                                      code: s.currency,
-                                      base: base,
-                                      customRates: trip.fxConfig?.customRates ?? const {},
-                                      liveRates: live,
-                                      onSave: (rates) => ref
-                                          .read(tripRepositoryProvider)
-                                          .setFxConfig(
-                                            id,
-                                            (trip.fxConfig ?? const TripFxConfigDefaults().value).copyWithRates(rates),
-                                          ),
+                          if (c.amountIsExpression && amountVal != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                l10n.formAmountEquals(_fmt(context, amountVal, s.currency)),
+                                key: const Key('amount-eval'),
+                                style: TextStyle(color: tokens.primaryAccent, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          if (conversion != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      l10n.formConverted(
+                                        _fmt(context, conversion.convertedAmount, base),
+                                        conversion.rate.toString(),
+                                      ),
+                                      key: const Key('conversion'),
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(color: tokens.textSecondary),
                                     ),
                                   ),
-                                  child: Text(l10n.formFxSet),
-                                ),
-                              ],
+                                  TextButton(
+                                    key: const Key('fx-set'),
+                                    onPressed: () => AppSheet.show<void>(
+                                      context: context,
+                                      title: l10n.formFxTitle(s.currency, base),
+                                      builder: (_) => FxRateSheet(
+                                        code: s.currency,
+                                        base: base,
+                                        customRates: trip.fxConfig?.customRates ?? const {},
+                                        liveRates: live,
+                                        onSave: (rates) => ref
+                                            .read(tripRepositoryProvider)
+                                            .setFxConfig(
+                                              id,
+                                              (trip.fxConfig ?? const TripFxConfigDefaults().value).copyWithRates(
+                                                rates,
+                                              ),
+                                            ),
+                                      ),
+                                    ),
+                                    child: Text(l10n.formFxSet),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
 
@@ -795,8 +837,10 @@ class _CategoryChip extends StatelessWidget {
       key: Key('cat-${category.id}'),
       label: Text('$icon${category.name}'),
       selected: selected,
-      selectedColor: color.withValues(alpha: 0.12),
-      side: BorderSide(color: selected ? color : Colors.transparent),
+      showCheckmark: false,
+      shape: const StadiumBorder(),
+      selectedColor: color.withValues(alpha: 0.16),
+      side: BorderSide(color: selected ? color : Colors.transparent, width: 1.5),
       onSelected: (_) => onTap(),
     );
   }

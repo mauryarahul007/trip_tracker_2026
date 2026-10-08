@@ -5,12 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../app/auth_state.dart';
 import '../../../core/format/money.dart';
 import '../../../data/providers.dart';
+import '../../../domain/logic/category_color.dart';
 import '../../../domain/models/expense.dart';
 import '../../../domain/logic/expense_list_logic.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_surface.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -64,33 +66,68 @@ class RecycleBinScreen extends ConsumerWidget {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(l10n.binBody, style: TextStyle(color: tokens.textSecondary)),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: tokens.colorWarning.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(tokens.radiusMd),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      children: [
+                        Icon(Icons.schedule_rounded, size: 20, color: tokens.colorWarning),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(l10n.binBody, style: TextStyle(color: tokens.textPrimary)),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
+                const SizedBox(height: 16),
                 for (final e in items)
-                  Card(
-                    key: Key('bin-${e.id}'),
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: AppCard(
+                      key: Key('bin-${e.id}'),
+                      padding: const EdgeInsets.all(14),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Row(
                             children: [
+                              Container(
+                                width: 42,
+                                height: 42,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Color(categoryColorArgb(e.category)).withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Icon(AppIcons.delete, size: 20, color: Color(categoryColorArgb(e.category))),
+                              ),
+                              const SizedBox(width: 12),
                               Expanded(
-                                child: Text(
-                                  e.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      e.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontWeight: FontWeight.w700),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${formatMoney(context, e.amount, base)} · ${e.date}',
+                                      style: TextStyle(fontSize: 12.5, color: tokens.textSecondary),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              Text(formatMoney(context, e.amount, base)),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 10),
                           Row(
                             children: [
                               Expanded(

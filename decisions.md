@@ -4877,4 +4877,14 @@ This document logs all meaningful technical decisions, library choices, design p
   - Push notifications and scheduled local notifications disabled on Web.
 * **Release Cut:** version bumped to `3.47.0` via `npm run release:minor`. Logged as `FEAT-101`.
 
+---
 
+## 277. Flutter Horizon rollout (P1-P7) and desktop polish
+* **Context:** The Flutter app needed the Horizon design (cobalt CTA, Night Sky / Ember / Slate / Dusk context surfaces) across every screen, with desktop layouts.
+* **Decision:** Restyle all screens; add Balances tab, Spend Insights screen and a home dock/rail behind new Pro-pack flags `enableHorizonNav` and `enableSpendInsights` (default OFF, TS flag count 103).
+* **Implementation:** `home_dock.dart` (dock on phones, rail >=900); expenses table + detail panel >=1100; planner third column >=1280; two-pane login/settings >=1024; Android back from Balances/Activity/Me returns to Trips.
+* **Fixture fix:** `parseQuickExpense` takes an injectable `now` (default unchanged); generator pins MOCK_DATE so `quick_parser_math` is deterministic.
+* **Trade-offs Accepted:** Some new labels are English-only until ARB regeneration; two-column add-expense dialog and full-screen settled celebration deferred.
+* **Release Cut:** version bumped to `3.48.0` via `npm run release:minor`.
+
+---

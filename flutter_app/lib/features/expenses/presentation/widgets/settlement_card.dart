@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../../../../domain/logic/settlement_share_card.dart';
+import '../../../../shared/theme/app_tokens.dart';
 
 /// Draws the share-card layout to PNG. The widget below paints the same lines.
 Future<List<int>> renderSettlementPng(SettlementShareCardLayout layout) async {
@@ -10,7 +11,9 @@ Future<List<int>> renderSettlementPng(SettlementShareCardLayout layout) async {
   final canvas = Canvas(recorder);
   final w = layout.width.toDouble();
   final h = layout.height.toDouble();
-  canvas.drawRect(Rect.fromLTWH(0, 0, w, h), Paint()..color = const Color(0xFF111827));
+  final rect = Rect.fromLTWH(0, 0, w, h);
+  // Dusk surface, same gradient as the in-app Wrapped / celebration cards.
+  canvas.drawRect(rect, Paint()..shader = AppTokens.duskGradient.createShader(rect));
   var y = 72.0;
   for (var i = 0; i < layout.lines.length; i++) {
     final big = i == 3;
@@ -43,8 +46,8 @@ class SettlementCardPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       key: const Key('share-card-preview'),
-      padding: const EdgeInsets.all(16),
-      color: const Color(0xFF111827),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(gradient: AppTokens.duskGradient, borderRadius: BorderRadius.circular(24)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

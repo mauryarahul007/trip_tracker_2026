@@ -12,10 +12,13 @@ import '../../../domain/logic/trip_wrapped_service.dart';
 import '../../../domain/models/expense.dart';
 import '../../../domain/models/member.dart';
 import '../../../domain/models/trip.dart';
+import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../../trip_details/application/trip_nav.dart';
 import 'passport_stamp.dart';
+import '../../../domain/logic/spend_insights.dart';
+import '../../../shared/theme/app_typography.dart';
 
 class TripWrappedModal extends ConsumerStatefulWidget {
   const TripWrappedModal({required this.tripId, super.key});
@@ -97,15 +100,17 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
     final rhythm = getTripRhythm(expenses, trip);
     final leaderboard = getMemberSpendLeaderboard(members, expenses);
 
-    final bgCardColor = _isDark ? const Color(0xFF121826) : Colors.white;
+    // Night mode is the Dusk surface (board 06): glass cards on a violet gradient.
+    final bgCardColor = _isDark ? Colors.white.withValues(alpha: 0.10) : Colors.white;
     final textPrimary = _isDark ? Colors.white : const Color(0xFF0F172A);
-    final textSecondary = _isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-    final accentColor = _isDark ? const Color(0xFF5C8DFF) : const Color(0xFF2559E6);
+    final textSecondary = _isDark ? Colors.white70 : const Color(0xFF64748B);
+    final accentColor = _isDark ? Colors.white : const Color(0xFF2559E6);
 
     return Container(
       constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.92),
       decoration: BoxDecoration(
-        color: _isDark ? const Color(0xFF080B12) : const Color(0xFFF8FAFC),
+        gradient: _isDark ? AppTokens.duskGradient : null,
+        color: _isDark ? null : const Color(0xFFF8FAFC),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
@@ -230,6 +235,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                   rhythm,
                   leaderboard,
                   trip,
+                  expenses,
                   bgCardColor,
                   textPrimary,
                   textSecondary,
@@ -338,7 +344,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
             Text(
               trip.name,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: textPrimary),
+              style: TextStyle(fontSize: 34, height: 1.05, fontWeight: FontWeight.w800, color: textPrimary),
             ),
             const SizedBox(height: 6),
             Text(
@@ -460,8 +466,8 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Who Did What on Tour',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: textPrimary),
+              'Who did what?',
+              style: TextStyle(fontSize: 30, height: 1.05, fontWeight: FontWeight.w800, color: textPrimary),
             ),
             const SizedBox(height: 16),
             if (superlatives.isEmpty)
@@ -486,18 +492,19 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    s.memberName,
-                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: textPrimary),
-                                  ),
-                                  Text(
-                                    s.title,
-                                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: accentColor),
-                                  ),
-                                ],
+                              Text(
+                                s.title,
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontMono,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 1.0,
+                                  color: textSecondary,
+                                ),
+                              ),
+                              Text(
+                                s.memberName,
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: textPrimary),
                               ),
                               const SizedBox(height: 2),
                               Text(s.note, style: TextStyle(fontSize: 11.5, color: textSecondary)),
@@ -519,6 +526,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
     TripRhythm rhythm,
     List<MemberSpendEntry> leaderboard,
     Trip trip,
+    List<Expense> expenses,
     Color bgCardColor,
     Color textPrimary,
     Color textSecondary,
@@ -542,8 +550,15 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Peak Days & Group Pace',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: textPrimary),
+              '${rhythm.peakDay} was your peak.',
+              style: TextStyle(fontSize: 28, height: 1.05, fontWeight: FontWeight.w800, color: textPrimary),
+            ),
+            const SizedBox(height: 14),
+            _DayBars(
+              days: spendByDay(expenses),
+              textSecondary: textSecondary,
+              accent: accentColor,
+              track: textSecondary.withValues(alpha: 0.18),
             ),
             const SizedBox(height: 14),
             Container(
@@ -815,6 +830,59 @@ class _ThemeTab extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Bar per spending day; the biggest day is full height and in the accent colour.
+class _DayBars extends StatelessWidget {
+  const _DayBars({required this.days, required this.textSecondary, required this.accent, required this.track});
+
+  final List<DaySpend> days;
+  final Color textSecondary;
+  final Color accent;
+  final Color track;
+
+  @override
+  Widget build(BuildContext context) {
+    if (days.isEmpty) return const SizedBox.shrink();
+    final shown = days.length > 7 ? days.sublist(days.length - 7) : days;
+    final maxV = shown.map((d) => d.total).reduce((a, b) => a > b ? a : b);
+    return SizedBox(
+      key: const Key('wrapped-day-bars'),
+      height: 110,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          for (final d in shown)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Flexible(
+                      child: FractionallySizedBox(
+                        heightFactor: maxV <= 0 ? 0.05 : (d.total / maxV).clamp(0.05, 1.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: d.total == maxV ? accent : track,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      d.date.length >= 10 ? d.date.substring(8) : d.date,
+                      style: TextStyle(fontSize: 10, color: textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

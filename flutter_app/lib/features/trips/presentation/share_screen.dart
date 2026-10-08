@@ -12,6 +12,7 @@ import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/app_surface.dart';
 
 /// Public summary behind a share link; counts a view once per screen load.
 final tripShareSummaryProvider = FutureProvider.autoDispose.family<TripShareSummary?, String>((ref, token) async {
@@ -49,7 +50,7 @@ class ShareScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(24),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
+              constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width >= 1024 ? 720 : 480),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -80,23 +81,19 @@ class ShareScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: tokens.bgSurface,
-                      borderRadius: BorderRadius.circular(tokens.radiusMd),
-                      border: Border.all(color: tokens.borderColor),
-                    ),
+                  // Money lives on the Ember surface, same as the in-app summary.
+                  HeroSurface(
+                    kind: SurfaceKind.ember,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(l10n.shareTotalSpend, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
+                        Text(l10n.shareTotalSpend, style: const TextStyle(fontSize: 12, color: Colors.white70)),
                         const SizedBox(height: 6),
                         for (final e in spend)
                           Text(
                             formatAmount(e.value, getCurrencySymbol(e.key)),
                             key: Key('spend-${e.key}'),
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: tokens.textPrimary),
+                            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white),
                           ),
                       ],
                     ),
@@ -131,13 +128,7 @@ class _Stat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: tokens.bgSurface,
-        borderRadius: BorderRadius.circular(tokens.radiusMd),
-        border: Border.all(color: tokens.borderColor),
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

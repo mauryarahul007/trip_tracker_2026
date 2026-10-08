@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_sheet.dart';
-import '../../../../shared/widgets/app_text_field.dart';
+import '../../../../shared/theme/app_tokens.dart';
 
 final _codeShape = RegExp(r'^[A-Za-z0-9]{6}$');
 
@@ -51,14 +51,73 @@ class _JoinCodeFormState extends State<_JoinCodeForm> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AppTextField(
-            controller: _controller,
-            hint: l10n.authTripCodeHint,
-            errorText: _error,
-            autofocus: true,
-            textInputAction: TextInputAction.go,
-            onSubmitted: (_) => _go(),
+          // Six frosted boxes (board 02) over one invisible field, so paste, autofill and the
+          // keyboard behave exactly as with a normal text field.
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _controller,
+                builder: (context, v, _) {
+                  final chars = v.text.trim().toUpperCase();
+                  final t = context.tokens;
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (var i = 0; i < 6; i++)
+                        Container(
+                          width: 46,
+                          height: 56,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: t.bgSurface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: i == chars.length.clamp(0, 5) ? t.primaryAccent : t.borderColor,
+                              width: i == chars.length.clamp(0, 5) ? 2 : 1,
+                            ),
+                          ),
+                          child: Text(
+                            i < chars.length ? chars[i] : '',
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: t.primaryAccent),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+              Positioned.fill(
+                child: TextField(
+                  controller: _controller,
+                  autofocus: true,
+                  textInputAction: TextInputAction.go,
+                  textCapitalization: TextCapitalization.characters,
+                  showCursor: false,
+                  enableInteractiveSelection: false,
+                  style: const TextStyle(color: Colors.transparent),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: false,
+                    counterText: '',
+                  ),
+                  onChanged: (_) => setState(() => _error = null),
+                  onSubmitted: (_) => _go(),
+                ),
+              ),
+            ],
           ),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: context.tokens.dangerColor, fontSize: 13),
+              ),
+            ),
           const SizedBox(height: 16),
           AppButton(label: l10n.joinEnterCodeAction, isFullWidth: true, onPressed: _go),
         ],

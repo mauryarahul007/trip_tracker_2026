@@ -16,7 +16,10 @@ import '../../../domain/models/member.dart';
 import '../../../domain/models/travel_pass.dart';
 import '../../../domain/models/trip_note.dart';
 import '../../../l10n/l10n_ext.dart';
+import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_sheet.dart';
+import '../../../shared/widgets/app_surface.dart' show AppCard;
 import '../../../shared/widgets/ask_text.dart';
 import '../../chat/application/chat_providers.dart';
 import '../../chat/presentation/chat_pane.dart';
@@ -25,6 +28,8 @@ import '../../travel/presentation/live_travel_status_modal.dart';
 import '../../travel/presentation/next_up_capsule.dart';
 import '../../travel/presentation/pass_scanner_modal.dart';
 import '../../travel/presentation/weather_badge.dart';
+import '../../settings/presentation/settings_widgets.dart' show SettingsIcon;
+import '../../members/presentation/members_tab.dart';
 import '../../trip_details/application/trip_nav.dart';
 
 const _categories = ['packing', 'prep', 'documents', 'medical', 'general'];
@@ -55,7 +60,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
 
     final panes = [('checklist', l10n.notesCheck), ('notes', l10n.notesNotes), if (showChat) ('chat', l10n.notesChat)];
 
-    return Column(
+    final content = Column(
       key: const Key('tab-notes'),
       children: [
         if (trip != null) NextUpTravelCapsule(trip: trip, passes: trip.passes),
@@ -71,6 +76,12 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                   label: p.$1 == 'chat' && unread ? Text(p.$2, key: const Key('notes-chat-unread')) : Text(p.$2),
                 ),
             ],
+            showSelectedIcon: false,
+            style: SegmentedButton.styleFrom(
+              shape: const StadiumBorder(),
+              side: BorderSide.none,
+              backgroundColor: context.tokens.bgSurface,
+            ),
             selected: {_pane},
             onSelectionChanged: (s) => setState(() => _pane = s.first),
           ),
@@ -81,6 +92,21 @@ class _NotesTabState extends ConsumerState<NotesTab> {
             'chat' => ChatPane(tripId: widget.tripId),
             _ => _checklist(context, trip?.checklist ?? const [], packing),
           },
+        ),
+      ],
+    );
+    // Desktop: planner layout, members as a third column next to notes and passes.
+    if (MediaQuery.sizeOf(context).width < 1280) return content;
+    return Row(
+      children: [
+        Expanded(child: content),
+        Container(
+          key: const Key('planner-members'),
+          width: 340,
+          decoration: BoxDecoration(
+            border: Border(left: BorderSide(color: context.tokens.borderColor)),
+          ),
+          child: MembersTab(tripId: widget.tripId),
         ),
       ],
     );
@@ -103,42 +129,49 @@ class _NotesTabState extends ConsumerState<NotesTab> {
             Builder(
               builder: (ctx) {
                 final statusInfo = getTravelStatusInfo(p);
-                return ListTile(
-                  key: Key('pass-${p.id}'),
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(p.title),
-                  subtitle: Text(
-                    [
-                      p.type,
-                      if (p.origin != null) p.origin,
-                      if (p.destination != null) p.destination,
-                    ].whereType<String>().join(' · '),
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: AppCard(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                    child: ListTile(
+                      key: Key('pass-${p.id}'),
+                      contentPadding: EdgeInsets.zero,
+                      leading: SettingsIcon(_passIcon(p.type)),
+                      title: Text(p.title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                      subtitle: Text(
+                        [
+                          p.type,
+                          if (p.origin != null) p.origin,
+                          if (p.destination != null) p.destination,
+                        ].whereType<String>().join(' · '),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (gateScannerOn)
+                            IconButton(
+                              key: Key('pass-scan-${p.id}'),
+                              icon: const Icon(Icons.qr_code_2, size: 20),
+                              tooltip: 'Show Pass / QR',
+                              onPressed: () => PassScannerModal.show(ctx, pass: p),
+                            ),
+                          if (statusInfo != null)
+                            IconButton(
+                              icon: const Icon(Icons.radar, size: 20),
+                              tooltip: 'Live Travel Status',
+                              onPressed: () => LiveTravelStatusModal.show(ctx, statusInfo),
+                            ),
+                        ],
+                      ),
+                      onTap: () {
+                        if (gateScannerOn) {
+                          PassScannerModal.show(ctx, pass: p);
+                        } else if (statusInfo != null) {
+                          LiveTravelStatusModal.show(ctx, statusInfo);
+                        }
+                      },
+                    ),
                   ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (gateScannerOn)
-                        IconButton(
-                          key: Key('pass-scan-${p.id}'),
-                          icon: const Icon(Icons.qr_code_2, size: 20),
-                          tooltip: 'Show Pass / QR',
-                          onPressed: () => PassScannerModal.show(ctx, pass: p),
-                        ),
-                      if (statusInfo != null)
-                        IconButton(
-                          icon: const Icon(Icons.radar, size: 20),
-                          tooltip: 'Live Travel Status',
-                          onPressed: () => LiveTravelStatusModal.show(ctx, statusInfo),
-                        ),
-                    ],
-                  ),
-                  onTap: () {
-                    if (gateScannerOn) {
-                      PassScannerModal.show(ctx, pass: p);
-                    } else if (statusInfo != null) {
-                      LiveTravelStatusModal.show(ctx, statusInfo);
-                    }
-                  },
                 );
               },
             ),
@@ -188,12 +221,39 @@ class _NotesTabState extends ConsumerState<NotesTab> {
               child: WeatherBadge(destination: dest),
             ),
           ),
-        Text(l10n.notesProgress(done, items.length)),
+        AppCard(
+          child: Row(
+            children: [
+              SizedBox(
+                width: 52,
+                height: 52,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: items.isEmpty ? 0 : done / items.length,
+                      strokeWidth: 6,
+                      strokeCap: StrokeCap.round,
+                      backgroundColor: context.tokens.borderColor,
+                      color: context.tokens.primaryAccent,
+                    ),
+                    Text('$done/${items.length}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(child: Text(l10n.notesProgress(done, items.length))),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
         Wrap(
           spacing: 6,
           children: [
             for (final c in ['all', ..._categories])
               ChoiceChip(
+                showCheckmark: false,
+                shape: const StadiumBorder(),
                 key: Key('check-cat-$c'),
                 label: Text(c),
                 selected: _category == c,
@@ -220,45 +280,63 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   Widget _checkRow(BuildContext context, List<ChecklistItem> all, ChecklistItem item, List<Member> members) {
     final index = all.indexWhere((i) => i.id == item.id);
     final assignee = members.where((m) => m.id == item.assignedToMemberId).map((m) => m.name).firstOrNull;
-    return ListTile(
-      key: Key('check-${item.id}'),
-      contentPadding: EdgeInsets.zero,
-      leading: Checkbox(
-        key: Key('check-toggle-${item.id}'),
-        value: item.completed,
-        onChanged: (_) => _saveChecks([
-          for (final i in all) i.id == item.id ? i.copyWith(completed: !i.completed, updatedAt: _now()) : i,
-        ]),
-      ),
-      title: Text(item.text, style: item.completed ? const TextStyle(decoration: TextDecoration.lineThrough) : null),
-      subtitle: Text([?item.category, ?assignee].join(' · ')),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          PopupMenuButton<String>(
-            key: Key('check-assign-${item.id}'),
-            onSelected: (id) => _saveChecks([
-              for (final i in all) i.id == item.id ? i.copyWith(assignedToMemberId: id, updatedAt: _now()) : i,
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: AppCard(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: ListTile(
+          key: Key('check-${item.id}'),
+          contentPadding: EdgeInsets.zero,
+          leading: Checkbox(
+            shape: const CircleBorder(),
+            key: Key('check-toggle-${item.id}'),
+            value: item.completed,
+            onChanged: (_) => _saveChecks([
+              for (final i in all) i.id == item.id ? i.copyWith(completed: !i.completed, updatedAt: _now()) : i,
             ]),
-            itemBuilder: (_) => [for (final m in members) PopupMenuItem(value: m.id, child: Text(m.name))],
-            child: const Icon(Icons.person_outline),
           ),
-          IconButton(
-            tooltip: 'Move up',
-            key: Key('check-up-${item.id}'),
-            onPressed: index <= 0 ? null : () => _move(all, index, index - 1),
-            icon: const Icon(Icons.arrow_upward),
+          title: Text(
+            item.text,
+            style: item.completed ? const TextStyle(decoration: TextDecoration.lineThrough) : null,
           ),
-          IconButton(
-            tooltip: 'Move down',
-            key: Key('check-down-${item.id}'),
-            onPressed: index < 0 || index >= all.length - 1 ? null : () => _move(all, index, index + 1),
-            icon: const Icon(Icons.arrow_downward),
+          subtitle: Text([?item.category, ?assignee].join(' · ')),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              PopupMenuButton<String>(
+                key: Key('check-assign-${item.id}'),
+                onSelected: (id) => _saveChecks([
+                  for (final i in all) i.id == item.id ? i.copyWith(assignedToMemberId: id, updatedAt: _now()) : i,
+                ]),
+                itemBuilder: (_) => [for (final m in members) PopupMenuItem(value: m.id, child: Text(m.name))],
+                child: const Icon(Icons.person_outline),
+              ),
+              IconButton(
+                tooltip: 'Move up',
+                key: Key('check-up-${item.id}'),
+                onPressed: index <= 0 ? null : () => _move(all, index, index - 1),
+                icon: const Icon(Icons.arrow_upward),
+              ),
+              IconButton(
+                tooltip: 'Move down',
+                key: Key('check-down-${item.id}'),
+                onPressed: index < 0 || index >= all.length - 1 ? null : () => _move(all, index, index + 1),
+                icon: const Icon(Icons.arrow_downward),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
+
+  IconData _passIcon(String type) => switch (type) {
+    'flight' => Icons.flight_rounded,
+    'train' => Icons.train_rounded,
+    'stay' => Icons.bed_rounded,
+    'activity' => Icons.local_activity_outlined,
+    _ => Icons.directions_transit_rounded,
+  };
 
   Widget _notes(BuildContext context, List<TripNote> notes) {
     final l10n = context.l10n;
@@ -333,7 +411,11 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   }
 
   Future<void> _addPass(BuildContext context, List<TravelPass> passes) async {
-    final draft = await showDialog<_PassDraft>(context: context, builder: (_) => const _PassDialog());
+    final draft = await AppSheet.show<_PassDraft>(
+      context: context,
+      title: context.l10n.notesAddPass,
+      builder: (_) => const _PassDialog(),
+    );
     if (draft == null || draft.title.isEmpty) return;
     final now = _now();
     await ref.read(tripRepositoryProvider).setPasses(widget.tripId, [
@@ -492,47 +574,79 @@ class _PassDialogState extends State<_PassDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AlertDialog(
-      title: Text(l10n.notesAddPass),
-      content: Column(
+    final types = [
+      ('flight', l10n.notesPassFlight, Icons.flight_rounded),
+      ('train', l10n.notesPassTrain, Icons.train_rounded),
+      ('stay', l10n.notesPassHotel, Icons.bed_rounded),
+    ];
+    final tokens = context.tokens;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          DropdownButton<String>(
+          Row(
             key: const Key('pass-type'),
-            value: _type,
-            items: [
-              DropdownMenuItem(value: 'flight', child: Text(l10n.notesPassFlight)),
-              DropdownMenuItem(value: 'train', child: Text(l10n.notesPassTrain)),
-              DropdownMenuItem(value: 'stay', child: Text(l10n.notesPassHotel)),
+            children: [
+              for (final t in types)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: InkWell(
+                      key: Key('pass-type-${t.$1}'),
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () => setState(() => _type = t.$1),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: _type == t.$1 ? tokens.primaryAccent.withValues(alpha: 0.1) : tokens.bgSurfaceHover,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: _type == t.$1 ? tokens.primaryAccent : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(t.$3, color: _type == t.$1 ? tokens.primaryAccent : tokens.textSecondary),
+                            const SizedBox(height: 6),
+                            Text(t.$2, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
-            onChanged: (v) => setState(() => _type = v ?? 'flight'),
           ),
+          const SizedBox(height: 12),
           TextField(
             key: const Key('pass-title'),
             controller: _title,
             decoration: InputDecoration(labelText: l10n.notesPassTitle),
           ),
+          const SizedBox(height: 8),
           TextField(
             key: const Key('pass-from'),
             controller: _from,
             decoration: InputDecoration(labelText: l10n.notesPassFrom),
           ),
+          const SizedBox(height: 8),
           TextField(
             key: const Key('pass-to'),
             controller: _to,
             decoration: InputDecoration(labelText: l10n.notesPassTo),
           ),
+          const SizedBox(height: 16),
+          AppButton(
+            key: const Key('pass-save'),
+            label: l10n.notesAddPass,
+            onPressed: () =>
+                Navigator.pop(context, _PassDraft(_type, _title.text.trim(), _from.text.trim(), _to.text.trim())),
+          ),
         ],
       ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.actionCancel)),
-        TextButton(
-          key: const Key('pass-save'),
-          onPressed: () =>
-              Navigator.pop(context, _PassDraft(_type, _title.text.trim(), _from.text.trim(), _to.text.trim())),
-          child: Text(l10n.actionSave),
-        ),
-      ],
     );
   }
 }

@@ -13,6 +13,7 @@ import '../../../domain/logic/trip_utilities.dart';
 import '../../../domain/models/location_share.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 
@@ -224,16 +225,16 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
             ],
           ),
         ),
-        // Top status chip floating card
+        // Bottom status card (board 06 #8): who is sharing, freshness, and a primary Open in Maps.
         Positioned(
-          top: 16,
+          bottom: 24,
           left: 16,
           right: 16,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: tokens.bgSurface.withValues(alpha: 0.94),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(color: tokens.borderColor.withValues(alpha: 0.3)),
               boxShadow: [
                 BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 16, offset: const Offset(0, 4)),
@@ -241,6 +242,8 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
             ),
             child: Row(
               children: [
+                AppAvatar(name: loc.memberName, size: 40),
+                const SizedBox(width: 12),
                 AnimatedBuilder(
                   animation: _pulseController,
                   builder: (context, child) {
@@ -290,7 +293,8 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
                     ],
                   ),
                 ),
-                IconButton(
+                IconButton.filled(
+                  style: IconButton.styleFrom(backgroundColor: tokens.primaryAccent),
                   icon: const Icon(Icons.open_in_new_rounded, size: 20),
                   tooltip: 'Open in Maps',
                   onPressed: () => _openExternalMap(loc.lat, loc.lng, loc.memberName),

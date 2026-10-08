@@ -8,6 +8,7 @@ import '../../../domain/logic/sync_merge.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_surface.dart' show Eyebrow;
 
 class ConflictSheet extends ConsumerWidget {
   const ConflictSheet({required this.tripId, super.key});
@@ -27,12 +28,43 @@ class ConflictSheet extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.conflictTitle, style: Theme.of(context).textTheme.titleMedium),
+          Row(
+            children: [
+              Icon(Icons.sync_problem_rounded, color: tokens.colorWarning),
+              const SizedBox(width: 10),
+              Text(l10n.conflictTitle, style: Theme.of(context).textTheme.titleLarge),
+            ],
+          ),
           const SizedBox(height: 4),
           Text(l10n.conflictBody, style: TextStyle(color: tokens.textSecondary)),
           const SizedBox(height: 12),
           for (final c in conflicts) _row(context, ref, c),
         ],
+      ),
+    );
+  }
+
+  /// One side of the comparison; the local ("mine") side carries the primary outline.
+  Widget _version(BuildContext context, String label, String amount, String date, bool mine) {
+    final tokens = context.tokens;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: mine ? tokens.primaryAccent.withValues(alpha: 0.08) : tokens.bgSurface,
+        borderRadius: BorderRadius.circular(tokens.radiusMd),
+        border: Border.all(color: mine ? tokens.primaryAccent : tokens.borderColor, width: mine ? 1.5 : 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Eyebrow(label),
+            const SizedBox(height: 6),
+            Text(amount, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 2),
+            Text(date, style: TextStyle(fontSize: 12.5, color: tokens.textSecondary)),
+          ],
+        ),
       ),
     );
   }
@@ -46,9 +78,34 @@ class ConflictSheet extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(c.local.title, style: const TextStyle(fontWeight: FontWeight.w700)),
-          Text('${l10n.conflictLocal}: ${formatMoney(context, c.local.amount, cur)} · ${c.local.date}'),
-          Text('${l10n.conflictServer}: ${formatMoney(context, c.server.amount, cur)} · ${c.server.date}'),
           const SizedBox(height: 8),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _version(
+                    context,
+                    l10n.conflictLocal,
+                    formatMoney(context, c.local.amount, cur),
+                    c.local.date,
+                    true,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _version(
+                    context,
+                    l10n.conflictServer,
+                    formatMoney(context, c.server.amount, cur),
+                    c.server.date,
+                    false,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(

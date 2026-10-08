@@ -7,9 +7,9 @@ import '../../../core/platform/haptics.dart';
 import '../../../core/platform/ocr_gateway.dart';
 import '../../../domain/logic/receipt_ocr_service.dart';
 import '../../../shared/theme/app_icons.dart';
+import '../../../shared/theme/app_theme.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_text_field.dart';
 
 /// Modal for scanning or pasting receipt text to extract itemized breakdown.
@@ -31,11 +31,20 @@ class ReceiptOcrModal extends ConsumerStatefulWidget {
     List<String> defaultMemberIds = const [],
     required void Function(ParsedReceiptData data) onApplyReceipt,
   }) {
-    return AppSheet.show<void>(
+    // Night Sky surface (board 04 #10): own sheet chrome instead of the light AppSheet.
+    return showModalBottomSheet<void>(
       context: context,
-      title: 'Scan & Itemize Receipt',
-      builder: (_) =>
-          ReceiptOcrModal(tripId: tripId, defaultMemberIds: defaultMemberIds, onApplyReceipt: onApplyReceipt),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: SingleChildScrollView(
+            child: ReceiptOcrModal(tripId: tripId, defaultMemberIds: defaultMemberIds, onApplyReceipt: onApplyReceipt),
+          ),
+        ),
+      ),
     );
   }
 
@@ -141,11 +150,23 @@ class _ReceiptOcrModalState extends ConsumerState<ReceiptOcrModal> {
 
   @override
   Widget build(BuildContext context) {
+    return Theme(
+      data: AppTheme.dark(),
+      child: Builder(
+        builder: (ctx) => DecoratedBox(
+          decoration: const BoxDecoration(gradient: AppTokens.nightSkyGradient),
+          child: Material(type: MaterialType.transparency, child: _body(ctx)),
+        ),
+      ),
+    );
+  }
+
+  Widget _body(BuildContext context) {
     final tokens = context.tokens;
     final parsed = _parsedData;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -235,9 +256,10 @@ class _ReceiptOcrModalState extends ConsumerState<ReceiptOcrModal> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: tokens.colorSuccess.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: tokens.colorSuccess.withValues(alpha: 0.3)),
+                color: tokens.bgSurface,
+                borderRadius: BorderRadius.circular(tokens.radiusMd),
+                border: Border.all(color: tokens.borderColor),
+                boxShadow: tokens.shadowSm,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -252,6 +274,23 @@ class _ReceiptOcrModalState extends ConsumerState<ReceiptOcrModal> {
                       if (parsed.date != null)
                         Text(parsed.date!, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
                     ],
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: tokens.colorSuccess.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        child: Text(
+                          '${parsed.items.length} items found',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: tokens.colorSuccess),
+                        ),
+                      ),
+                    ),
                   ),
                   const Divider(height: 20),
                   for (final item in parsed.items)

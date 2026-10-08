@@ -326,7 +326,7 @@ console.log('--- Generating Golden Fixtures ---');
 
   const parseCases = parserInputs.map((input) => ({
     input,
-    output: expenseQuickParserMod.parseQuickExpense(input, parserCategories, [], members, null)
+    output: expenseQuickParserMod.parseQuickExpense(input, parserCategories, [], members, null, MOCK_DATE)
   }));
 
   const mathInputs = [

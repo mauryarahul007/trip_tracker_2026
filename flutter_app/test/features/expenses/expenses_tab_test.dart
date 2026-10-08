@@ -279,13 +279,9 @@ void main() {
       await setup(tester);
       await tester.tap(find.byKey(const Key('open-filters')));
       await settle(tester);
-      await tester.tap(find.byKey(const Key('filter-member')));
-      await settle(tester);
       await tester.tap(find.text('Cara').last);
       await settle(tester);
       expect(find.text('Show 3 expenses'), findsOneWidget); // Cara is in all three splits
-      await tester.tap(find.byKey(const Key('filter-category')));
-      await settle(tester);
       await tester.tap(find.textContaining('Stay & Hotel').last);
       await settle(tester);
       expect(find.text('Show 1 expense'), findsOneWidget);
@@ -455,6 +451,23 @@ void main() {
       expect(tester.widget<Text>(find.byKey(const Key('detail-amount'))).data, '₹100.00');
       expect(tester.widget<Text>(find.byKey(Key('share-${s.me}'))).data, '₹33.34'); // payer takes the spare paisa
       expect(tester.widget<Text>(find.byKey(Key('share-${s.ben}'))).data, '₹33.33');
+    });
+
+    testApp('wide window: tapping a row opens the detail in a side panel that can be closed', (tester) async {
+      final (s, _) = await setup(tester); // the harness pins a phone-size window...
+      tester.view.physicalSize = const Size(1400, 900); // ...so widen it afterwards
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await settle(tester);
+      await addExpense(tester, s, title: 'Beach lunch', amount: 100, split: [s.me, s.ben, s.cara]);
+      expect(find.byKey(const Key('detail-panel')), findsNothing);
+      await openRow(tester, s, 'Beach lunch');
+      expect(find.text('CATEGORY'), findsOneWidget); // table column header
+      expect(find.byKey(const Key('detail-panel')), findsOneWidget);
+      expect(find.byKey(const Key('detail-title')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('detail-panel-close')));
+      await settle(tester);
+      expect(find.byKey(const Key('detail-panel')), findsNothing);
     });
 
     testApp('flag + resolve a dispute (flag on): server first, banner appears and clears', (tester) async {

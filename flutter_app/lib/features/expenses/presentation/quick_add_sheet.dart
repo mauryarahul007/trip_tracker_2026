@@ -15,6 +15,7 @@ import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_surface.dart' show AppCard, Eyebrow;
 import '../../../shared/widgets/app_text_field.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
@@ -171,8 +172,11 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
               ),
               if (voiceEnabled) ...[
                 const SizedBox(width: 8),
-                IconButton(
+                IconButton.filled(
                   key: const Key('quick-add-mic'),
+                  style: IconButton.styleFrom(
+                    backgroundColor: (_isListening ? tokens.colorDanger : tokens.primaryAccent).withValues(alpha: 0.12),
+                  ),
                   icon: Icon(
                     _isListening ? Icons.mic : AppIcons.mic,
                     color: _isListening ? tokens.colorDanger : tokens.primaryAccent,
@@ -185,8 +189,23 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
           ),
           if (p != null && p.amount != null)
             Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text('${p.title} · ${p.amount}', key: const Key('quick-add-preview')),
+              padding: const EdgeInsets.only(top: 12),
+              child: AppCard(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ponytail: English-only label until the ARB files are regenerated.
+                    const Eyebrow('We understood'),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${p.title} · ${p.amount}',
+                      key: const Key('quick-add-preview'),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+              ),
             ),
           if (_error != null)
             Padding(

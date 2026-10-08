@@ -52,6 +52,9 @@ class ExpensesTab extends ConsumerStatefulWidget {
   ConsumerState<ExpensesTab> createState() => _ExpensesTabState();
 }
 
+/// Window width from which the expense detail opens in a side panel.
+const double _kDetailPanelBreakpoint = 1100;
+
 class _ExpensesTabState extends ConsumerState<ExpensesTab> {
   final _search = TextEditingController();
   Timer? _debounce;
@@ -60,6 +63,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
   /// Days the user toggled away from the default (collapsed, like the web).
   final _expandedDays = <String>{};
   final _hidden = <String>{}; // rows removed from view the instant they are swiped
+
+  /// Wide windows show the selected expense in a side panel (board 08) instead of a bottom sheet.
+  String? _selectedId;
   bool _compact = false;
 
   @override
@@ -105,6 +111,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
   void _edit(Expense e) => context.push('/trip/$id/expenses/${e.id}/edit');
 
   void _openDetail(Expense e) {
+    if (MediaQuery.sizeOf(context).width >= _kDetailPanelBreakpoint) {
+      setState(() => _selectedId = e.id);
+      return;
+    }
     AppSheet.show<void>(
       context: context,
       builder: (sheetCtx) => ExpenseDetailSheet(
@@ -205,7 +215,20 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       context.go('/trip/$id/$target');
     }
 
+    // Desktop (board 08): rows become table rows with column headers.
+    final wide = MediaQuery.sizeOf(context).width >= _kDetailPanelBreakpoint;
+
     Widget rowFor(Expense e, {required bool lastInGroup}) {
+      if (wide) {
+        return _TableRow(
+          expense: e,
+          baseCurrency: trip.baseCurrency,
+          payer: members[e.paidBy]?.name ?? '',
+          category: categories.where((c) => c.id == e.category).firstOrNull?.name ?? e.category,
+          selected: e.id == _selectedId,
+          onTap: () => _openDetail(e),
+        );
+      }
       final row = ExpenseRow(
         expense: e,
         trip: trip,
@@ -305,54 +328,58 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: HeroSurface(
-              kind: SurfaceKind.ember,
-              padding: EdgeInsets.all(_flag(ref, 'enableCompactSummary', id) ? 14 : 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.expTotalSpent,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontMono,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1.0,
-                      color: Colors.white.withValues(alpha: 0.65),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    formatMoney(context, totals.totalSpent, trip.baseCurrency),
-                    key: const Key('stat-total'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.moneyDisplay(
-                      fontSize: _flag(ref, 'enableCompactSummary', id) ? 30 : 40,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _Stat(
-                          label: l10n.expPerPerson,
-                          value: formatMoney(context, totals.averageCost, trip.baseCurrency),
-                          valueKey: const Key('stat-avg'),
-                        ),
+            child: GestureDetector(
+              key: const Key('summary-card'),
+              onTap: _flag(ref, 'enableSpendInsights', id) ? () => context.push('/trip/$id/insights') : null,
+              child: HeroSurface(
+                kind: SurfaceKind.ember,
+                padding: EdgeInsets.all(_flag(ref, 'enableCompactSummary', id) ? 14 : 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.expTotalSpent,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontMono,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.0,
+                        color: Colors.white.withValues(alpha: 0.65),
                       ),
-                      if (totals.top != null)
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      formatMoney(context, totals.totalSpent, trip.baseCurrency),
+                      key: const Key('stat-total'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.moneyDisplay(
+                        fontSize: _flag(ref, 'enableCompactSummary', id) ? 30 : 40,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
                         Expanded(
                           child: _Stat(
-                            label: l10n.expTopCategory,
-                            value: '${totals.top!.name} ${totals.top!.percentage.round()}%',
-                            valueKey: const Key('stat-top'),
+                            label: l10n.expPerPerson,
+                            value: formatMoney(context, totals.averageCost, trip.baseCurrency),
+                            valueKey: const Key('stat-avg'),
                           ),
                         ),
-                    ],
-                  ),
-                ],
+                        if (totals.top != null)
+                          Expanded(
+                            child: _Stat(
+                              label: l10n.expTopCategory,
+                              value: '${totals.top!.name} ${totals.top!.percentage.round()}%',
+                              valueKey: const Key('stat-top'),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -472,7 +499,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             child: Center(child: Text(l10n.expNoMatches)),
           );
 
-    return Stack(
+    final list = Stack(
       children: [
         AppPullToRefresh(
           onRefresh: ref.read(refreshTripsProvider),
@@ -480,6 +507,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               header,
+              if (wide && shown.isNotEmpty) const SliverToBoxAdapter(child: _TableHead()),
               if (shown.isEmpty)
                 SliverToBoxAdapter(child: empty)
               else ...[
@@ -524,6 +552,48 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             onPressed: () => context.push('/trip/$id/expenses/new'),
             icon: const Icon(AppIcons.add),
             label: Text(l10n.expAdd),
+          ),
+        ),
+      ],
+    );
+
+    final selected = (all.value ?? const <Expense>[]).where((e) => e.id == _selectedId).firstOrNull;
+    if (selected == null || MediaQuery.sizeOf(context).width < _kDetailPanelBreakpoint) return list;
+    return Row(
+      children: [
+        Expanded(child: list),
+        Container(
+          key: const Key('detail-panel'),
+          width: 400,
+          decoration: BoxDecoration(
+            color: tokens.bgSurface,
+            border: Border(left: BorderSide(color: tokens.borderColor)),
+          ),
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  key: const Key('detail-panel-close'),
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                  icon: const Icon(AppIcons.close),
+                  onPressed: () => setState(() => _selectedId = null),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: ExpenseDetailSheet(
+                    tripId: id,
+                    expenseId: selected.id,
+                    onEdit: () => _edit(selected),
+                    onDelete: () {
+                      setState(() => _selectedId = null);
+                      unawaited(_delete(selected));
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -665,4 +735,113 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
       old.count != count ||
       old.expanded != expanded ||
       old.background != background;
+}
+
+const _tableCols = [4, 2, 2, 2, 2];
+
+/// Column labels above the wide expense table.
+class _TableHead extends StatelessWidget {
+  const _TableHead();
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    // ponytail: English-only column labels until the ARB files are regenerated.
+    const labels = ['Expense', 'Category', 'Paid by', 'Date', 'Amount'];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: t.borderColor)),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++)
+            Expanded(
+              flex: _tableCols[i],
+              child: Text(
+                labels[i].toUpperCase(),
+                textAlign: i == labels.length - 1 ? TextAlign.right : TextAlign.left,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontMono,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.1,
+                  color: t.textMuted,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TableRow extends StatelessWidget {
+  const _TableRow({
+    required this.expense,
+    required this.baseCurrency,
+    required this.payer,
+    required this.category,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final Expense expense;
+  final String baseCurrency;
+  final String payer;
+  final String category;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final muted = TextStyle(fontSize: 13.5, color: t.textSecondary);
+    return Material(
+      color: selected ? t.primaryAccent.withValues(alpha: 0.08) : Colors.transparent,
+      child: InkWell(
+        key: Key('table-row-${expense.id}'),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: t.borderColor)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                flex: _tableCols[0],
+                child: Text(
+                  expense.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontWeight: FontWeight.w600, color: t.textPrimary),
+                ),
+              ),
+              Expanded(
+                flex: _tableCols[1],
+                child: Text(category, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
+              ),
+              Expanded(
+                flex: _tableCols[2],
+                child: Text(payer, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
+              ),
+              Expanded(
+                flex: _tableCols[3],
+                child: Text(expense.date, style: muted),
+              ),
+              Expanded(
+                flex: _tableCols[4],
+                child: Text(
+                  formatMoney(context, expense.amount, baseCurrency),
+                  textAlign: TextAlign.right,
+                  style: TextStyle(fontWeight: FontWeight.w800, color: t.textPrimary),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

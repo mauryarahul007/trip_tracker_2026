@@ -10,6 +10,7 @@ import '../../../domain/models/member.dart';
 import '../../../domain/models/trip_message.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/ask_text.dart';
 import '../../expenses/application/expenses_providers.dart';
@@ -86,7 +87,17 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                         if (showDay)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Center(child: Text(_day(m.createdAt))),
+                            child: Center(
+                              child: Text(
+                                _day(m.createdAt),
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontMono,
+                                  fontSize: 10.5,
+                                  letterSpacing: 1.1,
+                                  color: context.tokens.textMuted,
+                                ),
+                              ),
+                            ),
                           ),
                         if (m.deletedAt != null)
                           Padding(
@@ -110,15 +121,27 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                 child: TextField(
                   key: const Key('chat-input'),
                   controller: _input,
-                  decoration: InputDecoration(hintText: l10n.chatHint),
+                  decoration: InputDecoration(
+                    hintText: l10n.chatHint,
+                    filled: true,
+                    fillColor: context.tokens.bgSurface,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(99), borderSide: BorderSide.none),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(99),
+                      borderSide: BorderSide(color: context.tokens.borderColor),
+                    ),
+                  ),
                   onSubmitted: (_) => _send(),
                 ),
               ),
-              IconButton(
+              const SizedBox(width: 8),
+              IconButton.filled(
                 tooltip: 'Send message',
                 key: const Key('chat-send'),
                 onPressed: _send,
-                icon: const Icon(Icons.send),
+                style: IconButton.styleFrom(backgroundColor: context.tokens.primaryAccent),
+                icon: const Icon(Icons.send_rounded, size: 20),
               ),
             ],
           ),
@@ -182,8 +205,9 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
           margin: const EdgeInsets.symmetric(vertical: 6),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-            borderRadius: BorderRadius.circular(12),
+            color: context.tokens.bgSurface,
+            boxShadow: context.tokens.shadowSm,
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,

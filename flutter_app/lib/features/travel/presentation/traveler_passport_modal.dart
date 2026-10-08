@@ -7,6 +7,7 @@ import '../../../domain/models/trip.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../trips/application/trips_providers.dart';
+import '../../../shared/theme/app_theme.dart';
 import 'passport_stamp.dart';
 
 class TravelerPassportModal extends ConsumerWidget {
@@ -23,15 +24,23 @@ class TravelerPassportModal extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Night Sky surface (board 06 #5): dark tokens for everything inside the sheet.
+    return Theme(
+      data: AppTheme.dark(),
+      child: Builder(builder: (ctx) => _content(ctx, ref)),
+    );
+  }
+
+  Widget _content(BuildContext context, WidgetRef ref) {
     final tokens = context.tokens;
     final trips = ref.watch(tripsProvider).value ?? const <Trip>[];
     final passport = computeTravelerPassport(trips);
 
     return Container(
       constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.88),
-      decoration: BoxDecoration(
-        color: tokens.bgSurface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: const BoxDecoration(
+        gradient: AppTokens.nightSkyGradient,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       child: Column(

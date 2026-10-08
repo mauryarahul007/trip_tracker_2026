@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,6 +24,7 @@ import '../../../domain/models/member.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
+import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_surface.dart';
@@ -204,6 +207,14 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                     contentPadding: EdgeInsets.zero,
                     dense: compact,
                     title: Text(b.name),
+                    // Member bars (board 05): length shows how big each balance is relative to the largest.
+                    subtitle: b.balance.abs() < 0.01
+                        ? null
+                        : _BalanceBar(
+                            fraction: b.balance.abs() / result.balances.map((x) => x.balance.abs()).reduce(math.max),
+                            color: b.balance > 0 ? tokens.colorSuccess : tokens.colorDanger,
+                            track: tokens.borderColor,
+                          ),
                     trailing: Text(
                       b.balance.abs() < 0.01
                           ? l10n.ledEven
@@ -433,12 +444,24 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AppAvatar(name: t.fromLabel, size: 44),
+              const SizedBox(width: 12),
+              Icon(Icons.arrow_forward_rounded, color: context.tokens.textMuted),
+              const SizedBox(width: 12),
+              AppAvatar(name: t.toLabel, size: 44),
+            ],
+          ),
+          const SizedBox(height: 12),
           Text(
             partial ? l10n.ledSettlePartialTitle : l10n.ledSettleTitle,
+            textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 4),
-          Text(l10n.ledTransfer(t.fromLabel, t.toLabel)),
+          Text(l10n.ledTransfer(t.fromLabel, t.toLabel), textAlign: TextAlign.center),
           Text(partial ? l10n.ledSettlePartialBody : l10n.ledSettleBody, key: const Key('settle-body')),
           const SizedBox(height: 12),
           AppTextField(
@@ -507,4 +530,26 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
       ),
     );
   }
+}
+
+class _BalanceBar extends StatelessWidget {
+  const _BalanceBar({required this.fraction, required this.color, required this.track});
+
+  final double fraction;
+  final Color color;
+  final Color track;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 4),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(99),
+      child: LinearProgressIndicator(
+        value: fraction.clamp(0.04, 1.0),
+        minHeight: 6,
+        backgroundColor: track,
+        color: color,
+      ),
+    ),
+  );
 }

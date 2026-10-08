@@ -92,6 +92,7 @@ class TripSettingsScreen extends ConsumerWidget {
                   children: [
                     SettingsSwitchTile(
                       key: const Key('trip-mute'),
+                      icon: Icons.notifications_off_outlined,
                       title: 'Mute this trip',
                       subtitle: 'No push alerts from this trip. In-app notifications still arrive.',
                       value: muted,
@@ -108,6 +109,7 @@ class TripSettingsScreen extends ConsumerWidget {
                     if (simplifyFlag)
                       SettingsSwitchTile(
                         key: const Key('trip-simplify'),
+                        icon: Icons.swap_horiz_rounded,
                         title: 'Simplify debts',
                         subtitle: 'Fewest payments to settle up',
                         value: trip.simplifyDebts,
@@ -116,6 +118,7 @@ class TripSettingsScreen extends ConsumerWidget {
                     if (approvalFlag)
                       SettingsTile(
                         key: const Key('trip-approval'),
+                        icon: Icons.verified_user_outlined,
                         title: 'Approval threshold',
                         subtitle: trip.approvalThreshold == null
                             ? 'Off'
@@ -124,11 +127,13 @@ class TripSettingsScreen extends ConsumerWidget {
                       ),
                     SettingsTile(
                       key: const Key('trip-categories'),
+                      icon: Icons.sell_outlined,
                       title: 'Categories',
                       onTap: () => context.push('/trip/$tripId/categories'),
                     ),
                     SettingsTile(
                       key: const Key('trip-recycle'),
+                      icon: Icons.delete_outline_rounded,
                       title: 'Recycle bin',
                       onTap: () => context.push('/trip/$tripId/recycle-bin'),
                     ),
@@ -140,6 +145,7 @@ class TripSettingsScreen extends ConsumerWidget {
                     children: [
                       SettingsSwitchTile(
                         key: const Key('trip-freeze'),
+                        icon: Icons.lock_outline_rounded,
                         title: 'Freeze trip',
                         subtitle: 'Read-only: nobody can add or edit expenses',
                         value: trip.frozen,
@@ -155,6 +161,7 @@ class TripSettingsScreen extends ConsumerWidget {
                       ),
                       SettingsSwitchTile(
                         key: const Key('trip-close'),
+                        icon: Icons.check_circle_outline_rounded,
                         title: 'Trip closed',
                         subtitle: 'Marks the trip as settled and finished',
                         value: trip.closed,
@@ -168,6 +175,7 @@ class TripSettingsScreen extends ConsumerWidget {
                       ),
                       SettingsSwitchTile(
                         key: const Key('trip-archive'),
+                        icon: Icons.inventory_2_outlined,
                         title: 'Archive',
                         subtitle: 'Hide from the main list',
                         value: trip.archived,

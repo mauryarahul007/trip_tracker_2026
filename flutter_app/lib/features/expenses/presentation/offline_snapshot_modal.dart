@@ -13,6 +13,7 @@ import '../../../domain/logic/offline_snapshot_service.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_surface.dart' show HeroSurface, SurfaceKind;
 import '../../../shared/widgets/app_text_field.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
@@ -178,31 +179,39 @@ class _OfflineSnapshotModalState extends ConsumerState<OfflineSnapshotModal> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(color: tokens.primaryAccent.withValues(alpha: 0.12), shape: BoxShape.circle),
-                child: Icon(AppIcons.sync, size: 20, color: tokens.primaryAccent),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Offline Snapshot (.triptracker)',
-                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: tokens.textPrimary),
-                    ),
-                    Text(
-                      'Export & import offline .triptracker files',
-                      style: TextStyle(fontSize: 12, color: tokens.textSecondary),
-                    ),
-                  ],
+          HeroSurface(
+            kind: SurfaceKind.slate,
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+                  ),
+                  child: const Icon(Icons.cloud_done_outlined, size: 22, color: Colors.white),
                 ),
-              ),
-            ],
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Offline Snapshot (.triptracker)',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Everything on this phone: balances, expenses and passes, even without signal.',
+                        style: TextStyle(fontSize: 12.5, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           if (_errorMessage != null) ...[

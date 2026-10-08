@@ -6,6 +6,9 @@ import '../../../../domain/models/category.dart';
 import '../../../../domain/models/expense.dart';
 import '../../../../domain/models/member.dart';
 import '../../../../l10n/l10n_ext.dart';
+import '../../../../shared/theme/app_tokens.dart';
+import '../../../../shared/theme/app_typography.dart';
+import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../trips/presentation/widgets/create_trip_sheet.dart' show dateRangePickerProvider;
@@ -54,6 +57,17 @@ class _ExpenseFilterSheetState extends ConsumerState<ExpenseFilterSheet> {
     if (r != null) setState(() => _f = _f.copyWith(dateFrom: _ymd(r.start), dateTo: _ymd(r.end)));
   }
 
+  Widget _label(String text) => Text(
+    text.toUpperCase(),
+    style: TextStyle(
+      fontFamily: AppTypography.fontMono,
+      fontSize: 10.5,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 1.1,
+      color: context.tokens.textMuted,
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -65,41 +79,43 @@ class _ExpenseFilterSheetState extends ConsumerState<ExpenseFilterSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          DropdownButtonFormField<String>(
-            key: const Key('filter-member'),
-            isExpanded: true,
-            initialValue: _f.memberId,
-            decoration: InputDecoration(labelText: l10n.filterTraveler),
-            items: [
-              DropdownMenuItem(value: '', child: Text(l10n.filterAny)),
+          _label(l10n.filterTraveler),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [
               for (final m in widget.members)
-                DropdownMenuItem(
-                  value: m.id,
-                  child: Text(m.name, overflow: TextOverflow.ellipsis),
+                ChoiceChip(
+                  key: Key('filter-member-${m.id}'),
+                  showCheckmark: false,
+                  shape: const StadiumBorder(),
+                  avatar: AppAvatar(name: m.name, size: 22),
+                  label: Text(m.name, overflow: TextOverflow.ellipsis),
+                  selected: _f.memberId == m.id,
+                  onSelected: (on) => setState(() => _f = _f.copyWith(memberId: on ? m.id : '')),
                 ),
             ],
-            onChanged: (v) => setState(() => _f = _f.copyWith(memberId: v ?? '')),
           ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            key: const Key('filter-category'),
-            isExpanded: true,
-            initialValue: _f.categoryId,
-            decoration: InputDecoration(labelText: l10n.filterCategory),
-            items: [
-              DropdownMenuItem(value: '', child: Text(l10n.filterAny)),
+          const SizedBox(height: 16),
+          _label(l10n.filterCategory),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [
               for (final c in widget.categories)
-                DropdownMenuItem(
-                  value: c.id,
-                  child: Text(
-                    '${c.icon != null && !c.icon!.contains(':') ? '${c.icon} ' : ''}${c.name}',
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                ChoiceChip(
+                  key: Key('filter-category-${c.id}'),
+                  showCheckmark: false,
+                  shape: const StadiumBorder(),
+                  label: Text('${c.icon != null && !c.icon!.contains(':') ? '${c.icon} ' : ''}${c.name}'),
+                  selected: _f.categoryId == c.id,
+                  onSelected: (on) => setState(() => _f = _f.copyWith(categoryId: on ? c.id : '')),
                 ),
             ],
-            onChanged: (v) => setState(() => _f = _f.copyWith(categoryId: v ?? '')),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           OutlinedButton.icon(
             key: const Key('filter-dates'),
             onPressed: _pickDates,
@@ -135,6 +151,8 @@ class _ExpenseFilterSheetState extends ConsumerState<ExpenseFilterSheet> {
               spacing: 8,
               children: [
                 ChoiceChip(
+                  showCheckmark: false,
+                  shape: const StadiumBorder(),
                   label: Text(l10n.expPaidByMe),
                   selected: _f.relation == ExpenseRelation.paidByMe,
                   onSelected: (s) => setState(
@@ -142,6 +160,8 @@ class _ExpenseFilterSheetState extends ConsumerState<ExpenseFilterSheet> {
                   ),
                 ),
                 ChoiceChip(
+                  showCheckmark: false,
+                  shape: const StadiumBorder(),
                   label: Text(l10n.expInvolvesMe),
                   selected: _f.relation == ExpenseRelation.involvesMe,
                   onSelected: (s) => setState(

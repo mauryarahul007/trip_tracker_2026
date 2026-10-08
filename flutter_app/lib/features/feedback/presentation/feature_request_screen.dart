@@ -11,6 +11,8 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../application/feedback_providers.dart';
+import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 
 class FeatureRequestScreen extends ConsumerStatefulWidget {
   const FeatureRequestScreen({super.key});
@@ -94,6 +96,18 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Center(
+            child: Container(
+              width: 64,
+              height: 64,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: context.tokens.warningColor.withValues(alpha: 0.16),
+              ),
+              child: Icon(Icons.lightbulb_outline_rounded, size: 30, color: context.tokens.warningColor),
+            ),
+          ),
           if (!signedIn)
             const Padding(padding: EdgeInsets.only(bottom: 12), child: Text('Sign in with an account to send ideas.')),
           AppTextField(
@@ -105,13 +119,22 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
           const SizedBox(height: 12),
           AppTextField(key: const Key('feature-desc'), controller: _desc, label: 'Why would it help?', maxLines: 4),
           const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            isExpanded: true,
+          _chipLabel(context, 'Area'),
+          Wrap(
             key: const Key('feature-category'),
-            initialValue: _category,
-            decoration: const InputDecoration(labelText: 'Area'),
-            items: [for (final c in featureCategories) DropdownMenuItem(value: c, child: Text(c))],
-            onChanged: (v) => setState(() => _category = v ?? _category),
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              for (final c in featureCategories)
+                ChoiceChip(
+                  key: Key('feature-category-$c'),
+                  showCheckmark: false,
+                  shape: const StadiumBorder(),
+                  label: Text(c),
+                  selected: _category == c,
+                  onSelected: (_) => setState(() => _category = c),
+                ),
+            ],
           ),
           if (_error != null)
             Padding(
@@ -140,3 +163,17 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
     );
   }
 }
+
+Widget _chipLabel(BuildContext context, String text) => Padding(
+  padding: const EdgeInsets.only(bottom: 8),
+  child: Text(
+    text.toUpperCase(),
+    style: TextStyle(
+      fontFamily: AppTypography.fontMono,
+      fontSize: 10.5,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 1.1,
+      color: context.tokens.textMuted,
+    ),
+  ),
+);

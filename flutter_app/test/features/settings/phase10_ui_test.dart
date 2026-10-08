@@ -45,6 +45,20 @@ void main() {
       expect(tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode, ThemeMode.dark);
     });
 
+    testApp('wide window: section list on the left jumps to a section on the right', (tester) async {
+      await pumpApp(tester, user: named);
+      await go(tester, '/settings');
+      expect(find.byKey(const Key('settings-nav')), findsNothing); // harness is phone-sized
+      tester.view.physicalSize = const Size(1400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await settle(tester);
+      expect(find.byKey(const Key('settings-nav')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('settings-nav-Account')));
+      await settle(tester, rounds: 10);
+      expect(find.byKey(const Key('settings-signout')), findsOneWidget);
+    });
+
     testApp('amoled and biometric rows appear with their flags and persist', (tester) async {
       final app = await pumpApp(tester, user: asha, flagsOn: {'enableAmoledTheme', 'enableBiometricAuth'});
       await go(tester, '/settings');
@@ -353,9 +367,7 @@ void main() {
       await settle(tester, rounds: 10);
       await tester.enterText(find.byKey(const Key('flags-search')), 'enableQuietHours');
       await settle(tester);
-      await tester.tap(find.byKey(const Key('flag-menu-enableQuietHours')));
-      await settle(tester);
-      await tester.tap(find.text('Force ON'));
+      await tester.tap(find.byKey(const Key('flag-on-enableQuietHours')));
       await settle(tester);
       expect(containerOf(tester).read(flagOverrideStoreProvider).all['enableQuietHours'], isTrue);
     });

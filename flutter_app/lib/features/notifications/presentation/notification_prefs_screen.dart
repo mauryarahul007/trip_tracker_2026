@@ -60,6 +60,8 @@ class NotificationPrefsScreen extends ConsumerWidget {
               children: [
                 SettingsSwitchTile(
                   key: const Key('quiet-enabled'),
+                  icon: Icons.bedtime_outlined,
+                  iconColor: const Color(0xFF8B3CF7),
                   title: 'Pause push alerts overnight',
                   subtitle: 'Alerts in this window arrive in your notification list instead',
                   value: quiet.enabled,
@@ -68,12 +70,14 @@ class NotificationPrefsScreen extends ConsumerWidget {
                 if (quiet.enabled) ...[
                   SettingsTile(
                     key: const Key('quiet-start'),
+                    icon: Icons.schedule_rounded,
                     title: 'From',
                     subtitle: quiet.startTime,
                     onTap: () => _time(context, ref, quiet, start: true),
                   ),
                   SettingsTile(
                     key: const Key('quiet-end'),
+                    icon: Icons.alarm_rounded,
                     title: 'Until',
                     subtitle: quiet.endTime,
                     onTap: () => _time(context, ref, quiet, start: false),
@@ -87,6 +91,8 @@ class NotificationPrefsScreen extends ConsumerWidget {
               children: [
                 SettingsSwitchTile(
                   key: const Key('digest-enabled'),
+                  icon: Icons.mark_email_unread_outlined,
+                  iconColor: const Color(0xFFE8890C),
                   title: 'Bundle alerts into one daily summary',
                   value: digest,
                   onChanged: (v) async {
@@ -120,6 +126,8 @@ class _MuteTile extends ConsumerWidget {
     final muted = ref.watch(tripMutedProvider(tripId)).value ?? false;
     return SettingsSwitchTile(
       key: Key('mute-$tripId'),
+      icon: Icons.notifications_off_outlined,
+      iconColor: const Color(0xFF16A34A),
       title: name,
       subtitle: muted ? 'Muted' : null,
       value: muted,
@@ -143,6 +151,7 @@ class _PushTile extends ConsumerWidget {
     };
     return SettingsTile(
       key: const Key('push-tile'),
+      icon: Icons.notifications_none_rounded,
       title: 'Alerts on this device',
       subtitle: subtitle,
       onTap: canEnable ? () => ref.read(pushControllerProvider.notifier).enable() : null,

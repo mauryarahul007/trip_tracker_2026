@@ -275,6 +275,12 @@
         ],
         "createdAt": "2026-09-14T12:07:04.905Z",
         "reason": "same accent-blue family already used across map components this session"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "13px",
+        "createdAt": "2026-10-08T10:25:10.986Z",
+        "reason": "Claude: 13px is the Horizon kit's .t-sm step in design/new-app-ui/kit.css; DESIGN.md still documents the pre-Horizon ramp"
       }
     ]
   }

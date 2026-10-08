@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-08 | flutter 3.48 | FLUTTER-HORIZON | [Flutter: Horizon nav and spend insights](#flutter-horizon--horizon-nav-and-spend-insights-v3480) |
 | 2026-10-07 | flutter 3.45 | FLUTTER-P12 | [Flutter: accessibility, hardening, release checks](#flutter-p12--flutter-accessibility-hardening-release-checks) |
 | 2026-10-06 | flutter 3.45 | FLUTTER-P10E | [Flutter: push, tap routing, pass reminders](#flutter-p10e--flutter-push-tap-routing-pass-reminders) |
 | 2026-10-06 | flutter 3.45 | FLUTTER-P10D | [Flutter: feedback, diagnostics, legal, telemetry](#flutter-p10d--flutter-feedback-diagnostics-legal-telemetry) |
@@ -2179,3 +2180,19 @@ Copy below when shipping the next customer-facing change:
 ```
 
 Then add a row to the **Index** table.
+
+## FLUTTER-HORIZON — Horizon nav and spend insights (v3.48.0)
+
+**Flags:** `enableHorizonNav`, `enableSpendInsights` (Pro pack, default OFF).
+
+1. In Ops Deck > Flags turn ON `enableHorizonNav` for your user, reopen the Flutter app.
+2. Phone width: bottom dock shows Trips, Balances, centre add, Activity, Me. Tap Balances: per-member balance bars render.
+3. Window >= 900px: dock becomes a side rail. Press Android/system back on Balances: lands on Trips, app does not exit.
+4. Window >= 1100px, open a trip Expenses: table with columns Expense, Category, Paid by, Date, Amount; selecting a row opens the detail panel.
+5. Turn ON `enableSpendInsights`: trip tools show Spend insights; day and category charts render.
+6. Window >= 1024px: login shows Night Sky pitch left, form right; Settings shows section list left that jumps to sections.
+
+**Flag-OFF checks:** both flags OFF = original bottom nav and no Spend insights entry.
+
+### Pass
+- Each step matches; no overflow at 430, 900, 1100, 1280 widths.

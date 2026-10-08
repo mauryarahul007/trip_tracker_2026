@@ -253,7 +253,8 @@ export function parseQuickExpense(
   categories: Category[] = [],
   historicalExpenses: Expense[] = [],
   members: Member[] = [],
-  currentMemberId?: string | null
+  currentMemberId?: string | null,
+  now: Date = new Date()
 ): ParsedQuickExpense | null {
   const trimmed = rawInput.trim();
   if (!trimmed) return null;
@@ -324,7 +325,7 @@ export function parseQuickExpense(
   }
 
   // 2. Detect Relative Date ("yesterday", "today", "tomorrow", "2 days ago")
-  const today = new Date();
+  const today = new Date(now);
   const yesterdayRegex = /\b(yesterday)\b/i;
   const todayRegex = /\b(today)\b/i;
   if (yesterdayRegex.test(workingText)) {

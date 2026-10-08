@@ -13,6 +13,7 @@ import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../trips/application/trips_providers.dart';
+import '../../trips/presentation/widgets/home_dock.dart';
 import '../application/notification_providers.dart';
 import 'notification_style.dart';
 
@@ -77,103 +78,111 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             for (final n in shown) [n],
           ];
 
-    return AppScaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        actions: [
-          IconButton(
-            key: const Key('notifications-mark-all'),
-            tooltip: 'Mark all as read',
-            onPressed: unread == 0 || userId == null ? null : () => repo.markAllRead(userId, tripId: _scope),
-            icon: const Icon(Icons.done_all_rounded),
-          ),
-          IconButton(
-            key: const Key('notifications-clear'),
-            tooltip: 'Clear notifications',
-            onPressed: scoped.isEmpty ? null : _clearAll,
-            icon: const Icon(AppIcons.delete),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-            child: Wrap(
-              spacing: 8,
-              children: [
-                if (widget.tripId != null) ...[
-                  ChoiceChip(
-                    key: const Key('filter-this-trip'),
-                    label: const Text('This trip'),
-                    selected: _thisTrip,
-                    onSelected: (_) => setState(() => _thisTrip = true),
-                  ),
-                  ChoiceChip(
-                    key: const Key('filter-all-trips'),
-                    label: const Text('All trips'),
-                    selected: !_thisTrip,
-                    onSelected: (_) => setState(() => _thisTrip = false),
-                  ),
-                ],
-                if (groupingOn) ...[
-                  ChoiceChip(
-                    key: const Key('filter-kind-all'),
-                    label: const Text('All'),
-                    selected: !_moneyOnly,
-                    onSelected: (_) => setState(() => _moneyOnly = false),
-                  ),
-                  ChoiceChip(
-                    key: const Key('filter-kind-money'),
-                    label: const Text('Money'),
-                    selected: _moneyOnly,
-                    onSelected: (_) => setState(() => _moneyOnly = true),
-                  ),
-                ],
-              ],
+    return wrapHomeBody(
+      context,
+      ref,
+      HomeTab.activity,
+      enabled: widget.tripId == null, // the per-trip list is a pushed screen: no rail, normal back
+      AppScaffold(
+        // Per-trip view (opened from inside a trip) keeps its back arrow and no dock.
+        bottomNavigationBar: widget.tripId == null ? buildHomeDock(context, ref, HomeTab.activity) : null,
+        appBar: AppBar(
+          title: const Text('Notifications'),
+          actions: [
+            IconButton(
+              key: const Key('notifications-mark-all'),
+              tooltip: 'Mark all as read',
+              onPressed: unread == 0 || userId == null ? null : () => repo.markAllRead(userId, tripId: _scope),
+              icon: const Icon(Icons.done_all_rounded),
             ),
-          ),
-          Expanded(
-            child: groups.isEmpty
-                ? EmptyState(
-                    icon: AppIcons.bell,
-                    title: groupingOn && _moneyOnly && scoped.isNotEmpty ? 'No money updates' : 'No notifications',
-                    subtitle: groupingOn && _moneyOnly && scoped.isNotEmpty
-                        ? 'Switch back to All to see everything.'
-                        : 'Updates from your trips will show up here.',
-                  )
-                : ListView.builder(
-                    key: const Key('notifications-list'),
-                    itemCount: groups.length,
-                    itemBuilder: (context, i) {
-                      final g = groups[i];
-                      final lead = g.first;
-                      final folded = g.length > 1 && !_expanded.contains(lead.id);
-                      final rows = folded ? [lead] : g;
-                      return Column(
-                        children: [
-                          for (final n in rows)
-                            _Row(
-                              key: ValueKey('notif-${n.id}'),
-                              item: n,
-                              tokens: tokens,
-                              onTap: () => _open(n),
-                              onToggleRead: () => repo.setRead(n.id, !n.read),
-                              onDelete: () => repo.delete(n.id),
-                            ),
-                          if (g.length > 1)
-                            TextButton(
-                              key: Key('group-toggle-${lead.id}'),
-                              onPressed: () =>
-                                  setState(() => folded ? _expanded.add(lead.id) : _expanded.remove(lead.id)),
-                              child: Text(folded ? 'Show ${g.length - 1} more' : 'Show less'),
-                            ),
-                        ],
-                      );
-                    },
-                  ),
-          ),
-        ],
+            IconButton(
+              key: const Key('notifications-clear'),
+              tooltip: 'Clear notifications',
+              onPressed: scoped.isEmpty ? null : _clearAll,
+              icon: const Icon(AppIcons.delete),
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  if (widget.tripId != null) ...[
+                    ChoiceChip(
+                      key: const Key('filter-this-trip'),
+                      label: const Text('This trip'),
+                      selected: _thisTrip,
+                      onSelected: (_) => setState(() => _thisTrip = true),
+                    ),
+                    ChoiceChip(
+                      key: const Key('filter-all-trips'),
+                      label: const Text('All trips'),
+                      selected: !_thisTrip,
+                      onSelected: (_) => setState(() => _thisTrip = false),
+                    ),
+                  ],
+                  if (groupingOn) ...[
+                    ChoiceChip(
+                      key: const Key('filter-kind-all'),
+                      label: const Text('All'),
+                      selected: !_moneyOnly,
+                      onSelected: (_) => setState(() => _moneyOnly = false),
+                    ),
+                    ChoiceChip(
+                      key: const Key('filter-kind-money'),
+                      label: const Text('Money'),
+                      selected: _moneyOnly,
+                      onSelected: (_) => setState(() => _moneyOnly = true),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Expanded(
+              child: groups.isEmpty
+                  ? EmptyState(
+                      icon: AppIcons.bell,
+                      title: groupingOn && _moneyOnly && scoped.isNotEmpty ? 'No money updates' : 'No notifications',
+                      subtitle: groupingOn && _moneyOnly && scoped.isNotEmpty
+                          ? 'Switch back to All to see everything.'
+                          : 'Updates from your trips will show up here.',
+                    )
+                  : ListView.builder(
+                      key: const Key('notifications-list'),
+                      itemCount: groups.length,
+                      itemBuilder: (context, i) {
+                        final g = groups[i];
+                        final lead = g.first;
+                        final folded = g.length > 1 && !_expanded.contains(lead.id);
+                        final rows = folded ? [lead] : g;
+                        return Column(
+                          children: [
+                            for (final n in rows)
+                              _Row(
+                                key: ValueKey('notif-${n.id}'),
+                                item: n,
+                                tokens: tokens,
+                                onTap: () => _open(n),
+                                onToggleRead: () => repo.setRead(n.id, !n.read),
+                                onDelete: () => repo.delete(n.id),
+                              ),
+                            if (g.length > 1)
+                              TextButton(
+                                key: Key('group-toggle-${lead.id}'),
+                                onPressed: () =>
+                                    setState(() => folded ? _expanded.add(lead.id) : _expanded.remove(lead.id)),
+                                child: Text(folded ? 'Show ${g.length - 1} more' : 'Show less'),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

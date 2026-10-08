@@ -37,7 +37,11 @@ class AppSheet extends StatelessWidget {
           ),
           child: SafeArea(
             top: false,
-            child: AppSheet(title: title, child: builder(ctx)),
+            // Transparent Material so ListTile ink/background paints correctly on the sheet colour.
+            child: Material(
+              type: MaterialType.transparency,
+              child: AppSheet(title: title, child: builder(ctx)),
+            ),
           ),
         ),
       ),

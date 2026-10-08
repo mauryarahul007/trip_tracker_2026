@@ -110,6 +110,8 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
       'enableSplitwiseImport',
       'enableCrossTripSearch',
       'enableExpenseQuickFilterChips',
+      'enableHorizonNav',
+      'enableSpendInsights',
       'enableCompactLedgerView',
       'enableStickyDayHeaders',
       'enableCategoryColorRings',
@@ -801,6 +803,22 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     pack: 'pro',
     defaultEnabledForUsers: false,
   },
+  enableHorizonNav: {
+    key: 'enableHorizonNav',
+    label: 'Horizon App-Wide Navigation (Flutter)',
+    description: 'Flutter app: replaces the Trips overflow menu with a bottom dock (Trips, Balances, + New trip, Activity, Me). Balances shows your net across every trip; Me hosts Settings. When OFF, the Trips screen keeps its settings menu and New trip button.',
+    category: 'core',
+    pack: 'pro',
+    defaultEnabledForUsers: false,
+  },
+  enableSpendInsights: {
+    key: 'enableSpendInsights',
+    label: 'Spend Insights Screen (Flutter)',
+    description: 'Flutter app: tap the Expenses summary card to open a Slate insights screen with daily spend, projected total and a category breakdown. When OFF the summary card is not tappable.',
+    category: 'core',
+    pack: 'pro',
+    defaultEnabledForUsers: false,
+  },
 
   // Phase 6: WhatsApp Social & Chat Hub
   enableChatFirstNav: {
@@ -1082,6 +1100,8 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableSplitwiseImport: false,
   enableCrossTripSearch: false,
   enableExpenseQuickFilterChips: false,
+  enableHorizonNav: false,
+  enableSpendInsights: false,
   enableCompactLedgerView: false,
   enableStickyDayHeaders: false,
   enableCategoryColorRings: false,

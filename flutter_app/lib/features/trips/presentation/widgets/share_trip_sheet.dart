@@ -103,14 +103,23 @@ class _ShareTripSheetState extends ConsumerState<ShareTripSheet> {
               code,
               key: const Key('join-code'),
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 32, letterSpacing: 6, fontWeight: FontWeight.w800, color: tokens.textPrimary),
+              style: TextStyle(
+                fontSize: 34,
+                letterSpacing: 8,
+                fontWeight: FontWeight.w800,
+                color: tokens.primaryAccent,
+              ),
             ),
             const SizedBox(height: 16),
             Center(
               child: Container(
                 key: const Key('join-qr'),
-                padding: const EdgeInsets.all(12),
-                color: Colors.white,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: tokens.borderColor),
+                ),
                 child: Semantics(
                   label: l10n.joinTripTitle,
                   child: QrImageView(key: ValueKey(joinLink), data: joinLink, size: 180),

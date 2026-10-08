@@ -43,13 +43,15 @@ void main() {
     await typeAsk(tester, 'Dev');
     expect(find.text('Dev'), findsOneWidget);
 
-    await tester.tap(key('member-role-${s.ben}'));
+    await tester.tap(key('member-actions-${s.ben}'));
     await settle(tester, rounds: 4);
     await tester.tap(find.text('Viewer').last);
     await settle(tester, rounds: 6);
     final trip = containerOf(tester).read(tripProvider(s.tripId)).value;
     expect(trip?.memberRoles[s.ben], 'viewer');
 
+    await tester.tap(key('member-actions-${s.cara}'));
+    await settle(tester, rounds: 4);
     await tester.tap(key('member-archive-${s.cara}'));
     await settle(tester, rounds: 6);
     expect(find.text('Archived'), findsOneWidget);
@@ -69,6 +71,19 @@ void main() {
     await tester.tap(key('member-invite'));
     await settle(tester, rounds: 6);
     expect(find.text('Invite travelers'), findsOneWidget);
+  });
+
+  testApp('notes on a wide window show members as a third column', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await openTab(tester, s, 'notes');
+    expect(find.byKey(const Key('planner-members')), findsNothing); // harness is phone-sized
+    tester.view.physicalSize = const Size(1500, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await settle(tester);
+    expect(find.byKey(const Key('planner-members')), findsOneWidget);
+    expect(find.byKey(const Key('member-add')), findsOneWidget);
   });
 
   testApp('notes: checklist, packing suggestions, a linked note, and a manual pass', (tester) async {

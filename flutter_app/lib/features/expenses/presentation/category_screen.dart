@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/providers.dart';
+import '../../../domain/logic/category_color.dart';
 import '../../../domain/models/category.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -53,8 +54,20 @@ class CategoryScreen extends ConsumerWidget {
   Widget _tile(BuildContext context, WidgetRef ref, Category c, bool isAdmin, {Key? key}) {
     return ListTile(
       key: key ?? Key('cat-${c.id}'),
-      title: Text(c.name),
-      subtitle: Text(c.icon ?? ''),
+      leading: Container(
+        width: 42,
+        height: 42,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Color(categoryColorArgb(c.id)).withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Text(
+          c.icon?.isNotEmpty == true && !c.icon!.contains(':') ? c.icon! : '🏷️',
+          style: const TextStyle(fontSize: 20),
+        ),
+      ),
+      title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w600)),
       trailing: isAdmin && c.isCustom
           ? Row(
               mainAxisSize: MainAxisSize.min,

@@ -99,6 +99,46 @@ class AchievementBadgeModal extends ConsumerWidget {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          // Overall progress (board 06 #6)
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: tokens.bgSurface,
+              borderRadius: BorderRadius.circular(tokens.radiusMd),
+              boxShadow: tokens.shadowSm,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '$unlockedCount of ${badges.length} unlocked',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        '${badges.isEmpty ? 0 : (unlockedCount * 100 / badges.length).round()}%',
+                        style: TextStyle(fontWeight: FontWeight.w700, color: tokens.primaryAccent),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(99),
+                    child: LinearProgressIndicator(
+                      value: badges.isEmpty ? 0 : unlockedCount / badges.length,
+                      minHeight: 8,
+                      backgroundColor: tokens.borderColor,
+                      color: tokens.primaryAccent,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 16),
 
           // Badges List
@@ -127,20 +167,29 @@ class AchievementBadgeModal extends ConsumerWidget {
                         height: 44,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: b.unlocked ? tokens.primaryAccent.withValues(alpha: 0.18) : tokens.bgSurface,
-                          border: Border.all(color: b.unlocked ? tokens.primaryAccent : tokens.borderColor, width: 2),
+                          // Glossy 3D orb when unlocked, flat grey when locked.
+                          gradient: b.unlocked
+                              ? RadialGradient(
+                                  center: const Alignment(-0.4, -0.5),
+                                  colors: [tokens.primaryAccentLight, tokens.primaryAccent],
+                                )
+                              : null,
+                          color: b.unlocked ? null : tokens.borderColor.withValues(alpha: 0.6),
                           boxShadow: b.unlocked
                               ? [
                                   BoxShadow(
-                                    color: tokens.primaryAccent.withValues(alpha: 0.25),
-                                    blurRadius: 8,
-                                    spreadRadius: 1,
+                                    color: tokens.primaryAccent.withValues(alpha: 0.35),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 5),
                                   ),
                                 ]
                               : null,
                         ),
                         alignment: Alignment.center,
-                        child: Text(b.icon, style: const TextStyle(fontSize: 22)),
+                        child: Opacity(
+                          opacity: b.unlocked ? 1 : 0.4,
+                          child: Text(b.icon, style: const TextStyle(fontSize: 22)),
+                        ),
                       ),
                       const SizedBox(width: 14),
 

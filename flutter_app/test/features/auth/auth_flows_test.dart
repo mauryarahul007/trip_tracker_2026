@@ -24,6 +24,17 @@ void main() {
       expect(button('Continue with Apple'), findsNothing);
     });
 
+    testApp('wide window: two-pane landing with the Night Sky pitch; phone width has no pitch pane', (tester) async {
+      await pumpApp(tester);
+      expect(find.byKey(const Key('login-hero')), findsNothing); // harness is phone-sized
+      tester.view.physicalSize = const Size(1400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('login-hero')), findsOneWidget);
+      expect(button('Continue with Google'), findsOneWidget);
+    });
+
     testApp('Apple button is offered on iOS', (tester) async {
       await pumpApp(tester, appleAvailable: true);
       expect(button('Continue with Apple'), findsOneWidget);

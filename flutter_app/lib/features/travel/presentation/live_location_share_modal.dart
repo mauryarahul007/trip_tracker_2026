@@ -216,36 +216,30 @@ class _LiveLocationShareModalState extends ConsumerState<LiveLocationShareModal>
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: isSharing
-                      ? tokens.colorSuccess.withValues(alpha: 0.12)
-                      : tokens.primaryAccent.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(AppIcons.location, size: 22, color: isSharing ? tokens.colorSuccess : tokens.primaryAccent),
+          Center(
+            child: Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: isSharing
+                    ? tokens.colorSuccess.withValues(alpha: 0.14)
+                    : tokens.primaryAccent.withValues(alpha: 0.14),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Live Location Sharing',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: tokens.textPrimary),
-                    ),
-                    Text(
-                      isSharing ? 'Active · Broadcast to trip squad' : 'Share your real-time position',
-                      style: TextStyle(fontSize: 13, color: tokens.textSecondary),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              child: Icon(AppIcons.location, size: 30, color: isSharing ? tokens.colorSuccess : tokens.primaryAccent),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Live Location Sharing',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: tokens.textPrimary),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isSharing ? 'Active · Broadcast to trip squad' : 'Share your real-time position',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: tokens.textSecondary),
           ),
           const SizedBox(height: 16),
           if (_errorMessage != null) ...[
@@ -351,31 +345,24 @@ class _LiveLocationShareModalState extends ConsumerState<LiveLocationShareModal>
               onPressed: _handleStopSharing,
             ),
           ] else ...[
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: tokens.bgSurface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: tokens.borderColor.withValues(alpha: 0.5)),
+            for (final r in const [
+              (Icons.visibility_outlined, 'Only active trip squad members can see your position'),
+              (Icons.schedule_rounded, 'Automatically expires after 12 hours'),
+              (Icons.battery_charging_full_rounded, 'Low-frequency 60s heartbeat protects battery life'),
+              (Icons.lock_outline_rounded, 'Stop sharing at any time with one tap'),
+            ])
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Icon(r.$1, size: 18, color: tokens.primaryAccent),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(r.$2, style: TextStyle(fontSize: 13.5, color: tokens.textSecondary, height: 1.35)),
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Privacy & Battery Protection',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: tokens.textPrimary),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '• Only active trip squad members can see your position\n'
-                    '• Automatically expires after 12 hours\n'
-                    '• Low-frequency 60s background heartbeat protects battery life\n'
-                    '• Stop sharing at any time with one tap',
-                    style: TextStyle(fontSize: 13, color: tokens.textSecondary, height: 1.45),
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: 20),
             AppButton(
               label: 'Start Sharing Live Location',

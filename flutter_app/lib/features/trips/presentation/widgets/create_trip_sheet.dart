@@ -139,7 +139,11 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
               onPressed: _pickDates,
               icon: const Icon(Icons.date_range_rounded),
               label: Text(_range == null ? l10n.fieldDates : formatDateRange(_iso(_range!.start), _iso(_range!.end))),
-              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(56),
+                alignment: Alignment.centerLeft,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              ),
             ),
             if (_dateError != null)
               Padding(

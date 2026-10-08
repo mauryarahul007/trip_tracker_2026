@@ -13,6 +13,8 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../application/feedback_providers.dart';
+import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 
 /// "Report a problem": a form plus the user's earlier reports. Recent logs are attached
 /// (scrubbed of emails, tokens and phone numbers) unless switched off.
@@ -141,25 +143,40 @@ class _BugReportScreenState extends ConsumerState<BugReportScreen> {
             maxLines: 3,
           ),
           const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            isExpanded: true,
+          _chipLabel(context, 'How bad is it?'),
+          Wrap(
             key: const Key('bug-severity'),
-            initialValue: _severity,
-            decoration: const InputDecoration(labelText: 'How bad is it?'),
-            items: [
+            spacing: 8,
+            runSpacing: 4,
+            children: [
               for (final s in bugSeverities)
-                DropdownMenuItem(value: s, child: Text(s[0].toUpperCase() + s.substring(1))),
+                ChoiceChip(
+                  key: Key('bug-severity-$s'),
+                  showCheckmark: false,
+                  shape: const StadiumBorder(),
+                  label: Text(s[0].toUpperCase() + s.substring(1)),
+                  selected: _severity == s,
+                  onSelected: (_) => setState(() => _severity = s),
+                ),
             ],
-            onChanged: (v) => setState(() => _severity = v ?? _severity),
           ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            isExpanded: true,
+          const SizedBox(height: 16),
+          _chipLabel(context, 'Area'),
+          Wrap(
             key: const Key('bug-category'),
-            initialValue: _category,
-            decoration: const InputDecoration(labelText: 'Area'),
-            items: [for (final c in bugCategories) DropdownMenuItem(value: c, child: Text(c))],
-            onChanged: (v) => setState(() => _category = v ?? _category),
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              for (final c in bugCategories)
+                ChoiceChip(
+                  key: Key('bug-category-$c'),
+                  showCheckmark: false,
+                  shape: const StadiumBorder(),
+                  label: Text(c),
+                  selected: _category == c,
+                  onSelected: (_) => setState(() => _category = c),
+                ),
+            ],
           ),
           SwitchListTile.adaptive(
             key: const Key('bug-logs'),
@@ -200,3 +217,17 @@ class _BugReportScreenState extends ConsumerState<BugReportScreen> {
     );
   }
 }
+
+Widget _chipLabel(BuildContext context, String text) => Padding(
+  padding: const EdgeInsets.only(bottom: 8),
+  child: Text(
+    text.toUpperCase(),
+    style: TextStyle(
+      fontFamily: AppTypography.fontMono,
+      fontSize: 10.5,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 1.1,
+      color: context.tokens.textMuted,
+    ),
+  ),
+);

@@ -6,12 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/auth_state.dart';
 import '../../../../core/format/money.dart';
 import '../../../../data/providers.dart';
+import '../../../../domain/logic/category_color.dart';
 import '../../../../domain/logic/expense_list_logic.dart';
 import '../../../../domain/models/expense.dart';
 import '../../../../domain/models/expense_io.dart';
 import '../../../../domain/models/member.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_tokens.dart';
+import '../../../../shared/theme/app_typography.dart';
+import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../trip_details/application/trip_nav.dart';
 import '../../application/expenses_providers.dart';
@@ -129,16 +132,47 @@ class ExpenseDetailSheet extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            e.title,
-            key: const Key('detail-title'),
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: tokens.textPrimary),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            formatMoney(context, e.amount, base),
-            key: const Key('detail-amount'),
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: tokens.textPrimary),
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Color(categoryColorArgb(e.category)).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Text(
+                  cat?.icon?.isNotEmpty == true && !cat!.icon!.contains(':') ? cat.icon! : '🏷️',
+                  style: const TextStyle(fontSize: 24),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      e.title,
+                      key: const Key('detail-title'),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: tokens.textPrimary),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      formatMoney(context, e.amount, base),
+                      key: const Key('detail-amount'),
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontTitle,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.8,
+                        color: tokens.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           _ReceiptPreview(expenseId: e.id, remotePath: e.receiptPath),
           if (e.currency != base) Text(e.currency, style: TextStyle(color: tokens.textMuted, fontSize: 12)),
@@ -171,25 +205,47 @@ class ExpenseDetailSheet extends ConsumerWidget {
                 style: TextStyle(color: tokens.colorSuccess),
               ),
             ),
-          kv(l10n.detailDate, e.date),
-          kv(
-            l10n.detailCategory,
-            cat == null
-                ? e.category
-                : '${cat.icon != null && !cat.icon!.contains(':') ? '${cat.icon} ' : ''}${cat.name}',
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: tokens.bgSurface,
+              borderRadius: BorderRadius.circular(tokens.radiusMd),
+              border: Border.all(color: tokens.borderColor.withValues(alpha: 0.7)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+              child: Column(
+                children: [
+                  kv(l10n.detailDate, e.date),
+                  kv(
+                    l10n.detailCategory,
+                    cat == null
+                        ? e.category
+                        : '${cat.icon != null && !cat.icon!.contains(':') ? '${cat.icon} ' : ''}${cat.name}',
+                  ),
+                  kv(l10n.detailPaidBy, payerNames),
+                ],
+              ),
+            ),
           ),
-          kv(l10n.detailPaidBy, payerNames),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Text(
             l10n.detailShares,
-            style: TextStyle(fontWeight: FontWeight.w700, color: tokens.textPrimary),
+            style: TextStyle(
+              fontFamily: AppTypography.fontMono,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.1,
+              color: tokens.textMuted,
+            ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           for (final id in e.splitMemberIds)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
+              padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 children: [
+                  AppAvatar(name: members[id]?.name ?? '?', size: 28),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       members[id]?.name ?? l10n.rowRemovedMember,
