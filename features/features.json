@@ -1612,5 +1612,21 @@
     "shippedAt": "2026-10-08T09:59:59.747Z",
     "shippedBy": "rahul",
     "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-102",
+    "title": "Flutter app: instant trips after sign-in, destination autocomplete, Horizon nav and Spend Insights on by default",
+    "description": "Flutter app: instant trips after sign-in, destination autocomplete, Horizon nav and Spend Insights on by default",
+    "category": "native",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-08T17:55:52.881Z",
+    "updatedAt": "2026-10-08T17:55:54.188Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-08T17:55:54.187Z",
+    "shippedNote": "Shipped in commit 09966ab (v3.48.2): first-sync fix, destination autocomplete, Horizon flags default ON (Core pack)"
   }
 ]
