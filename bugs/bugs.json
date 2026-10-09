@@ -8116,5 +8116,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-09T07:32:52.009Z",
     "resolutionNote": "Fixed in commit 1d71018 (v3.50.1): admin mode set before sign-in, https/http manifest queries added, portal URL points at the EC2 deployment. Regression test added. Confirmed on a Motorola Edge 70 Fusion over adb."
+  },
+  {
+    "id": "BUG-280",
+    "title": "Flutter: trip header map button did nothing; checklist ticks undone by stale sync; Notes and Chat not live",
+    "description": "Flutter: trip header map button did nothing; checklist ticks undone by stale sync; Notes and Chat not live",
+    "severity": "high",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-09T11:08:38.793Z",
+    "updatedAt": "2026-10-09T11:08:42.075Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-09T11:08:42.075Z",
+    "resolutionNote": "Fixed in commit 75d35f8 (v3.52.0): map button opens a route panel, outbox epoch guard stops stale pulls undoing local ticks, trip shell opens realtime."
   }
 ]

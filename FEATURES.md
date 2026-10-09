@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **106** |
+| **Total Tracked** | **107** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **104** |
+| **✅ Shipped** | **105** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -156,6 +156,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-104** | Flutter web-app palette, pass cards and Superadmin screen | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 19cb764 (v3.50.0). Headless-verified only; device check pending. |
 | **FEAT-105** | Flutter Superadmin screen with single sign-on hand-off to the web Ops Deck | `admin` | `claude-cli` | `claude-cli` | Shipped in commit 1d71018 (v3.50.1). Verified on a Motorola Edge 70 Fusion; the refresh token is shared with the web app, so the Flutter session may need a new sign-in later (decision 282). |
 | **FEAT-106** | Flutter Bento redesign: pastel tiles, new fonts and floating pill navigation | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit ec6e203 (v3.51.0). Verified on a Motorola Edge 70 Fusion; side-by-side comparison with the design board still pending. |
+| **FEAT-107** | Flutter: Summary tab redesign and Add expense on Summary | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 75d35f8 (v3.52.0): boarding-pass Summary hero, progress card, donut spend report, Add expense on Summary. Verified in tests; on-device look pending user review. |
 
 ---
 

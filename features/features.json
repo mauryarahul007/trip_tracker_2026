@@ -1692,5 +1692,21 @@
     "shippedAt": "2026-10-09T09:12:05.384Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped in commit ec6e203 (v3.51.0). Verified on a Motorola Edge 70 Fusion; side-by-side comparison with the design board still pending."
+  },
+  {
+    "id": "FEAT-107",
+    "title": "Flutter: Summary tab redesign and Add expense on Summary",
+    "description": "Flutter: Summary tab redesign and Add expense on Summary",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T11:08:42.268Z",
+    "updatedAt": "2026-10-09T11:08:50.046Z",
+    "shippedAt": "2026-10-09T11:08:50.045Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped in commit 75d35f8 (v3.52.0): boarding-pass Summary hero, progress card, donut spend report, Add expense on Summary. Verified in tests; on-device look pending user review."
   }
 ]
