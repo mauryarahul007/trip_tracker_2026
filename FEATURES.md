@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **103** |
+| **Total Tracked** | **104** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **101** |
+| **✅ Shipped** | **102** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -153,6 +153,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-101** | Flutter app: Horizon redesign, Web platform Wasm SQLite, and Google + Superadmin auth gate | `native` | `rahul` | `rahul` | Shipped |
 | **FEAT-102** | Flutter app: instant trips after sign-in, destination autocomplete, Horizon nav and Spend Insights on by default | `native` | `claude-cli` | `claude-cli` | Shipped in commit 09966ab (v3.48.2): first-sync fix, destination autocomplete, Horizon flags default ON (Core pack) |
 | **FEAT-103** | Pass list sorting by time, flight leg, or traveler name (Flutter Notes tab) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7bfeccb (v3.49.0) behind enablePassSorting (Travel pack, default ON). Headless-verified only; device check pending. |
+| **FEAT-104** | Flutter web-app palette, pass cards and Superadmin screen | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 19cb764 (v3.50.0). Headless-verified only; device check pending. |
 
 ---
 

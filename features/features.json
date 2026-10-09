@@ -1644,5 +1644,21 @@
     "shippedAt": "2026-10-08T19:05:31.581Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped in commit 7bfeccb (v3.49.0) behind enablePassSorting (Travel pack, default ON). Headless-verified only; device check pending."
+  },
+  {
+    "id": "FEAT-104",
+    "title": "Flutter web-app palette, pass cards and Superadmin screen",
+    "description": "Flutter theme tokens now use the web app teal/orange palette in light, dark and AMOLED; Notes passes are cards; superadmin form login lands on /admin which opens the web Ops Deck or switches to the traveller UI.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T06:41:15.345Z",
+    "updatedAt": "2026-10-09T06:41:15.345Z",
+    "shippedAt": "2026-10-09T06:41:15.345Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped in commit 19cb764 (v3.50.0). Headless-verified only; device check pending."
   }
 ]
