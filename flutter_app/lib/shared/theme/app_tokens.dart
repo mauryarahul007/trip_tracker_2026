@@ -63,8 +63,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
     required this.textSecondary,
     required this.textMuted,
     this.shadowBase = const Color(0xFF0B0F1A),
-    this.headerStart = const Color(0xFF17354F),
-    this.headerEnd = const Color(0xFF05080F),
+    this.headerStart = const Color(0xFF0F6F63),
+    this.headerEnd = const Color(0xFF0B5348),
     this.radiusSm = 14.0,
     this.radiusMd = 20.0,
     this.radiusLg = 28.0,
@@ -80,11 +80,11 @@ class AppTokens extends ThemeExtension<AppTokens> {
   LinearGradient get headerGradient =>
       LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [headerStart, headerEnd]);
 
-  /// Horizon primary-CTA gradient: cobalt #2F66F8 -> #2250E6 (white label >= 5:1).
+  /// Primary-CTA gradient: web header teal #0F6F63 -> #0B5348 (white label >= 5:1).
   static const LinearGradient ctaGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF2F66F8), Color(0xFF2250E6)],
+    colors: [Color(0xFF0F6F63), Color(0xFF0B5348)],
   );
 
   static LinearGradient _vertical(List<Color> c, [List<double>? stops]) =>
@@ -218,8 +218,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
     textSecondary: AppColors.darkTextSecondary,
     textMuted: AppColors.darkTextMuted,
     shadowBase: Color(0xFF000000),
-    headerStart: Color(0xFF17354F),
-    headerEnd: Color(0xFF010203),
+    headerStart: Color(0xFF1F6E68),
+    headerEnd: Color(0xFF0D2522),
   );
 
   static const AppTokens amoled = AppTokens(
@@ -240,8 +240,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
     textSecondary: AppColors.darkTextSecondary,
     textMuted: AppColors.darkTextMuted,
     shadowBase: Color(0xFF000000),
-    headerStart: Color(0xFF17354F),
-    headerEnd: Color(0xFF010203),
+    headerStart: Color(0xFF0B2925),
+    headerEnd: Color(0xFF000000),
   );
 
   @override

@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.50.0', '2026-10-09', [
+    'Behind the scenes: Flutter app now uses the web app colours (teal and orange), passes show as cards, and Superadmin login opens a Superadmin screen. No change to the web app.',
+  ]),
   ChangelogEntry('3.49.0', '2026-10-09', [
     'Behind the scenes: Flutter Notes tab no longer overflows on trips with many passes, and passes can be sorted by time, flight leg, or traveler name. No change to the web app.',
   ]),
@@ -40,10 +43,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.44.1', '2026-10-06', [
     'Behind the scenes: groundwork for the upcoming native mobile app (expense form and balances screens). No change to the web app.',
-  ]),
-  ChangelogEntry('3.43.11', '2026-10-05', [
-    'The Amount box in Add Expense now sits immediately below its label for faster entry, with currency suggestions underneath.',
-    'Split presets, quick amount additions, stepper dots, and currency toggles now have enlarged 44px tap targets for easier mobile tapping.',
-    'Restored draft notices are calmer, and the bottom save bar has subtle elevation above scrolling form content.',
   ]),
 ];

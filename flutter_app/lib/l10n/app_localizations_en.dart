@@ -178,6 +178,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authSuperadminLogin => 'Superadmin login';
 
   @override
+  String get adminTitle => 'Superadmin';
+
+  @override
+  String get adminSubtitle => 'The Ops Deck (flags, users, trips, analytics, audit) runs on the web portal.';
+
+  @override
+  String get adminOpenOpsDeck => 'Open Ops Deck';
+
+  @override
+  String get adminViewTraveller => 'View as traveller';
+
+  @override
+  String get adminSignOut => 'Sign out';
+
+  @override
   String get authSuperadminHint => 'Admins only. Everyone else continues with Google.';
 
   @override

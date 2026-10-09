@@ -80,7 +80,7 @@ class _TripMapHeroState extends ConsumerState<TripMapHero> {
         MapRouteLine(
           id: 'route_glow',
           coordinates: points,
-          color: const Color(0xFF2559E6).withValues(alpha: 0.6),
+          color: const Color(0xFF0F6F63).withValues(alpha: 0.6),
           strokeWidth: 6.0,
           glow: true,
         ),

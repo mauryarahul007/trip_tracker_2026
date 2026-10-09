@@ -83,7 +83,7 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
           title: exp.title,
           subtitle: loc.placeName ?? exp.date,
           icon: emoji,
-          color: const Color(0xFF2559E6),
+          color: const Color(0xFF0F6F63),
           onTap: () {
             setState(() => _selectedExpense = exp);
           },
@@ -126,7 +126,7 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2559E6).withValues(alpha: 0.1),
+                          color: const Color(0xFF0F6F63).withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Text(

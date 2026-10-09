@@ -23,6 +23,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 |--------|---------|-----|---------|
 | 2026-10-08 | flutter 3.48.2 | FLUTTER-FIRSTSYNC | [Flutter: first sync, destination autocomplete, Horizon defaults](#flutter-firstsync--trips-after-sign-in-destination-autocomplete-horizon-defaults-v3482) |
 | 2026-10-08 | flutter 3.48 | FLUTTER-HORIZON | [Flutter: Horizon nav and spend insights](#flutter-horizon--horizon-nav-and-spend-insights-v3480) |
+| 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
 | 2026-10-07 | flutter 3.45 | FLUTTER-P12 | [Flutter: accessibility, hardening, release checks](#flutter-p12--flutter-accessibility-hardening-release-checks) |
@@ -2199,6 +2200,27 @@ Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, ne
 
 ### Pass
 - Each mode orders as above, headers only in Leg mode, flag OFF restores the plain list.
+
+## FLUTTER-WEBTHEME — Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics
+
+### Flags
+- None new. Passes cards use `enableTravelPasses`; sort uses `enablePassSorting`.
+
+### Steps
+1. Light, dark and AMOLED themes (Settings): primary actions and headers are teal (`#0F6F63` light, `#3FCBBD` dark), accent orange, surfaces match the web app; no blue remains (trips, balances, maps, Wrapped).
+2. Notes tab with passes: each pass is a card (type icon, route, passenger, flight, date chip, QR + live-status buttons); tapping opens the scanner/status as before.
+3. Login → expand Superadmin login → sign in with a superadmin account: you land on the Superadmin screen, not the traveller UI.
+4. On it: **Open Ops Deck** opens the web portal in the browser; **View as traveller** opens Trips; **Sign out** returns to login.
+5. Superadmin password field: capital letters can be typed; eye icon shows/hides.
+6. Debug builds: a failed Google sign-in shows the red banner plus a small grey line with the raw error.
+
+### Negative checks
+- Non-superadmin account in the Superadmin form → rejected, signed out, no `/admin`.
+- Force-close and reopen as the same superadmin → traveller UI (admin redirect is per login, not persisted).
+- Release builds never show the grey error line.
+
+### Pass
+- Palette matches the web app in all three themes; passes read as cards; superadmin login lands on `/admin`.
 
 ## Template for the next feature
 

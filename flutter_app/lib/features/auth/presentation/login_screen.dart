@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import '../../../data/auth/social_auth.dart';
 import '../../../data/providers.dart';
 import '../../../domain/repositories/repositories.dart';
 import '../../../l10n/l10n_ext.dart';
+import '../../admin/admin_mode.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -36,6 +38,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _busy = false;
   String? _error;
 
+  /// Debug builds only: the raw exception, so a misconfigured OAuth client is diagnosable on-device.
+  String? _detail;
+
   @override
   void dispose() {
     _email.dispose();
@@ -50,13 +55,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() {
       _busy = true;
       _error = null;
+      _detail = null;
     });
     try {
       await action();
     } on AuthException catch (e) {
-      if (mounted) setState(() => _error = authErrorMessage(e.failure, context.l10n));
-    } catch (_) {
-      if (mounted) setState(() => _error = context.l10n.authErrorGeneric);
+      if (mounted) {
+        setState(() {
+          _error = authErrorMessage(e.failure, context.l10n);
+          _detail = kDebugMode ? '$e' : null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = context.l10n.authErrorGeneric;
+          _detail = kDebugMode ? '$e' : null;
+        });
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -69,7 +85,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
     final repo = ref.read(authRepositoryProvider);
-    await _run(() => repo.signInAsSuperadmin(email, _password.text));
+    await _run(() async {
+      await repo.signInAsSuperadmin(email, _password.text);
+      ref.read(adminModeProvider.notifier).set(true);
+    });
   }
 
   Future<void> _google() => _run(() => signInWithGoogle(ref));
@@ -121,6 +140,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 if (paused)
                   _Banner(key: const Key('paused-banner'), text: l10n.authSignInsPaused, color: tokens.warningColor),
                 if (_error != null) _Banner(key: const Key('error-banner'), text: _error!, color: tokens.colorDanger),
+                if (_detail != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: SelectableText(
+                      _detail!,
+                      key: const Key('error-detail'),
+                      style: TextStyle(fontSize: 11, color: tokens.textMuted),
+                    ),
+                  ),
                 AppButton(
                   label: l10n.authContinueGoogle,
                   icon: Icons.g_mobiledata_rounded,

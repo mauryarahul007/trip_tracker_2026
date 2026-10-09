@@ -104,7 +104,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
     final bgCardColor = _isDark ? Colors.white.withValues(alpha: 0.10) : Colors.white;
     final textPrimary = _isDark ? Colors.white : const Color(0xFF0F172A);
     final textSecondary = _isDark ? Colors.white70 : const Color(0xFF64748B);
-    final accentColor = _isDark ? Colors.white : const Color(0xFF2559E6);
+    final accentColor = _isDark ? Colors.white : const Color(0xFF0F6F63);
 
     return Container(
       constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.92),
@@ -813,7 +813,7 @@ class _ThemeTab extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF2559E6) : Colors.transparent,
+          color: selected ? const Color(0xFF0F6F63) : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(

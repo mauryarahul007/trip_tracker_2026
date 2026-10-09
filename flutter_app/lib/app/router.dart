@@ -36,6 +36,8 @@ import '../features/trips/presentation/balances_screen.dart';
 import '../features/trips/presentation/join_screen.dart';
 import '../features/trips/presentation/share_screen.dart';
 import '../features/trips/presentation/trips_screen.dart';
+import '../features/admin/admin_home_screen.dart';
+import '../features/admin/admin_mode.dart';
 import 'auth_state.dart';
 
 final routerKey = GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -59,6 +61,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
   ref.listen(authStateProvider, (_, _) => refresh.value++);
   ref.listen(onboardedProvider, (_, _) => refresh.value++);
+  ref.listen(adminModeProvider, (_, _) => refresh.value++);
   ref.onDispose(refresh.dispose);
 
   return GoRouter(
@@ -73,6 +76,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (auth.isLoading) return loc == '/splash' ? null : '/splash';
       if (loc == '/splash') return auth.isAuthenticated ? '/' : '/login';
       if (!auth.isAuthenticated && !_isPublic(loc)) return '/login';
+      if (auth.isAuthenticated && ref.read(adminModeProvider)) return loc == '/admin' ? null : '/admin';
       if (auth.isAuthenticated) {
         // An invite flow finishes first; the intro carousel can wait.
         if (loc.startsWith('/join')) return null;
@@ -89,6 +93,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/', name: 'trips', builder: (context, state) => const TripsScreen()),
       GoRoute(path: '/balances', name: 'balances', builder: (context, state) => const BalancesScreen()),
       GoRoute(path: '/onboarding', name: 'onboarding', builder: (context, state) => const OnboardingScreen()),
+      GoRoute(path: '/admin', name: 'admin', builder: (context, state) => const AdminHomeScreen()),
       GoRoute(path: '/login', name: 'login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/reset-password',

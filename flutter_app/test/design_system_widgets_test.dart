@@ -36,6 +36,16 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
+    testWidgets('AppTextField password uses visiblePassword keyboard and can be revealed', (tester) async {
+      await tester.pumpWidget(_buildThemedApp(const AppTextField(label: 'Password', obscureText: true)));
+      TextField field() => tester.widget<TextField>(find.byType(TextField));
+      expect(field().keyboardType, TextInputType.visiblePassword);
+      expect(field().obscureText, isTrue);
+      await tester.tap(find.byKey(const Key('password-visibility')));
+      await tester.pump();
+      expect(field().obscureText, isFalse);
+    });
+
     testWidgets('AppTextField renders label and hint', (tester) async {
       final controller = TextEditingController();
       await tester.pumpWidget(

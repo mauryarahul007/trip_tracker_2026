@@ -427,6 +427,36 @@ abstract class AppLocalizations {
   /// **'Superadmin login'**
   String get authSuperadminLogin;
 
+  /// No description provided for @adminTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Superadmin'**
+  String get adminTitle;
+
+  /// No description provided for @adminSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The Ops Deck (flags, users, trips, analytics, audit) runs on the web portal.'**
+  String get adminSubtitle;
+
+  /// No description provided for @adminOpenOpsDeck.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Ops Deck'**
+  String get adminOpenOpsDeck;
+
+  /// No description provided for @adminViewTraveller.
+  ///
+  /// In en, this message translates to:
+  /// **'View as traveller'**
+  String get adminViewTraveller;
+
+  /// No description provided for @adminSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get adminSignOut;
+
   /// No description provided for @authSuperadminHint.
   ///
   /// In en, this message translates to:

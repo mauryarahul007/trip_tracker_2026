@@ -4916,3 +4916,17 @@ This document logs all meaningful technical decisions, library choices, design p
   - On small screens the passes area scrolls inside a fixed share of the height instead of using the full screen.
   - Sort choice resets each visit.
 * **Release Cut:** version bumped to `3.49.0` via `npm run release:minor`.
+
+## 281. Flutter: web palette, pass cards, Superadmin redirect, password field
+
+* **Date:** 2026-10-09
+* **Context:** On a real device the Flutter app looked nothing like the web app on `main`, passes were plain list rows, Superadmin login dropped into the traveller UI, and masked password fields blocked capital letters.
+* **Decisions:**
+  - **Web palette via tokens:** `AppColors` / `AppTokens` now carry the `src/index.css` values (teal `#0F6F63`, orange accent, light/dark/AMOLED surfaces); hero gradients use the web header teal. Fonts were already the same. The Horizon look from decision #276 is superseded; widgets are unchanged.
+  - **Pass cards:** `PassCard` replaces `ListTile` rows (icon, route, passenger, flight, date chip, QR/status buttons).
+  - **Superadmin:** no Flutter admin UI is built. A superadmin form login sets `adminModeProvider`; the router keeps the session on `/admin`, which opens the existing web Ops Deck (`WEB_APP_URL`, default GitHub Pages) or switches to the traveller UI. Memory-only, so a cold start returns to the traveller UI.
+  - **Password fields:** `AppTextField` uses `visiblePassword` and a show/hide toggle.
+  - **Sign-in diagnostics:** debug builds show the raw exception under the error banner.
+* **Trade-offs Accepted:**
+  - Ops Deck needs a second sign-in in the browser. Device verification of the new look is pending.
+* **Release Cut:** version bumped to `3.50.0` via `npm run release:minor`.

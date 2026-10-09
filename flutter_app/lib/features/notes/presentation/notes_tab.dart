@@ -29,9 +29,9 @@ import '../../travel/presentation/live_travel_status_modal.dart';
 import '../../travel/presentation/next_up_capsule.dart';
 import '../../travel/presentation/pass_scanner_modal.dart';
 import '../../travel/presentation/weather_badge.dart';
-import '../../settings/presentation/settings_widgets.dart' show SettingsIcon;
 import '../../members/presentation/members_tab.dart';
 import '../../trip_details/application/trip_nav.dart';
+import 'pass_card.dart';
 
 const _categories = ['packing', 'prep', 'documents', 'medical', 'general'];
 
@@ -174,49 +174,17 @@ class _NotesTabState extends ConsumerState<NotesTab> {
             Builder(
               builder: (ctx) {
                 final statusInfo = getTravelStatusInfo(p);
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: AppCard(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                    child: ListTile(
-                      key: Key('pass-${p.id}'),
-                      contentPadding: EdgeInsets.zero,
-                      leading: SettingsIcon(_passIcon(p.type)),
-                      title: Text(p.title, style: const TextStyle(fontWeight: FontWeight.w700)),
-                      subtitle: Text(
-                        [
-                          p.type,
-                          if (p.origin != null) p.origin,
-                          if (p.destination != null) p.destination,
-                        ].whereType<String>().join(' · '),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (gateScannerOn)
-                            IconButton(
-                              key: Key('pass-scan-${p.id}'),
-                              icon: const Icon(Icons.qr_code_2, size: 20),
-                              tooltip: 'Show Pass / QR',
-                              onPressed: () => PassScannerModal.show(ctx, pass: p),
-                            ),
-                          if (statusInfo != null)
-                            IconButton(
-                              icon: const Icon(Icons.radar, size: 20),
-                              tooltip: 'Live Travel Status',
-                              onPressed: () => LiveTravelStatusModal.show(ctx, statusInfo),
-                            ),
-                        ],
-                      ),
-                      onTap: () {
-                        if (gateScannerOn) {
-                          PassScannerModal.show(ctx, pass: p);
-                        } else if (statusInfo != null) {
-                          LiveTravelStatusModal.show(ctx, statusInfo);
-                        }
-                      },
-                    ),
-                  ),
+                return PassCard(
+                  pass: p,
+                  onScan: gateScannerOn ? () => PassScannerModal.show(ctx, pass: p) : null,
+                  onStatus: statusInfo != null ? () => LiveTravelStatusModal.show(ctx, statusInfo) : null,
+                  onTap: () {
+                    if (gateScannerOn) {
+                      PassScannerModal.show(ctx, pass: p);
+                    } else if (statusInfo != null) {
+                      LiveTravelStatusModal.show(ctx, statusInfo);
+                    }
+                  },
                 );
               },
             ),
@@ -375,14 +343,6 @@ class _NotesTabState extends ConsumerState<NotesTab> {
       ),
     );
   }
-
-  IconData _passIcon(String type) => switch (type) {
-    'flight' => Icons.flight_rounded,
-    'train' => Icons.train_rounded,
-    'stay' => Icons.bed_rounded,
-    'activity' => Icons.local_activity_outlined,
-    _ => Icons.directions_transit_rounded,
-  };
 
   Widget _notes(BuildContext context, List<TripNote> notes) {
     final l10n = context.l10n;
