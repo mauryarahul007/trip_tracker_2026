@@ -34,7 +34,7 @@ void main() {
 
     testApp('requires a name and dates', (tester) async {
       final app = await pumpApp(tester, user: asha);
-      await tester.tap(find.text('New Trip'));
+      await tester.tap(find.byKey(const Key('dock-center'))); // the dock's centre button opens create trip
       await settle(tester);
       await tester.tap(find.widgetWithText(AppButton, 'Create Trip').last);
       await settle(tester);
@@ -46,7 +46,7 @@ void main() {
 
     testApp('creates the trip locally, queues createTrip, opens it', (tester) async {
       await pumpApp(tester, user: asha, overrides: [picker]);
-      await tester.tap(find.text('New Trip'));
+      await tester.tap(find.byKey(const Key('dock-center'))); // the dock's centre button opens create trip
       await settle(tester);
       await tester.enterText(find.byType(TextField).at(1), 'Goa Weekend');
       await tester.enterText(find.byType(TextField).at(2), 'Tokyo');
@@ -74,7 +74,7 @@ void main() {
 
     testApp('destination autocomplete: suggests, picks, sets name and currency', (tester) async {
       await pumpApp(tester, user: asha, overrides: [picker]);
-      await tester.tap(find.text('New Trip'));
+      await tester.tap(find.byKey(const Key('dock-center'))); // the dock's centre button opens create trip
       await settle(tester);
       await tester.enterText(find.byType(TextField).at(2), 'Toky');
       await settle(tester);
@@ -88,7 +88,7 @@ void main() {
 
     testApp('destination autocomplete: offers a did-you-mean fix', (tester) async {
       await pumpApp(tester, user: asha, overrides: [picker]);
-      await tester.tap(find.text('New Trip'));
+      await tester.tap(find.byKey(const Key('dock-center'))); // the dock's centre button opens create trip
       await settle(tester);
       await tester.enterText(find.byType(TextField).at(2), 'Munar');
       await settle(tester);
@@ -99,7 +99,7 @@ void main() {
 
     testApp('blank name falls back to a suggestion from destination + dates', (tester) async {
       await pumpApp(tester, user: asha, overrides: [picker]);
-      await tester.tap(find.text('New Trip'));
+      await tester.tap(find.byKey(const Key('dock-center'))); // the dock's centre button opens create trip
       await settle(tester);
       await tester.enterText(find.byType(TextField).at(2), 'Tokyo');
       await tester.tap(find.byIcon(Icons.date_range_rounded));

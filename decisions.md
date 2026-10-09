@@ -4945,3 +4945,19 @@ This document logs all meaningful technical decisions, library choices, design p
   - The refresh token is shared between the Flutter app and the web app; refresh-token rotation means the Flutter copy may stop working once the web app refreshes it, so the app can ask for a sign-in again later. A one-time-code hand-off through an edge function would avoid this.
   - The first history entry in Chrome keeps the fragment; rotation makes that token useless after the web app first refreshes it.
 * **Release Cut:** version bumped to `3.50.1` via `npm run release:patch`.
+
+## 283. Flutter: Bento redesign (design direction C)
+
+* **Date:** 2026-10-09
+* **Context:** The Flutter UI looked plain next to the web app and the market. Four directions were designed (Wayfarer, Ledger, Bento, Nocturne); Bento was chosen.
+* **Decisions:**
+  - **Theme first:** the palette lives in `AppColors` / `AppTokens` (soft green-grey ground, white surfaces, ink text, five pastel tones as `BentoTones`, deep tinted versions for dark and AMOLED). Fonts are Bricolage Grotesque (titles, numbers) and Figtree (body), bundled as variable fonts with their SIL OFL texts. Existing widgets inherit the look through tokens.
+  - **Shared pieces:** `BentoTile`, `BentoEntrance` (staggered spring-in, off with reduce-motion), a floating pill `AppBottomNav` (selected item shows a lilac pill and its label; icons keep spoken labels), ink primary buttons (cream in dark), lilac selected chips.
+  - **Screens rebuilt as tiles:** Login, Trips, Expenses summary and rows, Add expense amount, Balances, Ledger summary, Members, Passes, Spend insights, Settings profile, Splash, Onboarding.
+  - **No flag:** a restyle, not a new feature; git is the rollback. The Horizon hero gradients stay for a few dark panels (Next Up capsule, receipt scan, Wrapped), retinted to ink.
+  - **Supersedes** decision 276 (Horizon) and 281's palette note.
+* **Trade-offs Accepted:**
+  - Unselected nav items show icons only, so tests find them by semantics label.
+  - The Add expense form body, Ledger lists, Notes checklist and chat, and Trip settings keep their layouts and only get new colours and fonts; they can move to tiles later.
+  - Not yet compared side by side on a device with the design board.
+* **Release Cut:** version bumped to `3.51.0` via `npm run release:minor`.

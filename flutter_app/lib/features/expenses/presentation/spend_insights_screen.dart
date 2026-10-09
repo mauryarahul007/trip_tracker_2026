@@ -13,6 +13,7 @@ import '../../../shared/theme/app_theme.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_surface.dart';
+import '../../../shared/widgets/bento_tile.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
 
@@ -55,16 +56,13 @@ class _Body extends StatelessWidget {
     final biggest = days.isEmpty ? null : days.reduce((a, b) => b.total > a.total ? b : a);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
+      backgroundColor: tokens.bgPage,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         title: const Text('Insights'),
         leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20), onPressed: context.pop),
       ),
       body: DecoratedBox(
-        decoration: BoxDecoration(gradient: AppTokens.slateGradient),
+        decoration: BoxDecoration(color: tokens.bgPage),
         child: Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
@@ -76,12 +74,13 @@ class _Body extends StatelessWidget {
                       child: Text('Add some expenses to see insights.', style: TextStyle(color: tokens.textSecondary)),
                     )
                   : ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 56, 16, 32),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                       children: [
                         Row(
                           children: [
                             Expanded(
                               child: _Kpi(
+                                tone: BentoTone.butter,
                                 label: 'Daily avg',
                                 value: formatMoney(context, avg, currency),
                                 key: const Key('insight-avg'),
@@ -90,6 +89,7 @@ class _Body extends StatelessWidget {
                             const SizedBox(width: 12),
                             Expanded(
                               child: _Kpi(
+                                tone: BentoTone.peach,
                                 label: biggest == null ? 'Biggest day' : 'Biggest day · ${biggest.date.substring(5)}',
                                 value: biggest == null ? '-' : formatMoney(context, biggest.total, currency),
                                 key: const Key('insight-biggest'),
@@ -100,18 +100,23 @@ class _Body extends StatelessWidget {
                         if (burn != null) ...[
                           const SizedBox(height: 12),
                           _Kpi(
+                            tone: BentoTone.mint,
                             label: 'On track for · ${burn.daysElapsed} of ${burn.daysTotal} days',
                             value: formatMoney(context, burn.projectedTotal, currency),
                             key: const Key('insight-projected'),
                           ),
                         ],
                         const SizedBox(height: 20),
-                        SizedBox(
-                          height: 160,
-                          child: CustomPaint(
-                            key: const Key('insight-line'),
-                            painter: _LinePainter([for (final d in days) d.total], tokens.primaryAccent),
-                            size: Size.infinite,
+                        BentoTile(
+                          tone: BentoTone.sky,
+                          padding: const EdgeInsets.all(12),
+                          child: SizedBox(
+                            height: 160,
+                            child: CustomPaint(
+                              key: const Key('insight-line'),
+                              painter: _LinePainter([for (final d in days) d.total], tokens.textPrimary),
+                              size: Size.infinite,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -186,35 +191,29 @@ class _Body extends StatelessWidget {
 }
 
 class _Kpi extends StatelessWidget {
-  const _Kpi({required this.label, required this.value, super.key});
+  const _Kpi({required this.tone, required this.label, required this.value, super.key});
 
+  final BentoTone tone;
   final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Eyebrow(label, color: Colors.white70),
-            const SizedBox(height: 6),
-            Text(value, style: AppTypography.moneyDisplay(fontSize: 26, color: Colors.white)),
-          ],
-        ),
+    return BentoTile(
+      tone: tone,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          BentoTile.eyebrow(context, tone, label),
+          const SizedBox(height: 6),
+          Text(value, style: AppTypography.moneyDisplay(fontSize: 26, color: context.tokens.textPrimary)),
+        ],
       ),
     );
   }
 }
 
-/// Smooth glowing line through the daily totals with a dot on the biggest day.
+/// Smooth line (ink on the sky tile) through the daily totals with a dot on the biggest day.
 class _LinePainter extends CustomPainter {
   const _LinePainter(this.values, this.accent);
 
@@ -245,8 +244,7 @@ class _LinePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round
-      ..shader = LinearGradient(colors: [const Color(0xFF2DD4E0), accent])
-          .createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+      ..color = accent;
     canvas.drawPath(
       path,
       Paint()
@@ -257,7 +255,7 @@ class _LinePainter extends CustomPainter {
     );
     canvas.drawPath(path, stroke);
     final top = values.indexOf(maxV);
-    canvas.drawCircle(pt(top), 5, Paint()..color = Colors.white);
+    canvas.drawCircle(pt(top), 5, Paint()..color = accent);
   }
 
   @override

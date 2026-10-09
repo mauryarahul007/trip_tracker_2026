@@ -76,7 +76,7 @@ class AppCard extends StatelessWidget {
   }
 }
 
-/// Mono, tracked, uppercase section label (Horizon `.eyebrow`).
+/// Tracked, uppercase section label; pass a tile accent colour to tint it (Bento eyebrow).
 class Eyebrow extends StatelessWidget {
   const Eyebrow(this.text, {this.color, super.key});
 
@@ -88,10 +88,10 @@ class Eyebrow extends StatelessWidget {
     return Text(
       text.toUpperCase(),
       style: TextStyle(
-        fontFamily: AppTypography.fontMono,
-        fontSize: 10.5,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 1.1,
+        fontFamily: AppTypography.fontBody,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.8,
         color: color ?? context.tokens.textMuted,
       ),
     );

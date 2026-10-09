@@ -164,8 +164,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           constraints: const BoxConstraints(maxWidth: 280),
           decoration: BoxDecoration(
-            gradient: mine ? AppTokens.ctaGradient : null,
-            color: mine ? null : context.tokens.bgSurface,
+            color: mine ? context.tokens.tones.mint.bg : context.tokens.bgSurface,
             boxShadow: mine ? null : context.tokens.shadowSm,
             borderRadius: BorderRadius.only(
               topLeft: const Radius.circular(20),
@@ -175,7 +174,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
             ),
           ),
           child: DefaultTextStyle.merge(
-            style: TextStyle(color: mine ? Colors.white : context.tokens.textPrimary),
+            style: TextStyle(color: context.tokens.textPrimary),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

@@ -4,18 +4,23 @@ import 'package:flutter/services.dart';
 import 'app_tokens.dart';
 import 'app_typography.dart';
 
-/// Selected chips use a light tint with the accent as text (like [CategoryChip]); the Material
-/// default painted a dark fill under dark text in the light theme (contrast 1.18, found by the
-/// Phase 12 accessibility test).
-ChipThemeData _chipTheme(AppTokens t) => ChipThemeData(
-  backgroundColor: t.bgSurface,
-  selectedColor: t.primaryAccent.withValues(alpha: 0.1),
-  side: BorderSide(color: t.borderColor),
-  shape: const StadiumBorder(),
-  labelStyle: TextStyle(color: t.textPrimary, fontSize: 13, fontWeight: FontWeight.w500),
-  secondaryLabelStyle: TextStyle(color: t.primaryAccent, fontSize: 13, fontWeight: FontWeight.w600),
-  checkmarkColor: t.primaryAccent,
-);
+/// Bento chips: white pills; the selected chip flips to ink with a contrasting label (found by the Phase 12
+/// accessibility test that Material's default painted dark text on a dark fill).
+ChipThemeData _chipTheme(AppTokens t) {
+  // Bento chips: white pills; a selected chip takes the lilac tone (same as the nav's selected pill) and the label
+  // stays ink in every state, so contrast never depends on which style Material picks (ChoiceChip reads
+  // secondaryLabelStyle, the others labelStyle).
+  final label = TextStyle(color: t.textPrimary, fontSize: 14, fontWeight: FontWeight.w700);
+  return ChipThemeData(
+    backgroundColor: t.bgSurface,
+    selectedColor: t.tones.lilac.bg,
+    side: BorderSide.none,
+    shape: const StadiumBorder(),
+    labelStyle: label,
+    secondaryLabelStyle: label,
+    checkmarkColor: t.textPrimary,
+  );
+}
 
 OutlineInputBorder _inputBorder(AppTokens t, Color color, [double width = 1]) => OutlineInputBorder(
   borderRadius: BorderRadius.circular(t.radiusSm + 4), // 18, Horizon field radius
@@ -46,12 +51,18 @@ ThemeData _build(AppTokens t, Brightness brightness) {
     extensions: [t],
     // Web header is a teal gradient with light text; AppBar stays transparent over [AppGradientHeader].
     appBarTheme: AppBarTheme(
-      backgroundColor: t.bgSurface,
+      backgroundColor: t.bgPage,
       foregroundColor: t.textPrimary,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
-      titleTextStyle: textTheme.titleLarge,
+      titleTextStyle: TextStyle(
+        fontFamily: AppTypography.fontTitle,
+        fontSize: 26,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.6,
+        color: t.textPrimary,
+      ),
       systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
     ),
     cardTheme: CardThemeData(
@@ -93,10 +104,10 @@ ThemeData _build(AppTokens t, Brightness brightness) {
         textStyle: const TextStyle(fontWeight: FontWeight.w600),
       ),
     ),
-    // Cobalt FAB: the single primary action per screen.
+    // Ink FAB: the single primary action per screen.
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: AppTokens.ctaGradient.colors.last,
-      foregroundColor: Colors.white,
+      backgroundColor: t.ctaBg,
+      foregroundColor: t.ctaFg,
       elevation: 4,
       shape: const CircleBorder(),
     ),

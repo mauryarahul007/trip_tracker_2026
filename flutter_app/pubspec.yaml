@@ -100,6 +100,13 @@ flutter:
     - family: IBM Plex Sans
       fonts:
         - asset: assets/fonts/plexsans-variable.ttf
+    # Bento design (variable fonts; FontWeight maps to the wght axis). SIL OFL texts sit beside the files.
+    - family: Bricolage Grotesque
+      fonts:
+        - asset: assets/fonts/bricolage-grotesque-variable.ttf
+    - family: Figtree
+      fonts:
+        - asset: assets/fonts/figtree-variable.ttf
     - family: IBM Plex Mono
       fonts:
         - asset: assets/fonts/plexmono-400.ttf

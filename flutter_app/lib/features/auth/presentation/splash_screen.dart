@@ -11,21 +11,18 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.tokens;
     return AppScaffold(
-      backgroundColor: const Color(0xFF05080F),
+      backgroundColor: t.bgPage,
       body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: AppTokens.nightSkyGradient),
+        decoration: BoxDecoration(color: t.bgPage),
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const BrandMark(size: 88),
               const SizedBox(height: 32),
-              SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white.withValues(alpha: 0.8)),
-              ),
+              SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: t.textPrimary)),
             ],
           ),
         ),

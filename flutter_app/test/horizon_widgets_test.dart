@@ -26,7 +26,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('Members'));
+    await tester.tap(find.bySemanticsLabel('Members')); // Bento: only the selected item shows its label
     expect(tapped, 2);
     expect(find.byType(Badge), findsOneWidget);
   });
@@ -50,7 +50,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('dock-center')));
     expect(centre, 1);
-    await tester.tap(find.text('Members'));
+    await tester.tap(find.bySemanticsLabel('Members')); // Bento: only the selected item shows its label
     expect(tapped, 2);
   });
 

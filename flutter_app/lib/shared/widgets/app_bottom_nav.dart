@@ -1,6 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
-import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../theme/app_tokens.dart';
@@ -16,9 +13,9 @@ class AppNavItem {
   final Key? badgeKey;
 }
 
-/// Horizon bottom navigation. iOS / web: floating frosted dock with a tinted pill behind the
-/// selected item. Android: Material 3 [NavigationBar] (pill indicator). Pass [forceDock] to
-/// pick a style explicitly (used by tests and previews).
+/// Bento bottom navigation: a floating white pill; the selected item grows a lilac pill with its label,
+/// the others show only their icon, and the optional centre action is an ink circle. [forceDock]: false
+/// selects the plain Material 3 [NavigationBar] (tests and previews).
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({
     required this.items,
@@ -35,13 +32,12 @@ class AppBottomNav extends StatelessWidget {
   final ValueChanged<int> onTap;
   final bool? forceDock;
 
-  /// Raised round button between the two halves of the dock (iOS / web only; Material 3 keeps
-  /// the screen's own extended FAB instead).
+  /// Round button between the two halves of the dock.
   final VoidCallback? centerAction;
   final String? centerLabel;
 
-  /// True when the frosted dock (not the Material 3 bar) is used on this platform.
-  static bool get dockByDefault => kIsWeb || defaultTargetPlatform != TargetPlatform.android;
+  /// The Bento pill is used on every platform.
+  static bool get dockByDefault => true;
 
   bool get _useDock => forceDock ?? dockByDefault;
 
@@ -96,37 +92,24 @@ class _Dock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    final radius = BorderRadius.circular(32);
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
         child: DecoratedBox(
-          decoration: BoxDecoration(borderRadius: radius, boxShadow: t.shadowLg),
-          child: ClipRRect(
-            borderRadius: radius,
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: t.bgSurface.withValues(alpha: 0.9),
-                  borderRadius: radius,
-                  border: Border.all(color: t.borderColor.withValues(alpha: 0.7)),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: Row(
-                    children: [
-                      for (var i = 0; i < items.length; i++) ...[
-                        if (centerAction != null && i == items.length ~/ 2)
-                          _DockCenter(label: centerLabel, onTap: centerAction!),
-                        Expanded(
-                          child: _DockItem(item: items[i], selected: i == currentIndex, onTap: () => onTap(i)),
-                        ),
-                      ],
-                    ],
+          decoration: BoxDecoration(color: t.bgSurface, borderRadius: BorderRadius.circular(36), boxShadow: t.shadowLg),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                for (var i = 0; i < items.length; i++) ...[
+                  if (centerAction != null && i == items.length ~/ 2)
+                    _DockCenter(label: centerLabel, onTap: centerAction!),
+                  Expanded(
+                    flex: i == currentIndex ? 2 : 1,
+                    child: _DockItem(item: items[i], selected: i == currentIndex, onTap: () => onTap(i)),
                   ),
-                ),
-              ),
+                ],
+              ],
             ),
           ),
         ),
@@ -143,6 +126,7 @@ class _DockCenter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.tokens;
     return Semantics(
       button: true,
       label: label,
@@ -151,11 +135,11 @@ class _DockCenter extends StatelessWidget {
         onTap: onTap,
         customBorder: const CircleBorder(),
         child: Container(
-          width: 56,
-          height: 56,
-          margin: const EdgeInsets.symmetric(horizontal: 6),
-          decoration: const BoxDecoration(shape: BoxShape.circle, gradient: AppTokens.ctaGradient),
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+          width: 54,
+          height: 54,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: t.ctaBg),
+          child: Icon(Icons.add_rounded, color: t.ctaFg, size: 28),
         ),
       ),
     );
@@ -172,37 +156,43 @@ class _DockItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    final color = selected ? t.primaryAccent : t.textMuted;
+    final lilac = t.tones.lilac;
+    // Ink on the lilac pill, muted ink on the bare dock.
+    final color = selected ? t.textPrimary : t.textMuted;
     return Semantics(
       button: true,
       selected: selected,
       label: item.label,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(28),
         child: AnimatedContainer(
           duration: t.durationNormal,
           curve: t.easeSpring,
           constraints: const BoxConstraints(minHeight: 52),
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 6),
           decoration: BoxDecoration(
-            color: selected ? t.primaryAccent.withValues(alpha: 0.12) : Colors.transparent,
-            borderRadius: BorderRadius.circular(26),
+            color: selected ? lilac.bg : Colors.transparent,
+            borderRadius: BorderRadius.circular(28),
           ),
-          child: Column(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconTheme(
                 data: IconThemeData(color: color, size: 24),
                 child: _icon(item, color: color),
               ),
-              const SizedBox(height: 2),
-              Text(
-                item.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, fontWeight: selected ? FontWeight.w700 : FontWeight.w600, color: color),
-              ),
+              if (selected) ...[
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    item.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

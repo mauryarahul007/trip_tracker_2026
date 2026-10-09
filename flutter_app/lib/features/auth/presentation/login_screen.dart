@@ -11,7 +11,7 @@ import '../../admin/admin_mode.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/brand_mark.dart';
+import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/app_surface.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -124,25 +124,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Center(child: BrandMark()),
-                const SizedBox(height: 20),
+                const _TileCollage(),
+                const SizedBox(height: 28),
                 Text(
                   l10n.authWelcome,
-                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: AppTypography.fontTitle,
-                    fontSize: 30,
+                    fontSize: 36,
+                    height: 1.05,
                     fontWeight: FontWeight.w800,
                     color: tokens.textPrimary,
-                    letterSpacing: -0.9,
+                    letterSpacing: -1.0,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.authSubtitle,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 15, color: tokens.textSecondary),
-                ),
+                const SizedBox(height: 10),
+                Text(l10n.authSubtitle, style: TextStyle(fontSize: 16, height: 1.4, color: tokens.textSecondary)),
                 const SizedBox(height: 24),
                 if (paused)
                   _Banner(key: const Key('paused-banner'), text: l10n.authSignInsPaused, color: tokens.warningColor),
@@ -159,7 +155,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 AppButton(
                   label: l10n.authContinueGoogle,
                   icon: Icons.g_mobiledata_rounded,
-                  variant: AppButtonVariant.secondary,
                   isFullWidth: true,
                   onPressed: (paused || _busy) ? null : _google,
                 ),
@@ -217,6 +212,99 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Decorative Bento collage above the sign-in form: what the app does, one pastel tile each.
+/// Tiles size to their content (text scale safe); each row stretches to its tallest tile.
+class _TileCollage extends StatelessWidget {
+  const _TileCollage();
+
+  Widget _tile(BuildContext context, BentoTone tone, IconData icon, String label, {double minHeight = 96}) {
+    return BentoTile(
+      tone: tone,
+      padding: const EdgeInsets.all(14),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: minHeight - 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(icon, size: 26),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: AppTypography.fontTitle,
+                fontSize: 18,
+                height: 1.05,
+                fontWeight: FontWeight.w800,
+                color: context.tokens.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Column(
+      key: const Key('login-tiles'),
+      children: [
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(flex: 3, child: _tile(context, BentoTone.mint, Icons.receipt_long_rounded, l10n.authTileSplit)),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 2,
+                child: _tile(context, BentoTone.butter, Icons.flight_takeoff_rounded, l10n.authTileFlights),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(flex: 2, child: _tile(context, BentoTone.lilac, Icons.groups_rounded, l10n.authTileCrew)),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 3,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: _tile(
+                        context,
+                        BentoTone.peach,
+                        Icons.payments_rounded,
+                        l10n.authTileSettle,
+                        minHeight: 80,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Expanded(
+                      child: _tile(
+                        context,
+                        BentoTone.sky,
+                        Icons.cloud_off_rounded,
+                        l10n.authTileOffline,
+                        minHeight: 80,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -339,12 +427,12 @@ Widget _splitOnWide(BuildContext context, Widget form) {
   if (MediaQuery.sizeOf(context).width < _kSplitBreakpoint) return form;
   return Row(
     children: [
-      const Expanded(
+      Expanded(
         child: DecoratedBox(
-          key: Key('login-hero'),
-          decoration: BoxDecoration(gradient: AppTokens.nightSkyGradient),
+          key: const Key('login-hero'),
+          decoration: BoxDecoration(color: context.tokens.tones.mint.bg),
           child: Padding(
-            padding: EdgeInsets.all(56),
+            padding: const EdgeInsets.all(56),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,12 +440,19 @@ Widget _splitOnWide(BuildContext context, Widget form) {
                 // ponytail: English-only pitch until the ARB files are regenerated.
                 Text(
                   'Plan it.\nSplit it.\nRemember it.',
-                  style: TextStyle(fontSize: 56, height: 1.02, fontWeight: FontWeight.w800, color: Colors.white),
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontTitle,
+                    fontSize: 56,
+                    height: 1.02,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -1.5,
+                    color: context.tokens.textPrimary,
+                  ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   'The shared wallet for every trip with friends: expenses, passes and memories in one place.',
-                  style: TextStyle(fontSize: 17, color: Colors.white70, height: 1.4),
+                  style: TextStyle(fontSize: 17, color: context.tokens.textSecondary, height: 1.4),
                 ),
               ],
             ),

@@ -10,8 +10,10 @@ import '../../../domain/models/member.dart';
 import '../../../domain/models/trip.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/app_surface.dart';
+import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../../expenses/application/money_providers.dart';
@@ -60,18 +62,24 @@ class BalancesScreen extends ConsumerWidget {
             : ListView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
                 children: [
-                  HeroSurface(
-                    kind: SurfaceKind.ember,
+                  BentoTile(
+                    tone: BentoTone.mint,
+                    padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Eyebrow(l10n.ledAcrossTrips, color: Colors.white70),
+                        BentoTile.eyebrow(context, BentoTone.mint, l10n.ledAcrossTrips),
                         const SizedBox(height: 12),
                         if (total.isEmpty)
-                          const Text(
+                          Text(
                             'All settled up',
-                            key: Key('balances-even'),
-                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+                            key: const Key('balances-even'),
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontTitle,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w800,
+                              color: tokens.textPrimary,
+                            ),
                           )
                         else
                           for (final n in total) _NetRow(n, light: true),
@@ -84,8 +92,9 @@ class BalancesScreen extends ConsumerWidget {
                   for (final t in trips)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
-                      child: AppCard(
+                      child: BentoTile(
                         key: Key('balance-trip-${t.id}'),
+                        tone: toneFor(t.id),
                         onTap: () => context.push('/trip/${t.id}/ledger'),
                         child: Row(
                           children: [
@@ -119,6 +128,7 @@ class BalancesScreen extends ConsumerWidget {
 class _NetRow extends StatelessWidget {
   const _NetRow(this.net, {this.light = false});
 
+  /// [light] is the big figure at the top of the screen; otherwise a compact row inside a trip tile.
   final CrossTripNet net;
   final bool light;
 
@@ -127,7 +137,7 @@ class _NetRow extends StatelessWidget {
     final tokens = context.tokens;
     final owed = net.net > 0;
     final amount = formatMoney(context, net.net.abs(), net.currency);
-    final color = light ? Colors.white : (owed ? tokens.successColor : tokens.dangerColor);
+    // Ink on pastel tiles for every figure; the sign and the words carry meaning, not colour.
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Text.rich(
@@ -135,11 +145,17 @@ class _NetRow extends StatelessWidget {
           children: [
             TextSpan(
               text: '${owed ? '+' : '-'}$amount',
-              style: TextStyle(fontSize: light ? 32 : 16, fontWeight: FontWeight.w800, color: color),
+              style: TextStyle(
+                fontFamily: AppTypography.fontTitle,
+                fontSize: light ? 36 : 17,
+                fontWeight: FontWeight.w800,
+                letterSpacing: light ? -1 : 0,
+                color: tokens.textPrimary,
+              ),
             ),
             TextSpan(
               text: owed ? '  you are owed' : '  you owe',
-              style: TextStyle(fontSize: light ? 13 : 12, color: light ? Colors.white70 : tokens.textMuted),
+              style: TextStyle(fontSize: light ? 14 : 12, fontWeight: FontWeight.w600, color: tokens.textSecondary),
             ),
           ],
         ),

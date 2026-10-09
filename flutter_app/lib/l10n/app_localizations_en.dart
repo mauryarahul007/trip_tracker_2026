@@ -100,6 +100,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authSubtitle => 'Plan trips, split expenses, and travel seamlessly together.';
 
   @override
+  String get authTileSplit => 'Split every cost';
+
+  @override
+  String get authTileFlights => 'Boarding passes';
+
+  @override
+  String get authTileSettle => 'Settle up fast';
+
+  @override
+  String get authTileOffline => 'Works offline';
+
+  @override
+  String get authTileCrew => 'Plan with your crew';
+
+  @override
   String get authResetPassword => 'Reset Password';
 
   @override

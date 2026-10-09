@@ -28,6 +28,7 @@ import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_surface.dart';
+import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../trip_details/application/trip_nav.dart';
@@ -151,21 +152,21 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           Padding(
             key: const Key('sticky-balance'),
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: HeroSurface(
-              kind: SurfaceKind.ember,
+            child: BentoTile(
+              // Mint when you are owed, peach when you owe, sky when even.
+              tone: myBalance.balance.abs() < 0.01
+                  ? BentoTone.sky
+                  : (myBalance.balance > 0 ? BentoTone.mint : BentoTone.peach),
               padding: EdgeInsets.all(compact ? 14 : 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  BentoTile.eyebrow(
+                    context,
+                    myBalance.balance.abs() < 0.01
+                        ? BentoTone.sky
+                        : (myBalance.balance > 0 ? BentoTone.mint : BentoTone.peach),
                     l10n.ledYou,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontMono,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1.0,
-                      color: Colors.white.withValues(alpha: 0.65),
-                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -174,12 +175,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                         : myBalance.balance > 0
                         ? l10n.ledOwed(formatMoney(context, myBalance.balance, cur))
                         : l10n.ledOwes(formatMoney(context, -myBalance.balance, cur)),
-                    style: AppTypography.moneyDisplay(
-                      fontSize: compact ? 24 : 30,
-                      color: myBalance.balance.abs() < 0.01
-                          ? Colors.white
-                          : (myBalance.balance > 0 ? const Color(0xFF4ADE80) : const Color(0xFFFF9A9D)),
-                    ),
+                    style: AppTypography.moneyDisplay(fontSize: compact ? 26 : 34, color: tokens.textPrimary),
                   ),
                 ],
               ),
@@ -215,17 +211,22 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                             color: b.balance > 0 ? tokens.colorSuccess : tokens.colorDanger,
                             track: tokens.borderColor,
                           ),
-                    trailing: Text(
-                      b.balance.abs() < 0.01
-                          ? l10n.ledEven
-                          : b.balance > 0
-                          ? l10n.ledOwed(formatMoney(context, b.balance, cur))
-                          : l10n.ledOwes(formatMoney(context, -b.balance, cur)),
-                      style: TextStyle(
-                        color: b.balance.abs() < 0.01
-                            ? tokens.textSecondary
-                            : (b.balance > 0 ? tokens.colorSuccess : tokens.colorDanger),
-                        fontWeight: FontWeight.w600,
+                    // Bounded so a long amount wraps instead of consuming the tile (200% text, wide fonts).
+                    trailing: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 150),
+                      child: Text(
+                        b.balance.abs() < 0.01
+                            ? l10n.ledEven
+                            : b.balance > 0
+                            ? l10n.ledOwed(formatMoney(context, b.balance, cur))
+                            : l10n.ledOwes(formatMoney(context, -b.balance, cur)),
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          color: b.balance.abs() < 0.01
+                              ? tokens.textSecondary
+                              : (b.balance > 0 ? tokens.colorSuccess : tokens.colorDanger),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -255,10 +256,13 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                       dense: compact,
                       title: Text(l10n.ledTransfer(t.fromLabel, t.toLabel)),
                       subtitle: Text(formatMoney(context, t.amount, cur)),
-                      trailing: AppButton(
-                        key: Key('settle-$i'),
-                        label: l10n.ledSettle,
-                        onPressed: () => _settle(context, t),
+                      trailing: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 130),
+                        child: AppButton(
+                          key: Key('settle-$i'),
+                          label: l10n.ledSettle,
+                          onPressed: () => _settle(context, t),
+                        ),
                       ),
                     ),
               ]),

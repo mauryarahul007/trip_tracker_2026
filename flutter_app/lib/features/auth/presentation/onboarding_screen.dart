@@ -39,11 +39,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     ];
     final last = _index == steps.length - 1;
 
-    const onDark = Colors.white;
+    final onDark = tokens.textPrimary;
+    const stepTones = [BentoTone.mint, BentoTone.butter, BentoTone.peach];
     return AppScaffold(
-      backgroundColor: const Color(0xFF05080F),
+      backgroundColor: tokens.bgPage,
       body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: AppTokens.nightSkyGradient),
+        decoration: BoxDecoration(color: tokens.bgPage),
         child: SafeArea(
           child: Column(
             children: [
@@ -51,7 +52,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: _finish,
-                  style: TextButton.styleFrom(foregroundColor: Colors.white.withValues(alpha: 0.8)),
+                  style: TextButton.styleFrom(foregroundColor: tokens.textSecondary),
                   child: Text(l10n.onboardingSkip),
                 ),
               ),
@@ -70,14 +71,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           height: 148,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [
-                                tokens.primaryAccent.withValues(alpha: 0.55),
-                                tokens.primaryAccent.withValues(alpha: 0.08),
-                              ],
-                            ),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+                            color: tokens.tones[stepTones[i]].bg,
+                            borderRadius: BorderRadius.circular(48),
                           ),
                           child: Text(steps[i].$1, style: const TextStyle(fontSize: 64)),
                         ),
@@ -85,11 +80,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         Text(
                           steps[i].$2,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: AppTypography.fontTitle,
-                            fontSize: 28,
+                            fontSize: 30,
                             fontWeight: FontWeight.w800,
-                            letterSpacing: -0.7,
+                            letterSpacing: -0.8,
                             color: onDark,
                           ),
                         ),
@@ -97,7 +92,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         Text(
                           steps[i].$3,
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, color: Colors.white.withValues(alpha: 0.7), height: 1.45),
+                          style: TextStyle(fontSize: 16, color: tokens.textSecondary, height: 1.45),
                         ),
                       ],
                     ),
@@ -114,7 +109,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       width: i == _index ? 22 : 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: i == _index ? Colors.white : Colors.white.withValues(alpha: 0.25),
+                        color: i == _index ? tokens.textPrimary : tokens.textPrimary.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),

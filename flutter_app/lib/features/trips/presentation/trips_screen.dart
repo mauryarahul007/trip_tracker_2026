@@ -19,6 +19,7 @@ import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/offline_banner.dart';
@@ -355,7 +356,11 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                         children: [
-                          for (final t in active) _card(t, owner(t), featured: t.id == heroId),
+                          for (final (i, t) in active.indexed)
+                            BentoEntrance(
+                              index: i,
+                              child: _card(t, owner(t), featured: t.id == heroId),
+                            ),
                           if (archived.isNotEmpty)
                             ExpansionTile(
                               tilePadding: EdgeInsets.zero,

@@ -27,7 +27,7 @@ import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
-import '../../../shared/widgets/app_surface.dart' show AppCard;
+import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../trip_details/application/trip_nav.dart';
@@ -359,7 +359,8 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                   // Amount (+ currency)
                   section(
                     l10n.formAmount,
-                    AppCard(
+                    BentoTile(
+                      tone: BentoTone.butter,
                       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,

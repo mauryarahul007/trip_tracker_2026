@@ -23,6 +23,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 |--------|---------|-----|---------|
 | 2026-10-08 | flutter 3.48.2 | FLUTTER-FIRSTSYNC | [Flutter: first sync, destination autocomplete, Horizon defaults](#flutter-firstsync--trips-after-sign-in-destination-autocomplete-horizon-defaults-v3482) |
 | 2026-10-08 | flutter 3.48 | FLUTTER-HORIZON | [Flutter: Horizon nav and spend insights](#flutter-horizon--horizon-nav-and-spend-insights-v3480) |
+| 2026-10-09 | flutter (unreleased) | FLUTTER-BENTO | [Flutter: Bento redesign (P0 to P5)](#flutter-bento--flutter-bento-redesign-p0-to-p5) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -2223,6 +2224,31 @@ Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, ne
 
 ### Pass
 - Palette matches the web app in all three themes; passes read as cards; superadmin login lands on `/admin`.
+
+## FLUTTER-BENTO — Flutter: Bento redesign (P0 to P5)
+
+### Flags
+- None new. Existing flags still gate their features; `enableHorizonNav` keeps the home dock.
+
+### Steps
+1. Light theme: green-grey ground, white surfaces, ink text, five pastel tiles (mint, butter, peach, sky, lilac); fonts are Bricolage Grotesque (titles, numbers) and Figtree (body).
+2. Switch Settings → Appearance to Dark and Black: tiles become deep tinted versions, text stays readable, buttons turn cream.
+3. Login: tile collage, large headline, ink Google button; Superadmin login still works.
+4. Trips: each trip is a tile (the trip happening today is the large mint tile with the flight arc); tiles spring in one after another (not with reduce-motion on).
+5. Bottom dock: floating white pill, the selected item shows its lilac pill with its label, others show only an icon, the centre ink button creates a trip. Every icon has a spoken label (TalkBack).
+6. Trip: header on the ground colour with an ink title; Expenses summary is mint/butter/peach tiles; each expense is a tile tinted by its category; Add expense has a butter amount tile and lilac selected chips.
+7. Balances (cross-trip and per trip): mint/peach/sky "you" tile, ink text, trip tiles coloured per trip.
+8. Members: one tile per person, groups in lilac.
+9. Notes → Passes: each pass is a tinted tile (same flight, same colour); Spend insights: butter/peach/mint KPI tiles and a sky chart tile.
+10. Settings: mint profile tile, section labels in Figtree; Onboarding and Splash on the ground colour.
+
+### Negative checks
+- Large text (200%) and right-to-left: no yellow overflow stripes on Login, Trips, Expenses, Balances, Members.
+- Wide window (900px+): side rail still shows, tiles stay a readable width.
+- Reduce motion: tiles appear without the spring-in.
+
+### Pass
+- Same colours and type in all three themes; every screen above reads as tiles on the ground; no overflow; all labels contrast-checked by the a11y test.
 
 ## Template for the next feature
 

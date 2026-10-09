@@ -18,7 +18,7 @@ import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_surface.dart';
+import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -241,11 +241,13 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         isConflict: conflicts.contains(e.id),
         onTap: () => _openDetail(e),
       );
-      final body = DecoratedBox(
-        decoration: BoxDecoration(
-          border: lastInGroup ? null : Border(bottom: BorderSide(color: tokens.borderColor)),
+      // Bento: each expense is a rounded tile tinted by its category.
+      final body = Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(tokens.radiusMd),
+          child: ColoredBox(color: tokens.tones[toneFor(e.category)].bg, child: row),
         ),
-        child: row,
       );
       if (!canManageExpense(e, isAdmin: isAdmin, userId: uid)) return body;
       return ExpenseSwipe(
@@ -269,7 +271,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
           semantics: l10n.expDaySemantics(g.date, g.expenses.length, formatMoney(context, g.total, trip.baseCurrency)),
           onTap: () =>
               setState(() => _expandedDays.contains(g.date) ? _expandedDays.remove(g.date) : _expandedDays.add(g.date)),
-          background: tokens.bgSurface,
+          background: tokens.bgPage,
           textColor: tokens.textPrimary,
           mutedColor: tokens.textMuted,
         ),
@@ -331,55 +333,66 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             child: GestureDetector(
               key: const Key('summary-card'),
               onTap: _flag(ref, 'enableSpendInsights', id) ? () => context.push('/trip/$id/insights') : null,
-              child: HeroSurface(
-                kind: SurfaceKind.ember,
-                padding: EdgeInsets.all(_flag(ref, 'enableCompactSummary', id) ? 14 : 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.expTotalSpent,
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontMono,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.0,
-                        color: Colors.white.withValues(alpha: 0.65),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      formatMoney(context, totals.totalSpent, trip.baseCurrency),
-                      key: const Key('stat-total'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.moneyDisplay(
-                        fontSize: _flag(ref, 'enableCompactSummary', id) ? 30 : 40,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
+              child: Column(
+                children: [
+                  BentoTile(
+                    tone: BentoTone.mint,
+                    padding: EdgeInsets.all(_flag(ref, 'enableCompactSummary', id) ? 14 : 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
+                        BentoTile.eyebrow(context, BentoTone.mint, l10n.expTotalSpent),
+                        const SizedBox(height: 4),
+                        SizedBox(
+                          width: double.infinity,
+                          child: Text(
+                            formatMoney(context, totals.totalSpent, trip.baseCurrency),
+                            key: const Key('stat-total'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.moneyDisplay(
+                              fontSize: _flag(ref, 'enableCompactSummary', id) ? 30 : 40,
+                              color: tokens.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: BentoTile(
+                          tone: BentoTone.butter,
+                          padding: const EdgeInsets.all(14),
                           child: _Stat(
+                            tone: BentoTone.butter,
                             label: l10n.expPerPerson,
                             value: formatMoney(context, totals.averageCost, trip.baseCurrency),
                             valueKey: const Key('stat-avg'),
                           ),
                         ),
-                        if (totals.top != null)
-                          Expanded(
+                      ),
+                      if (totals.top != null) ...[
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: BentoTile(
+                            tone: BentoTone.peach,
+                            padding: const EdgeInsets.all(14),
                             child: _Stat(
+                              tone: BentoTone.peach,
                               label: l10n.expTopCategory,
                               value: '${totals.top!.name} ${totals.top!.percentage.round()}%',
                               valueKey: const Key('stat-top'),
                             ),
                           ),
+                        ),
                       ],
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -640,24 +653,34 @@ class _OtherTrips extends ConsumerWidget {
 }
 
 class _Stat extends StatelessWidget {
-  const _Stat({required this.label, required this.value, required this.valueKey});
+  const _Stat({required this.tone, required this.label, required this.value, required this.valueKey});
+  final BentoTone tone;
   final String label;
   final String value;
   final Key valueKey;
 
   @override
   Widget build(BuildContext context) {
+    final t = context.tokens;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.6))),
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: t.tones[tone].accent),
+        ),
         const SizedBox(height: 2),
         Text(
           value,
           key: valueKey,
-          maxLines: 1,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+          style: TextStyle(
+            fontFamily: AppTypography.fontTitle,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: t.textPrimary,
+          ),
         ),
       ],
     );

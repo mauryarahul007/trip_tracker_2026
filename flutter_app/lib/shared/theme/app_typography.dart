@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 class AppTypography {
-  static const String fontTitle = 'Plus Jakarta Sans';
-  static const String fontBody = 'IBM Plex Sans';
+  static const String fontTitle = 'Bricolage Grotesque';
+  static const String fontBody = 'Figtree';
   static const String fontMono = 'IBM Plex Mono';
 
-  /// Horizon type scale: display numerals / titles in Jakarta, body in Plex, labels + eyebrows in Plex Mono.
+  /// Bento type scale: titles and big numerals in Bricolage Grotesque, body and labels in Figtree.
   static TextTheme createTextTheme(Color textPrimary, Color textSecondary, Color textMuted) {
     return TextTheme(
       displayLarge: TextStyle(
@@ -44,10 +44,10 @@ class AppTypography {
       labelLarge: TextStyle(fontFamily: fontBody, fontSize: 14, fontWeight: FontWeight.w600, color: textPrimary),
       labelMedium: TextStyle(fontFamily: fontBody, fontSize: 12, fontWeight: FontWeight.w500, color: textMuted),
       labelSmall: TextStyle(
-        fontFamily: fontMono,
-        fontSize: 10.5,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 1.0,
+        fontFamily: fontBody,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.7,
         color: textMuted,
       ),
     );
@@ -63,7 +63,7 @@ class AppTypography {
     );
   }
 
-  /// Big money figure (Jakarta 800, tight tracking, tabular).
+  /// Big money figure (Bricolage 800, tight tracking, tabular).
   static TextStyle moneyDisplay({double fontSize = 44, Color? color}) => TextStyle(
     fontFamily: fontTitle,
     fontSize: fontSize,

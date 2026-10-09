@@ -2,6 +2,72 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
+/// The five Bento tile colours.
+enum BentoTone { mint, butter, peach, sky, lilac }
+
+/// One tint: its [bg] and the deeper [accent] used for the small label on it (text on it stays ink).
+@immutable
+class BentoTint {
+  const BentoTint(this.bg, this.accent);
+  BentoTint.of(List<Color> c) : this(c[0], c[1]);
+  final Color bg;
+  final Color accent;
+
+  static BentoTint lerp(BentoTint a, BentoTint b, double t) =>
+      BentoTint(Color.lerp(a.bg, b.bg, t) ?? a.bg, Color.lerp(a.accent, b.accent, t) ?? a.accent);
+}
+
+@immutable
+class BentoTones {
+  const BentoTones({
+    required this.mint,
+    required this.butter,
+    required this.peach,
+    required this.sky,
+    required this.lilac,
+  });
+
+  final BentoTint mint, butter, peach, sky, lilac;
+
+  BentoTint operator [](BentoTone tone) => switch (tone) {
+    BentoTone.mint => mint,
+    BentoTone.butter => butter,
+    BentoTone.peach => peach,
+    BentoTone.sky => sky,
+    BentoTone.lilac => lilac,
+  };
+
+  static BentoTones lerp(BentoTones a, BentoTones b, double t) => BentoTones(
+    mint: BentoTint.lerp(a.mint, b.mint, t),
+    butter: BentoTint.lerp(a.butter, b.butter, t),
+    peach: BentoTint.lerp(a.peach, b.peach, t),
+    sky: BentoTint.lerp(a.sky, b.sky, t),
+    lilac: BentoTint.lerp(a.lilac, b.lilac, t),
+  );
+
+  static final BentoTones light = BentoTones(
+    mint: BentoTint.of(AppColors.tileMint),
+    butter: BentoTint.of(AppColors.tileButter),
+    peach: BentoTint.of(AppColors.tilePeach),
+    sky: BentoTint.of(AppColors.tileSky),
+    lilac: BentoTint.of(AppColors.tileLilac),
+  );
+  static final BentoTones dark = BentoTones(
+    mint: BentoTint.of(AppColors.darkTileMint),
+    butter: BentoTint.of(AppColors.darkTileButter),
+    peach: BentoTint.of(AppColors.darkTilePeach),
+    sky: BentoTint.of(AppColors.darkTileSky),
+    lilac: BentoTint.of(AppColors.darkTileLilac),
+  );
+  static final BentoTones amoled = BentoTones(
+    mint: BentoTint.of(AppColors.amoledTileMint),
+    butter: BentoTint.of(AppColors.amoledTileButter),
+    peach: BentoTint.of(AppColors.amoledTilePeach),
+    sky: BentoTint.of(AppColors.amoledTileSky),
+    lilac: BentoTint.of(AppColors.amoledTileLilac),
+  );
+}
+
 @immutable
 class AppTokens extends ThemeExtension<AppTokens> {
   final Color bgPage;
@@ -23,6 +89,11 @@ class AppTokens extends ThemeExtension<AppTokens> {
   final Color textPrimary;
   final Color textSecondary;
   final Color textMuted;
+
+  /// Bento pastel tiles and the solid primary-button colours (ink on light, cream on dark).
+  final BentoTones tones;
+  final Color ctaBg;
+  final Color ctaFg;
 
   // Elevation base + header gradient (index.css --glass-shadow / --header-gradient-solid)
   final Color shadowBase;
@@ -62,11 +133,14 @@ class AppTokens extends ThemeExtension<AppTokens> {
     required this.textPrimary,
     required this.textSecondary,
     required this.textMuted,
+    required this.tones,
+    required this.ctaBg,
+    required this.ctaFg,
     this.shadowBase = const Color(0xFF0B0F1A),
     this.headerStart = const Color(0xFF0F6F63),
     this.headerEnd = const Color(0xFF0B5348),
-    this.radiusSm = 14.0,
-    this.radiusMd = 20.0,
+    this.radiusSm = 16.0,
+    this.radiusMd = 24.0,
     this.radiusLg = 28.0,
     this.radiusFull = 999.0,
     this.dur1 = const Duration(milliseconds: 120),
@@ -79,13 +153,6 @@ class AppTokens extends ThemeExtension<AppTokens> {
 
   LinearGradient get headerGradient =>
       LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [headerStart, headerEnd]);
-
-  /// Primary-CTA gradient: web header teal #0F6F63 -> #0B5348 (white label >= 5:1).
-  static const LinearGradient ctaGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0xFF0F6F63), Color(0xFF0B5348)],
-  );
 
   static LinearGradient _vertical(List<Color> c, [List<double>? stops]) =>
       LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: c, stops: stops);
@@ -181,7 +248,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
   Duration get durationNormal => dur2;
   Duration get durationSlow => dur3;
 
-  static const AppTokens light = AppTokens(
+  static final AppTokens light = AppTokens(
     bgPage: AppColors.lightBgPage,
     bgApp: AppColors.lightBgApp,
     bgSurface: AppColors.lightBgSurface,
@@ -198,9 +265,12 @@ class AppTokens extends ThemeExtension<AppTokens> {
     textPrimary: AppColors.lightTextPrimary,
     textSecondary: AppColors.lightTextSecondary,
     textMuted: AppColors.lightTextMuted,
+    tones: BentoTones.light,
+    ctaBg: AppColors.lightSecondaryAccent,
+    ctaFg: const Color(0xFFFFFFFF),
   );
 
-  static const AppTokens dark = AppTokens(
+  static final AppTokens dark = AppTokens(
     bgPage: AppColors.darkBgPage,
     bgApp: AppColors.darkBgApp,
     bgSurface: AppColors.darkBgSurface,
@@ -217,12 +287,15 @@ class AppTokens extends ThemeExtension<AppTokens> {
     textPrimary: AppColors.darkTextPrimary,
     textSecondary: AppColors.darkTextSecondary,
     textMuted: AppColors.darkTextMuted,
-    shadowBase: Color(0xFF000000),
-    headerStart: Color(0xFF1F6E68),
-    headerEnd: Color(0xFF0D2522),
+    tones: BentoTones.dark,
+    ctaBg: AppColors.darkSecondaryAccent,
+    ctaFg: AppColors.darkBgPage,
+    shadowBase: const Color(0xFF000000),
+    headerStart: const Color(0xFF1F6E68),
+    headerEnd: const Color(0xFF0D2522),
   );
 
-  static const AppTokens amoled = AppTokens(
+  static final AppTokens amoled = AppTokens(
     bgPage: AppColors.amoledBgPage,
     bgApp: AppColors.amoledBgApp,
     bgSurface: AppColors.amoledBgSurface,
@@ -239,9 +312,12 @@ class AppTokens extends ThemeExtension<AppTokens> {
     textPrimary: AppColors.darkTextPrimary,
     textSecondary: AppColors.darkTextSecondary,
     textMuted: AppColors.darkTextMuted,
-    shadowBase: Color(0xFF000000),
-    headerStart: Color(0xFF0B2925),
-    headerEnd: Color(0xFF000000),
+    tones: BentoTones.amoled,
+    ctaBg: AppColors.darkSecondaryAccent,
+    ctaFg: AppColors.darkBgPage,
+    shadowBase: const Color(0xFF000000),
+    headerStart: const Color(0xFF0B2925),
+    headerEnd: const Color(0xFF000000),
   );
 
   @override
@@ -262,6 +338,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
     Color? textPrimary,
     Color? textSecondary,
     Color? textMuted,
+    BentoTones? tones,
+    Color? ctaBg,
+    Color? ctaFg,
     Color? shadowBase,
     Color? headerStart,
     Color? headerEnd,
@@ -293,6 +372,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
       textPrimary: textPrimary ?? this.textPrimary,
       textSecondary: textSecondary ?? this.textSecondary,
       textMuted: textMuted ?? this.textMuted,
+      tones: tones ?? this.tones,
+      ctaBg: ctaBg ?? this.ctaBg,
+      ctaFg: ctaFg ?? this.ctaFg,
       shadowBase: shadowBase ?? this.shadowBase,
       headerStart: headerStart ?? this.headerStart,
       headerEnd: headerEnd ?? this.headerEnd,
@@ -329,6 +411,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t) ?? textPrimary,
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t) ?? textSecondary,
       textMuted: Color.lerp(textMuted, other.textMuted, t) ?? textMuted,
+      tones: BentoTones.lerp(tones, other.tones, t),
+      ctaBg: Color.lerp(ctaBg, other.ctaBg, t) ?? ctaBg,
+      ctaFg: Color.lerp(ctaFg, other.ctaFg, t) ?? ctaFg,
       shadowBase: Color.lerp(shadowBase, other.shadowBase, t) ?? shadowBase,
       headerStart: Color.lerp(headerStart, other.headerStart, t) ?? headerStart,
       headerEnd: Color.lerp(headerEnd, other.headerEnd, t) ?? headerEnd,

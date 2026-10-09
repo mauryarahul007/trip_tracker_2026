@@ -12,7 +12,7 @@ import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_avatar.dart';
-import '../../../shared/widgets/app_surface.dart';
+import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/ask_text.dart';
@@ -93,7 +93,8 @@ class MembersTab extends ConsumerWidget {
         for (final g in groups)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: AppCard(
+            child: BentoTile(
+              tone: BentoTone.lilac,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
               child: ListTile(
                 key: Key('group-${g.id}'),
@@ -126,10 +127,10 @@ class MembersTab extends ConsumerWidget {
   }
 
   static TextStyle _sectionStyle(BuildContext context) => TextStyle(
-    fontFamily: AppTypography.fontMono,
-    fontSize: 11,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 1.0,
+    fontFamily: AppTypography.fontBody,
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.8,
     color: context.tokens.textMuted,
   );
 
@@ -151,7 +152,8 @@ class MembersTab extends ConsumerWidget {
     }
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: AppCard(
+      child: BentoTile(
+        tone: toneFor(m.id),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
         child: ListTile(
           key: Key('member-${m.id}'),
@@ -168,7 +170,7 @@ class MembersTab extends ConsumerWidget {
                   '${balance > 0 ? '+' : '-'}${formatMoney(context, balance.abs(), currency)}',
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
-                    color: balance > 0 ? context.tokens.successColor : context.tokens.dangerColor,
+                    color: context.tokens.textPrimary, // sign and wording carry the meaning; ink reads on every tile
                   ),
                 ),
               if (canManage)

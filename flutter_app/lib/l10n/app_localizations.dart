@@ -271,6 +271,36 @@ abstract class AppLocalizations {
   /// **'Plan trips, split expenses, and travel seamlessly together.'**
   String get authSubtitle;
 
+  /// No description provided for @authTileSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Split every cost'**
+  String get authTileSplit;
+
+  /// No description provided for @authTileFlights.
+  ///
+  /// In en, this message translates to:
+  /// **'Boarding passes'**
+  String get authTileFlights;
+
+  /// No description provided for @authTileSettle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle up fast'**
+  String get authTileSettle;
+
+  /// No description provided for @authTileOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Works offline'**
+  String get authTileOffline;
+
+  /// No description provided for @authTileCrew.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan with your crew'**
+  String get authTileCrew;
+
   /// No description provided for @authResetPassword.
   ///
   /// In en, this message translates to:

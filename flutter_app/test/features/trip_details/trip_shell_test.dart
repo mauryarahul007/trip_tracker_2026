@@ -41,6 +41,12 @@ String location(WidgetTester tester) => GoRouterState.of(tester.element(find.byT
 
 Finder tabBody(String tab) => find.byKey(Key('tab-$tab'));
 
+/// Bento dock: only the selected item shows its label, so items are found by their button semantics.
+Finder navItem(String label) => find.descendant(
+  of: find.byType(AppBottomNav),
+  matching: find.byWidgetPredicate((w) => w is Semantics && w.properties.button == true && w.properties.label == label),
+);
+
 void main() {
   testApp('wide window swaps the bottom bar for a side rail', (tester) async {
     await pumpApp(tester, user: asha);
@@ -58,15 +64,10 @@ void main() {
     final id = await openTrip(tester);
     expect(location(tester), '/trip/$id/expenses');
     expect(find.descendant(of: find.byType(AppBar), matching: find.text('Goa Weekend')), findsOneWidget);
-    final bar = find.byType(AppBottomNav);
     for (final label in ['Expenses', 'Balances', 'Members', 'Notes']) {
-      expect(
-        find.descendant(of: bar, matching: find.text(label)),
-        findsOneWidget,
-        reason: label,
-      );
+      expect(navItem(label), findsOneWidget, reason: label);
     }
-    expect(find.descendant(of: bar, matching: find.text('Chat')), findsNothing);
+    expect(navItem('Chat'), findsNothing);
     expect(find.byType(ExpensesTab), findsOneWidget);
   });
 
@@ -74,7 +75,7 @@ void main() {
     await pumpApp(tester, user: asha, flagsOn: {'enableChatFirstNav'});
     final id = await openTrip(tester);
     final bar = find.byType(AppBottomNav);
-    expect(find.descendant(of: bar, matching: find.text('Chat')), findsOneWidget);
+    expect(navItem('Chat'), findsOneWidget);
     final items = tester.widget<AppBottomNav>(bar).items.map((i) => i.label).toList();
     expect(items.first, 'Chat');
     expect(id, isNotEmpty);
@@ -83,13 +84,13 @@ void main() {
   testApp('notes/passes/chat all off hides the Notes tab', (tester) async {
     await pumpApp(tester, user: asha, flagsOff: {'enableNotesAndChecklist', 'enableTravelPasses', 'enableTripChat'});
     await openTrip(tester);
-    expect(find.descendant(of: find.byType(AppBottomNav), matching: find.text('Notes')), findsNothing);
+    expect(navItem('Notes'), findsNothing);
   });
 
   testApp('tapping a tab switches content and the route', (tester) async {
     await pumpApp(tester, user: asha);
     final id = await openTrip(tester);
-    await tester.tap(find.descendant(of: find.byType(AppBottomNav), matching: find.text('Members')));
+    await tester.tap(navItem('Members'));
     await settle(tester, rounds: 12);
     expect(location(tester), '/trip/$id/members');
     expect(tabBody('members'), findsOneWidget);
@@ -110,10 +111,9 @@ void main() {
   testApp('system back walks the tab trail, then leaves the trip', (tester) async {
     await pumpApp(tester, user: asha);
     final id = await openTrip(tester);
-    final bar = find.byType(AppBottomNav);
-    await tester.tap(find.descendant(of: bar, matching: find.text('Balances')));
+    await tester.tap(navItem('Balances'));
     await settle(tester, rounds: 10);
-    await tester.tap(find.descendant(of: bar, matching: find.text('Members')));
+    await tester.tap(navItem('Members'));
     await settle(tester, rounds: 10);
     expect(location(tester), '/trip/$id/members');
 

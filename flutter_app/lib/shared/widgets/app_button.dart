@@ -45,14 +45,14 @@ class AppButton extends StatelessWidget {
 
     switch (variant) {
       case AppButtonVariant.primary:
-        // Horizon cobalt gradient (AppTokens.ctaGradient); white label is >= 5:1 on every stop.
-        bg = AppTokens.ctaGradient.colors.last;
-        fg = Colors.white;
+        // Bento: solid ink (cream in dark) with a contrasting label.
+        bg = tokens.ctaBg;
+        fg = tokens.ctaFg;
         break;
       case AppButtonVariant.secondary:
         bg = tokens.bgSurface;
         fg = tokens.textPrimary;
-        border = BorderSide(color: tokens.borderColor);
+        border = BorderSide(color: tokens.textPrimary, width: 1.5);
         break;
       case AppButtonVariant.danger:
         bg = tokens.colorDanger;
@@ -88,44 +88,26 @@ class AppButton extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: fg, fontSize: 15, fontWeight: FontWeight.w600),
+            style: TextStyle(color: fg, fontSize: 16, fontWeight: FontWeight.w700),
           ),
         ),
       ],
     );
 
-    final isPrimary = variant == AppButtonVariant.primary;
-
-    Widget button = FilledButton(
+    final button = FilledButton(
       onPressed: isEnabled ? onPressed : null,
       style: FilledButton.styleFrom(
-        backgroundColor: isPrimary ? Colors.transparent : bg,
+        backgroundColor: bg,
         foregroundColor: fg,
-        disabledBackgroundColor: isPrimary ? Colors.transparent : bg.withValues(alpha: 0.5),
+        disabledBackgroundColor: bg.withValues(alpha: 0.5),
         disabledForegroundColor: fg.withValues(alpha: 0.5),
         shadowColor: Colors.transparent,
         shape: StadiumBorder(side: border),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
         elevation: 0,
       ),
       child: content,
     );
-
-    if (isPrimary) {
-      button = Opacity(
-        opacity: isEnabled ? 1 : 0.5,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: AppTokens.ctaGradient,
-            borderRadius: BorderRadius.circular(tokens.radiusFull),
-            boxShadow: isEnabled
-                ? [BoxShadow(color: bg.withValues(alpha: 0.28), blurRadius: 16, offset: const Offset(0, 6))]
-                : null,
-          ),
-          child: button,
-        ),
-      );
-    }
 
     return Semantics(
       button: true,

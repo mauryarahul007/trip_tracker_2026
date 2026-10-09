@@ -41,10 +41,10 @@ class SettingsSection extends StatelessWidget {
             child: Text(
               title.toUpperCase(),
               style: TextStyle(
-                fontFamily: AppTypography.fontMono,
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1.1,
+                fontFamily: AppTypography.fontBody,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
                 color: tokens.textMuted,
               ),
             ),
@@ -53,10 +53,7 @@ class SettingsSection extends StatelessWidget {
           Material(
             color: tokens.bgSurface,
             clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(tokens.radiusMd),
-              side: BorderSide(color: tokens.borderColor),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(tokens.radiusMd)),
             child: Column(children: children),
           ),
         ],

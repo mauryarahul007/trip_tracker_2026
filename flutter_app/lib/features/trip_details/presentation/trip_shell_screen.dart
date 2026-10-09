@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -134,11 +133,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
       child: AppScaffold(
         maxContentWidth: null,
         appBar: AppBar(
-          // Horizon Night Sky header band with light text.
-          backgroundColor: Colors.transparent,
-          foregroundColor: Colors.white,
-          flexibleSpace: Container(decoration: BoxDecoration(gradient: tokens.headerGradient)),
-          systemOverlayStyle: SystemUiOverlayStyle.light,
+          // Bento: the app bar sits on the ground colour with an ink title; the theme supplies both.
           leading: IconButton(
             tooltip: l10n.actionBack,
             icon: const Icon(AppIcons.back, size: 20),
@@ -152,11 +147,12 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 trip?.name ?? '',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: AppTypography.fontTitle,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
-                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 22,
+                  letterSpacing: -0.5,
+                  color: tokens.textPrimary,
                 ),
               ),
             ),

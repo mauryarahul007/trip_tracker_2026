@@ -18,7 +18,7 @@ import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/widgets/app_scaffold.dart';
-import '../../../shared/widgets/app_surface.dart';
+import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../auth/application/app_lock.dart';
 import '../../expenses/presentation/trip_tools_sheet.dart' show textFilePickerProvider;
@@ -246,7 +246,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: AppCard(
+                child: BentoTile(
+                  tone: BentoTone.mint,
                   onTap: _rename,
                   child: Row(
                     key: const Key('settings-profile'),
@@ -554,12 +555,13 @@ void _showChangelog(BuildContext context) {
         controller: controller,
         padding: const EdgeInsets.all(20),
         children: [
-          HeroSurface(
-            kind: SurfaceKind.dusk,
+          BentoTile(
+            tone: BentoTone.lilac,
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Eyebrow("What's new", color: Colors.white70),
+                BentoTile.eyebrow(ctx, BentoTone.lilac, "What's new"),
                 const SizedBox(height: 6),
                 Text(
                   changelogEntries.isEmpty ? '' : 'Version ${changelogEntries.first.version}',
