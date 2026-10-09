@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **108** |
+| **Total Tracked** | **111** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **106** |
+| **✅ Shipped** | **109** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -158,6 +158,9 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-106** | Flutter Bento redesign: pastel tiles, new fonts and floating pill navigation | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit ec6e203 (v3.51.0). Verified on a Motorola Edge 70 Fusion; side-by-side comparison with the design board still pending. |
 | **FEAT-107** | Flutter: Summary tab redesign and Add expense on Summary | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 75d35f8 (v3.52.0): boarding-pass Summary hero, progress card, donut spend report, Add expense on Summary. Verified in tests; on-device look pending user review. |
 | **FEAT-108** | Flutter: boarding-pass UI for Summary, Expenses and Passes | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 20249e8 (v3.54.0): boarding-pass Summary, receipt-card Expenses with category runway, boarding-pass Passes with QR stub, App settings entry inside a trip. Verified in tests and on a Motorola Edge 70 Fusion. |
+| **FEAT-109** | Flutter: native Superadmin portal (overview, bug ledger, users, trips, flags, features, audit, controls, tools) | `admin` | `claude-cli` | `claude-cli` | Shipped in commit 510f2a4 (v3.55.0): the Superadmin login lands in the app; same Supabase tables and RPCs as the web Ops Deck. Installed on a Motorola Edge 70 Fusion; on-device walkthrough pending user review. |
+| **FEAT-110** | Flutter: growth panels and spend analytics ported from the Ops Deck | `analytics` | `claude-cli` | `claude-cli` | Shipped in commit 510f2a4 (v3.55.0): Growth, Overview, Financial, Engagement and Health tabs; ports opsGrowthMetrics.ts and the AdminAnalyticsPage spend panels. Unit-tested on a fixed fleet. |
+| **FEAT-111** | Flutter: Trips home card-stack view with destination photos and blurred backdrop | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 510f2a4 (v3.55.0): list / cards switch behind enableTripCardStack (Trip pack, default ON); swipe right to open, left to skip, long-press menu; photo from cover or destination. |
 
 ---
 

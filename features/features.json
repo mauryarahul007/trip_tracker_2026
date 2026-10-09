@@ -1724,5 +1724,53 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-09T14:59:57.360Z",
     "shippedNote": "Shipped in commit 20249e8 (v3.54.0): boarding-pass Summary, receipt-card Expenses with category runway, boarding-pass Passes with QR stub, App settings entry inside a trip. Verified in tests and on a Motorola Edge 70 Fusion."
+  },
+  {
+    "id": "FEAT-109",
+    "title": "Flutter: native Superadmin portal (overview, bug ledger, users, trips, flags, features, audit, controls, tools)",
+    "description": "Flutter: native Superadmin portal (overview, bug ledger, users, trips, flags, features, audit, controls, tools)",
+    "category": "admin",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T16:46:05.171Z",
+    "updatedAt": "2026-10-09T16:46:05.276Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-09T16:46:05.276Z",
+    "shippedNote": "Shipped in commit 510f2a4 (v3.55.0): the Superadmin login lands in the app; same Supabase tables and RPCs as the web Ops Deck. Installed on a Motorola Edge 70 Fusion; on-device walkthrough pending user review."
+  },
+  {
+    "id": "FEAT-110",
+    "title": "Flutter: growth panels and spend analytics ported from the Ops Deck",
+    "description": "Flutter: growth panels and spend analytics ported from the Ops Deck",
+    "category": "analytics",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T16:46:05.352Z",
+    "updatedAt": "2026-10-09T16:46:05.463Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-09T16:46:05.463Z",
+    "shippedNote": "Shipped in commit 510f2a4 (v3.55.0): Growth, Overview, Financial, Engagement and Health tabs; ports opsGrowthMetrics.ts and the AdminAnalyticsPage spend panels. Unit-tested on a fixed fleet."
+  },
+  {
+    "id": "FEAT-111",
+    "title": "Flutter: Trips home card-stack view with destination photos and blurred backdrop",
+    "description": "Flutter: Trips home card-stack view with destination photos and blurred backdrop",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T16:46:05.538Z",
+    "updatedAt": "2026-10-09T16:46:05.646Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-09T16:46:05.646Z",
+    "shippedNote": "Shipped in commit 510f2a4 (v3.55.0): list / cards switch behind enableTripCardStack (Trip pack, default ON); swipe right to open, left to skip, long-press menu; photo from cover or destination."
   }
 ]

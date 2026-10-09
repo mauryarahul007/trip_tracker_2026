@@ -8168,5 +8168,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-09T14:59:57.176Z",
     "resolutionNote": "Fixed in commit 20249e8 (v3.54.0): trip, group and flag streams used customSelect('SELECT 1').watch(), which drift emits once; replaced by watchTables() that reloads after every write. Regression test added. Confirmed on a Motorola Edge 70 Fusion over adb."
+  },
+  {
+    "id": "BUG-282",
+    "title": "Flutter: Superadmin user list would crash on object-type profiles.signup_source",
+    "description": "Flutter: Superadmin user list would crash on object-type profiles.signup_source",
+    "severity": "high",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-09T16:46:04.958Z",
+    "updatedAt": "2026-10-09T16:46:05.096Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-09T16:46:05.096Z",
+    "resolutionNote": "Fixed in commit 510f2a4 (v3.55.0): signup_source is jsonb on current databases; the user list now reads utm_source instead of casting to String. Covered by the admin portal and metrics tests."
   }
 ]
