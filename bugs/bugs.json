@@ -8090,5 +8090,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-09T06:41:15.284Z",
     "resolutionNote": "Fixed in commit 19cb764 (v3.50.0): AppTextField password fields use TextInputType.visiblePassword and have a show/hide toggle; widget test added. Not yet verified on a device."
+  },
+  {
+    "id": "BUG-279",
+    "title": "Flutter Superadmin login lands on traveller UI and Ops Deck button cannot open web links on Android",
+    "description": "After a Superadmin login the router left the login screen before admin mode was set, so the session landed on the traveller Trips page. The Ops Deck button then did nothing because the Android manifest lacked https/http query intents (url_launcher: component name for the https URL is null), and the default URL was a dummy GitHub Pages build that cannot sign anyone in.",
+    "severity": "high",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-09T07:32:51.919Z",
+    "updatedAt": "2026-10-09T07:32:52.009Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-09T07:32:52.009Z",
+    "resolutionNote": "Fixed in commit 1d71018 (v3.50.1): admin mode set before sign-in, https/http manifest queries added, portal URL points at the EC2 deployment. Regression test added. Confirmed on a Motorola Edge 70 Fusion over adb."
   }
 ]

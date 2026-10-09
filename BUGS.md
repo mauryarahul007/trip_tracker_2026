@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **276** | All recorded bugs across sessions |
+| **Total Tracked** | **277** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **249** | Verified & closed |
+| **✅ Resolved** | **250** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -280,6 +280,7 @@
 | **BUG-276** | Vite dev server crashes on Windows with EBUSY watching flutter_app build cache | `general` | `medium` | `rahul` | `rahul` | Ignore flutter_app directory in vite.config.ts server.watch to avoid EBUSY on Windows |
 | **BUG-277** | Flutter Notes tab overflows by 531px on trips with many passes, hiding Checklist/Notes/Chat selector | `general` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 7bfeccb (v3.49.0): capsule + passes capped to 35% screen height inside a scroll view. Regression widget test added; manual QA in docs/FEATURE_TEST_STEPS.md (FLUTTER-NOTES-OVERFLOW). Not yet verified on a device. |
 | **BUG-278** | Flutter masked password fields block capital letters (Superadmin login, reset password) | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 19cb764 (v3.50.0): AppTextField password fields use TextInputType.visiblePassword and have a show/hide toggle; widget test added. Not yet verified on a device. |
+| **BUG-279** | Flutter Superadmin login lands on traveller UI and Ops Deck button cannot open web links on Android | `general` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 1d71018 (v3.50.1): admin mode set before sign-in, https/http manifest queries added, portal URL points at the EC2 deployment. Regression test added. Confirmed on a Motorola Edge 70 Fusion over adb. |
 
 ---
 

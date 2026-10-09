@@ -1660,5 +1660,21 @@
     "shippedAt": "2026-10-09T06:41:15.345Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped in commit 19cb764 (v3.50.0). Headless-verified only; device check pending."
+  },
+  {
+    "id": "FEAT-105",
+    "title": "Flutter Superadmin screen with single sign-on hand-off to the web Ops Deck",
+    "description": "Superadmin form login in the Flutter app opens a Superadmin screen whose Open Ops Deck button signs the superadmin straight into the web portal via a session hand-off in the URL fragment. No Flutter admin UI; traveller view is not offered.",
+    "category": "admin",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T07:32:52.070Z",
+    "updatedAt": "2026-10-09T07:32:52.070Z",
+    "shippedAt": "2026-10-09T07:32:52.070Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped in commit 1d71018 (v3.50.1). Verified on a Motorola Edge 70 Fusion; the refresh token is shared with the web app, so the Flutter session may need a new sign-in later (decision 282)."
   }
 ]
