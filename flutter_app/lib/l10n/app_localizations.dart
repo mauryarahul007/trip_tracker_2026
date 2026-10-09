@@ -2821,6 +2821,42 @@ abstract class AppLocalizations {
   /// **'Viewer'**
   String get memRoleViewer;
 
+  /// No description provided for @memGmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Gmail ID'**
+  String get memGmail;
+
+  /// No description provided for @memGmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'friend@gmail.com'**
+  String get memGmailHint;
+
+  /// No description provided for @memGmailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Gmail ID is required'**
+  String get memGmailRequired;
+
+  /// No description provided for @memGmailRestricted.
+  ///
+  /// In en, this message translates to:
+  /// **'Only @gmail.com addresses are supported right now'**
+  String get memGmailRestricted;
+
+  /// No description provided for @memGmailLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked with Google'**
+  String get memGmailLinked;
+
+  /// No description provided for @memGmailPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending sign-in'**
+  String get memGmailPending;
+
   /// No description provided for @notesCheck.
   ///
   /// In en, this message translates to:

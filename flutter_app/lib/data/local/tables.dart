@@ -41,6 +41,7 @@ class MembersTable extends Table {
   TextColumn get id => text()();
   TextColumn get tripId => text().named('trip_id')();
   TextColumn get name => text()();
+  TextColumn get email => text().nullable()();
   TextColumn get linkedUserId => text().named('linked_user_id').nullable()();
   BoolColumn get archived => boolean().withDefault(const Constant(false))();
   TextColumn get joinDate => text().named('join_date').nullable()();

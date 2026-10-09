@@ -1,6 +1,7 @@
 class Member {
   final String id;
   final String name;
+  final String? email;
   final String? tripId;
   final bool archived;
   final String? linkedUserId;
@@ -12,6 +13,7 @@ class Member {
   const Member({
     required this.id,
     required this.name,
+    this.email,
     this.tripId,
     this.archived = false,
     this.linkedUserId,
@@ -24,6 +26,7 @@ class Member {
   Member copyWith({
     String? id,
     String? name,
+    String? email,
     String? tripId,
     bool? archived,
     String? linkedUserId,
@@ -35,6 +38,7 @@ class Member {
     return Member(
       id: id ?? this.id,
       name: name ?? this.name,
+      email: email ?? this.email,
       tripId: tripId ?? this.tripId,
       archived: archived ?? this.archived,
       linkedUserId: linkedUserId ?? this.linkedUserId,
@@ -49,6 +53,7 @@ class Member {
     return {
       'id': id,
       'name': name,
+      if (email != null) 'email': email,
       if (tripId != null) 'tripId': tripId,
       'archived': archived,
       if (linkedUserId != null) 'linkedUserId': linkedUserId,
@@ -63,6 +68,7 @@ class Member {
     return Member(
       id: json['id'] as String,
       name: json['name'] as String,
+      email: json['email'] as String?,
       tripId: (json['tripId'] ?? json['trip_id']) as String?,
       archived: json['archived'] as bool? ?? false,
       linkedUserId: (json['linkedUserId'] ?? json['linked_user_id']) as String?,

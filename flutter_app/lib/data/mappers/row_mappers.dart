@@ -51,6 +51,7 @@ Trip tripFromRow(Map<String, dynamic> r, {List<String> memberIds = const [], Lis
 Member memberFromRow(Map<String, dynamic> r) => Member(
   id: r['id'] as String,
   name: r['name'] as String? ?? '',
+  email: r['email'] as String?,
   tripId: r['trip_id'] as String?,
   archived: r['archived'] == true,
   linkedUserId: r['linked_user_id'] as String?,

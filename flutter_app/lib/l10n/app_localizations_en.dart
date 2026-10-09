@@ -1536,6 +1536,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memRoleViewer => 'Viewer';
 
   @override
+  String get memGmail => 'Gmail ID';
+
+  @override
+  String get memGmailHint => 'friend@gmail.com';
+
+  @override
+  String get memGmailRequired => 'Gmail ID is required';
+
+  @override
+  String get memGmailRestricted => 'Only @gmail.com addresses are supported right now';
+
+  @override
+  String get memGmailLinked => 'Linked with Google';
+
+  @override
+  String get memGmailPending => 'Pending sign-in';
+
+  @override
   String get notesCheck => 'Checklist';
 
   @override

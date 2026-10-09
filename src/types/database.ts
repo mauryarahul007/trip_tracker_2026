@@ -222,6 +222,7 @@ export interface Database {
           id: string;
           trip_id: string;
           name: string;
+          email: string | null;
           archived: boolean;
           linked_user_id: string | null;
           join_date: string | null;
@@ -233,11 +234,13 @@ export interface Database {
           id?: string;
           trip_id: string;
           name: string;
+          email?: string | null;
           archived?: boolean;
           linked_user_id?: string;
         };
         Update: Partial<{
           name: string;
+          email: string | null;
           archived: boolean;
           linked_user_id: string | null;
           join_date: string | null;
@@ -705,6 +708,14 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      lookup_profile_by_email: {
+        Args: { p_email: string };
+        Returns: {
+          id: string;
+          display_name: string | null;
+          avatar_url: string | null;
+        }[];
+      };
       lookup_trip_by_join_code: {
         Args: { p_code: string };
         Returns: {

@@ -33,7 +33,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -46,6 +46,9 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(tripsTable, tripsTable.domainJson);
         await m.addColumn(expensesTable, expensesTable.domainJson);
         await m.addColumn(tripMessagesTable, tripMessagesTable.domainJson);
+      }
+      if (from < 3) {
+        await m.addColumn(membersTable, membersTable.email);
       }
     },
   );

@@ -4980,3 +4980,28 @@ This document logs all meaningful technical decisions, library choices, design p
   - The checklist freeze on a physical device was not reproduced in tests; the overlay and error message are defensive.
   - The Add person flow (invite by Google email) is undecided and not part of this change.
 * **Release Cut:** version bumped to `3.52.0` via `npm run release:minor`.
+
+## 285. Member Creation with Mandatory Gmail ID Linking & Auto-Claiming
+
+* **Date:** 2026-10-09
+* **Context:** Previously, adding a person to a trip only asked for a name (with no account connection) or relied on join codes after trip creation. Travelers needed a way to link members directly to their Google accounts from creation time so trips automatically appear in their account when they sign in.
+* **Decisions:**
+  - **Mandatory Gmail:** When adding a person to a trip, providing a Gmail address is mandatory.
+  - **Domain Restriction:** The address is strictly validated to end with `@gmail.com` using case-insensitive regex (`^[a-zA-Z0-9._%+-]+@gmail\.com$`). Future expansion to other email providers can loosen this restriction.
+  - **Smart Typing Pre-fill:** In both the Flutter bottom sheet and web modal, typing a member name automatically drafts an initial `sanitized@gmail.com` candidate until the user manually touches the email input field. This speeds up entry and preserves backward-compatibility with automated tests.
+  - **Database Migration & Auto-Linking (`0116_member_email_and_autolink.sql`):**
+    - Added `email` text column to `public.members` with lower-cased indexes.
+    - `trg_autolink_member_on_email`: Trigger on `members` insert/update that queries `public.profiles` and immediately links `linked_user_id` if the user is already registered.
+    - `trg_claim_pending_members`: Trigger on `profiles` insert/update that auto-claims all pending `members` matching the email when a new user signs up with Google.
+    - RPC `public.lookup_profile_by_email` and frontend gateways for real-time profile preview (avatar, display name).
+  - **Flutter App Support:**
+    - Domain `Member` model and Postgres row mappers updated with `email`.
+    - Drift schema bumped to version 3 with additive column migration in `app_database.dart` and `tables.dart`.
+    - `_AddMemberSheet` renders Name and Gmail fields with debounced Supabase lookup.
+    - Member roster tile and member actions sheet display linked Gmail address with status indicator (success checkmark when linked, clock when pending claim).
+  - **Web App Parity:**
+    - TypeScript interfaces, `tripApi.ts`, `tripStore.ts`, and `MembersGroupsTab.tsx` updated with identical validation, debounced profile lookup, and roster email badge.
+* **Trade-offs Accepted:**
+  - Only `@gmail.com` addresses are accepted currently; users with Google Workspace custom domains or non-Google providers cannot be directly linked via this flow until the domain whitelist is expanded.
+* **Release Cut:** version bumped to `3.53.0` via `npm run release:minor`.
+

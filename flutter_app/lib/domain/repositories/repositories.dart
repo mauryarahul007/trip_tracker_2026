@@ -114,8 +114,8 @@ abstract class MemberRepository {
   Stream<List<Member>> watchMembers(String tripId);
   Stream<List<Member>> watchAll();
   Stream<List<Group>> watchGroups(String tripId);
-  Future<String> addMember(String tripId, String name, {String? linkedUserId});
-  Future<void> updateMember(String id, {String? name, String? joinDate, String? leaveDate});
+  Future<String> addMember(String tripId, String name, {String? email, String? linkedUserId});
+  Future<void> updateMember(String id, {String? name, String? email, String? joinDate, String? leaveDate});
   Future<void> setArchived(String id, bool archived);
 
   /// Removes the member and cascades group dissolve/rename like the web store.

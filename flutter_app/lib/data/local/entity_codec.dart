@@ -68,6 +68,7 @@ MembersTableCompanion memberToCompanion(Member m, String tripId) => MembersTable
   id: Value(m.id),
   tripId: Value(tripId),
   name: Value(m.name),
+  email: Value(m.email),
   linkedUserId: Value(m.linkedUserId),
   archived: Value(m.archived),
   joinDate: Value(m.joinDate),
@@ -77,6 +78,7 @@ MembersTableCompanion memberToCompanion(Member m, String tripId) => MembersTable
 Member entryToMember(MemberEntry e) => Member(
   id: e.id,
   name: e.name,
+  email: e.email,
   tripId: e.tripId,
   archived: e.archived,
   linkedUserId: e.linkedUserId,

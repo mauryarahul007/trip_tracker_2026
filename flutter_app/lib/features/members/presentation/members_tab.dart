@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/env/app_env.dart';
 import '../../../core/format/money.dart';
 import '../../../data/providers.dart';
+import '../../../data/supabase/supabase_gateway.dart';
 import '../../../domain/logic/member_roles.dart';
 import '../../../domain/logic/settlement.dart';
 import '../../../domain/models/group.dart';
@@ -158,9 +161,41 @@ class MembersTab extends ConsumerWidget {
         child: ListTile(
           key: Key('member-${m.id}'),
           contentPadding: EdgeInsets.zero,
-          leading: AppAvatar(name: m.name, size: 40),
+          leading: AppAvatar(name: m.name, avatarUrl: m.avatarUrl, size: 40),
           title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-          subtitle: Text(moneyText == null ? _roleLabel(l10n, role) : '${_roleLabel(l10n, role)} · $moneyText'),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (m.email != null && m.email!.isNotEmpty) ...[
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      m.linkedUserId != null ? Icons.check_circle_outline_rounded : Icons.schedule_rounded,
+                      size: 12,
+                      color: m.linkedUserId != null ? context.tokens.colorSuccess : context.tokens.textMuted,
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        m.email!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: context.tokens.textMuted,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 1),
+              ],
+              Text(moneyText == null ? _roleLabel(l10n, role) : '${_roleLabel(l10n, role)} · $moneyText'),
+            ],
+          ),
           onTap: canManage ? () => _actions(context, ref, m, role) : null,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -200,6 +235,28 @@ class MembersTab extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text('Role', style: _sectionStyle(sheetCtx)),
+            if (m.email != null && m.email!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(
+                    m.linkedUserId != null ? Icons.check_circle_outline_rounded : Icons.schedule_rounded,
+                    size: 14,
+                    color: m.linkedUserId != null ? sheetCtx.tokens.colorSuccess : sheetCtx.tokens.textMuted,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${m.email!} · ${m.linkedUserId != null ? l10n.memGmailLinked : l10n.memGmailPending}',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontBody,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: sheetCtx.tokens.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -252,9 +309,18 @@ class MembersTab extends ConsumerWidget {
   };
 
   Future<void> _add(BuildContext context, WidgetRef ref) async {
-    final name = await askText(context, context.l10n.memName);
-    if (name == null || name.isEmpty) return;
-    await ref.read(memberRepositoryProvider).addMember(tripId, name);
+    final draft = await AppSheet.show<_AddMemberDraft>(
+      context: context,
+      title: context.l10n.memAdd,
+      builder: (_) => const _AddMemberSheet(),
+    );
+    if (draft == null || draft.name.isEmpty || draft.email.isEmpty) return;
+    await ref.read(memberRepositoryProvider).addMember(
+      tripId,
+      draft.name,
+      email: draft.email,
+      linkedUserId: draft.linkedUserId,
+    );
   }
 
   Future<void> _rename(BuildContext context, WidgetRef ref, Member m) async {
@@ -329,13 +395,244 @@ class _GroupDialogState extends State<_GroupDialog> {
               onChanged: (v) => setState(() => v == true ? _picked.add(m.id) : _picked.remove(m.id)),
             ),
           const SizedBox(height: 12),
+            AppButton(
+              key: const Key('group-save'),
+              label: l10n.actionSave,
+              onPressed: () => Navigator.pop(context, _GroupDraft(_name.text.trim(), _picked.toList())),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+class _AddMemberDraft {
+  const _AddMemberDraft({
+    required this.name,
+    required this.email,
+    this.linkedUserId,
+  });
+
+  final String name;
+  final String email;
+  final String? linkedUserId;
+}
+
+class _AddMemberSheet extends ConsumerStatefulWidget {
+  const _AddMemberSheet();
+
+  @override
+  ConsumerState<_AddMemberSheet> createState() => _AddMemberSheetState();
+}
+
+class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  String? _error;
+  bool _emailManuallyEdited = false;
+  bool _searching = false;
+  Map<String, dynamic>? _resolvedProfile;
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _nameController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  void _onNameChanged(String val) {
+    if (!_emailManuallyEdited) {
+      final sanitized = val.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '');
+      if (sanitized.isNotEmpty) {
+        final candidate = '$sanitized@gmail.com';
+        _emailController.text = candidate;
+        _checkEmail(candidate);
+      } else {
+        _emailController.clear();
+        setState(() {
+          _resolvedProfile = null;
+          _error = null;
+        });
+      }
+    }
+  }
+
+  void _onEmailChanged(String val) {
+    _emailManuallyEdited = true;
+    _checkEmail(val);
+  }
+
+  void _checkEmail(String email) {
+    _debounce?.cancel();
+    final trimmed = email.trim().toLowerCase();
+    if (!trimmed.endsWith('@gmail.com') || trimmed.length <= 10) {
+      setState(() {
+        _resolvedProfile = null;
+        if (_error != null) _error = null;
+      });
+      return;
+    }
+
+    _debounce = Timer(const Duration(milliseconds: 300), () async {
+      if (!mounted) return;
+      if (!AppEnv.current.hasBackend) return;
+      setState(() => _searching = true);
+      try {
+        final client = ref.read<SupabaseGateway>(supabaseGatewayProvider).client;
+        final res = await client
+            .from('profiles')
+            .select('id, display_name, avatar_url')
+            .eq('email', trimmed)
+            .maybeSingle();
+        if (mounted) {
+          setState(() {
+            _searching = false;
+            _resolvedProfile = res == null ? null : Map<String, dynamic>.from(res as Map);
+          });
+        }
+      } catch (_) {
+        if (mounted) setState(() => _searching = false);
+      }
+    });
+  }
+
+  void _submit() {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
+    final l10n = context.l10n;
+
+    if (name.isEmpty) {
+      setState(() => _error = l10n.memName);
+      return;
+    }
+    if (email.isEmpty) {
+      setState(() => _error = l10n.memGmailRequired);
+      return;
+    }
+    final gmailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@gmail\.com$', caseSensitive: false);
+    if (!gmailRegex.hasMatch(email)) {
+      setState(() => _error = l10n.memGmailRestricted);
+      return;
+    }
+
+    Navigator.of(context).pop(
+      _AddMemberDraft(
+        name: name,
+        email: email,
+        linkedUserId: _resolvedProfile?['id'] as String?,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final tokens = context.tokens;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            key: const Key('ask-field'),
+            controller: _nameController,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+              labelText: l10n.memName,
+              prefixIcon: const Icon(Icons.person_outline),
+            ),
+            onChanged: _onNameChanged,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            key: const Key('member-email-field'),
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: InputDecoration(
+              labelText: l10n.memGmail,
+              hintText: l10n.memGmailHint,
+              prefixIcon: const Icon(Icons.mail_outline),
+              suffixIcon: _searching
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: Padding(
+                        padding: EdgeInsets.all(12),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : (_resolvedProfile != null
+                      ? Icon(Icons.check_circle_rounded, color: tokens.colorSuccess)
+                      : null),
+            ),
+            onChanged: _onEmailChanged,
+          ),
+          if (_resolvedProfile != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: tokens.colorSuccess.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(tokens.radiusSm),
+                border: Border.all(color: tokens.colorSuccess.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  AppAvatar(
+                    name: (_resolvedProfile!['display_name'] as String?) ?? _nameController.text,
+                    avatarUrl: _resolvedProfile!['avatar_url'] as String?,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${_resolvedProfile!['display_name'] ?? 'Google user'} · ${l10n.memGmailLinked}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: tokens.colorSuccess,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else if (_emailController.text.trim().toLowerCase().endsWith('@gmail.com') &&
+              RegExp(r'^[a-zA-Z0-9._%+-]+@gmail\.com$').hasMatch(_emailController.text.trim())) ...[
+            const SizedBox(height: 6),
+            Text(
+              '${l10n.memGmailPending} · will automatically connect when they sign in',
+              style: TextStyle(
+                fontSize: 11,
+                color: tokens.textMuted,
+              ),
+            ),
+          ],
+          if (_error != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              _error!,
+              style: TextStyle(
+                color: tokens.colorDanger,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
           AppButton(
-            key: const Key('group-save'),
+            key: const Key('ask-ok'),
             label: l10n.actionSave,
-            onPressed: () => Navigator.pop(context, _GroupDraft(_name.text.trim(), _picked.toList())),
+            onPressed: _submit,
           ),
         ],
       ),
     );
   }
 }
+

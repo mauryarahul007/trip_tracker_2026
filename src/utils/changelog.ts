@@ -9,6 +9,20 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.53.0',
+    date: '2026-10-09',
+    changes: [
+      'Trip Members: Adding a person now requires a mandatory Gmail ID (@gmail.com) with smart auto-completion, real-time Google account preview, and automatic member claiming across Flutter and Web.',
+    ],
+  },
+  {
+    version: '3.52.0',
+    date: '2026-10-09',
+    changes: [
+      'Behind the scenes: Flutter app features Summary-first tabs, boarding pass summary hero, live Notes checklist with live editing, and realtime trip chat sync.',
+    ],
+  },
+  {
     version: '3.51.0',
     date: '2026-10-09',
     changes: [

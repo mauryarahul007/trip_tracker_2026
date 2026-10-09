@@ -237,7 +237,7 @@ interface TripStore extends TripState {
   setTripMuted: (tripId: string, muted: boolean) => Promise<void>;
 
   // Member Actions
-  addMember: (name: string, linkedUserId?: string | null) => Promise<void>;
+  addMember: (name: string, linkedUserId?: string | null, email?: string | null) => Promise<void>;
   toggleArchiveMember: (id: string) => Promise<void>;
   updateMember: (id: string, name: string, dates?: { joinDate?: string | null; leaveDate?: string | null }) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
@@ -2452,7 +2452,7 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
-    addMember: async (name, linkedUserId) => {
+    addMember: async (name, linkedUserId, email) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
 
@@ -2462,9 +2462,11 @@ export const useTripStore = create<TripStore>()(
         return;
       }
 
+      const emailTrimmed = email ? email.trim().toLowerCase() : null;
+
       if (isMissingSupabaseEnv) {
         const memberId = newId();
-        const member: Member = { id: memberId, name: name.trim(), linkedUserId: linkedUserId || null };
+        const member: Member = { id: memberId, name: name.trim(), email: emailTrimmed, linkedUserId: linkedUserId || null };
         set((state) => ({
           members: { ...state.members, [memberId]: member },
           trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, memberIds: [...t.memberIds, memberId], updatedAt: Date.now() } : t)),
@@ -2474,7 +2476,7 @@ export const useTripStore = create<TripStore>()(
       }
 
       const tempId = newId();
-      const optimisticMember: Member = { id: tempId, name, linkedUserId: linkedUserId ?? null };
+      const optimisticMember: Member = { id: tempId, name, email: emailTrimmed, linkedUserId: linkedUserId ?? null };
 
       // Optimistically add the member — same tempId becomes the real row id
       // once synced (insertMember passes it through), so nothing downstream
@@ -2504,15 +2506,15 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!navigator.onLine) {
-        get().queueSync('addMember', { tempId, name, linkedUserId: linkedUserId ?? null, tripId: activeTripId });
+        get().queueSync('addMember', { tempId, name, email: emailTrimmed, linkedUserId: linkedUserId ?? null, tripId: activeTripId });
       } else {
         try {
-          const member = await insertMember(activeTripId, name, linkedUserId || undefined, tempId);
+          const member = await insertMember(activeTripId, name, linkedUserId || undefined, tempId, emailTrimmed || undefined);
           invalidatePreviousMembersCache();
           set((state) => ({ members: { ...state.members, [tempId]: member } }));
         } catch (e) {
           console.warn('Online addMember failed, falling back to offline sync queue:', e);
-          get().queueSync('addMember', { tempId, name, linkedUserId: linkedUserId ?? null, tripId: activeTripId });
+          get().queueSync('addMember', { tempId, name, email: emailTrimmed, linkedUserId: linkedUserId ?? null, tripId: activeTripId });
         }
       }
     },

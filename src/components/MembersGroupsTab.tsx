@@ -5,7 +5,7 @@ import type { Group, Member, PreviousMemberSuggestion, MemberRole } from '../typ
 import type { MemberBalance } from '../utils/settlement';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
-import { fetchPreviousTripMembers, searchRemoteMemberSuggestions } from '../services/tripApi';
+import { fetchPreviousTripMembers, searchRemoteMemberSuggestions, lookupProfileByEmail } from '../services/tripApi';
 import { IconCheck, IconEdit, IconTrash, IconMembers, IconTag, IconBell } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { useHistoryBack } from '../utils/useHistoryBack';
@@ -32,7 +32,8 @@ type Props = {
     name: string,
     id: string | null,
     linkedUserId?: string | null,
-    dates?: { joinDate?: string | null; leaveDate?: string | null }
+    dates?: { joinDate?: string | null; leaveDate?: string | null },
+    email?: string | null
   ) => Promise<{ success: boolean; error?: string }>;
   onDeleteMember: (member: Member) => void;
 
@@ -90,6 +91,10 @@ export function MembersGroupsTab({
   const dateRangeMembershipEnabled = useTripStore((s) => s.isFeatureEnabled('enableDateRangeMembership'));
   // Member Form State
   const [newMemberName, setNewMemberName] = React.useState('');
+  const [newMemberEmail, setNewMemberEmail] = React.useState('');
+  const [emailManuallyEdited, setEmailManuallyEdited] = React.useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = React.useState(false);
+  const [resolvedProfile, setResolvedProfile] = React.useState<{ id: string; display_name: string | null; avatar_url: string | null } | null>(null);
   const [editingMember, setEditingMember] = React.useState<Member | null>(null);
   const [memberJoinDate, setMemberJoinDate] = React.useState('');
   const [memberLeaveDate, setMemberLeaveDate] = React.useState('');
@@ -105,6 +110,30 @@ export function MembersGroupsTab({
   const [highlightedIndex, setHighlightedIndex] = React.useState<number>(-1);
   const [selectedLinkedUserId, setSelectedLinkedUserId] = React.useState<string | null>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Real-time lookup of Supabase profiles matching entered Gmail
+  React.useEffect(() => {
+    const trimmed = newMemberEmail.trim().toLowerCase();
+    if (!trimmed.endsWith('@gmail.com') || trimmed.length <= 10) {
+      setResolvedProfile(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsCheckingEmail(true);
+      try {
+        const profile = await lookupProfileByEmail(trimmed);
+        setResolvedProfile(profile);
+        if (profile?.id) {
+          setSelectedLinkedUserId(profile.id);
+        }
+      } catch {
+        // ignore
+      } finally {
+        setIsCheckingEmail(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [newMemberEmail]);
 
   // Load previous members associated with this user
   React.useEffect(() => {
@@ -380,6 +409,9 @@ export function MembersGroupsTab({
     setAddAnother(false);
     setEditingMember(null);
     setNewMemberName('');
+    setNewMemberEmail('');
+    setEmailManuallyEdited(false);
+    setResolvedProfile(null);
     setSelectedLinkedUserId(null);
     setMemberFormError('');
   });
@@ -388,6 +420,9 @@ export function MembersGroupsTab({
     setAddAnother(false);
     setEditingMember(null);
     setNewMemberName('');
+    setNewMemberEmail('');
+    setEmailManuallyEdited(false);
+    setResolvedProfile(null);
     setSelectedLinkedUserId(null);
     setMemberFormError('');
   });
@@ -404,6 +439,9 @@ export function MembersGroupsTab({
     lastAddSignal.current = addMemberSignal;
     setEditingMember(null);
     setNewMemberName('');
+    setNewMemberEmail('');
+    setEmailManuallyEdited(false);
+    setResolvedProfile(null);
     setSelectedLinkedUserId(null);
     setMemberFormError('');
     setAddAnother(false);
@@ -428,13 +466,17 @@ export function MembersGroupsTab({
     setMemberFormError('');
     setIsSavingMember(true);
     let res: { success: boolean; error?: string };
+    const emailToUse = suggestion.email || `${suggestion.name.toLowerCase().replace(/[^a-z0-9._%+-]/g, '')}@gmail.com`;
     try {
-      res = await onSaveMember(suggestion.name, null, suggestion.linkedUserId || null);
+      res = await onSaveMember(suggestion.name, null, suggestion.linkedUserId || null, undefined, emailToUse);
     } finally {
       setIsSavingMember(false);
     }
     if (res.success) {
       setNewMemberName('');
+      setNewMemberEmail('');
+      setEmailManuallyEdited(false);
+      setResolvedProfile(null);
       setSelectedLinkedUserId(null);
       setEditingMember(null);
       setMemberFormError('');
@@ -450,6 +492,32 @@ export function MembersGroupsTab({
 
   const handleAddMemberLocal = async (e: React.FormEvent) => {
     e.preventDefault();
+    const nameTrimmed = newMemberName.trim();
+    const emailTrimmed = newMemberEmail.trim().toLowerCase();
+
+    if (!nameTrimmed) {
+      setMemberFormError('Member name cannot be empty.');
+      return;
+    }
+
+    if (!editingMember) {
+      if (!emailTrimmed) {
+        setMemberFormError('Gmail address is mandatory.');
+        return;
+      }
+      const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+      if (!gmailRegex.test(emailTrimmed)) {
+        setMemberFormError('Only @gmail.com addresses are supported right now.');
+        return;
+      }
+    } else if (emailTrimmed) {
+      const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+      if (!gmailRegex.test(emailTrimmed)) {
+        setMemberFormError('Only @gmail.com addresses are supported right now.');
+        return;
+      }
+    }
+
     if (isSavingMember || duplicateTripMember) {
       if (duplicateTripMember) setMemberFormError(`A member named "${duplicateTripMember.name}" is already in this trip.`);
       return;
@@ -458,20 +526,26 @@ export function MembersGroupsTab({
     setIsDropdownOpen(false);
     // If exact match exists in DB, automatically inherit their linkedUserId
     const linkedIdToUse =
-      selectedLinkedUserId || (matchingExistingPerson ? matchingExistingPerson.linkedUserId : null);
+      resolvedProfile?.id ||
+      selectedLinkedUserId ||
+      (matchingExistingPerson ? matchingExistingPerson.linkedUserId : null);
 
     setIsSavingMember(true);
     try {
       const res = await onSaveMember(
-        newMemberName,
+        nameTrimmed,
         editingMember ? editingMember.id : null,
         editingMember ? undefined : linkedIdToUse,
         editingMember && dateRangeMembershipEnabled
           ? { joinDate: memberJoinDate || null, leaveDate: memberLeaveDate || null }
-          : undefined
+          : undefined,
+        editingMember ? (editingMember.email || emailTrimmed || null) : emailTrimmed
       );
       if (res.success) {
         setNewMemberName('');
+        setNewMemberEmail('');
+        setEmailManuallyEdited(false);
+        setResolvedProfile(null);
         setSelectedLinkedUserId(null);
         setEditingMember(null);
         setMemberJoinDate('');
@@ -496,7 +570,10 @@ export function MembersGroupsTab({
     setIsDropdownOpen(false);
     setEditingMember(member);
     setNewMemberName(member.name);
-    setSelectedLinkedUserId(null);
+    setNewMemberEmail(member.email || '');
+    setEmailManuallyEdited(Boolean(member.email));
+    setResolvedProfile(null);
+    setSelectedLinkedUserId(member.linkedUserId || null);
     setMemberJoinDate(member.joinDate || '');
     setMemberLeaveDate(member.leaveDate || '');
     setMemberFormError('');
@@ -507,6 +584,9 @@ export function MembersGroupsTab({
   const handleCancelMemberEditLocal = () => {
     setIsDropdownOpen(false);
     setNewMemberName('');
+    setNewMemberEmail('');
+    setEmailManuallyEdited(false);
+    setResolvedProfile(null);
     setSelectedLinkedUserId(null);
     setEditingMember(null);
     setMemberJoinDate('');
@@ -672,11 +752,16 @@ export function MembersGroupsTab({
                 }
               }}
               onChange={(e) => {
-                setNewMemberName(e.target.value);
+                const val = e.target.value;
+                setNewMemberName(val);
                 setSelectedLinkedUserId(null);
                 if (!editingMember) {
                   setIsDropdownOpen(true);
                   setHighlightedIndex(-1);
+                  if (!emailManuallyEdited) {
+                    const sanitized = val.toLowerCase().replace(/[^a-z0-9._%+-]/g, '');
+                    setNewMemberEmail(sanitized ? `${sanitized}@gmail.com` : '');
+                  }
                 }
               }}
               onKeyDown={handleKeyDown}
@@ -843,6 +928,63 @@ export function MembersGroupsTab({
               </div>
             )}
           </div>
+
+          <div className="form-group" style={{ marginTop: '12px' }}>
+            <label className="form-label" htmlFor="member-gmail">
+              Gmail Address {!editingMember && <span style={{ color: 'var(--color-danger)' }}>*</span>}
+            </label>
+            <div style={{ position: 'relative' }}>
+              <input
+                id="member-gmail"
+                type="email"
+                required={!editingMember}
+                className="input-field"
+                placeholder="name@gmail.com"
+                value={newMemberEmail}
+                autoComplete="off"
+                onChange={(e) => {
+                  setEmailManuallyEdited(true);
+                  setNewMemberEmail(e.target.value);
+                }}
+              />
+              {isCheckingEmail && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    fontSize: '11px',
+                    color: 'var(--text-muted)',
+                  }}
+                >
+                  Checking…
+                </span>
+              )}
+            </div>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+              Must be a @gmail.com address. Automatically links when they sign in with Google.
+            </span>
+            {resolvedProfile && (
+              <div
+                style={{
+                  marginTop: '6px',
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  background: 'rgba(34, 197, 94, 0.12)',
+                  border: '1px solid rgba(34, 197, 94, 0.3)',
+                  color: 'var(--color-success, #22C55E)',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span>✓ Google Account found: {resolvedProfile.display_name || newMemberEmail}</span>
+              </div>
+            )}
+          </div>
           {editingMember && dateRangeMembershipEnabled && (
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
               <div className="form-group" style={{ flex: 1 }}>
@@ -947,7 +1089,33 @@ export function MembersGroupsTab({
                   <div className="lt-body">
                     <div className="member-roster-main">
                       <div className="member-roster-top">
-                        <span className="lt-name">{member.name}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                          <span className="lt-name">{member.name}</span>
+                          {member.email && (
+                            <span
+                              style={{
+                                fontSize: '11px',
+                                color: 'var(--text-muted)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                marginTop: '1px',
+                              }}
+                              title={member.linkedUserId ? 'Linked to Google account' : 'Pending Google account login'}
+                            >
+                              <span
+                                style={{
+                                  display: 'inline-block',
+                                  width: '6px',
+                                  height: '6px',
+                                  borderRadius: '50%',
+                                  backgroundColor: member.linkedUserId ? 'var(--color-success, #22C55E)' : 'var(--text-muted)',
+                                }}
+                              />
+                              {member.email}
+                            </span>
+                          )}
+                        </div>
                         <div className="member-roster-money">
                           <span className="lt-amt">{moneyAmount}</span>
                           {moneyDir ? <span className="member-roster-dir">{moneyDir}</span> : null}

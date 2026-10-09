@@ -583,13 +583,13 @@ class DriftMemberRepository extends _DriftRepo implements MemberRepository {
   }
 
   @override
-  Future<String> addMember(String tripId, String name, {String? linkedUserId}) => write(() async {
+  Future<String> addMember(String tripId, String name, {String? email, String? linkedUserId}) => write(() async {
     final id = uuid.v4();
     await db
         .into(db.membersTable)
-        .insert(memberToCompanion(Member(id: id, name: name, tripId: tripId, linkedUserId: linkedUserId), tripId));
+        .insert(memberToCompanion(Member(id: id, name: name, email: email, tripId: tripId, linkedUserId: linkedUserId), tripId));
     await outbox.enqueue(OutboxType.addMember, {
-      'row': {'id': id, 'trip_id': tripId, 'name': name, 'linked_user_id': ?linkedUserId},
+      'row': {'id': id, 'trip_id': tripId, 'name': name, 'email': ?email, 'linked_user_id': ?linkedUserId},
     }, tripId: tripId);
     return id;
   });
@@ -598,19 +598,20 @@ class DriftMemberRepository extends _DriftRepo implements MemberRepository {
       (db.select(db.membersTable)..where((t) => t.id.equals(id))).getSingleOrNull();
 
   @override
-  Future<void> updateMember(String id, {String? name, String? joinDate, String? leaveDate}) => write(() async {
+  Future<void> updateMember(String id, {String? name, String? email, String? joinDate, String? leaveDate}) => write(() async {
     final m = await _member(id);
     if (m == null) return;
     await (db.update(db.membersTable)..where((t) => t.id.equals(id))).write(
       MembersTableCompanion(
         name: name == null ? const Value.absent() : Value(name),
+        email: email == null ? const Value.absent() : Value(email),
         joinDate: joinDate == null ? const Value.absent() : Value(joinDate),
         leaveDate: leaveDate == null ? const Value.absent() : Value(leaveDate),
       ),
     );
     await outbox.enqueue(OutboxType.updateMember, {
       'id': id,
-      'patch': {'name': ?name, 'join_date': ?joinDate, 'leave_date': ?leaveDate},
+      'patch': {'name': ?name, 'email': ?email, 'join_date': ?joinDate, 'leave_date': ?leaveDate},
     }, tripId: m.tripId);
   });
 

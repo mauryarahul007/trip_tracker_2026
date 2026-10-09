@@ -182,6 +182,7 @@ export interface TripFxConfig {
 export interface Member {
   id: string;
   name: string;
+  email?: string | null; // linked Google/Gmail address
   archived?: boolean; // soft-delete flag
   linkedUserId?: string | null; // set once this member "claims" their identity via /join
   avatarUrl?: string | null; // from the linked account's Google profile, if any
@@ -265,6 +266,7 @@ export interface PreviousMemberSuggestion {
   name: string;
   linkedUserId?: string | null;
   avatarUrl?: string | null;
+  email?: string | null;
 }
 
 export interface AppNotification {
