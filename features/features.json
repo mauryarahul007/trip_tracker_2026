@@ -1676,5 +1676,21 @@
     "shippedAt": "2026-10-09T07:32:52.070Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped in commit 1d71018 (v3.50.1). Verified on a Motorola Edge 70 Fusion; the refresh token is shared with the web app, so the Flutter session may need a new sign-in later (decision 282)."
+  },
+  {
+    "id": "FEAT-106",
+    "title": "Flutter Bento redesign: pastel tiles, new fonts and floating pill navigation",
+    "description": "Design direction C (Bento) for the Flutter app: pastel tile screens, Bricolage Grotesque and Figtree fonts, floating pill nav, ink buttons, deep tinted dark and AMOLED themes, staggered tile entrance. No feature flag.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T09:12:05.384Z",
+    "updatedAt": "2026-10-09T09:12:05.384Z",
+    "shippedAt": "2026-10-09T09:12:05.384Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped in commit ec6e203 (v3.51.0). Verified on a Motorola Edge 70 Fusion; side-by-side comparison with the design board still pending."
   }
 ]

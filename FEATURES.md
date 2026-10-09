@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **105** |
+| **Total Tracked** | **106** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **103** |
+| **✅ Shipped** | **104** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -155,6 +155,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-103** | Pass list sorting by time, flight leg, or traveler name (Flutter Notes tab) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7bfeccb (v3.49.0) behind enablePassSorting (Travel pack, default ON). Headless-verified only; device check pending. |
 | **FEAT-104** | Flutter web-app palette, pass cards and Superadmin screen | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 19cb764 (v3.50.0). Headless-verified only; device check pending. |
 | **FEAT-105** | Flutter Superadmin screen with single sign-on hand-off to the web Ops Deck | `admin` | `claude-cli` | `claude-cli` | Shipped in commit 1d71018 (v3.50.1). Verified on a Motorola Edge 70 Fusion; the refresh token is shared with the web app, so the Flutter session may need a new sign-in later (decision 282). |
+| **FEAT-106** | Flutter Bento redesign: pastel tiles, new fonts and floating pill navigation | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit ec6e203 (v3.51.0). Verified on a Motorola Edge 70 Fusion; side-by-side comparison with the design board still pending. |
 
 ---
 
