@@ -84,7 +84,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(app.auth.calls, ['superadmin:root@b.c']);
       // A superadmin lands on the Superadmin screen, not the traveller Trips page.
-      expect(find.byKey(const Key('admin-open-ops-deck')), findsOneWidget);
+      expect(find.byKey(const Key('admin-portal')), findsOneWidget); // the native portal, not a web redirect
+      expect(app.launched, isEmpty); // nothing was opened in a browser
+      expect(find.byKey(const Key('admin-open-ops-deck')), findsOneWidget); // web-only tools stay one tap away
       expect(find.byKey(const Key('admin-view-traveller')), findsNothing); // the web portal has its own preview
       expect(find.text('My Trips'), findsNothing);
     });

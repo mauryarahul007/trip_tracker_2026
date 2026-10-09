@@ -521,6 +521,23 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get tripsViewCards => 'Card view';
+
+  @override
+  String get tripsViewList => 'List view';
+
+  @override
+  String get tripsStackSkip => 'Skip';
+
+  @override
+  String get tripsStackOpen => 'Open';
+
+  @override
+  String tripsStackPosition(int n, int total) {
+    return '$n of $total';
+  }
+
+  @override
   String get tripArchive => 'Archive';
 
   @override

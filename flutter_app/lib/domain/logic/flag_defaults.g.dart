@@ -96,6 +96,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableTravelPasses': true,
   'enableTravelerPassBack': true,
   'enableTravelerPassport': true,
+  'enableTripCardStack': true,
   'enableTripChat': true,
   'enableTripCloseout': true,
   'enableTripShareLink': true,
@@ -108,6 +109,589 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableWhatsAppSettlementShare': true,
   'enableWhatsNewHub': false,
 };
+
+/// Superadmin-facing text for each flag (`FEATURE_FLAGS_META`): label, pack id, what ON / OFF does.
+const Map<String, ({String label, String pack, String description})> flagMeta = {
+  'boardingPassLogin': (
+    label: 'Boarding Pass Login',
+    pack: 'core',
+    description: 'ON: the traveler login/home screen becomes a ticket-styled boarding pass — perforated stub, rotating destination photo (from the Landing Page Cover Gallery below), gate-code quick-join, barcode-style staff link. OFF: today\'s glass-card login screen, unchanged. Does not touch the Superadmin credentials screen either way.',
+  ),
+  'cycleDestinationCovers': (
+    label: 'Cycling Destination Photos',
+    pack: 'core',
+    description: 'ON: a trip with more than one destination — typed as Gangtok, Pelling, Lachung or added as stops — rotates the cover on the home stack and the list cards about every 5–6 seconds, one photo per place. The blurred page behind the stack follows the front card. OFF: those cards keep a single cover, the first place. Does not add a button, and does not change the photo or map inside an open trip.',
+  ),
+  'enableAchievements': (
+    label: 'Trip Squad Achievements & Milestones',
+    pack: 'labs',
+    description: 'Gamified milestone badges (First Expense, Settle-Up Master, Global Roamer).',
+  ),
+  'enableAdvancedLocationSearch': (
+    label: 'Advanced Place Name Search & Map Picker',
+    pack: 'trip',
+    description: 'Nominatim geocoding place search and manual map pin picker.',
+  ),
+  'enableAdvancedSplits': (
+    label: 'Advanced Split Modes',
+    pack: 'trip',
+    description: 'Unlocks Exact amounts, Percentage, and Custom Weight split modes.',
+  ),
+  'enableAmoledTheme': (
+    label: 'AMOLED Pure Black & High-Contrast Theme',
+    pack: 'pro',
+    description: 'Gates the battery-saving OLED Pure Black theme with high-contrast borders for bright daylight and night flights.',
+  ),
+  'enableAutoCurrencyDetection': (
+    label: 'Auto Currency Detection',
+    pack: 'pro',
+    description:
+        'Suggests the local currency on the expense form from device GPS location (reuses existing Geotag consent).',
+  ),
+  'enableBiometricAuth': (
+    label: 'Biometric Screen Lock (WebAuthn)',
+    pack: 'pro',
+    description: 'Touch ID, Face ID, or Windows Hello passkey protection for trips.',
+  ),
+  'enableBurnRateInsight': (
+    label: 'Spend Burn-Rate Forecast',
+    pack: 'pro',
+    description:
+        'Analytics card projecting total trip spend from the daily average so far, for trips currently in progress.',
+  ),
+  'enableCalmHaptics': (
+    label: 'Calmer Haptics + iPhone Haptics',
+    pack: 'core',
+    description: 'ON: by default only meaningful actions vibrate (save, settle, delete, warnings); plain taps like switching tabs or opening menus stay silent. Settings → Appearance gains a Haptics choice (All / Important only / Off) remembered per device. Native iOS and Android builds use the system haptic engine, so iPhones get feedback at all (they had none before). OFF: every tap vibrates on Android web/app, iPhones get no haptics, and there is no Settings choice. Does not affect sounds or notifications.',
+  ),
+  'enableCategoryColorRings': (
+    label: 'Category Icon Color Rings & Tabular Alignment',
+    pack: 'pro',
+    description: 'Ambient duo-tone color halo rings on expense category icons with tabular-number alignment.',
+  ),
+  'enableCategoryReorder': (
+    label: 'Manual Category Reorder',
+    pack: 'pro',
+    description:
+        'Reorder expense categories with up/down controls in Settings; order syncs across devices for the trip.',
+  ),
+  'enableChatAttachments': (
+    label: 'Chat Attachment Tray',
+    pack: 'labs',
+    description: 'Composer + tray for camera, gallery, and attach-existing-expense cards (chat-media storage).',
+  ),
+  'enableChatFirstNav': (
+    label: 'Primary Tab-1 Chat Navigation',
+    pack: 'labs',
+    description: 'Moves Chat from the Notes hub to Tab 1 on the bottom bar. Does not create Chat by itself — requires Trip Group Chat (enableTripChat). When OFF, Chat stays under Notes.',
+  ),
+  'enableChatOfflineOutbox': (
+    label: 'Offline Chat Outbox with Status Ticks',
+    pack: 'labs',
+    description: 'Queue messages in IndexedDB when offline with WhatsApp delivery indicators (🕒, ✓, ✓✓).',
+  ),
+  'enableChatReactionsAndReplies': (
+    label: 'Chat Emoji Reactions & Quoted Replies',
+    pack: 'labs',
+    description:
+        'WhatsApp-style emoji reactions (👍, ❤️, 😂, 😮, 🙏), swipe-to-reply quoting, and pinned admin notices.',
+  ),
+  'enableChatReadReceipts': (
+    label: 'Chat Read Receipts',
+    pack: 'labs',
+    description: 'Trip-level read cursors so senders see when peers have caught up (not per-message rows).',
+  ),
+  'enableChatTypingIndicators': (
+    label: 'Chat Typing Indicators',
+    pack: 'labs',
+    description: 'Realtime “is typing…” presence on the trip chat channel.',
+  ),
+  'enableChatUnreadOnNotes': (
+    label: 'Unread Badge on Notes Chat',
+    pack: 'labs',
+    description: 'Dot on Notes (and Chat tab when Chat-first is on) when there are new trip messages you have not opened. Does not add messages to the thread.',
+  ),
+  'enableChatVoiceNotes': (
+    label: 'Chat Voice Notes',
+    pack: 'labs',
+    description: 'Hold-to-record voice bubbles in trip chat (separate from speech-to-text quick-add).',
+  ),
+  'enableCloneLastExpense': (
+    label: 'Clone Last Expense',
+    pack: 'core',
+    description: 'Prefill the add-expense form from the most recent trip expense (date resets to today).',
+  ),
+  'enableCloneTripSquad': (
+    label: 'New Trip With This Group',
+    pack: 'core',
+    description: 'Duplicate copies name-only squad members onto the new trip, copies remembered split habits, and labels the action New trip with this group. Off = Duplicate Trip, creator only.',
+  ),
+  'enableCloseoutPulse': (
+    label: 'One-tap closeout pulse',
+    pack: 'labs',
+    description: 'After lock: “Would you use this for the next trip?” Yes / Not this group / Skip. Superadmin sees the % on Growth. Off: lock still two buttons, no survey. Not a form and not a new tab.',
+  ),
+  'enableCompactExpenseForm': (
+    label: 'Short Add-Expense Form',
+    pack: 'core',
+    description: 'ON: the add/edit expense screen shows amount, title and who paid first, then how it is split. Category, date, place, receipt and extra photos sit under a "More details" row, which opens automatically when editing an expense that already uses any of them, or when a receipt scan fills them. OFF: every section is always expanded, as before. Does not remove any field or change what gets saved; split modes, itemizing, duplicate warnings and drafts behave the same.',
+  ),
+  'enableCompactLedgerView': (
+    label: 'Compact Ledger View',
+    pack: 'pro',
+    description:
+        'Tighter row padding and smaller avatars/icons in the expense ledger for viewing more rows per screen.',
+  ),
+  'enableCompactSummary': (
+    label: 'Focused Trip Summary',
+    pack: 'core',
+    description: 'ON: the Summary tab keeps the outstanding total, attention chips and who-owes-whom on top, and the charts (category donut, daily spend, per-member spend) move into a collapsed "Spending breakdown" row the traveler taps to open (the choice is remembered on that device). A trip with no expenses yet shows a two-step start card (Invite your group, Add the first expense) instead of an empty "settled at 0" summary. OFF: the charts are always expanded below the balances, and an empty trip shows the regular summary. Does not change balances, settlement maths, or the Expenses tab.',
+  ),
+  'enableContactInvite': (
+    label: 'Invite From Phone Contacts',
+    pack: 'core',
+    description: 'Pick a trip invitee from the device contact list (native only) and hand off to the system share sheet with the join link.',
+  ),
+  'enableCrossTripSearch': (
+    label: 'Search Across All Trips',
+    pack: 'pro',
+    description: 'Cmd+K / home search finds expenses in every trip you belong to and opens the matching trip.',
+  ),
+  'enableCurrencyFx': (
+    label: 'Live Multi-Currency FX Converter',
+    pack: 'trip',
+    description: 'Real-time conversion across 160+ fiat currencies with offline lock.',
+  ),
+  'enableDataSaverMode': (
+    label: 'Data Saver Mode',
+    pack: 'travel',
+    description: 'Keeps the trip map collapsed until manually opened and skips celebration animations, to cut mobile data and battery use while traveling.',
+  ),
+  'enableDateRangeMembership': (
+    label: 'Date-Range Member Participation',
+    pack: 'pro',
+    description: 'Members can have a join/leave date within the trip; new expenses default their split to only members present on that date.',
+  ),
+  'enableDeepLinkedTabs': (
+    label: 'Deep-Linked Tabs',
+    pack: 'trip',
+    description: 'Keep the open trip and tab in the URL so a refresh or shared link lands on the same screen.',
+  ),
+  'enableDemoSeeding': (
+    label: 'Demo Trip Data Seeding',
+    pack: 'ops',
+    description: 'Shows "Seed Demo Data" button in Settings.',
+  ),
+  'enableDestinationAutocomplete': (
+    label: 'Destination Suggestions & Spell-Fix',
+    pack: 'core',
+    description: 'ON: typing a destination in New Trip or Edit Trip shows up to 6 matching places under the field (popular destinations and the traveler\'s own past ones first, then real cities/states/countries from the free Photon map search), and picking one fills the correct spelling and suggests that country\'s currency. If the typed place looks misspelled (e.g. "Swtizerland"), a "Did you mean Switzerland?" chip offers a one-tap fix; nothing is ever changed without that tap. Editing an existing trip with a misspelled destination shows the same chip. OFF: a plain text field, no suggestions, no network lookups while typing. Does not change saved trips unless the traveler accepts a fix and saves.',
+  ),
+  'enableDigestNotifications': (
+    label: 'Digest-Mode Notifications',
+    pack: 'labs',
+    description: 'One daily push summary instead of a push per event. Requires the digest_cron_secret Vault setup in migration 0087.',
+  ),
+  'enableDocumentVault': (
+    label: 'Document / ID Vault',
+    pack: 'pro',
+    description:
+        'Local-only, biometric-gated storage for passport, visa, and insurance scans. Never leaves the device.',
+  ),
+  'enableDuplicateDetector': (
+    label: '4D Duplicate Expense Warning Guard',
+    pack: 'core',
+    description: 'Heuristic check preventing duplicate check-ins or companion double-entries.',
+  ),
+  'enableExpenseApprovalThreshold': (
+    label: 'Big-Expense Mutual Approval',
+    pack: 'pro',
+    description: 'Expenses above a per-trip threshold enter Pending Approval and are excluded from balances/analytics until a second member approves.',
+  ),
+  'enableExpenseDisputes': (
+    label: 'Dispute Flag on Expenses',
+    pack: 'pro',
+    description: 'Any participant can flag an expense as disputed; the flagger or a trip admin can resolve it.',
+  ),
+  'enableExpensePhotoLinking': (
+    label: 'Extra Expense Photos',
+    pack: 'pro',
+    description: 'Attach more photos to an already-saved expense, beyond the single primary receipt.',
+  ),
+  'enableExpenseQuickFilterChips': (
+    label: 'Expenses Tab Quick-Filter Chip Bar',
+    pack: 'pro',
+    description: 'Horizontally scrollable 1-tap filter chips directly on the Expenses tab for instant filtering without opening drawers.',
+  ),
+  'enableExplainThisNumber': (
+    label: 'Why This Amount? Settlement Audit',
+    pack: 'core',
+    description:
+        'ⓘ Why? on a suggested settlement transfer explains the amount, including the bill titles in that balance.',
+  ),
+  'enableExtendedUndo': (
+    label: 'Extended Undo',
+    pack: 'core',
+    description: 'Undo toast for member delete, member archive and recorded settlements.',
+  ),
+  'enableFeatureSuggestions': (
+    label: 'Suggest a Feature Feedback Box',
+    pack: 'ops',
+    description: 'Allows travelers to submit feature feedback directly to the Ops Deck.',
+  ),
+  'enableFlightRadar': (
+    label: 'Live Flight & Railways PNR Radar',
+    pack: 'travel',
+    description: 'Deep links to Flightradar24, FlightAware, ConfirmTkt, and RailYatri.',
+  ),
+  'enableGateScanner': (
+    label: 'High-Contrast Optical Gate Scanner',
+    pack: 'travel',
+    description: 'Inverted retina barcode viewer with Screen Wake Lock API for turnstiles.',
+  ),
+  'enableGeotagging': (
+    label: 'GPS Geotagging & Journey Map',
+    pack: 'trip',
+    description: 'Auto GPS coordinates and MapLibre GL interactive spending trail.',
+  ),
+  'enableGrowthTelemetry': (
+    label: 'Growth Telemetry (Retention & Reliability)',
+    pack: 'ops',
+    description: 'ON: signed-in apps send one app-open event per day plus sync-health events (queue stuck, sync failed, queue flushed), and join-code previews are counted per trip. These feed the Retention, Reliability and Invite funnel cards on Ops Deck Analytics. OFF: nothing is sent or counted and those cards stay empty. Travelers see nothing either way, and no expense, member name or search text is ever sent. Data starts from the day this is armed.',
+  ),
+  'enableHorizonNav': (
+    label: 'Horizon App-Wide Navigation (Flutter)',
+    pack: 'core',
+    description: 'Flutter app: replaces the Trips overflow menu with a bottom dock (Trips, Balances, + New trip, Activity, Me). Balances shows your net across every trip; Me hosts Settings. Default ON. When OFF, the Trips screen keeps its settings menu and New trip button.',
+  ),
+  'enableIcsExport': (
+    label: 'ICS Calendar Export for Passes',
+    pack: 'travel',
+    description:
+        'Share flight/train/hotel passes to the device Calendar app (Web Share), or download a .ics file as fallback.',
+  ),
+  'enableInChatEventCards': (
+    label: 'In-Chat Expense Event Cards',
+    pack: 'labs',
+    description: 'Auto-post compact expense cards into trip chat when someone adds a bill. Delete, restore, and settlement confirm update that same card in place (title, amount, tap to open).',
+  ),
+  'enableInviteConversion': (
+    label: 'Invite & Share Signup Conversion',
+    pack: 'core',
+    description: 'ON: the invite preview screen adds a short "what you get" block and tags the visitor as an invite signup, and the public share page shows a "Track your own trip" button tagged as a share-page signup. OFF: preview is the plain Google-only screen and the share page has no button and no signup tag. Does not change what a guest can see (still no expenses or balances), who can join, or how sign-in works. Join-preview counts on Growth need Growth Telemetry ON.',
+  ),
+  'enableItemizedSplit': (
+    label: 'Itemized Receipt Splitting',
+    pack: 'pro',
+    description: 'Line-item dish assignment with automated tax and tip proration.',
+  ),
+  'enableKeywordTagging': (
+    label: 'Custom Keyword & Brand Tag Editor',
+    pack: 'pro',
+    description: 'Exposes dictionary editor in Categories settings.',
+  ),
+  'enableLifecycleNudges': (
+    label: 'Lifecycle Nudge Pushes',
+    pack: 'travel',
+    description: 'ON (global or per-trip): a daily job may push the trip organizer at most once per 3 days: invite reminder for a trip over 24h old with no expenses and nobody else joined, packing reminder 2 days before start when the checklist is empty, and a plan-the-next-trip prompt 30 days after closeout. OFF: the job selects nothing and sends nothing. Push only, no email; does not replace settlement reminders. Quiet hours and notification opt-outs still apply.',
+  ),
+  'enableLiveLocationShare': (
+    label: 'Live Location Share',
+    pack: 'labs',
+    description: 'Share a public, no-login link showing a member’s current position for a bounded 12h window.',
+  ),
+  'enableMapCollapsedByDefault': (
+    label: 'Collapse Map by Default',
+    pack: 'trip',
+    description: 'Open a trip with the content sheet covering the map. Swipe down to peek the route.',
+  ),
+  'enableMemberLastSeen': (
+    label: 'Member Last Seen',
+    pack: 'labs',
+    description: 'Show Online now / last seen on member rows from live trip presence (remembered on this device).',
+  ),
+  'enableMemberMoneyRow': (
+    label: 'Balances on the Members List',
+    pack: 'trip',
+    description: 'ON: each person on the Members tab shows their balance (owes / is owed / settled) and whether they have joined or are still invited, with a Remind button next to anyone who owes money that shares a pre-written reminder via the phone share sheet. OFF: the Members tab lists names and groups only; reminders stay on the Summary tab. Does not send anything automatically or change any balance.',
+  ),
+  'enableMotionPolish': (
+    label: 'Smooth Motion & Touch Feedback',
+    pack: 'core',
+    description: 'ON: every dialog, sheet and drawer fades/slides out when closed instead of vanishing; bottom sheets (split explainer, @tripbot confirm, UPI pay) can be dragged down to dismiss; buttons shrink slightly on press; opening a trip morphs the tapped card into the trip header; switching tabs slides content in the direction of travel; home trip cards, new ledger rows and changed balances animate in. OFF: dialogs close instantly, those sheets only close via buttons/backdrop, no press shrink, plain crossfades. Does not change any data, layout, or the Ops Deck; users with Reduce Motion set see no animation either way.',
+  ),
+  'enableMultiPayerExpenses': (
+    label: 'Multi-Payer Shared Expenses',
+    pack: 'pro',
+    description:
+        'Allows single expenses to be fronted by multiple members in custom amounts with exact settlement math.',
+  ),
+  'enableMultiTripAnalytics': (
+    label: 'Master Multi-Trip Analytics',
+    pack: 'pro',
+    description: 'Cross-trip net balance, category breakdown, and spending charts.',
+  ),
+  'enableNextUpCapsule': (
+    label: '"Next Up" Travel Island Capsule',
+    pack: 'travel',
+    description: 'Pinned transit countdown capsule tracking imminent flights and trains within 36h.',
+  ),
+  'enableNotesAndChecklist': (
+    label: 'Collaborative Notes & Checklist Hub',
+    pack: 'trip',
+    description: 'Enables the 5th tab for shared packing lists, Wi-Fi codes, and trip notes.',
+  ),
+  'enableNotesTalkPackPass': (
+    label: 'Notes Hub Talk / Pack / Pass Labels',
+    pack: 'core',
+    description:
+        'Relabels Notes segments to Talk / Pack / Pass / Notes (Chat, Checklist, Passes when OFF). Requires Notes hub.',
+  ),
+  'enableNotificationGrouping': (
+    label: 'Grouped Notifications + Money Filter',
+    pack: 'trip',
+    description: 'ON: the notifications inbox folds bursts from the same person and trip within an hour into one row ("Riya added 5 expenses"), tappable to expand, and adds a Money filter (settlements, reminders, you-owe alerts) next to All and Unread. OFF: one row per notification and only All / Unread filters. Does not change which pushes are sent or their read state.',
+  ),
+  'enableOfflineMapTiles': (
+    label: 'Offline Map Tile Caching',
+    pack: 'travel',
+    description: 'Caches MapLibre journey-map tiles so the last-viewed trip map still renders with no signal.',
+  ),
+  'enableOfflineSnapshot': (
+    label: 'Offline Snapshot JSON Data Backup',
+    pack: 'ops',
+    description: 'Complete offline JSON database export and backup migration tools.',
+  ),
+  'enablePackingAssistant': (
+    label: 'Smart Weather & Packing Assistant',
+    pack: 'trip',
+    description: 'Open-Meteo destination weather analysis & airline luggage rule checklist.',
+  ),
+  'enablePassSorting': (
+    label: 'Pass List Sorting (Time / Leg / Name)',
+    pack: 'travel',
+    description: 'ON: when a trip has 3+ travel passes, travelers get a Time / Leg / Name sort control above the Passes list on the Notes tab (Leg groups passes under a flight/route header). OFF: the list shows in stored order with no sort control. Does not change stored pass order or the Next Up capsule, and has no effect while Travel Pass Wallet is OFF.',
+  ),
+  'enablePersistentExpenseDraft': (
+    label: 'Persistent Expense Draft',
+    pack: 'core',
+    description: 'Keep an unsaved new-expense draft for 24h, even after the app is closed, including payers, currency, location and itemized receipt.',
+  ),
+  'enablePredictiveChips': (
+    label: 'Predictive Quick-Expense Chips',
+    pack: 'core',
+    description: 'Shows time-of-day suggestions (breakfast, cab, dinner) for 1-tap logging.',
+  ),
+  'enableProgressiveNextUp': (
+    label: 'Hide Next-Up Until a Pass Exists',
+    pack: 'core',
+    description: 'Expenses-tab Next-Up capsule stays hidden until the trip has at least one boarding pass or ticket. Radar and scanner stay on pass cards.',
+  ),
+  'enableQuickTripCreate': (
+    label: 'Destination-First New Trip',
+    pack: 'core',
+    description: 'ON: the new-trip form starts with "Where to?". Typing a destination fills in a suggested trip name ("Goa trip") and, for well-known countries and cities, the local currency; both stay editable, and a name or currency the traveler typed is never overwritten. Dates stay required (the server needs them); stops stay optional. OFF: the old form with every field shown and nothing pre-filled. Does not change how trips are saved or joined.',
+  ),
+  'enableQuietHours': (
+    label: 'Quiet Hours',
+    pack: 'labs',
+    description:
+        'Per-user time window (e.g. 11pm-7am, in their local timezone) during which push notifications are suppressed.',
+  ),
+  'enableReceiptOcr': (
+    label: 'On-Device Tesseract Receipt OCR',
+    pack: 'pro',
+    description: 'Camera bill scanning and text/total extraction directly on device.',
+  ),
+  'enableReceiptUpload': (
+    label: 'Receipt Photo Attachments',
+    pack: 'trip',
+    description: 'Allows capturing and attaching compressed receipt images to expenses.',
+  ),
+  'enableRecycleBin': (
+    label: 'Recycle Bin & 24h Soft-Delete',
+    pack: 'core',
+    description: 'Safeguards deleted expenses in a 24-hour staging area with instant restore.',
+  ),
+  'enableRememberDefaultSplit': (
+    label: 'Remember Default Split',
+    pack: 'core',
+    description: 'Reuse the last split mode and participants on new expenses in this trip.',
+  ),
+  'enableRouteStops': (
+    label: 'Interactive Route Stops Itinerary',
+    pack: 'travel',
+    description: 'Multi-city itinerary manager with arrival/departure dates and map pins.',
+  ),
+  'enableSettlementConfirmation': (
+    label: 'Two-Sided Settlement Confirmation',
+    pack: 'pro',
+    description: 'The recipient of a settlement must confirm receipt before it\'s marked fully settled, instead of trusting the payer\'s entry alone.',
+  ),
+  'enableSettlementDateNote': (
+    label: 'Settlement Date & Note',
+    pack: 'pro',
+    description: 'Record a settlement with a chosen date and optional note on the ledger entry.',
+  ),
+  'enableSettlementHistory': (
+    label: 'Payment History / Installment Tracker',
+    pack: 'pro',
+    description: 'Groups partial settlements between the same two members into a running paid-so-far history instead of separate ledger rows.',
+  ),
+  'enableSimplifyDebtsToggle': (
+    label: '"Simplify Debts" Algorithm Toggle',
+    pack: 'pro',
+    description:
+        'Allow trip members to toggle between greedy debt flow minimization and direct bilateral reimbursement.',
+  ),
+  'enableSpendInsights': (
+    label: 'Spend Insights Screen (Flutter)',
+    pack: 'core',
+    description: 'Flutter app: tap the Expenses summary card to open a Slate insights screen with daily spend, projected total and a category breakdown. Default ON. When OFF the summary card is not tappable.',
+  ),
+  'enableSplitExclusionDefaults': (
+    label: 'Per-Category Split Exclusion Defaults',
+    pack: 'pro',
+    description: 'Set members who are excluded by default from a category\'s split (e.g. non-drinkers from Alcohol), applied automatically on new expenses.',
+  ),
+  'enableSplitwiseImport': (
+    label: 'Splitwise CSV Import',
+    pack: 'pro',
+    description: 'Import a Splitwise group spreadsheet into the active trip with member mapping.',
+  ),
+  'enableStickyDayHeaders': (
+    label: 'Sticky Ledger Day Headers',
+    pack: 'pro',
+    description: 'Pins day headers with date and subtotal while scrolling the expense ledger feed.',
+  ),
+  'enableSyncQueueInspector': (
+    label: 'Sync Queue Inspector',
+    pack: 'ops',
+    description: 'Offline queue shows readable items with errors, per-item Retry and Discard, and keeps failed changes instead of dropping them.',
+  ),
+  'enableTabBackHistory': (
+    label: 'Tab Back History',
+    pack: 'pro',
+    description:
+        'Back gesture / button walks through the tabs you visited (up to 5) instead of jumping straight to Expenses.',
+  ),
+  'enableTravelPasses': (
+    label: 'Universal Travel Pass Wallet',
+    pack: 'travel',
+    description: 'Central wallet for airline boarding passes, train tickets, and hotel vouchers.',
+  ),
+  'enableTravelerPassBack': (
+    label: 'Traveler Pass Back (Balance Details)',
+    pack: 'core',
+    description: 'ON: flipping the Summary boarding pass shows a single personal-balance hero ("You owe Rohan ₹2,300" or the generic "You owe"/"You’re owed" when more than one person is involved), a settled-travelers progress bar, a working join-code copy chip, a traveler-initials row, and a last-updated timestamp. Tapping the amount smooth-scrolls down to the existing "Who owes who" section instead of opening a second settle flow. No weather, route map, or trip-status pill on this face. OFF: the older itinerary back (dates, traveler, a weather strip, join code). The front of the pass is unchanged either way. Does not change any balance, only how the back is laid out.',
+  ),
+  'enableTravelerPassport': (
+    label: 'Traveler Passport',
+    pack: 'trip',
+    description: 'ON: Settings shows one line under your name with trip count and destinations, worked out from the trips already on the device. OFF: that line is absent. Does not sync a separate profile, never adds money across currencies, and has no share button.',
+  ),
+  'enableTripCardStack': (
+    label: 'Trips Home: Card Stack View',
+    pack: 'trip',
+    description: 'ON (Flutter app): the Trips home screen gets a list / cards switch in its header. Cards shows every trip, in any state, as a stack of tall boarding-pass cards: swipe right or tap to open a trip, swipe left to send it to the back; long-press a card for the same menu as the list (delete for owners). The choice is remembered on the device and the list view stays the default. OFF: Trips home is the list only and the switch is gone. Does not change which trips appear, the filter chips, archive-by-swipe in the list, or the web app.',
+  ),
+  'enableTripChat': (
+    label: 'Trip Group Chat',
+    pack: 'trip',
+    description: 'WhatsApp-style realtime chat for the trip. Lives under Notes by default; enable Primary Tab-1 Chat Navigation to elevate it to the bottom bar.',
+  ),
+  'enableTripCloseout': (
+    label: 'End-of-Trip Closeout',
+    pack: 'core',
+    description:
+        'Guided review → settle remaining → lock the trip. After lock, opens Trip Wrapped when that flag is on.',
+  ),
+  'enableTripShareLink': (
+    label: 'Read-Only Trip Share Link',
+    pack: 'core',
+    description: 'Generate a revocable, no-login link showing a bounded read-only trip summary. Shown first in Invite & Share so people who will not install can still see totals.',
+  ),
+  'enableTripStackSort': (
+    label: 'Trip Stack Sort Toggle',
+    pack: 'pro',
+    description: 'Adds a Sort: A–Z / Date toggle under the home trip stack. Swiping always steps alphabetically or by date order (left = next, right = previous).',
+  ),
+  'enableTripWrapped': (
+    label: 'Trip Wrapped Story Card & Highlights',
+    pack: 'core',
+    description: 'Interactive year-end/trip-end highlights and spend personality cards.',
+  ),
+  'enableTripbotNlExpenses': (
+    label: 'In-Chat @tripbot Expense Logging',
+    pack: 'labs',
+    description: 'Parse @tripbot natural-language lines into a confirm sheet, then create an expense.',
+  ),
+  'enableUpiPayments': (
+    label: '1-Tap UPI on settlement rows',
+    pack: 'core',
+    description: 'UPI Pay chip on each settlement transfer (GPay, PhonePe, Paytm, or QR). Not a separate tab.',
+  ),
+  'enableVoiceInput': (
+    label: 'Hands-Free Voice Quick-Add',
+    pack: 'trip',
+    description: 'Web Speech API listener with Hinglish number parser and acoustic feedback.',
+  ),
+  'enableWeatherItineraryNudges': (
+    label: 'Weather-Triggered Itinerary Nudges',
+    pack: 'labs',
+    description: 'Daily server check of each upcoming route-stop destination; pushes a nudge when bad weather is forecast for the next day.',
+  ),
+  'enableWhatsAppSettlementShare': (
+    label: 'WhatsApp Settlement Share Card',
+    pack: 'core',
+    description: 'Share a settlement PNG card via WhatsApp or the system share sheet.',
+  ),
+  'enableWhatsNewHub': (
+    label: 'What\'s New on Version Screen',
+    pack: 'labs',
+    description: 'Makes the version in Settings → About tappable, opening an iOS-style \'What\'s New\' screen with this release\'s changes.',
+  ),
+};
+
+/// Pack display info for the Superadmin portal (`CONSUMER_PACKS`): code, title, tagline, in rail order.
+const List<({String id, String code, String title, String tagline})> consumerPackInfo = [
+  (
+    id: 'core',
+    code: 'CORE',
+    title: 'Core — first and last minutes',
+    tagline: 'Add, invite, settle, share, lock, same squad next trip',
+  ),
+  (
+    id: 'trip',
+    code: 'TRIP',
+    title: 'Trip — on the road',
+    tagline: 'Voice, receipts, Notes + quiet chat, packing, FX, map collapsed',
+  ),
+  (
+    id: 'travel',
+    code: 'TRAVEL',
+    title: 'Travel — pass holders',
+    tagline: 'Passes, Next-Up, scanner, flight/PNR radar — chrome hidden until a pass exists',
+  ),
+  (
+    id: 'pro',
+    code: 'PRO',
+    title: 'Pro — power money',
+    tagline: 'Itemized dishes, OCR, analytics, vault, multi-payer, Splitwise import',
+  ),
+  (
+    id: 'labs',
+    code: 'LABS',
+    title: 'Labs — do not ship',
+    tagline: 'Chat-first, Tripbot, live location, achievements — keep built, keep off',
+  ),
+  (
+    id: 'ops',
+    code: 'OPS',
+    title: 'Ops — Superadmin only',
+    tagline: 'Demo seed, JSON snapshot, feedback inbox, sync inspector',
+  ),
+];
 
 /// Consumer pack -> flag keys (`CONSUMER_PACKS`).
 const Map<String, List<String>> consumerPacks = {
@@ -144,6 +728,7 @@ const Map<String, List<String>> consumerPacks = {
   ],
   'trip': [
     'enableMemberMoneyRow',
+    'enableTripCardStack',
     'enableNotificationGrouping',
     'enableVoiceInput',
     'enableReceiptUpload',

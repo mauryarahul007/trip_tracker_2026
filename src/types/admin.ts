@@ -18,6 +18,7 @@ export type FeatureFlagKey =
   | 'cycleDestinationCovers'
   | 'enableTravelerPassBack'
   | 'enableMemberMoneyRow'
+  | 'enableTripCardStack'
   | 'enableNotificationGrouping'
   // Phase 2: Active Group Collab & Natural Entry
   | 'enableVoiceInput'

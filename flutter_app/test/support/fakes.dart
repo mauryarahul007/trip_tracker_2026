@@ -6,6 +6,12 @@ import 'package:trip_tracker/core/platform/push_gateway.dart';
 import 'package:trip_tracker/data/push/push_service.dart';
 import 'package:trip_tracker/domain/logic/bug_report.dart';
 import 'package:trip_tracker/domain/logic/pass_reminders.dart';
+import 'package:trip_tracker/domain/models/admin.dart';
+import 'package:trip_tracker/domain/models/admin_fleet.dart';
+
+import 'fleet_fixture.dart';
+
+import 'package:trip_tracker/domain/repositories/admin_repository.dart';
 import 'package:trip_tracker/domain/repositories/feedback_repository.dart';
 import 'package:trip_tracker/domain/repositories/notification_prefs_repository.dart';
 import 'package:trip_tracker/core/platform/share_service.dart';
@@ -406,4 +412,294 @@ class FakeNotificationPrefs implements NotificationPrefsRepository {
   Future<bool> isTripMuted(String tripId) async => muted.contains(tripId);
   @override
   Future<void> setTripMuted(String tripId, bool m) async => m ? muted.add(tripId) : muted.remove(tripId);
+}
+
+/// In-memory superadmin portal data; every mutation is recorded in [calls] and applied to the lists.
+class FakeAdmin implements AdminRepository {
+  List<AdminBug> bugList = [
+    AdminBug(
+      id: 'BUG-1',
+      title: 'Crash on settle',
+      description: 'App closes when settling',
+      severity: 'critical',
+      category: 'splits-math',
+      status: 'open',
+      foundBy: 'tester',
+      createdAt: DateTime(2026, 10, 1),
+    ),
+    AdminBug(
+      id: 'BUG-2',
+      title: 'Typo in login',
+      description: '',
+      severity: 'low',
+      category: 'ui-ux',
+      status: 'resolved',
+      foundBy: 'tester',
+      createdAt: DateTime(2026, 10, 2),
+    ),
+  ];
+  List<AdminUser> userList = const [
+    AdminUser(id: 'u1', email: 'asha@b.c', displayName: 'Asha'),
+    AdminUser(id: 'root', email: 'root@b.c', displayName: 'Root', isSuperadmin: true),
+  ];
+  List<AdminTrip> tripList = const [AdminTrip(id: 't1', name: 'Goa Weekend', ownerId: 'u1', memberCount: 3)];
+  List<FlagOverride> overrides = [];
+  final calls = <String>[];
+  bool failBugs = false;
+
+  @override
+  Future<List<AdminBug>> bugs() async {
+    if (failBugs) throw const AdminUnavailable();
+    return bugList;
+  }
+
+  @override
+  Future<AdminBug?> bug(String id) async => bugList.where((b) => b.id == id).firstOrNull;
+
+  @override
+  Future<AdminBug?> updateBug(
+    String id, {
+    String? status,
+    String? severity,
+    String? assignee,
+    String? resolutionNote,
+    required String resolvedBy,
+  }) async {
+    calls.add('bug:$id:${status ?? '-'}:${severity ?? '-'}:${resolutionNote ?? '-'}');
+    bugList = [
+      for (final b in bugList)
+        if (b.id == id)
+          AdminBug(
+            id: b.id,
+            title: b.title,
+            description: b.description,
+            severity: severity ?? b.severity,
+            category: b.category,
+            status: status ?? b.status,
+            foundBy: b.foundBy,
+            resolutionNote: resolutionNote ?? b.resolutionNote,
+            createdAt: b.createdAt,
+          )
+        else
+          b,
+    ];
+    return bug(id);
+  }
+
+  @override
+  Future<String> createBug({
+    required String title,
+    required String description,
+    required String severity,
+    required String category,
+    required Map<String, Object?> environment,
+  }) async {
+    calls.add('create:$title:$severity:$category');
+    bugList = [
+      AdminBug(
+        id: 'BUG-3',
+        title: title,
+        description: description,
+        severity: severity,
+        category: category,
+        status: 'open',
+        foundBy: 'superadmin-flutter',
+      ),
+      ...bugList,
+    ];
+    return 'BUG-3';
+  }
+
+  @override
+  Future<List<AdminUser>> users() async => userList;
+  @override
+  Future<void> setUserBanned(String userId, bool banned) async {
+    calls.add('ban:$userId:$banned');
+    userList = [for (final u in userList) u.id == userId ? u.copyWith(banned: banned) : u];
+  }
+
+  @override
+  Future<void> deleteUser(String userId) async {
+    calls.add('deleteUser:$userId');
+    userList = [
+      for (final u in userList)
+        if (u.id != userId) u,
+    ];
+  }
+
+  @override
+  Future<int> broadcast(String title, String body) async {
+    calls.add('broadcast:$title');
+    return userList.length;
+  }
+
+  @override
+  Future<List<AdminTrip>> trips() async => tripList;
+  @override
+  Future<void> setTripFrozen(AdminTrip trip, bool frozen) async {
+    calls.add('ground:${trip.id}:$frozen');
+    tripList = [for (final t in tripList) t.id == trip.id ? t.copyWith(frozen: frozen) : t];
+  }
+
+  @override
+  Future<void> setTripArchived(AdminTrip trip, bool archived) async {
+    calls.add('archive:${trip.id}:$archived');
+    tripList = [for (final t in tripList) t.id == trip.id ? t.copyWith(archived: archived) : t];
+  }
+
+  @override
+  Future<void> deleteTrip(AdminTrip trip) async {
+    calls.add('deleteTrip:${trip.id}');
+    tripList = [
+      for (final t in tripList)
+        if (t.id != trip.id) t,
+    ];
+  }
+
+  @override
+  Future<List<FlagOverride>> flagOverrides() async => overrides;
+  @override
+  Future<void> setFlagOverride(String scope, String scopeId, String flagKey, bool? value) async {
+    calls.add('flag:$scope:$scopeId:$flagKey:$value');
+    overrides = [
+      for (final o in overrides)
+        if (!(o.scope == scope && o.scopeId == scopeId && o.flagKey == flagKey)) o,
+      if (value != null) FlagOverride(scope: scope, scopeId: scopeId, flagKey: flagKey, value: value),
+    ];
+  }
+
+  AdminConfig config = const AdminConfig({'join_max_attempts': 5});
+  List<AuditEntry> audit = [
+    AuditEntry(
+      id: '1',
+      action: 'ground_trip',
+      tripId: 't1',
+      details: const {'tripName': 'Goa Weekend'},
+      createdAt: DateTime(2026, 10, 3),
+    ),
+    AuditEntry(
+      id: '2',
+      action: 'user_suspended',
+      details: const {'targetEmail': 'asha@b.c'},
+      createdAt: DateTime(2026, 10, 4),
+    ),
+  ];
+  List<AdminFeature> featureList = const [
+    AdminFeature(
+      id: 'FEAT-1',
+      title: 'Dark maps',
+      description: 'Dark map tiles',
+      category: 'ui-ux',
+      status: 'requested',
+    ),
+    AdminFeature(id: 'FEAT-2', title: 'Offline export', description: '', category: 'sync', status: 'shipped'),
+  ];
+  int recycled = 4;
+  bool pingOk = true;
+
+  @override
+  Future<AdminConfig> appConfig() async => config;
+  @override
+  Future<void> setAppConfig(String key, Object? value) async {
+    calls.add('config:$key:$value');
+    config = AdminConfig({...config.values, key: value});
+  }
+
+  @override
+  Future<List<AuditEntry>> auditLogs({int limit = 200}) async => audit;
+  @override
+  Future<int> purgeAuditLogs(int olderThanDays) async {
+    calls.add('purgeAudit:$olderThanDays');
+    return 2;
+  }
+
+  @override
+  Future<List<AdminFeature>> features() async => featureList;
+  @override
+  Future<String> createFeature({required String title, required String description, required String category}) async {
+    calls.add('createFeature:$title:$category');
+    featureList = [
+      AdminFeature(id: 'FEAT-3', title: title, description: description, category: category, status: 'requested'),
+      ...featureList,
+    ];
+    return 'FEAT-3';
+  }
+
+  @override
+  Future<AdminFeature?> updateFeature(
+    String id, {
+    String? status,
+    String? category,
+    String? shippedNote,
+    String? shippedBy,
+    String? linkedFlagKey,
+  }) async {
+    calls.add('feature:$id:${status ?? '-'}:${shippedNote ?? '-'}');
+    featureList = [
+      for (final f in featureList)
+        if (f.id == id)
+          AdminFeature(
+            id: f.id,
+            title: f.title,
+            description: f.description,
+            category: category ?? f.category,
+            status: status ?? f.status,
+            shippedNote: shippedNote ?? f.shippedNote,
+          )
+        else
+          f,
+    ];
+    return featureList.where((f) => f.id == id).firstOrNull;
+  }
+
+  @override
+  Future<void> deleteFeature(String id) async {
+    calls.add('deleteFeature:$id');
+    featureList = [
+      for (final f in featureList)
+        if (f.id != id) f,
+    ];
+  }
+
+  @override
+  Future<NotificationStats> notificationStats() async => const NotificationStats(total: 40, read: 30, last7d: 12);
+  @override
+  Future<Map<String, int>> devicePlatformCounts() async => const {'android': 7, 'ios': 3};
+  @override
+  Future<List<RetentionCohort>> retentionCohorts({int weeks = 8}) async => const [
+    RetentionCohort(week: '2026-09-28', size: 10, d1: (10, 6), d7: (10, 4), d30: (0, 0)),
+  ];
+  @override
+  Future<({int eligible, int repeat})> repeatCreatorRate() async => (eligible: 8, repeat: 2);
+  @override
+  Future<List<ReliabilityGroup>> reliability({int days = 14}) async => [
+    ReliabilityGroup('android', '3.54.0')
+      ..openUsers = 20
+      ..stuckUsers = 1
+      ..failUsers = 2,
+  ];
+
+  FleetData fleetData = sampleFleet();
+
+  @override
+  Future<FleetData> fleet() async => fleetData;
+
+  @override
+  Future<int> recycledExpenseCount() async => recycled;
+  @override
+  Future<int> purgeRecycleBin(int olderThanDays) async {
+    calls.add('purgeBin:$olderThanDays');
+    final n = recycled;
+    recycled = 0;
+    return n;
+  }
+
+  @override
+  Future<void> changePassword(String newPassword) async => calls.add('password:${newPassword.length}');
+  @override
+  Future<List<ServiceCheck>> pingServices() async => [
+    ServiceCheck(name: 'Auth', ok: pingOk, ms: 120),
+    const ServiceCheck(name: 'Database', ok: true, ms: 90),
+    const ServiceCheck(name: 'Storage', ok: true, ms: 300),
+  ];
 }

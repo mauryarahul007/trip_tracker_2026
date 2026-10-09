@@ -1,12 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/auth_state.dart';
+import '../../../core/storage/prefs.dart';
 import '../../../core/env/app_env.dart';
 import '../../../data/providers.dart';
 import '../../../data/sync/outbox_store.dart';
 import '../../../data/sync/outbox_types.dart';
 import '../../../domain/logic/trip_utilities.dart' show sortTrips;
 import '../../../domain/models/trip.dart';
+import '../../travel/places/place_image_service.dart';
 
 final tripsProvider = StreamProvider<List<Trip>>((ref) => ref.watch(tripRepositoryProvider).watchTrips());
 
@@ -19,6 +21,24 @@ class TripSortMode extends Notifier<TripSort> {
 }
 
 final tripSortProvider = NotifierProvider<TripSortMode, TripSort>(TripSortMode.new);
+
+enum TripsView { list, cards }
+
+/// List or card-stack Trips home, remembered on the device. The list is the default.
+class TripsViewMode extends Notifier<TripsView> {
+  static const _key = 'trips_view_mode';
+
+  @override
+  TripsView build() =>
+      ref.read(sharedPreferencesProvider).getString(_key) == 'cards' ? TripsView.cards : TripsView.list;
+
+  void set(TripsView v) {
+    state = v;
+    ref.read(sharedPreferencesProvider).setString(_key, v.name);
+  }
+}
+
+final tripsViewProvider = NotifierProvider<TripsViewMode, TripsView>(TripsViewMode.new);
 
 class TripSearch extends Notifier<String> {
   @override
@@ -114,3 +134,32 @@ final refreshTripsProvider = Provider<Future<void> Function()>(
     await ref.read(syncCoordinatorProvider).syncNow();
   },
 );
+
+/// Looks a destination up for a cover photo (Wikipedia). Overridden in tests so nothing touches the network.
+final tripCoverResolverProvider = Provider<Future<String?> Function(String destination)>(
+  (ref) =>
+      (destination) => resolveDestinationImage(destination),
+);
+
+/// Search terms for a trip's destination field: the whole text, then its first place when several are listed
+/// ("Gangtok → Lachung → Pelling", "Goa, India").
+List<String> destinationQueries(String destination) {
+  final whole = destination.trim();
+  if (whole.isEmpty) return const [];
+  final first = whole.split(RegExp(r'\s*(?:→|->|>|,|;|\||/)\s*')).first.trim();
+  return [whole, if (first.isNotEmpty && first != whole) first];
+}
+
+/// The photo for a trip: its own cover if it has one, else one found from the destination typed when it was
+/// created. Null when there is neither (callers fall back to a tinted gradient). Cached per (cover, destination).
+final tripCoverProvider = FutureProvider.family<String?, (String, String)>((ref, key) async {
+  if (key.$1.isNotEmpty) return key.$1;
+  final resolve = ref.watch(tripCoverResolverProvider);
+  for (final q in destinationQueries(key.$2)) {
+    final url = await resolve(q);
+    if (url != null) return url;
+  }
+  return null;
+});
+
+(String, String) tripCoverKey(Trip t) => (t.coverImageUrl ?? '', t.destination ?? '');

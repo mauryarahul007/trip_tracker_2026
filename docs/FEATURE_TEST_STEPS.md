@@ -26,6 +26,8 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-09 | flutter 3.52 | FLUTTER-SUMMARY | [Flutter: Summary tab, Add expense on Summary, map panel, live Notes](#flutter-summary--flutter-summary-tab-add-expense-on-summary-map-panel-live-notes) |
 | 2026-10-09 | flutter (unreleased) | FLUTTER-BENTO | [Flutter: Bento redesign (P0 to P5)](#flutter-bento--flutter-bento-redesign-p0-to-p5) |
 | 2026-10-09 | flutter 3.54 | FLUTTER-BOARDING | [Flutter: boarding-pass Summary, receipt Expenses, pass wallet, live-stream fix](#flutter-boarding--flutter-boarding-pass-ui-and-live-stream-fix-v3540) |
+| 2026-10-09 | flutter 3.55 | FLUTTER-SUPERADMIN | [Flutter: native Superadmin portal and analytics](#flutter-superadmin--flutter-native-superadmin-portal-and-analytics-v3550) |
+| 2026-10-09 | flutter 3.55 | FLUTTER-CARDSTACK | [Flutter: Trips card-stack view](#flutter-cardstack--flutter-trips-card-stack-view-v3550) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -2348,4 +2350,39 @@ Then add a row to the **Index** table.
 
 ### Pass
 - Each step matches; no overflow at 360 px width and at 200% text size; toggling Per person survives a sync.
+
+## FLUTTER-SUPERADMIN — Flutter native Superadmin portal and analytics (v3.55.0)
+
+**Flags:** none (reachable only after the Superadmin login).
+
+1. On the login screen open "Superadmin login" and sign in. You land in the portal inside the app (no browser opens). Bottom tabs: Overview, Bugs, Users, Trips, Flags, More.
+2. Overview: tiles for open bugs, users, trips and flag overrides; each opens its tab. "Needs attention" lists open critical / high bugs.
+3. Bugs: filter Open / Resolved / Won't fix / All and by severity; tap a bug, set status and a resolution note, Save; it leaves the Open list. "New bug" files one.
+4. Users: ban / unban and delete (both ask first); superadmins show no ban or delete; Broadcast sends a notification after confirming.
+5. Trips: filter by Active / Grounded / Closed / Archived; Ground, Archive and Delete a trip (delete confirms). Check the Audit log shows the action.
+6. Flags: sections per pack (Core, Trip, Travel, Pro, Labs, Ops) with "x/y ON"; the chips filter by pack; flip a global switch (shows OVERRIDDEN); open a flag to reset it or add / remove a per-trip or per-user override.
+7. More > Features: mark a request shipped with a note; log a new one; delete one (confirms). More > Audit log: filters and "Purge old entries" (confirms). More > Controls: toggle maintenance mode and sign-ins paused, set a maintenance window, change a number or the landing text and Save. More > Tools: Ping services, purge the recycle bin (confirms), change password.
+8. More > Analytics: Growth (loop health, funnel, ghost trips, win-back, flag use, invites, slices, closeout pulse, Splitwise, signup source, retention), Overview, Financial (currency, categories, spenders, split modes, settlement health), Engagement and Health tabs fill in; pull to refresh reloads.
+9. The open-in-browser icon in the top bar still opens the web Ops Deck already signed in.
+
+**Negative checks:** a non-superadmin account is rejected at the Superadmin login with Google guidance; with the server refusing a change, the sheet shows the error and nothing changes.
+
+### Pass
+- Each step matches; no overflow at 360 px width; changes made here show up in the web Ops Deck.
+
+## FLUTTER-CARDSTACK — Flutter Trips card-stack view (v3.55.0)
+
+**Flags:** `enableTripCardStack` (Trip pack, default ON).
+
+1. Open the app on the Trips home. The header has a list / cards button; the list is shown by default.
+2. Tap it: a stack of tall boarding-pass cards appears. Every trip is there (upcoming, ongoing, ended, and archived ones at the back); the counter reads "1 of N".
+3. Each card shows the trip photo with the destination (from when the trip was created) and a pin; a trip with no destination or photo shows a tinted gradient. The screen background is the top card's photo, blurred, and it fades to the next photo as you swipe.
+4. Swipe right (or tap the card, or press Open): the trip opens; going back shows the same card on top. Swipe left (or press Skip): the card goes to the back and the next one is on top. A short drag springs back.
+5. Long-press a card: a menu with Open, and (for trips you own) Archive / Unarchive and Delete. Delete asks first; Archive shows the undo bar.
+6. Kill and reopen the app: it opens in the view you left it in. Tap the button again to return to the list.
+
+**Flag-OFF checks:** turn `enableTripCardStack` OFF in Ops Deck > Flags: the button disappears and the Trips home is the list, even if you had chosen cards. A single trip cannot be skipped (the Skip button is disabled).
+
+### Pass
+- Each step matches; no overflow at 360 px width; swiping stays smooth with 20+ trips.
 

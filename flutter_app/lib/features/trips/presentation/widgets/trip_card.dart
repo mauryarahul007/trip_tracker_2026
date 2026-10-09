@@ -14,6 +14,21 @@ const _tripTones = [BentoTone.sky, BentoTone.peach, BentoTone.lilac, BentoTone.b
 
 BentoTone tripTone(String tripId) => _tripTones[tripId.codeUnits.fold<int>(0, (a, b) => a + b) % _tripTones.length];
 
+/// "Day 3 of 8", "Starts tomorrow", "Ended", or "" when the dates are unknown.
+String tripHeadline(BuildContext context, TripStatus s) {
+  final l10n = context.l10n;
+  switch (s.phase) {
+    case TripPhase.upcoming:
+      return s.daysUntilStart == 1 ? l10n.tripStartsTomorrow : l10n.tripStartsIn(s.daysUntilStart);
+    case TripPhase.active:
+      return l10n.tripDayOf(s.dayNumber, s.totalDays);
+    case TripPhase.ended:
+      return l10n.tripEnded;
+    case TripPhase.unknown:
+      return '';
+  }
+}
+
 /// A trip as a Bento tile: destination eyebrow, big name, dates, a status pill and stat chips.
 /// The trip happening today ([featured]) is the mint tile with a flight arc showing how far through it is.
 class TripCard extends StatelessWidget {
@@ -36,26 +51,12 @@ class TripCard extends StatelessWidget {
   /// Overflow menu (delete…); null hides it (non-owners).
   final VoidCallback? onMenu;
 
-  String _headline(BuildContext context, TripStatus s) {
-    final l10n = context.l10n;
-    switch (s.phase) {
-      case TripPhase.upcoming:
-        return s.daysUntilStart == 1 ? l10n.tripStartsTomorrow : l10n.tripStartsIn(s.daysUntilStart);
-      case TripPhase.active:
-        return l10n.tripDayOf(s.dayNumber, s.totalDays);
-      case TripPhase.ended:
-        return l10n.tripEnded;
-      case TripPhase.unknown:
-        return '';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final t = context.tokens;
     final status = tripStatus(trip.startDate, trip.endDate, now);
-    final headline = _headline(context, status);
+    final headline = tripHeadline(context, status);
     final dim = trip.archived || status.phase == TripPhase.ended;
     final isHero = featured && status.phase == TripPhase.active;
     final tone = isHero ? BentoTone.mint : tripTone(trip.id);
@@ -83,7 +84,7 @@ class TripCard extends StatelessWidget {
                       runSpacing: 4,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        if (headline.isNotEmpty) _StatusPill(headline),
+                        if (headline.isNotEmpty) TripStatusPill(headline),
                         if (dest.isNotEmpty) BentoTile.eyebrow(context, tone, dest),
                       ],
                     ),
@@ -144,11 +145,11 @@ class TripCard extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _Chip(l10n.tripTravelers(trip.memberIds.length)),
-                    _Chip(l10n.tripExpenseCount(trip.expenseCount)),
-                    if (trip.archived) _Chip(l10n.tripBadgeArchived),
-                    if (trip.closed) _Chip(l10n.tripBadgeClosed),
-                    if (trip.frozen) _Chip(l10n.tripBadgeFrozen),
+                    TripChip(l10n.tripTravelers(trip.memberIds.length)),
+                    TripChip(l10n.tripExpenseCount(trip.expenseCount)),
+                    if (trip.archived) TripChip(l10n.tripBadgeArchived),
+                    if (trip.closed) TripChip(l10n.tripBadgeClosed),
+                    if (trip.frozen) TripChip(l10n.tripBadgeFrozen),
                   ],
                 ),
               ),
@@ -161,8 +162,8 @@ class TripCard extends StatelessWidget {
 }
 
 /// Solid ink pill with the trip's status ("Day 3 of 8", "Starts tomorrow").
-class _StatusPill extends StatelessWidget {
-  const _StatusPill(this.text);
+class TripStatusPill extends StatelessWidget {
+  const TripStatusPill(this.text, {super.key});
   final String text;
 
   @override
@@ -179,8 +180,8 @@ class _StatusPill extends StatelessWidget {
   }
 }
 
-class _Chip extends StatelessWidget {
-  const _Chip(this.text);
+class TripChip extends StatelessWidget {
+  const TripChip(this.text, {super.key});
   final String text;
 
   @override

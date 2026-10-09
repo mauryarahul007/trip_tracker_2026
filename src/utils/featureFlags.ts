@@ -51,6 +51,7 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
     targetAudience: 'Friends and families actively traveling together.',
     flagKeys: [
       'enableMemberMoneyRow',
+      'enableTripCardStack',
       'enableNotificationGrouping',
       'enableVoiceInput',
       'enableReceiptUpload',
@@ -229,6 +230,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     key: 'enableMemberMoneyRow',
     label: 'Balances on the Members List',
     description: 'ON: each person on the Members tab shows their balance (owes / is owed / settled) and whether they have joined or are still invited, with a Remind button next to anyone who owes money that shares a pre-written reminder via the phone share sheet. OFF: the Members tab lists names and groups only; reminders stay on the Summary tab. Does not send anything automatically or change any balance.',
+    category: 'core',
+    pack: 'trip',
+    defaultEnabledForUsers: true,
+  },
+  enableTripCardStack: {
+    key: 'enableTripCardStack',
+    label: 'Trips Home: Card Stack View',
+    description: 'ON (Flutter app): the Trips home screen gets a list / cards switch in its header. Cards shows every trip, in any state, as a stack of tall boarding-pass cards: swipe right or tap to open a trip, swipe left to send it to the back; long-press a card for the same menu as the list (delete for owners). The choice is remembered on the device and the list view stays the default. OFF: Trips home is the list only and the switch is gone. Does not change which trips appear, the filter chips, archive-by-swipe in the list, or the web app.',
     category: 'core',
     pack: 'trip',
     defaultEnabledForUsers: true,
@@ -1046,6 +1055,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   cycleDestinationCovers: true,
   enableTravelerPassBack: true,
   enableMemberMoneyRow: true,
+  enableTripCardStack: true,
   enableNotificationGrouping: true,
   // Core — first and last minutes (default ON)
   enablePredictiveChips: true,

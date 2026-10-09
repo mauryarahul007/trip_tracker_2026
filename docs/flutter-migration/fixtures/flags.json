@@ -10,6 +10,7 @@
     "cycleDestinationCovers": true,
     "enableTravelerPassBack": true,
     "enableMemberMoneyRow": true,
+    "enableTripCardStack": true,
     "enableNotificationGrouping": true,
     "enablePredictiveChips": true,
     "enableRecycleBin": true,
@@ -116,6 +117,7 @@
     "cycleDestinationCovers": true,
     "enableTravelerPassBack": true,
     "enableMemberMoneyRow": true,
+    "enableTripCardStack": true,
     "enableNotificationGrouping": true,
     "enablePredictiveChips": true,
     "enableRecycleBin": true,
@@ -250,6 +252,7 @@
       "id": "trip",
       "flagKeys": [
         "enableMemberMoneyRow",
+        "enableTripCardStack",
         "enableNotificationGrouping",
         "enableVoiceInput",
         "enableReceiptUpload",

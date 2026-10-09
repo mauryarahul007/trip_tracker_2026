@@ -22,6 +22,8 @@ import 'package:trip_tracker/core/platform/local_notifications_gateway.dart';
 import 'package:trip_tracker/core/platform/push_gateway.dart';
 import 'package:trip_tracker/core/settings/app_settings.dart';
 import 'package:trip_tracker/core/version/version_gate.dart';
+import 'package:trip_tracker/features/admin/application/admin_providers.dart';
+import 'package:trip_tracker/features/trips/application/trips_providers.dart';
 import 'package:trip_tracker/features/feedback/application/feedback_providers.dart';
 import 'package:trip_tracker/features/notifications/application/notification_prefs_providers.dart';
 import 'package:trip_tracker/main.dart';
@@ -61,6 +63,7 @@ class TestApp {
     required this.push,
     required this.local,
     required this.feedback,
+    required this.admin,
     required this.notifPrefs,
   });
   final FakeAuthRepository auth;
@@ -76,6 +79,7 @@ class TestApp {
   final FakePushGateway push;
   final FakeLocalNotifications local;
   final FakeFeedback feedback;
+  final FakeAdmin admin;
   final FakeNotificationPrefs notifPrefs;
 
   /// What the file picker returns (null = cancelled).
@@ -100,6 +104,7 @@ Future<TestApp> pumpApp(
   bool online = true,
   List<Override> overrides = const [],
   Uri? launchLink,
+  Future<String?> Function(String destination)? coverResolver,
   void Function(TestApp app)? setup,
 }) async {
   tester.view.physicalSize = const Size(430, 1400);
@@ -122,6 +127,7 @@ Future<TestApp> pumpApp(
     push: FakePushGateway(),
     local: FakeLocalNotifications(),
     feedback: FakeFeedback(),
+    admin: FakeAdmin(),
     notifPrefs: FakeNotificationPrefs(),
   );
   _lastDb = t.db;
@@ -152,6 +158,10 @@ Future<TestApp> pumpApp(
         pushGatewayProvider.overrideWithValue(t.push),
         localNotificationsGatewayProvider.overrideWithValue(t.local),
         feedbackRepositoryProvider.overrideWithValue(t.feedback),
+        adminRepositoryProvider.overrideWithValue(t.admin),
+        tripCoverResolverProvider.overrideWithValue(
+          coverResolver ?? (destination) async => null,
+        ), // no network in tests
         notificationPrefsRepositoryProvider.overrideWithValue(t.notifPrefs),
         appVersionProvider.overrideWith((ref) async => const AppVersionInfo('3.45.0', '1')),
         gatePlatformProvider.overrideWithValue('android'),

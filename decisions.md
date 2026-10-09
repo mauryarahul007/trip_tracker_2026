@@ -5024,3 +5024,22 @@ This document logs all meaningful technical decisions, library choices, design p
   - `watchTables` reloads on any write to the listed tables, which can reload slightly more often than before.
 * **Release Cut:** version bumped to `3.54.0` via `npm run release:minor`.
 
+## 287. Native Superadmin Portal, Growth/Spend Analytics Port and Trips Card Stack (Flutter)
+
+* **Date:** 2026-10-09
+* **Context:** A superadmin signing in from the Flutter app was handed to the web Ops Deck in a browser. The user asked for the portal inside the app, the growth panels and spend analytics ported, and a Tinder-style card stack as a second view of the Trips home.
+* **Decisions:**
+  - **Portal in the app:** the Superadmin login (admin mode) now lands on a native portal: Overview, Bug Ledger, Users, Trips, Flags and a More hub (Analytics, Features, Audit, Controls, Tools). It calls the same Supabase tables and RPCs as the web Ops Deck (`bugs`, `features`, `profiles`, `trips`, `security_audit_logs`, `get_app_config`/`set_app_config`, `set_feature_flag_override`, `broadcast_notification`, `delete_user`, `purge_*`, `admin_*` analytics RPCs). Access is enforced by the server (RLS and SECURITY DEFINER functions); the app adds no checks. A top-bar button still opens the web Ops Deck with the session for what is not ported.
+  - **No Ops Deck flag for the portal:** it is reachable only after the Superadmin login, so it is not customer-facing.
+  - **Flags grouped by consumer pack** (Core, Trip, Travel, Pro, Labs, Ops, plus "Other"). `scripts/export-golden-fixtures.mjs` now also exports each flag's label, pack and description and the pack titles/taglines into `flag_defaults.g.dart`, so the portal reads them from the same registry as the web.
+  - **Analytics port:** `ops_growth_metrics.dart` ports `src/utils/opsGrowthMetrics.ts`; `ops_analytics.dart` ports the spend, lifecycle and engagement figures of `AdminAnalyticsPage.tsx`. Pure functions over one read of every trip, member and expense (paged 1000 rows at a time; the web read stops at 1000). Unit-tested against a hand-built fleet (`test/support/fleet_fixture.dart`). UPI-saved and recycle-bin usage rows are left out because that data is not on the server.
+  - **Signup source:** `profiles.signup_source` is jsonb on current databases; the user list parses `utm_source` instead of casting to String (the cast would have thrown).
+  - **Trips card stack:** new flag `enableTripCardStack` (Trip pack, default ON). A list / cards switch in the Trips header (choice kept in SharedPreferences, list is the default). The stack shows every trip in any state, archived ones at the back: swipe right or tap to open, swipe left or Skip to send to the back, long-press for Open / Archive / Delete (owners). Cards use the trip cover or a destination photo from the Wikipedia resolver (whole destination text, then its first place); the page background is the top card's photo, blurred.
+  - **Stale live streams fix (from 3.54.0) follow-up:** none needed; `watchTables` stays.
+* **Trade-offs Accepted:**
+  - Still web-only: the landing cover gallery, brand keyword tagging, the fleet financial integrity scanner, backup and demo data, flag presets and per-pack bulk arm/disarm.
+  - The card-stack backdrop covers the area under the app bar, not the app bar itself.
+  - Cards without a destination or cover show a tinted gradient.
+  - Skip is a no-op for a single trip.
+* **Release Cut:** version bumped to `3.55.0` via `npm run release:minor`.
+

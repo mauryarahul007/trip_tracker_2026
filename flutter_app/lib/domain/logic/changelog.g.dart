@@ -8,6 +8,18 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.55.0', '2026-10-09', [
+    'Behind the scenes: the Flutter app has a native Superadmin portal (overview, bug ledger, users, trips, flags, analytics, audit, controls and tools) and a card-stack view for the Trips home screen with destination photos. No change to the web app.',
+  ]),
+  ChangelogEntry('3.54.0', '2026-10-09', [
+    'Behind the scenes: the Flutter app has a boarding-pass look for Summary, Expenses and Passes, and the Fewest / Per person switch now updates right away instead of snapping back. No change to the web app.',
+  ]),
+  ChangelogEntry('3.53.0', '2026-10-09', [
+    'Trip Members: Adding a person now requires a mandatory Gmail ID (@gmail.com) with smart auto-completion, real-time Google account preview, and automatic member claiming across Flutter and Web.',
+  ]),
+  ChangelogEntry('3.52.0', '2026-10-09', [
+    'Behind the scenes: Flutter app features Summary-first tabs, boarding pass summary hero, live Notes checklist with live editing, and realtime trip chat sync.',
+  ]),
   ChangelogEntry('3.51.0', '2026-10-09', [
     'Behind the scenes: the Flutter app has a new Bento look with pastel tiles, new fonts and a floating bottom bar, in light, dark and black themes. No change to the web app.',
   ]),
@@ -31,17 +43,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.47.0', '2026-10-08', [
     'Behind the scenes: Flutter migration Horizon redesign, Web platform compilation with Wasm SQLite, and Google-only + Superadmin authentication gate. No change to the web app.',
-  ]),
-  ChangelogEntry('3.46.1', '2026-10-07', [
-    'Behind the scenes: fixed the Flutter Android build (core library desugaring for local notifications). No change to the web app.',
-  ]),
-  ChangelogEntry('3.46.0', '2026-10-07', [
-    'Behind the scenes: Flutter migration Phases 10-12 (notifications, settings, push and reminders, feedback, version gate, accessibility fixes, release hardening, cutover and rollout plans). No change to the web app.',
-  ]),
-  ChangelogEntry('3.45.0', '2026-10-06', [
-    'Behind the scenes: Flutter migration Phase 9 (maps, live location, receipts OCR, weather, Trip Wrapped, squad badges, traveler passport, ICS calendar export, Next Up capsule & gate scanner). No change to the web app.',
-  ]),
-  ChangelogEntry('3.44.3', '2026-10-06', [
-    'Behind the scenes: groundwork for Flutter migration Phase 8 (members, notes, chat, boarding passes). No change to the web app.',
   ]),
 ];

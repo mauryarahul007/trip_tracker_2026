@@ -10,6 +10,7 @@ import '../../../core/clock.dart';
 import '../../../core/env/app_env.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/back_exit.dart';
+import '../../../domain/logic/flag_defaults.g.dart';
 import '../../../domain/logic/trip_status.dart';
 import '../../../domain/models/trip.dart';
 import '../../../l10n/l10n_ext.dart';
@@ -18,6 +19,7 @@ import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
+import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
@@ -31,7 +33,9 @@ import '../application/trips_providers.dart';
 import 'widgets/home_dock.dart';
 import 'widgets/join_code_sheet.dart';
 import 'widgets/sync_chip.dart';
+import 'widgets/trip_backdrop.dart';
 import 'widgets/trip_card.dart';
+import 'widgets/trip_card_stack.dart';
 
 class TripsScreen extends ConsumerStatefulWidget {
   const TripsScreen({this.now, super.key});
@@ -51,6 +55,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
 
   /// Board 03 filter chips: all, active, upcoming, past.
   String _filter = 'all';
+
+  /// The trip on top of the card stack, whose photo is blurred into the background.
+  Trip? _stackTop;
 
   DateTime get _now => widget.now?.call() ?? ref.read(nowProvider)();
 
@@ -108,6 +115,50 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     );
   }
 
+  /// Long-press menu on a stack card: the same actions the list has (archive by swipe, delete from the card menu).
+  Future<void> _tripMenu(Trip t, bool isOwner) async {
+    final l10n = context.l10n;
+    final action = await AppSheet.show<String>(
+      context: context,
+      title: t.name,
+      builder: (sheetCtx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            key: const Key('stack-menu-open'),
+            leading: const Icon(Icons.arrow_forward_rounded),
+            title: Text(l10n.tripsStackOpen),
+            onTap: () => Navigator.of(sheetCtx).pop('open'),
+          ),
+          if (isOwner) ...[
+            ListTile(
+              key: const Key('stack-menu-archive'),
+              leading: Icon(t.archived ? AppIcons.undo : Icons.archive_outlined),
+              title: Text(t.archived ? l10n.tripUnarchive : l10n.tripArchive),
+              onTap: () => Navigator.of(sheetCtx).pop('archive'),
+            ),
+            ListTile(
+              key: const Key('stack-menu-delete'),
+              leading: Icon(Icons.delete_outline_rounded, color: context.tokens.colorDanger),
+              title: Text(l10n.tripDelete, style: TextStyle(color: context.tokens.colorDanger)),
+              onTap: () => Navigator.of(sheetCtx).pop('delete'),
+            ),
+          ],
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    switch (action) {
+      case 'open':
+        _open(t);
+      case 'archive':
+        await _setArchived(t, !t.archived);
+      case 'delete':
+        await _delete(t);
+    }
+  }
+
   Widget _card(Trip t, bool isOwner, {bool featured = false}) {
     final card = TripCard(
       trip: t,
@@ -159,6 +210,10 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     final auth = ref.watch(authStateProvider);
     final sort = ref.watch(tripSortProvider);
     final horizon = ref.watch(horizonNavProvider);
+    final stackOn =
+        ref.watch(flagProvider(('enableTripCardStack', null))).value ??
+        (defaultFeatureFlags['enableTripCardStack'] ?? true);
+    final cards = stackOn && ref.watch(tripsViewProvider) == TripsView.cards;
 
     return PopScope(
       canPop: false,
@@ -173,6 +228,13 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
           appBar: AppBar(
             title: Text(l10n.tripsTitle),
             actions: [
+              if (stackOn)
+                IconButton(
+                  key: const Key('trips-view-toggle'),
+                  tooltip: cards ? l10n.tripsViewList : l10n.tripsViewCards,
+                  icon: Icon(cards ? Icons.view_list_rounded : Icons.view_carousel_rounded),
+                  onPressed: () => ref.read(tripsViewProvider.notifier).set(cards ? TripsView.list : TripsView.cards),
+                ),
               PopupMenuButton<TripSort>(
                 tooltip: l10n.tripsSortDate,
                 icon: const Icon(AppIcons.filter),
@@ -207,94 +269,57 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
               ),
             ],
           ),
-          body: Column(
+          body: Stack(
             children: [
-              const OfflineBanner(),
-              const SyncChip(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                child: AppTextField(
-                  hint: l10n.tripsSearchHint,
-                  prefixIcon: const Icon(AppIcons.search),
-                  onChanged: ref.read(tripSearchProvider.notifier).set,
-                ),
-              ),
-              SizedBox(
-                height: 56,
-                child: ListView(
-                  key: const Key('trip-filters'),
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  children: [
-                    for (final f in const [
-                      ('all', 'All'),
-                      ('active', 'Active'),
-                      ('upcoming', 'Upcoming'),
-                      ('past', 'Past'),
-                    ])
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          key: Key('trip-filter-${f.$1}'),
-                          materialTapTargetSize: MaterialTapTargetSize.padded,
-                          showCheckmark: false,
-                          shape: const StadiumBorder(),
-                          label: Text(f.$2),
-                          selected: _filter == f.$1,
-                          onSelected: (_) => setState(() => _filter = f.$1),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: AppPullToRefresh(
-                  onRefresh: ref.read(refreshTripsProvider),
-                  child: lists.when(
-                    loading: () => ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(16),
+              if (cards) Positioned.fill(child: TripBackdrop(trip: _stackTop)),
+              Column(
+                children: [
+                  const OfflineBanner(),
+                  const SyncChip(),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                    child: AppTextField(
+                      hint: l10n.tripsSearchHint,
+                      prefixIcon: const Icon(AppIcons.search),
+                      onChanged: ref.read(tripSearchProvider.notifier).set,
+                    ),
+                  ),
+                  SizedBox(
+                    height: 56,
+                    child: ListView(
+                      key: const Key('trip-filters'),
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       children: [
-                        for (var i = 0; i < 3; i++)
+                        for (final f in const [
+                          ('all', 'All'),
+                          ('active', 'Active'),
+                          ('upcoming', 'Upcoming'),
+                          ('past', 'Past'),
+                        ])
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: SkeletonLoader(
-                              child: Container(
-                                height: 96,
-                                decoration: BoxDecoration(
-                                  color: tokens.bgSurface,
-                                  borderRadius: BorderRadius.circular(tokens.radiusMd),
-                                ),
-                              ),
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              key: Key('trip-filter-${f.$1}'),
+                              materialTapTargetSize: MaterialTapTargetSize.padded,
+                              showCheckmark: false,
+                              shape: const StadiumBorder(),
+                              label: Text(f.$2),
+                              selected: _filter == f.$1,
+                              onSelected: (_) => setState(() => _filter = f.$1),
                             ),
                           ),
                       ],
                     ),
-                    error: (_, _) => ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        EmptyState(
-                          icon: AppIcons.alert,
-                          title: l10n.tripsLoadError,
-                          subtitle: l10n.errorGenericMessage,
-                          action: AppButton(label: l10n.actionRetry, onPressed: () => ref.invalidate(tripsProvider)),
-                        ),
-                      ],
-                    ),
-                    data: (data) {
-                      final active = data.active.where((t) => !_hidden.contains(t.id) && _matchesFilter(t)).toList();
-                      final archived = data.archived.where((t) => !_hidden.contains(t.id)).toList();
-                      if (data.total == 0 && syncing) {
-                        return ListView(
-                          key: const Key('trips-syncing'),
+                  ),
+                  Expanded(
+                    child: AppPullToRefresh(
+                      onRefresh: ref.read(refreshTripsProvider),
+                      child: lists.when(
+                        loading: () => ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           padding: const EdgeInsets.all(16),
                           children: [
-                            // ponytail: English-only until the ARB files are regenerated.
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: Text('Syncing your trips…', style: TextStyle(color: tokens.textSecondary)),
-                            ),
                             for (var i = 0; i < 3; i++)
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
@@ -309,72 +334,130 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                 ),
                               ),
                           ],
-                        );
-                      }
-                      if (data.total == 0) {
-                        return ListView(
+                        ),
+                        error: (_, _) => ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           children: [
                             EmptyState(
-                              icon: AppIcons.expenses,
-                              title: l10n.emptyTripsTitle,
-                              subtitle: l10n.emptyTripsSubtitle,
-                              action: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  AppButton(label: l10n.actionCreateTrip, onPressed: _create),
-                                  const SizedBox(height: 8),
-                                  AppButton(
-                                    label: l10n.tripsJoinWithCode,
-                                    variant: AppButtonVariant.secondary,
-                                    onPressed: () => showJoinCodeSheet(context),
+                              icon: AppIcons.alert,
+                              title: l10n.tripsLoadError,
+                              subtitle: l10n.errorGenericMessage,
+                              action: AppButton(
+                                label: l10n.actionRetry,
+                                onPressed: () => ref.invalidate(tripsProvider),
+                              ),
+                            ),
+                          ],
+                        ),
+                        data: (data) {
+                          final active = data.active
+                              .where((t) => !_hidden.contains(t.id) && _matchesFilter(t))
+                              .toList();
+                          final archived = data.archived.where((t) => !_hidden.contains(t.id)).toList();
+                          if (data.total == 0 && syncing) {
+                            return ListView(
+                              key: const Key('trips-syncing'),
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(16),
+                              children: [
+                                // ponytail: English-only until the ARB files are regenerated.
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Text('Syncing your trips…', style: TextStyle(color: tokens.textSecondary)),
+                                ),
+                                for (var i = 0; i < 3; i++)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: SkeletonLoader(
+                                      child: Container(
+                                        height: 96,
+                                        decoration: BoxDecoration(
+                                          color: tokens.bgSurface,
+                                          borderRadius: BorderRadius.circular(tokens.radiusMd),
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        );
-                      }
-                      if (active.isEmpty && archived.isEmpty) {
-                        return ListView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(32),
-                              child: Center(child: Text(l10n.tripsNoMatches)),
-                            ),
-                          ],
-                        );
-                      }
-                      bool owner(Trip t) => t.ownerId == auth.userId;
-                      // The first trip happening today becomes the Night Sky hero.
-                      final heroId = active
-                          .where((t) => tripStatus(t.startDate, t.endDate, _now).phase == TripPhase.active)
-                          .map((t) => t.id)
-                          .firstOrNull;
-                      return ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-                        children: [
-                          for (final (i, t) in active.indexed)
-                            BentoEntrance(
-                              index: i,
-                              child: _card(t, owner(t), featured: t.id == heroId),
-                            ),
-                          if (archived.isNotEmpty)
-                            ExpansionTile(
-                              tilePadding: EdgeInsets.zero,
-                              title: Text(
-                                l10n.tripsArchivedSection(archived.length),
-                                style: TextStyle(color: tokens.textSecondary),
-                              ),
-                              children: [for (final t in archived) _card(t, owner(t))],
-                            ),
-                        ],
-                      );
-                    },
+                              ],
+                            );
+                          }
+                          if (data.total == 0) {
+                            return ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                EmptyState(
+                                  icon: AppIcons.expenses,
+                                  title: l10n.emptyTripsTitle,
+                                  subtitle: l10n.emptyTripsSubtitle,
+                                  action: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      AppButton(label: l10n.actionCreateTrip, onPressed: _create),
+                                      const SizedBox(height: 8),
+                                      AppButton(
+                                        label: l10n.tripsJoinWithCode,
+                                        variant: AppButtonVariant.secondary,
+                                        onPressed: () => showJoinCodeSheet(context),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                          if (active.isEmpty && archived.isEmpty) {
+                            return ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(32),
+                                  child: Center(child: Text(l10n.tripsNoMatches)),
+                                ),
+                              ],
+                            );
+                          }
+                          bool owner(Trip t) => t.ownerId == auth.userId;
+                          if (cards) {
+                            // Every trip, any state: current ones first, archived ones at the back.
+                            return TripCardStack(
+                              key: const Key('trip-stack'),
+                              trips: [...active, ...archived],
+                              now: _now,
+                              onOpen: _open,
+                              onLongPress: (t) => _tripMenu(t, owner(t)),
+                              onTopChanged: (t) => setState(() => _stackTop = t),
+                            );
+                          }
+                          // The first trip happening today becomes the Night Sky hero.
+                          final heroId = active
+                              .where((t) => tripStatus(t.startDate, t.endDate, _now).phase == TripPhase.active)
+                              .map((t) => t.id)
+                              .firstOrNull;
+                          return ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+                            children: [
+                              for (final (i, t) in active.indexed)
+                                BentoEntrance(
+                                  index: i,
+                                  child: _card(t, owner(t), featured: t.id == heroId),
+                                ),
+                              if (archived.isNotEmpty)
+                                ExpansionTile(
+                                  tilePadding: EdgeInsets.zero,
+                                  title: Text(
+                                    l10n.tripsArchivedSection(archived.length),
+                                    style: TextStyle(color: tokens.textSecondary),
+                                  ),
+                                  children: [for (final t in archived) _card(t, owner(t))],
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),

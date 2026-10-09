@@ -1189,6 +1189,23 @@ console.log('--- Generating Golden Fixtures ---');
     ...keys.map((k) => `  '${k}': ${defaults[k]},`),
     '};',
     '',
+    '/// Superadmin-facing text for each flag (`FEATURE_FLAGS_META`): label, pack id, what ON / OFF does.',
+    'const Map<String, ({String label, String pack, String description})> flagMeta = {',
+    ...keys.map((k) => {
+      const m = flagsMod.FEATURE_FLAGS_META[k];
+      const esc = (t) => String(t ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\$/g, '\\$').replace(/\n/g, ' ');
+      return `  '${k}': (label: '${esc(m?.label ?? k)}', pack: '${esc(m?.pack ?? '')}', description: '${esc(m?.description ?? '')}'),`;
+    }),
+    '};',
+    '',
+    '/// Pack display info for the Superadmin portal (`CONSUMER_PACKS`): code, title, tagline, in rail order.',
+    'const List<({String id, String code, String title, String tagline})> consumerPackInfo = [',
+    ...flagsMod.CONSUMER_PACKS.map((p) => {
+      const esc = (t) => String(t ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\$/g, '\\$').replace(/\n/g, ' ');
+      return `  (id: '${esc(p.id)}', code: '${esc(p.code)}', title: '${esc(p.title)}', tagline: '${esc(p.tagline)}'),`;
+    }),
+    '];',
+    '',
     '/// Consumer pack -> flag keys (`CONSUMER_PACKS`).',
     'const Map<String, List<String>> consumerPacks = {',
     ...packs.map((p) => `  '${p.id}': [${p.flagKeys.map((k) => `'${k}'`).join(', ')}],`),

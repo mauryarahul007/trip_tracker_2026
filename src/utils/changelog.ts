@@ -9,6 +9,20 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.55.0',
+    date: '2026-10-09',
+    changes: [
+      'Behind the scenes: the Flutter app has a native Superadmin portal (overview, bug ledger, users, trips, flags, analytics, audit, controls and tools) and a card-stack view for the Trips home screen with destination photos. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.54.0',
+    date: '2026-10-09',
+    changes: [
+      'Behind the scenes: the Flutter app has a boarding-pass look for Summary, Expenses and Passes, and the Fewest / Per person switch now updates right away instead of snapping back. No change to the web app.',
+    ],
+  },
+  {
     version: '3.53.0',
     date: '2026-10-09',
     changes: [

@@ -211,6 +211,21 @@
       }
     }
   },
+  "tripsViewCards": "Card view",
+  "tripsViewList": "List view",
+  "tripsStackSkip": "Skip",
+  "tripsStackOpen": "Open",
+  "tripsStackPosition": "{n} of {total}",
+  "@tripsStackPosition": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "tripArchive": "Archive",
   "tripUnarchive": "Unarchive",
   "tripArchived": "Trip archived",

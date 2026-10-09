@@ -1021,6 +1021,36 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{No expenses} =1{1 expense} other{{count} expenses}}'**
   String tripExpenseCount(int count);
 
+  /// No description provided for @tripsViewCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Card view'**
+  String get tripsViewCards;
+
+  /// No description provided for @tripsViewList.
+  ///
+  /// In en, this message translates to:
+  /// **'List view'**
+  String get tripsViewList;
+
+  /// No description provided for @tripsStackSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get tripsStackSkip;
+
+  /// No description provided for @tripsStackOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get tripsStackOpen;
+
+  /// No description provided for @tripsStackPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} of {total}'**
+  String tripsStackPosition(int n, int total);
+
   /// No description provided for @tripArchive.
   ///
   /// In en, this message translates to:
