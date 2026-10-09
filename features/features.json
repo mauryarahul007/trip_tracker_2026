@@ -1772,5 +1772,37 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-09T16:46:05.646Z",
     "shippedNote": "Shipped in commit 510f2a4 (v3.55.0): list / cards switch behind enableTripCardStack (Trip pack, default ON); swipe right to open, left to skip, long-press menu; photo from cover or destination."
+  },
+  {
+    "id": "FEAT-112",
+    "title": "Flutter: boarding-gate login screen",
+    "description": "Flutter: boarding-gate login screen",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T20:01:11.132Z",
+    "updatedAt": "2026-10-09T20:01:19.959Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-09T20:01:19.959Z",
+    "shippedNote": "Shipped in commit adb88c7 (v3.56.0): boardingPassLogin flag in prod, always on dev/staging."
+  },
+  {
+    "id": "FEAT-113",
+    "title": "Flutter: Departures card stack with runway slider and destination-first Create Trip",
+    "description": "Flutter: Departures card stack with runway slider and destination-first Create Trip",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T20:01:11.212Z",
+    "updatedAt": "2026-10-09T20:01:20.025Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-09T20:01:20.025Z",
+    "shippedNote": "Shipped in commit adb88c7 (v3.56.0): behind enableTripCardStack; swipes flip the deck, tap opens, runway slider for New Trip / Join."
   }
 ]

@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **111** |
+| **Total Tracked** | **113** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **109** |
+| **✅ Shipped** | **111** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -161,6 +161,8 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-109** | Flutter: native Superadmin portal (overview, bug ledger, users, trips, flags, features, audit, controls, tools) | `admin` | `claude-cli` | `claude-cli` | Shipped in commit 510f2a4 (v3.55.0): the Superadmin login lands in the app; same Supabase tables and RPCs as the web Ops Deck. Installed on a Motorola Edge 70 Fusion; on-device walkthrough pending user review. |
 | **FEAT-110** | Flutter: growth panels and spend analytics ported from the Ops Deck | `analytics` | `claude-cli` | `claude-cli` | Shipped in commit 510f2a4 (v3.55.0): Growth, Overview, Financial, Engagement and Health tabs; ports opsGrowthMetrics.ts and the AdminAnalyticsPage spend panels. Unit-tested on a fixed fleet. |
 | **FEAT-111** | Flutter: Trips home card-stack view with destination photos and blurred backdrop | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 510f2a4 (v3.55.0): list / cards switch behind enableTripCardStack (Trip pack, default ON); swipe right to open, left to skip, long-press menu; photo from cover or destination. |
+| **FEAT-112** | Flutter: boarding-gate login screen | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit adb88c7 (v3.56.0): boardingPassLogin flag in prod, always on dev/staging. |
+| **FEAT-113** | Flutter: Departures card stack with runway slider and destination-first Create Trip | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit adb88c7 (v3.56.0): behind enableTripCardStack; swipes flip the deck, tap opens, runway slider for New Trip / Join. |
 
 ---
 
