@@ -46,6 +46,19 @@ class SupabaseAuthRepository implements AuthRepository {
   AuthUser? get currentUser => _current;
 
   @override
+  Future<AuthTokens?> sessionTokens() async {
+    try {
+      // Refresh first so the web app receives an access token with a full lifetime.
+      final session = (await _api.auth.refreshSession()).session ?? _api.auth.currentSession;
+      final refresh = session?.refreshToken;
+      if (session == null || refresh == null) return null;
+      return AuthTokens(accessToken: session.accessToken, refreshToken: refresh, expiresIn: session.expiresIn ?? 3600);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
   Stream<AuthUser?> watchUser() async* {
     await _restored; // no flash of the login screen for a returning guest
     yield _current;

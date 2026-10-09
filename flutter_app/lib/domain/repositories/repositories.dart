@@ -171,9 +171,20 @@ class AuthException implements Exception {
   String toString() => 'AuthException(${failure.name}): $message';
 }
 
+/// The raw session tokens, used only to hand a superadmin's login to the web Ops Deck.
+class AuthTokens {
+  const AuthTokens({required this.accessToken, required this.refreshToken, required this.expiresIn});
+  final String accessToken;
+  final String refreshToken;
+  final int expiresIn;
+}
+
 abstract class AuthRepository {
   Stream<AuthUser?> watchUser();
   AuthUser? get currentUser;
+
+  /// Fresh session tokens, or null when there is no Supabase session (guest/demo/signed out).
+  Future<AuthTokens?> sessionTokens();
 
   /// Whether the superadmin "signup_gate" app flag is closing new sign-ins.
   Future<bool> signInsPaused();

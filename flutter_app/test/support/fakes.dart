@@ -55,9 +55,18 @@ class FakeAuthRepository implements AuthRepository {
   static const _u = AuthUser(id: 'u1', email: 'a@b.c', displayName: 'Asha', provider: 'email');
 
   @override
+  Future<AuthTokens?> sessionTokens() async =>
+      const AuthTokens(accessToken: 'acc', refreshToken: 'ref', expiresIn: 3600);
+  @override
   Future<void> signInWithEmail(String email, String password) => _auth('email:$email', _u);
   @override
-  Future<void> signInAsSuperadmin(String email, String password) => _auth('superadmin:$email', _u);
+  Future<void> signInAsSuperadmin(String email, String password) async {
+    await _auth('superadmin:$email', _u);
+    // The real repository now awaits the `is_superadmin` RPC while the session already exists, so the
+    // router has time to leave (and dispose) the login screen before this call returns.
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+  }
+
   @override
   Future<void> signUpWithEmail(String email, String password, {String? displayName}) => _auth('signup:$email', _u);
   @override

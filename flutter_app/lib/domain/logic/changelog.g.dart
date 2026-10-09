@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.50.1', '2026-10-09', [
+    'Behind the scenes: Flutter Superadmin login now opens a Superadmin screen whose Ops Deck button signs you straight into the web portal, and web links open correctly on Android. No change to the web app.',
+  ]),
   ChangelogEntry('3.50.0', '2026-10-09', [
     'Behind the scenes: Flutter app now uses the web app colours (teal and orange), passes show as cards, and Superadmin login opens a Superadmin screen. No change to the web app.',
   ]),
@@ -40,8 +43,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.44.2', '2026-10-06', [
     'Behind the scenes: groundwork for Flutter migration Phase 7 slices E-G (ledger loop, UPI, share card, close-out). No change to the web app.',
-  ]),
-  ChangelogEntry('3.44.1', '2026-10-06', [
-    'Behind the scenes: groundwork for the upcoming native mobile app (expense form and balances screens). No change to the web app.',
   ]),
 ];

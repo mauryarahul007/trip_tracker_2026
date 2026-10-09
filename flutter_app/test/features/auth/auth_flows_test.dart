@@ -83,6 +83,10 @@ void main() {
       await tester.tap(button('Sign In'));
       await tester.pumpAndSettle();
       expect(app.auth.calls, ['superadmin:root@b.c']);
+      // A superadmin lands on the Superadmin screen, not the traveller Trips page.
+      expect(find.byKey(const Key('admin-open-ops-deck')), findsOneWidget);
+      expect(find.byKey(const Key('admin-view-traveller')), findsNothing); // the web portal has its own preview
+      expect(find.text('My Trips'), findsNothing);
     });
 
     testApp('a non-superadmin account is rejected with Google guidance', (tester) async {

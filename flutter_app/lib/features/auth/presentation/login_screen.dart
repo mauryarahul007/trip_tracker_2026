@@ -85,9 +85,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
     final repo = ref.read(authRepositoryProvider);
+    // Admin mode goes on BEFORE the sign-in: once the session exists the router leaves this screen,
+    // which disposes it, so anything after the await could no longer touch `ref`.
+    final adminMode = ref.read(adminModeProvider.notifier)..set(true);
     await _run(() async {
-      await repo.signInAsSuperadmin(email, _password.text);
-      ref.read(adminModeProvider.notifier).set(true);
+      try {
+        await repo.signInAsSuperadmin(email, _password.text);
+      } catch (_) {
+        adminMode.set(false);
+        rethrow;
+      }
     });
   }
 

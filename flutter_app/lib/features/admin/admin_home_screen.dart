@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/platform/external_launcher.dart';
 import '../../data/providers.dart';
@@ -9,14 +8,13 @@ import '../../shared/theme/app_tokens.dart';
 import '../../shared/theme/app_typography.dart';
 import '../../shared/widgets/app_button.dart';
 import 'admin_mode.dart';
+import 'ops_deck_link.dart';
 
-/// The Ops Deck (Command Center, Flags, Users, Trips, Analytics, Audit, Tools) is the web app's
-/// admin portal on `main`; superadmins land there after signing in. Override per build with
-/// `--dart-define=WEB_APP_URL=...`.
-const _webAppUrl = String.fromEnvironment(
-  'WEB_APP_URL',
-  defaultValue: 'https://mauryarahul007.github.io/trip_tracker_2026/',
-);
+/// The Ops Deck (Command Center, Flags, Users, Trips, Analytics, Audit, Tools) is the web app's admin portal;
+/// superadmins land there signed in. This is the EC2 deployment (deploy-ec2.yml), which is built with the real
+/// Supabase project. The GitHub Pages copy is a dummy build and can never sign anyone in. Override per build
+/// with `--dart-define=WEB_APP_URL=...`.
+const _webAppUrl = String.fromEnvironment('WEB_APP_URL', defaultValue: 'https://trip-tracker.blackmaroon.in/');
 
 class AdminHomeScreen extends ConsumerWidget {
   const AdminHomeScreen({super.key});
@@ -67,17 +65,10 @@ class AdminHomeScreen extends ConsumerWidget {
                   label: l10n.adminOpenOpsDeck,
                   icon: Icons.open_in_new_rounded,
                   isFullWidth: true,
-                  onPressed: () => ref.read(externalLauncherProvider)(Uri.parse(_webAppUrl)),
-                ),
-                const SizedBox(height: 12),
-                AppButton(
-                  key: const Key('admin-view-traveller'),
-                  label: l10n.adminViewTraveller,
-                  variant: AppButtonVariant.secondary,
-                  isFullWidth: true,
-                  onPressed: () {
-                    ref.read(adminModeProvider.notifier).set(false);
-                    context.go('/');
+                  onPressed: () async {
+                    // Hand the session to the web portal so the superadmin is not asked to sign in twice.
+                    final tokens = await ref.read(authRepositoryProvider).sessionTokens();
+                    await ref.read(externalLauncherProvider)(opsDeckUri(Uri.parse(_webAppUrl), tokens));
                   },
                 ),
                 const SizedBox(height: 12),

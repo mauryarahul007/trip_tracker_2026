@@ -2209,14 +2209,16 @@ Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, ne
 ### Steps
 1. Light, dark and AMOLED themes (Settings): primary actions and headers are teal (`#0F6F63` light, `#3FCBBD` dark), accent orange, surfaces match the web app; no blue remains (trips, balances, maps, Wrapped).
 2. Notes tab with passes: each pass is a card (type icon, route, passenger, flight, date chip, QR + live-status buttons); tapping opens the scanner/status as before.
-3. Login → expand Superadmin login → sign in with a superadmin account: you land on the Superadmin screen, not the traveller UI.
-4. On it: **Open Ops Deck** opens the web portal in the browser; **View as traveller** opens Trips; **Sign out** returns to login.
+3. Login → expand Superadmin login → sign in with a superadmin account: you land on the Superadmin screen with only **Open Ops Deck** and **Sign out** (no traveller view, no trips).
+4. Tap **Open Ops Deck**: Chrome opens the web app (`trip-tracker.blackmaroon.in`) and lands in the Superadmin portal already signed in, with no second login. Sign out returns to the Flutter login.
 5. Superadmin password field: capital letters can be typed; eye icon shows/hides.
 6. Debug builds: a failed Google sign-in shows the red banner plus a small grey line with the raw error.
 
 ### Negative checks
 - Non-superadmin account in the Superadmin form → rejected, signed out, no `/admin`.
 - Force-close and reopen as the same superadmin → traveller UI (admin redirect is per login, not persisted).
+- After about an hour the web portal may refresh the shared session; reopening the Flutter app can then ask for a sign-in again (known trade-off, decision 282).
+- Web links elsewhere in the app (share links, maps) open in the browser (Android manifest `https` query).
 - Release builds never show the grey error line.
 
 ### Pass

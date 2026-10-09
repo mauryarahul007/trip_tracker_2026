@@ -4930,3 +4930,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Ops Deck needs a second sign-in in the browser. Device verification of the new look is pending.
 * **Release Cut:** version bumped to `3.50.0` via `npm run release:minor`.
+
+## 282. Flutter: Superadmin screen opens the web Ops Deck already signed in
+
+* **Date:** 2026-10-09
+* **Context:** After decision 281 a superadmin still landed on the traveller Trips page, the Ops Deck button did nothing on Android, and when it did open it showed a second login (the default URL was the GitHub Pages build, which is compiled with a dummy Supabase URL).
+* **Decisions:**
+  - **Admin mode set before sign-in:** `adminModeProvider` is switched on before `signInAsSuperadmin` and off again on failure. The session appearing makes the router dispose the login screen, so code after the await could no longer use `ref`. Covered by a test whose fake mimics the `is_superadmin` round trip.
+  - **Single sign-on hand-off:** `AuthRepository.sessionTokens()` returns refreshed tokens; `opsDeckUri` puts them in the URL fragment (`access_token`, `refresh_token`, `expires_in`, `token_type`, no `type`). The web app uses supabase-js implicit flow with `detectSessionInUrl`, which signs in from the fragment and clears it. Fragments are not sent to servers.
+  - **Superadmin screen:** only Open Ops Deck and Sign out. The web portal has its own traveller preview, so the Flutter traveller UI is no longer reachable for a superadmin login.
+  - **Default portal URL:** `https://trip-tracker.blackmaroon.in/` (EC2 deployment, real Supabase secrets); override with `--dart-define=WEB_APP_URL`.
+  - **Android package visibility:** `https` and `http` VIEW intents added to the manifest queries; without them url_launcher cannot open any web link.
+* **Trade-offs Accepted:**
+  - The refresh token is shared between the Flutter app and the web app; refresh-token rotation means the Flutter copy may stop working once the web app refreshes it, so the app can ask for a sign-in again later. A one-time-code hand-off through an edge function would avoid this.
+  - The first history entry in Chrome keeps the fragment; rotation makes that token useless after the web app first refreshes it.
+* **Release Cut:** version bumped to `3.50.1` via `npm run release:patch`.

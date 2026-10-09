@@ -111,5 +111,15 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="bhim"/>
         </intent>
+        <!-- Android 11+ package visibility: without these url_launcher cannot open any web link
+             (Ops Deck, shared links, maps). The log says: component name for the https URL is null. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="http"/>
+        </intent>
     </queries>
 </manifest>

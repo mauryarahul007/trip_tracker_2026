@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.50.1',
+    date: '2026-10-09',
+    changes: [
+      'Behind the scenes: Flutter Superadmin login now opens a Superadmin screen whose Ops Deck button signs you straight into the web portal, and web links open correctly on Android. No change to the web app.',
+    ],
+  },
+  {
     version: '3.50.0',
     date: '2026-10-09',
     changes: [

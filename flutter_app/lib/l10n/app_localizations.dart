@@ -436,7 +436,7 @@ abstract class AppLocalizations {
   /// No description provided for @adminSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'The Ops Deck (flags, users, trips, analytics, audit) runs on the web portal.'**
+  /// **'Superadmin tools (flags, users, trips, analytics, audit, traveller preview) run in the web portal. You will be signed in automatically.'**
   String get adminSubtitle;
 
   /// No description provided for @adminOpenOpsDeck.
@@ -444,12 +444,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open Ops Deck'**
   String get adminOpenOpsDeck;
-
-  /// No description provided for @adminViewTraveller.
-  ///
-  /// In en, this message translates to:
-  /// **'View as traveller'**
-  String get adminViewTraveller;
 
   /// No description provided for @adminSignOut.
   ///
