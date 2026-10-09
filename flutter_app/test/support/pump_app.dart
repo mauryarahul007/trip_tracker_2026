@@ -23,6 +23,9 @@ import 'package:trip_tracker/core/platform/push_gateway.dart';
 import 'package:trip_tracker/core/settings/app_settings.dart';
 import 'package:trip_tracker/core/version/version_gate.dart';
 import 'package:trip_tracker/features/admin/application/admin_providers.dart';
+import 'package:trip_tracker/features/auth/presentation/boarding_login_widgets.dart';
+import 'package:trip_tracker/features/travel/places/weather_service.dart';
+import 'package:trip_tracker/features/expenses/application/expenses_providers.dart';
 import 'package:trip_tracker/features/trips/application/trips_providers.dart';
 import 'package:trip_tracker/features/feedback/application/feedback_providers.dart';
 import 'package:trip_tracker/features/notifications/application/notification_prefs_providers.dart';
@@ -105,6 +108,8 @@ Future<TestApp> pumpApp(
   List<Override> overrides = const [],
   Uri? launchLink,
   Future<String?> Function(String destination)? coverResolver,
+  bool superadmin = false,
+  bool boardingLogin = false,
   void Function(TestApp app)? setup,
 }) async {
   tester.view.physicalSize = const Size(430, 1400);
@@ -159,6 +164,9 @@ Future<TestApp> pumpApp(
         localNotificationsGatewayProvider.overrideWithValue(t.local),
         feedbackRepositoryProvider.overrideWithValue(t.feedback),
         adminRepositoryProvider.overrideWithValue(t.admin),
+        isSuperadminProvider.overrideWith((ref) async => superadmin),
+        boardingLoginProvider.overrideWithValue(boardingLogin),
+        weatherServiceProvider.overrideWithValue(FakeWeather()),
         tripCoverResolverProvider.overrideWithValue(
           coverResolver ?? (destination) async => null,
         ), // no network in tests

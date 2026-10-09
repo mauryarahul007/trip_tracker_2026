@@ -436,12 +436,18 @@ void main() {
   });
 
   group('detail sheet and online-only actions', () {
-    Future<(Seed, FakeApi)> setup(WidgetTester tester, {Set<String> flags = const {}, bool owner = true}) async {
+    Future<(Seed, FakeApi)> setup(
+      WidgetTester tester, {
+      Set<String> flags = const {},
+      bool owner = true,
+      bool superadmin = false,
+    }) async {
       final api = FakeApi();
       await pumpApp(
         tester,
         user: asha,
         flagsOn: flags,
+        superadmin: superadmin,
         overrides: [
           expenseRepositoryProvider.overrideWith(
             (ref) =>
@@ -573,6 +579,22 @@ void main() {
       expect(api.calls, ['confirm:$id']);
       expect(find.byKey(const Key('detail-confirmed')), findsOneWidget);
       expect(button('Confirm payment received'), findsNothing);
+    });
+
+    testApp('someone who is not the owner, an admin or the author gets no Edit / Delete', (tester) async {
+      final (s, _) = await setup(tester, owner: false);
+      await addExpense(tester, s, title: 'Beach lunch', userId: 'someone-else');
+      await openRow(tester, s, 'Beach lunch');
+      expect(button('Delete'), findsNothing);
+      expect(button('Edit'), findsNothing);
+    });
+
+    testApp('a superadmin can edit and delete any expense', (tester) async {
+      final (s, _) = await setup(tester, owner: false, superadmin: true);
+      await addExpense(tester, s, title: 'Beach lunch', userId: 'someone-else');
+      await openRow(tester, s, 'Beach lunch');
+      expect(button('Delete'), findsOneWidget);
+      expect(button('Edit'), findsOneWidget);
     });
 
     testApp('delete from the sheet closes it and offers undo', (tester) async {

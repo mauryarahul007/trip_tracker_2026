@@ -4,12 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:trip_tracker/data/providers.dart';
 import 'package:trip_tracker/data/sync/outbox_types.dart';
 import 'package:trip_tracker/domain/models/expense.dart';
+import 'package:trip_tracker/domain/repositories/repositories.dart' show AuthUser;
 import 'package:trip_tracker/shared/widgets/app_button.dart';
 
 import '../../support/pump_app.dart';
 import '../../support/seed.dart';
 
 Finder key(String k) => find.byKey(Key(k));
+
+const outsider = AuthUser(id: 'u9', email: 'x@y.z', provider: 'email');
+const benUser = AuthUser(id: 'u2', email: 'ben@b.c', provider: 'email');
 
 Future<void> openLedger(WidgetTester tester, Seed s) async {
   await settle(tester);
@@ -37,16 +41,69 @@ String text(WidgetTester t, String k) {
 }
 
 void main() {
-  testApp('balances and who-pays-whom for an unequal split', (tester) async {
+  testApp('who-pays-whom for an equal split; there is no per-person balance list any more', (tester) async {
     await pumpApp(tester, user: asha);
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 90); // Asha paid, 3-way equal: Ben & Cara owe 30 each
     await openLedger(tester, s);
-    await scrollToKey(tester, 'balance-${s.me}'); // Trip numbers is open by default, below the fold
-    expect(text(tester, 'balance-${s.me}'), 'is owed ₹60.00');
-    expect(text(tester, 'balance-${s.ben}'), 'owes ₹30.00');
     expect(find.text('Ben pays Asha'), findsOneWidget);
     expect(find.text('Cara pays Asha'), findsOneWidget);
+    await scrollToKey(tester, 'open-insights'); // the very end of Trip numbers
+    expect(find.byKey(Key('balance-${s.me}')), findsNothing);
+    expect(find.text("Everyone's balance"), findsNothing);
+  });
+
+  testApp("someone who is square but others still owe: stamped NOT SETTLED, not 'all square'", (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    // Ben paid for himself and Cara; Asha is not in the split, so her own balance is zero.
+    await addExpense(tester, s, amount: 90, paidBy: s.ben, split: [s.ben, s.cara]);
+    await openLedger(tester, s);
+    expect(find.descendant(of: key('settle-stamp'), matching: find.text('NOT SETTLED')), findsOneWidget);
+    expect(
+      find.descendant(of: key('sticky-balance'), matching: find.text("YOU'RE SQUARE · OTHERS STILL OWE")),
+      findsOneWidget,
+    );
+  });
+
+  testApp('a viewer who is not on the trip sees what is still to settle, never SETTLED, and no personal cards', (
+    tester,
+  ) async {
+    await pumpApp(tester, user: outsider);
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 90);
+    await openLedger(tester, s);
+    expect(find.descendant(of: key('settle-stamp'), matching: find.text('NOT SETTLED')), findsOneWidget);
+    expect(find.descendant(of: key('sticky-balance'), matching: find.text('STILL TO SETTLE')), findsOneWidget);
+    expect(
+      find.descendant(of: key('sticky-balance'), matching: find.text('₹60.00', findRichText: true)),
+      findsOneWidget,
+    ); // 30 + 30 open
+    expect(key('money-receive'), findsNothing);
+    expect(key('money-pay'), findsNothing);
+  });
+
+  group('who may flip Fewest / Per person', () {
+    testApp('the owner can', (tester) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await openLedger(tester, s);
+      expect(key('simplify-toggle'), findsOneWidget);
+    });
+
+    testApp('a plain member cannot (the server only accepts the owner)', (tester) async {
+      await pumpApp(tester, user: benUser);
+      final s = await seedTrip(tester);
+      await openLedger(tester, s);
+      expect(key('simplify-toggle'), findsNothing);
+    });
+
+    testApp('a superadmin can, even though they are not on the trip', (tester) async {
+      await pumpApp(tester, user: outsider, superadmin: true);
+      final s = await seedTrip(tester);
+      await openLedger(tester, s);
+      expect(key('simplify-toggle'), findsOneWidget);
+    });
   });
 
   testApp('the hero boarding pass is stamped SETTLED at zero and NOT SETTLED while money is owed', (tester) async {

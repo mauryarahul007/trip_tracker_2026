@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -88,9 +86,9 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final result = ref.watch(tripSettlementProvider(id));
     if (trip == null || result == null) return const Center(child: CircularProgressIndicator());
     final cur = trip.baseCurrency;
-    // The server only lets the trip owner change this (RLS), so only the owner gets the switch; for anyone
-    // else it would flip back on the next sync.
-    final canToggle = trip.ownerId == ref.watch(authStateProvider).userId;
+    // The server only accepts this change from the trip owner or a superadmin (RLS), so only they get the switch;
+    // for anyone else it would flip back on the next sync.
+    final canToggle = ref.watch(canEditTripRulesProvider(id));
     final history = _flag(ref, 'enableSettlementHistory', id);
     final compact = _flag(ref, 'enableCompactLedgerView', id);
     final pad = compact ? 8.0 : 16.0;
@@ -139,15 +137,22 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
       );
     }
 
-    // Hero: with groups it is my group's balance, otherwise my own.
+    // Hero: with groups it is my group's balance, otherwise my own. Someone who is not on the trip (a superadmin
+    // looking in) has no balance of their own, so they see what is still to settle across the trip.
+    final iAmIn = mine != null;
     final myGroup = mine == null
         ? null
         : groupLedger.nodes.where((n) => n.id.startsWith('group:') && n.memberIds.contains(mine)).firstOrNull;
-    final heroBalance = myGroup?.balance ?? myBalance?.balance ?? 0.0;
+    final outstanding = result.transfers.fold<double>(0, (a, t) => a + t.amount);
+    // "Settled" is a fact about the whole trip (nobody owes anybody), never about one person's balance.
+    final tripSettled = outstanding < 0.01;
+    final heroBalance = iAmIn ? (myGroup?.balance ?? myBalance?.balance ?? 0.0) : outstanding;
     final heroName = myGroup?.name ?? l10n.ledYou;
-    final settled = heroBalance.abs() < 0.01;
-    final heroLabel = settled
-        ? l10n.ledHeroSquare
+    final iAmSquare = iAmIn && heroBalance.abs() < 0.01;
+    final heroLabel = !iAmIn
+        ? (tripSettled ? l10n.ledHeroSquare : l10n.ledHeroOutstanding)
+        : iAmSquare
+        ? (tripSettled ? l10n.ledHeroSquare : l10n.ledHeroSquareOthers)
         : myGroup != null
         ? (heroBalance > 0 ? l10n.ledHeroGroupOwed(heroName) : l10n.ledHeroGroupOwes(heroName))
         : (heroBalance > 0 ? l10n.ledHeroYouOwed : l10n.ledHeroYouOwe);
@@ -156,10 +161,14 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final myNet = myBalance?.balance ?? 0.0;
     final toReceive = myNet > 0.005 ? myNet : 0.0;
     final toPay = myNet < -0.005 ? -myNet : 0.0;
-    final outstanding = result.transfers.fold<double>(0, (a, t) => a + t.amount);
     final settledSoFar = settlements.fold<double>(0, (a, e) => a + e.amount);
     final progressTotal = outstanding + settledSoFar;
-    final heroTone = settled ? BentoTone.sky : (heroBalance > 0 ? BentoTone.mint : BentoTone.peach);
+    final heroTone = tripSettled
+        ? BentoTone.sky
+        : (!iAmIn || iAmSquare ? BentoTone.butter : (heroBalance > 0 ? BentoTone.mint : BentoTone.peach));
+    final heroColor = !iAmIn || iAmSquare
+        ? tokens.textPrimary
+        : (heroBalance > 0 ? tokens.colorSuccess : tokens.colorDanger);
     final counts = ref.watch(tripSettlementCountsProvider(id));
     final totals = computeTotals(
       ref.watch(tripExpensesProvider(id)).value ?? const <Expense>[],
@@ -275,39 +284,36 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
               padding: const EdgeInsets.only(bottom: 20),
               child: BoardingPassCard(
                 tone: heroTone,
-                banner: _TwilightBanner(coverUrl: trip.coverImageUrl, title: trip.name),
+                banner: _PassBanner(
+                  coverUrl: trip.coverImageUrl,
+                  title: trip.name,
+                  dates: tripDates,
+                  eyebrow: l10n.ledPassTitle,
+                ),
                 top: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    BentoTile.eyebrow(context, heroTone, l10n.ledPassTitle),
-                    const SizedBox(height: 6),
+                    BentoTile.eyebrow(context, heroTone, heroLabel),
+                    const SizedBox(height: 4),
                     MoneyText(
                       whole: heroSplit.$1,
                       decimals: heroSplit.$2,
                       fontSize: compact ? 38 : 46,
-                      color: settled
-                          ? tokens.textPrimary
-                          : (heroBalance > 0 ? tokens.colorSuccess : tokens.colorDanger),
-                      glow: !settled,
+                      color: heroColor,
                     ),
-                    const SizedBox(height: 2),
-                    BentoTile.eyebrow(context, heroTone, heroLabel),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     Row(
                       children: [
                         StatusStamp(
                           key: const Key('settle-stamp'),
-                          settled: settled,
-                          text: settled ? l10n.ledStampSettled : l10n.ledStampNotSettled,
+                          settled: tripSettled,
+                          text: tripSettled ? l10n.ledStampSettled : l10n.ledStampNotSettled,
                           tone: heroTone,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            [
-                              if (tripDates.isNotEmpty) tripDates,
-                              '${trip.memberIds.length} ${l10n.ledHeroTravellers}',
-                            ].join('  ·  '),
+                            '${trip.memberIds.length} ${l10n.ledHeroTravellers}',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.end,
@@ -339,23 +345,24 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                 ),
               ),
             ),
-            // Your money: what I still receive and what I still pay.
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Row(
-                children: [
-                  moneyCard(
-                    Icons.south_west_rounded,
-                    BentoTone.mint,
-                    l10n.ledToReceive,
-                    toReceive,
-                    const Key('money-receive'),
-                  ),
-                  const SizedBox(width: 12),
-                  moneyCard(Icons.north_east_rounded, BentoTone.peach, l10n.ledToPay, toPay, const Key('money-pay')),
-                ],
+            // Your money: what I still receive and what I still pay (people on the trip only).
+            if (iAmIn)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: Row(
+                  children: [
+                    moneyCard(
+                      Icons.south_west_rounded,
+                      BentoTone.mint,
+                      l10n.ledToReceive,
+                      toReceive,
+                      const Key('money-receive'),
+                    ),
+                    const SizedBox(width: 12),
+                    moneyCard(Icons.north_east_rounded, BentoTone.peach, l10n.ledToPay, toPay, const Key('money-pay')),
+                  ],
+                ),
               ),
-            ),
             // Settlement progress, like a goal: how much of what was owed is already paid.
             if (progressTotal > 0.005)
               Padding(
@@ -599,47 +606,6 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                   ),
                 const SizedBox(height: 6),
               ],
-              const SizedBox(height: 22),
-              const Divider(),
-              Padding(
-                padding: const EdgeInsets.only(top: 14, bottom: 6),
-                child: Text(
-                  l10n.ledEveryone,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
-                ),
-              ),
-              for (final b in result.balances)
-                ListTile(
-                  key: Key('balance-${b.memberId}'),
-                  contentPadding: EdgeInsets.zero,
-                  dense: compact,
-                  title: Text(b.name),
-                  subtitle: b.balance.abs() < 0.01
-                      ? null
-                      : _BalanceBar(
-                          fraction: b.balance.abs() / result.balances.map((x) => x.balance.abs()).reduce(math.max),
-                          color: b.balance > 0 ? tokens.colorSuccess : tokens.colorDanger,
-                          track: tokens.borderColor,
-                        ),
-                  // Bounded so a long amount wraps instead of consuming the tile (200% text, wide fonts).
-                  trailing: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 150),
-                    child: Text(
-                      b.balance.abs() < 0.01
-                          ? l10n.ledEven
-                          : b.balance > 0
-                          ? l10n.ledOwed(formatMoney(context, b.balance, cur))
-                          : l10n.ledOwes(formatMoney(context, -b.balance, cur)),
-                      textAlign: TextAlign.end,
-                      style: TextStyle(
-                        color: b.balance.abs() < 0.01
-                            ? tokens.textSecondary
-                            : (b.balance > 0 ? tokens.colorSuccess : tokens.colorDanger),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
               if (_flag(ref, 'enableSpendInsights', id))
                 Align(
                   alignment: Alignment.centerLeft,
@@ -690,64 +656,148 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
   }
 }
 
-/// Twilight sky banner (trip cover when set) with the trip title, above the boarding-pass body.
-class _TwilightBanner extends StatelessWidget {
-  const _TwilightBanner({required this.coverUrl, required this.title});
+/// Banner of the settlement pass: a deep navy-to-teal gradient (the trip cover under a dark wash when it has one),
+/// a faint flight arc, the trip name and its dates in white.
+class _PassBanner extends StatelessWidget {
+  const _PassBanner({required this.coverUrl, required this.title, required this.dates, required this.eyebrow});
 
   final String? coverUrl;
   final String title;
+  final String dates;
+  final String eyebrow;
 
   @override
   Widget build(BuildContext context) {
-    final tokens = context.tokens;
-    return SizedBox(
+    // At least 150 high, taller when the text is scaled up, so nothing is ever clipped.
+    return ConstrainedBox(
       key: const Key('ledger-banner'),
-      height: 120,
+      constraints: const BoxConstraints(minHeight: 150),
       child: Stack(
-        fit: StackFit.expand,
         children: [
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFFF9A62), Color(0xFFB4506E), Color(0xFF2A2F55)],
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF0B1F33), Color(0xFF123A57), Color(0xFF1F6F78)],
+                ),
               ),
             ),
           ),
           if (coverUrl != null && coverUrl!.isNotEmpty)
-            Image.network(coverUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const SizedBox.shrink()),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.transparent, tokens.bgSurface],
+            Positioned.fill(
+              child: Image.network(coverUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const SizedBox.shrink()),
+            ),
+          // Soft teal glow top-right, and a wash so white text is readable on any photo.
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0.9, -1.1),
+                  radius: 1.1,
+                  colors: [Color(0x3329D9C2), Color(0x00000000)],
+                ),
               ),
             ),
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: AppTypography.fontTitle,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: tokens.textPrimary,
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: coverUrl == null ? 0.0 : 0.25),
+                    Colors.black.withValues(alpha: coverUrl == null ? 0.18 : 0.6),
+                  ],
                 ),
               ),
+            ),
+          ),
+          Positioned.fill(child: CustomPaint(painter: _FlightArcPainter())),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.flight_takeoff_rounded, size: 15, color: Colors.white70),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        eyebrow.toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: AppTypography.fontMono,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.6,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 34),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: AppTypography.fontTitle,
+                        fontSize: 27,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.6,
+                        color: Colors.white,
+                        shadows: [Shadow(color: Color(0x66000000), blurRadius: 10)],
+                      ),
+                    ),
+                    if (dates.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          dates,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white70),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+}
+
+/// A faint dashed route across the banner, like a flight path on a departures board.
+class _FlightArcPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()
+      ..moveTo(size.width * 0.05, size.height * 0.92)
+      ..quadraticBezierTo(size.width * 0.5, -size.height * 0.15, size.width * 0.96, size.height * 0.5);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.3
+      ..color = Colors.white.withValues(alpha: 0.22);
+    for (final m in path.computeMetrics()) {
+      for (var d = 0.0; d < m.length; d += 9) {
+        canvas.drawPath(m.extractPath(d, d + 4), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_FlightArcPainter old) => false;
 }
 
 class _SettleSheet extends ConsumerStatefulWidget {
@@ -969,26 +1019,4 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
       ),
     );
   }
-}
-
-class _BalanceBar extends StatelessWidget {
-  const _BalanceBar({required this.fraction, required this.color, required this.track});
-
-  final double fraction;
-  final Color color;
-  final Color track;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 4),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(99),
-      child: LinearProgressIndicator(
-        value: fraction.clamp(0.04, 1.0),
-        minHeight: 6,
-        backgroundColor: track,
-        color: color,
-      ),
-    ),
-  );
 }

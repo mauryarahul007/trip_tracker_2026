@@ -5,6 +5,9 @@ class AppTypography {
   static const String fontBody = 'Figtree';
   static const String fontMono = 'IBM Plex Mono';
 
+  /// Display serif for the two hero screens (login, Journeys); everything else stays Bricolage.
+  static const String fontSerif = 'Playfair Display';
+
   /// Bento type scale: titles and big numerals in Bricolage Grotesque, body and labels in Figtree.
   static TextTheme createTextTheme(Color textPrimary, Color textSecondary, Color textMuted) {
     return TextTheme(

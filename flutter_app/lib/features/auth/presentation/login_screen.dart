@@ -17,6 +17,9 @@ import '../../../shared/widgets/app_surface.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../application/auth_messages.dart';
 import '../application/social_sign_in.dart';
+import '../../../shared/theme/app_theme.dart';
+import '../../expenses/presentation/widgets/settle_ticket.dart' show TicketBarcode;
+import 'boarding_login_widgets.dart';
 
 /// Whether the superadmin "signup_gate" is closing new sign-ins.
 final signInsPausedProvider = FutureProvider.autoDispose<bool>(
@@ -107,12 +110,304 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (code.length == 6) context.go('/join/$code');
   }
 
+  /// The boarding-gate login: day's destination photo above, a torn-ticket sheet below with the boarding
+  /// actions. Same sign-in, join-by-code and staff paths as the classic layout.
+  Widget _buildBoarding(BuildContext context, {required bool paused, required bool apple}) {
+    final l10n = context.l10n;
+    const white = Colors.white;
+    Widget chip(IconData icon, String label) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0B1B2E).withValues(alpha: 0.62),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: const Color(0xFFFFC857)),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: white, fontSize: 12.5, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+    final hero = SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 36, 24, 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0B1B2E).withValues(alpha: 0.62),
+                borderRadius: BorderRadius.circular(99),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.wb_sunny_rounded, size: 14, color: Color(0xFFFFC857)),
+                  const SizedBox(width: 7),
+                  Flexible(
+                    child: Text(
+                      l10n.loginEdition.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: AppTypography.fontMono,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.4,
+                        color: Color(0xFF7EE0D0),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              'Trip Tracker',
+              key: Key('boarding-title'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: AppTypography.fontSerif,
+                fontSize: 44,
+                fontWeight: FontWeight.w800,
+                height: 1.05,
+                color: white,
+                shadows: [Shadow(color: Color(0x66000000), blurRadius: 16)],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              l10n.loginTagline,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14.5, height: 1.4, color: Colors.white70),
+            ),
+            const SizedBox(height: 18),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                chip(Icons.bolt_rounded, l10n.loginChipOffline),
+                chip(Icons.balance_rounded, l10n.loginChipSplits),
+                chip(Icons.public_rounded, l10n.loginChipSync),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    final sheet = Theme(
+      data: AppTheme.dark(),
+      child: Builder(
+        builder: (context) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const ScallopEdge(),
+            Container(
+              width: double.infinity,
+              color: boardingSheet,
+              padding: EdgeInsets.fromLTRB(22, 6, 22, 14 + MediaQuery.paddingOf(context).bottom),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.loginPassenger.toUpperCase(),
+                              style: const TextStyle(
+                                fontFamily: AppTypography.fontMono,
+                                fontSize: 11,
+                                letterSpacing: 1.4,
+                                color: Colors.white54,
+                              ),
+                            ),
+                            Text(
+                              l10n.loginPassengerYou,
+                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: white),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              l10n.loginStatus.toUpperCase(),
+                              style: const TextStyle(
+                                fontFamily: AppTypography.fontMono,
+                                fontSize: 11,
+                                letterSpacing: 1.4,
+                                color: Colors.white54,
+                              ),
+                            ),
+                            Text(
+                              l10n.loginNotSignedIn,
+                              style: const TextStyle(
+                                fontFamily: AppTypography.fontMono,
+                                fontSize: 12.5,
+                                color: Colors.white60,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  if (paused)
+                    _Banner(
+                      key: const Key('paused-banner'),
+                      text: l10n.authSignInsPaused,
+                      color: const Color(0xFFFFC857),
+                    ),
+                  if (_error != null)
+                    _Banner(key: const Key('error-banner'), text: _error!, color: const Color(0xFFFF8A80)),
+                  if (_detail != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: SelectableText(
+                        _detail!,
+                        key: const Key('error-detail'),
+                        style: const TextStyle(fontSize: 11, color: Colors.white38),
+                      ),
+                    ),
+                  _BoardButton(
+                    key: const Key('board-google'),
+                    label: l10n.loginBoardGoogle,
+                    leading: const GoogleGlyph(),
+                    onPressed: (paused || _busy) ? null : _google,
+                    busy: _busy,
+                  ),
+                  if (apple) ...[
+                    const SizedBox(height: 10),
+                    _BoardButton(
+                      key: const Key('board-apple'),
+                      label: l10n.loginBoardApple,
+                      leading: const Icon(Icons.apple, color: Colors.white),
+                      dark: true,
+                      onPressed: (paused || _busy) ? null : _apple,
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(l10n.authLegal, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(0, 28),
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                        ),
+                        onPressed: () => context.push('/terms'),
+                        child: Text(l10n.authTerms, style: const TextStyle(color: Color(0xFF7EB6FF), fontSize: 12)),
+                      ),
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(0, 28),
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                        ),
+                        onPressed: () => context.push('/privacy'),
+                        child: Text(l10n.authPrivacy, style: const TextStyle(color: Color(0xFF7EB6FF), fontSize: 12)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  GateCodeField(controller: _code, onChanged: (_) => setState(() {}), onJoin: _goJoin),
+                  const SizedBox(height: 12),
+                  if (_showAdmin)
+                    _SuperadminSection(
+                      showToggle: false,
+                      expanded: true,
+                      busy: _busy,
+                      email: _email,
+                      password: _password,
+                      onToggle: () {},
+                      onSubmit: _submitSuperadmin,
+                    ),
+                  Row(
+                    children: [
+                      const SizedBox(width: 86, child: TicketBarcode(seed: 'trip-tracker-gate', height: 22)),
+                      const Spacer(),
+                      TextButton(
+                        key: const Key('superadmin-toggle'),
+                        onPressed: _busy
+                            ? null
+                            : () => setState(() {
+                                _showAdmin = !_showAdmin;
+                                _error = null;
+                              }),
+                        child: Text(
+                          '${l10n.loginStaff} ›',
+                          style: const TextStyle(color: Colors.white60, fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return Scaffold(
+      backgroundColor: boardingSheet,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const BoardingBackdrop(),
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: CustomScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                slivers: [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Column(
+                      children: [
+                        Expanded(child: hero),
+                        sheet,
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final tokens = context.tokens;
     final paused = ref.watch(signInsPausedProvider).value ?? false;
     final apple = ref.watch(socialAuthProvider).appleAvailable;
+    if (ref.watch(boardingLoginProvider)) return _buildBoarding(context, paused: paused, apple: apple);
     return AppScaffold(
       maxContentWidth: MediaQuery.sizeOf(context).width >= _kSplitBreakpoint ? null : 960,
       body: _splitOnWide(
@@ -336,8 +631,10 @@ class _SuperadminSection extends StatelessWidget {
     required this.password,
     required this.onToggle,
     required this.onSubmit,
+    this.showToggle = true,
   });
 
+  final bool showToggle;
   final bool expanded;
   final bool busy;
   final TextEditingController email;
@@ -352,21 +649,22 @@ class _SuperadminSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(
-          child: TextButton.icon(
-            key: const Key('superadmin-toggle'),
-            onPressed: busy ? null : onToggle,
-            icon: Icon(
-              expanded ? Icons.expand_less_rounded : Icons.admin_panel_settings_outlined,
-              size: 18,
-              color: tokens.textSecondary,
-            ),
-            label: Text(
-              l10n.authSuperadminLogin,
-              style: TextStyle(color: tokens.textSecondary, fontSize: 13, fontWeight: FontWeight.w600),
+        if (showToggle)
+          Center(
+            child: TextButton.icon(
+              key: const Key('superadmin-toggle'),
+              onPressed: busy ? null : onToggle,
+              icon: Icon(
+                expanded ? Icons.expand_less_rounded : Icons.admin_panel_settings_outlined,
+                size: 18,
+                color: tokens.textSecondary,
+              ),
+              label: Text(
+                l10n.authSuperadminLogin,
+                style: TextStyle(color: tokens.textSecondary, fontSize: 13, fontWeight: FontWeight.w600),
+              ),
             ),
           ),
-        ),
         if (expanded)
           AppCard(
             key: const Key('superadmin-form'),
@@ -466,4 +764,63 @@ Widget _splitOnWide(BuildContext context, Widget form) {
       ),
     ],
   );
+}
+
+/// A big pill action on the dark boarding sheet: white (primary) or outlined dark.
+class _BoardButton extends StatelessWidget {
+  const _BoardButton({
+    required this.label,
+    required this.leading,
+    required this.onPressed,
+    this.dark = false,
+    this.busy = false,
+    super.key,
+  });
+
+  final String label;
+  final Widget leading;
+  final VoidCallback? onPressed;
+  final bool dark;
+  final bool busy;
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = dark ? Colors.white : const Color(0xFF111827);
+    return Opacity(
+      opacity: onPressed == null && !busy ? 0.5 : 1,
+      child: Material(
+        color: dark ? Colors.transparent : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: dark ? BorderSide(color: Colors.white.withValues(alpha: 0.35)) : BorderSide.none,
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onPressed,
+          child: SizedBox(
+            height: 56,
+            child: Center(
+              child: busy
+                  ? SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: fg))
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        leading,
+                        const SizedBox(width: 12),
+                        Flexible(
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: fg, fontSize: 16, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

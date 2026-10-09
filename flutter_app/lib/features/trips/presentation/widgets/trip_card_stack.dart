@@ -1,23 +1,26 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/format/money.dart';
 import '../../../../domain/logic/trip_status.dart';
 import '../../../../domain/logic/trip_utilities.dart' show formatDateRange;
 import '../../../../domain/models/trip.dart';
 import '../../../../l10n/l10n_ext.dart';
-import '../../../../shared/theme/app_icons.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/app_typography.dart';
-import '../../../../shared/widgets/ticket_scallop_divider.dart';
+import '../../../../shared/widgets/app_avatar.dart';
+import '../../../expenses/application/expenses_providers.dart' show tripMembersProvider;
 import '../../application/trips_providers.dart';
-import 'trip_card.dart';
+import 'trip_card.dart' show tripHeadline;
 
-/// Trips as a deck of tall boarding-pass cards, every trip in any state.
+/// Trips as a deck of full-bleed photo cards, every trip in any state.
 ///
-/// Swipe the top card right (or tap it, or press Open) to open the trip; swipe left (or press Skip) to send it to
-/// the back of the deck; long-press for the trip menu. The next two cards peek out behind it.
+/// Tap the top card to open the trip; swipe left or right to flip through the deck;
+/// long-press for the trip menu. The next two cards peek out behind it. Screen readers get the same actions as
+/// "Open" and "Skip" custom actions on the top card.
 class TripCardStack extends StatefulWidget {
   const TripCardStack({
     required this.trips,
@@ -25,6 +28,7 @@ class TripCardStack extends StatefulWidget {
     required this.onOpen,
     required this.onLongPress,
     this.onTopChanged,
+    this.bottomInset = 80,
     super.key,
   });
 
@@ -35,6 +39,9 @@ class TripCardStack extends StatefulWidget {
 
   /// Called (after the frame) whenever a different trip becomes the top card, so the screen can tint its background.
   final ValueChanged<Trip>? onTopChanged;
+
+  /// Space kept free under the card for the floating runway slider (about 90 high) and the page dots.
+  final double bottomInset;
 
   @override
   State<TripCardStack> createState() => _TripCardStackState();
@@ -89,19 +96,17 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
     _flying = false;
   }
 
-  /// Right = open the trip (the card returns afterwards); left = to the back of the deck.
-  Future<void> _commit({required bool open, required double width}) async {
+  /// Left = top card to the back of the deck (next); right = the last card back to the front (previous). Opening a trip
+  /// is a tap, never a swipe.
+  Future<void> _commit({required bool next, required double width}) async {
     final trips = _ordered;
-    if (trips.isEmpty || _flying) return;
-    final top = trips.first;
-    if (!open && trips.length < 2) return _snapBack(); // nothing to skip to
-    await _fly(Offset((open ? 1 : -1) * width * 1.6, _drag.dy));
+    if (trips.length < 2 || _flying) return _snapBack(); // nothing to move to
+    await _fly(Offset((next ? -1 : 1) * width * 1.6, _drag.dy));
     if (!mounted) return;
     setState(() {
       _drag = Offset.zero;
-      if (!open) _order = [..._order.skip(1), _order.first];
+      _order = next ? [..._order.skip(1), _order.first] : [_order.last, ..._order.take(_order.length - 1)];
     });
-    if (open) widget.onOpen(top);
   }
 
   Future<void> _snapBack() async {
@@ -113,7 +118,6 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final t = context.tokens;
     final trips = _ordered;
     if (trips.isEmpty) return const SizedBox.shrink();
     if (_reportedTop != trips.first.id) {
@@ -123,16 +127,18 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
         if (mounted) widget.onTopChanged?.call(top);
       });
     }
+    final position = widget.trips.indexWhere((x) => x.id == trips.first.id);
     return LayoutBuilder(
       builder: (context, box) {
-        final cardW = math.min(box.maxWidth - 32, 440.0);
-        final cardH = (box.maxHeight - 108).clamp(280.0, 640.0);
+        final cardW = math.min(box.maxWidth - 24, 460.0);
+        final cardH = (box.maxHeight - 28 - widget.bottomInset).clamp(300.0, 900.0);
         final progress = (_drag.dx.abs() / (cardW * 0.4)).clamp(0.0, 1.0);
         final behind = math.min(2, trips.length - 1);
         return Column(
           children: [
             Expanded(
-              child: Center(
+              child: Align(
+                alignment: Alignment.topCenter,
                 child: SizedBox(
                   width: cardW,
                   height: cardH + 28,
@@ -157,32 +163,44 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
                         ),
                       Positioned(
                         top: 0,
-                        child: GestureDetector(
-                          key: const Key('stack-top'),
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () => widget.onOpen(trips.first),
-                          onLongPress: () => widget.onLongPress(trips.first),
-                          onPanUpdate: (d) {
-                            if (!_flying) setState(() => _drag += d.delta);
+                        child: Semantics(
+                          customSemanticsActions: {
+                            CustomSemanticsAction(label: l10n.tripsStackOpen): () => widget.onOpen(trips.first),
+                            if (trips.length > 1)
+                              CustomSemanticsAction(label: l10n.tripsStackSkip): () =>
+                                  _commit(next: true, width: cardW),
                           },
-                          onPanEnd: (d) {
-                            final vx = d.velocity.pixelsPerSecond.dx;
-                            final far = _drag.dx.abs() > cardW * 0.28;
-                            final flung = vx.abs() > 800 && vx.sign == _drag.dx.sign;
-                            if (far || flung) {
-                              _commit(open: _drag.dx > 0, width: cardW);
-                            } else {
-                              _snapBack();
-                            }
-                          },
-                          child: Transform.translate(
-                            offset: _drag,
-                            child: Transform.rotate(
-                              angle: _drag.dx / cardW * 0.25,
-                              child: SizedBox(
-                                width: cardW,
-                                height: cardH,
-                                child: _StackCard(trip: trips.first, now: widget.now, swipe: _drag.dx / (cardW * 0.4)),
+                          child: GestureDetector(
+                            key: const Key('stack-top'),
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => widget.onOpen(trips.first),
+                            onLongPress: () => widget.onLongPress(trips.first),
+                            onPanUpdate: (d) {
+                              if (!_flying) setState(() => _drag += d.delta);
+                            },
+                            onPanEnd: (d) {
+                              final vx = d.velocity.pixelsPerSecond.dx;
+                              final far = _drag.dx.abs() > cardW * 0.28;
+                              final flung = vx.abs() > 800 && vx.sign == _drag.dx.sign;
+                              if (far || flung) {
+                                _commit(next: _drag.dx < 0, width: cardW);
+                              } else {
+                                _snapBack();
+                              }
+                            },
+                            child: Transform.translate(
+                              offset: _drag,
+                              child: Transform.rotate(
+                                angle: _drag.dx / cardW * 0.25,
+                                child: SizedBox(
+                                  width: cardW,
+                                  height: cardH,
+                                  child: _StackCard(
+                                    trip: trips.first,
+                                    now: widget.now,
+                                    swipe: _drag.dx / (cardW * 0.4),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -193,37 +211,11 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _RoundButton(
-                    key: const Key('stack-skip'),
-                    icon: AppIcons.close,
-                    label: l10n.tripsStackSkip,
-                    onPressed: trips.length < 2 ? null : () => _commit(open: false, width: cardW),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 22),
-                    child: Text(
-                      l10n.tripsStackPosition(
-                        (widget.trips.indexWhere((x) => x.id == trips.first.id) + 1),
-                        widget.trips.length,
-                      ),
-                      key: const Key('stack-position'),
-                      style: TextStyle(fontFamily: AppTypography.fontMono, fontSize: 12.5, color: t.textSecondary),
-                    ),
-                  ),
-                  _RoundButton(
-                    key: const Key('stack-open'),
-                    icon: Icons.arrow_forward_rounded,
-                    label: l10n.tripsStackOpen,
-                    filled: true,
-                    onPressed: () => _commit(open: true, width: cardW),
-                  ),
-                ],
-              ),
+            _PageDots(
+              key: const Key('stack-dots'),
+              count: widget.trips.length,
+              index: position < 0 ? 0 : position,
+              label: l10n.tripsStackPosition(position + 1, widget.trips.length),
             ),
           ],
         );
@@ -232,44 +224,48 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
   }
 }
 
-class _RoundButton extends StatelessWidget {
-  const _RoundButton({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-    this.filled = false,
-    super.key,
-  });
+/// Up to seven dots; the active one is a longer pill. Falls back to the first/last seven for big decks.
+class _PageDots extends StatelessWidget {
+  const _PageDots({required this.count, required this.index, required this.label, super.key});
 
-  final IconData icon;
+  final int count;
+  final int index;
   final String label;
-  final VoidCallback? onPressed;
-  final bool filled;
 
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    const max = 7;
+    final shown = math.min(count, max);
+    // Window of dots that always contains the active one.
+    final start = count <= max ? 0 : (index - max ~/ 2).clamp(0, count - max);
     return Semantics(
-      button: true,
       label: label,
-      child: Material(
-        color: filled ? t.ctaBg : t.bgSurface,
-        shape: CircleBorder(side: BorderSide(color: t.borderColor)),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onPressed,
-          child: SizedBox(
-            width: 56,
-            height: 56,
-            child: Icon(icon, color: filled ? t.ctaFg : (onPressed == null ? t.textMuted : t.textPrimary)),
-          ),
+      excludeSemantics: true,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var i = 0; i < shown; i++)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                width: start + i == index ? 18 : 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: start + i == index ? t.textPrimary : t.textPrimary.withValues(alpha: 0.28),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// One trip as a tall boarding pass: cover (or tinted gradient) above a perforation, details in the stub below.
+/// One trip, full bleed: the photo with a dark wash, status + route chips on top, name, dates, crew and spend below.
 class _StackCard extends ConsumerWidget {
   const _StackCard({required this.trip, required this.now, this.dim = false, this.swipe = 0});
 
@@ -280,196 +276,329 @@ class _StackCard extends ConsumerWidget {
   /// -1 (left, skip) .. 1 (right, open): drives the hint label on the top card.
   final double swipe;
 
+  static const _ink = Colors.white;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final t = context.tokens;
     final status = tripStatus(trip.startDate, trip.endDate, now);
-    final headline = tripHeadline(context, status);
-    final tone = tripTone(trip.id);
-    final dest = (trip.destination ?? '').trim();
-    final dates = trip.startDate.isNotEmpty ? formatDateRange(trip.startDate, trip.endDate) : '';
+    final headline = trip.archived ? l10n.tripBadgeArchived : tripHeadline(context, status);
     final cover = ref.watch(tripCoverProvider(tripCoverKey(trip))).value; // own cover, else the destination's photo
-    final ended = trip.archived || status.phase == TripPhase.ended;
+    final route = _routeText(trip);
+    final weather = route.isEmpty ? null : ref.watch(tripWeatherProvider(trip.destination ?? route)).value;
+    final dates = trip.startDate.isNotEmpty ? formatDateRange(trip.startDate, trip.endDate) : '';
+    final spent = ref.watch(tripSpentProvider(trip.id));
+    final progress = switch (status.phase) {
+      TripPhase.ended => 1.0,
+      TripPhase.active => status.totalDays <= 0 ? 0.0 : (status.dayNumber / status.totalDays).clamp(0.0, 1.0),
+      _ => 0.0,
+    };
+    final dotColor = switch (status.phase) {
+      TripPhase.active => t.colorSuccess,
+      TripPhase.upcoming => t.colorWarning,
+      _ => const Color(0xFF8EA2FF),
+    };
     return Semantics(
       container: true,
       label: '${trip.name}. $headline',
-      child: Opacity(
-        opacity: dim ? 0.92 : (ended ? 0.9 : 1),
-        child: Container(
-          decoration: BoxDecoration(
-            color: t.bgSurface,
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: t.borderColor.withValues(alpha: 0.6)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: dim ? 0.10 : 0.22),
-                blurRadius: 22,
-                offset: const Offset(0, 8),
-              ),
-            ],
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: dim ? 0.18 : 0.38),
+              blurRadius: 28,
+              offset: const Offset(0, 12),
+            ),
+          ],
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF14304A), Color(0xFF0A1827)],
           ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: [
-              Expanded(
-                flex: 11,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    DecoratedBox(
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (cover != null && cover.isNotEmpty)
+              Image.network(
+                cover,
+                key: Key('stack-photo-${trip.id}'),
+                fit: BoxFit.cover,
+                frameBuilder: (_, child, frame, sync) => AnimatedOpacity(
+                  opacity: frame == null && !sync ? 0 : 1,
+                  duration: const Duration(milliseconds: 350),
+                  child: child,
+                ),
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              ),
+            // Lightens nothing: a clear top for the sky, a deep navy wash from the lower half for the text.
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0, 0.25, 0.55, 1],
+                  colors: [Color(0x66050B14), Color(0x00050B14), Color(0x99050B14), Color(0xF2050B14)],
+                ),
+              ),
+            ),
+            Positioned(
+              top: 16,
+              left: 16,
+              right: 16,
+              // A Wrap, so a long route chip drops to its own line on a narrow phone or at large text sizes.
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  _Chip(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
+                        ),
+                        const SizedBox(width: 7),
+                        Text(
+                          headline.toUpperCase(),
+                          key: const Key('stack-status'),
+                          style: const TextStyle(
+                            fontFamily: AppTypography.fontMono,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1,
+                            color: _ink,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (route.isNotEmpty)
+                    _Chip(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              route,
+                              key: const Key('stack-place'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: _ink),
+                            ),
+                          ),
+                          if (weather != null) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              '${weather.weatherEmoji} ${weather.tempC}°C',
+                              key: const Key('stack-weather'),
+                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: _ink),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (swipe.abs() > 0.15)
+              Positioned(
+                top: 72,
+                left: swipe > 0 ? 22 : null,
+                right: swipe < 0 ? 22 : null,
+                child: Opacity(
+                  opacity: swipe.abs().clamp(0.0, 1.0),
+                  child: Transform.rotate(
+                    angle: swipe > 0 ? -0.2 : 0.2,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [t.tones[tone].bg, t.tones[tone].accent.withValues(alpha: 0.75)],
+                        border: Border.all(color: swipe > 0 ? t.colorSuccess : Colors.white, width: 3),
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.black.withValues(alpha: 0.22),
+                      ),
+                      child: Text(
+                        (swipe > 0 ? l10n.tripsStackOpen : l10n.tripsStackSkip).toUpperCase(),
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontMono,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.4,
+                          color: swipe > 0 ? t.colorSuccess : Colors.white,
                         ),
                       ),
                     ),
-                    if (cover != null && cover.isNotEmpty)
-                      Image.network(
-                        cover,
-                        key: Key('stack-photo-${trip.id}'),
-                        fit: BoxFit.cover,
-                        frameBuilder: (_, child, frame, sync) => AnimatedOpacity(
-                          opacity: frame == null && !sync ? 0 : 1,
-                          duration: const Duration(milliseconds: 350),
-                          child: child,
-                        ),
-                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                      ),
-                    // Darkens the top and bottom of the photo so the pill and the place name stay readable.
-                    const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          stops: [0, 0.3, 0.6, 1],
-                          colors: [Color(0x66000000), Color(0x00000000), Color(0x00000000), Color(0x99000000)],
-                        ),
-                      ),
+                  ),
+                ),
+              ),
+            Positioned(
+              left: 22,
+              right: 22,
+              bottom: 22,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    trip.name,
+                    key: const Key('stack-title'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: AppTypography.fontSerif,
+                      fontSize: 38,
+                      fontWeight: FontWeight.w800,
+                      height: 1.05,
+                      color: _ink,
+                      shadows: [Shadow(color: Color(0x66000000), blurRadius: 12)],
                     ),
-                    if (dest.isNotEmpty)
-                      Positioned(
-                        left: 16,
-                        right: 16,
-                        bottom: 14,
-                        child: Row(
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          dates.toUpperCase(),
+                          style: const TextStyle(
+                            fontFamily: AppTypography.fontMono,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.8,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ),
+                      if (status.totalDays > 0)
+                        Text(
+                          l10n.tripDaysCount(status.totalDays),
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white70),
+                        ),
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    child: Divider(height: 1, color: Colors.white24),
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _Crew(tripId: trip.id, fallbackCount: trip.memberIds.length),
+                      const SizedBox(width: 12),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            const Icon(Icons.place_rounded, size: 18, color: Colors.white),
-                            const SizedBox(width: 4),
-                            Expanded(
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerRight,
                               child: Text(
-                                dest,
-                                key: const Key('stack-place'),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                l10n.tripSpentLabel(formatMoney(context, spent, trip.baseCurrency)),
+                                key: const Key('stack-spent'),
                                 style: const TextStyle(
+                                  fontFamily: AppTypography.fontMono,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: _ink,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(99),
+                              child: SizedBox(
+                                width: 120,
+                                height: 4,
+                                child: LinearProgressIndicator(
+                                  key: const Key('stack-progress'),
+                                  value: progress,
                                   color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  shadows: [Shadow(color: Color(0x99000000), blurRadius: 8)],
+                                  backgroundColor: Colors.white24,
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    Positioned(
-                      top: 14,
-                      left: 14,
-                      right: 14,
-                      child: Row(
-                        children: [
-                          if (headline.isNotEmpty) TripStatusPill(headline),
-                          const Spacer(),
-                          if (trip.archived) TripChip(l10n.tripBadgeArchived),
-                        ],
-                      ),
-                    ),
-                    if (swipe.abs() > 0.15)
-                      Positioned(
-                        top: 56,
-                        left: swipe > 0 ? 18 : null,
-                        right: swipe < 0 ? 18 : null,
-                        child: Opacity(
-                          opacity: swipe.abs().clamp(0.0, 1.0),
-                          child: Transform.rotate(
-                            angle: swipe > 0 ? -0.2 : 0.2,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: swipe > 0 ? t.colorSuccess : t.textPrimary, width: 3),
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.black.withValues(alpha: 0.18),
-                              ),
-                              child: Text(
-                                (swipe > 0 ? l10n.tripsStackOpen : l10n.tripsStackSkip).toUpperCase(),
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontMono,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.4,
-                                  color: swipe > 0 ? t.colorSuccess : t.textPrimary,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              TicketScallopDivider(
-                notchRadius: 12,
-                cardColor: t.bgSurface,
-                cutoutColor: t.bgPage,
-                perforationColor: t.textPrimary.withValues(alpha: 0.2),
-              ),
-              Expanded(
-                flex: 8,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        trip.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontTitle,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.8,
-                          height: 1.05,
-                          color: t.textPrimary,
-                        ),
-                      ),
-                      if (dates.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          dates,
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: t.tones[tone].accent),
-                        ),
-                      ],
-                      const Spacer(),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          TripChip(l10n.tripTravelers(trip.memberIds.length)),
-                          TripChip(l10n.tripExpenseCount(trip.expenseCount)),
-                          if (trip.closed) TripChip(l10n.tripBadgeClosed),
-                          if (trip.frozen) TripChip(l10n.tripBadgeFrozen),
-                        ],
-                      ),
                     ],
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+/// "Manali → Shimla → Cha…": the destination as typed, else the saved stops.
+String _routeText(Trip trip) {
+  final dest = (trip.destination ?? '').trim();
+  if (dest.isNotEmpty) return dest.replaceAll('->', '→');
+  return trip.stops.map((s) => s.name).where((n) => n.trim().isNotEmpty).join(' → ');
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+    decoration: BoxDecoration(
+      color: const Color(0xFF0B1B2E).withValues(alpha: 0.62),
+      borderRadius: BorderRadius.circular(99),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+    ),
+    child: child,
+  );
+}
+
+/// Overlapping avatars of the people on the trip (up to three, then "+N").
+class _Crew extends ConsumerWidget {
+  const _Crew({required this.tripId, required this.fallbackCount});
+
+  final String tripId;
+  final int fallbackCount;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final members = ref.watch(tripMembersProvider(tripId)).value ?? const [];
+    final names = [for (final m in members) m.name];
+    final total = names.isEmpty ? fallbackCount : names.length;
+    final shown = names.take(3).toList();
+    return SizedBox(
+      height: 38,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < shown.length; i++)
+            Align(
+              widthFactor: i == 0 ? 1 : 0.68,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFF0A1827), width: 2),
+                ),
+                child: AppAvatar(name: shown[i], size: 34),
+              ),
+            ),
+          if (total > shown.length)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Text(
+                '+${total - shown.length}',
+                style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white70),
+              ),
+            ),
+        ],
       ),
     );
   }

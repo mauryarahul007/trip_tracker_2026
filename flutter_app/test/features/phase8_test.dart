@@ -203,12 +203,16 @@ void main() {
     var item = containerOf(tester).read(tripProvider(s.tripId)).value!.checklist.single;
     expect((item.text, item.category, item.assignedToMemberId), ('Passport', 'documents', s.ben));
 
+    TextDecoration? deco() => DefaultTextStyle.of(tester.element(find.text('Passport'))).style.decoration;
+    expect(deco(), TextDecoration.none); // not done yet: plain text, no strike-through
+
     // One tap on the tile ticks it off (and strikes the text through).
     await tester.tap(key('check-${item.id}'));
     await settle(tester, rounds: 6);
     item = containerOf(tester).read(tripProvider(s.tripId)).value!.checklist.single;
     expect(item.completed, isTrue);
-    expect(tester.widget<Text>(find.text('Passport')).style?.decoration, TextDecoration.lineThrough);
+    await settle(tester, rounds: 4);
+    expect(deco(), TextDecoration.lineThrough);
 
     // Edit from the menu: rename and make it "anyone".
     await tester.tap(key('check-menu-${item.id}'));

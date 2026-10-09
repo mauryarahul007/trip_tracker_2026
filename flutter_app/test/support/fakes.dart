@@ -7,6 +7,7 @@ import 'package:trip_tracker/data/push/push_service.dart';
 import 'package:trip_tracker/domain/logic/bug_report.dart';
 import 'package:trip_tracker/domain/logic/pass_reminders.dart';
 import 'package:trip_tracker/domain/models/admin.dart';
+import 'package:trip_tracker/features/travel/places/weather_service.dart';
 import 'package:trip_tracker/domain/models/admin_fleet.dart';
 
 import 'fleet_fixture.dart';
@@ -702,4 +703,14 @@ class FakeAdmin implements AdminRepository {
     const ServiceCheck(name: 'Database', ok: true, ms: 90),
     const ServiceCheck(name: 'Storage', ok: true, ms: 300),
   ];
+}
+
+/// Never touches the network: no destination has weather.
+class FakeWeather implements WeatherService {
+  @override
+  Future<WeatherData?> getDestinationWeather(
+    dynamic destination, {
+    void Function(WeatherData fresh)? onLiveUpdate,
+    bool forceRefresh = false,
+  }) async => null;
 }

@@ -12,6 +12,10 @@ class AppScaffold extends StatelessWidget {
   final bool resizeToAvoidBottomInset;
   final Color? backgroundColor;
 
+  /// Whether the body keeps clear of the status bar. Null = yes when there is no app bar. Screens that paint their own
+  /// full-bleed background (the card-stack Trips home) pass false and inset their content themselves.
+  final bool? safeTop;
+
   /// Caps the body width on wide windows (web / tablet) and centres it. Null = full width.
   final double? maxContentWidth;
 
@@ -23,6 +27,7 @@ class AppScaffold extends StatelessWidget {
     this.floatingActionButton,
     this.resizeToAvoidBottomInset = true,
     this.backgroundColor,
+    this.safeTop,
     this.maxContentWidth = 960,
   });
 
@@ -35,7 +40,7 @@ class AppScaffold extends StatelessWidget {
       backgroundColor: backgroundColor ?? tokens.bgPage,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       body: SafeArea(
-        top: appBar == null,
+        top: safeTop ?? appBar == null,
         bottom: bottomNavigationBar == null,
         child: maxContentWidth == null
             ? body

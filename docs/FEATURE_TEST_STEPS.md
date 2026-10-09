@@ -28,6 +28,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-09 | flutter 3.54 | FLUTTER-BOARDING | [Flutter: boarding-pass Summary, receipt Expenses, pass wallet, live-stream fix](#flutter-boarding--flutter-boarding-pass-ui-and-live-stream-fix-v3540) |
 | 2026-10-09 | flutter 3.55 | FLUTTER-SUPERADMIN | [Flutter: native Superadmin portal and analytics](#flutter-superadmin--flutter-native-superadmin-portal-and-analytics-v3550) |
 | 2026-10-09 | flutter 3.55 | FLUTTER-CARDSTACK | [Flutter: Trips card-stack view](#flutter-cardstack--flutter-trips-card-stack-view-v3550) |
+| 2026-10-10 | flutter 3.56 | FLUTTER-DEPARTURES | [Flutter: boarding-gate login, Departures stack, runway slider, destination-first Create Trip](#flutter-departures--flutter-boarding-gate-login-departures-stack-runway-slider-v3560) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -2386,3 +2387,18 @@ Then add a row to the **Index** table.
 ### Pass
 - Each step matches; no overflow at 360 px width; swiping stays smooth with 20+ trips.
 
+## FLUTTER-DEPARTURES — Flutter boarding-gate login, Departures stack, runway slider (v3.56.0)
+
+**Flags:** `boardingPassLogin` (login, prod only), `enableTripCardStack` (Trip pack, default ON). Dev/staging builds always show the new login.
+
+1. Signed out: the login shows a destination photo, "Board with Google", a gate-code field (Join stays dim until 6 characters) and "Staff ›".
+2. Never sign in automatically as the superadmin: kill and reopen the app after a superadmin session; the login must show.
+3. Sign in, open Trips, tap the cards button. The header says "Departures" with "N TRIPS · M ACTIVE"; the filter pills are centred; no white bar above the header.
+4. Swipe the top card left (goes to the back) and right (previous card returns). Neither opens a trip. Tap the card: the trip opens. Long-press: Open / Archive / Delete menu.
+5. Slide the plane right to the end: Create Trip opens. Slide left to the end: Join opens. A short slide rolls back. Tapping the Join / New Trip labels does the same.
+6. In Create Trip, Destination is first. Type "Tokyo": the name fills "Tokyo trip". Type your own name, then change the destination: the name stays. Clear the name: the suggestion returns.
+
+**Flag-OFF checks:** `enableTripCardStack` OFF: only the list view with the dock. `boardingPassLogin` OFF on a production build: the old login.
+
+### Pass
+- Each step matches; no overflow at 360 px width.

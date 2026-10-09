@@ -15,6 +15,8 @@
   "ledHeroGroupOwes": "{name} owes",
   "@ledHeroGroupOwes": {"placeholders": {"name": {"type": "String"}}},
   "ledHeroSquare": "All square",
+  "ledHeroSquareOthers": "You're square · others still owe",
+  "ledHeroOutstanding": "Still to settle",
   "ledYourMoney": "Your money",
   "ledToReceive": "To receive",
   "ledToPay": "To pay",
@@ -113,6 +115,21 @@
   "authDemo": "Try the demo",
   "authErrorInvalid": "Invalid email or password.",
   "authSuperadminLogin": "Superadmin login",
+  "loginEdition": "Paradise Edition · 2026",
+  "loginTagline": "Split costs effortlessly with travel companions anywhere on earth.",
+  "loginChipOffline": "100% Offline-First",
+  "loginChipSplits": "Smart Splits",
+  "loginChipSync": "Instant Sync",
+  "loginPassenger": "Passenger",
+  "loginStatus": "Status",
+  "loginPassengerYou": "You",
+  "loginNotSignedIn": "Not signed in",
+  "loginBoardGoogle": "Board with Google",
+  "loginBoardApple": "Board with Apple",
+  "loginGateCode": "Gate code",
+  "loginSixDigits": "6 digits",
+  "loginJoin": "Join",
+  "loginStaff": "Staff",
   "adminTitle": "Superadmin",
   "adminSubtitle": "Superadmin tools (flags, users, trips, analytics, audit, traveller preview) run in the web portal. You will be signed in automatically.",
   "adminOpenOpsDeck": "Open Ops Deck",
@@ -208,6 +225,36 @@
     "placeholders": {
       "count": {
         "type": "int"
+      }
+    }
+  },
+  "tripsJourneys": "Departures",
+  "tripsHeaderCount": "{total, plural, =1{1 trip} other{{total} trips}} · {active} active",
+  "@tripsHeaderCount": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      },
+      "active": {
+        "type": "int"
+      }
+    }
+  },
+  "tripsJoinShort": "Join",
+  "tripsSearch": "Search trips",
+  "tripDaysCount": "{n} Days",
+  "@tripDaysCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "tripSpentLabel": "{amount} spent",
+  "@tripSpentLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
       }
     }
   },

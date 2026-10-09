@@ -453,21 +453,18 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // The strike-through fades in/out instead of snapping.
-                      TweenAnimationBuilder<Color?>(
-                        tween: ColorTween(end: done ? t.textPrimary : Colors.transparent),
+                      // Struck through only once ticked off; the colour eases between the two states.
+                      AnimatedDefaultTextStyle(
                         duration: const Duration(milliseconds: 220),
-                        builder: (_, strike, _) => Text(
-                          item.text,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: t.textPrimary,
-                            decoration: TextDecoration.lineThrough,
-                            decorationColor: strike,
-                            decorationThickness: 2,
-                          ),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: done ? t.textSecondary : t.textPrimary,
+                          decoration: done ? TextDecoration.lineThrough : TextDecoration.none,
+                          decorationColor: t.textSecondary,
+                          decorationThickness: 2,
                         ),
+                        child: Text(item.text, key: Key('check-text-${item.id}')),
                       ),
                       const SizedBox(height: 6),
                       Wrap(

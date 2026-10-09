@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.56.0',
+    date: '2026-10-10',
+    changes: [
+      'Behind the scenes: the Flutter app has a boarding-gate sign-in screen, a redesigned "Departures" card stack with an airport runway slider for New Trip and Join, and a Create Trip form that starts with the destination and suggests the trip name. Superadmin sessions are never restored automatically. No change to the web app.',
+    ],
+  },
+  {
     version: '3.55.0',
     date: '2026-10-09',
     changes: [

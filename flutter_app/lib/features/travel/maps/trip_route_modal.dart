@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/route_helper.dart';
 import '../../../domain/models/trip.dart';
+import '../../expenses/application/expenses_providers.dart' show canEditTripRulesProvider;
 import '../places/place_suggest_service.dart';
 import 'trip_map_hero.dart';
 import '../../../shared/theme/app_tokens.dart';
@@ -85,6 +86,14 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
   }
 
   Future<void> _saveRoute() async {
+    // The server only accepts a route change from the owner or a superadmin; say so instead of saving something
+    // that the next sync would undo.
+    if (!ref.read(canEditTripRulesProvider(widget.trip.id))) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text('Only the trip owner can change the route.')));
+      return;
+    }
     setState(() => _isSaving = true);
     try {
       await ref.read(tripRepositoryProvider).setStops(widget.trip.id, _stops);

@@ -5043,3 +5043,14 @@ This document logs all meaningful technical decisions, library choices, design p
   - Skip is a no-op for a single trip.
 * **Release Cut:** version bumped to `3.55.0` via `npm run release:minor`.
 
+
+## 288. Boarding-Gate Login, Departures Card Stack and Runway Slider (Flutter)
+* **Context:** The first screen and the Trips home still looked like plain forms. A superadmin session could also be restored at cold start, and a few Summary / Notes / Trip bugs were found on device.
+* **Decision:**
+  - **Login:** boarding-gate sign-in (photo backdrop, scalloped sheet, gate-code field, Staff entry). Always on for dev/staging; production follows the existing `boardingPassLogin` flag.
+  - **Departures:** the card view (flag `enableTripCardStack`) is full-bleed under the status bar, titled "Departures" with a trip-count line, centred filter pills, and a runway slider (slide right = New Trip, left = Join; labels also tappable). Supersedes the swipe-right-to-open rule of ADR 287: left and right swipes now only flip through the deck; a tap opens a trip; long-press keeps the menu.
+  - **Create Trip:** destination first; the trip name is suggested from it until the traveler types their own.
+  - **Security:** superadmin sessions are dropped at cold start and the known superadmin ids are remembered, so the account is only used after a manual sign-in.
+  - **Fixes:** stops edits go through the trip patch (the collab RPC rejected them), checklist strikethrough only when done, trip-level SETTLED stamp, superadmin treated as trip admin.
+* **Trade-offs Accepted:** Playfair Display (SIL OFL) is bundled for these two screens only; the spend bar shows days elapsed since there is no budget.
+* **Release Cut:** version bumped to `3.56.0` via `npm run release:minor`.

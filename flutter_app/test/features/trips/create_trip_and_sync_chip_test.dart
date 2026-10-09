@@ -48,8 +48,8 @@ void main() {
       await pumpApp(tester, user: asha, overrides: [picker]);
       await tester.tap(find.byKey(const Key('dock-center'))); // the dock's centre button opens create trip
       await settle(tester);
-      await tester.enterText(find.byType(TextField).at(1), 'Goa Weekend');
-      await tester.enterText(find.byType(TextField).at(2), 'Tokyo');
+      await tester.enterText(find.byType(TextField).at(1), 'Tokyo');
+      await tester.enterText(find.byType(TextField).at(2), 'Goa Weekend');
       await settle(tester);
       await tester.tap(find.byIcon(Icons.date_range_rounded));
       await settle(tester);
@@ -76,7 +76,7 @@ void main() {
       await pumpApp(tester, user: asha, overrides: [picker]);
       await tester.tap(find.byKey(const Key('dock-center'))); // the dock's centre button opens create trip
       await settle(tester);
-      await tester.enterText(find.byType(TextField).at(2), 'Toky');
+      await tester.enterText(find.byType(TextField).at(1), 'Toky');
       await settle(tester);
       expect(find.byKey(const Key('destination-suggestions')), findsOneWidget);
       await tester.tap(find.byKey(const Key('destination-option-Tokyo')));
@@ -90,7 +90,7 @@ void main() {
       await pumpApp(tester, user: asha, overrides: [picker]);
       await tester.tap(find.byKey(const Key('dock-center'))); // the dock's centre button opens create trip
       await settle(tester);
-      await tester.enterText(find.byType(TextField).at(2), 'Munar');
+      await tester.enterText(find.byType(TextField).at(1), 'Munar');
       await settle(tester);
       await tester.tap(find.byKey(const Key('destination-fix')));
       await settle(tester);
@@ -101,7 +101,7 @@ void main() {
       await pumpApp(tester, user: asha, overrides: [picker]);
       await tester.tap(find.byKey(const Key('dock-center'))); // the dock's centre button opens create trip
       await settle(tester);
-      await tester.enterText(find.byType(TextField).at(2), 'Tokyo');
+      await tester.enterText(find.byType(TextField).at(1), 'Tokyo');
       await tester.tap(find.byIcon(Icons.date_range_rounded));
       await settle(tester);
       await tester.tap(find.widgetWithText(AppButton, 'Create Trip').last);

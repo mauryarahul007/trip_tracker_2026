@@ -7,6 +7,7 @@ import 'package:trip_tracker/domain/models/category.dart';
 import 'package:trip_tracker/domain/models/expense.dart';
 import 'package:trip_tracker/domain/models/trip.dart';
 import 'package:trip_tracker/domain/repositories/repositories.dart';
+import 'package:trip_tracker/features/expenses/application/expenses_providers.dart' show canEditTripRulesProvider;
 import 'package:trip_tracker/features/travel/maps/deferred_trip_map_hero.dart';
 import 'package:trip_tracker/features/travel/maps/trip_journey_map.dart';
 import 'package:trip_tracker/features/travel/maps/trip_map_hero.dart';
@@ -153,6 +154,27 @@ void main() {
   });
 
   group('TripRouteModal', () {
+    testWidgets('someone who is not the owner is told, and nothing is saved', (tester) async {
+      final fakeRepo = _FakeTripRepo();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            tripRepositoryProvider.overrideWithValue(fakeRepo),
+            mapGatewayProvider.overrideWithValue(const FakeMapGateway()),
+            canEditTripRulesProvider('trip_1').overrideWithValue(false),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(body: TripRouteModal(trip: sampleTrip)),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(find.text('Only the trip owner can change the route.'), findsOneWidget);
+      expect(fakeRepo.lastSavedStops, isNull);
+    });
+
     testWidgets('displays stops, supports reordering and saving to repository', (tester) async {
       final fakeRepo = _FakeTripRepo();
 
@@ -161,6 +183,7 @@ void main() {
           overrides: [
             tripRepositoryProvider.overrideWithValue(fakeRepo),
             mapGatewayProvider.overrideWithValue(const FakeMapGateway()),
+            canEditTripRulesProvider('trip_1').overrideWithValue(true), // the owner
           ],
           child: const MaterialApp(
             home: Scaffold(body: TripRouteModal(trip: sampleTrip)),

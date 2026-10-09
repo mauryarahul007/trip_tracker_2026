@@ -7,7 +7,7 @@ class OutboxType {
   static const permanentlyDeleteExpense = 'permanentlyDeleteExpense';
   static const emptyRecycleBin = 'emptyRecycleBin';
   static const createTrip = 'createTrip';
-  static const updateTripState = 'updateTripState'; // archived / frozen / closed
+  static const updateTripState = 'updateTripState'; // archived / frozen / closed / simplify_debts / stops (owner)
   static const deleteTrip = 'deleteTrip';
   static const setTripCollabField =
       'setTripCollabField'; // checklist / notes / passes / fx_config (participants may write)

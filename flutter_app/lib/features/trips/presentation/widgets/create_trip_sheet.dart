@@ -132,15 +132,6 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AppTextField(
-              controller: _name,
-              label: l10n.fieldTripName,
-              hint: l10n.fieldTripNameHint,
-              errorText: _nameError,
-              onChanged: (_) => _nameTouched = true,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 12),
             DestinationField(
               controller: _destination,
               label: l10n.fieldDestination,
@@ -151,6 +142,16 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
               ],
               onChanged: _onDestinationChanged,
               onPicked: _onPlacePicked,
+            ),
+            const SizedBox(height: 12),
+            AppTextField(
+              controller: _name,
+              label: l10n.fieldTripName,
+              hint: l10n.fieldTripNameHint,
+              errorText: _nameError,
+              // Typing a name stops the suggestion; clearing it brings the suggestion back.
+              onChanged: (v) => _nameTouched = v.trim().isNotEmpty,
+              textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(

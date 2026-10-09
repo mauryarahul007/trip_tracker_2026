@@ -104,6 +104,9 @@ flutter:
     - family: Bricolage Grotesque
       fonts:
         - asset: assets/fonts/bricolage-grotesque-variable.ttf
+    - family: Playfair Display
+      fonts:
+        - asset: assets/fonts/playfair-display-variable.ttf
     - family: Figtree
       fonts:
         - asset: assets/fonts/figtree-variable.ttf

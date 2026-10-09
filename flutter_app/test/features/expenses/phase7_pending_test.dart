@@ -35,15 +35,8 @@ void main() {
     // Top of the page first: the hero boarding pass and the payment tickets.
     expect(find.descendant(of: key('sticky-balance'), matching: find.text('YOU ARE OWED')), findsOneWidget);
     expect(find.text('Ben pays Asha'), findsOneWidget);
-    // Then the per-person list under Trip numbers (open by default, below the fold; the list builds lazily).
-    await tester.scrollUntilVisible(
-      key('balance-${s.cara}'),
-      300,
-      scrollable: find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable)),
-    );
-    expect(find.descendant(of: key('balance-${s.me}'), matching: find.text('is owed ₹60.00')), findsOneWidget);
-    expect(find.descendant(of: key('balance-${s.ben}'), matching: find.text('owes ₹30.00')), findsOneWidget);
-    expect(find.descendant(of: key('balance-${s.cara}'), matching: find.text('owes ₹30.00')), findsOneWidget);
+    // The per-person balance list is gone (it disagreed with the group view).
+    expect(find.byKey(Key('balance-${s.me}')), findsNothing);
   });
 
   testApp('settle sheet shares a card and copies an unopened UPI id', (tester) async {

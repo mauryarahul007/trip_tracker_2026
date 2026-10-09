@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.56.0', '2026-10-10', [
+    'Behind the scenes: the Flutter app has a boarding-gate sign-in screen, a redesigned "Departures" card stack with an airport runway slider for New Trip and Join, and a Create Trip form that starts with the destination and suggests the trip name. Superadmin sessions are never restored automatically. No change to the web app.',
+  ]),
   ChangelogEntry('3.55.0', '2026-10-09', [
     'Behind the scenes: the Flutter app has a native Superadmin portal (overview, bug ledger, users, trips, flags, analytics, audit, controls and tools) and a card-stack view for the Trips home screen with destination photos. No change to the web app.',
   ]),
@@ -40,8 +43,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.48.0', '2026-10-08', [
     'Behind the scenes: Flutter Horizon redesign across all screens, desktop layouts, Balances and Spend Insights behind new flags. No change to the web app.',
-  ]),
-  ChangelogEntry('3.47.0', '2026-10-08', [
-    'Behind the scenes: Flutter migration Horizon redesign, Web platform compilation with Wasm SQLite, and Google-only + Superadmin authentication gate. No change to the web app.',
   ]),
 ];

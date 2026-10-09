@@ -242,9 +242,14 @@ class DriftTripRepository extends _DriftRepo implements TripRepository {
   Future<void> setPasses(String id, List<TravelPass> passes) =>
       _collab(id, 'passes', [for (final p in passes) p.toJson()], 'passes');
 
+  /// The route is a plain `trips` column update (owner or superadmin), like the web's `updateTripRow`. It cannot go
+  /// through `set_trip_collab_field`: that function only accepts checklist, notes, passes and fx_config, so a stops
+  /// change sent that way was refused and the next sync restored the old route.
   @override
-  Future<void> setStops(String id, List<TripStop> stops) =>
-      _collab(id, 'stops', [for (final s in stops) s.toJson()], 'stops');
+  Future<void> setStops(String id, List<TripStop> stops) {
+    final json = [for (final s in stops) s.toJson()];
+    return _columnPatch(id, {'stops': json}, {'stops': json});
+  }
 
   @override
   Future<void> deleteTrip(String id) => write(() async {

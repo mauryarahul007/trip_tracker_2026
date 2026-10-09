@@ -44,6 +44,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledHeroSquare => 'All square';
 
   @override
+  String get ledHeroSquareOthers => 'You\'re square · others still owe';
+
+  @override
+  String get ledHeroOutstanding => 'Still to settle';
+
+  @override
   String get ledYourMoney => 'Your money';
 
   @override
@@ -340,6 +346,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authSuperadminLogin => 'Superadmin login';
 
   @override
+  String get loginEdition => 'Paradise Edition · 2026';
+
+  @override
+  String get loginTagline => 'Split costs effortlessly with travel companions anywhere on earth.';
+
+  @override
+  String get loginChipOffline => '100% Offline-First';
+
+  @override
+  String get loginChipSplits => 'Smart Splits';
+
+  @override
+  String get loginChipSync => 'Instant Sync';
+
+  @override
+  String get loginPassenger => 'Passenger';
+
+  @override
+  String get loginStatus => 'Status';
+
+  @override
+  String get loginPassengerYou => 'You';
+
+  @override
+  String get loginNotSignedIn => 'Not signed in';
+
+  @override
+  String get loginBoardGoogle => 'Board with Google';
+
+  @override
+  String get loginBoardApple => 'Board with Apple';
+
+  @override
+  String get loginGateCode => 'Gate code';
+
+  @override
+  String get loginSixDigits => '6 digits';
+
+  @override
+  String get loginJoin => 'Join';
+
+  @override
+  String get loginStaff => 'Staff';
+
+  @override
   String get adminTitle => 'Superadmin';
 
   @override
@@ -518,6 +569,31 @@ class AppLocalizationsEn extends AppLocalizations {
       zero: 'No expenses',
     );
     return '$_temp0';
+  }
+
+  @override
+  String get tripsJourneys => 'Departures';
+
+  @override
+  String tripsHeaderCount(int total, int active) {
+    String _temp0 = intl.Intl.pluralLogic(total, locale: localeName, other: '$total trips', one: '1 trip');
+    return '$_temp0 · $active active';
+  }
+
+  @override
+  String get tripsJoinShort => 'Join';
+
+  @override
+  String get tripsSearch => 'Search trips';
+
+  @override
+  String tripDaysCount(int n) {
+    return '$n Days';
+  }
+
+  @override
+  String tripSpentLabel(String amount) {
+    return '$amount spent';
   }
 
   @override

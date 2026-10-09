@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/auth_state.dart';
+import '../../../core/env/app_env.dart';
 import '../../../data/providers.dart';
+import '../../../data/supabase/supabase_gateway.dart';
 import '../../../data/sync/conflict_store.dart';
 import '../../../domain/logic/default_categories.g.dart';
 import '../../../domain/logic/expense_list_logic.dart';
@@ -58,12 +60,33 @@ final myMemberIdProvider = Provider.family<String?, String>((ref, tripId) {
   return null;
 });
 
-/// Owner, or a member the trip lists as admin.
+/// Whether the signed-in account is a Superadmin (asked once per sign-in; the server decides, a failure means no).
+/// A superadmin has the owner's powers on every trip, exactly as the server's `is_trip_admin` treats them.
+final isSuperadminProvider = FutureProvider<bool>((ref) async {
+  final uid = ref.watch(authStateProvider.select((a) => a.userId));
+  if (uid == null || !AppEnv.current.hasBackend) return false;
+  try {
+    return await ref.watch(supabaseGatewayProvider).client.rpc<dynamic>('is_superadmin') == true;
+  } catch (_) {
+    return false;
+  }
+});
+
+/// Who may change the trip's own rules (simplify debts, freeze, archive): only the owner or a superadmin, because
+/// that is all the server accepts for a `trips` update.
+final canEditTripRulesProvider = Provider.family<bool, String>((ref, tripId) {
+  final uid = ref.watch(authStateProvider).userId;
+  final trip = ref.watch(tripProvider(tripId)).value;
+  if (uid == null || trip == null) return false;
+  return trip.ownerId == uid || (ref.watch(isSuperadminProvider).value ?? false);
+});
+
+/// Owner, a superadmin, or a member the trip lists as admin.
 final isTripAdminProvider = Provider.family<bool, String>((ref, tripId) {
   final uid = ref.watch(authStateProvider).userId;
   final trip = ref.watch(tripProvider(tripId)).value;
   if (uid == null || trip == null) return false;
-  if (trip.ownerId == uid) return true;
+  if (trip.ownerId == uid || (ref.watch(isSuperadminProvider).value ?? false)) return true;
   final me = ref.watch(myMemberIdProvider(tripId));
   return me != null && trip.adminMemberIds.contains(me);
 });

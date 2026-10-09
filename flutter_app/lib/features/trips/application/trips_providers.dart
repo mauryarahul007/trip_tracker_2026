@@ -8,7 +8,10 @@ import '../../../data/sync/outbox_store.dart';
 import '../../../data/sync/outbox_types.dart';
 import '../../../domain/logic/trip_utilities.dart' show sortTrips;
 import '../../../domain/models/trip.dart';
+import '../../expenses/application/expenses_providers.dart' show tripExpensesProvider;
 import '../../travel/places/place_image_service.dart';
+import '../../travel/places/weather_service.dart';
+import '../../../domain/logic/expense_list_logic.dart' show computeTotals;
 
 final tripsProvider = StreamProvider<List<Trip>>((ref) => ref.watch(tripRepositoryProvider).watchTrips());
 
@@ -163,3 +166,20 @@ final tripCoverProvider = FutureProvider.family<String?, (String, String)>((ref,
 });
 
 (String, String) tripCoverKey(Trip t) => (t.coverImageUrl ?? '', t.destination ?? '');
+
+/// Current weather for a trip's destination (the first place of a multi-stop route); null when unknown or offline.
+final tripWeatherProvider = FutureProvider.family<WeatherData?, String>((ref, destination) async {
+  final first = destinationQueries(destination);
+  if (first.isEmpty) return null;
+  try {
+    return await ref.watch(weatherServiceProvider).getDestinationWeather(first.last);
+  } catch (_) {
+    return null;
+  }
+});
+
+/// What a trip has cost so far, in its own currency terms (settlements and unapproved expenses never count).
+final tripSpentProvider = Provider.family<double, String>((ref, tripId) {
+  final ex = ref.watch(tripExpensesProvider(tripId)).value ?? const [];
+  return computeTotals(ex, visibleMemberCount: 1, categories: const []).totalSpent;
+});

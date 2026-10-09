@@ -153,4 +153,54 @@ void main() {
       );
     });
   });
+
+  group('a restored superadmin session is dropped at cold start', () {
+    test('a known superadmin is dropped without asking the server', () async {
+      var asked = 0;
+      final drop = await shouldDropRestoredSession(
+        uid: 'root',
+        known: {'root'},
+        isSuperadmin: () async {
+          asked++;
+          return false;
+        },
+        remember: (_) async {},
+      );
+      expect((drop, asked), (true, 0));
+    });
+
+    test('an unknown account the server says is a superadmin is dropped and remembered', () async {
+      final remembered = <String>[];
+      final drop = await shouldDropRestoredSession(
+        uid: 'root',
+        known: {},
+        isSuperadmin: () async => true,
+        remember: (u) async => remembered.add(u),
+      );
+      expect(drop, isTrue);
+      expect(remembered, ['root']);
+    });
+
+    test('an ordinary traveller keeps their session', () async {
+      final remembered = <String>[];
+      final drop = await shouldDropRestoredSession(
+        uid: 'u1',
+        known: {'root'},
+        isSuperadmin: () async => false,
+        remember: (u) async => remembered.add(u),
+      );
+      expect(drop, isFalse);
+      expect(remembered, isEmpty);
+    });
+
+    test('when the server cannot be asked (offline) the session is kept', () async {
+      final drop = await shouldDropRestoredSession(
+        uid: 'u1',
+        known: {},
+        isSuperadmin: () async => throw const SocketException('offline'),
+        remember: (_) async {},
+      );
+      expect(drop, isFalse);
+    });
+  });
 }

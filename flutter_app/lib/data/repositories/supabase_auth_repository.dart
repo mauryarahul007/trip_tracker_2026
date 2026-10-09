@@ -9,6 +9,34 @@ import '../local/app_database.dart';
 
 const _localSessionKey = 'auth.local_session';
 
+/// Ids of accounts known to be superadmins, kept on this device so a cold start can drop their session
+/// without a network call.
+const _superadminIdsKey = 'auth.superadmin_ids';
+
+/// Whether a session restored at cold start must be dropped because it belongs to a superadmin.
+///
+/// A superadmin credential is only ever used by signing in on purpose: the app never resumes it by itself, so
+/// closing and reopening the app lands on the login page. A device-local list ([known]) answers offline; an
+/// unknown account is asked once ([isSuperadmin]) and remembered through [remember]. If the question cannot be
+/// answered (offline, error) the session is kept: dropping every offline traveller would be worse.
+Future<bool> shouldDropRestoredSession({
+  required String uid,
+  required Set<String> known,
+  required Future<bool> Function() isSuperadmin,
+  required Future<void> Function(String uid) remember,
+}) async {
+  if (known.contains(uid)) return true;
+  try {
+    if (await isSuperadmin()) {
+      await remember(uid);
+      return true;
+    }
+  } catch (_) {
+    // Cannot tell: keep the session.
+  }
+  return false;
+}
+
 /// Mirrors authStore.ts: real Supabase sessions plus local-only guest/demo
 /// identities (never backed by a Supabase session). Superadmin is excluded.
 class SupabaseAuthRepository implements AuthRepository {
@@ -17,12 +45,69 @@ class SupabaseAuthRepository implements AuthRepository {
     if (client != null) {
       _sub = client.auth.onAuthStateChange.listen((s) {
         if (s.event == sb.AuthChangeEvent.passwordRecovery) _recovery.add(true);
+        if (!_booted) return; // the restored session is vetted first (see _bootstrap)
         if (_local != null) return; // a local identity takes over until sign-out
         _emit(_fromSession(s.session));
       });
-      _emit(_fromSession(client.auth.currentSession));
     }
-    _restored = _restoreLocal();
+    _restored = _bootstrap();
+  }
+
+  bool _booted = false;
+
+  /// Cold start: drop a restored superadmin session, then publish whoever is still signed in.
+  Future<void> _bootstrap() async {
+    try {
+      await _dropRestoredSuperadmin();
+    } catch (e) {
+      AppLogger.warn('Superadmin session check failed: $e');
+    }
+    _booted = true;
+    final client = _client;
+    if (client != null) _emit(_fromSession(client.auth.currentSession));
+    await _restoreLocal();
+  }
+
+  Future<Set<String>> _knownSuperadmins() async {
+    final row = await (_db.select(
+      _db.settingsKvTable,
+    )..where((t) => t.key.equals(_superadminIdsKey))).getSingleOrNull();
+    if (row == null) return {};
+    try {
+      return {for (final e in jsonDecode(row.value) as List<dynamic>) '$e'};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<void> _rememberSuperadmin(String uid) async {
+    final all = {...await _knownSuperadmins(), uid};
+    await _db
+        .into(_db.settingsKvTable)
+        .insertOnConflictUpdate(
+          SettingsKvTableCompanion.insert(key: _superadminIdsKey, value: jsonEncode(all.toList())),
+        );
+  }
+
+  Future<void> _dropRestoredSuperadmin() async {
+    final client = _client;
+    final uid = client?.auth.currentSession?.user.id;
+    if (client == null || uid == null) return;
+    final drop = await shouldDropRestoredSession(
+      uid: uid,
+      known: await _knownSuperadmins(),
+      isSuperadmin: () async => await client.rpc<dynamic>('is_superadmin') == true,
+      remember: _rememberSuperadmin,
+    );
+    if (!drop) return;
+    AppLogger.warn('Dropping a restored superadmin session: superadmins sign in on purpose.');
+    try {
+      await unregisterPush?.call(uid);
+    } catch (_) {}
+    await _wipeLocal(); // the superadmin saw every trip; none of that stays on the device
+    try {
+      await client.auth.signOut();
+    } catch (_) {}
   }
 
   /// Null when no backend is configured: only guest/demo work.
@@ -165,6 +250,8 @@ class SupabaseAuthRepository implements AuthRepository {
       await signOut();
       throw const AuthException(AuthFailure.notSuperadmin, 'Not a superadmin account.');
     }
+    final uid = _api.auth.currentUser?.id;
+    if (uid != null) await _rememberSuperadmin(uid); // so the next cold start drops this session without asking
   });
 
   @override

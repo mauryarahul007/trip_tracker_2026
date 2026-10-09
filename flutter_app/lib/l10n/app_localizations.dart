@@ -151,6 +151,18 @@ abstract class AppLocalizations {
   /// **'All square'**
   String get ledHeroSquare;
 
+  /// No description provided for @ledHeroSquareOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re square · others still owe'**
+  String get ledHeroSquareOthers;
+
+  /// No description provided for @ledHeroOutstanding.
+  ///
+  /// In en, this message translates to:
+  /// **'Still to settle'**
+  String get ledHeroOutstanding;
+
   /// No description provided for @ledYourMoney.
   ///
   /// In en, this message translates to:
@@ -703,6 +715,96 @@ abstract class AppLocalizations {
   /// **'Superadmin login'**
   String get authSuperadminLogin;
 
+  /// No description provided for @loginEdition.
+  ///
+  /// In en, this message translates to:
+  /// **'Paradise Edition · 2026'**
+  String get loginEdition;
+
+  /// No description provided for @loginTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Split costs effortlessly with travel companions anywhere on earth.'**
+  String get loginTagline;
+
+  /// No description provided for @loginChipOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'100% Offline-First'**
+  String get loginChipOffline;
+
+  /// No description provided for @loginChipSplits.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Splits'**
+  String get loginChipSplits;
+
+  /// No description provided for @loginChipSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Instant Sync'**
+  String get loginChipSync;
+
+  /// No description provided for @loginPassenger.
+  ///
+  /// In en, this message translates to:
+  /// **'Passenger'**
+  String get loginPassenger;
+
+  /// No description provided for @loginStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get loginStatus;
+
+  /// No description provided for @loginPassengerYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get loginPassengerYou;
+
+  /// No description provided for @loginNotSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in'**
+  String get loginNotSignedIn;
+
+  /// No description provided for @loginBoardGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Board with Google'**
+  String get loginBoardGoogle;
+
+  /// No description provided for @loginBoardApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Board with Apple'**
+  String get loginBoardApple;
+
+  /// No description provided for @loginGateCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Gate code'**
+  String get loginGateCode;
+
+  /// No description provided for @loginSixDigits.
+  ///
+  /// In en, this message translates to:
+  /// **'6 digits'**
+  String get loginSixDigits;
+
+  /// No description provided for @loginJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get loginJoin;
+
+  /// No description provided for @loginStaff.
+  ///
+  /// In en, this message translates to:
+  /// **'Staff'**
+  String get loginStaff;
+
   /// No description provided for @adminTitle.
   ///
   /// In en, this message translates to:
@@ -1020,6 +1122,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0{No expenses} =1{1 expense} other{{count} expenses}}'**
   String tripExpenseCount(int count);
+
+  /// No description provided for @tripsJourneys.
+  ///
+  /// In en, this message translates to:
+  /// **'Departures'**
+  String get tripsJourneys;
+
+  /// No description provided for @tripsHeaderCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{total, plural, =1{1 trip} other{{total} trips}} · {active} active'**
+  String tripsHeaderCount(int total, int active);
+
+  /// No description provided for @tripsJoinShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get tripsJoinShort;
+
+  /// No description provided for @tripsSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search trips'**
+  String get tripsSearch;
+
+  /// No description provided for @tripDaysCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} Days'**
+  String tripDaysCount(int n);
+
+  /// No description provided for @tripSpentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} spent'**
+  String tripSpentLabel(String amount);
 
   /// No description provided for @tripsViewCards.
   ///

@@ -76,6 +76,16 @@ void main() {
     });
   });
 
+  test('route stops go through the owner column update, not the collab RPC (which refuses them)', () async {
+    await trips.setStops(id, const [TripStop(id: 's1', name: 'Gangtok'), TripStop(id: 's2', name: 'Pelling')]);
+    expect([for (final s in (await trips.watchTrip(id).first)!.stops) s.name], ['Gangtok', 'Pelling']);
+    final q = (await outbox.all()).single;
+    expect(q.type, OutboxType.updateTripState);
+    expect(q.type, isNot(OutboxType.setTripCollabField));
+    final stops = (q.payload['patch'] as Map)['stops'] as List;
+    expect([for (final s in stops) (s as Map)['name']], ['Gangtok', 'Pelling']);
+  });
+
   test('settings on a trip that no longer exists are ignored, not queued', () async {
     await trips.setSimplifyDebts('ghost', false);
     await trips.setFxConfig('ghost', const TripFxConfig());
