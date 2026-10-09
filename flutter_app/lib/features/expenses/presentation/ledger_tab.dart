@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/auth_state.dart';
 import '../../../core/clock.dart';
@@ -12,19 +13,20 @@ import '../../../core/platform/external_launcher.dart';
 import '../../../core/platform/share_service.dart';
 import '../../../data/providers.dart';
 import '../../../data/sync/conflict_store.dart';
-import '../../../domain/logic/cross_trip_balances.dart';
+import '../../../domain/logic/category_color.dart';
 import '../../../domain/logic/currency.dart';
+import '../../../domain/logic/expense_list_logic.dart';
 import '../../../domain/logic/expense_form_logic.dart';
 import '../../../domain/logic/settle_up.dart';
 import '../../../domain/logic/settlement.dart';
 import '../../../domain/logic/settlement_share_card.dart';
 import '../../../domain/logic/trip_utilities.dart';
 import '../../../domain/models/expense.dart';
-import '../../../domain/models/member.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_avatar.dart';
+import '../../../domain/models/group.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_surface.dart';
@@ -35,28 +37,20 @@ import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
 import '../application/money_providers.dart';
 import 'conflict_sheet.dart';
+import 'widgets/add_expense_fab.dart';
+import 'widgets/spend_donut.dart';
 import 'widgets/expense_detail_sheet.dart';
+import 'widgets/settle_ticket.dart';
 import 'widgets/settlement_card.dart';
 
+/// "₹1,200.00" -> ("₹1,200", ".00") so the decimals can be dimmed (MoneyText).
+(String, String?) _splitMoney(String formatted) {
+  final dot = formatted.lastIndexOf('.');
+  if (dot < 0 || formatted.length - dot > 3) return (formatted, null);
+  return (formatted.substring(0, dot), formatted.substring(dot));
+}
+
 bool _flag(WidgetRef ref, String key, String tripId) => ref.watch(flagProvider((key, tripId))).value ?? false;
-
-Map<String, List<Member>> _byTrip(List<Member> members) {
-  final out = <String, List<Member>>{};
-  for (final m in members) {
-    final tripId = m.tripId;
-    if (tripId == null) continue;
-    (out[tripId] ??= []).add(m);
-  }
-  return out;
-}
-
-Map<String, List<Expense>> _expensesByTrip(List<Expense> expenses) {
-  final out = <String, List<Expense>>{};
-  for (final e in expenses) {
-    (out[e.tripId] ??= []).add(e);
-  }
-  return out;
-}
 
 /// Balances tab: who is owed what, who pays whom, settle up, settlement history.
 class LedgerTab extends ConsumerStatefulWidget {
@@ -68,7 +62,7 @@ class LedgerTab extends ConsumerStatefulWidget {
 }
 
 class _LedgerTabState extends ConsumerState<LedgerTab> {
-  final _open = <String>{'balances', 'transfers', 'history', 'cross'};
+  final _open = <String>{'transfers', 'analytics'}; // history (flagged) starts folded away
 
   Future<void> _settle(BuildContext context, Transfer t) async {
     final trip = ref.read(tripProvider(widget.tripId)).value;
@@ -91,7 +85,8 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     if (trip == null || result == null) return const Center(child: CircularProgressIndicator());
     final cur = trip.baseCurrency;
     final isAdmin = ref.watch(isTripAdminProvider(id));
-    final canToggle = isAdmin && _flag(ref, 'enableSimplifyDebtsToggle', id);
+    // Trip admins always get the switch here (it used to hide behind a Labs flag that is off by default).
+    final canToggle = isAdmin;
     final history = _flag(ref, 'enableSettlementHistory', id);
     final compact = _flag(ref, 'enableCompactLedgerView', id);
     final pad = compact ? 8.0 : 16.0;
@@ -100,20 +95,12 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         if (e.isSettlement && e.deletedAt == null) e,
     ]..sort((a, b) => b.date.compareTo(a.date));
     final allEven = result.transfers.isEmpty;
+    final groups = ref.watch(tripGroupsProvider(id)).value ?? const <Group>[];
+    final groupLedger = calculateGroupLedger(result.balances, groups);
     final conflicts = ref.watch(conflictStoreProvider)[id] ?? const [];
     final mine = ref.watch(myMemberIdProvider(id));
     final myBalance = mine == null ? null : result.balances.where((b) => b.memberId == mine).firstOrNull;
-    final trips = ref.watch(allTripsProvider).value ?? const [];
-    final cross = trips.length < 2
-        ? const <CrossTripNet>[]
-        : crossTripNets(
-            userId: ref.watch(authStateProvider).userId,
-            trips: trips,
-            membersByTrip: _byTrip(ref.watch(allMembersProvider).value ?? const []),
-            expensesByTrip: _expensesByTrip(ref.watch(allActiveExpensesProvider).value ?? const []),
-          );
-
-    Widget section(String key, String title, List<Widget> children) {
+    Widget section(String key, String title, List<Widget> children, {bool bare = false}) {
       final open = _open.contains(key);
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -137,57 +124,315 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             ),
           ),
           if (open)
-            AppCard(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
-            ),
+            bare
+                ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children)
+                : AppCard(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+                  ),
           const SizedBox(height: 12),
         ],
       );
     }
 
-    return Column(
+    // Hero: with groups it is my group's balance, otherwise my own.
+    final myGroup = mine == null
+        ? null
+        : groupLedger.nodes.where((n) => n.id.startsWith('group:') && n.memberIds.contains(mine)).firstOrNull;
+    final heroBalance = myGroup?.balance ?? myBalance?.balance ?? 0.0;
+    final heroName = myGroup?.name ?? l10n.ledYou;
+    final settled = heroBalance.abs() < 0.01;
+    final heroLabel = settled
+        ? l10n.ledHeroSquare
+        : myGroup != null
+        ? (heroBalance > 0 ? l10n.ledHeroGroupOwed(heroName) : l10n.ledHeroGroupOwes(heroName))
+        : (heroBalance > 0 ? l10n.ledHeroYouOwed : l10n.ledHeroYouOwe);
+    final heroSplit = _splitMoney(formatMoney(context, heroBalance.abs(), cur));
+    // Personal position (not the group's): what I still receive and what I still pay.
+    final myNet = myBalance?.balance ?? 0.0;
+    final toReceive = myNet > 0.005 ? myNet : 0.0;
+    final toPay = myNet < -0.005 ? -myNet : 0.0;
+    final outstanding = result.transfers.fold<double>(0, (a, t) => a + t.amount);
+    final settledSoFar = settlements.fold<double>(0, (a, e) => a + e.amount);
+    final progressTotal = outstanding + settledSoFar;
+    final heroTone = settled ? BentoTone.sky : (heroBalance > 0 ? BentoTone.mint : BentoTone.peach);
+    final counts = ref.watch(tripSettlementCountsProvider(id));
+    final totals = computeTotals(
+      ref.watch(tripExpensesProvider(id)).value ?? const <Expense>[],
+      visibleMemberCount: ref.watch(visibleMembersProvider(id)).length,
+      categories: ref.watch(tripCategoriesProvider(id)),
+    );
+
+    final tripDates = trip.startDate.isEmpty ? '' : formatDateRange(trip.startDate, trip.endDate);
+    final names = {for (final b in result.balances) b.memberId: b.name};
+    final paid = <String, double>{};
+    for (final e in ref.watch(tripExpensesProvider(id)).value ?? const <Expense>[]) {
+      if (e.isSettlement || e.deletedAt != null || e.approvalStatus == 'pending_approval') continue;
+      if (e.title.startsWith('Settlement:')) continue;
+      if (e.paidByShares != null && e.paidByShares!.isNotEmpty) {
+        e.paidByShares!.forEach((k, v) => paid[k] = (paid[k] ?? 0) + v);
+      } else {
+        paid[e.paidBy] = (paid[e.paidBy] ?? 0) + e.amount;
+      }
+    }
+    final paidList = paid.entries.where((e) => e.value > 0.005).toList()..sort((a, b) => b.value.compareTo(a.value));
+    final paidMax = paidList.isEmpty ? 1.0 : paidList.first.value;
+    final cats = totals.categories.take(5).toList();
+
+    Widget moneyCard(IconData icon, BentoTone tone, String label, double amount, Key key) {
+      final split = _splitMoney(formatMoney(context, amount, cur));
+      return Expanded(
+        child: BentoTile(
+          key: key,
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(color: tokens.tones[tone].bg, shape: BoxShape.circle),
+                child: Icon(icon, size: 18, color: tokens.textPrimary),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                label,
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: tokens.textSecondary),
+              ),
+              const SizedBox(height: 2),
+              MoneyText(whole: split.$1, decimals: split.$2, fontSize: 22, color: tokens.textPrimary),
+            ],
+          ),
+        ),
+      );
+    }
+
+    Widget statTile(BentoTone tone, String label, String value, Key key) => Expanded(
+      child: BentoTile(
+        tone: tone,
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            BentoTile.eyebrow(context, tone, label),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              key: key,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: AppTypography.fontTitle,
+                fontSize: 19,
+                fontWeight: FontWeight.w800,
+                color: tokens.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // One boarding-pass field: small tinted label over a bold value.
+    Widget field(String label, String value, {CrossAxisAlignment align = CrossAxisAlignment.start}) => Expanded(
+      child: Column(
+        crossAxisAlignment: align,
+        children: [
+          BentoTile.eyebrow(context, heroTone, label),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: align == CrossAxisAlignment.end ? TextAlign.end : TextAlign.start,
+            style: TextStyle(
+              fontFamily: AppTypography.fontTitle,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: tokens.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Stack(
       children: [
-        if (myBalance != null)
-          Padding(
-            key: const Key('sticky-balance'),
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: BentoTile(
-              // Mint when you are owed, peach when you owe, sky when even.
-              tone: myBalance.balance.abs() < 0.01
-                  ? BentoTone.sky
-                  : (myBalance.balance > 0 ? BentoTone.mint : BentoTone.peach),
-              padding: EdgeInsets.all(compact ? 14 : 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        ListView(
+          key: const Key('ledger-list'),
+          padding: EdgeInsets.fromLTRB(pad, 12, pad, 120),
+          children: [
+            // 1. Hero boarding pass: what is owed, stamped SETTLED or NOT SETTLED.
+            Padding(
+              key: const Key('sticky-balance'),
+              padding: const EdgeInsets.only(bottom: 20),
+              child: TicketFrame(
+                tone: heroTone,
+                top: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.flight_takeoff_rounded, size: 16),
+                        const SizedBox(width: 6),
+                        Expanded(child: BentoTile.eyebrow(context, heroTone, l10n.ledPassTitle)),
+                        if (tripDates.isNotEmpty)
+                          Text(
+                            tripDates,
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: tokens.textSecondary),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              BentoTile.eyebrow(context, heroTone, heroLabel),
+                              const SizedBox(height: 4),
+                              MoneyText(
+                                whole: heroSplit.$1,
+                                decimals: heroSplit.$2,
+                                fontSize: compact ? 34 : 42,
+                                color: tokens.textPrimary,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _SettleStamp(
+                          key: const Key('settle-stamp'),
+                          settled: settled,
+                          text: settled ? l10n.ledStampSettled : l10n.ledStampNotSettled,
+                          tone: heroTone,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        field(l10n.ledHeroTrip, trip.name),
+                        const SizedBox(width: 12),
+                        field(l10n.ledHeroTravellers, '${trip.memberIds.length}'),
+                        const SizedBox(width: 12),
+                        field(l10n.ledHeroOpen, '${result.transfers.length}', align: CrossAxisAlignment.end),
+                      ],
+                    ),
+                  ],
+                ),
+                stub: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: Row(
+                        children: [
+                          field(l10n.expTotalSpent, formatMoney(context, totals.totalSpent, cur)),
+                          const SizedBox(width: 12),
+                          field(l10n.expPerPerson, formatMoney(context, totals.averageCost, cur)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(flex: 3, child: TicketBarcode(seed: trip.id, height: 44)),
+                  ],
+                ),
+              ),
+            ),
+            // Your money: what I still receive and what I still pay.
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Row(
                 children: [
-                  BentoTile.eyebrow(
-                    context,
-                    myBalance.balance.abs() < 0.01
-                        ? BentoTone.sky
-                        : (myBalance.balance > 0 ? BentoTone.mint : BentoTone.peach),
-                    l10n.ledYou,
+                  moneyCard(
+                    Icons.south_west_rounded,
+                    BentoTone.mint,
+                    l10n.ledToReceive,
+                    toReceive,
+                    const Key('money-receive'),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    myBalance.balance.abs() < 0.01
-                        ? l10n.ledEven
-                        : myBalance.balance > 0
-                        ? l10n.ledOwed(formatMoney(context, myBalance.balance, cur))
-                        : l10n.ledOwes(formatMoney(context, -myBalance.balance, cur)),
-                    style: AppTypography.moneyDisplay(fontSize: compact ? 26 : 34, color: tokens.textPrimary),
-                  ),
+                  const SizedBox(width: 12),
+                  moneyCard(Icons.north_east_rounded, BentoTone.peach, l10n.ledToPay, toPay, const Key('money-pay')),
                 ],
               ),
             ),
-          ),
-        Expanded(
-          child: ListView(
-            key: const Key('ledger-list'),
-            padding: EdgeInsets.all(pad),
-            children: [
-              if (conflicts.isNotEmpty)
-                AppButton(
+            // Settlement progress, like a goal: how much of what was owed is already paid.
+            if (progressTotal > 0.005)
+              Padding(
+                key: const Key('settle-progress'),
+                padding: const EdgeInsets.only(bottom: 20),
+                child: BentoTile(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.ledProgress,
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              l10n.ledProgressLine(
+                                formatMoney(context, settledSoFar, cur),
+                                formatMoney(context, progressTotal, cur),
+                              ),
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontTitle,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: tokens.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(99),
+                              child: LinearProgressIndicator(
+                                value: (settledSoFar / progressTotal).clamp(0.0, 1.0),
+                                minHeight: 10,
+                                backgroundColor: tokens.borderColor,
+                                color: tokens.tones.mint.accent,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        color: outstanding < 0.01 ? tokens.tones.mint.bg : tokens.tones.peach.bg,
+                        child: Row(
+                          children: [
+                            Icon(
+                              outstanding < 0.01 ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                outstanding < 0.01
+                                    ? l10n.ledProgressDone
+                                    : l10n.ledProgressLeft(result.transfers.length),
+                                style: TextStyle(fontWeight: FontWeight.w700, color: tokens.textPrimary),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (conflicts.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: AppButton(
                   key: const Key('open-conflicts'),
                   label: l10n.conflictTitle,
                   variant: AppButtonVariant.secondary,
@@ -196,121 +441,331 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                     builder: (_) => ConflictSheet(tripId: id),
                   ),
                 ),
-              section('balances', l10n.ledBalances, [
-                for (final b in result.balances)
-                  ListTile(
-                    key: Key('balance-${b.memberId}'),
-                    contentPadding: EdgeInsets.zero,
-                    dense: compact,
-                    title: Text(b.name),
-                    // Member bars (board 05): length shows how big each balance is relative to the largest.
-                    subtitle: b.balance.abs() < 0.01
-                        ? null
-                        : _BalanceBar(
-                            fraction: b.balance.abs() / result.balances.map((x) => x.balance.abs()).reduce(math.max),
-                            color: b.balance > 0 ? tokens.colorSuccess : tokens.colorDanger,
-                            track: tokens.borderColor,
-                          ),
-                    // Bounded so a long amount wraps instead of consuming the tile (200% text, wide fonts).
-                    trailing: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 150),
-                      child: Text(
-                        b.balance.abs() < 0.01
-                            ? l10n.ledEven
-                            : b.balance > 0
-                            ? l10n.ledOwed(formatMoney(context, b.balance, cur))
-                            : l10n.ledOwes(formatMoney(context, -b.balance, cur)),
-                        textAlign: TextAlign.end,
-                        style: TextStyle(
-                          color: b.balance.abs() < 0.01
-                              ? tokens.textSecondary
-                              : (b.balance > 0 ? tokens.colorSuccess : tokens.colorDanger),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                if (canToggle)
-                  SwitchListTile(
+              ),
+            // 2. Who pays whom, and how it is worked out.
+            section('transfers', l10n.ledWhoPays, [
+              if (canToggle)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: SegmentedButton<bool>(
                     key: const Key('simplify-toggle'),
+                    showSelectedIcon: false,
+                    segments: [
+                      ButtonSegment(value: true, label: Text(l10n.ledModeFewest, maxLines: 1)),
+                      ButtonSegment(value: false, label: Text(l10n.ledModePerPerson, maxLines: 1)),
+                    ],
+                    selected: {trip.simplifyDebts},
+                    onSelectionChanged: (v) => ref.read(tripRepositoryProvider).setSimplifyDebts(id, v.first),
+                  ),
+                ),
+              if (counts != null && counts.direct > 0)
+                Padding(
+                  key: const Key('simplify-counts'),
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    counts.simplified == counts.direct
+                        ? l10n.ledCountsSame(counts.direct)
+                        : l10n.ledCountsSaves(counts.simplified, counts.direct),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: tokens.textSecondary),
+                  ),
+                ),
+              if (allEven)
+                EmptyState(
+                  key: const Key('all-settled'),
+                  icon: Icons.check_circle_outline,
+                  title: l10n.ledAllSettled,
+                  subtitle: l10n.ledAllSettledHint,
+                )
+              else
+                for (final (i, t) in result.transfers.indexed)
+                  Padding(
+                    key: Key('transfer-$i'),
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: SettleTicket(
+                      tone: toneFor(t.from),
+                      fromName: t.fromLabel,
+                      toName: t.toLabel,
+                      fromLabel: l10n.ledFrom,
+                      toLabel: l10n.ledTo,
+                      caption: l10n.ledTransfer(t.fromLabel, t.toLabel),
+                      amountText: formatMoney(context, t.amount, cur),
+                      settleLabel: l10n.ledSettle,
+                      settleKey: Key('settle-$i'),
+                      onSettle: () => _settle(context, t),
+                    ),
+                  ),
+            ], bare: true),
+            // 3. Trip analytics: totals, where the money went, who paid, and each person's balance.
+            section('analytics', l10n.ledNumbers, [
+              Padding(
+                padding: const EdgeInsets.only(top: 6, bottom: 14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    statTile(
+                      BentoTone.butter,
+                      l10n.expTotalSpent,
+                      formatMoney(context, totals.totalSpent, cur),
+                      const Key('stat-total'),
+                    ),
+                    const SizedBox(width: 10),
+                    statTile(
+                      BentoTone.mint,
+                      l10n.expPerPerson,
+                      formatMoney(context, totals.averageCost, cur),
+                      const Key('stat-avg'),
+                    ),
+                    if (totals.top != null) ...[
+                      const SizedBox(width: 10),
+                      statTile(
+                        BentoTone.peach,
+                        l10n.expTopCategory,
+                        '${totals.top!.name} ${totals.top!.percentage.round()}%',
+                        const Key('stat-top'),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (cats.isNotEmpty) ...[
+                Text(
+                  l10n.ledSpendByCategory,
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
+                ),
+                const SizedBox(height: 8),
+                Center(
+                  child: SpendDonut(
+                    key: const Key('spend-donut'),
+                    values: [for (final c in cats) c.percentage],
+                    colors: [for (final c in cats) Color(categoryColorArgb(c.id))],
+                    centerLabel: l10n.expTotalSpent,
+                    centerValue: formatMoney(context, totals.totalSpent, cur),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                for (final c in cats)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: BentoTile(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(categoryColorArgb(c.id)),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w800)),
+                              ),
+                              Text(
+                                formatMoney(context, c.amount, cur),
+                                style: const TextStyle(fontWeight: FontWeight.w800),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            l10n.ledShareOfTotal(c.percentage.round()),
+                            style: TextStyle(fontSize: 12, color: tokens.textSecondary),
+                          ),
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(99),
+                            child: LinearProgressIndicator(
+                              value: (c.percentage / 100).clamp(0.02, 1.0),
+                              minHeight: 8,
+                              backgroundColor: tokens.borderColor,
+                              color: Color(categoryColorArgb(c.id)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+              ],
+              if (paidList.isNotEmpty) ...[
+                Text(
+                  l10n.ledWhoPaid,
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
+                ),
+                const SizedBox(height: 8),
+                for (final e in paidList)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      children: [
+                        AppAvatar(name: names[e.key] ?? '?', size: 28),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            names[e.key] ?? '?',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 4,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(99),
+                            child: LinearProgressIndicator(
+                              value: (e.value / paidMax).clamp(0.04, 1.0),
+                              minHeight: 8,
+                              backgroundColor: tokens.borderColor,
+                              color: tokens.primaryAccent,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        SizedBox(
+                          width: 84,
+                          child: Text(
+                            formatMoney(context, e.value, cur),
+                            textAlign: TextAlign.end,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 6),
+              ],
+              const Divider(),
+              Padding(
+                padding: const EdgeInsets.only(top: 6, bottom: 2),
+                child: Text(
+                  l10n.ledEveryone,
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
+                ),
+              ),
+              for (final b in result.balances)
+                ListTile(
+                  key: Key('balance-${b.memberId}'),
+                  contentPadding: EdgeInsets.zero,
+                  dense: compact,
+                  title: Text(b.name),
+                  subtitle: b.balance.abs() < 0.01
+                      ? null
+                      : _BalanceBar(
+                          fraction: b.balance.abs() / result.balances.map((x) => x.balance.abs()).reduce(math.max),
+                          color: b.balance > 0 ? tokens.colorSuccess : tokens.colorDanger,
+                          track: tokens.borderColor,
+                        ),
+                  // Bounded so a long amount wraps instead of consuming the tile (200% text, wide fonts).
+                  trailing: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 150),
+                    child: Text(
+                      b.balance.abs() < 0.01
+                          ? l10n.ledEven
+                          : b.balance > 0
+                          ? l10n.ledOwed(formatMoney(context, b.balance, cur))
+                          : l10n.ledOwes(formatMoney(context, -b.balance, cur)),
+                      textAlign: TextAlign.end,
+                      style: TextStyle(
+                        color: b.balance.abs() < 0.01
+                            ? tokens.textSecondary
+                            : (b.balance > 0 ? tokens.colorSuccess : tokens.colorDanger),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              if (_flag(ref, 'enableSpendInsights', id))
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    key: const Key('open-insights'),
+                    icon: const Icon(Icons.insights_rounded, size: 18),
+                    label: Text(l10n.ledOpenInsights),
+                    onPressed: () => context.push('/trip/$id/insights'),
+                  ),
+                ),
+            ]),
+            if (history)
+              section('history', l10n.ledHistory, [
+                if (settlements.isEmpty)
+                  Text(
+                    l10n.ledNoHistory,
+                    key: const Key('history-empty'),
+                    style: TextStyle(color: tokens.textSecondary),
+                  ),
+                for (final e in settlements)
+                  ListTile(
+                    key: Key('history-${e.id}'),
                     contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.ledSimplify),
-                    subtitle: Text(l10n.ledSimplifyHint),
-                    value: trip.simplifyDebts,
-                    onChanged: (v) => ref.read(tripRepositoryProvider).setSimplifyDebts(id, v),
+                    title: Text(e.title.replaceFirst('Settlement: ', '')),
+                    subtitle: Text('${e.date} · ${formatMoney(context, e.amount, e.currency)}'),
+                    trailing: Text(
+                      e.settlementConfirmedAt != null ? l10n.ledConfirmed : l10n.ledAwaiting,
+                      style: TextStyle(
+                        color: e.settlementConfirmedAt != null ? tokens.colorSuccess : tokens.textSecondary,
+                      ),
+                    ),
+                    onTap: () => AppSheet.show<void>(
+                      context: context,
+                      builder: (sheetCtx) => ExpenseDetailSheet(
+                        tripId: id,
+                        expenseId: e.id,
+                        onEdit: () => Navigator.of(sheetCtx).pop(),
+                        onDelete: () => Navigator.of(sheetCtx).pop(),
+                      ),
+                    ),
                   ),
               ]),
-              section('transfers', l10n.ledWhoPays, [
-                if (allEven)
-                  EmptyState(
-                    key: const Key('all-settled'),
-                    icon: Icons.check_circle_outline,
-                    title: l10n.ledAllSettled,
-                    subtitle: l10n.ledAllSettledHint,
-                  )
-                else
-                  for (final (i, t) in result.transfers.indexed)
-                    ListTile(
-                      key: Key('transfer-$i'),
-                      contentPadding: EdgeInsets.zero,
-                      dense: compact,
-                      title: Text(l10n.ledTransfer(t.fromLabel, t.toLabel)),
-                      subtitle: Text(formatMoney(context, t.amount, cur)),
-                      trailing: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 130),
-                        child: AppButton(
-                          key: Key('settle-$i'),
-                          label: l10n.ledSettle,
-                          onPressed: () => _settle(context, t),
-                        ),
-                      ),
-                    ),
-              ]),
-              if (history)
-                section('history', l10n.ledHistory, [
-                  if (settlements.isEmpty)
-                    Text(
-                      l10n.ledNoHistory,
-                      key: const Key('history-empty'),
-                      style: TextStyle(color: tokens.textSecondary),
-                    ),
-                  for (final e in settlements)
-                    ListTile(
-                      key: Key('history-${e.id}'),
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(e.title.replaceFirst('Settlement: ', '')),
-                      subtitle: Text('${e.date} · ${formatMoney(context, e.amount, e.currency)}'),
-                      trailing: Text(
-                        e.settlementConfirmedAt != null ? l10n.ledConfirmed : l10n.ledAwaiting,
-                        style: TextStyle(
-                          color: e.settlementConfirmedAt != null ? tokens.colorSuccess : tokens.textSecondary,
-                        ),
-                      ),
-                      onTap: () => AppSheet.show<void>(
-                        context: context,
-                        builder: (sheetCtx) => ExpenseDetailSheet(
-                          tripId: id,
-                          expenseId: e.id,
-                          onEdit: () => Navigator.of(sheetCtx).pop(),
-                          onDelete: () => Navigator.of(sheetCtx).pop(),
-                        ),
-                      ),
-                    ),
-                ]),
-              if (cross.isNotEmpty)
-                section('cross', l10n.ledAcrossTrips, [
-                  for (final n in cross)
-                    ListTile(
-                      key: Key('cross-${n.currency}'),
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.ledAcrossLine(n.currency, formatMoney(context, n.net.abs(), n.currency))),
-                      trailing: Text(n.net > 0 ? l10n.ledOwed('') : l10n.ledOwes('')),
-                    ),
-                ]),
-            ],
+          ],
+        ),
+        AddExpenseFab(tripId: id),
+      ],
+    );
+  }
+}
+
+/// A passport-style stamp on the hero ticket: SETTLED when nothing is owed, NOT SETTLED otherwise.
+class _SettleStamp extends StatelessWidget {
+  const _SettleStamp({required this.settled, required this.text, required this.tone, super.key});
+
+  final bool settled;
+  final String text;
+  final BentoTone tone;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.tokens.tones[tone].accent;
+    return Semantics(
+      label: text,
+      child: ExcludeSemantics(
+        child: Transform.rotate(
+          angle: -0.14,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              border: Border.all(color: color, width: 2.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(settled ? Icons.check_rounded : Icons.hourglass_top_rounded, size: 16, color: color),
+                const SizedBox(width: 4),
+                Text(
+                  text.toUpperCase(),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: color),
+                ),
+              ],
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 }

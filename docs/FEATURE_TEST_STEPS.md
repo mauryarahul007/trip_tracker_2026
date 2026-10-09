@@ -23,6 +23,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 |--------|---------|-----|---------|
 | 2026-10-08 | flutter 3.48.2 | FLUTTER-FIRSTSYNC | [Flutter: first sync, destination autocomplete, Horizon defaults](#flutter-firstsync--trips-after-sign-in-destination-autocomplete-horizon-defaults-v3482) |
 | 2026-10-08 | flutter 3.48 | FLUTTER-HORIZON | [Flutter: Horizon nav and spend insights](#flutter-horizon--horizon-nav-and-spend-insights-v3480) |
+| 2026-10-09 | flutter 3.52 | FLUTTER-SUMMARY | [Flutter: Summary tab, Add expense on Summary, map panel, live Notes](#flutter-summary--flutter-summary-tab-add-expense-on-summary-map-panel-live-notes) |
 | 2026-10-09 | flutter (unreleased) | FLUTTER-BENTO | [Flutter: Bento redesign (P0 to P5)](#flutter-bento--flutter-bento-redesign-p0-to-p5) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
@@ -2249,6 +2250,28 @@ Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, ne
 
 ### Pass
 - Same colours and type in all three themes; every screen above reads as tiles on the ground; no overflow; all labels contrast-checked by the a11y test.
+
+## FLUTTER-SUMMARY — Flutter: Summary tab, Add expense on Summary, map panel, live Notes
+
+### Flags
+- None new. The Spend insights link and Settlement history still follow `enableSpendInsights` and `enableSettlementHistory`.
+
+### Steps
+1. Open a trip: it lands on Summary; the tab order is Summary, Expenses, Members, Notes.
+2. Summary top: boarding-pass card with trip dates, "You are owed" or "You owe" and a large amount, and a stamp (NOT SETTLED while money is owed, SETTLED at zero). Below it, To receive and To pay cards and, once there is something to settle, a progress card.
+3. Who pays whom: tickets with avatars; as admin, flip the Simplify / Direct switch and check the counts line and the tickets change; tap Settle on a ticket to open the settle sheet.
+4. Trip numbers (open by default): totals tiles, donut with a row per category, Who paid bars, per-person balances.
+5. Tap Add expense on Summary, then on Expenses: both open the expense form; save one and see Summary update.
+6. Tap the map icon in the trip header: with stops you get the map (tap it to edit the route); without stops you get "No route yet" and an Add stops button. Tap the icon again to hide it.
+7. Notes: Passes pane, checklist add / edit / delete (Undo) and tick several items; with a second account, a tick or chat message appears without refreshing.
+
+### Negative checks
+- `enableSettlementHistory` OFF: no history section. `enableSpendInsights` OFF: no insights link.
+- Non-admin member: no simplify switch.
+- 200% text: Summary scrolls with no overflow stripes.
+
+### Pass
+- All steps behave as described, no overflow, ticks stay ticked after a pull-to-refresh.
 
 ## Template for the next feature
 

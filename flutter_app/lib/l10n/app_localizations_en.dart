@@ -22,6 +22,153 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navExpenses => 'Expenses';
 
   @override
+  String get navSummary => 'Summary';
+
+  @override
+  String get ledHeroYouOwed => 'You are owed';
+
+  @override
+  String get ledHeroYouOwe => 'You owe';
+
+  @override
+  String ledHeroGroupOwed(String name) {
+    return '$name is owed';
+  }
+
+  @override
+  String ledHeroGroupOwes(String name) {
+    return '$name owes';
+  }
+
+  @override
+  String get ledHeroSquare => 'All square';
+
+  @override
+  String get ledYourMoney => 'Your money';
+
+  @override
+  String get ledToReceive => 'To receive';
+
+  @override
+  String get ledToPay => 'To pay';
+
+  @override
+  String get ledProgress => 'Settlement progress';
+
+  @override
+  String ledProgressLine(String done, String total) {
+    return '$done of $total settled';
+  }
+
+  @override
+  String ledProgressLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payments left',
+      one: '1 payment left',
+    );
+    return '$_temp0 to square up';
+  }
+
+  @override
+  String get ledProgressDone => 'Everyone is square';
+
+  @override
+  String get ledSpendReport => 'Spend report';
+
+  @override
+  String get ledByCategory => 'Categories';
+
+  @override
+  String get ledByPerson => 'People';
+
+  @override
+  String get ledAllExpenses => 'All expenses';
+
+  @override
+  String ledShareOfTotal(int percent) {
+    return '$percent% of total';
+  }
+
+  @override
+  String ledInsightTop(String name, int percent) {
+    return 'Biggest spend: $name at $percent%';
+  }
+
+  @override
+  String get ledPassTitle => 'Settlement pass';
+
+  @override
+  String get ledHeroTravellers => 'Travellers';
+
+  @override
+  String get ledSpendByCategory => 'Spend by category';
+
+  @override
+  String get ledWhoPaid => 'Who paid';
+
+  @override
+  String get mapNoRoute => 'No route yet';
+
+  @override
+  String get mapNoRouteHint => 'Add the places you will visit to see the trip on a map.';
+
+  @override
+  String get mapAddStops => 'Add stops';
+
+  @override
+  String get mapOpenRoute => 'Open route';
+
+  @override
+  String get ledStampSettled => 'Settled';
+
+  @override
+  String get ledStampNotSettled => 'Not settled';
+
+  @override
+  String get ledHeroTrip => 'Trip';
+
+  @override
+  String get ledHeroOpen => 'Open payments';
+
+  @override
+  String get ledFrom => 'From';
+
+  @override
+  String get ledTo => 'To';
+
+  @override
+  String get ledModeFewest => 'Fewest payments';
+
+  @override
+  String get ledModePerPerson => 'Per person';
+
+  @override
+  String ledCountsSame(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count payments', one: '1 payment');
+    return '$_temp0 either way for this trip';
+  }
+
+  @override
+  String ledCountsSaves(int simple, int direct) {
+    String _temp0 = intl.Intl.pluralLogic(simple, locale: localeName, other: '$simple payments', one: '1 payment');
+    return '$_temp0 instead of $direct';
+  }
+
+  @override
+  String get ledOthers => 'Everyone else';
+
+  @override
+  String get ledAllSettledYou => 'You are all settled up';
+
+  @override
+  String get ledNumbers => 'Trip numbers';
+
+  @override
+  String get ledOpenInsights => 'Open spend insights';
+
+  @override
   String get navBalances => 'Balances';
 
   @override
@@ -1417,6 +1564,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesAddPass => 'Add pass';
+
+  @override
+  String get ledGroupBalances => 'Group balances';
+
+  @override
+  String get ledBetweenGroups => 'Between groups';
+
+  @override
+  String get ledEveryone => 'Everyone\'s balance';
+
+  @override
+  String get notesItemEdit => 'Edit item';
+
+  @override
+  String get notesItemHint => 'What needs doing?';
+
+  @override
+  String get notesItemCategory => 'Category';
+
+  @override
+  String get notesItemAssign => 'Assign to';
+
+  @override
+  String get notesItemAnyone => 'Anyone';
+
+  @override
+  String get notesItemSave => 'Save';
+
+  @override
+  String get notesItemDelete => 'Delete';
+
+  @override
+  String get notesItemDeleted => 'Item deleted';
+
+  @override
+  String get notesItemMore => 'More actions';
+
+  @override
+  String get notesItemMoveUp => 'Move up';
+
+  @override
+  String get notesItemMoveDown => 'Move down';
+
+  @override
+  String get notesEmptyChecklist => 'Nothing on the list yet. Add the first item above.';
+
+  @override
+  String get notesNoItemsInCategory => 'No items in this category.';
 
   @override
   String get notesSortTime => 'Time';

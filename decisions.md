@@ -4961,3 +4961,22 @@ This document logs all meaningful technical decisions, library choices, design p
   - The Add expense form body, Ledger lists, Notes checklist and chat, and Trip settings keep their layouts and only get new colours and fonts; they can move to tiles later.
   - Not yet compared side by side on a device with the design board.
 * **Release Cut:** version bumped to `3.51.0` via `npm run release:minor`.
+
+## 284. Flutter: Summary-first trip tabs, boarding-pass Summary, live Notes and Chat, sync race fix
+
+* **Date:** 2026-10-09
+* **Context:** On-device testing of the Bento build showed a Notes tab that could not edit or delete checklist items, ticks that appeared to freeze, a cluttered Balances tab, a map button that did nothing, and no Add expense button outside the Expenses tab.
+* **Decisions:**
+  - **Tab order (Flutter only):** Summary is first and the landing tab, Expenses second; the web app keeps its own order. The old Balances tab is renamed Summary.
+  - **Summary tab:** boarding-pass hero with a SETTLED / NOT SETTLED stamp, trip dates, a large balance with dimmed decimals, a To receive / To pay pair, a settlement-progress card, Who pays whom tickets with avatars and the simplify-debts switch (with a counts line), and a Trip numbers section (donut, category rows, Who paid, per-person balances). Group members are shown as one group balance.
+  - **Add expense:** one shared button on both Summary and Expenses (`AddExpenseFab`, no hero tag because both tabs stay mounted).
+  - **Map button:** opens a route panel under the header (map with stops, otherwise a No route yet tile with Add stops).
+  - **Notes tab:** own Passes pane; full checklist with add, edit, delete (undo) and tap-to-tick with an optimistic overlay and an on-screen error.
+  - **Realtime:** the trip shell now opens the realtime channel (it had no callers), so Notes and Chat update live.
+  - **Sync race:** `OutboxStore.epoch` changes on every local write; `TripPullSync` refetches (up to 3 times) when it changed during a fetch, so a stale server row can no longer undo a local tick.
+  - **No new flags:** restyle and fixes to existing surfaces; the simplify switch is no longer hidden behind a Labs flag for admins.
+* **Trade-offs Accepted:**
+  - Summary-first order differs from the web app.
+  - The checklist freeze on a physical device was not reproduced in tests; the overlay and error message are defensive.
+  - The Add person flow (invite by Google email) is undecided and not part of this change.
+* **Release Cut:** version bumped to `3.52.0` via `npm run release:minor`.

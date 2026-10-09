@@ -17,6 +17,20 @@ Future<void> openLedger(WidgetTester tester, Seed s) async {
   await settle(tester, rounds: 14);
 }
 
+/// Sections other than "who pays whom" start folded away; tap a header to open it.
+Future<void> openSection(WidgetTester tester, String section) async {
+  await tester.ensureVisible(key('section-$section'));
+  await tester.tap(key('section-$section'));
+  await settle(tester, rounds: 4);
+}
+
+/// The list builds lazily: scroll down until [k] exists.
+Future<void> scrollToKey(WidgetTester tester, String k) => tester.scrollUntilVisible(
+  key(k),
+  300,
+  scrollable: find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable)),
+);
+
 String text(WidgetTester t, String k) {
   final w = t.widget(key(k));
   return w is Text ? w.data! : t.widget<Text>(find.descendant(of: key(k), matching: find.byType(Text)).last).data!;
@@ -28,10 +42,33 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 90); // Asha paid, 3-way equal: Ben & Cara owe 30 each
     await openLedger(tester, s);
+    await scrollToKey(tester, 'balance-${s.me}'); // Trip numbers is open by default, below the fold
     expect(text(tester, 'balance-${s.me}'), 'is owed ₹60.00');
     expect(text(tester, 'balance-${s.ben}'), 'owes ₹30.00');
     expect(find.text('Ben pays Asha'), findsOneWidget);
     expect(find.text('Cara pays Asha'), findsOneWidget);
+  });
+
+  testApp('the hero boarding pass is stamped SETTLED at zero and NOT SETTLED while money is owed', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await openLedger(tester, s);
+    expect(find.descendant(of: key('settle-stamp'), matching: find.text('SETTLED')), findsOneWidget);
+
+    await addExpense(tester, s, amount: 90); // Ben and Cara now owe Asha
+    await settle(tester, rounds: 8);
+    expect(find.descendant(of: key('settle-stamp'), matching: find.text('NOT SETTLED')), findsOneWidget);
+    expect(find.descendant(of: key('sticky-balance'), matching: find.text('YOU ARE OWED')), findsOneWidget);
+  });
+
+  testApp('Add expense is on the Summary tab and opens the expense form', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await openLedger(tester, s);
+    await tester.tap(key('add-expense-fab-${s.tripId}'));
+    await settle(tester, rounds: 10);
+    final path = GoRouterState.of(tester.element(find.byType(Scaffold).last)).uri.path;
+    expect(path, '/trip/${s.tripId}/expenses/new');
   });
 
   testApp('nothing owed shows the settled state', (tester) async {
@@ -46,8 +83,15 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 90);
     await openLedger(tester, s);
+    // Asha is the one being paid, so Ben's payment sits on her summary ticket (a row keyed transfer-N).
     await tester.tap(
-      find.descendant(of: find.widgetWithText(ListTile, 'Ben pays Asha'), matching: find.byType(AppButton)),
+      find.descendant(
+        of: find.ancestor(
+          of: find.text('Ben pays Asha'),
+          matching: find.byWidgetPredicate((w) => w.key.toString().contains("'transfer-")),
+        ),
+        matching: find.byType(AppButton),
+      ),
     );
     await settle(tester, rounds: 6);
     expect(find.text('Confirm settlement'), findsOneWidget);
@@ -138,11 +182,44 @@ void main() {
     expect(after, !before);
   });
 
-  testApp('no simplify toggle without the flag', (tester) async {
+  testApp('simplify switch changes who pays whom (chain of debts collapses, then expands again)', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    // Asha paid for Asha+Ben (Ben owes 30); Ben paid for Ben+Cara (Cara owes 30).
+    await addExpense(tester, s, title: 'Taxi', amount: 60, split: [s.me, s.ben]);
+    await addExpense(tester, s, title: 'Lunch', amount: 60, paidBy: s.ben, split: [s.ben, s.cara]);
+    await openLedger(tester, s);
+
+    // The switch says what it does: one payment instead of two.
+    expect(find.text('1 payment instead of 2'), findsOneWidget);
+
+    // Simplified (default): Cara pays Asha directly, Ben is out of it.
+    expect(find.text('Cara pays Asha'), findsOneWidget);
+    expect(find.text('Ben pays Asha'), findsNothing);
+
+    await tester.tap(find.descendant(of: key('simplify-toggle'), matching: find.text('Per person')));
+    await settle(tester, rounds: 8);
+
+    // Not simplified: every debt stays between the people who incurred it.
+    expect(find.text('Ben pays Asha'), findsOneWidget);
+    expect(find.text('Cara pays Ben'), findsOneWidget);
+    expect(find.text('Cara pays Asha'), findsNothing);
+  });
+
+  testApp('when simplifying changes nothing the counts line says so', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 90); // Asha paid for everyone: two payments either way
+    await openLedger(tester, s);
+    expect(find.text('2 payments either way for this trip'), findsOneWidget);
+  });
+
+  testApp('trip admins get the simplify switch without any flag', (tester) async {
+    // The switch used to hide behind a Labs flag that is off by default, so it looked broken.
     await pumpApp(tester, user: asha, flagsOff: {'enableSimplifyDebtsToggle'});
     final s = await seedTrip(tester);
     await openLedger(tester, s);
-    expect(key('simplify-toggle'), findsNothing);
+    expect(key('simplify-toggle'), findsOneWidget);
   });
 
   testApp('history lists settlements with their confirmation state; flag-gated', (tester) async {
@@ -151,6 +228,10 @@ void main() {
     await addExpense(tester, s, amount: 60, split: [s.me, s.ben]);
     await addExpense(tester, s, title: 'Settlement: Ben ➔ Asha', amount: 30, paidBy: s.ben, split: [s.me]);
     await openLedger(tester, s);
+    await scrollToKey(tester, 'section-history'); // below the fold; the list builds lazily
+    await openSection(tester, 'history');
+    await tester.drag(key('ledger-list'), const Offset(0, -300)); // reveal the rows under the header
+    await settle(tester, rounds: 4);
     expect(find.text('Ben ➔ Asha'), findsOneWidget);
     expect(find.text('Awaiting confirmation'), findsOneWidget);
   });

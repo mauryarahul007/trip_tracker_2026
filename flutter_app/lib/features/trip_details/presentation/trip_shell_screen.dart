@@ -5,7 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/auth_state.dart';
+import '../../../core/env/app_env.dart';
 import '../../../core/platform/haptics.dart';
+import '../../../data/providers.dart';
+import '../../../data/realtime/realtime_manager.dart';
 import '../../../domain/logic/tab_trail.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
@@ -18,7 +21,7 @@ import '../../../shared/widgets/app_sheet.dart';
 import '../../chat/application/chat_providers.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../../notifications/presentation/notification_bell.dart';
-import '../../travel/maps/deferred_trip_map_hero.dart';
+import '../../travel/maps/trip_route_panel.dart';
 import '../../travel/maps/trip_route_modal.dart';
 import '../../travel/presentation/live_location_share_modal.dart';
 import '../../trips/presentation/widgets/share_trip_sheet.dart';
@@ -31,7 +34,7 @@ String tripTabLabel(BuildContext context, TripNavTab tab) {
   return switch (tab) {
     TripNavTab.chat => l10n.navChat,
     TripNavTab.expenses => l10n.navExpenses,
-    TripNavTab.ledger => l10n.navBalances,
+    TripNavTab.ledger => l10n.navSummary,
     TripNavTab.members => l10n.navMembers,
     TripNavTab.notes => l10n.navNotes,
   };
@@ -40,7 +43,7 @@ String tripTabLabel(BuildContext context, TripNavTab tab) {
 IconData tripTabIcon(TripNavTab tab) => switch (tab) {
   TripNavTab.chat => AppIcons.chat,
   TripNavTab.expenses => AppIcons.expenses,
-  TripNavTab.ledger => AppIcons.ledger,
+  TripNavTab.ledger => Icons.space_dashboard_rounded,
   TripNavTab.members => AppIcons.members,
   TripNavTab.notes => AppIcons.notes,
 };
@@ -63,16 +66,35 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
   late int _current;
   bool _mapExpanded = false;
 
+  RealtimeManager? _realtime;
+
   @override
   void initState() {
     super.initState();
     // Eager: a lazy `late` initialiser would first run after the first tab change.
     _current = widget.navigationShell.currentIndex;
+    _openRealtime();
+  }
+
+  /// Live updates for this trip (chat, checklist, notes, passes…). Without this nothing a teammate adds shows up
+  /// until the next manual sync. Guests, demo and no-backend builds stay local.
+  void _openRealtime() {
+    final a = ref.read(authStateProvider);
+    if (!(AppEnv.current.hasBackend && a.isAuthenticated && !a.isLocalOnly)) return;
+    _realtime = ref.read(realtimeManagerProvider);
+    unawaited(_realtime!.openTrip(widget.tripId));
+  }
+
+  @override
+  void dispose() {
+    unawaited(_realtime?.closeTrip());
+    super.dispose();
   }
 
   @override
   void didUpdateWidget(TripShellScreen old) {
     super.didUpdateWidget(old);
+    if (old.tripId != widget.tripId) _openRealtime(); // openTrip closes the previous trip's channels
     final next = widget.navigationShell.currentIndex;
     if (next != _current) {
       _trail = pushTab(_trail, _current, next);
@@ -215,16 +237,22 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                   child: Column(
                     children: [
                       const OfflineBanner(),
-                      if (_mapExpanded && trip != null)
-                        GestureDetector(
-                          onTap: () => showModalBottomSheet<void>(
-                            context: context,
-                            isScrollControlled: true,
-                            useSafeArea: true,
-                            builder: (_) => TripRouteModal(trip: trip),
-                          ),
-                          child: DeferredTripMapHero(trip: trip, height: 160),
-                        ),
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment.topCenter,
+                        child: _mapExpanded && trip != null
+                            ? TripRoutePanel(
+                                trip: trip,
+                                onOpen: () => showModalBottomSheet<void>(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  useSafeArea: true,
+                                  builder: (_) => TripRouteModal(trip: trip),
+                                ),
+                              )
+                            : const SizedBox(width: double.infinity),
+                      ),
                       Expanded(child: widget.body),
                     ],
                   ),

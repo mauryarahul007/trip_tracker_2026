@@ -109,7 +109,9 @@ ThemeData _build(AppTokens t, Brightness brightness) {
       backgroundColor: t.ctaBg,
       foregroundColor: t.ctaFg,
       elevation: 4,
-      shape: const CircleBorder(),
+      // A pill, not a circle: the extended "Add expense" button carries a label and must grow with it.
+      shape: const StadiumBorder(),
+      extendedPadding: const EdgeInsets.symmetric(horizontal: 20),
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: t.bgSurface.withValues(alpha: 0.96),

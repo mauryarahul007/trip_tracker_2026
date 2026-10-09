@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trip_tracker/data/local/app_database.dart';
 import 'package:trip_tracker/data/repositories/drift_repositories.dart';
 import 'package:trip_tracker/data/sync/outbox_store.dart';
 import 'package:trip_tracker/data/sync/outbox_types.dart';
 import 'package:trip_tracker/data/sync/trip_pull_sync.dart';
+import 'package:trip_tracker/domain/models/checklist_item.dart';
 import 'package:trip_tracker/domain/models/expense.dart';
 
 class FakeReader extends TripRemoteReader {
@@ -19,10 +22,15 @@ class FakeReader extends TripRemoteReader {
   @override
   Future<List<String>> myTripIds() async => ids;
 
+  /// When set, a fetch takes its snapshot immediately but only returns once this completes (a slow network).
+  Completer<void>? gate;
+
   @override
   Future<Map<String, dynamic>> tripChanges(String tripId, DateTime? since) async {
     sinceCalls.add(since);
-    return responses[tripId]!;
+    final snapshot = responses[tripId]!;
+    await gate?.future;
+    return snapshot;
   }
 }
 
@@ -214,6 +222,40 @@ void main() {
       expect(e.splitMemberIds, ['m1', 'm2']);
       expect(e.resolvedShares, {'m1': 50.0, 'm2': 50.0});
       expect(reader.sinceCalls.single, isNull);
+    });
+
+    test('a stale fetch must not undo a checklist tick that was made and pushed while it was in flight', () async {
+      reader.ids = ['t1'];
+      reader.responses['t1'] = changes(trip: tripRow('t1'));
+      await pull.syncAll(); // hydrate: server has no checklist items
+
+      // A slow fetch starts: it holds the OLD server snapshot.
+      reader.gate = Completer<void>();
+      final slow = pull.syncTrip('t1');
+      await Future<void>.delayed(Duration.zero);
+
+      // Meanwhile the user ticks an item. The write is queued, then the push succeeds and the queue empties.
+      await trips.setChecklist('t1', [
+        const ChecklistItem(id: 'c1', text: 'Card reader dongle', completed: true, createdAt: 1, updatedAt: 2),
+      ]);
+      for (final o in await outbox.all()) {
+        await outbox.markDone(o.id);
+      }
+      // The server now has the tick (that is what the push did).
+      reader.responses['t1'] = changes(
+        trip: {
+          ...tripRow('t1'),
+          'checklist': [
+            {'id': 'c1', 'text': 'Card reader dongle', 'completed': true, 'createdAt': 1, 'updatedAt': 2},
+          ],
+        },
+      );
+
+      reader.gate!.complete(); // the stale snapshot lands
+      await slow;
+
+      final item = (await trips.watchTrip('t1').first)!.checklist.single;
+      expect((item.text, item.completed), ('Card reader dongle', true));
     });
 
     test('incremental sync uses cursor minus skew', () async {

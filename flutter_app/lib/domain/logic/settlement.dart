@@ -488,3 +488,18 @@ SettlementCloseoutSummary summarizeSettlement(List<dynamic> balances, List<dynam
     unsettledMemberCount: unsettledCount,
   );
 }
+
+/// Balances by group and who pays whom between groups. Members in no group stay their own node, so
+/// the flows always cover everyone; money moving inside one group nets out and never appears.
+class GroupLedger {
+  const GroupLedger({required this.nodes, required this.flows});
+  final List<SettlementNode> nodes;
+  final List<Transfer> flows;
+
+  bool get hasGroups => nodes.any((n) => n.id.startsWith('group:'));
+}
+
+GroupLedger calculateGroupLedger(List<MemberBalance> balances, List<Group> groups) {
+  final nodes = buildSettlementNodes(balances, groups);
+  return GroupLedger(nodes: nodes, flows: _matchDebtorsToCreditors(nodes, balances));
+}

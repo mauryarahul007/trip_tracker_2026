@@ -31,7 +31,7 @@ Future<void> createTripFlow(BuildContext context) async {
     title: context.l10n.createTripTitle,
     builder: (_) => const CreateTripSheet(),
   );
-  if (id != null && context.mounted) unawaited(context.push('/trip/$id/expenses'));
+  if (id != null && context.mounted) unawaited(context.push('/trip/$id/ledger'));
 }
 
 /// True when the window is wide enough for the desktop shell (left rail, no bottom dock).

@@ -115,6 +115,252 @@ abstract class AppLocalizations {
   /// **'Expenses'**
   String get navExpenses;
 
+  /// No description provided for @navSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get navSummary;
+
+  /// No description provided for @ledHeroYouOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'You are owed'**
+  String get ledHeroYouOwed;
+
+  /// No description provided for @ledHeroYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe'**
+  String get ledHeroYouOwe;
+
+  /// No description provided for @ledHeroGroupOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is owed'**
+  String ledHeroGroupOwed(String name);
+
+  /// No description provided for @ledHeroGroupOwes.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes'**
+  String ledHeroGroupOwes(String name);
+
+  /// No description provided for @ledHeroSquare.
+  ///
+  /// In en, this message translates to:
+  /// **'All square'**
+  String get ledHeroSquare;
+
+  /// No description provided for @ledYourMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Your money'**
+  String get ledYourMoney;
+
+  /// No description provided for @ledToReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'To receive'**
+  String get ledToReceive;
+
+  /// No description provided for @ledToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'To pay'**
+  String get ledToPay;
+
+  /// No description provided for @ledProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement progress'**
+  String get ledProgress;
+
+  /// No description provided for @ledProgressLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} settled'**
+  String ledProgressLine(String done, String total);
+
+  /// No description provided for @ledProgressLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 payment left} other{{count} payments left}} to square up'**
+  String ledProgressLeft(int count);
+
+  /// No description provided for @ledProgressDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone is square'**
+  String get ledProgressDone;
+
+  /// No description provided for @ledSpendReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Spend report'**
+  String get ledSpendReport;
+
+  /// No description provided for @ledByCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get ledByCategory;
+
+  /// No description provided for @ledByPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get ledByPerson;
+
+  /// No description provided for @ledAllExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'All expenses'**
+  String get ledAllExpenses;
+
+  /// No description provided for @ledShareOfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of total'**
+  String ledShareOfTotal(int percent);
+
+  /// No description provided for @ledInsightTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Biggest spend: {name} at {percent}%'**
+  String ledInsightTop(String name, int percent);
+
+  /// No description provided for @ledPassTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement pass'**
+  String get ledPassTitle;
+
+  /// No description provided for @ledHeroTravellers.
+  ///
+  /// In en, this message translates to:
+  /// **'Travellers'**
+  String get ledHeroTravellers;
+
+  /// No description provided for @ledSpendByCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Spend by category'**
+  String get ledSpendByCategory;
+
+  /// No description provided for @ledWhoPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Who paid'**
+  String get ledWhoPaid;
+
+  /// No description provided for @mapNoRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'No route yet'**
+  String get mapNoRoute;
+
+  /// No description provided for @mapNoRouteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the places you will visit to see the trip on a map.'**
+  String get mapNoRouteHint;
+
+  /// No description provided for @mapAddStops.
+  ///
+  /// In en, this message translates to:
+  /// **'Add stops'**
+  String get mapAddStops;
+
+  /// No description provided for @mapOpenRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Open route'**
+  String get mapOpenRoute;
+
+  /// No description provided for @ledStampSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled'**
+  String get ledStampSettled;
+
+  /// No description provided for @ledStampNotSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Not settled'**
+  String get ledStampNotSettled;
+
+  /// No description provided for @ledHeroTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip'**
+  String get ledHeroTrip;
+
+  /// No description provided for @ledHeroOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open payments'**
+  String get ledHeroOpen;
+
+  /// No description provided for @ledFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get ledFrom;
+
+  /// No description provided for @ledTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get ledTo;
+
+  /// No description provided for @ledModeFewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Fewest payments'**
+  String get ledModeFewest;
+
+  /// No description provided for @ledModePerPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Per person'**
+  String get ledModePerPerson;
+
+  /// No description provided for @ledCountsSame.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 payment} other{{count} payments}} either way for this trip'**
+  String ledCountsSame(int count);
+
+  /// No description provided for @ledCountsSaves.
+  ///
+  /// In en, this message translates to:
+  /// **'{simple, plural, =1{1 payment} other{{simple} payments}} instead of {direct}'**
+  String ledCountsSaves(int simple, int direct);
+
+  /// No description provided for @ledOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone else'**
+  String get ledOthers;
+
+  /// No description provided for @ledAllSettledYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You are all settled up'**
+  String get ledAllSettledYou;
+
+  /// No description provided for @ledNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip numbers'**
+  String get ledNumbers;
+
+  /// No description provided for @ledOpenInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Open spend insights'**
+  String get ledOpenInsights;
+
   /// No description provided for @navBalances.
   ///
   /// In en, this message translates to:
@@ -2634,6 +2880,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add pass'**
   String get notesAddPass;
+
+  /// No description provided for @ledGroupBalances.
+  ///
+  /// In en, this message translates to:
+  /// **'Group balances'**
+  String get ledGroupBalances;
+
+  /// No description provided for @ledBetweenGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Between groups'**
+  String get ledBetweenGroups;
+
+  /// No description provided for @ledEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone\'s balance'**
+  String get ledEveryone;
+
+  /// No description provided for @notesItemEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit item'**
+  String get notesItemEdit;
+
+  /// No description provided for @notesItemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What needs doing?'**
+  String get notesItemHint;
+
+  /// No description provided for @notesItemCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get notesItemCategory;
+
+  /// No description provided for @notesItemAssign.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign to'**
+  String get notesItemAssign;
+
+  /// No description provided for @notesItemAnyone.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone'**
+  String get notesItemAnyone;
+
+  /// No description provided for @notesItemSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get notesItemSave;
+
+  /// No description provided for @notesItemDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get notesItemDelete;
+
+  /// No description provided for @notesItemDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Item deleted'**
+  String get notesItemDeleted;
+
+  /// No description provided for @notesItemMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get notesItemMore;
+
+  /// No description provided for @notesItemMoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get notesItemMoveUp;
+
+  /// No description provided for @notesItemMoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get notesItemMoveDown;
+
+  /// No description provided for @notesEmptyChecklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing on the list yet. Add the first item above.'**
+  String get notesEmptyChecklist;
+
+  /// No description provided for @notesNoItemsInCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'No items in this category.'**
+  String get notesNoItemsInCategory;
 
   /// No description provided for @notesSortTime.
   ///

@@ -9,6 +9,7 @@ import 'package:trip_tracker/data/providers.dart';
 import 'package:trip_tracker/domain/logic/back_exit.dart';
 
 import 'package:trip_tracker/features/expenses/presentation/expenses_tab.dart';
+import 'package:trip_tracker/features/expenses/presentation/ledger_tab.dart';
 
 import '../../support/pump_app.dart';
 
@@ -55,20 +56,34 @@ void main() {
     await openTrip(tester);
     expect(find.byType(AppBottomNav), findsNothing);
     expect(find.byType(AppSideNav), findsOneWidget);
-    expect(find.descendant(of: find.byType(AppSideNav), matching: find.text('Balances')), findsOneWidget);
-    expect(find.byType(ExpensesTab), findsOneWidget);
+    expect(find.descendant(of: find.byType(AppSideNav), matching: find.text('Summary')), findsOneWidget);
+    expect(find.byType(LedgerTab), findsOneWidget);
   });
 
-  testApp('opening a trip shows its name, default tabs and the Expenses tab', (tester) async {
+  testApp('opening a trip shows its name, default tabs and the Summary tab', (tester) async {
     await pumpApp(tester, user: asha);
     final id = await openTrip(tester);
-    expect(location(tester), '/trip/$id/expenses');
+    expect(location(tester), '/trip/$id/ledger');
     expect(find.descendant(of: find.byType(AppBar), matching: find.text('Goa Weekend')), findsOneWidget);
-    for (final label in ['Expenses', 'Balances', 'Members', 'Notes']) {
+    for (final label in ['Summary', 'Expenses', 'Members', 'Notes']) {
       expect(navItem(label), findsOneWidget, reason: label);
     }
     expect(navItem('Chat'), findsNothing);
-    expect(find.byType(ExpensesTab), findsOneWidget);
+    expect(find.byType(LedgerTab), findsOneWidget);
+  });
+
+  testApp('the map button opens a route panel; a trip without stops says so and offers to add them', (tester) async {
+    await pumpApp(tester, user: asha);
+    await openTrip(tester);
+    expect(find.byKey(const Key('route-panel')), findsNothing);
+    await tester.tap(find.byKey(const Key('action-trip-map')));
+    await settle(tester, rounds: 8);
+    expect(find.byKey(const Key('route-panel')), findsOneWidget);
+    expect(find.text('No route yet'), findsOneWidget);
+    expect(find.byKey(const Key('route-add-stops')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('action-trip-map'))); // toggles back off
+    await settle(tester, rounds: 8);
+    expect(find.byKey(const Key('route-panel')), findsNothing);
   });
 
   testApp('chat-first flag puts Chat first and makes it the landing tab', (tester) async {
@@ -100,18 +115,18 @@ void main() {
   testApp('swiping the content moves to the next tab', (tester) async {
     await pumpApp(tester, user: asha);
     final id = await openTrip(tester);
-    await tester.drag(find.byType(ExpensesTab), const Offset(-400, 0));
-    await settle(tester, rounds: 14);
-    expect(location(tester), '/trip/$id/ledger');
-    await tester.drag(find.byKey(const Key('ledger-list')), const Offset(400, 0));
+    await tester.drag(find.byKey(const Key('ledger-list')), const Offset(-400, 0));
     await settle(tester, rounds: 14);
     expect(location(tester), '/trip/$id/expenses');
+    await tester.drag(find.byType(ExpensesTab), const Offset(400, 0));
+    await settle(tester, rounds: 14);
+    expect(location(tester), '/trip/$id/ledger');
   });
 
   testApp('system back walks the tab trail, then leaves the trip', (tester) async {
     await pumpApp(tester, user: asha);
     final id = await openTrip(tester);
-    await tester.tap(navItem('Balances'));
+    await tester.tap(navItem('Expenses'));
     await settle(tester, rounds: 10);
     await tester.tap(navItem('Members'));
     await settle(tester, rounds: 10);
@@ -119,10 +134,10 @@ void main() {
 
     await tester.binding.handlePopRoute();
     await settle(tester, rounds: 10);
-    expect(location(tester), '/trip/$id/ledger');
+    expect(location(tester), '/trip/$id/expenses');
     await tester.binding.handlePopRoute();
     await settle(tester, rounds: 10);
-    expect(location(tester), '/trip/$id/expenses');
+    expect(location(tester), '/trip/$id/ledger');
     await tester.binding.handlePopRoute(); // trail empty: leave the trip
     await settle(tester, rounds: 10);
     expect(location(tester), '/');
@@ -145,7 +160,7 @@ void main() {
     expect(location(tester), '/trip/$id/settings');
     await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
     await settle(tester, rounds: 10);
-    expect(location(tester), '/trip/$id/expenses');
+    expect(location(tester), '/trip/$id/ledger');
   });
 
   testApp('a bare /trip/:id link lands on the first visible tab', (tester) async {
@@ -166,7 +181,7 @@ void main() {
     );
     GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/trip/$id');
     await settle(tester, rounds: 10);
-    expect(location(tester), '/trip/$id/expenses');
+    expect(location(tester), '/trip/$id/ledger');
   });
 
   group('root double-back exit', () {

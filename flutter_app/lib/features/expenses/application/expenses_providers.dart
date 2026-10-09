@@ -111,6 +111,18 @@ final tripSettlementProvider = Provider.family<SettlementResult?, String>((ref, 
   return calculateSettlements(trip, {for (final m in members) m.id: m}, expenses, groups, trip.simplifyDebts);
 });
 
+/// How many payments the trip needs with and without "simplify debts", so the switch can show what it does.
+final tripSettlementCountsProvider = Provider.family<({int simplified, int direct})?, String>((ref, tripId) {
+  final trip = ref.watch(tripProvider(tripId)).value;
+  final members = ref.watch(tripMembersProvider(tripId)).value;
+  final expenses = ref.watch(tripExpensesProvider(tripId)).value;
+  if (trip == null || members == null || expenses == null) return null;
+  final groups = ref.watch(tripGroupsProvider(tripId)).value ?? const <Group>[];
+  final byId = {for (final m in members) m.id: m};
+  int count(bool simplify) => calculateSettlements(trip, byId, expenses, groups, simplify).transfers.length;
+  return (simplified: count(true), direct: count(false));
+});
+
 /// Active (non-archived) members, the people a split can involve.
 final visibleMembersProvider = Provider.family<List<Member>, String>((ref, tripId) {
   final trip = ref.watch(tripProvider(tripId)).value;

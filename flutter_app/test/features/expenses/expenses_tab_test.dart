@@ -87,10 +87,30 @@ Future<String> addExpense(
   return r.expenseId!;
 }
 
+/// A trip opens on Summary (the first tab); the Expenses tab is the second.
 Future<void> openExpenses(WidgetTester tester, Seed s) async {
   await settle(tester);
   await tester.tap(find.text('Goa Weekend'));
   await settle(tester, rounds: 14);
+  // Bottom pill (phone): icon-only items are found by their button semantics. Side rail (wide): by their text.
+  final pill = find.byWidgetPredicate(
+    (w) => w is Semantics && w.properties.button == true && w.properties.label == 'Expenses',
+  );
+  await tester.tap(pill.evaluate().isNotEmpty ? pill.first : find.text('Expenses').first);
+  await settle(tester, rounds: 14);
+}
+
+/// Summary tab with the folded "Trip numbers" section opened.
+Future<void> openSummaryNumbers(WidgetTester tester, Seed s) async {
+  await settle(tester);
+  await tester.tap(find.text('Goa Weekend'));
+  await settle(tester, rounds: 14);
+  // Trip numbers is open by default, below the hero and the payments: scroll to it.
+  await tester.scrollUntilVisible(
+    find.byKey(const Key('stat-total')),
+    300,
+    scrollable: find.descendant(of: find.byKey(const Key('ledger-list')), matching: find.byType(Scrollable)),
+  );
 }
 
 void main() {
@@ -122,7 +142,7 @@ void main() {
       );
     });
     await addExpense(tester, s, title: 'Big thing', amount: 1000, approvalGate: true);
-    await openExpenses(tester, s);
+    await openSummaryNumbers(tester, s); // the totals live in the Summary tab's "Trip numbers" section
 
     expect(tester.widget<Text>(find.byKey(const Key('stat-total'))).data, '₹1,200.00');
     expect(tester.widget<Text>(find.byKey(const Key('stat-avg'))).data, '₹400.00'); // 3 travelers

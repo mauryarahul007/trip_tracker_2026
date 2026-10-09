@@ -98,7 +98,7 @@ void main() {
       await tester.tap(button("I'm Ben"));
       await settle(tester, rounds: 12);
       expect(app.join.calls, contains('claim:m2'));
-      expect(where(tester), '/trip/trip-1/expenses');
+      expect(where(tester), '/trip/trip-1/ledger'); // a trip opens on Summary, the first tab
     });
 
     testApp('lost the race: list reloads with a notice and nothing navigates', (tester) async {
@@ -125,7 +125,7 @@ void main() {
       expect(find.text("You're the admin of this trip."), findsOneWidget);
       await tester.tap(button('Open trip'));
       await settle(tester, rounds: 12);
-      expect(where(tester), '/trip/trip-1/expenses');
+      expect(where(tester), '/trip/trip-1/ledger'); // a trip opens on Summary, the first tab
     });
 
     testApp('everyone already claimed', (tester) async {

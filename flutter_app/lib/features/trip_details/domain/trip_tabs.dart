@@ -14,13 +14,14 @@ bool showNotesNavTab({
 
 /// Computes the active bottom-nav tabs and ordering for a trip.
 /// Settings is accessed from the trip header and is not in the bottom tab bar.
-/// Mirrors `visibleTripTabs` in `src/utils/tripTabs.ts`.
+/// Based on `visibleTripTabs` in `src/utils/tripTabs.ts`, except that the Flutter app puts Summary (the
+/// `ledger` tab) first and Expenses second, so a trip opens on who owes what.
 List<TripNavTab> visibleTripTabs({required bool isChatFirstNav, required bool showNotesTab}) {
   final tabs = <TripNavTab>[];
   if (isChatFirstNav) {
     tabs.add(TripNavTab.chat);
   }
-  tabs.addAll([TripNavTab.expenses, TripNavTab.ledger, TripNavTab.members]);
+  tabs.addAll([TripNavTab.ledger, TripNavTab.expenses, TripNavTab.members]);
   if (showNotesTab) {
     tabs.add(TripNavTab.notes);
   }

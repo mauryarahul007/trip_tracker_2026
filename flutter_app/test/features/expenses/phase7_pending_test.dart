@@ -32,11 +32,18 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 90);
     await openLedger(tester, s);
+    // Top of the page first: the hero boarding pass and the payment tickets.
+    expect(find.descendant(of: key('sticky-balance'), matching: find.text('YOU ARE OWED')), findsOneWidget);
+    expect(find.text('Ben pays Asha'), findsOneWidget);
+    // Then the per-person list under Trip numbers (open by default, below the fold; the list builds lazily).
+    await tester.scrollUntilVisible(
+      key('balance-${s.cara}'),
+      300,
+      scrollable: find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable)),
+    );
     expect(find.descendant(of: key('balance-${s.me}'), matching: find.text('is owed ₹60.00')), findsOneWidget);
     expect(find.descendant(of: key('balance-${s.ben}'), matching: find.text('owes ₹30.00')), findsOneWidget);
     expect(find.descendant(of: key('balance-${s.cara}'), matching: find.text('owes ₹30.00')), findsOneWidget);
-    expect(find.descendant(of: key('sticky-balance'), matching: find.text('is owed ₹60.00')), findsOneWidget);
-    expect(find.text('Ben pays Asha'), findsOneWidget);
   });
 
   testApp('settle sheet shares a card and copies an unopened UPI id', (tester) async {
@@ -237,6 +244,12 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 60, split: [s.me, s.ben]);
     await openLedger(tester, s);
+    // At 200% the hero ticket fills the screen, so the first payment is below the fold: scroll to it.
+    await tester.scrollUntilVisible(
+      find.text('Ben pays Asha'),
+      200,
+      scrollable: find.descendant(of: find.byKey(const Key('ledger-list')), matching: find.byType(Scrollable)),
+    );
     expect(find.text('Ben pays Asha'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

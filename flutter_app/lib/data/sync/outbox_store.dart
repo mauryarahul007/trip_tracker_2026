@@ -51,8 +51,15 @@ class OutboxStore {
   final DateTime Function() _now;
   final Uuid _uuid;
 
+  int _epoch = 0;
+
+  /// Bumps whenever the queue changes (a local write was queued, or one was delivered). A pull that sees it
+  /// move while its fetch was in flight is holding a snapshot from before that write and must fetch again.
+  int get epoch => _epoch;
+
   Future<String> enqueue(String type, Map<String, dynamic> payload, {String? tripId}) async {
     assert(OutboxType.all.contains(type), 'unknown outbox type $type');
+    _epoch++;
     final id = _uuid.v4();
     await _db
         .into(_db.outboxTable)
@@ -103,7 +110,10 @@ class OutboxStore {
     ),
   );
 
-  Future<void> markDone(String id) => (_db.delete(_db.outboxTable)..where((t) => t.id.equals(id))).go();
+  Future<void> markDone(String id) {
+    _epoch++;
+    return (_db.delete(_db.outboxTable)..where((t) => t.id.equals(id))).go();
+  }
 
   /// Back to pending without burning an attempt (auth pause / offline).
   Future<void> release(String id) => _update(id, const OutboxTableCompanion(status: Value(OutboxStatus.pending)));

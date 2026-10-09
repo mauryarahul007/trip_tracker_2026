@@ -54,7 +54,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
 
   DateTime get _now => widget.now?.call() ?? ref.read(nowProvider)();
 
-  void _open(Trip t) => context.push('/trip/${t.id}/expenses');
+  void _open(Trip t) => context.push('/trip/${t.id}/ledger'); // opens on Summary, the first tab
 
   Future<void> _create() => createTripFlow(context);
 

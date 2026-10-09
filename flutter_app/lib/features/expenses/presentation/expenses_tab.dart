@@ -34,6 +34,7 @@ import 'quick_add_sheet.dart';
 import 'trip_tools_sheet.dart';
 import 'widgets/expense_detail_sheet.dart';
 import 'widgets/expense_filter_sheet.dart';
+import 'widgets/add_expense_fab.dart';
 import 'widgets/expense_row.dart';
 import 'widgets/expense_swipe.dart';
 
@@ -171,8 +172,6 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final isAdmin = ref.watch(isTripAdminProvider(id));
     final dirty = ref.watch(dirtyIdsProvider).value ?? const <String>{};
     final conflicts = ref.watch(conflictIdsProvider(id));
-    final visibleMembers = ref.watch(visibleMembersProvider(id));
-    final totals = computeTotals(active, visibleMemberCount: visibleMembers.length, categories: categories);
     final compactActive = _flag(ref, 'enableCompactLedgerView', id) && _compact;
     final quickChips = _flag(ref, 'enableExpenseQuickFilterChips', id);
     final binOn = _flag(ref, 'enableRecycleBin', id);
@@ -328,74 +327,6 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                 ],
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: GestureDetector(
-              key: const Key('summary-card'),
-              onTap: _flag(ref, 'enableSpendInsights', id) ? () => context.push('/trip/$id/insights') : null,
-              child: Column(
-                children: [
-                  BentoTile(
-                    tone: BentoTone.mint,
-                    padding: EdgeInsets.all(_flag(ref, 'enableCompactSummary', id) ? 14 : 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        BentoTile.eyebrow(context, BentoTone.mint, l10n.expTotalSpent),
-                        const SizedBox(height: 4),
-                        SizedBox(
-                          width: double.infinity,
-                          child: Text(
-                            formatMoney(context, totals.totalSpent, trip.baseCurrency),
-                            key: const Key('stat-total'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTypography.moneyDisplay(
-                              fontSize: _flag(ref, 'enableCompactSummary', id) ? 30 : 40,
-                              color: tokens.textPrimary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: BentoTile(
-                          tone: BentoTone.butter,
-                          padding: const EdgeInsets.all(14),
-                          child: _Stat(
-                            tone: BentoTone.butter,
-                            label: l10n.expPerPerson,
-                            value: formatMoney(context, totals.averageCost, trip.baseCurrency),
-                            valueKey: const Key('stat-avg'),
-                          ),
-                        ),
-                      ),
-                      if (totals.top != null) ...[
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: BentoTile(
-                            tone: BentoTone.peach,
-                            padding: const EdgeInsets.all(14),
-                            child: _Stat(
-                              tone: BentoTone.peach,
-                              label: l10n.expTopCategory,
-                              value: '${totals.top!.name} ${totals.top!.percentage.round()}%',
-                              valueKey: const Key('stat-top'),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
             child: Row(
@@ -557,16 +488,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             ],
           ),
         ),
-        Positioned(
-          right: 16,
-          bottom: 16,
-          child: FloatingActionButton.extended(
-            heroTag: 'add-expense-$id',
-            onPressed: () => context.push('/trip/$id/expenses/new'),
-            icon: const Icon(AppIcons.add),
-            label: Text(l10n.expAdd),
-          ),
-        ),
+        AddExpenseFab(tripId: id),
       ],
     );
 
@@ -647,41 +569,6 @@ class _OtherTrips extends ConsumerWidget {
         ),
         for (final e in rows)
           ListTile(key: Key('other-${e.id}'), title: Text(e.title), subtitle: Text(trips[e.tripId] ?? e.tripId)),
-      ],
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  const _Stat({required this.tone, required this.label, required this.value, required this.valueKey});
-  final BentoTone tone;
-  final String label;
-  final String value;
-  final Key valueKey;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.tokens;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: t.tones[tone].accent),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          key: valueKey,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontFamily: AppTypography.fontTitle,
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: t.textPrimary,
-          ),
-        ),
       ],
     );
   }

@@ -88,13 +88,22 @@ class TripPullSync {
   }
 
   Future<PullResult> syncTrip(String tripId) async {
-    final since = await cursor(tripId);
-    final res = await _reader.tripChanges(tripId, since?.subtract(skew));
-    // Recycle bin: fetched best-effort; a failure must not block the main sync.
+    // A fetch takes a while. If the user writes (and the push even finishes) while it is in flight, the
+    // snapshot is older than local state and applying it would silently undo that write, e.g. a checklist
+    // tick that flicks back. So when the queue moved during the fetch, fetch again (a few times at most).
+    late Map<String, dynamic> res;
     var recycled = const <Map<String, dynamic>>[];
-    try {
-      recycled = await _reader.recycledExpenses(tripId);
-    } catch (_) {}
+    for (var attempt = 1; attempt <= 3; attempt++) {
+      final epoch = _outbox.epoch;
+      final since = await cursor(tripId);
+      res = await _reader.tripChanges(tripId, since?.subtract(skew));
+      // Recycle bin: fetched best-effort; a failure must not block the main sync.
+      recycled = const <Map<String, dynamic>>[];
+      try {
+        recycled = await _reader.recycledExpenses(tripId);
+      } catch (_) {}
+      if (_outbox.epoch == epoch) break;
+    }
     final queue = (await _outbox.all()).map((i) => i.toQueuedOp()).toList();
     final dirty = collectDirtyIds(queue);
 
