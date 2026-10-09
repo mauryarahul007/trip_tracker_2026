@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **278** | All recorded bugs across sessions |
+| **Total Tracked** | **279** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **251** | Verified & closed |
+| **✅ Resolved** | **252** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -282,6 +282,7 @@
 | **BUG-278** | Flutter masked password fields block capital letters (Superadmin login, reset password) | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 19cb764 (v3.50.0): AppTextField password fields use TextInputType.visiblePassword and have a show/hide toggle; widget test added. Not yet verified on a device. |
 | **BUG-279** | Flutter Superadmin login lands on traveller UI and Ops Deck button cannot open web links on Android | `general` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 1d71018 (v3.50.1): admin mode set before sign-in, https/http manifest queries added, portal URL points at the EC2 deployment. Regression test added. Confirmed on a Motorola Edge 70 Fusion over adb. |
 | **BUG-280** | Flutter: trip header map button did nothing; checklist ticks undone by stale sync; Notes and Chat not live | `navigation` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 75d35f8 (v3.52.0): map button opens a route panel, outbox epoch guard stops stale pulls undoing local ticks, trip shell opens realtime. |
+| **BUG-281** | Flutter: screens stayed stale after local writes and sync pulls (Fewest/Per person switch looked dead) | `offline-sync` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 20249e8 (v3.54.0): trip, group and flag streams used customSelect('SELECT 1').watch(), which drift emits once; replaced by watchTables() that reloads after every write. Regression test added. Confirmed on a Motorola Edge 70 Fusion over adb. |
 
 ---
 

@@ -8142,5 +8142,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-09T11:08:42.075Z",
     "resolutionNote": "Fixed in commit 75d35f8 (v3.52.0): map button opens a route panel, outbox epoch guard stops stale pulls undoing local ticks, trip shell opens realtime."
+  },
+  {
+    "id": "BUG-281",
+    "title": "Flutter: screens stayed stale after local writes and sync pulls (Fewest/Per person switch looked dead)",
+    "description": "Flutter: screens stayed stale after local writes and sync pulls (Fewest/Per person switch looked dead)",
+    "severity": "high",
+    "category": "offline-sync",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-09T14:59:56.968Z",
+    "updatedAt": "2026-10-09T14:59:57.176Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-09T14:59:57.176Z",
+    "resolutionNote": "Fixed in commit 20249e8 (v3.54.0): trip, group and flag streams used customSelect('SELECT 1').watch(), which drift emits once; replaced by watchTables() that reloads after every write. Regression test added. Confirmed on a Motorola Edge 70 Fusion over adb."
   }
 ]

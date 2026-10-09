@@ -1708,5 +1708,21 @@
     "shippedAt": "2026-10-09T11:08:50.045Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped in commit 75d35f8 (v3.52.0): boarding-pass Summary hero, progress card, donut spend report, Add expense on Summary. Verified in tests; on-device look pending user review."
+  },
+  {
+    "id": "FEAT-108",
+    "title": "Flutter: boarding-pass UI for Summary, Expenses and Passes",
+    "description": "Flutter: boarding-pass UI for Summary, Expenses and Passes",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T14:59:57.242Z",
+    "updatedAt": "2026-10-09T14:59:57.360Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-09T14:59:57.360Z",
+    "shippedNote": "Shipped in commit 20249e8 (v3.54.0): boarding-pass Summary, receipt-card Expenses with category runway, boarding-pass Passes with QR stub, App settings entry inside a trip. Verified in tests and on a Motorola Edge 70 Fusion."
   }
 ]
