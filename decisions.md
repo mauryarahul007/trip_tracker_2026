@@ -4499,3 +4499,10 @@ This document logs all meaningful technical decisions, library choices, design p
   - Invisible 44px tap envelopes can slightly overlap if elements are positioned closer than 12px together; standard CSS stacking context ensures the directly clicked target takes precedence.
   - Subtler draft alerts reduce banner blindness but may be slightly less conspicuous to inattentive users.
 
+
+## 257. Move production hosting from AWS EC2 to Oracle Cloud (OCI) (v3.43.12)
+* **Context:** Production web hosting for `trip-tracker.blackmaroon.in` moves from an AWS EC2 host to an OCI Ubuntu 24.04 instance (140.245.196.175) that already runs nginx and certbot for other sites.
+* **Decision:**
+  - Renamed `.github/workflows/deploy-ec2.yml` to `deploy-oci.yml`; build, live-update packaging and rsync steps are unchanged. Secrets renamed to `OCI_SSH_KEY`, `OCI_HOST`, `OCI_USER`.
+  - Added an nginx vhost on the OCI host (SPA fallback, long cache for hashed assets, no-cache for `index.html` and `updates/latest.json`) and issued a Let's Encrypt certificate with certbot.
+* **Trade-offs Accepted:** The OCI host is shared with other sites, so a bad nginx change could affect them; every reload is preceded by `nginx -t`. Old `EC2_*` secrets become unused and should be deleted from GitHub.

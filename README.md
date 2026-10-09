@@ -248,7 +248,7 @@ See [Reference: Data Model](docs/reference-data-model.md) for full field-level d
 ## CI/CD
 
 - **`deploy-pages.yml`** — builds and deploys the web PWA to GitHub Pages on every push to `main`
-- **`deploy-ec2.yml`** — deploys to the EC2-hosted environment on every push to `main`
+- **`deploy-oci.yml`** — deploys to the OCI-hosted environment (secrets: `OCI_SSH_KEY`, `OCI_HOST`, `OCI_USER`) on every push to `main`
 - **`build-android.yml`** / **`build-ios.yml`** — native builds, triggered manually or by tag only (never on a plain push to `main`)
 
 ---
@@ -260,7 +260,7 @@ Before running either for the first time, in the Codemagic dashboard:
 
 1. Create an environment variable group named `trip_tracker_secrets` containing
    `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (same values as the GitHub Actions
-   `deploy-ec2` workflow secrets).
+   `deploy-oci` workflow secrets).
 2. For Android: create an environment variable group named `android_signing` and configure
    an Android code signing identity in Codemagic's UI — this auto-populates the
    `CM_KEYSTORE_*` variables `android/app/build.gradle`'s signing config reads.
