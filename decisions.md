@@ -5005,3 +5005,22 @@ This document logs all meaningful technical decisions, library choices, design p
   - Only `@gmail.com` addresses are accepted currently; users with Google Workspace custom domains or non-Google providers cannot be directly linked via this flow until the domain whitelist is expanded.
 * **Release Cut:** version bumped to `3.53.0` via `npm run release:minor`.
 
+## 286. Flutter Boarding-Pass UI (Summary, Expenses, Passes) and Live-Stream Fix
+
+* **Date:** 2026-10-09
+* **Context:** The Flutter app needed the "Aviation Boarding Pass & Travel FinTech" look from `complete_app_ui_evolution_and_plan.md`. While testing it on a device, the Summary "Fewest payments / Per person" switch appeared dead: the write reached Supabase and sync pulled the right value back, but the screen never refreshed.
+* **Decisions:**
+  - **Presentation only:** `calculateSettlements`, `calculateGroupLedger`, the settle sheet and outbox sync are untouched. No Ops Deck flag, because this restyles existing surfaces rather than adding a feature.
+  - **Widgets (`shared/widgets/`):** `BoardingPassCard`, `TicketScallopDivider`, `StatusStamp`, `FlightProgressRunway`, `LuggageStubTile`, `ReceiptCard`; `SpendDonut` gains a neon glow and `DonutLegendBadge`; `MoneyText` gains `glow`.
+  - **Summary:** twilight banner (trip cover when set), glowing net balance, NOT SETTLED / SETTLED stamp, runway progress card, luggage-stub settle tiles, legend badges under the donut, more space above "Everyone's balance". The simplify switch is shown to the trip owner only (the server RLS allows only the owner to update `trips`).
+  - **Expenses:** category pill runway with teal glow, monospace flight-log day headers ("OCT 14 · DAY 3"), receipt-card rows with a perforated footer, "your share" / "you get back" and a micro barcode. Compact rows are unchanged.
+  - **Passes:** `PassCard` is a boarding pass with a vertical perforation and a QR stub (`qr_flutter`); the pane selector shows counts and a teal selected state; checklist ticks are teal and the strike-through fades in.
+  - **Trip app bar:** a `⋮` menu adds "App settings" (the app-level settings screen, previously unreachable from inside a trip) and live location.
+  - **Live-stream root cause:** `customSelect('SELECT 1').watch()` emits once, because drift drops results equal to the previous one, so trip, group and flag streams went stale after every local write or sync pull. New `watchTables()` re-runs the loader after every write to the listed tables. Regression test `test/data/watch_tables_test.dart`.
+  - **CI hygiene:** `schema_migration_test` fixture gained the `members` table that the v3 migration needs; three files that failed `dart format --set-exit-if-changed` were formatted.
+* **Trade-offs Accepted:**
+  - The mockup's "Smart Debt Simplification" switch is still the Fewest / Per person segmented control (tests depend on it).
+  - Non-owner admins no longer see the simplify control on Summary; letting admins change it needs a server policy change that is not part of this release.
+  - `watchTables` reloads on any write to the listed tables, which can reload slightly more often than before.
+* **Release Cut:** version bumped to `3.54.0` via `npm run release:minor`.
+

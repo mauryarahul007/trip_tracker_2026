@@ -243,10 +243,12 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       // Bento: each expense is a rounded tile tinted by its category.
       final body = Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(tokens.radiusMd),
-          child: ColoredBox(color: tokens.tones[toneFor(e.category)].bg, child: row),
-        ),
+        child: compactActive
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(tokens.radiusMd),
+                child: ColoredBox(color: tokens.tones[toneFor(e.category)].bg, child: row),
+              )
+            : row,
       );
       if (!canManageExpense(e, isAdmin: isAdmin, userId: uid)) return body;
       return ExpenseSwipe(
@@ -263,6 +265,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         pinned: sticky && expanded,
         delegate: _DayHeader(
           date: g.date,
+          label: _dayLabel(g.date, trip.startDate, l10n.expDayN),
           total: formatMoney(context, g.total, trip.baseCurrency),
           count: g.expenses.length,
           expanded: expanded,
@@ -389,6 +392,30 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
               ],
             ),
           ),
+          if (categories.isNotEmpty)
+            SizedBox(
+              key: const Key('category-runway'),
+              height: 52,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                children: [
+                  _RunwayChip(
+                    key: const Key('runway-all'),
+                    label: l10n.expAllExpenses,
+                    selected: filters.categoryId.isEmpty,
+                    onTap: () => _setFilters(filters.copyWith(categoryId: '')),
+                  ),
+                  for (final c in categories)
+                    _RunwayChip(
+                      key: Key('runway-${c.id}'),
+                      label: c.name,
+                      selected: filters.categoryId == c.id,
+                      onTap: () => _setFilters(filters.copyWith(categoryId: filters.categoryId == c.id ? '' : c.id)),
+                    ),
+                ],
+              ),
+            ),
           if (quickChips && myMember != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -574,9 +601,24 @@ class _OtherTrips extends ConsumerWidget {
   }
 }
 
+const _months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+/// Airline flight-log label: "OCT 14 · DAY 3" (day number counted from the trip start, when known).
+String _dayLabel(String date, String tripStart, String Function(int) dayN) {
+  final d = DateTime.tryParse(date);
+  if (d == null) return date;
+  final start = DateTime.tryParse(tripStart);
+  final base = '${_months[d.month - 1]} ${d.day}';
+  if (start == null) return base;
+  final n =
+      DateTime.utc(d.year, d.month, d.day).difference(DateTime.utc(start.year, start.month, start.day)).inDays + 1;
+  return n >= 1 ? '$base · ${dayN(n)}' : base;
+}
+
 class _DayHeader extends SliverPersistentHeaderDelegate {
   _DayHeader({
     required this.date,
+    required this.label,
     required this.total,
     required this.count,
     required this.expanded,
@@ -589,6 +631,7 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
   });
 
   final String date;
+  final String label; // "OCT 14 · DAY 3"
   final String total;
   final int count;
   final bool expanded;
@@ -623,8 +666,13 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
               children: [
                 Expanded(
                   child: Text(
-                    date,
-                    style: TextStyle(fontWeight: FontWeight.w700, color: textColor),
+                    label,
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                      color: textColor,
+                    ),
                   ),
                 ),
                 Text('$total · $count', style: TextStyle(color: mutedColor, fontSize: 13)),
@@ -641,6 +689,7 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_DayHeader old) =>
       old.date != date ||
+      old.label != label ||
       old.total != total ||
       old.count != count ||
       old.expanded != expanded ||
@@ -749,6 +798,49 @@ class _TableRow extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Pill on the filter runway; the active one glows teal.
+class _RunwayChip extends StatelessWidget {
+  const _RunwayChip({required this.label, required this.selected, required this.onTap, super.key});
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Semantics(
+        button: true,
+        selected: selected,
+        child: GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: selected ? t.primaryAccent.withValues(alpha: 0.16) : t.bgSurface,
+              borderRadius: BorderRadius.circular(99),
+              border: Border.all(color: selected ? t.primaryAccent : t.borderColor),
+              boxShadow: selected ? [BoxShadow(color: t.primaryAccent.withValues(alpha: 0.4), blurRadius: 10)] : null,
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: selected ? t.textPrimary : t.textSecondary,
+              ),
+            ),
           ),
         ),
       ),

@@ -31,6 +31,10 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_surface.dart';
 import '../../../shared/widgets/bento_tile.dart';
+import '../../../shared/widgets/boarding_pass_card.dart';
+import '../../../shared/widgets/flight_progress_runway.dart';
+import '../../../shared/widgets/luggage_stub_tile.dart';
+import '../../../shared/widgets/status_stamp.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../trip_details/application/trip_nav.dart';
@@ -40,7 +44,7 @@ import 'conflict_sheet.dart';
 import 'widgets/add_expense_fab.dart';
 import 'widgets/spend_donut.dart';
 import 'widgets/expense_detail_sheet.dart';
-import 'widgets/settle_ticket.dart';
+import 'widgets/settle_ticket.dart' show TicketBarcode;
 import 'widgets/settlement_card.dart';
 
 /// "₹1,200.00" -> ("₹1,200", ".00") so the decimals can be dimmed (MoneyText).
@@ -84,9 +88,9 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final result = ref.watch(tripSettlementProvider(id));
     if (trip == null || result == null) return const Center(child: CircularProgressIndicator());
     final cur = trip.baseCurrency;
-    final isAdmin = ref.watch(isTripAdminProvider(id));
-    // Trip admins always get the switch here (it used to hide behind a Labs flag that is off by default).
-    final canToggle = isAdmin;
+    // The server only lets the trip owner change this (RLS), so only the owner gets the switch; for anyone
+    // else it would flip back on the next sync.
+    final canToggle = trip.ownerId == ref.watch(authStateProvider).userId;
     final history = _flag(ref, 'enableSettlementHistory', id);
     final compact = _flag(ref, 'enableCompactLedgerView', id);
     final pad = compact ? 8.0 : 16.0;
@@ -240,16 +244,19 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         children: [
           BentoTile.eyebrow(context, heroTone, label),
           const SizedBox(height: 2),
-          Text(
-            value,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: align == CrossAxisAlignment.end ? TextAlign.end : TextAlign.start,
-            style: TextStyle(
-              fontFamily: AppTypography.fontTitle,
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: tokens.textPrimary,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: align == CrossAxisAlignment.end ? Alignment.centerRight : Alignment.centerLeft,
+            child: Text(
+              value,
+              maxLines: 1,
+              textAlign: align == CrossAxisAlignment.end ? TextAlign.end : TextAlign.start,
+              style: TextStyle(
+                fontFamily: AppTypography.fontTitle,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: tokens.textPrimary,
+              ),
             ),
           ),
         ],
@@ -266,59 +273,47 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             Padding(
               key: const Key('sticky-balance'),
               padding: const EdgeInsets.only(bottom: 20),
-              child: TicketFrame(
+              child: BoardingPassCard(
                 tone: heroTone,
+                banner: _TwilightBanner(coverUrl: trip.coverImageUrl, title: trip.name),
                 top: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.flight_takeoff_rounded, size: 16),
-                        const SizedBox(width: 6),
-                        Expanded(child: BentoTile.eyebrow(context, heroTone, l10n.ledPassTitle)),
-                        if (tripDates.isNotEmpty)
-                          Text(
-                            tripDates,
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: tokens.textSecondary),
-                          ),
-                      ],
+                    BentoTile.eyebrow(context, heroTone, l10n.ledPassTitle),
+                    const SizedBox(height: 6),
+                    MoneyText(
+                      whole: heroSplit.$1,
+                      decimals: heroSplit.$2,
+                      fontSize: compact ? 38 : 46,
+                      color: settled
+                          ? tokens.textPrimary
+                          : (heroBalance > 0 ? tokens.colorSuccess : tokens.colorDanger),
+                      glow: !settled,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 2),
+                    BentoTile.eyebrow(context, heroTone, heroLabel),
+                    const SizedBox(height: 10),
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              BentoTile.eyebrow(context, heroTone, heroLabel),
-                              const SizedBox(height: 4),
-                              MoneyText(
-                                whole: heroSplit.$1,
-                                decimals: heroSplit.$2,
-                                fontSize: compact ? 34 : 42,
-                                color: tokens.textPrimary,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _SettleStamp(
+                        StatusStamp(
                           key: const Key('settle-stamp'),
                           settled: settled,
                           text: settled ? l10n.ledStampSettled : l10n.ledStampNotSettled,
                           tone: heroTone,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        field(l10n.ledHeroTrip, trip.name),
-                        const SizedBox(width: 12),
-                        field(l10n.ledHeroTravellers, '${trip.memberIds.length}'),
-                        const SizedBox(width: 12),
-                        field(l10n.ledHeroOpen, '${result.transfers.length}', align: CrossAxisAlignment.end),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            [
+                              if (tripDates.isNotEmpty) tripDates,
+                              '${trip.memberIds.length} ${l10n.ledHeroTravellers}',
+                            ].join('  ·  '),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.end,
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: tokens.textSecondary),
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -333,6 +328,8 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                           field(l10n.expTotalSpent, formatMoney(context, totals.totalSpent, cur)),
                           const SizedBox(width: 12),
                           field(l10n.expPerPerson, formatMoney(context, totals.averageCost, cur)),
+                          const SizedBox(width: 12),
+                          field(l10n.ledHeroOpen, '${result.transfers.length}'),
                         ],
                       ),
                     ),
@@ -364,69 +361,17 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
               Padding(
                 key: const Key('settle-progress'),
                 padding: const EdgeInsets.only(bottom: 20),
-                child: BentoTile(
-                  padding: EdgeInsets.zero,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.ledProgress,
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              l10n.ledProgressLine(
-                                formatMoney(context, settledSoFar, cur),
-                                formatMoney(context, progressTotal, cur),
-                              ),
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontTitle,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                color: tokens.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(99),
-                              child: LinearProgressIndicator(
-                                value: (settledSoFar / progressTotal).clamp(0.0, 1.0),
-                                minHeight: 10,
-                                backgroundColor: tokens.borderColor,
-                                color: tokens.tones.mint.accent,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        color: outstanding < 0.01 ? tokens.tones.mint.bg : tokens.tones.peach.bg,
-                        child: Row(
-                          children: [
-                            Icon(
-                              outstanding < 0.01 ? Icons.check_circle_rounded : Icons.info_outline_rounded,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                outstanding < 0.01
-                                    ? l10n.ledProgressDone
-                                    : l10n.ledProgressLeft(result.transfers.length),
-                                style: TextStyle(fontWeight: FontWeight.w700, color: tokens.textPrimary),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                child: FlightProgressRunway(
+                  tone: heroTone,
+                  settledLabel: l10n.ledProgress,
+                  totalLabel: l10n.ledHeroOpen,
+                  settledAmount: formatMoney(context, settledSoFar, cur),
+                  totalAmount: formatMoney(context, progressTotal, cur),
+                  progress: (settledSoFar / progressTotal).clamp(0.0, 1.0),
+                  remainingTransfers: result.transfers.length,
+                  remainingLabel: outstanding < 0.01
+                      ? l10n.ledProgressDone
+                      : l10n.ledProgressLeft(result.transfers.length),
                 ),
               ),
             if (conflicts.isNotEmpty)
@@ -481,7 +426,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                   Padding(
                     key: Key('transfer-$i'),
                     padding: const EdgeInsets.only(bottom: 14),
-                    child: SettleTicket(
+                    child: LuggageStubTile(
                       tone: toneFor(t.from),
                       fromName: t.fromLabel,
                       toName: t.toLabel,
@@ -541,6 +486,20 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                     centerLabel: l10n.expTotalSpent,
                     centerValue: formatMoney(context, totals.totalSpent, cur),
                   ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  key: const Key('donut-legend'),
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    for (final c in cats)
+                      DonutLegendBadge(
+                        label: '${c.name} ${c.percentage.round()}%',
+                        color: Color(categoryColorArgb(c.id)),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 14),
                 for (final c in cats)
@@ -640,9 +599,10 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                   ),
                 const SizedBox(height: 6),
               ],
+              const SizedBox(height: 22),
               const Divider(),
               Padding(
-                padding: const EdgeInsets.only(top: 6, bottom: 2),
+                padding: const EdgeInsets.only(top: 14, bottom: 6),
                 child: Text(
                   l10n.ledEveryone,
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
@@ -730,41 +690,61 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
   }
 }
 
-/// A passport-style stamp on the hero ticket: SETTLED when nothing is owed, NOT SETTLED otherwise.
-class _SettleStamp extends StatelessWidget {
-  const _SettleStamp({required this.settled, required this.text, required this.tone, super.key});
+/// Twilight sky banner (trip cover when set) with the trip title, above the boarding-pass body.
+class _TwilightBanner extends StatelessWidget {
+  const _TwilightBanner({required this.coverUrl, required this.title});
 
-  final bool settled;
-  final String text;
-  final BentoTone tone;
+  final String? coverUrl;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
-    final color = context.tokens.tones[tone].accent;
-    return Semantics(
-      label: text,
-      child: ExcludeSemantics(
-        child: Transform.rotate(
-          angle: -0.14,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    final tokens = context.tokens;
+    return SizedBox(
+      key: const Key('ledger-banner'),
+      height: 120,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const DecoratedBox(
             decoration: BoxDecoration(
-              border: Border.all(color: color, width: 2.5),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(settled ? Icons.check_rounded : Icons.hourglass_top_rounded, size: 16, color: color),
-                const SizedBox(width: 4),
-                Text(
-                  text.toUpperCase(),
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: color),
-                ),
-              ],
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFFFF9A62), Color(0xFFB4506E), Color(0xFF2A2F55)],
+              ),
             ),
           ),
-        ),
+          if (coverUrl != null && coverUrl!.isNotEmpty)
+            Image.network(coverUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const SizedBox.shrink()),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.transparent, tokens.bgSurface],
+              ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontTitle,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: tokens.textPrimary,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

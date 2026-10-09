@@ -8,10 +8,13 @@ import '../../../../domain/models/category.dart';
 import '../../../../domain/models/expense.dart';
 import '../../../../domain/models/member.dart';
 import '../../../../domain/models/trip.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/app_typography.dart';
 import '../../../../shared/widgets/app_avatar.dart';
+import '../../../../shared/widgets/receipt_card.dart';
+import 'settle_ticket.dart' show TicketBarcode;
 
 /// One expense line, same information as the web row: category tile, title with
 /// state badges, amount (tap the currency chip to flip foreign/base), payer ->
@@ -57,6 +60,194 @@ class _ExpenseRowState extends State<ExpenseRow> {
     ),
   );
 
+  /// Boarding-receipt layout (non-compact): glow category icon, "Paid by X · Split with N", amount,
+  /// then a perforated footer with the personal-share pill and a micro barcode.
+  Widget _receipt(
+    BuildContext context,
+    ExpenseReview review,
+    Color accent,
+    Category? cat,
+    double shownAmount,
+    String shownCode,
+    bool isForeign,
+    bool showingForeign,
+    double? myShare,
+    List<String>? payers,
+    Member? payer,
+  ) {
+    final l10n = context.l10n;
+    final tokens = context.tokens;
+    final e = widget.expense;
+    final base = widget.trip.baseCurrency;
+    final teal = tokens.primaryAccent;
+    final iAmPayer = widget.myMemberId != null && payers == null && e.paidBy == widget.myMemberId;
+    final getBack = iAmPayer && e.splitMemberIds.any((id) => id != widget.myMemberId)
+        ? e.amount - (e.resolvedShares[widget.myMemberId] ?? 0)
+        : null;
+    final shareText = myShare != null ? l10n.rowYourShare(formatMoney(context, myShare, base)) : null;
+    final backText = getBack != null && getBack > 0.01 ? l10n.rowGetBack(formatMoney(context, getBack, base)) : null;
+    final pill = (shareText != null && backText != null) ? '$shareText · $backText' : (backText ?? shareText);
+    final who = payers != null ? l10n.rowPayers(payers.length) : l10n.rowPaidBy(payer?.name ?? l10n.rowRemovedMember);
+    final sub = e.splitMemberIds.length > 1 ? '$who · ${l10n.rowSplitWith(e.splitMemberIds.length)}' : who;
+    final glow = review.needsReview ? tokens.colorWarning : accent;
+    return Semantics(
+      container: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: widget.onTap,
+          child: ReceiptCard(
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: glow.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: glow.withValues(alpha: 0.7), width: widget.colorRings ? 2 : 1.2),
+                        boxShadow: [BoxShadow(color: glow.withValues(alpha: 0.35), blurRadius: 10)],
+                      ),
+                      child: Text(
+                        cat?.icon?.isNotEmpty == true && !cat!.icon!.contains(':') ? cat.icon! : '🏷️',
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  e.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: tokens.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              ..._badges(l10n, tokens, e),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            sub,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 12, color: tokens.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          formatMoney(context, shownAmount, shownCode),
+                          key: const Key('row-amount'),
+                          style: AppTypography.moneyDisplay(
+                            fontSize: 17,
+                            color: tokens.textPrimary,
+                          ).copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3),
+                        ),
+                        if (isForeign) _currencyToggle(tokens, l10n, e, base, showingForeign),
+                      ],
+                    ),
+                  ],
+                ),
+                if (review.needsReview) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    review.message!,
+                    key: const Key('row-review'),
+                    style: TextStyle(fontSize: 12, color: tokens.colorWarning, height: 1.3),
+                  ),
+                ],
+              ],
+            ),
+            footer: pill == null
+                ? null
+                : Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          pill,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: teal),
+                        ),
+                      ),
+                      if (backText == null) SizedBox(width: 72, child: TicketBarcode(seed: e.id, height: 18)),
+                    ],
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _badges(AppLocalizations l10n, AppTokens tokens, Expense e) => [
+    if (e.receiptPath != null || e.receiptImage != null)
+      _badge(Icons.photo_camera_outlined, tokens.textMuted, l10n.rowReceipt),
+    if (e.disputedAt != null)
+      _badge(
+        Icons.flag_outlined,
+        tokens.colorWarning,
+        e.disputeNote?.isNotEmpty == true ? l10n.detailDisputedBy(e.disputeNote!) : l10n.rowDisputed,
+      ),
+    if (e.approvalStatus == 'pending_approval')
+      _badge(Icons.schedule_rounded, tokens.colorWarning, l10n.rowPendingApprovalTip),
+    if (widget.isConflict)
+      _badge(Icons.error_outline_rounded, tokens.colorDanger, l10n.rowConflict)
+    else if (widget.isDirty)
+      _badge(Icons.sync_rounded, tokens.textMuted, l10n.rowSyncPending),
+  ];
+
+  Widget _currencyToggle(AppTokens tokens, AppLocalizations l10n, Expense e, String base, bool showingForeign) =>
+      Padding(
+        padding: const EdgeInsets.only(left: 4),
+        child: Semantics(
+          button: true,
+          label: l10n.rowSwitchCurrency(base, e.currency),
+          child: InkWell(
+            key: const Key('row-currency-toggle'),
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => setState(() => _showForeign = !_showForeign),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 28, minWidth: 28),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              decoration: BoxDecoration(
+                color: showingForeign ? tokens.primaryAccent : Colors.transparent,
+                border: Border.all(color: tokens.borderColor),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                showingForeign ? e.currency : '⇄ ${e.currency}',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: showingForeign ? Colors.white : tokens.textMuted,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -85,6 +276,22 @@ class _ExpenseRowState extends State<ExpenseRow> {
       return Opacity(
         opacity: m == null ? 0.45 : 1,
         child: AppAvatar(name: m?.name ?? '?', size: size),
+      );
+    }
+
+    if (!widget.compact) {
+      return _receipt(
+        context,
+        review,
+        accent,
+        cat,
+        shownAmount,
+        shownCode,
+        isForeign,
+        showingForeign,
+        myShare,
+        payers,
+        payer,
       );
     }
 

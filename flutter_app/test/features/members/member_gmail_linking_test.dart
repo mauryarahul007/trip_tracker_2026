@@ -59,12 +59,7 @@ void main() {
     });
 
     test('Drift entity_codec translates email to companion and back to member', () {
-      const m = Member(
-        id: 'm-55',
-        name: 'Amit',
-        email: 'amit@gmail.com',
-        tripId: 't-1',
-      );
+      const m = Member(id: 'm-55', name: 'Amit', email: 'amit@gmail.com', tripId: 't-1');
 
       final companion = memberToCompanion(m, 't-1');
       expect(companion.email, const Value('amit@gmail.com'));

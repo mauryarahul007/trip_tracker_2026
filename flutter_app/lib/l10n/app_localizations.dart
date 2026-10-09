@@ -1657,6 +1657,30 @@ abstract class AppLocalizations {
   /// **'Paid by {name}'**
   String rowPaidBy(String name);
 
+  /// No description provided for @expAllExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'All Expenses'**
+  String get expAllExpenses;
+
+  /// No description provided for @expDayN.
+  ///
+  /// In en, this message translates to:
+  /// **'DAY {n}'**
+  String expDayN(int n);
+
+  /// No description provided for @rowSplitWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Split with {count}'**
+  String rowSplitWith(int count);
+
+  /// No description provided for @rowGetBack.
+  ///
+  /// In en, this message translates to:
+  /// **'you get back {amount}'**
+  String rowGetBack(String amount);
+
   /// No description provided for @rowRemovedMember.
   ///
   /// In en, this message translates to:

@@ -229,6 +229,8 @@ void main() {
     await addExpense(tester, s, title: 'Settlement: Ben ➔ Asha', amount: 30, paidBy: s.ben, split: [s.me]);
     await openLedger(tester, s);
     await scrollToKey(tester, 'section-history'); // below the fold; the list builds lazily
+    await tester.drag(key('ledger-list'), const Offset(0, -200)); // lift the header clear of the floating nav
+    await settle(tester, rounds: 2);
     await openSection(tester, 'history');
     await tester.drag(key('ledger-list'), const Offset(0, -300)); // reveal the rows under the header
     await settle(tester, rounds: 4);

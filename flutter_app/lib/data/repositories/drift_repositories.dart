@@ -25,6 +25,20 @@ import '../remote/expense_online_api.dart';
 import '../sync/outbox_store.dart';
 import '../sync/outbox_types.dart';
 
+/// Re-runs [load] now and after every write to any of [tables].
+///
+/// Not `customSelect('SELECT 1').watch()`: drift drops results equal to the last one, and `SELECT 1` never
+/// changes, so such a stream emitted once and the UI went stale after every local write or sync pull.
+Stream<T> watchTables<T>(GeneratedDatabase db, Set<TableInfo<Table, Object?>> tables, Future<T> Function() load) {
+  final updates = db.tableUpdates(TableUpdateQuery.onAllTables(tables));
+  Stream<void> trigger() async* {
+    yield null;
+    yield* updates;
+  }
+
+  return trigger().asyncMap((_) => load());
+}
+
 /// Shared plumbing: every write is `db.transaction { local write + enqueue }`
 /// followed by a fire-and-forget sync request.
 abstract class _DriftRepo {
@@ -84,10 +98,8 @@ class DriftTripRepository extends _DriftRepo implements TripRepository {
     return out;
   }
 
-  Stream<T> _watch<T>(Future<T> Function() load) => db
-      .customSelect('SELECT 1', readsFrom: {db.tripsTable, db.membersTable, db.groupsTable, db.expensesTable})
-      .watch()
-      .asyncMap((_) => load());
+  Stream<T> _watch<T>(Future<T> Function() load) =>
+      watchTables(db, {db.tripsTable, db.membersTable, db.groupsTable, db.expensesTable}, load);
 
   @override
   Stream<List<Trip>> watchTrips() => _watch(_load);
@@ -560,10 +572,8 @@ class DriftMemberRepository extends _DriftRepo implements MemberRepository {
   Stream<List<Member>> watchAll() => db.select(db.membersTable).watch().map((r) => r.map(entryToMember).toList());
 
   @override
-  Stream<List<Group>> watchGroups(String tripId) => db
-      .customSelect('SELECT 1', readsFrom: {db.groupsTable, db.groupMembersTable})
-      .watch()
-      .asyncMap((_) => _groups(tripId));
+  Stream<List<Group>> watchGroups(String tripId) =>
+      watchTables(db, {db.groupsTable, db.groupMembersTable}, () => _groups(tripId));
 
   Future<List<Group>> _groups(String tripId) async {
     final groups = await (db.select(db.groupsTable)..where((t) => t.tripId.equals(tripId))).get();
@@ -587,7 +597,12 @@ class DriftMemberRepository extends _DriftRepo implements MemberRepository {
     final id = uuid.v4();
     await db
         .into(db.membersTable)
-        .insert(memberToCompanion(Member(id: id, name: name, email: email, tripId: tripId, linkedUserId: linkedUserId), tripId));
+        .insert(
+          memberToCompanion(
+            Member(id: id, name: name, email: email, tripId: tripId, linkedUserId: linkedUserId),
+            tripId,
+          ),
+        );
     await outbox.enqueue(OutboxType.addMember, {
       'row': {'id': id, 'trip_id': tripId, 'name': name, 'email': ?email, 'linked_user_id': ?linkedUserId},
     }, tripId: tripId);
@@ -598,22 +613,23 @@ class DriftMemberRepository extends _DriftRepo implements MemberRepository {
       (db.select(db.membersTable)..where((t) => t.id.equals(id))).getSingleOrNull();
 
   @override
-  Future<void> updateMember(String id, {String? name, String? email, String? joinDate, String? leaveDate}) => write(() async {
-    final m = await _member(id);
-    if (m == null) return;
-    await (db.update(db.membersTable)..where((t) => t.id.equals(id))).write(
-      MembersTableCompanion(
-        name: name == null ? const Value.absent() : Value(name),
-        email: email == null ? const Value.absent() : Value(email),
-        joinDate: joinDate == null ? const Value.absent() : Value(joinDate),
-        leaveDate: leaveDate == null ? const Value.absent() : Value(leaveDate),
-      ),
-    );
-    await outbox.enqueue(OutboxType.updateMember, {
-      'id': id,
-      'patch': {'name': ?name, 'email': ?email, 'join_date': ?joinDate, 'leave_date': ?leaveDate},
-    }, tripId: m.tripId);
-  });
+  Future<void> updateMember(String id, {String? name, String? email, String? joinDate, String? leaveDate}) =>
+      write(() async {
+        final m = await _member(id);
+        if (m == null) return;
+        await (db.update(db.membersTable)..where((t) => t.id.equals(id))).write(
+          MembersTableCompanion(
+            name: name == null ? const Value.absent() : Value(name),
+            email: email == null ? const Value.absent() : Value(email),
+            joinDate: joinDate == null ? const Value.absent() : Value(joinDate),
+            leaveDate: leaveDate == null ? const Value.absent() : Value(leaveDate),
+          ),
+        );
+        await outbox.enqueue(OutboxType.updateMember, {
+          'id': id,
+          'patch': {'name': ?name, 'email': ?email, 'join_date': ?joinDate, 'leave_date': ?leaveDate},
+        }, tripId: m.tripId);
+      });
 
   @override
   Future<void> setArchived(String id, bool archived) => write(() async {

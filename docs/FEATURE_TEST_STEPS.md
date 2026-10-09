@@ -25,6 +25,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-08 | flutter 3.48 | FLUTTER-HORIZON | [Flutter: Horizon nav and spend insights](#flutter-horizon--horizon-nav-and-spend-insights-v3480) |
 | 2026-10-09 | flutter 3.52 | FLUTTER-SUMMARY | [Flutter: Summary tab, Add expense on Summary, map panel, live Notes](#flutter-summary--flutter-summary-tab-add-expense-on-summary-map-panel-live-notes) |
 | 2026-10-09 | flutter (unreleased) | FLUTTER-BENTO | [Flutter: Bento redesign (P0 to P5)](#flutter-bento--flutter-bento-redesign-p0-to-p5) |
+| 2026-10-09 | flutter 3.54 | FLUTTER-BOARDING | [Flutter: boarding-pass Summary, receipt Expenses, pass wallet, live-stream fix](#flutter-boarding--flutter-boarding-pass-ui-and-live-stream-fix-v3540) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -2329,3 +2330,22 @@ Then add a row to the **Index** table.
 
 ### Pass
 - Each step matches; no blank Trips screen after sign-in.
+
+## FLUTTER-BOARDING — Flutter boarding-pass UI and live-stream fix (v3.54.0)
+
+**Flags:** none (restyle of existing screens).
+
+1. Open a trip. Summary: a twilight banner with the trip name, a glowing net balance, a NOT SETTLED (or SETTLED) stamp, dates and traveller count, and a barcode stub with Total spent, Per person and Open payments.
+2. Scroll down: a runway card with an airplane marker and "% CLEARED"; under "Who pays whom", luggage-stub tiles with a Settle button. Tap Settle: the existing confirm sheet opens.
+3. As the trip owner tap "Per person": within a second the list changes to one tile per debt and the "payments instead of" line stays; tap "Fewest payments": it changes back. Neither choice flips back on its own. Do it again after pulling to refresh.
+4. Trip numbers: glowing donut with category badges below it; there is clear space above "Everyone's balance".
+5. Expenses tab: a pill row (All Expenses plus categories); tap one to filter and see the pill glow teal. Day headers read like "OCT 14 · DAY 3". Rows are receipt cards; a row where you owe shows "your share ₹X" with a barcode, and one you paid shows "you get back ₹Y".
+6. Notes > Passes: a pass shows route, time, passenger and seat, a dashed vertical tear line and a QR stub when the pass has QR data. The selector reads "Passes (2)" / "Checklist (8)".
+7. Checklist: tick an item; the circle turns teal and the strike-through fades in.
+8. Trip app bar: tap `⋮`: "App settings" opens the app settings; "Live Location Share" opens the share dialog. The gear still opens Trip settings.
+
+**Negative checks:** as a non-owner admin the Fewest / Per person control is not shown on Summary. With compact ledger view ON, expense rows keep the old compact style.
+
+### Pass
+- Each step matches; no overflow at 360 px width and at 200% text size; toggling Per person survives a sync.
+

@@ -188,7 +188,7 @@ void main() {
       await settle(tester);
       await tester.tap(find.text('Expand all days'));
       await settle(tester);
-      expect(find.text('your share ₹40.00'), findsWidgets);
+      expect(find.textContaining('your share ₹40.00'), findsWidgets);
       expect(find.byKey(const Key('row-review')), findsOneWidget);
       expect(find.text('Payer was removed — assign a new payer.'), findsOneWidget);
       expect(c, isNotNull);
@@ -598,6 +598,8 @@ void main() {
     await settle(tester, rounds: 12);
     expect(button('Load more'), findsNothing); // not on screen yet (list is virtualised)
     await tester.dragUntilVisible(button('Load more'), find.byType(CustomScrollView), const Offset(0, -400));
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -200)); // clear the floating nav
+    await settle(tester);
     expect(button('Load more'), findsOneWidget);
     await tester.tap(button('Load more'));
     await settle(tester, rounds: 10);

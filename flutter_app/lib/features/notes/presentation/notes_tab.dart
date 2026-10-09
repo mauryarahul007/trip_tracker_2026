@@ -56,6 +56,15 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   final _pendingDone = <String, bool>{};
   var _category = 'all';
 
+  /// "Passes (2)": the name stays its own Text so it can still be found by label.
+  Widget _countLabel(String name, int n) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Flexible(child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis)),
+      if (n > 0) Text(' ($n)', maxLines: 1),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -89,7 +98,11 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                   value: p.$1,
                   label: p.$1 == 'chat' && unread
                       ? Text(p.$2, key: const Key('notes-chat-unread'), maxLines: 1)
-                      : Text(p.$2, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      : switch (p.$1) {
+                          'passes' => _countLabel(p.$2, trip?.passes.length ?? 0),
+                          'checklist' => _countLabel(p.$2, trip?.checklist.length ?? 0),
+                          _ => Text(p.$2, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        },
                 ),
             ],
             showSelectedIcon: false,
@@ -97,6 +110,9 @@ class _NotesTabState extends ConsumerState<NotesTab> {
               shape: const StadiumBorder(),
               side: BorderSide.none,
               backgroundColor: context.tokens.bgSurface,
+              selectedBackgroundColor: context.tokens.primaryAccent.withValues(alpha: 0.18),
+              selectedForegroundColor: context.tokens.textPrimary,
+              textStyle: const TextStyle(fontWeight: FontWeight.w700),
             ),
             selected: {_pane},
             onSelectionChanged: (s) => setState(() => _pane = s.first),
@@ -426,8 +442,8 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                 key: Key('check-toggle-${item.id}'),
                 shape: const CircleBorder(),
                 side: BorderSide(color: t.textPrimary, width: 2),
-                activeColor: t.ctaBg,
-                checkColor: t.ctaFg,
+                activeColor: t.primaryAccent,
+                checkColor: Colors.white,
                 value: done,
                 onChanged: (_) => unawaited(toggle()),
               ),
@@ -437,14 +453,20 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        item.text,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: t.textPrimary,
-                          decoration: done ? TextDecoration.lineThrough : null,
-                          decorationThickness: 2,
+                      // The strike-through fades in/out instead of snapping.
+                      TweenAnimationBuilder<Color?>(
+                        tween: ColorTween(end: done ? t.textPrimary : Colors.transparent),
+                        duration: const Duration(milliseconds: 220),
+                        builder: (_, strike, _) => Text(
+                          item.text,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: t.textPrimary,
+                            decoration: TextDecoration.lineThrough,
+                            decorationColor: strike,
+                            decorationThickness: 2,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 6),

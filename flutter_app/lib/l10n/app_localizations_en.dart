@@ -892,6 +892,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get expAllExpenses => 'All Expenses';
+
+  @override
+  String expDayN(int n) {
+    return 'DAY $n';
+  }
+
+  @override
+  String rowSplitWith(int count) {
+    return 'Split with $count';
+  }
+
+  @override
+  String rowGetBack(String amount) {
+    return 'you get back $amount';
+  }
+
+  @override
   String get rowRemovedMember => 'Removed member';
 
   @override

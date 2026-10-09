@@ -4,7 +4,7 @@ import 'package:trip_tracker/data/local/app_database.dart';
 
 /// v1 -> v2 must be additive: existing rows survive, new column is nullable.
 void main() {
-  test('upgrade 1 -> 2 keeps data and adds domain_json columns', () async {
+  test('upgrade 1 -> 3 keeps data and adds domain_json and members.email columns', () async {
     final db = AppDatabase.forTesting(
       NativeDatabase.memory(
         setup: (raw) {
@@ -26,6 +26,8 @@ void main() {
         CREATE TABLE trip_messages (id TEXT NOT NULL PRIMARY KEY, trip_id TEXT NOT NULL, user_id TEXT NOT NULL,
           sender_name TEXT NOT NULL, kind TEXT NOT NULL, message TEXT NOT NULL, expense_payload_json TEXT,
           created_at TEXT NOT NULL);
+        CREATE TABLE members (id TEXT NOT NULL PRIMARY KEY, trip_id TEXT NOT NULL, name TEXT NOT NULL,
+          linked_user_id TEXT, archived INTEGER NOT NULL DEFAULT 0, join_date TEXT, leave_date TEXT, created_at TEXT);
         INSERT INTO trips (id, name, start_date, end_date, base_currency, owner_id) VALUES ('t1','Goa','a','b','INR','u');
         PRAGMA user_version = 1;
       ''');
@@ -39,6 +41,8 @@ void main() {
       final cols = await db.customSelect('PRAGMA table_info($t)').get();
       expect(cols.map((c) => c.read<String>('name')), contains('domain_json'), reason: t);
     }
+    final members = await db.customSelect('PRAGMA table_info(members)').get();
+    expect(members.map((c) => c.read<String>('name')), contains('email'));
     await db.close();
   });
 }

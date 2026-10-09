@@ -1,3 +1,5 @@
+import 'drift_repositories.dart' show watchTables;
+
 import 'package:drift/drift.dart';
 
 import '../../core/logging/app_logger.dart';
@@ -63,9 +65,6 @@ class DriftFlagsRepository implements FlagsRepository {
   }
 
   @override
-  Stream<bool> watch(String key, {String? tripId}) => _db
-      .customSelect('SELECT 1', readsFrom: {_db.featureFlagsTable})
-      .watch()
-      .asyncMap((_) => _resolve(key, tripId))
-      .distinct();
+  Stream<bool> watch(String key, {String? tripId}) =>
+      watchTables(_db, {_db.featureFlagsTable}, () => _resolve(key, tripId)).distinct();
 }

@@ -86,9 +86,23 @@ class _DonutPainter extends CustomPainter {
     const gap = 0.05;
     for (var i = 0; i < values.length; i++) {
       final sweep = values[i] / sum * math.pi * 2;
+      final arc = start + gap / 2;
+      // Neon halo under each segment.
       canvas.drawArc(
         rect,
-        start + gap / 2,
+        arc,
+        math.max(0.001, sweep - gap),
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = stroke
+          ..strokeCap = StrokeCap.round
+          ..color = colors[i % colors.length].withValues(alpha: 0.45)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+      );
+      canvas.drawArc(
+        rect,
+        arc,
         math.max(0.001, sweep - gap),
         false,
         Paint()
@@ -103,4 +117,28 @@ class _DonutPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_DonutPainter old) => old.values != values || old.colors != colors || old.track != track;
+}
+
+/// Pill badge "Dining 20%" tinted with its segment colour, shown around the donut.
+class DonutLegendBadge extends StatelessWidget {
+  const DonutLegendBadge({required this.label, required this.color, super.key});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.18),
+      borderRadius: BorderRadius.circular(99),
+      border: Border.all(color: color.withValues(alpha: 0.5)),
+    ),
+    child: Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.tokens.textPrimary),
+    ),
+  );
 }

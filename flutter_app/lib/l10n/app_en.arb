@@ -465,6 +465,31 @@
       }
     }
   },
+  "expAllExpenses": "All Expenses",
+  "expDayN": "DAY {n}",
+  "@expDayN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rowSplitWith": "Split with {count}",
+  "@rowSplitWith": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rowGetBack": "you get back {amount}",
+  "@rowGetBack": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "rowRemovedMember": "Removed member",
   "rowReceipt": "Receipt attached",
   "rowDisputed": "Disputed",

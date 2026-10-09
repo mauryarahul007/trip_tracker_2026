@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -182,11 +183,7 @@ class MembersTab extends ConsumerWidget {
                         m.email!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: context.tokens.textMuted,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: TextStyle(fontSize: 11, color: context.tokens.textMuted, fontWeight: FontWeight.w500),
                       ),
                     ),
                   ],
@@ -315,12 +312,9 @@ class MembersTab extends ConsumerWidget {
       builder: (_) => const _AddMemberSheet(),
     );
     if (draft == null || draft.name.isEmpty || draft.email.isEmpty) return;
-    await ref.read(memberRepositoryProvider).addMember(
-      tripId,
-      draft.name,
-      email: draft.email,
-      linkedUserId: draft.linkedUserId,
-    );
+    await ref
+        .read(memberRepositoryProvider)
+        .addMember(tripId, draft.name, email: draft.email, linkedUserId: draft.linkedUserId);
   }
 
   Future<void> _rename(BuildContext context, WidgetRef ref, Member m) async {
@@ -395,23 +389,19 @@ class _GroupDialogState extends State<_GroupDialog> {
               onChanged: (v) => setState(() => v == true ? _picked.add(m.id) : _picked.remove(m.id)),
             ),
           const SizedBox(height: 12),
-            AppButton(
-              key: const Key('group-save'),
-              label: l10n.actionSave,
-              onPressed: () => Navigator.pop(context, _GroupDraft(_name.text.trim(), _picked.toList())),
-            ),
-          ],
-        ),
-      );
-    }
+          AppButton(
+            key: const Key('group-save'),
+            label: l10n.actionSave,
+            onPressed: () => Navigator.pop(context, _GroupDraft(_name.text.trim(), _picked.toList())),
+          ),
+        ],
+      ),
+    );
   }
+}
 
 class _AddMemberDraft {
-  const _AddMemberDraft({
-    required this.name,
-    required this.email,
-    this.linkedUserId,
-  });
+  const _AddMemberDraft({required this.name, required this.email, this.linkedUserId});
 
   final String name;
   final String email;
@@ -517,13 +507,8 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
       return;
     }
 
-    Navigator.of(context).pop(
-      _AddMemberDraft(
-        name: name,
-        email: email,
-        linkedUserId: _resolvedProfile?['id'] as String?,
-      ),
-    );
+    Navigator.of(context)
+        .pop(_AddMemberDraft(name: name, email: email, linkedUserId: _resolvedProfile?['id'] as String?));
   }
 
   @override
@@ -542,10 +527,7 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
             controller: _nameController,
             autofocus: true,
             textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
-              labelText: l10n.memName,
-              prefixIcon: const Icon(Icons.person_outline),
-            ),
+            decoration: InputDecoration(labelText: l10n.memName, prefixIcon: const Icon(Icons.person_outline)),
             onChanged: _onNameChanged,
           ),
           const SizedBox(height: 12),
@@ -561,14 +543,9 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: Padding(
-                        padding: EdgeInsets.all(12),
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
+                      child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 2)),
                     )
-                  : (_resolvedProfile != null
-                      ? Icon(Icons.check_circle_rounded, color: tokens.colorSuccess)
-                      : null),
+                  : (_resolvedProfile != null ? Icon(Icons.check_circle_rounded, color: tokens.colorSuccess) : null),
             ),
             onChanged: _onEmailChanged,
           ),
@@ -592,11 +569,7 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
                   Expanded(
                     child: Text(
                       '${_resolvedProfile!['display_name'] ?? 'Google user'} · ${l10n.memGmailLinked}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: tokens.colorSuccess,
-                      ),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tokens.colorSuccess),
                     ),
                   ),
                 ],
@@ -607,32 +580,20 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
             const SizedBox(height: 6),
             Text(
               '${l10n.memGmailPending} · will automatically connect when they sign in',
-              style: TextStyle(
-                fontSize: 11,
-                color: tokens.textMuted,
-              ),
+              style: TextStyle(fontSize: 11, color: tokens.textMuted),
             ),
           ],
           if (_error != null) ...[
             const SizedBox(height: 10),
             Text(
               _error!,
-              style: TextStyle(
-                color: tokens.colorDanger,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(color: tokens.colorDanger, fontSize: 12, fontWeight: FontWeight.w600),
             ),
           ],
           const SizedBox(height: 16),
-          AppButton(
-            key: const Key('ask-ok'),
-            label: l10n.actionSave,
-            onPressed: _submit,
-          ),
+          AppButton(key: const Key('ask-ok'), label: l10n.actionSave, onPressed: _submit),
         ],
       ),
     );
   }
 }
-

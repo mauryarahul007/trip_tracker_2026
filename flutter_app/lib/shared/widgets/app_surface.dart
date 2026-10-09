@@ -100,17 +100,28 @@ class Eyebrow extends StatelessWidget {
 
 /// Big money figure with the decimals dimmed: "₹84,320" + ".00".
 class MoneyText extends StatelessWidget {
-  const MoneyText({required this.whole, this.decimals = '.00', this.fontSize = 44, this.color, super.key});
+  const MoneyText({
+    required this.whole,
+    this.decimals = '.00',
+    this.fontSize = 44,
+    this.color,
+    this.glow = false,
+    super.key,
+  });
 
   final String whole;
   final String? decimals;
   final double fontSize;
   final Color? color;
 
+  /// Neon halo behind the digits (boarding-pass hero).
+  final bool glow;
+
   @override
   Widget build(BuildContext context) {
     final c = color ?? context.tokens.textPrimary;
-    final base = AppTypography.moneyDisplay(fontSize: fontSize, color: c);
+    var base = AppTypography.moneyDisplay(fontSize: fontSize, color: c);
+    if (glow) base = base.copyWith(shadows: [Shadow(color: c.withValues(alpha: 0.55), blurRadius: 18)]);
     return Text.rich(
       TextSpan(
         text: whole,

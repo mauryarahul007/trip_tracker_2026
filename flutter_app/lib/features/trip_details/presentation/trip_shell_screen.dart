@@ -196,20 +196,36 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 builder: (_) => ShareTripSheet(tripId: widget.tripId),
               ),
             ),
-            IconButton(
-              key: const Key('action-live-location'),
-              icon: const Icon(AppIcons.location, size: 20),
-              tooltip: 'Live Location Share',
-              onPressed: () {
-                final user = ref.read(authStateProvider).user;
-                final myMember = ref.read(myMemberIdProvider(widget.tripId));
-                LiveLocationShareModal.show(
-                  context,
-                  tripId: widget.tripId,
-                  memberId: myMember ?? '',
-                  userId: user?.id ?? '',
-                );
+            // Live location and app-level settings live in a menu so the bell and the trip gear always fit.
+            PopupMenuButton<String>(
+              key: const Key('action-trip-more'),
+              icon: const Icon(Icons.more_vert_rounded),
+              onSelected: (v) {
+                if (v == 'app-settings') {
+                  context.push('/settings');
+                } else {
+                  final user = ref.read(authStateProvider).user;
+                  final myMember = ref.read(myMemberIdProvider(widget.tripId));
+                  LiveLocationShareModal.show(
+                    context,
+                    tripId: widget.tripId,
+                    memberId: myMember ?? '',
+                    userId: user?.id ?? '',
+                  );
+                }
               },
+              itemBuilder: (_) => [
+                const PopupMenuItem(
+                  key: Key('action-app-settings'),
+                  value: 'app-settings',
+                  child: ListTile(leading: Icon(AppIcons.settings), title: Text('App settings')),
+                ),
+                const PopupMenuItem(
+                  key: Key('action-live-location'),
+                  value: 'location',
+                  child: ListTile(leading: Icon(AppIcons.location), title: Text('Live Location Share')),
+                ),
+              ],
             ),
             NotificationBell(tripId: widget.tripId),
             IconButton(
