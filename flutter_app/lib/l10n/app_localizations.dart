@@ -265,6 +265,24 @@ abstract class AppLocalizations {
   /// **'Who paid'**
   String get ledWhoPaid;
 
+  /// No description provided for @ledSpendMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get ledSpendMembers;
+
+  /// No description provided for @ledSpendGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get ledSpendGroups;
+
+  /// No description provided for @ledSpendShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share {amount}'**
+  String ledSpendShare(String amount);
+
   /// No description provided for @mapNoRoute.
   ///
   /// In en, this message translates to:
@@ -2569,6 +2587,96 @@ abstract class AppLocalizations {
   /// **'Settle'**
   String get ledSettle;
 
+  /// No description provided for @ledSettleAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle all I owe · {count} payments · {amount}'**
+  String ledSettleAll(int count, String amount);
+
+  /// No description provided for @ledSettleAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark {count} payments as paid?'**
+  String ledSettleAllTitle(int count);
+
+  /// No description provided for @ledSettleAllBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This records {amount} of payments you owe as paid. It does not send any money.'**
+  String ledSettleAllBody(String amount);
+
+  /// No description provided for @ledSettleAllConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as paid'**
+  String get ledSettleAllConfirm;
+
+  /// No description provided for @ledSettleAllDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} payments recorded'**
+  String ledSettleAllDone(int count);
+
+  /// No description provided for @ledShareSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Share summary'**
+  String get ledShareSummary;
+
+  /// No description provided for @ledDayByDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day by day'**
+  String get ledDayByDay;
+
+  /// No description provided for @ledBudgetPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip budget'**
+  String get ledBudgetPrompt;
+
+  /// No description provided for @ledBudgetSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a trip budget'**
+  String get ledBudgetSet;
+
+  /// No description provided for @ledBudgetOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{spent} of {budget}'**
+  String ledBudgetOf(String spent, String budget);
+
+  /// No description provided for @ledBudgetLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} left'**
+  String ledBudgetLeft(String amount);
+
+  /// No description provided for @ledBudgetOver.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} over budget'**
+  String ledBudgetOver(String amount);
+
+  /// No description provided for @ledBudgetLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept on this device only'**
+  String get ledBudgetLocal;
+
+  /// No description provided for @ledYouPay.
+  ///
+  /// In en, this message translates to:
+  /// **'You pay'**
+  String get ledYouPay;
+
+  /// No description provided for @ledPaysYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Pays you'**
+  String get ledPaysYou;
+
   /// No description provided for @ledSimplify.
   ///
   /// In en, this message translates to:
@@ -2995,6 +3103,36 @@ abstract class AppLocalizations {
   /// **'Add group'**
   String get memAddGroup;
 
+  /// No description provided for @memEditGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit group'**
+  String get memEditGroup;
+
+  /// No description provided for @memGroupMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 member} other{{count} members}}'**
+  String memGroupMembers(int count);
+
+  /// No description provided for @memGroupNeedTwo.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick at least 2 members.'**
+  String get memGroupNeedTwo;
+
+  /// No description provided for @memGroupWillDissolve.
+  ///
+  /// In en, this message translates to:
+  /// **'A group needs at least 2 members. Saving with fewer dissolves it.'**
+  String get memGroupWillDissolve;
+
+  /// No description provided for @memGroupDissolved.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} dissolved: a group can\'t have a single member.'**
+  String memGroupDissolved(String name);
+
   /// No description provided for @memRoleOrganizer.
   ///
   /// In en, this message translates to:
@@ -3084,6 +3222,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Title'**
   String get notesNoteTitle;
+
+  /// No description provided for @notesNoteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get notesNoteBody;
 
   /// No description provided for @notesEmptyNotes.
   ///
@@ -3258,6 +3402,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'To'**
   String get notesPassTo;
+
+  /// No description provided for @notesAllDone.
+  ///
+  /// In en, this message translates to:
+  /// **'All done'**
+  String get notesAllDone;
+
+  /// No description provided for @notesLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} left'**
+  String notesLeft(int count);
 
   /// No description provided for @notesProgress.
   ///

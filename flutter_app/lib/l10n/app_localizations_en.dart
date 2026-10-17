@@ -115,6 +115,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledWhoPaid => 'Who paid';
 
   @override
+  String get ledSpendMembers => 'Members';
+
+  @override
+  String get ledSpendGroups => 'Groups';
+
+  @override
+  String ledSpendShare(String amount) {
+    return 'Share $amount';
+  }
+
+  @override
   String get mapNoRoute => 'No route yet';
 
   @override
@@ -1413,6 +1424,65 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledSettle => 'Settle';
 
   @override
+  String ledSettleAll(int count, String amount) {
+    return 'Settle all I owe · $count payments · $amount';
+  }
+
+  @override
+  String ledSettleAllTitle(int count) {
+    return 'Mark $count payments as paid?';
+  }
+
+  @override
+  String ledSettleAllBody(String amount) {
+    return 'This records $amount of payments you owe as paid. It does not send any money.';
+  }
+
+  @override
+  String get ledSettleAllConfirm => 'Mark as paid';
+
+  @override
+  String ledSettleAllDone(int count) {
+    return '$count payments recorded';
+  }
+
+  @override
+  String get ledShareSummary => 'Share summary';
+
+  @override
+  String get ledDayByDay => 'Day by day';
+
+  @override
+  String get ledBudgetPrompt => 'Trip budget';
+
+  @override
+  String get ledBudgetSet => 'Set a trip budget';
+
+  @override
+  String ledBudgetOf(String spent, String budget) {
+    return '$spent of $budget';
+  }
+
+  @override
+  String ledBudgetLeft(String amount) {
+    return '$amount left';
+  }
+
+  @override
+  String ledBudgetOver(String amount) {
+    return '$amount over budget';
+  }
+
+  @override
+  String get ledBudgetLocal => 'Kept on this device only';
+
+  @override
+  String get ledYouPay => 'You pay';
+
+  @override
+  String get ledPaysYou => 'Pays you';
+
+  @override
   String get ledSimplify => 'Simplify debts';
 
   @override
@@ -1638,6 +1708,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memAddGroup => 'Add group';
 
   @override
+  String get memEditGroup => 'Edit group';
+
+  @override
+  String memGroupMembers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count members', one: '1 member');
+    return '$_temp0';
+  }
+
+  @override
+  String get memGroupNeedTwo => 'Pick at least 2 members.';
+
+  @override
+  String get memGroupWillDissolve => 'A group needs at least 2 members. Saving with fewer dissolves it.';
+
+  @override
+  String memGroupDissolved(String name) {
+    return '$name dissolved: a group can\'t have a single member.';
+  }
+
+  @override
   String get memRoleOrganizer => 'Organizer';
 
   @override
@@ -1681,6 +1771,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesNoteTitle => 'Title';
+
+  @override
+  String get notesNoteBody => 'Note';
 
   @override
   String get notesEmptyNotes => 'No notes yet.';
@@ -1768,6 +1861,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesPassTo => 'To';
+
+  @override
+  String get notesAllDone => 'All done';
+
+  @override
+  String notesLeft(int count) {
+    return '$count left';
+  }
 
   @override
   String notesProgress(int done, int total) {

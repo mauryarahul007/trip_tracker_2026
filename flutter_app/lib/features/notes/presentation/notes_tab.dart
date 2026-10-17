@@ -10,6 +10,7 @@ import '../../../data/providers.dart';
 import '../../../domain/logic/flag_defaults.g.dart';
 import '../../../domain/logic/ics_export_service.dart';
 import '../../../domain/logic/pass_sort.dart';
+import '../../../domain/logic/summary_features.dart';
 import '../../../domain/logic/travel_status_service.dart';
 import '../../../domain/logic/trip_utilities.dart';
 import '../../../domain/models/checklist_item.dart';
@@ -25,7 +26,6 @@ import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/undo_snackbar.dart';
 import '../../../shared/widgets/app_sheet.dart';
-import '../../../shared/widgets/ask_text.dart';
 import '../../chat/application/chat_providers.dart';
 import '../../chat/presentation/chat_pane.dart';
 import '../../expenses/application/expenses_providers.dart';
@@ -276,27 +276,49 @@ class _NotesTabState extends ConsumerState<NotesTab> {
           child: Row(
             children: [
               SizedBox(
-                width: 56,
-                height: 56,
+                width: 64,
+                height: 64,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    CircularProgressIndicator(
-                      value: items.isEmpty ? 0 : done / items.length,
-                      strokeWidth: 6,
-                      strokeCap: StrokeCap.round,
-                      backgroundColor: t.textPrimary.withValues(alpha: 0.12),
-                      color: t.textPrimary,
+                    SizedBox.expand(
+                      child: CircularProgressIndicator(
+                        key: const Key('checklist-ring'),
+                        value: items.isEmpty ? 0 : done / items.length,
+                        strokeWidth: 6,
+                        strokeCap: StrokeCap.round,
+                        backgroundColor: t.textPrimary.withValues(alpha: 0.12),
+                        color: t.textPrimary,
+                      ),
                     ),
-                    Text('$done/${items.length}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                    // Percent inside the ring (short, always fits); the exact count is spelled out beside it.
+                    if (items.isNotEmpty && done == items.length)
+                      Icon(Icons.check_rounded, color: t.textPrimary, size: 28)
+                    else
+                      Text(
+                        '${items.isEmpty ? 0 : (done * 100 / items.length).floor()}%',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                      ),
                   ],
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 16),
               Expanded(
-                child: Text(
-                  l10n.notesProgress(done, items.length),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.notesProgress(done, items.length),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      items.isNotEmpty && done == items.length
+                          ? l10n.notesAllDone
+                          : l10n.notesLeft(items.length - done),
+                      style: TextStyle(fontSize: 13, color: t.textPrimary.withValues(alpha: 0.7)),
+                    ),
+                  ],
                 ),
               ),
               if (dest != null && dest.isNotEmpty) WeatherBadge(destination: dest),
@@ -312,6 +334,58 @@ class _NotesTabState extends ConsumerState<NotesTab> {
           isFullWidth: true,
           onPressed: () => _editItem(context, items),
         ),
+        if (_flag('enableChecklistCategoryProgress') && items.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Column(
+            key: const Key('checklist-category-progress'),
+            children: [
+              for (final p in categoryProgress([
+                for (final i in items) (category: i.category ?? 'general', done: _pendingDone[i.id] ?? i.completed),
+              ], _categories))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 92,
+                        child: Text(
+                          p.category[0].toUpperCase() + p.category.substring(1),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.textSecondary),
+                        ),
+                      ),
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(99),
+                          child: TweenAnimationBuilder<double>(
+                            tween: Tween(end: p.done / p.total),
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                            builder: (_, v, _) => LinearProgressIndicator(
+                              value: v,
+                              minHeight: 6,
+                              backgroundColor: t.borderColor,
+                              color: p.done == p.total ? t.colorSuccess : t.primaryAccent,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      SizedBox(
+                        width: 44,
+                        child: Text(
+                          '${p.done}/${p.total}',
+                          textAlign: TextAlign.end,
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ],
         const SizedBox(height: 12),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -621,12 +695,19 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   }
 
   Future<void> _addNote(BuildContext context, List<TripNote> notes) async {
-    final title = await askText(context, context.l10n.notesNoteTitle);
-    if (title == null || title.isEmpty) return;
+    final draft = await AppSheet.show<_NoteDraft>(
+      context: context,
+      title: context.l10n.notesAddNote,
+      builder: (_) => const _NoteDialog(),
+    );
+    if (draft == null) return;
+    final firstLine = draft.body.split('\n').first.trim();
+    final title = draft.title.isNotEmpty ? draft.title : firstLine;
+    if (title.isEmpty) return;
     final now = _now();
     await _saveNotes([
       ...notes,
-      TripNote(id: const Uuid().v4(), title: title, content: '', createdAt: now, updatedAt: now),
+      TripNote(id: const Uuid().v4(), title: title, content: draft.body, createdAt: now, updatedAt: now),
     ]);
   }
 
@@ -758,6 +839,68 @@ class _Linked extends ConsumerWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _NoteDraft {
+  _NoteDraft(this.title, this.body);
+  final String title;
+  final String body;
+}
+
+class _NoteDialog extends StatefulWidget {
+  const _NoteDialog();
+
+  @override
+  State<_NoteDialog> createState() => _NoteDialogState();
+}
+
+class _NoteDialogState extends State<_NoteDialog> {
+  final _title = TextEditingController();
+  final _body = TextEditingController();
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _body.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            key: const Key('note-new-title'),
+            controller: _title,
+            autofocus: true,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(labelText: l10n.notesNoteTitle),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            key: const Key('note-new-body'),
+            controller: _body,
+            minLines: 5,
+            maxLines: 10,
+            keyboardType: TextInputType.multiline,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(labelText: l10n.notesNoteBody, alignLabelWithHint: true),
+          ),
+          const SizedBox(height: 16),
+          AppButton(
+            key: const Key('note-save'),
+            label: l10n.notesItemSave,
+            onPressed: () => Navigator.pop(context, _NoteDraft(_title.text.trim(), _body.text.trim())),
+          ),
+        ],
+      ),
     );
   }
 }

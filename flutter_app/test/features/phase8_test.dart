@@ -65,10 +65,29 @@ void main() {
     await settle(tester, rounds: 4);
     await tester.enterText(key('group-name'), 'Room');
     await tester.tap(key('group-pick-${s.me}'));
+    await tester.pump();
     await tester.tap(key('group-pick-${s.ben}'));
+    await tester.pump();
+    await tester.ensureVisible(key('group-save'));
     await tester.tap(key('group-save'));
     await settle(tester, rounds: 8);
     expect(find.text('Room'), findsOneWidget);
+
+    // Tap the group: members listed in a popup; edit and drop to one member dissolves it.
+    await tester.tap(find.text('Room'));
+    await settle(tester, rounds: 6);
+    expect(key('group-member-${s.me}'), findsOneWidget);
+    expect(key('group-member-${s.ben}'), findsOneWidget);
+    await tester.tap(key('group-edit'));
+    await settle(tester, rounds: 6);
+    await tester.tap(key('group-pick-${s.ben}'));
+    await tester.pump();
+    expect(key('group-hint'), findsOneWidget);
+    await tester.ensureVisible(key('group-save'));
+    await tester.tap(key('group-save'));
+    await settle(tester, rounds: 8);
+    expect(containerOf(tester).read(tripGroupsProvider(s.tripId)).value, isEmpty);
+    expect(find.textContaining('dissolved'), findsOneWidget);
 
     await tester.tap(key('member-invite'));
     await settle(tester, rounds: 6);
@@ -99,6 +118,8 @@ void main() {
     expect(find.text('Passport'), findsOneWidget);
     expect(find.text('0 of 1'), findsOneWidget);
 
+    expect(key('checklist-category-progress'), findsOneWidget);
+    expect(find.text('General'), findsWidgets);
     await tester.tap(key('packing-suggest'));
     await settle(tester, rounds: 8);
     expect(find.text('Government Photo ID / Physical Passport'), findsOneWidget);
@@ -107,10 +128,9 @@ void main() {
     await settle(tester, rounds: 4);
     await tester.tap(key('note-add'));
     await settle(tester, rounds: 4);
-    await typeAsk(tester, 'Links');
-    final note = containerOf(tester).read(tripProvider(s.tripId)).value!.notes.single;
-    await tester.enterText(key('note-body-${note.id}'), 'See https://example.com/map');
-    await tester.pump(const Duration(milliseconds: 500));
+    await tester.enterText(key('note-new-title'), 'Links');
+    await tester.enterText(key('note-new-body'), 'See https://example.com/map');
+    await tester.tap(key('note-save'));
     await settle(tester, rounds: 8);
     final saved = containerOf(tester).read(tripProvider(s.tripId)).value!.notes.single.content;
     expect(saved, 'See https://example.com/map');

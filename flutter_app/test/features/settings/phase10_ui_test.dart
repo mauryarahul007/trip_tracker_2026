@@ -25,6 +25,17 @@ Future<void> go(WidgetTester t, String path) async {
   await settle(t, rounds: 10);
 }
 
+/// Settings is a flat list; each category opens its own page.
+Future<void> openRow(WidgetTester t, String name) async {
+  await t.tap(find.byKey(Key('settings-open-$name')));
+  await settle(t, rounds: 6);
+}
+
+Future<void> back(WidgetTester t) async {
+  await t.pageBack();
+  await settle(t, rounds: 6);
+}
+
 const named = AuthUser(id: 'u1', email: 'a@b.c', displayName: 'Asha', provider: 'email');
 
 void main() {
@@ -39,32 +50,18 @@ void main() {
       expect(find.byKey(const Key('settings-amoled')), findsNothing); // Pro flag off
       expect(find.byKey(const Key('settings-biometric')), findsNothing); // Pro flag off
 
+      await openRow(tester, 'appearance');
       await tester.tap(find.text('Dark'));
       await settle(tester);
       expect(app.prefs.getString('settings.theme'), 'dark');
       expect(tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode, ThemeMode.dark);
     });
 
-    testApp('wide window: section list on the left jumps to a section on the right', (tester) async {
-      await pumpApp(tester, user: named);
-      await go(tester, '/settings');
-      expect(find.byKey(const Key('settings-nav')), findsNothing); // harness is phone-sized
-      tester.view.physicalSize = const Size(1400, 900);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      await settle(tester);
-      expect(find.byKey(const Key('settings-nav')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('settings-nav-Account')));
-      await settle(tester, rounds: 10);
-      expect(find.byKey(const Key('settings-signout')), findsOneWidget);
-    });
-
     testApp('amoled and biometric rows appear with their flags and persist', (tester) async {
       final app = await pumpApp(tester, user: asha, flagsOn: {'enableAmoledTheme', 'enableBiometricAuth'});
       await go(tester, '/settings');
       final before = app.biometric.prompts; // the app lock may prompt on its own at start
-      await tester.ensureVisible(find.byKey(const Key('settings-biometric')));
-      await settle(tester);
+      await openRow(tester, 'security');
       await tester.tap(find.byKey(const Key('settings-biometric')));
       await settle(tester);
       expect(app.biometric.prompts, before + 1);
@@ -78,35 +75,59 @@ void main() {
       await tester.tap(find.byKey(const Key('settings-biometric')));
       await settle(tester);
       expect(containerOf(tester).read(biometricLockEnabledProvider), isFalse);
-      expect(find.byKey(const Key('settings-amoled'), skipOffstage: false), findsOneWidget);
+      await back(tester);
+      await openRow(tester, 'appearance');
+      expect(find.byKey(const Key('settings-amoled')), findsOneWidget);
     });
 
     testApp('Labs rows (suggest a feature, what is new) appear only with their flags', (tester) async {
       await pumpApp(tester, user: asha);
       await go(tester, '/settings');
-      await tester.ensureVisible(find.byKey(const Key('settings-version')));
-      await tester.pump();
+      await openRow(tester, 'help');
       expect(find.byKey(const Key('settings-feature-request')), findsNothing);
-      expect(find.byKey(const Key('settings-whats-new')), findsNothing);
       expect(find.byKey(const Key('settings-report-bug')), findsOneWidget);
       expect(find.byKey(const Key('settings-diagnostics')), findsOneWidget);
+      await back(tester);
+      await openRow(tester, 'about');
+      expect(find.byKey(const Key('settings-whats-new')), findsNothing);
     });
 
     testApp('with the flags on, what is new lists the changelog', (tester) async {
       await pumpApp(tester, user: asha, flagsOn: {'enableFeatureSuggestions', 'enableWhatsNewHub'});
       await go(tester, '/settings');
-      await tester.ensureVisible(find.byKey(const Key('settings-whats-new')));
-      await tester.pump();
+      await openRow(tester, 'help');
       expect(find.byKey(const Key('settings-feature-request')), findsOneWidget);
+      await back(tester);
+      await openRow(tester, 'about');
       await tester.tap(find.byKey(const Key('settings-whats-new')));
       await settle(tester);
       expect(find.byKey(const Key('changelog-list')), findsOneWidget);
       expect(find.textContaining('3.45.0'), findsWidgets);
     });
 
+    testApp('search lists matching settings from any page; no match says so; flag off hides it', (tester) async {
+      await pumpApp(tester, user: asha);
+      await go(tester, '/settings');
+      await tester.enterText(find.byKey(const Key('settings-search')), 'currency');
+      await tester.pump();
+      expect(find.byKey(const Key('settings-currency')), findsOneWidget);
+      expect(find.byKey(const Key('settings-open-appearance')), findsNothing);
+      await tester.enterText(find.byKey(const Key('settings-search')), 'zzzz');
+      await tester.pump();
+      expect(find.byKey(const Key('settings-search-empty')), findsOneWidget);
+    });
+
+    testApp('settings search is absent with its flag off', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableSettingsSearch'});
+      await go(tester, '/settings');
+      expect(find.byKey(const Key('settings-search')), findsNothing);
+      expect(find.byKey(const Key('settings-open-appearance')), findsOneWidget);
+    });
+
     testApp('haptics switch turns the facade off', (tester) async {
       await pumpApp(tester, user: asha);
       await go(tester, '/settings');
+      await openRow(tester, 'appearance');
       await tester.tap(find.byKey(const Key('settings-haptics')));
       await settle(tester);
       expect(AppHaptics.enabled, isFalse);
@@ -128,6 +149,7 @@ void main() {
     testApp('default currency is saved and used by the next trip', (tester) async {
       final app = await pumpApp(tester, user: asha);
       await go(tester, '/settings');
+      await openRow(tester, 'appearance');
       await tester.tap(find.byKey(const Key('settings-currency')));
       await settle(tester);
       await tester.tap(find.byKey(const Key('currency-EUR')));
@@ -142,11 +164,7 @@ void main() {
       await addExpense(tester, s, title: 'Beach lunch', amount: 300);
 
       await go(tester, '/settings');
-      await tester.dragUntilVisible(
-        find.byKey(const Key('settings-export')),
-        find.byType(ListView).first,
-        const Offset(0, -200),
-      );
+      await openRow(tester, 'data');
       await tester.tap(find.byKey(const Key('settings-export')));
       await settle(tester);
       expect(app.shareService.files.single, startsWith('triptracker-backup-'));
@@ -156,7 +174,7 @@ void main() {
       await tester.pump();
       await tester.tap(find.byKey(const Key('settings-import')));
       await settle(tester);
-      expect(find.byKey(const Key('settings-message'), skipOffstage: false), findsOneWidget);
+      expect(find.byKey(const Key('settings-message')), findsOneWidget);
       expect(find.text('Restore backup?'), findsNothing);
       await tester.ensureVisible(find.byKey(const Key('settings-import')));
       await tester.pump();
@@ -471,11 +489,7 @@ void main() {
 
       await containerOf(tester).read(sharedPreferencesProvider).setBool('settings.pass_reminders', false);
       await go(tester, '/settings');
-      await tester.dragUntilVisible(
-        find.byKey(const Key('settings-pass-reminders')),
-        find.byType(ListView).first,
-        const Offset(0, -200),
-      );
+      await openRow(tester, 'notifications');
       await tester.tap(find.byKey(const Key('settings-pass-reminders')));
       await tester.pump(const Duration(seconds: 3));
       await settle(tester);

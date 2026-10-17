@@ -105,24 +105,9 @@ class MembersTab extends ConsumerWidget {
                 contentPadding: EdgeInsets.zero,
                 leading: const SettingsIcon(Icons.groups_2_outlined),
                 title: Text(g.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                subtitle: Text('${g.memberIds.length}'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      tooltip: 'Rename',
-                      key: Key('group-rename-${g.id}'),
-                      icon: const Icon(Icons.edit_outlined),
-                      onPressed: () => _renameGroup(context, ref, g),
-                    ),
-                    IconButton(
-                      tooltip: 'Delete',
-                      key: Key('group-delete-${g.id}'),
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () => ref.read(memberRepositoryProvider).deleteGroup(g.id),
-                    ),
-                  ],
-                ),
+                subtitle: Text(l10n.memGroupMembers(g.memberIds.length)),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => _openGroup(context, ref, g, active),
               ),
             ),
           ),
@@ -333,10 +318,39 @@ class MembersTab extends ConsumerWidget {
     await ref.read(memberRepositoryProvider).createGroup(tripId, created.name, created.memberIds);
   }
 
-  Future<void> _renameGroup(BuildContext context, WidgetRef ref, Group g) async {
-    final name = await askText(context, context.l10n.memName, initial: g.name);
-    if (name == null || name.isEmpty) return;
-    await ref.read(memberRepositoryProvider).updateGroup(g.id, name, g.memberIds);
+  Future<void> _openGroup(BuildContext context, WidgetRef ref, Group g, List<Member> active) async {
+    final action = await AppSheet.show<String>(
+      context: context,
+      title: g.name,
+      builder: (_) => _GroupDetail(
+        group: g,
+        members: [
+          for (final m in active)
+            if (g.memberIds.contains(m.id)) m,
+        ],
+      ),
+    );
+    if (!context.mounted) return;
+    if (action == 'edit') await _editGroup(context, ref, g, active);
+    if (action == 'delete') await ref.read(memberRepositoryProvider).deleteGroup(g.id);
+  }
+
+  Future<void> _editGroup(BuildContext context, WidgetRef ref, Group g, List<Member> active) async {
+    final edited = await AppSheet.show<_GroupDraft>(
+      context: context,
+      title: context.l10n.memEditGroup,
+      builder: (_) => _GroupDialog(members: active, initial: g),
+    );
+    if (edited == null || edited.name.isEmpty) return;
+    final repo = ref.read(memberRepositoryProvider);
+    if (edited.memberIds.length < 2) {
+      await repo.deleteGroup(g.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.memGroupDissolved(g.name))));
+      }
+      return;
+    }
+    await repo.updateGroup(g.id, edited.name, edited.memberIds);
   }
 }
 
@@ -346,17 +360,59 @@ class _GroupDraft {
   final List<String> memberIds;
 }
 
-class _GroupDialog extends StatefulWidget {
-  const _GroupDialog({required this.members});
+class _GroupDetail extends StatelessWidget {
+  const _GroupDetail({required this.group, required this.members});
+  final Group group;
   final List<Member> members;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l10n.memGroupMembers(members.length), style: MembersTab._sectionStyle(context)),
+          const SizedBox(height: 8),
+          for (final m in members)
+            ListTile(
+              key: Key('group-member-${m.id}'),
+              contentPadding: EdgeInsets.zero,
+              leading: AppAvatar(name: m.name, size: 36),
+              title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+            ),
+          const SizedBox(height: 12),
+          AppButton(
+            key: const Key('group-edit'),
+            label: l10n.memEditGroup,
+            onPressed: () => Navigator.pop(context, 'edit'),
+          ),
+          TextButton.icon(
+            key: const Key('group-delete'),
+            icon: const Icon(Icons.delete_outline),
+            label: Text(l10n.actionDelete),
+            onPressed: () => Navigator.pop(context, 'delete'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GroupDialog extends StatefulWidget {
+  const _GroupDialog({required this.members, this.initial});
+  final List<Member> members;
+  final Group? initial;
 
   @override
   State<_GroupDialog> createState() => _GroupDialogState();
 }
 
 class _GroupDialogState extends State<_GroupDialog> {
-  final _name = TextEditingController();
-  final _picked = <String>{};
+  late final _name = TextEditingController(text: widget.initial?.name);
+  late final _picked = <String>{...?widget.initial?.memberIds};
 
   @override
   void dispose() {
@@ -389,10 +445,21 @@ class _GroupDialogState extends State<_GroupDialog> {
               onChanged: (v) => setState(() => v == true ? _picked.add(m.id) : _picked.remove(m.id)),
             ),
           const SizedBox(height: 12),
+          if (_picked.length < 2)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                widget.initial == null ? l10n.memGroupNeedTwo : l10n.memGroupWillDissolve,
+                key: const Key('group-hint'),
+                style: TextStyle(fontSize: 12, color: context.tokens.textSecondary),
+              ),
+            ),
           AppButton(
             key: const Key('group-save'),
             label: l10n.actionSave,
-            onPressed: () => Navigator.pop(context, _GroupDraft(_name.text.trim(), _picked.toList())),
+            onPressed: widget.initial == null && _picked.length < 2
+                ? null
+                : () => Navigator.pop(context, _GroupDraft(_name.text.trim(), _picked.toList())),
           ),
         ],
       ),

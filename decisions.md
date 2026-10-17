@@ -5054,3 +5054,19 @@ This document logs all meaningful technical decisions, library choices, design p
   - **Fixes:** stops edits go through the trip patch (the collab RPC rejected them), checklist strikethrough only when done, trip-level SETTLED stamp, superadmin treated as trip admin.
 * **Trade-offs Accepted:** Playfair Display (SIL OFL) is bundled for these two screens only; the spend bar shows days elapsed since there is no budget.
 * **Release Cut:** version bumped to `3.56.0` via `npm run release:minor`.
+
+---
+
+## Flutter v3.57.0: notes popup, group spend and editing, Settings list, Summary polish
+* **Context:** On-device review of the Flutter app asked for a real new-note form, group-wise spend, editable groups, an overlap fix on the checklist ring, a WhatsApp-style Settings, and a more professional Summary with a clearer Settlement Pass. Offline launch also needed a bounded wait.
+* **Decision:**
+  - **New note:** a title + body sheet replaces the title-only prompt; an empty title falls back to the first body line.
+  - **Groups:** tapping a group lists its members in a popup; Edit changes name and members; fewer than 2 members dissolves the group with a message (removing a trip member already did).
+  - **Group spend:** the Summary "Who paid" card gets a Members / Groups switch showing Paid and Share per group (`enableGroupSpend`, Trip pack, default ON).
+  - **Checklist:** percentage inside the ring, the count beside it; optional per-category bars (`enableChecklistCategoryProgress`).
+  - **Settings:** a flat list with a profile header and one page per category; sign out and version at the bottom; optional search (`enableSettingsSearch`). The old long page and desktop two-pane are replaced outright, not flagged.
+  - **Summary:** the Settlement Pass tile is simpler (From to To, amount, one Settle button, "You pay" / "Pays you" chips), your payments sort first, sections show a one-line summary and animate; replaces the old layout outright. New flagged extras: Settle all (`enableSettleAll`), share summary picture (`enableShareSummaryImage`), day-by-day (`enableDailyTimeline`), trip budget (`enableTripBudget`).
+  - **Offline launch:** the superadmin check at cold start gives up after 3 seconds and keeps the session.
+* **Trade-offs Accepted:** The trip budget is kept on the device (SharedPreferences), not synced: a shared budget needs a trip column, a Supabase migration and a sync change, and the web app has no budget either. Settings and Summary are replaced without a flag, so the old layouts cannot be restored from the Ops Deck.
+* **Release Cut:** version bumped to `3.57.0` via `npm run release:minor`; six flags added (112 in total).
+

@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.57.0', '2026-10-17', [
+    'Behind the scenes: the Flutter app has a WhatsApp-style Settings list with search, a cleaner Summary and Settlement Pass (your payments first, Settle all, share a summary picture, day-by-day spend, a device-only trip budget), group spend by Paid and Share, editable groups with a 2-member minimum, a title-and-note popup for new notes, a clearer checklist progress card with category bars, and a quicker offline start. No change to the web app.',
+  ]),
   ChangelogEntry('3.56.0', '2026-10-10', [
     'Behind the scenes: the Flutter app has a boarding-gate sign-in screen, a redesigned "Departures" card stack with an airport runway slider for New Trip and Join, and a Create Trip form that starts with the destination and suggests the trip name. Superadmin sessions are never restored automatically. No change to the web app.',
   ]),
@@ -40,8 +43,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.48.1', '2026-10-08', [
     'Behind the scenes: fixed the Flutter CI fixtures-drift check. No change to the web app.',
-  ]),
-  ChangelogEntry('3.48.0', '2026-10-08', [
-    'Behind the scenes: Flutter Horizon redesign across all screens, desktop layouts, Balances and Spend Insights behind new flags. No change to the web app.',
   ]),
 ];

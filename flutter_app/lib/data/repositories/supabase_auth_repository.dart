@@ -24,15 +24,16 @@ Future<bool> shouldDropRestoredSession({
   required Set<String> known,
   required Future<bool> Function() isSuperadmin,
   required Future<void> Function(String uid) remember,
+  Duration timeout = const Duration(seconds: 3),
 }) async {
   if (known.contains(uid)) return true;
   try {
-    if (await isSuperadmin()) {
+    if (await isSuperadmin().timeout(timeout)) {
       await remember(uid);
       return true;
     }
   } catch (_) {
-    // Cannot tell: keep the session.
+    // Cannot tell (offline, error, or no answer within [timeout]): keep the session.
   }
   return false;
 }

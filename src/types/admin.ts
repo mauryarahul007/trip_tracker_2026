@@ -86,6 +86,13 @@ export type FeatureFlagKey =
   | 'enableExpenseQuickFilterChips'
   | 'enableHorizonNav'
   | 'enableSpendInsights'
+  | 'enableGroupSpend'
+  | 'enableSettleAll'
+  | 'enableShareSummaryImage'
+  | 'enableDailyTimeline'
+  | 'enableChecklistCategoryProgress'
+  | 'enableSettingsSearch'
+  | 'enableTripBudget'
   // Phase 6: WhatsApp Social & Chat Hub
   | 'enableChatFirstNav'
   | 'enableChatReactionsAndReplies'

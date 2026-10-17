@@ -106,4 +106,24 @@ void main() {
     await tester.tap(find.byKey(const Key('settle-btn')));
     expect(settled, isTrue);
   });
+
+  testWidgets('LuggageStubTile shows the role chip only when given one', (tester) async {
+    Widget tile({String? badge}) => MaterialApp(
+      home: Scaffold(
+        body: LuggageStubTile(
+          fromName: 'Ben',
+          toName: 'Asha',
+          fromLabel: 'From',
+          toLabel: 'To',
+          caption: 'Ben pays Asha',
+          amountText: '₹30.00',
+          badge: badge,
+        ),
+      ),
+    );
+    await tester.pumpWidget(tile());
+    expect(find.byKey(const Key('transfer-badge')), findsNothing);
+    await tester.pumpWidget(tile(badge: 'You pay'));
+    expect(find.text('You pay'), findsOneWidget);
+  });
 }

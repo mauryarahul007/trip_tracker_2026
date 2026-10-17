@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -18,7 +19,7 @@ void main() {
     test('Dart flag key set equals the TS registry (CI drift check)', () {
       final ts = (fx['defaults'] as Map<String, dynamic>).keys.toSet();
       expect(defaultFeatureFlags.keys.toSet(), ts);
-      expect(ts.length, 105);
+      expect(ts.length, 112);
     });
 
     test('defaults and pack membership match the TS registry', () {
@@ -199,6 +200,17 @@ void main() {
         known: {},
         isSuperadmin: () async => throw const SocketException('offline'),
         remember: (_) async {},
+      );
+      expect(drop, isFalse);
+    });
+
+    test('a server that never answers does not hold up the launch; the session is kept', () async {
+      final drop = await shouldDropRestoredSession(
+        uid: 'u1',
+        known: {},
+        isSuperadmin: () => Completer<bool>().future,
+        remember: (_) async {},
+        timeout: const Duration(milliseconds: 50),
       );
       expect(drop, isFalse);
     });

@@ -29,6 +29,18 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-09 | flutter 3.55 | FLUTTER-SUPERADMIN | [Flutter: native Superadmin portal and analytics](#flutter-superadmin--flutter-native-superadmin-portal-and-analytics-v3550) |
 | 2026-10-09 | flutter 3.55 | FLUTTER-CARDSTACK | [Flutter: Trips card-stack view](#flutter-cardstack--flutter-trips-card-stack-view-v3550) |
 | 2026-10-10 | flutter 3.56 | FLUTTER-DEPARTURES | [Flutter: boarding-gate login, Departures stack, runway slider, destination-first Create Trip](#flutter-departures--flutter-boarding-gate-login-departures-stack-runway-slider-v3560) |
+| 2026-10-17 | flutter | FLUTTER-NOTE-POPUP | [Flutter: New note opens a title + body popup](#flutter-note-popup--new-note-opens-a-title--body-popup) |
+| 2026-10-17 | flutter | FLUTTER-GROUP-SPEND | [Flutter: group-wise spend (paid + share) on the Summary](#flutter-group-spend--group-wise-spend-paid--share-on-the-summary) |
+| 2026-10-17 | flutter | FLUTTER-GROUP-EDIT | [Flutter: group popup, edit members, 2-member minimum](#flutter-group-edit--flutter-group-popup-edit-members-2-member-minimum) |
+| 2026-10-17 | flutter | FLUTTER-CHECKLIST-RING | [Flutter: checklist progress card](#flutter-checklist-ring--flutter-checklist-progress-card) |
+| 2026-10-17 | flutter | FLUTTER-SETTINGS-LIST | [Flutter: WhatsApp-style settings](#flutter-settings-list--flutter-whatsapp-style-settings) |
+| 2026-10-17 | flutter | FLUTTER-SUMMARY-POLISH | [Flutter: Summary and Settlement Pass polish](#flutter-summary-polish--flutter-summary-and-settlement-pass-polish) |
+| 2026-10-17 | flutter | FLUTTER-SETTLE-ALL | [Flutter: settle all I owe](#flutter-settle-all--flutter-settle-all-i-owe) |
+| 2026-10-17 | flutter | FLUTTER-SHARE-SUMMARY | [Flutter: share trip summary as an image](#flutter-share-summary--flutter-share-trip-summary-as-an-image) |
+| 2026-10-17 | flutter | FLUTTER-DAY-BY-DAY | [Flutter: day-by-day spend](#flutter-day-by-day--flutter-day-by-day-spend) |
+| 2026-10-17 | flutter | FLUTTER-CHECKLIST-CATEGORIES | [Flutter: checklist category progress](#flutter-checklist-categories--flutter-checklist-category-progress) |
+| 2026-10-17 | flutter | FLUTTER-SETTINGS-SEARCH | [Flutter: settings search](#flutter-settings-search--flutter-settings-search) |
+| 2026-10-17 | flutter | FLUTTER-TRIP-BUDGET | [Flutter: trip budget (this device only)](#flutter-trip-budget--flutter-trip-budget-this-device-only) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -2402,3 +2414,160 @@ Then add a row to the **Index** table.
 
 ### Pass
 - Each step matches; no overflow at 360 px width.
+
+## FLUTTER-NOTE-POPUP — New note opens a title + body popup
+
+**Flags:** none (fix to the existing Notes tab).
+
+1. Open a trip > Notes > Notes pane > tap Add note.
+2. A popup opens with a Title field and a multi-line Note field, plus Save.
+3. Enter a title and a body, tap Save: the note appears with both filled in; no second step needed.
+4. Add another with only a body: the title becomes the body's first line. Add one with both empty: Save closes the popup and nothing is created.
+5. Dismiss the popup (swipe down / tap outside): no note is created.
+
+**Flag-OFF checks:** n/a (no flag).
+
+### Pass
+- Each step matches; keyboard does not hide the Save button at 360 px width.
+
+## FLUTTER-GROUP-SPEND — Group-wise spend (paid + share) on the Summary
+
+**Flags:** `enableGroupSpend` (Trip pack, default ON).
+
+1. Use a trip with at least two members in a group (Members > Add group) and a few expenses paid by different people, some split among everyone.
+2. Open the trip Summary (ledger). The "Who paid" card shows a Members / Groups switch.
+3. Members: unchanged per-person rows. Groups: one row per group with the amount its members paid (bar + amount) and "Share X" underneath, the sum of its members' split shares. Members in no group appear as their own row.
+4. Check: sum of all Paid values = sum of the Members view; the group's Paid = its members' Paid added up.
+5. A split payment (several payers) counts each payer toward their own group. Settlement transfers and pending-approval expenses are not counted.
+6. A trip with no groups: no switch, members only.
+
+**Flag-OFF checks:** turn `enableGroupSpend` OFF in Ops Deck > Flags: no switch, "Who paid" lists members only. Balances and settlements are identical either way.
+
+### Pass
+- Each step matches; rows do not overflow at 360 px width with long group names.
+
+## FLUTTER-GROUP-EDIT — Flutter: group popup, edit members, 2-member minimum
+
+**Flags:** none (fix to Members > Groups).
+
+1. Members tab > Groups: tap a group. A popup lists its members (avatar + name) with Edit group and Delete.
+2. Edit group: name and member checkboxes are pre-filled. Tick a new member / untick one, Save: the group updates.
+3. Untick down to 1 member: a hint says fewer than 2 dissolves the group. Save: the group is removed and a message says it was dissolved.
+4. Add group with fewer than 2 members picked: Save stays disabled.
+5. Remove a trip member who is in a 2-member group: the group dissolves.
+
+### Pass
+- Each step matches; sheet scrolls on a 360 px wide phone.
+
+## FLUTTER-CHECKLIST-RING — Flutter: checklist progress card
+
+**Flags:** none.
+
+1. Notes > Checklist with several items, some ticked: the ring shows a percentage inside; "N of M" and "K left" sit beside it. Nothing overlaps at 360 px or at 200% text.
+2. Tick everything: the ring shows a check mark and the text says "All done".
+3. Empty checklist: 0%.
+
+### Pass
+- No overlap in any state.
+
+## FLUTTER-SETTINGS-LIST — Flutter: WhatsApp-style settings
+
+**Flags:** `enableBiometricAuth` (Privacy and security row), `enableAmoledTheme` (inside Appearance), `enableFeatureSuggestions`, `enableWhatsNewHub`.
+
+1. Settings/Me: a profile header (tap to rename), then rows: Account, Notifications, Appearance, Data and backup, Help, About (plus Privacy and security when its flag is ON); Sign out in red and the app version at the bottom.
+2. Open each row: it is its own page with a back button. Appearance: theme, haptics, default currency. Notifications: preferences, pass reminders. Data and backup: export / restore. Help, About, Account (Delete account).
+3. Switch a toggle on a page: it repaints immediately. Errors and "backup ready" appear as a bottom message.
+
+**Flag-OFF checks:** with `enableBiometricAuth` OFF there is no Privacy and security row; with `enableAmoledTheme` OFF no Pure black row; Suggest a feature / What's new rows are absent unless their flags are ON.
+
+### Pass
+- Every old setting is still reachable; the list is flat with no cards.
+
+## FLUTTER-SUMMARY-POLISH — Flutter: Summary and Settlement Pass polish
+
+**Flags:** none (replaces the old layout). `enableGroupSpend` still controls the Members/Groups spend switch.
+
+1. Summary tab: the hero amount counts up/down when a payment changes it; section headers show a one-line summary ("2 payments left", total spent) and the chevron rotates as the section expands with a smooth animation.
+2. Who pays whom: your own payments come first. A transfer you must make has a "You pay" chip, one you receive has "Pays you". Each tile shows From → To, the amount and one Settle button.
+3. Trip numbers: category rows are compact (dot, name, %, amount, thin animated bar); the donut, "Who paid" and Insights link are unchanged.
+
+### Pass
+- No overflow at 360 px; settle flow (UPI / share / confirm) works as before.
+
+## FLUTTER-SETTLE-ALL — Flutter: settle all I owe
+
+**Flags:** `enableSettleAll` (Trip pack, default ON).
+
+1. Use a trip where you owe two or more people (e.g. Ben paid for you and him, Cara paid for you and her).
+2. Summary tab > Who pays whom: a "Settle all I owe · 2 payments · amount" button sits above the tiles.
+3. Tap it: a dialog asks "Mark 2 payments as paid?" and says no money is sent. Confirm: both payments are recorded, a toast says "2 payments recorded", and the list shows All settled.
+4. With only one payment owed, or when you owe nothing, the button is absent. It never records payments owed by or to other people.
+
+**Flag-OFF checks:** turn `enableSettleAll` OFF in Ops Deck > Flags: no button; each tile's own Settle still works.
+
+### Pass
+- Settlements appear in History and balances reach zero.
+
+## FLUTTER-SHARE-SUMMARY — Flutter: share trip summary as an image
+
+**Flags:** `enableShareSummaryImage` (Trip pack, default ON).
+
+1. Summary > Trip numbers: tap "Share summary" (above the Insights link).
+2. The share sheet opens with a picture: trip name, total spent, per person, who pays whom (max 6, "+N more" after) and a caption.
+3. Trip with nothing owed: the picture says "All settled".
+
+**Flag-OFF checks:** `enableShareSummaryImage` OFF: no button.
+
+### Pass
+- Image text is not cut off with 6+ transfers.
+
+## FLUTTER-DAY-BY-DAY — Flutter: day-by-day spend
+
+**Flags:** `enableDailyTimeline` (Trip pack, default ON).
+
+1. Summary > Trip numbers: a "Day by day" list shows one row per day with a bar and amount, most recent 14 days.
+2. Add an expense on a new date: a new row appears; totals are unchanged elsewhere.
+
+**Flag-OFF checks:** `enableDailyTimeline` OFF: no list.
+
+### Pass
+- The biggest day has the longest bar.
+
+## FLUTTER-CHECKLIST-CATEGORIES — Flutter: checklist category progress
+
+**Flags:** `enableChecklistCategoryProgress` (Trip pack, default ON).
+
+1. Notes > Checklist with items in at least two categories: under the overall ring, one thin bar per category with done/total.
+2. Tick an item: the bar and count update at once; a finished category turns green.
+
+**Flag-OFF checks:** `enableChecklistCategoryProgress` OFF: only the overall ring.
+
+### Pass
+- Categories without items are not listed.
+
+## FLUTTER-SETTINGS-SEARCH — Flutter: settings search
+
+**Flags:** `enableSettingsSearch` (Trip pack, default ON).
+
+1. Settings/Me: a "Search settings" box sits under the profile.
+2. Type "currency": the Default currency row appears in place and works. Type "backup": export and restore rows. Type "zzzz": "No settings match".
+3. Clear the box with the x: the normal category list returns.
+
+**Flag-OFF checks:** `enableSettingsSearch` OFF: no box.
+
+### Pass
+- Matches include rows from every page.
+
+## FLUTTER-TRIP-BUDGET — Flutter: trip budget (this device only)
+
+**Flags:** `enableTripBudget` (Trip pack, default ON).
+
+1. Summary > Trip numbers: a "Set a trip budget" card. Tap, enter an amount, Save.
+2. The card shows "spent of budget", a bar, and "X left"; green below 80%, orange from 80%, red and "X over budget" past 100%.
+3. Tap the card again to change or clear the budget (0 clears it).
+4. The note "Kept on this device only" is shown: the budget is not shared with other members and is not synced; a second device shows no budget.
+
+**Flag-OFF checks:** `enableTripBudget` OFF: no card. Adding expenses is never blocked by the budget.
+
+### Pass
+- The bar color and wording follow the thresholds above.

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trip_tracker/domain/repositories/repositories.dart';
 import 'package:trip_tracker/features/admin/admin_mode.dart';
+import 'package:trip_tracker/features/admin/application/admin_providers.dart';
 import 'package:trip_tracker/shared/widgets/app_button.dart';
 
+import '../../support/fleet_fixture.dart';
 import '../../support/pump_app.dart';
 
 class _AdminOn extends AdminModeNotifier {
@@ -16,7 +18,12 @@ const root = AuthUser(id: 'root', email: 'root@b.c', displayName: 'Root', provid
 Finder key(String k) => find.byKey(Key(k));
 
 Future<TestApp> open(WidgetTester tester, String entry) async {
-  final app = await pumpApp(tester, user: root, overrides: [adminModeProvider.overrideWith(_AdminOn.new)]);
+  final app = await pumpApp(
+    tester,
+    user: root,
+    // The fleet fixture is dated 9 Oct 2026; pin the analytics clock to it so ages do not drift with the real date.
+    overrides: [adminModeProvider.overrideWith(_AdminOn.new), adminNowProvider.overrideWithValue(() => fleetNow)],
+  );
   await tester.tap(find.descendant(of: key('admin-nav'), matching: find.text('More')));
   await settle(tester);
   await tester.tap(key(entry));
