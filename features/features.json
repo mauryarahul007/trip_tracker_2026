@@ -1804,5 +1804,101 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-09T20:01:20.025Z",
     "shippedNote": "Shipped in commit adb88c7 (v3.56.0): behind enableTripCardStack; swipes flip the deck, tap opens, runway slider for New Trip / Join."
+  },
+  {
+    "id": "FEAT-114",
+    "title": "Flutter: WhatsApp-style Settings list with search",
+    "description": "Flutter: WhatsApp-style Settings list with search",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T16:25:45.239Z",
+    "updatedAt": "2026-10-17T16:25:45.309Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T16:25:45.309Z",
+    "shippedNote": "Shipped in commit e58c883 (v3.57.0): flat list, one page per category; search behind enableSettingsSearch (Trip pack, default ON). Replaces the old page outright."
+  },
+  {
+    "id": "FEAT-115",
+    "title": "Flutter: Summary and Settlement Pass polish",
+    "description": "Flutter: Summary and Settlement Pass polish",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T16:25:45.382Z",
+    "updatedAt": "2026-10-17T16:25:45.455Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T16:25:45.455Z",
+    "shippedNote": "Shipped in commit e58c883 (v3.57.0): simpler tile, You pay / Pays you chips, own payments first, animated sections and hero amount. Replaces the old layout outright."
+  },
+  {
+    "id": "FEAT-116",
+    "title": "Flutter: group-wise spend (paid and share)",
+    "description": "Flutter: group-wise spend (paid and share)",
+    "category": "analytics",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T16:25:45.527Z",
+    "updatedAt": "2026-10-17T16:25:45.603Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T16:25:45.602Z",
+    "shippedNote": "Shipped in commit e58c883 (v3.57.0): Members / Groups switch on Who paid, behind enableGroupSpend (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-117",
+    "title": "Flutter: Settle all I owe and share summary picture",
+    "description": "Flutter: Settle all I owe and share summary picture",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T16:25:45.678Z",
+    "updatedAt": "2026-10-17T16:25:45.747Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T16:25:45.747Z",
+    "shippedNote": "Shipped in commit e58c883 (v3.57.0): behind enableSettleAll and enableShareSummaryImage (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-118",
+    "title": "Flutter: day-by-day spend and device-only trip budget",
+    "description": "Flutter: day-by-day spend and device-only trip budget",
+    "category": "analytics",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T16:25:45.820Z",
+    "updatedAt": "2026-10-17T16:25:45.897Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T16:25:45.897Z",
+    "shippedNote": "Shipped in commit e58c883 (v3.57.0): behind enableDailyTimeline and enableTripBudget (Trip pack, default ON); the budget is not synced."
+  },
+  {
+    "id": "FEAT-119",
+    "title": "Flutter: checklist category progress bars",
+    "description": "Flutter: checklist category progress bars",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T16:25:45.971Z",
+    "updatedAt": "2026-10-17T16:25:46.042Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T16:25:46.042Z",
+    "shippedNote": "Shipped in commit e58c883 (v3.57.0): behind enableChecklistCategoryProgress (Trip pack, default ON)."
   }
 ]

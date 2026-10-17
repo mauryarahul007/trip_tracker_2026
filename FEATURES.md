@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **113** |
+| **Total Tracked** | **119** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **111** |
+| **✅ Shipped** | **117** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -163,6 +163,12 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-111** | Flutter: Trips home card-stack view with destination photos and blurred backdrop | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 510f2a4 (v3.55.0): list / cards switch behind enableTripCardStack (Trip pack, default ON); swipe right to open, left to skip, long-press menu; photo from cover or destination. |
 | **FEAT-112** | Flutter: boarding-gate login screen | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit adb88c7 (v3.56.0): boardingPassLogin flag in prod, always on dev/staging. |
 | **FEAT-113** | Flutter: Departures card stack with runway slider and destination-first Create Trip | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit adb88c7 (v3.56.0): behind enableTripCardStack; swipes flip the deck, tap opens, runway slider for New Trip / Join. |
+| **FEAT-114** | Flutter: WhatsApp-style Settings list with search | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): flat list, one page per category; search behind enableSettingsSearch (Trip pack, default ON). Replaces the old page outright. |
+| **FEAT-115** | Flutter: Summary and Settlement Pass polish | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): simpler tile, You pay / Pays you chips, own payments first, animated sections and hero amount. Replaces the old layout outright. |
+| **FEAT-116** | Flutter: group-wise spend (paid and share) | `analytics` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): Members / Groups switch on Who paid, behind enableGroupSpend (Trip pack, default ON). |
+| **FEAT-117** | Flutter: Settle all I owe and share summary picture | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): behind enableSettleAll and enableShareSummaryImage (Trip pack, default ON). |
+| **FEAT-118** | Flutter: day-by-day spend and device-only trip budget | `analytics` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): behind enableDailyTimeline and enableTripBudget (Trip pack, default ON); the budget is not synced. |
+| **FEAT-119** | Flutter: checklist category progress bars | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): behind enableChecklistCategoryProgress (Trip pack, default ON). |
 
 ---
 

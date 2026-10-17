@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **282** | All recorded bugs across sessions |
+| **Total Tracked** | **286** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **255** | Verified & closed |
+| **✅ Resolved** | **259** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -286,6 +286,10 @@
 | **BUG-282** | Flutter: Superadmin user list would crash on object-type profiles.signup_source | `general` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 510f2a4 (v3.55.0): signup_source is jsonb on current databases; the user list now reads utm_source instead of casting to String. Covered by the admin portal and metrics tests. |
 | **BUG-283** | Flutter: superadmin session restored automatically at cold start | `auth` | `high` | `claude-cli` | `claude-cli` | Fixed in commit adb88c7 (v3.56.0): superadmin sessions dropped at cold start; only manual sign-in. Test added. |
 | **BUG-284** | Flutter: stops edits refused, checklist unchecked items struck through, false SETTLED stamp | `general` | `high` | `claude-cli` | `claude-cli` | Fixed in commit adb88c7 (v3.56.0): stops edits go via trip patch, checklist strikethrough only when done, trip-level SETTLED. Tests added. |
+| **BUG-285** | Flutter: New note asked only for a title, then made you type the body inline | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit e58c883 (v3.57.0): Add note opens a Title + Note sheet; empty title falls back to the first line. Test updated. |
+| **BUG-286** | Flutter: group members not visible, and groups could only be renamed | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit e58c883 (v3.57.0): tapping a group lists members in a popup; Edit changes members; fewer than 2 dissolves the group with a message. Tests added. |
+| **BUG-287** | Flutter: checklist progress count overlapped the ring | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in commit e58c883 (v3.57.0): percentage inside the ring, count and remaining beside it. |
+| **BUG-288** | Flutter: offline cold start could hang on the superadmin check | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit e58c883 (v3.57.0): the is_superadmin check times out after 3s and keeps the session. Unit test added. |
 
 ---
 

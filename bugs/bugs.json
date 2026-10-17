@@ -8246,5 +8246,109 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-09T20:01:20.184Z",
     "resolutionNote": "Fixed in commit adb88c7 (v3.56.0): stops edits go via trip patch, checklist strikethrough only when done, trip-level SETTLED. Tests added."
+  },
+  {
+    "id": "BUG-285",
+    "title": "Flutter: New note asked only for a title, then made you type the body inline",
+    "description": "Flutter: New note asked only for a title, then made you type the body inline",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-17T16:25:44.574Z",
+    "updatedAt": "2026-10-17T16:25:44.691Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-17T16:25:44.691Z",
+    "resolutionNote": "Fixed in commit e58c883 (v3.57.0): Add note opens a Title + Note sheet; empty title falls back to the first line. Test updated."
+  },
+  {
+    "id": "BUG-286",
+    "title": "Flutter: group members not visible, and groups could only be renamed",
+    "description": "Flutter: group members not visible, and groups could only be renamed",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-17T16:25:44.773Z",
+    "updatedAt": "2026-10-17T16:25:44.854Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-17T16:25:44.854Z",
+    "resolutionNote": "Fixed in commit e58c883 (v3.57.0): tapping a group lists members in a popup; Edit changes members; fewer than 2 dissolves the group with a message. Tests added."
+  },
+  {
+    "id": "BUG-287",
+    "title": "Flutter: checklist progress count overlapped the ring",
+    "description": "Flutter: checklist progress count overlapped the ring",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-17T16:25:44.922Z",
+    "updatedAt": "2026-10-17T16:25:45.012Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-17T16:25:45.011Z",
+    "resolutionNote": "Fixed in commit e58c883 (v3.57.0): percentage inside the ring, count and remaining beside it."
+  },
+  {
+    "id": "BUG-288",
+    "title": "Flutter: offline cold start could hang on the superadmin check",
+    "description": "Flutter: offline cold start could hang on the superadmin check",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-17T16:25:45.086Z",
+    "updatedAt": "2026-10-17T16:25:45.177Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-17T16:25:45.177Z",
+    "resolutionNote": "Fixed in commit e58c883 (v3.57.0): the is_superadmin check times out after 3s and keeps the session. Unit test added."
   }
 ]
