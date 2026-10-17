@@ -70,7 +70,8 @@ Widget? buildHomeDock(BuildContext context, WidgetRef ref, HomeTab current) {
 /// Desktop shell (board 08): on wide windows the four top-level screens get the same left rail
 /// as the trip workspace, with a New trip button on top. Narrow windows get [body] unchanged.
 ///
-/// Back from Balances, Activity or Me returns to Trips instead of leaving the app. Pass
+/// Back from Balances, Activity or Me returns to the previous page, or to Trips when there is none, instead of
+/// leaving the app. Pass
 /// `enabled: false` for a pushed variant of a screen (e.g. the per-trip notification list).
 Widget wrapHomeBody(BuildContext context, WidgetRef ref, HomeTab current, Widget body, {bool enabled = true}) {
   if (!enabled || !ref.watch(horizonNavProvider)) return body;
@@ -78,7 +79,8 @@ Widget wrapHomeBody(BuildContext context, WidgetRef ref, HomeTab current, Widget
     body = PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) context.go('/');
+        // One step back when something is underneath (e.g. Settings opened from a trip); Trips only as a last resort.
+        if (!didPop) context.canPop() ? context.pop() : context.go('/');
       },
       child: body,
     );

@@ -26,6 +26,13 @@ Future<void> openExpenses(WidgetTester tester, Seed s) async {
   await settle(tester, rounds: 14);
 }
 
+/// Scrolls [f] to the middle of the screen, clear of the floating Add button at the bottom.
+Future<void> centre(WidgetTester tester, Finder f) async {
+  await tester.ensureVisible(f);
+  await Scrollable.ensureVisible(tester.element(f), alignment: 0.4);
+  await tester.pump();
+}
+
 void main() {
   testApp('ledger shows golden balance strings and the sticky bar', (tester) async {
     await pumpApp(tester, user: asha);
@@ -44,9 +51,7 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 60, split: [s.me, s.ben]);
     await openLedger(tester, s);
-    await tester.ensureVisible(key('settle-0'));
-    await tester.drag(key('ledger-list'), const Offset(0, -150));
-    await tester.pump();
+    await centre(tester, key('settle-0'));
     await tester.tap(key('settle-0'));
     await settle(tester, rounds: 6);
     expect(key('settle-upi'), findsOneWidget);

@@ -101,6 +101,8 @@ export type FeatureFlagKey =
   | 'enableNotesQuickCapture'
   | 'enableCoachHints'
   | 'enableSettlementViewSwitch'
+  | 'enableTripSuggestions'
+  | 'enableTripsOverview'
   // Phase 6: WhatsApp Social & Chat Hub
   | 'enableChatFirstNav'
   | 'enableChatReactionsAndReplies'

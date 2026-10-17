@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:trip_tracker/data/providers.dart';
 import 'package:trip_tracker/domain/models/expense.dart';
 
 import '../../support/pump_app.dart';
@@ -108,5 +109,66 @@ void main() {
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 500)));
     await settle(tester, rounds: 6);
     expect(app.shareService.pngs.single, endsWith('_summary.png'));
+  });
+
+  testApp(
+    'plan and suggestions come first in Trip numbers: set-budget tip, then budget status with a daily allowance',
+    (tester) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await addExpense(tester, s, amount: 90);
+      await openLedger(tester, s);
+      await reveal(tester, 'plan-card');
+      expect(find.text('PLAN AND SUGGESTIONS'), findsOneWidget);
+      expect(key('suggestion-0'), findsOneWidget);
+      expect(find.descendant(of: key('suggestion-0'), matching: find.textContaining('budget')), findsWidgets);
+      // The plan card sits above the headline numbers.
+      final planY = tester.getTopLeft(key('plan-card')).dy;
+      final statY = tester.getTopLeft(key('stat-total')).dy;
+      expect(planY, lessThan(statY));
+
+      await tester.tap(key('suggestion-set-budget'));
+      await settle(tester, rounds: 4);
+      await tester.enterText(key('ask-field'), '50');
+      await tester.tap(key('ask-ok'));
+      await settle(tester, rounds: 6);
+      expect(tester.widget<Text>(key('budget-status')).data, contains('over budget'));
+      expect(find.descendant(of: key('plan-card'), matching: find.textContaining('over budget')), findsWidgets);
+    },
+  );
+
+  testApp('tips are gone with their flag off; the budget still shows', (tester) async {
+    await pumpApp(tester, user: asha, flagsOff: {'enableTripSuggestions'});
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 90);
+    await openLedger(tester, s);
+    await reveal(tester, 'plan-card');
+    expect(key('suggestion-0'), findsNothing);
+    expect(key('budget-card'), findsOneWidget);
+  });
+
+  testApp('one switch drives Who pays whom and Who paid; there is no second switch in Who paid', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await real(
+      tester,
+      () => containerOf(tester).read(memberRepositoryProvider).createGroup(s.tripId, 'Duo', [s.ben, s.cara]),
+    );
+    await addExpense(tester, s, amount: 90);
+    await openLedger(tester, s);
+    expect(key('settle-view-toggle'), findsOneWidget);
+    expect(key('spend-view-toggle'), findsNothing);
+    await reveal(tester, 'day-timeline');
+    expect(find.byWidgetPredicate((w) => w.key.toString().contains("'spend-group-")), findsWidgets); // groups
+    await tester.scrollUntilVisible(
+      key('settle-view-toggle'),
+      -300,
+      scrollable: find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable)),
+    );
+    await tester.tap(find.text('Person view'));
+    await settle(tester, rounds: 6);
+    expect(find.text('Ben pays Asha'), findsOneWidget);
+    await reveal(tester, 'day-timeline');
+    expect(find.byWidgetPredicate((w) => w.key.toString().contains("'spend-group-")), findsNothing); // people
   });
 }

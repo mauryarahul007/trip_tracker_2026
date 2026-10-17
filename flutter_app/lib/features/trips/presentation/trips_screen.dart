@@ -13,6 +13,7 @@ import '../../../core/format/money.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/back_exit.dart';
 import '../../../domain/logic/flag_defaults.g.dart';
+import '../../../domain/logic/cross_trip_balances.dart';
 import '../../../domain/logic/trip_list_money.dart';
 import '../../../domain/logic/trip_status.dart';
 import '../../../domain/models/expense.dart';
@@ -44,7 +45,7 @@ import 'widgets/home_dock.dart';
 import 'widgets/join_code_sheet.dart';
 import 'widgets/sync_chip.dart';
 import 'widgets/trip_backdrop.dart';
-import 'widgets/trip_card.dart';
+import 'widgets/trip_row.dart';
 import 'widgets/trip_card_stack.dart';
 
 class TripsScreen extends ConsumerStatefulWidget {
@@ -67,6 +68,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   var _membersByTrip = <String, List<Member>>{};
   var _expensesByTrip = <String, List<Expense>>{};
   var _moneyOn = false;
+  var _pastFolded = false;
 
   bool _flagOn(String key) => ref.watch(flagProvider((key, null))).value ?? (defaultFeatureFlags[key] ?? false);
 
@@ -216,23 +218,33 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
         }
       }
     }
-    final card = TripCard(
-      trip: t,
-      now: _now,
-      onTap: () => _open(t),
-      onMenu: isOwner ? () => _delete(t) : null,
-      featured: featured,
-      avatarNames: _moneyOn
-          ? [
-              for (final m in members)
-                if (!m.archived) m.name,
-            ]
-          : const [],
-      moneyText: money,
-      moneyColor: moneyColor,
-    );
+    final names = _moneyOn
+        ? [
+            for (final m in members)
+              if (!m.archived) m.name,
+          ]
+        : const <String>[];
+    final hero = featured && tripStatus(t.startDate, t.endDate, _now).phase == TripPhase.active;
+    final card = hero
+        ? TripHeroCard(
+            trip: t,
+            now: _now,
+            onTap: () => _open(t),
+            onLongPress: () => _tripMenu(t, isOwner),
+            avatarNames: names,
+            moneyText: money,
+          )
+        : TripRow(
+            trip: t,
+            now: _now,
+            onTap: () => _open(t),
+            onLongPress: () => _tripMenu(t, isOwner),
+            avatarNames: names,
+            moneyText: money,
+            moneyColor: moneyColor,
+          );
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: isOwner
           ? SwipeableRow(
               itemKey: ValueKey('trip-${t.id}'),
@@ -243,6 +255,69 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
               child: card,
             )
           : card,
+    );
+  }
+
+  /// One line for the whole list: where you stand across your trips. Null when there is nothing to say.
+  Widget? _overviewLine(List<Trip> trips) {
+    final live = [
+      for (final t in trips)
+        if (!t.archived) t,
+    ];
+    if (live.isEmpty) return null;
+    final l10n = context.l10n;
+    final nets = crossTripNets(
+      userId: ref.read(authStateProvider).userId,
+      trips: live,
+      membersByTrip: _membersByTrip,
+      expensesByTrip: _expensesByTrip,
+    );
+    final t = context.tokens;
+    final String text;
+    final Color color;
+    if (nets.isEmpty) {
+      text = l10n.tripsOverviewEven(live.length);
+      color = t.textSecondary;
+    } else if (nets.length > 1) {
+      text = l10n.tripsOverviewMulti(nets.length);
+      color = t.textSecondary;
+    } else if (nets.first.net > 0) {
+      text = l10n.tripsOverviewOwed(formatMoney(context, nets.first.net, nets.first.currency), live.length);
+      color = t.colorSuccess;
+    } else {
+      text = l10n.tripsOverviewOwe(formatMoney(context, -nets.first.net, nets.first.currency), live.length);
+      color = t.colorDanger;
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: t.bgSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(t.radiusMd),
+          side: BorderSide(color: t.borderColor),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: const Key('trips-overview'),
+          onTap: () => context.go('/balances'),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+            child: Row(
+              children: [
+                Icon(Icons.account_balance_wallet_outlined, color: color),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color),
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: t.textMuted),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -286,7 +361,8 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     final cards = stackOn && ref.watch(tripsViewProvider) == TripsView.cards;
     _moneyOn = _flagOn('enableTripListMoney');
     final sectionsOn = _flagOn('enableTripListSections');
-    if (_moneyOn) {
+    final overviewOn = _flagOn('enableTripsOverview');
+    if (_moneyOn || overviewOn) {
       _membersByTrip = {};
       for (final m in ref.watch(allMembersProvider).value ?? const <Member>[]) {
         final id = m.tripId;
@@ -315,6 +391,16 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
               : AppBar(
                   title: Text(l10n.tripsTitle),
                   actions: [
+                    if (!cards)
+                      IconButton(
+                        key: const Key('trips-search-toggle'),
+                        tooltip: l10n.tripsSearchHint,
+                        icon: Icon(_searchOpen ? Icons.search_off_rounded : AppIcons.search),
+                        onPressed: () => setState(() {
+                          _searchOpen = !_searchOpen;
+                          if (!_searchOpen) ref.read(tripSearchProvider.notifier).set('');
+                        }),
+                      ),
                     if (stackOn)
                       IconButton(
                         key: const Key('trips-view-toggle'),
@@ -384,11 +470,12 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                       ),
                     const OfflineBanner(),
                     const SyncChip(),
-                    if (!cards || _searchOpen)
+                    if (_searchOpen)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                         child: AppTextField(
                           hint: l10n.tripsSearchHint,
+                          autofocus: !cards,
                           prefixIcon: const Icon(AppIcons.search),
                           onChanged: ref.read(tripSearchProvider.notifier).set,
                         ),
@@ -558,34 +645,85 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                 .where((t) => tripStatus(t.startDate, t.endDate, _now).phase == TripPhase.active)
                                 .map((t) => t.id)
                                 .firstOrNull;
-                            return ListView(
+                            final grouped = sectionsOn && _filter == 'all';
+                            final sections = [
+                              for (final sec in TripSection.values)
+                                (
+                                  sec,
+                                  [
+                                    for (final t in active)
+                                      if (_sectionOf(t) == sec) t,
+                                  ],
+                                ),
+                            ];
+                            var n = 0;
+                            Widget rowFor(Trip t) => BentoEntrance(
+                              index: n++,
+                              child: _card(t, owner(t), featured: t.id == heroId),
+                            );
+                            Widget list(List<Trip> trips) => SliverPadding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              sliver: SliverList.builder(
+                                itemCount: trips.length,
+                                itemBuilder: (_, i) => rowFor(trips[i]),
+                              ),
+                            );
+                            String label(TripSection sec) => switch (sec) {
+                              TripSection.now => l10n.tripSectionNow,
+                              TripSection.upcoming => l10n.tripSectionUpcoming,
+                              TripSection.past => l10n.tripSectionPast,
+                            };
+                            final overview = overviewOn
+                                ? _overviewLine(data.active.where((t) => !_hidden.contains(t.id)).toList())
+                                : null;
+                            return CustomScrollView(
                               physics: const AlwaysScrollableScrollPhysics(),
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-                              children: [
-                                if (active.isNotEmpty) CoachHint(hintKey: 'trips-swipe', text: l10n.hintSwipeTrip),
-                                for (final (i, t) in active.indexed) ...[
-                                  if (sectionsOn &&
-                                      _filter == 'all' &&
-                                      _sectionOf(t) != (i == 0 ? null : _sectionOf(active[i - 1])))
-                                    _SectionHeader(switch (_sectionOf(t)) {
-                                      TripSection.now => l10n.tripSectionNow,
-                                      TripSection.upcoming => l10n.tripSectionUpcoming,
-                                      TripSection.past => l10n.tripSectionPast,
-                                    }),
-                                  BentoEntrance(
-                                    index: i,
-                                    child: _card(t, owner(t), featured: t.id == heroId),
-                                  ),
-                                ],
-                                if (archived.isNotEmpty)
-                                  ExpansionTile(
-                                    tilePadding: EdgeInsets.zero,
-                                    title: Text(
-                                      l10n.tripsArchivedSection(archived.length),
-                                      style: TextStyle(color: tokens.textSecondary),
+                              slivers: [
+                                SliverPadding(
+                                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                                  sliver: SliverToBoxAdapter(
+                                    child: Column(
+                                      children: [
+                                        ?overview,
+                                        if (active.isNotEmpty)
+                                          CoachHint(hintKey: 'trips-swipe', text: l10n.hintSwipeTrip),
+                                      ],
                                     ),
-                                    children: [for (final t in archived) _card(t, owner(t))],
                                   ),
+                                ),
+                                if (grouped) ...[
+                                  for (final (sec, trips) in sections)
+                                    if (trips.isNotEmpty) ...[
+                                      SliverPersistentHeader(
+                                        pinned: true,
+                                        delegate: _SectionHeaderDelegate(
+                                          label: label(sec),
+                                          count: trips.length,
+                                          folded: sec == TripSection.past && _pastFolded,
+                                          foldable: sec == TripSection.past,
+                                          onTap: () => setState(() => _pastFolded = !_pastFolded),
+                                          background: tokens.bgPage,
+                                        ),
+                                      ),
+                                      if (!(sec == TripSection.past && _pastFolded)) list(trips),
+                                    ],
+                                ] else
+                                  list(active),
+                                if (archived.isNotEmpty)
+                                  SliverPadding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    sliver: SliverToBoxAdapter(
+                                      child: ExpansionTile(
+                                        tilePadding: EdgeInsets.zero,
+                                        title: Text(
+                                          l10n.tripsArchivedSection(archived.length),
+                                          style: TextStyle(color: tokens.textSecondary),
+                                        ),
+                                        children: [for (final t in archived) _card(t, owner(t))],
+                                      ),
+                                    ),
+                                  ),
+                                const SliverToBoxAdapter(child: SizedBox(height: 96)),
                               ],
                             );
                           },
@@ -874,18 +1012,59 @@ class _FilterPills extends StatelessWidget {
   }
 }
 
-/// "Happening now" / "Upcoming" / "Past" divider in the grouped trip list.
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.label);
+/// Pinned "HAPPENING NOW · 1" header of the grouped trip list. "Past" can be folded away.
+class _SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _SectionHeaderDelegate({
+    required this.label,
+    required this.count,
+    required this.folded,
+    required this.foldable,
+    required this.onTap,
+    required this.background,
+  });
+
   final String label;
+  final int count;
+  final bool folded;
+  final bool foldable;
+  final VoidCallback onTap;
+  final Color background;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    key: Key('trip-section-$label'),
-    padding: const EdgeInsets.only(top: 8, bottom: 8, left: 4),
-    child: Text(
-      label.toUpperCase(),
-      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 0.8, color: context.tokens.textMuted),
-    ),
-  );
+  double get minExtent => 40;
+  @override
+  double get maxExtent => 40;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final t = context.tokens;
+    return Material(
+      color: background,
+      child: InkWell(
+        key: Key('trip-section-$label'),
+        onTap: foldable ? onTap : null,
+        child: SizedBox(
+          height: 40,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${label.toUpperCase()} · $count',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 0.8, color: t.textMuted),
+                  ),
+                ),
+                if (foldable) Icon(folded ? Icons.expand_more_rounded : Icons.expand_less_rounded, color: t.textMuted),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SectionHeaderDelegate old) =>
+      old.label != label || old.count != count || old.folded != folded || old.background != background;
 }

@@ -67,3 +67,61 @@ List<({String category, int done, int total})> categoryProgress(
       if ((total[c] ?? 0) > 0) (category: c, done: done[c] ?? 0, total: total[c]!),
   ];
 }
+
+enum SuggestionKind { setBudget, overBudget, overPace, nearBudget, openPayments, payerHeavy, topCategory, biggestDay }
+
+/// One tip for the Plan and suggestions card. Which fields are set depends on [kind]; the screen words it.
+class Suggestion {
+  const Suggestion(this.kind, {this.name, this.amount, this.percent, this.count, this.date});
+  final SuggestionKind kind;
+  final String? name;
+  final double? amount;
+  final double? percent;
+  final int? count;
+  final String? date;
+}
+
+/// Up to [max] tips worked out from the trip's own numbers, most useful first. Pure: no money is moved or changed.
+List<Suggestion> buildSuggestions({
+  required double totalSpent,
+  required double budget,
+  required double? projectedTotal,
+  required ({String name, double percent})? topCategory,
+  required ({String name, double percent})? topPayer,
+  required int openPayments,
+  required ({String date, double total})? biggestDay,
+  required int dayCount,
+  required int memberCount,
+  int max = 3,
+}) {
+  final out = <Suggestion>[];
+  if (budget > 0) {
+    if (totalSpent > budget) {
+      out.add(Suggestion(SuggestionKind.overBudget, amount: totalSpent - budget));
+    } else if (projectedTotal != null && projectedTotal > budget) {
+      out.add(Suggestion(SuggestionKind.overPace, amount: projectedTotal - budget));
+    } else if (totalSpent >= budget * 0.8) {
+      out.add(Suggestion(SuggestionKind.nearBudget, percent: totalSpent * 100 / budget));
+    }
+  } else if (totalSpent > 0) {
+    out.add(const Suggestion(SuggestionKind.setBudget));
+  }
+  if (openPayments > 0) out.add(Suggestion(SuggestionKind.openPayments, count: openPayments));
+  if (topPayer != null && memberCount >= 3 && topPayer.percent >= 60) {
+    out.add(Suggestion(SuggestionKind.payerHeavy, name: topPayer.name, percent: topPayer.percent));
+  }
+  if (topCategory != null && topCategory.percent >= 40) {
+    out.add(Suggestion(SuggestionKind.topCategory, name: topCategory.name, percent: topCategory.percent));
+  }
+  if (biggestDay != null && dayCount >= 3) {
+    out.add(Suggestion(SuggestionKind.biggestDay, date: biggestDay.date, amount: biggestDay.total));
+  }
+  return out.take(max).toList();
+}
+
+/// What you can still spend per remaining day to stay in [budget]; null with no budget or no days left.
+double? dailyAllowance(double budget, double spent, int daysLeft) {
+  if (budget <= 0 || daysLeft <= 0) return null;
+  final left = budget - spent;
+  return left <= 0 ? 0 : left / daysLeft;
+}

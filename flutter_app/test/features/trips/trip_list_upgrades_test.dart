@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:trip_tracker/data/providers.dart';
 
 import '../../support/pump_app.dart';
 import '../../support/seed.dart';
@@ -49,5 +50,69 @@ void main() {
     await home(tester);
     expect(find.byWidgetPredicate((w) => w.key.toString().contains("'trip-section-")), findsNothing);
     expect(key('hint-trips-swipe'), findsNothing);
+  });
+
+  String ymd(DateTime d) => d.toIso8601String().substring(0, 10);
+
+  Future<String> tripOn(WidgetTester tester, String name, int startOffset, int endOffset) {
+    final now = DateTime.now();
+    return real(
+      tester,
+      () => containerOf(tester)
+          .read(tripRepositoryProvider)
+          .createTrip(
+            name: name,
+            startDate: ymd(now.add(Duration(days: startOffset))),
+            endDate: ymd(now.add(Duration(days: endOffset))),
+            baseCurrency: 'INR',
+            ownerId: 'u1',
+            creatorName: 'Asha',
+          ),
+    );
+  }
+
+  testApp('overview line sums your position across trips and opens balances; off with its flag', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 90);
+    await home(tester);
+    expect(
+      tester.widget<Text>(find.descendant(of: key('trips-overview'), matching: find.byType(Text)).first).data,
+      "You're owed ₹60.00 across 1 trip",
+    );
+  });
+
+  testApp('overview line is absent with its flag off', (tester) async {
+    await pumpApp(tester, user: asha, flagsOff: {'enableTripsOverview'});
+    await seedTrip(tester);
+    await home(tester);
+    expect(key('trips-overview'), findsNothing);
+  });
+
+  testApp('the trip happening now is a hero with a progress bar; others are compact rows', (tester) async {
+    await pumpApp(tester, user: asha);
+    final now = await tripOn(tester, 'Now Trip', -1, 3);
+    final later = await tripOn(tester, 'Later Trip', 10, 14);
+    await home(tester);
+    expect(key('trip-row-$now'), findsOneWidget);
+    expect(key('trip-row-$later'), findsOneWidget);
+    expect(key('trip-progress'), findsOneWidget); // only the active trip has one
+    expect(find.byWidgetPredicate((w) => w.key.toString().contains("'trip-section-HAPPENING")), findsNothing);
+    expect(find.textContaining('HAPPENING NOW · 1'), findsOneWidget);
+    expect(find.textContaining('UPCOMING · 1'), findsOneWidget);
+  });
+
+  testApp('the Past section folds away', (tester) async {
+    await pumpApp(tester, user: asha);
+    await tripOn(tester, 'Old Trip', -30, -25);
+    await tripOn(tester, 'Later Trip', 10, 14);
+    await home(tester);
+    expect(find.text('Old Trip'), findsOneWidget);
+    await tester.tap(find.textContaining('PAST · 1'));
+    await settle(tester, rounds: 4);
+    expect(find.text('Old Trip'), findsNothing);
+    await tester.tap(find.textContaining('PAST · 1'));
+    await settle(tester, rounds: 4);
+    expect(find.text('Old Trip'), findsOneWidget);
   });
 }

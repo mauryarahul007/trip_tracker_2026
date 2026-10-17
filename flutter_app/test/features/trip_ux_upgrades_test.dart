@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:trip_tracker/app/router.dart';
 import 'package:trip_tracker/data/providers.dart';
 import 'package:trip_tracker/domain/repositories/repositories.dart' show AuthUser;
 import 'package:trip_tracker/features/trip_details/application/trip_nav.dart';
@@ -160,5 +163,41 @@ void main() {
     await openLedger(tester, s);
     expect(key('settle-view-toggle'), findsNothing);
     expect(find.text('Duo pays Asha'), findsOneWidget);
+  });
+
+  testApp('back from Settings opened inside a trip returns to the trip, then to the trips list', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    final router = containerOf(tester).read(routerProvider);
+    // The visible page is what matters: the settings page has a profile row, a trip has its header strip.
+    String where() => key('settings-profile').evaluate().isNotEmpty
+        ? '/settings'
+        : key('trip-strip').evaluate().isNotEmpty
+        ? '/trip'
+        : '/';
+    await settle(tester, rounds: 8);
+    unawaited(router.push<void>('/trip/${s.tripId}/ledger'));
+    await settle(tester, rounds: 12);
+    unawaited(router.push<void>('/settings'));
+    await settle(tester, rounds: 10);
+    expect(where(), '/settings');
+    await tester.binding.handlePopRoute(); // the system back gesture
+    await settle(tester, rounds: 10);
+    expect(where(), '/trip');
+    await tester.binding.handlePopRoute();
+    await settle(tester, rounds: 10);
+    expect(where(), '/');
+  });
+
+  testApp('back from Settings reached through the dock still lands on the trips list', (tester) async {
+    await pumpApp(tester, user: asha);
+    await seedTrip(tester);
+    final router = containerOf(tester).read(routerProvider);
+    router.go('/settings');
+    await settle(tester, rounds: 10);
+    await tester.binding.handlePopRoute();
+    await settle(tester, rounds: 10);
+    expect(key('settings-profile'), findsNothing);
+    expect(find.text('Goa Weekend'), findsWidgets);
   });
 }

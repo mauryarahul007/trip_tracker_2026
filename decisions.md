@@ -5082,3 +5082,15 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** Not built: Members "last active" and drag-into-groups, quick Settle on chat cards, per-trip accent from the cover photo (needs a palette library), due dates and pinned notes (data-model changes). The small avatars are hidden from semantics because their initials fail the contrast check at that size. Existing ledger tests now scroll before tapping Settle because the Next action banner pushes the list down.
 * **Release Cut:** version bumped to `3.58.0` via `npm run release:minor`.
 
+---
+
+## Flutter v3.59.0: compact trips list, Plan and suggestions, one Groups / People switch, back navigation
+* **Context:** On-device review found duplicate switches on the Summary (Who paid had its own Members / Groups switch next to the settlement Group / Person view), a long analytics section with no guidance, a tall and cluttered Trips list, and a back gesture that skipped the page you came from.
+* **Decision:**
+  - **Trips list:** compact rows (thumbnail, name, place and dates, status pill, money position, avatars) and a larger hero card for the trip happening now; colour now reflects state instead of a random pastel; the old tall `TripCard` and its overflow menu are removed (delete moved to the long-press menu). Pinned section headers with counts (Past can fold). Search became a top-bar icon. A one-line overview across trips behind `enableTripsOverview` (Trip pack, default ON, 122 flags in total).
+  - **Summary:** one Groups / People switch at the top drives Who pays whom and Who paid (the second switch is gone). Trip numbers now opens with a Plan and suggestions card: budget pace, a daily allowance and up to three rule-based tips from the trip's own numbers (`enableTripSuggestions`, Trip pack, default ON; pure logic in `summary_features.dart`).
+  - **Trip strip:** member avatars removed from the strip under the top bar (status and dates only).
+  - **Back navigation:** Settings, Balances and Activity (the shared home-body back rule) and the trip screen now go back one page when something is underneath, and to Trips only as a last resort. Fixes Settings opened from a trip landing on Trips instead of the trip.
+* **Trade-offs Accepted:** The notification tap still replaces the stack (`go`): pushing a second trip shell over an open trip broke the trip page, so back from a trip opened that way still lands on Trips. Swipe-left pin was not built (needs saved state). Settings and Summary remain replaced outright, not flagged. The pinned section headers are flat slivers because a pinned header inside `SliverMainAxisGroup` fails layout on this Flutter version.
+* **Release Cut:** version bumped to `3.59.0` via `npm run release:minor`.
+

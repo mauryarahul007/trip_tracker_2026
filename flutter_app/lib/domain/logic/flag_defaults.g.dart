@@ -116,8 +116,10 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableTripListSections': true,
   'enableTripShareLink': true,
   'enableTripStackSort': false,
+  'enableTripSuggestions': true,
   'enableTripWrapped': true,
   'enableTripbotNlExpenses': false,
+  'enableTripsOverview': true,
   'enableUpiPayments': true,
   'enableVoiceInput': true,
   'enableWeatherItineraryNudges': false,
@@ -706,6 +708,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'pro',
     description: 'Adds a Sort: A–Z / Date toggle under the home trip stack. Swiping always steps alphabetically or by date order (left = next, right = previous).',
   ),
+  'enableTripSuggestions': (
+    label: 'Trip Plan and Suggestions (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: the top of Trip numbers on the Summary tab shows up to 3 short tips worked out from this trip\'s own numbers (for example "On pace to go ₹X over budget", "Food is 52% of spend", "3 payments still open") with a button where it helps, next to the budget plan. OFF: no tips; the budget card still follows enableTripBudget. Tips are suggestions only: they never change an expense, split or balance, and nothing is sent anywhere.',
+  ),
   'enableTripWrapped': (
     label: 'Trip Wrapped Story Card & Highlights',
     pack: 'core',
@@ -715,6 +722,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'In-Chat @tripbot Expense Logging',
     pack: 'labs',
     description: 'Parse @tripbot natural-language lines into a confirm sheet, then create an expense.',
+  ),
+  'enableTripsOverview': (
+    label: 'Trips Overview Line (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: the Trips list starts with one line that sums up your position across all your trips ("You\'re owed ₹4,200 across 3 trips", "You owe ..." or "All settled across 3 trips"); tapping it opens Balances. With balances in more than one currency it says so instead of mixing them. OFF: no summary line. Does not change any balance or the Balances tab.',
   ),
   'enableUpiPayments': (
     label: '1-Tap UPI on settlement rows',
@@ -847,6 +859,8 @@ const Map<String, List<String>> consumerPacks = {
     'enableNotesQuickCapture',
     'enableCoachHints',
     'enableSettlementViewSwitch',
+    'enableTripSuggestions',
+    'enableTripsOverview',
   ],
   'travel': [
     'enableTravelPasses',

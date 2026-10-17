@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.59.0', '2026-10-18', [
+    'Behind the scenes: the Flutter app has a compact Trips list (cover thumbnails, a status pill and your money on every row, a hero card for the trip happening now, pinned Happening now / Upcoming / Past headers and a summary line across all trips), a Plan and suggestions card at the top of Trip numbers with budget pace and tips, one Groups / People switch that drives both Who pays whom and Who paid, and the back gesture now returns to the page you came from instead of the Trips home. No change to the web app.',
+  ]),
   ChangelogEntry('3.58.0', '2026-10-17', [
     'Behind the scenes: the Flutter app shows member avatars and your money position on each trip, groups trips under Happening now / Upcoming / Past, adds a trip header strip, an Add expense choice (Quick add or Full form), a "Pay Ben" next-action banner on Summary, a Notes quick-capture box, one-time tips, and a Group view / Person view switch for settlement that every member can use. No change to the web app.',
   ]),
@@ -40,8 +43,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.49.0', '2026-10-09', [
     'Behind the scenes: Flutter Notes tab no longer overflows on trips with many passes, and passes can be sorted by time, flight leg, or traveler name. No change to the web app.',
-  ]),
-  ChangelogEntry('3.48.2', '2026-10-08', [
-    'Behind the scenes: Flutter app now shows trips right after sign-in, suggests destinations while typing, and the Horizon navigation and Spend Insights are on by default. No change to the web app.',
   ]),
 ];

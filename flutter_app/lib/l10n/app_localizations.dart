@@ -2722,7 +2722,7 @@ abstract class AppLocalizations {
   /// No description provided for @hintSwipeTrip.
   ///
   /// In en, this message translates to:
-  /// **'Tip: swipe a trip sideways to archive it.'**
+  /// **'Tip: swipe a trip sideways to archive it, or press and hold for more.'**
   String get hintSwipeTrip;
 
   /// No description provided for @hintTapGroup.
@@ -2760,6 +2760,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Person view'**
   String get ledViewPeople;
+
+  /// No description provided for @planTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan and suggestions'**
+  String get planTitle;
+
+  /// No description provided for @planDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} a day left for {days, plural, =1{1 day} other{{days} days}}'**
+  String planDaily(String amount, int days);
+
+  /// No description provided for @planPace.
+  ///
+  /// In en, this message translates to:
+  /// **'On pace for {amount}'**
+  String planPace(String amount);
+
+  /// No description provided for @ledBudgetAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set budget'**
+  String get ledBudgetAction;
+
+  /// No description provided for @sugSetBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a budget to see whether you are on track.'**
+  String get sugSetBudget;
+
+  /// No description provided for @sugOverBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} over budget.'**
+  String sugOverBudget(String amount);
+
+  /// No description provided for @sugOverPace.
+  ///
+  /// In en, this message translates to:
+  /// **'On pace to finish {amount} over budget.'**
+  String sugOverPace(String amount);
+
+  /// No description provided for @sugNearBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of the budget is used.'**
+  String sugNearBudget(int percent);
+
+  /// No description provided for @sugOpenPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 payment is still open.} other{{count} payments are still open.}}'**
+  String sugOpenPayments(int count);
+
+  /// No description provided for @sugPayerHeavy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} paid {percent}% of everything. Settling up evens it out.'**
+  String sugPayerHeavy(String name, int percent);
+
+  /// No description provided for @sugTopCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is {percent}% of spend.'**
+  String sugTopCategory(String name, int percent);
+
+  /// No description provided for @sugBiggestDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Biggest day: {date}, {amount}.'**
+  String sugBiggestDay(String date, String amount);
+
+  /// No description provided for @tripsOverviewOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re owed {amount} across {count, plural, =1{1 trip} other{{count} trips}}'**
+  String tripsOverviewOwed(String amount, int count);
+
+  /// No description provided for @tripsOverviewOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {amount} across {count, plural, =1{1 trip} other{{count} trips}}'**
+  String tripsOverviewOwe(String amount, int count);
+
+  /// No description provided for @tripsOverviewEven.
+  ///
+  /// In en, this message translates to:
+  /// **'All settled across {count, plural, =1{1 trip} other{{count} trips}}'**
+  String tripsOverviewEven(int count);
+
+  /// No description provided for @tripsOverviewMulti.
+  ///
+  /// In en, this message translates to:
+  /// **'Balances in {count} currencies. Tap to see them.'**
+  String tripsOverviewMulti(int count);
 
   /// No description provided for @ledYouPay.
   ///

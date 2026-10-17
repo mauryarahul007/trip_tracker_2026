@@ -66,6 +66,8 @@ void main() {
     await settle(tester);
     expect(order(), ['Alps Ski', 'Beach Break', 'Goa Weekend']);
 
+    await tester.tap(find.byKey(const Key('trips-search-toggle'))); // search is an icon until opened
+    await settle(tester);
     await tester.enterText(find.byType(TextField).first, 'switz');
     await settle(tester);
     expect(order(), ['Alps Ski']); // matches destination
@@ -101,7 +103,9 @@ void main() {
     final id = await seedTrip(tester, c, 'Goa Weekend');
     await settle(tester);
 
-    await tester.tap(find.byTooltip('Delete trip'));
+    await tester.longPress(find.text('Goa Weekend')); // press and hold opens the trip menu
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('stack-menu-delete')));
     await settle(tester);
     expect(find.text('Delete this trip?'), findsOneWidget);
     await tester.tap(find.text('Delete'));
@@ -125,7 +129,9 @@ void main() {
     final c = containerOf(tester);
     final id = await seedTrip(tester, c, 'Goa Weekend');
     await settle(tester);
-    await tester.tap(find.byTooltip('Delete trip'));
+    await tester.longPress(find.text('Goa Weekend')); // press and hold opens the trip menu
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('stack-menu-delete')));
     await settle(tester);
     await tester.tap(find.text('Delete'));
     await settle(tester);

@@ -86,6 +86,8 @@
     "enableNotesQuickCapture": true,
     "enableCoachHints": true,
     "enableSettlementViewSwitch": true,
+    "enableTripSuggestions": true,
+    "enableTripsOverview": true,
     "enableCompactLedgerView": false,
     "enableStickyDayHeaders": false,
     "enableCategoryColorRings": false,
@@ -208,6 +210,8 @@
     "enableNotesQuickCapture": true,
     "enableCoachHints": true,
     "enableSettlementViewSwitch": true,
+    "enableTripSuggestions": true,
+    "enableTripsOverview": true,
     "enableCompactLedgerView": false,
     "enableStickyDayHeaders": false,
     "enableCategoryColorRings": false,
@@ -310,7 +314,9 @@
         "enableSummaryNextAction",
         "enableNotesQuickCapture",
         "enableCoachHints",
-        "enableSettlementViewSwitch"
+        "enableSettlementViewSwitch",
+        "enableTripSuggestions",
+        "enableTripsOverview"
       ]
     },
     {

@@ -40,6 +40,13 @@ String text(WidgetTester t, String k) {
   return w is Text ? w.data! : t.widget<Text>(find.descendant(of: key(k), matching: find.byType(Text)).last).data!;
 }
 
+/// Scrolls [f] to the middle of the screen, clear of the floating Add button at the bottom.
+Future<void> centre(WidgetTester tester, Finder f) async {
+  await tester.ensureVisible(f);
+  await Scrollable.ensureVisible(tester.element(f), alignment: 0.4);
+  await tester.pump();
+}
+
 void main() {
   testApp('who-pays-whom for an equal split; there is no per-person balance list any more', (tester) async {
     await pumpApp(tester, user: asha);
@@ -151,8 +158,7 @@ void main() {
       matching: find.byType(AppButton),
     );
     await tester.ensureVisible(benSettle);
-    await tester.drag(key('ledger-list'), const Offset(0, -150));
-    await tester.pump();
+    await centre(tester, key('settle-0'));
     await tester.tap(benSettle);
     await settle(tester, rounds: 6);
     expect(find.text('Confirm settlement'), findsOneWidget);
@@ -174,9 +180,7 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 60, split: [s.me, s.ben]);
     await openLedger(tester, s);
-    await tester.ensureVisible(key('settle-0'));
-    await tester.drag(key('ledger-list'), const Offset(0, -150));
-    await tester.pump();
+    await centre(tester, key('settle-0'));
     await tester.tap(key('settle-0'));
     await settle(tester, rounds: 6);
     await tester.enterText(key('settle-amount'), '10');
@@ -193,9 +197,7 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 60, split: [s.me, s.ben]);
     await openLedger(tester, s);
-    await tester.ensureVisible(key('settle-0'));
-    await tester.drag(key('ledger-list'), const Offset(0, -150));
-    await tester.pump();
+    await centre(tester, key('settle-0'));
     await tester.tap(key('settle-0'));
     await settle(tester, rounds: 6);
     await tester.enterText(key('settle-amount'), '0');
@@ -209,9 +211,7 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 60, split: [s.me, s.ben]);
     await openLedger(tester, s);
-    await tester.ensureVisible(key('settle-0'));
-    await tester.drag(key('ledger-list'), const Offset(0, -150));
-    await tester.pump();
+    await centre(tester, key('settle-0'));
     await tester.tap(key('settle-0'));
     await settle(tester, rounds: 6);
     expect(key('settle-date'), findsOneWidget);
@@ -229,9 +229,7 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 60, split: [s.me, s.ben]);
     await openLedger(tester, s);
-    await tester.ensureVisible(key('settle-0'));
-    await tester.drag(key('ledger-list'), const Offset(0, -150));
-    await tester.pump();
+    await centre(tester, key('settle-0'));
     await tester.tap(key('settle-0'));
     await settle(tester, rounds: 6);
     expect(key('settle-date'), findsNothing);

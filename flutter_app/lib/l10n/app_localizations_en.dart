@@ -1508,7 +1508,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripSectionPast => 'Past';
 
   @override
-  String get hintSwipeTrip => 'Tip: swipe a trip sideways to archive it.';
+  String get hintSwipeTrip => 'Tip: swipe a trip sideways to archive it, or press and hold for more.';
 
   @override
   String get hintTapGroup => 'Tip: tap a group to see its members or edit it.';
@@ -1533,6 +1533,90 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ledViewPeople => 'Person view';
+
+  @override
+  String get planTitle => 'Plan and suggestions';
+
+  @override
+  String planDaily(String amount, int days) {
+    String _temp0 = intl.Intl.pluralLogic(days, locale: localeName, other: '$days days', one: '1 day');
+    return '$amount a day left for $_temp0';
+  }
+
+  @override
+  String planPace(String amount) {
+    return 'On pace for $amount';
+  }
+
+  @override
+  String get ledBudgetAction => 'Set budget';
+
+  @override
+  String get sugSetBudget => 'Set a budget to see whether you are on track.';
+
+  @override
+  String sugOverBudget(String amount) {
+    return '$amount over budget.';
+  }
+
+  @override
+  String sugOverPace(String amount) {
+    return 'On pace to finish $amount over budget.';
+  }
+
+  @override
+  String sugNearBudget(int percent) {
+    return '$percent% of the budget is used.';
+  }
+
+  @override
+  String sugOpenPayments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payments are still open.',
+      one: '1 payment is still open.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sugPayerHeavy(String name, int percent) {
+    return '$name paid $percent% of everything. Settling up evens it out.';
+  }
+
+  @override
+  String sugTopCategory(String name, int percent) {
+    return '$name is $percent% of spend.';
+  }
+
+  @override
+  String sugBiggestDay(String date, String amount) {
+    return 'Biggest day: $date, $amount.';
+  }
+
+  @override
+  String tripsOverviewOwed(String amount, int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count trips', one: '1 trip');
+    return 'You\'re owed $amount across $_temp0';
+  }
+
+  @override
+  String tripsOverviewOwe(String amount, int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count trips', one: '1 trip');
+    return 'You owe $amount across $_temp0';
+  }
+
+  @override
+  String tripsOverviewEven(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count trips', one: '1 trip');
+    return 'All settled across $_temp0';
+  }
+
+  @override
+  String tripsOverviewMulti(int count) {
+    return 'Balances in $count currencies. Tap to see them.';
+  }
 
   @override
   String get ledYouPay => 'You pay';

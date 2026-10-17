@@ -49,6 +49,9 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-17 | flutter | FLUTTER-NOTES-QUICK-CAPTURE | [Flutter: Notes quick capture](#flutter-notes-quick-capture--flutter-notes-quick-capture) |
 | 2026-10-17 | flutter | FLUTTER-COACH-HINTS | [Flutter: one-time coach hints](#flutter-coach-hints--flutter-one-time-coach-hints) |
 | 2026-10-17 | flutter | FLUTTER-SETTLE-VIEW-SWITCH | [Flutter: settlement Group view / Person view](#flutter-settle-view-switch--flutter-settlement-group-view--person-view) |
+| 2026-10-17 | flutter | FLUTTER-PLAN-SUGGESTIONS | [Flutter: Plan and suggestions in Trip numbers](#flutter-plan-suggestions--flutter-plan-and-suggestions-in-trip-numbers) |
+| 2026-10-17 | flutter | FLUTTER-BACK-NAVIGATION | [Flutter: back goes to the previous page](#flutter-back-navigation--flutter-back-goes-to-the-previous-page) |
+| 2026-10-17 | flutter | FLUTTER-TRIP-LIST-REDESIGN | [Flutter: compact trips list](#flutter-trip-list-redesign--flutter-compact-trips-list) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -2443,7 +2446,7 @@ Then add a row to the **Index** table.
 **Flags:** `enableGroupSpend` (Trip pack, default ON).
 
 1. Use a trip with at least two members in a group (Members > Add group) and a few expenses paid by different people, some split among everyone.
-2. Open the trip Summary (ledger). The "Who paid" card shows a Members / Groups switch.
+2. Open the trip Summary (ledger). The "Who paid" card follows the single Groups / People switch at the top of the Summary page (there is no second switch inside the card).
 3. Members: unchanged per-person rows. Groups: one row per group with the amount its members paid (bar + amount) and "Share X" underneath, the sum of its members' split shares. Members in no group appear as their own row.
 4. Check: sum of all Paid values = sum of the Members view; the group's Paid = its members' Paid added up.
 5. A split payment (several payers) counts each payer toward their own group. Settlement transfers and pending-approval expenses are not counted.
@@ -2608,7 +2611,7 @@ Then add a row to the **Index** table.
 
 **Flags:** `enableTripHeaderStrip` (Trip pack, default ON).
 
-1. Open a trip. Under the top bar, on every tab, a strip shows the status pill (Day 3 of 8 / Starts in 5 days / Ended), the dates, and the travellers' avatars.
+1. Open a trip. Under the top bar, on every tab, a strip shows the status pill (Day 3 of 8 / Starts in 5 days / Ended) and the dates. It does not show account avatars.
 2. Switch tabs: the strip stays.
 
 **Flag-OFF checks:** `enableTripHeaderStrip` OFF: only the title bar.
@@ -2679,3 +2682,46 @@ Then add a row to the **Index** table.
 
 ### Pass
 - Both views list the same total owed; settling in either view clears the matching debt.
+
+## FLUTTER-PLAN-SUGGESTIONS — Flutter: Plan and suggestions in Trip numbers
+
+**Flags:** `enableTripSuggestions` (Trip pack, default ON); the budget part follows `enableTripBudget`.
+
+1. Summary > Trip numbers now starts with a "Plan and suggestions" card, above the total / per person / top category tiles.
+2. With no budget, the first tip says to set one and has a Set budget button. Set a budget: the card shows spent of budget, a bar, what is left, "X a day left for N days" and "On pace for Y".
+3. Up to 3 tips appear, for example "X over budget", "On pace to finish X over budget", "N payments are still open", "Ben paid 70% of everything...", "Food is 52% of spend", "Biggest day: 10-03, X". They never change an expense or balance.
+4. Below the card: headline numbers, category donut and rows, Who paid, Day by day, then Share summary and Open insights.
+5. Who paid follows the one Groups / People switch at the top of the Summary page.
+
+**Flag-OFF checks:** `enableTripSuggestions` OFF: no tips (the budget still shows if `enableTripBudget` is ON). Both OFF: no card.
+
+### Pass
+- Tips match the numbers; nothing overflows at 360 px.
+
+## FLUTTER-BACK-NAVIGATION — Flutter: back goes to the previous page
+
+**Flags:** none (fix).
+
+1. Open a trip, then its menu > App settings. Press the back button or swipe back: you return to the trip, not the trips list. Back again returns to the trips list.
+2. Open Settings, Balances or Activity from the bottom bar, then go back: you land on the trips list.
+3. In a trip, back still steps through previously visited tabs first.
+
+### Pass
+- Back never skips a page you came from.
+
+## FLUTTER-TRIP-LIST-REDESIGN — Flutter: compact trips list
+
+**Flags:** `enableTripsOverview` (new, Trip pack, default ON); the rows also follow `enableTripListMoney` and `enableTripListSections`.
+
+1. Trips home in list view: each trip is a compact row (about 96 px): a rounded cover thumbnail (or the trip's initial on a tinted block), the name, "place · dates", a small status pill, your money position on the right ("You're owed ₹X" green / "You owe ₹X" red / "Settled up"), member avatars and "N expenses". About six trips fit on one screen.
+2. The trip happening today is a larger photo card with "Day N of M" and a progress bar. Upcoming rows show "Starts in N days"; finished or archived rows are dimmed.
+3. Under the Search icon in the top bar, the search box appears; closing it clears the search.
+4. A line at the top says "You're owed ₹X across N trips" (or "You owe ...", "All settled across N trips", or "Balances in N currencies"); tapping it opens Balances.
+5. With the All filter, pinned headers read HAPPENING NOW · n, UPCOMING · n, PAST · n. Tap PAST to fold or unfold it.
+6. Swipe a row sideways to archive (owners), or press and hold for Open / Archive / Delete.
+7. The cards (stack) view is unchanged.
+
+**Flag-OFF checks:** `enableTripsOverview` OFF: no summary line. `enableTripListSections` OFF: one flat list without headers. `enableTripListMoney` OFF: no avatars or money text.
+
+### Pass
+- No overflow at 360 px or at 200% text; the long-press menu works for owners only for archive and delete.
