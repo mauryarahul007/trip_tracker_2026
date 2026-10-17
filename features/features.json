@@ -1980,5 +1980,53 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-17T17:41:49.642Z",
     "shippedNote": "Shipped in commit 87189ac (v3.58.0): behind enableSettlementViewSwitch (Trip pack, default ON); per-viewer view state, balances unchanged."
+  },
+  {
+    "id": "FEAT-125",
+    "title": "Flutter: compact Trips list with hero card, pinned sections and overview line",
+    "description": "Flutter: compact Trips list with hero card, pinned sections and overview line",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T18:51:59.099Z",
+    "updatedAt": "2026-10-17T18:51:59.178Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T18:51:59.178Z",
+    "shippedNote": "Shipped in commit 561a2c1 (v3.59.0): compact rows with thumbnails, status and money; photo hero for the trip happening now; pinned Happening now / Upcoming / Past headers; overview line behind enableTripsOverview (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-126",
+    "title": "Flutter: Plan and suggestions card and redesigned Trip numbers",
+    "description": "Flutter: Plan and suggestions card and redesigned Trip numbers",
+    "category": "analytics",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T18:51:59.247Z",
+    "updatedAt": "2026-10-17T18:51:59.340Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T18:51:59.340Z",
+    "shippedNote": "Shipped in commit 561a2c1 (v3.59.0): budget pace, daily allowance and up to three tips behind enableTripSuggestions (Trip pack, default ON); analytics reordered."
+  },
+  {
+    "id": "FEAT-127",
+    "title": "Flutter: one Groups / People switch for the Summary",
+    "description": "Flutter: one Groups / People switch for the Summary",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T18:51:59.427Z",
+    "updatedAt": "2026-10-17T18:51:59.508Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T18:51:59.508Z",
+    "shippedNote": "Shipped in commit 561a2c1 (v3.59.0): a single switch drives Who pays whom and Who paid; the duplicate switch in Who paid is removed."
   }
 ]

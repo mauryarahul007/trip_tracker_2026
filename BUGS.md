@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **286** | All recorded bugs across sessions |
+| **Total Tracked** | **287** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **259** | Verified & closed |
+| **✅ Resolved** | **260** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -290,6 +290,7 @@
 | **BUG-286** | Flutter: group members not visible, and groups could only be renamed | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit e58c883 (v3.57.0): tapping a group lists members in a popup; Edit changes members; fewer than 2 dissolves the group with a message. Tests added. |
 | **BUG-287** | Flutter: checklist progress count overlapped the ring | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in commit e58c883 (v3.57.0): percentage inside the ring, count and remaining beside it. |
 | **BUG-288** | Flutter: offline cold start could hang on the superadmin check | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit e58c883 (v3.57.0): the is_superadmin check times out after 3s and keeps the session. Unit test added. |
+| **BUG-289** | Flutter: back gesture from Settings opened inside a trip went to the Trips home instead of the trip | `navigation` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 561a2c1 (v3.59.0): Settings, Balances, Activity and the trip screen go back one page when something is underneath, Trips only as a last resort. Tests added. |
 
 ---
 

@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **124** |
+| **Total Tracked** | **127** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **122** |
+| **✅ Shipped** | **125** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -174,6 +174,9 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-122** | Flutter: Summary next action and Notes quick capture | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 87189ac (v3.58.0): behind enableSummaryNextAction and enableNotesQuickCapture (Trip pack, default ON). |
 | **FEAT-123** | Flutter: one-time coach hints | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 87189ac (v3.58.0): behind enableCoachHints (Trip pack, default ON); dismissed tips are remembered on the device. |
 | **FEAT-124** | Flutter: settlement Group view / Person view for every member | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 87189ac (v3.58.0): behind enableSettlementViewSwitch (Trip pack, default ON); per-viewer view state, balances unchanged. |
+| **FEAT-125** | Flutter: compact Trips list with hero card, pinned sections and overview line | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 561a2c1 (v3.59.0): compact rows with thumbnails, status and money; photo hero for the trip happening now; pinned Happening now / Upcoming / Past headers; overview line behind enableTripsOverview (Trip pack, default ON). |
+| **FEAT-126** | Flutter: Plan and suggestions card and redesigned Trip numbers | `analytics` | `claude-cli` | `claude-cli` | Shipped in commit 561a2c1 (v3.59.0): budget pace, daily allowance and up to three tips behind enableTripSuggestions (Trip pack, default ON); analytics reordered. |
+| **FEAT-127** | Flutter: one Groups / People switch for the Summary | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 561a2c1 (v3.59.0): a single switch drives Who pays whom and Who paid; the duplicate switch in Who paid is removed. |
 
 ---
 
