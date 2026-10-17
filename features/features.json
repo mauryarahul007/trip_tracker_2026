@@ -1900,5 +1900,85 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-17T16:25:46.042Z",
     "shippedNote": "Shipped in commit e58c883 (v3.57.0): behind enableChecklistCategoryProgress (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-120",
+    "title": "Flutter: trip cards show members and your money, trips grouped by phase",
+    "description": "Flutter: trip cards show members and your money, trips grouped by phase",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T17:41:48.540Z",
+    "updatedAt": "2026-10-17T17:41:48.664Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T17:41:48.663Z",
+    "shippedNote": "Shipped in commit 87189ac (v3.58.0): behind enableTripListMoney and enableTripListSections (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-121",
+    "title": "Flutter: trip header strip and Add expense speed dial",
+    "description": "Flutter: trip header strip and Add expense speed dial",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T17:41:48.795Z",
+    "updatedAt": "2026-10-17T17:41:48.922Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T17:41:48.922Z",
+    "shippedNote": "Shipped in commit 87189ac (v3.58.0): behind enableTripHeaderStrip and enableQuickAddSpeedDial (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-122",
+    "title": "Flutter: Summary next action and Notes quick capture",
+    "description": "Flutter: Summary next action and Notes quick capture",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T17:41:49.024Z",
+    "updatedAt": "2026-10-17T17:41:49.127Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T17:41:49.127Z",
+    "shippedNote": "Shipped in commit 87189ac (v3.58.0): behind enableSummaryNextAction and enableNotesQuickCapture (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-123",
+    "title": "Flutter: one-time coach hints",
+    "description": "Flutter: one-time coach hints",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T17:41:49.247Z",
+    "updatedAt": "2026-10-17T17:41:49.373Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T17:41:49.373Z",
+    "shippedNote": "Shipped in commit 87189ac (v3.58.0): behind enableCoachHints (Trip pack, default ON); dismissed tips are remembered on the device."
+  },
+  {
+    "id": "FEAT-124",
+    "title": "Flutter: settlement Group view / Person view for every member",
+    "description": "Flutter: settlement Group view / Person view for every member",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T17:41:49.526Z",
+    "updatedAt": "2026-10-17T17:41:49.643Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T17:41:49.642Z",
+    "shippedNote": "Shipped in commit 87189ac (v3.58.0): behind enableSettlementViewSwitch (Trip pack, default ON); per-viewer view state, balances unchanged."
   }
 ]

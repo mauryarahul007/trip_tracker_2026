@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **119** |
+| **Total Tracked** | **124** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **117** |
+| **✅ Shipped** | **122** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -169,6 +169,11 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-117** | Flutter: Settle all I owe and share summary picture | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): behind enableSettleAll and enableShareSummaryImage (Trip pack, default ON). |
 | **FEAT-118** | Flutter: day-by-day spend and device-only trip budget | `analytics` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): behind enableDailyTimeline and enableTripBudget (Trip pack, default ON); the budget is not synced. |
 | **FEAT-119** | Flutter: checklist category progress bars | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): behind enableChecklistCategoryProgress (Trip pack, default ON). |
+| **FEAT-120** | Flutter: trip cards show members and your money, trips grouped by phase | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 87189ac (v3.58.0): behind enableTripListMoney and enableTripListSections (Trip pack, default ON). |
+| **FEAT-121** | Flutter: trip header strip and Add expense speed dial | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 87189ac (v3.58.0): behind enableTripHeaderStrip and enableQuickAddSpeedDial (Trip pack, default ON). |
+| **FEAT-122** | Flutter: Summary next action and Notes quick capture | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 87189ac (v3.58.0): behind enableSummaryNextAction and enableNotesQuickCapture (Trip pack, default ON). |
+| **FEAT-123** | Flutter: one-time coach hints | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 87189ac (v3.58.0): behind enableCoachHints (Trip pack, default ON); dismissed tips are remembered on the device. |
+| **FEAT-124** | Flutter: settlement Group view / Person view for every member | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 87189ac (v3.58.0): behind enableSettlementViewSwitch (Trip pack, default ON); per-viewer view state, balances unchanged. |
 
 ---
 
