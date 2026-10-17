@@ -9,10 +9,14 @@ import 'package:go_router/go_router.dart';
 import '../../../app/auth_state.dart';
 import '../../../core/clock.dart';
 import '../../../core/env/app_env.dart';
+import '../../../core/format/money.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/back_exit.dart';
 import '../../../domain/logic/flag_defaults.g.dart';
+import '../../../domain/logic/trip_list_money.dart';
 import '../../../domain/logic/trip_status.dart';
+import '../../../domain/models/expense.dart';
+import '../../../domain/models/member.dart';
 import '../../../domain/models/trip.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
@@ -25,6 +29,7 @@ import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/bento_tile.dart';
+import '../../../shared/widgets/coach_hint.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/offline_banner.dart';
@@ -33,6 +38,7 @@ import '../../../shared/widgets/runway_slider.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/widgets/swipeable_row.dart';
 import '../../../shared/widgets/undo_snackbar.dart';
+import '../../expenses/application/expenses_providers.dart';
 import '../application/trips_providers.dart';
 import 'widgets/home_dock.dart';
 import 'widgets/join_code_sheet.dart';
@@ -56,6 +62,13 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   /// never lingers while the local write streams back.
   final _hidden = <String>{};
   DateTime? _lastBackPress;
+
+  // Filled in build() for the cards below (flag `enableTripListMoney`); empty when the flag is off.
+  var _membersByTrip = <String, List<Member>>{};
+  var _expensesByTrip = <String, List<Expense>>{};
+  var _moneyOn = false;
+
+  bool _flagOn(String key) => ref.watch(flagProvider((key, null))).value ?? (defaultFeatureFlags[key] ?? false);
 
   /// Board 03 filter chips: all, active, upcoming, past.
   String _filter = 'all';
@@ -183,12 +196,40 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   }
 
   Widget _card(Trip t, bool isOwner, {bool featured = false}) {
+    final tokens = context.tokens;
+    final members = _membersByTrip[t.id] ?? const <Member>[];
+    String? money;
+    Color? moneyColor;
+    if (_moneyOn) {
+      final pos = myTripNet(ref.read(authStateProvider).userId, t, members, _expensesByTrip[t.id] ?? const <Expense>[]);
+      final net = pos.net;
+      if (net != null) {
+        final l10n = context.l10n;
+        if (net.abs() < 0.01) {
+          money = l10n.tripMoneySettled;
+        } else if (net > 0) {
+          money = l10n.tripMoneyOwed(formatMoney(context, net, pos.currency));
+          moneyColor = tokens.colorSuccess;
+        } else {
+          money = l10n.tripMoneyOwe(formatMoney(context, -net, pos.currency));
+          moneyColor = tokens.colorDanger;
+        }
+      }
+    }
     final card = TripCard(
       trip: t,
       now: _now,
       onTap: () => _open(t),
       onMenu: isOwner ? () => _delete(t) : null,
       featured: featured,
+      avatarNames: _moneyOn
+          ? [
+              for (final m in members)
+                if (!m.archived) m.name,
+            ]
+          : const [],
+      moneyText: money,
+      moneyColor: moneyColor,
     );
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -204,6 +245,12 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
           : card,
     );
   }
+
+  TripSection _sectionOf(Trip t) => switch (tripStatus(t.startDate, t.endDate, _now).phase) {
+    TripPhase.active => TripSection.now,
+    TripPhase.upcoming => TripSection.upcoming,
+    _ => TripSection.past,
+  };
 
   /// Root back press: exit only on a second press inside the window.
   void _onRootBack() {
@@ -237,6 +284,19 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
         ref.watch(flagProvider(('enableTripCardStack', null))).value ??
         (defaultFeatureFlags['enableTripCardStack'] ?? true);
     final cards = stackOn && ref.watch(tripsViewProvider) == TripsView.cards;
+    _moneyOn = _flagOn('enableTripListMoney');
+    final sectionsOn = _flagOn('enableTripListSections');
+    if (_moneyOn) {
+      _membersByTrip = {};
+      for (final m in ref.watch(allMembersProvider).value ?? const <Member>[]) {
+        final id = m.tripId;
+        if (id != null) (_membersByTrip[id] ??= []).add(m);
+      }
+      _expensesByTrip = {};
+      for (final e in ref.watch(allActiveExpensesProvider).value ?? const <Expense>[]) {
+        (_expensesByTrip[e.tripId] ??= []).add(e);
+      }
+    }
 
     return PopScope(
       canPop: false,
@@ -406,9 +466,18 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                             ],
                           ),
                           data: (data) {
-                            final active = data.active
+                            final unsorted = data.active
                                 .where((t) => !_hidden.contains(t.id) && _matchesFilter(t))
                                 .toList();
+                            // Grouped view: Happening now, then Upcoming, then Past; the chosen sort holds inside each group.
+                            final active = sectionsOn && _filter == 'all'
+                                ? [
+                                    for (final (_, t) in ([
+                                      for (final (i, t) in unsorted.indexed) (_sectionOf(t).index * 100000 + i, t),
+                                    ]..sort((a, b) => a.$1.compareTo(b.$1))))
+                                      t,
+                                  ]
+                                : unsorted;
                             final archived = data.archived.where((t) => !_hidden.contains(t.id)).toList();
                             if (data.total == 0 && syncing) {
                               return ListView(
@@ -493,11 +562,21 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                               physics: const AlwaysScrollableScrollPhysics(),
                               padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                               children: [
-                                for (final (i, t) in active.indexed)
+                                if (active.isNotEmpty) CoachHint(hintKey: 'trips-swipe', text: l10n.hintSwipeTrip),
+                                for (final (i, t) in active.indexed) ...[
+                                  if (sectionsOn &&
+                                      _filter == 'all' &&
+                                      _sectionOf(t) != (i == 0 ? null : _sectionOf(active[i - 1])))
+                                    _SectionHeader(switch (_sectionOf(t)) {
+                                      TripSection.now => l10n.tripSectionNow,
+                                      TripSection.upcoming => l10n.tripSectionUpcoming,
+                                      TripSection.past => l10n.tripSectionPast,
+                                    }),
                                   BentoEntrance(
                                     index: i,
                                     child: _card(t, owner(t), featured: t.id == heroId),
                                   ),
+                                ],
                                 if (archived.isNotEmpty)
                                   ExpansionTile(
                                     tilePadding: EdgeInsets.zero,
@@ -793,4 +872,20 @@ class _FilterPills extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "Happening now" / "Upcoming" / "Past" divider in the grouped trip list.
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader(this.label);
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    key: Key('trip-section-$label'),
+    padding: const EdgeInsets.only(top: 8, bottom: 8, left: 4),
+    child: Text(
+      label.toUpperCase(),
+      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 0.8, color: context.tokens.textMuted),
+    ),
+  );
 }

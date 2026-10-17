@@ -17,6 +17,7 @@ import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/widgets/bento_tile.dart';
+import '../../../shared/widgets/coach_hint.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/ask_text.dart';
@@ -94,6 +95,11 @@ class MembersTab extends ConsumerWidget {
           variant: AppButtonVariant.secondary,
           onPressed: () => _addGroup(context, ref, active),
         ),
+        if (groups.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: CoachHint(hintKey: 'groups-tap', text: l10n.hintTapGroup),
+          ),
         for (final g in groups)
           Padding(
             padding: const EdgeInsets.only(top: 8),

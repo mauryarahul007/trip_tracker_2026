@@ -123,6 +123,8 @@ void main() {
     final s = await seedTrip(tester);
     await openLedger(tester, s);
     await tester.tap(key('add-expense-fab-${s.tripId}'));
+    await settle(tester, rounds: 6);
+    await tester.tap(key('fab-full'));
     await settle(tester, rounds: 10);
     final path = GoRouterState.of(tester.element(find.byType(Scaffold).last)).uri.path;
     expect(path, '/trip/${s.tripId}/expenses/new');
@@ -141,15 +143,17 @@ void main() {
     await addExpense(tester, s, amount: 90);
     await openLedger(tester, s);
     // Asha is the one being paid, so Ben's payment sits on her summary ticket (a row keyed transfer-N).
-    await tester.tap(
-      find.descendant(
-        of: find.ancestor(
-          of: find.text('Ben pays Asha'),
-          matching: find.byWidgetPredicate((w) => w.key.toString().contains("'transfer-")),
-        ),
-        matching: find.byType(AppButton),
+    final benSettle = find.descendant(
+      of: find.ancestor(
+        of: find.text('Ben pays Asha'),
+        matching: find.byWidgetPredicate((w) => w.key.toString().contains("'transfer-")),
       ),
+      matching: find.byType(AppButton),
     );
+    await tester.ensureVisible(benSettle);
+    await tester.drag(key('ledger-list'), const Offset(0, -150));
+    await tester.pump();
+    await tester.tap(benSettle);
     await settle(tester, rounds: 6);
     expect(find.text('Confirm settlement'), findsOneWidget);
     await tester.tap(key('settle-confirm'));
@@ -170,6 +174,9 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 60, split: [s.me, s.ben]);
     await openLedger(tester, s);
+    await tester.ensureVisible(key('settle-0'));
+    await tester.drag(key('ledger-list'), const Offset(0, -150));
+    await tester.pump();
     await tester.tap(key('settle-0'));
     await settle(tester, rounds: 6);
     await tester.enterText(key('settle-amount'), '10');
@@ -186,6 +193,9 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 60, split: [s.me, s.ben]);
     await openLedger(tester, s);
+    await tester.ensureVisible(key('settle-0'));
+    await tester.drag(key('ledger-list'), const Offset(0, -150));
+    await tester.pump();
     await tester.tap(key('settle-0'));
     await settle(tester, rounds: 6);
     await tester.enterText(key('settle-amount'), '0');
@@ -199,6 +209,9 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 60, split: [s.me, s.ben]);
     await openLedger(tester, s);
+    await tester.ensureVisible(key('settle-0'));
+    await tester.drag(key('ledger-list'), const Offset(0, -150));
+    await tester.pump();
     await tester.tap(key('settle-0'));
     await settle(tester, rounds: 6);
     expect(key('settle-date'), findsOneWidget);
@@ -216,6 +229,9 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 60, split: [s.me, s.ben]);
     await openLedger(tester, s);
+    await tester.ensureVisible(key('settle-0'));
+    await tester.drag(key('ledger-list'), const Offset(0, -150));
+    await tester.pump();
     await tester.tap(key('settle-0'));
     await settle(tester, rounds: 6);
     expect(key('settle-date'), findsNothing);

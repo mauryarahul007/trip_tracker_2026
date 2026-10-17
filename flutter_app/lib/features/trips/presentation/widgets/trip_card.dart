@@ -7,6 +7,7 @@ import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_icons.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/app_typography.dart';
+import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/bento_tile.dart';
 
 /// Stable pastel per trip, so a trip keeps its colour across sessions.
@@ -38,6 +39,9 @@ class TripCard extends StatelessWidget {
     required this.onTap,
     this.onMenu,
     this.featured = false,
+    this.avatarNames = const [],
+    this.moneyText,
+    this.moneyColor,
     super.key,
   });
 
@@ -50,6 +54,11 @@ class TripCard extends StatelessWidget {
 
   /// Overflow menu (delete…); null hides it (non-owners).
   final VoidCallback? onMenu;
+
+  /// Overlapping member avatars and a one-line money position (both optional, flag `enableTripListMoney`).
+  final List<String> avatarNames;
+  final String? moneyText;
+  final Color? moneyColor;
 
   @override
   Widget build(BuildContext context) {
@@ -153,6 +162,58 @@ class TripCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (avatarNames.isNotEmpty || moneyText != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: 12, bottom: 6),
+                  child: Row(
+                    children: [
+                      if (avatarNames.isNotEmpty)
+                        SizedBox(
+                          key: const Key('trip-avatars'),
+                          height: 28,
+                          width: 28.0 + 18 * (avatarNames.take(4).length - 1),
+                          child: Stack(
+                            children: [
+                              for (final (i, n) in avatarNames.take(4).indexed)
+                                Positioned(
+                                  left: 18.0 * i,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: t.tones[tone].bg, width: 2),
+                                    ),
+                                    child: ExcludeSemantics(child: AppAvatar(name: n, size: 28)),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      if (avatarNames.length > 4)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 6),
+                          child: Text(
+                            '+${avatarNames.length - 4}',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: t.textSecondary),
+                          ),
+                        ),
+                      const Spacer(),
+                      if (moneyText != null)
+                        Flexible(
+                          child: Text(
+                            moneyText!,
+                            key: const Key('trip-money'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: moneyColor ?? t.textPrimary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),

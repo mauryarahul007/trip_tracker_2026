@@ -878,6 +878,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expAdd => 'Add expense';
 
   @override
+  String get expQuickAddHint => 'Type a sentence or speak, we fill in the rest';
+
+  @override
+  String get expFullForm => 'Full form';
+
+  @override
+  String get expFullFormHint => 'Choose the payer, split and category yourself';
+
+  @override
   String get expSearchHint => 'Search expenses';
 
   @override
@@ -1477,6 +1486,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledBudgetLocal => 'Kept on this device only';
 
   @override
+  String tripMoneyOwed(String amount) {
+    return 'You\'re owed $amount';
+  }
+
+  @override
+  String tripMoneyOwe(String amount) {
+    return 'You owe $amount';
+  }
+
+  @override
+  String get tripMoneySettled => 'Settled up';
+
+  @override
+  String get tripSectionNow => 'Happening now';
+
+  @override
+  String get tripSectionUpcoming => 'Upcoming';
+
+  @override
+  String get tripSectionPast => 'Past';
+
+  @override
+  String get hintSwipeTrip => 'Tip: swipe a trip sideways to archive it.';
+
+  @override
+  String get hintTapGroup => 'Tip: tap a group to see its members or edit it.';
+
+  @override
+  String ledNextPay(String name, String amount) {
+    return 'Pay $name $amount';
+  }
+
+  @override
+  String ledNextOwedOne(String name, String amount) {
+    return '$name still owes you $amount';
+  }
+
+  @override
+  String ledNextOwedMany(int count, String amount) {
+    return '$count people still owe you $amount';
+  }
+
+  @override
+  String get ledViewGroups => 'Group view';
+
+  @override
+  String get ledViewPeople => 'Person view';
+
+  @override
   String get ledYouPay => 'You pay';
 
   @override
@@ -1774,6 +1832,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesNoteBody => 'Note';
+
+  @override
+  String get notesQuickHint => 'Quick note, press done to save';
 
   @override
   String get notesEmptyNotes => 'No notes yet.';

@@ -55,6 +55,13 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   /// responsive (and later taps correct) even if a sync round-trip is slow or briefly sends an older copy back.
   final _pendingDone = <String, bool>{};
   var _category = 'all';
+  final _quick = TextEditingController();
+
+  @override
+  void dispose() {
+    _quick.dispose();
+    super.dispose();
+  }
 
   /// "Passes (2)": the name stays its own Text so it can still be found by label.
   Widget _countLabel(String name, int n) => Row(
@@ -584,11 +591,40 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     );
   }
 
+  Widget _quickCapture(List<TripNote> notes) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: TextField(
+      key: const Key('note-quick'),
+      controller: _quick,
+      textInputAction: TextInputAction.done,
+      textCapitalization: TextCapitalization.sentences,
+      decoration: InputDecoration(
+        hintText: context.l10n.notesQuickHint,
+        prefixIcon: const Icon(Icons.edit_note_rounded),
+      ),
+      onSubmitted: (v) {
+        final title = v.trim();
+        if (title.isEmpty) return;
+        _quick.clear();
+        final now = _now();
+        unawaited(
+          _saveNotes([
+            ...notes,
+            TripNote(id: const Uuid().v4(), title: title, content: '', createdAt: now, updatedAt: now),
+          ]),
+        );
+      },
+    ),
+  );
+
   Widget _notes(BuildContext context, List<TripNote> notes) {
     final l10n = context.l10n;
+    final quick = _flag('enableNotesQuickCapture');
     if (notes.isEmpty) {
       return ListView(
+        padding: quick ? const EdgeInsets.fromLTRB(16, 8, 16, 0) : null,
         children: [
+          if (quick) _quickCapture(notes),
           Padding(padding: const EdgeInsets.all(24), child: Text(l10n.notesEmptyNotes)),
           AppButton(key: const Key('note-add'), label: l10n.notesAddNote, onPressed: () => _addNote(context, notes)),
         ],
@@ -597,6 +633,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
+        if (quick) _quickCapture(notes),
         for (final n in notes)
           _NoteCard(
             key: Key('note-${n.id}'),

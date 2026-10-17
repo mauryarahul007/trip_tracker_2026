@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.58.0',
+    date: '2026-10-17',
+    changes: [
+      'Behind the scenes: the Flutter app shows member avatars and your money position on each trip, groups trips under Happening now / Upcoming / Past, adds a trip header strip, an Add expense choice (Quick add or Full form), a "Pay Ben" next-action banner on Summary, a Notes quick-capture box, one-time tips, and a Group view / Person view switch for settlement that every member can use. No change to the web app.',
+    ],
+  },
+  {
     version: '3.57.0',
     date: '2026-10-17',
     changes: [

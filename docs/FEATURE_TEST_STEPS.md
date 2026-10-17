@@ -41,6 +41,14 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-17 | flutter | FLUTTER-CHECKLIST-CATEGORIES | [Flutter: checklist category progress](#flutter-checklist-categories--flutter-checklist-category-progress) |
 | 2026-10-17 | flutter | FLUTTER-SETTINGS-SEARCH | [Flutter: settings search](#flutter-settings-search--flutter-settings-search) |
 | 2026-10-17 | flutter | FLUTTER-TRIP-BUDGET | [Flutter: trip budget (this device only)](#flutter-trip-budget--flutter-trip-budget-this-device-only) |
+| 2026-10-17 | flutter | FLUTTER-TRIP-LIST-MONEY | [Flutter: trip cards show people and your money](#flutter-trip-list-money--flutter-trip-cards-show-people-and-your-money) |
+| 2026-10-17 | flutter | FLUTTER-TRIP-LIST-SECTIONS | [Flutter: trips grouped by Happening now / Upcoming / Past](#flutter-trip-list-sections--flutter-trips-grouped-by-happening-now--upcoming--past) |
+| 2026-10-17 | flutter | FLUTTER-TRIP-STRIP | [Flutter: trip header strip](#flutter-trip-strip--flutter-trip-header-strip) |
+| 2026-10-17 | flutter | FLUTTER-ADD-SPEED-DIAL | [Flutter: Add expense speed dial](#flutter-add-speed-dial--flutter-add-expense-speed-dial) |
+| 2026-10-17 | flutter | FLUTTER-SUMMARY-NEXT-ACTION | [Flutter: Summary next action](#flutter-summary-next-action--flutter-summary-next-action) |
+| 2026-10-17 | flutter | FLUTTER-NOTES-QUICK-CAPTURE | [Flutter: Notes quick capture](#flutter-notes-quick-capture--flutter-notes-quick-capture) |
+| 2026-10-17 | flutter | FLUTTER-COACH-HINTS | [Flutter: one-time coach hints](#flutter-coach-hints--flutter-one-time-coach-hints) |
+| 2026-10-17 | flutter | FLUTTER-SETTLE-VIEW-SWITCH | [Flutter: settlement Group view / Person view](#flutter-settle-view-switch--flutter-settlement-group-view--person-view) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -2571,3 +2579,103 @@ Then add a row to the **Index** table.
 
 ### Pass
 - The bar color and wording follow the thresholds above.
+
+## FLUTTER-TRIP-LIST-MONEY — Flutter: trip cards show people and your money
+
+**Flags:** `enableTripListMoney` (Trip pack, default ON).
+
+1. Trips list (list view): each trip card has overlapping member avatars (up to 4, then "+N") and, on the right, "You're owed ₹X" (green), "You owe ₹X" (red) or "Settled up".
+2. Add an expense on a trip and return to the list: the line updates. A trip you are not a member of shows avatars but no money line.
+
+**Flag-OFF checks:** `enableTripListMoney` OFF: no avatars and no money line.
+
+### Pass
+- The amount matches the trip's Summary hero; no overflow at 360 px.
+
+## FLUTTER-TRIP-LIST-SECTIONS — Flutter: trips grouped by Happening now / Upcoming / Past
+
+**Flags:** `enableTripListSections` (Trip pack, default ON).
+
+1. Trips list with the All filter and trips in different phases: headers HAPPENING NOW, UPCOMING and PAST group the trips in that order; the chosen sort holds inside each group.
+2. Switch the filter to Active/Upcoming/Past: no headers.
+
+**Flag-OFF checks:** `enableTripListSections` OFF: one flat list in sort order.
+
+### Pass
+- A header never repeats; archived trips stay in their folded section.
+
+## FLUTTER-TRIP-STRIP — Flutter: trip header strip
+
+**Flags:** `enableTripHeaderStrip` (Trip pack, default ON).
+
+1. Open a trip. Under the top bar, on every tab, a strip shows the status pill (Day 3 of 8 / Starts in 5 days / Ended), the dates, and the travellers' avatars.
+2. Switch tabs: the strip stays.
+
+**Flag-OFF checks:** `enableTripHeaderStrip` OFF: only the title bar.
+
+### Pass
+- The strip does not push content off screen at 360 px.
+
+## FLUTTER-ADD-SPEED-DIAL — Flutter: Add expense speed dial
+
+**Flags:** `enableQuickAddSpeedDial` (Trip pack, default ON).
+
+1. Summary or Expenses tab: tap Add expense. A sheet offers Quick add (type a sentence or speak) and Full form.
+2. Quick add opens the quick-add sheet; Full form opens the usual form.
+
+**Flag-OFF checks:** `enableQuickAddSpeedDial` OFF: the button opens the full form directly.
+
+### Pass
+- Both routes save an expense as before.
+
+## FLUTTER-SUMMARY-NEXT-ACTION — Flutter: Summary next action
+
+**Flags:** `enableSummaryNextAction` (Trip pack, default ON).
+
+1. You owe someone: the top of Summary says "Pay Ben ₹300" with a Settle button that opens that payment.
+2. Others owe you: "Ben still owes you ₹300" or "2 people still owe you ₹X", no button.
+3. Everything settled, or you are not on the trip: no banner.
+
+**Flag-OFF checks:** `enableSummaryNextAction` OFF: no banner.
+
+### Pass
+- The named person and amount match the first tile under Who pays whom.
+
+## FLUTTER-NOTES-QUICK-CAPTURE — Flutter: Notes quick capture
+
+**Flags:** `enableNotesQuickCapture` (Trip pack, default ON).
+
+1. Notes > Notes pane: a "Quick note" box is at the top. Type a title, press done: a note with that title is added and the box clears.
+2. Add note (button) still opens the title + note popup.
+
+**Flag-OFF checks:** `enableNotesQuickCapture` OFF: no box.
+
+### Pass
+- The note appears for other members after sync.
+
+## FLUTTER-COACH-HINTS — Flutter: one-time coach hints
+
+**Flags:** `enableCoachHints` (Trip pack, default ON).
+
+1. Trips list: a tip "swipe a trip sideways to archive it". Members tab (once a group exists): "tap a group to see its members or edit it".
+2. Tap the x on a tip: it disappears and stays gone after restarting the app.
+
+**Flag-OFF checks:** `enableCoachHints` OFF: no tips.
+
+### Pass
+- A dismissed tip never returns on that device.
+
+## FLUTTER-SETTLE-VIEW-SWITCH — Flutter: settlement Group view / Person view
+
+**Flags:** `enableSettlementViewSwitch` (Trip pack, default ON).
+
+1. Use a trip with a group (Members > Add group) and expenses so the group owes someone.
+2. Summary > Who pays whom: a Group view / Person view switch is shown to every member, not only the owner.
+3. Group view (default): the list settles between groups ("Duo pays Asha"). Person view: the same debts person to person ("Ben pays Asha", "Cara pays Asha"). Your own payments are still first; Settle all and the next-action banner follow the view you picked.
+4. The choice is only for you: other members keep their own view, and the trip's Fewest payments setting is unchanged.
+5. A trip with no groups shows no switch.
+
+**Flag-OFF checks:** `enableSettlementViewSwitch` OFF: no switch; Who pays whom follows the groups.
+
+### Pass
+- Both views list the same total owed; settling in either view clears the matching debt.

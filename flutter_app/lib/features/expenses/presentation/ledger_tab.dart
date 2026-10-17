@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +10,7 @@ import '../../../core/clock.dart';
 import '../../../core/format/money.dart';
 import '../../../core/storage/prefs.dart';
 import '../../../core/platform/external_launcher.dart';
+import '../../../core/platform/haptics.dart';
 import '../../../core/platform/share_service.dart';
 import '../../../data/providers.dart';
 import '../../../data/sync/conflict_store.dart';
@@ -26,6 +29,7 @@ import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_avatar.dart';
 import '../../../domain/models/group.dart';
+import '../../../domain/models/member.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_surface.dart';
@@ -73,6 +77,7 @@ class LedgerTab extends ConsumerStatefulWidget {
 class _LedgerTabState extends ConsumerState<LedgerTab> {
   final _open = <String>{'transfers', 'analytics'}; // history (flagged) starts folded away
   var _byGroup = false;
+  var _personView = false; // settlement list as people, not groups (this viewer only)
 
   Future<void> _settle(BuildContext context, Transfer t) async {
     final trip = ref.read(tripProvider(widget.tripId)).value;
@@ -150,7 +155,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
       for (final e in ref.watch(tripExpensesProvider(id)).value ?? const <Expense>[])
         if (e.isSettlement && e.deletedAt == null) e,
     ]..sort((a, b) => b.date.compareTo(a.date));
-    final allEven = result.transfers.isEmpty;
+    var allEven = result.transfers.isEmpty;
     final groups = ref.watch(tripGroupsProvider(id)).value ?? const <Group>[];
     final groupLedger = calculateGroupLedger(result.balances, groups);
     final conflicts = ref.watch(conflictStoreProvider)[id] ?? const [];
@@ -215,10 +220,23 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         ? null
         : groupLedger.nodes.where((n) => n.id.startsWith('group:') && n.memberIds.contains(mine)).firstOrNull;
     final outstanding = result.transfers.fold<double>(0, (a, t) => a + t.amount);
-    bool isMe(String node) => mine != null && (node == 'member:$mine' || node == myGroup?.id);
+    // Everyone can flip the settlement list between groups and people; it is a view, not a trip setting.
+    final viewSwitchOn = _flag(ref, 'enableSettlementViewSwitch', id) && groupLedger.hasGroups;
+    final personView = viewSwitchOn && _personView;
+    final baseTransfers = personView
+        ? calculateSettlements(
+            trip,
+            {for (final m in ref.watch(tripMembersProvider(id)).value ?? const <Member>[]) m.id: m},
+            ref.watch(tripExpensesProvider(id)).value ?? const <Expense>[],
+            const <Group>[],
+            trip.simplifyDebts,
+          ).transfers
+        : result.transfers;
+    bool isMe(String node) => mine != null && (node == 'member:$mine' || (!personView && node == myGroup?.id));
     // Your own payments lead the list: what you must pay first, then what is coming to you.
     int rank(Transfer t) => isMe(t.from) ? 0 : (isMe(t.to) ? 1 : 2);
-    final transfers = [...result.transfers]..sort((a, b) => rank(a).compareTo(rank(b)));
+    final transfers = [...baseTransfers]..sort((a, b) => rank(a).compareTo(rank(b)));
+    allEven = transfers.isEmpty;
     // "Settled" is a fact about the whole trip (nobody owes anybody), never about one person's balance.
     final tripSettled = outstanding < 0.01;
     final heroBalance = iAmIn ? (myGroup?.balance ?? myBalance?.balance ?? 0.0) : outstanding;
@@ -265,6 +283,12 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final myPays = [
       for (final t in transfers)
         if (isMe(t.from)) t,
+    ];
+    final nextOn = _flag(ref, 'enableSummaryNextAction', id) && iAmIn && transfers.isNotEmpty;
+    final nextPay = myPays.firstOrNull;
+    final owedToMe = [
+      for (final t in transfers)
+        if (isMe(t.to)) t,
     ];
     final settleAllOn = _flag(ref, 'enableSettleAll', id) && iAmIn && myPays.length >= 2;
     final timelineOn = _flag(ref, 'enableDailyTimeline', id);
@@ -368,6 +392,46 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           key: const Key('ledger-list'),
           padding: EdgeInsets.fromLTRB(pad, 12, pad, 120),
           children: [
+            if (nextOn && (nextPay != null || owedToMe.isNotEmpty))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: BentoTile(
+                  key: const Key('next-action'),
+                  tone: nextPay != null ? BentoTone.peach : BentoTone.mint,
+                  padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          nextPay != null
+                              ? l10n.ledNextPay(nextPay.toLabel, formatMoney(context, nextPay.amount, cur))
+                              : owedToMe.length == 1
+                              ? l10n.ledNextOwedOne(
+                                  owedToMe.first.fromLabel,
+                                  formatMoney(context, owedToMe.first.amount, cur),
+                                )
+                              : l10n.ledNextOwedMany(
+                                  owedToMe.length,
+                                  formatMoney(context, owedToMe.fold<double>(0, (a, t) => a + t.amount), cur),
+                                ),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      if (nextPay != null) ...[
+                        const SizedBox(width: 8),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(minWidth: 88, maxWidth: 120),
+                          child: AppButton(
+                            key: const Key('next-action-pay'),
+                            label: l10n.ledSettle,
+                            onPressed: () => _settle(context, nextPay),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
             // 1. Hero boarding pass: what is owed, stamped SETTLED or NOT SETTLED.
             Padding(
               key: const Key('sticky-balance'),
@@ -492,8 +556,22 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             section(
               'transfers',
               l10n.ledWhoPays,
-              subtitle: allEven ? l10n.ledAllSettled : l10n.ledProgressLeft(result.transfers.length),
+              subtitle: allEven ? l10n.ledAllSettled : l10n.ledProgressLeft(transfers.length),
               [
+                if (viewSwitchOn)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: SegmentedButton<bool>(
+                      key: const Key('settle-view-toggle'),
+                      showSelectedIcon: false,
+                      segments: [
+                        ButtonSegment(value: false, label: Text(l10n.ledViewGroups, maxLines: 1)),
+                        ButtonSegment(value: true, label: Text(l10n.ledViewPeople, maxLines: 1)),
+                      ],
+                      selected: {_personView},
+                      onSelectionChanged: (v) => setState(() => _personView = v.first),
+                    ),
+                  ),
                 if (canToggle)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
@@ -1164,6 +1242,7 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
         .submit(plan.submission, tripId: widget.tripId, userId: ref.read(authStateProvider).userId ?? '');
     if (!mounted) return;
     if (r.isOk) {
+      unawaited(AppHaptics.success());
       nav.pop();
       messenger.showSnackBar(SnackBar(content: Text(l10n.ledSettledToast)));
     } else {

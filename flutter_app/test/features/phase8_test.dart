@@ -73,6 +73,7 @@ void main() {
     await settle(tester, rounds: 8);
     expect(find.text('Room'), findsOneWidget);
 
+    expect(key('hint-groups-tap'), findsOneWidget);
     // Tap the group: members listed in a popup; edit and drop to one member dissolves it.
     await tester.tap(find.text('Room'));
     await settle(tester, rounds: 6);

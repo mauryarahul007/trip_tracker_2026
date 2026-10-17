@@ -1645,6 +1645,24 @@ abstract class AppLocalizations {
   /// **'Add expense'**
   String get expAdd;
 
+  /// No description provided for @expQuickAddHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a sentence or speak, we fill in the rest'**
+  String get expQuickAddHint;
+
+  /// No description provided for @expFullForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Full form'**
+  String get expFullForm;
+
+  /// No description provided for @expFullFormHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the payer, split and category yourself'**
+  String get expFullFormHint;
+
   /// No description provided for @expSearchHint.
   ///
   /// In en, this message translates to:
@@ -2665,6 +2683,84 @@ abstract class AppLocalizations {
   /// **'Kept on this device only'**
   String get ledBudgetLocal;
 
+  /// No description provided for @tripMoneyOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re owed {amount}'**
+  String tripMoneyOwed(String amount);
+
+  /// No description provided for @tripMoneyOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {amount}'**
+  String tripMoneyOwe(String amount);
+
+  /// No description provided for @tripMoneySettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled up'**
+  String get tripMoneySettled;
+
+  /// No description provided for @tripSectionNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Happening now'**
+  String get tripSectionNow;
+
+  /// No description provided for @tripSectionUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get tripSectionUpcoming;
+
+  /// No description provided for @tripSectionPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Past'**
+  String get tripSectionPast;
+
+  /// No description provided for @hintSwipeTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: swipe a trip sideways to archive it.'**
+  String get hintSwipeTrip;
+
+  /// No description provided for @hintTapGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: tap a group to see its members or edit it.'**
+  String get hintTapGroup;
+
+  /// No description provided for @ledNextPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay {name} {amount}'**
+  String ledNextPay(String name, String amount);
+
+  /// No description provided for @ledNextOwedOne.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} still owes you {amount}'**
+  String ledNextOwedOne(String name, String amount);
+
+  /// No description provided for @ledNextOwedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} people still owe you {amount}'**
+  String ledNextOwedMany(int count, String amount);
+
+  /// No description provided for @ledViewGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Group view'**
+  String get ledViewGroups;
+
+  /// No description provided for @ledViewPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Person view'**
+  String get ledViewPeople;
+
   /// No description provided for @ledYouPay.
   ///
   /// In en, this message translates to:
@@ -3228,6 +3324,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Note'**
   String get notesNoteBody;
+
+  /// No description provided for @notesQuickHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick note, press done to save'**
+  String get notesQuickHint;
 
   /// No description provided for @notesEmptyNotes.
   ///

@@ -6,14 +6,19 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/auth_state.dart';
 import '../../../core/env/app_env.dart';
+import '../../../core/clock.dart';
 import '../../../core/platform/haptics.dart';
 import '../../../data/providers.dart';
 import '../../../data/realtime/realtime_manager.dart';
 import '../../../domain/logic/tab_trail.dart';
+import '../../../domain/logic/trip_status.dart';
+import '../../../domain/logic/trip_utilities.dart' show formatDateRange;
+import '../../../domain/models/member.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
+import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/offline_banner.dart';
@@ -25,6 +30,7 @@ import '../../travel/maps/trip_route_panel.dart';
 import '../../travel/maps/trip_route_modal.dart';
 import '../../travel/presentation/live_location_share_modal.dart';
 import '../../trips/presentation/widgets/share_trip_sheet.dart';
+import '../../trips/presentation/widgets/trip_card.dart' show TripStatusPill, tripHeadline;
 import '../application/trip_nav.dart';
 import '../domain/trip_tabs.dart';
 
@@ -253,6 +259,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                   child: Column(
                     children: [
                       const OfflineBanner(),
+                      if (trip != null) _TripStrip(tripId: widget.tripId),
                       AnimatedSize(
                         duration: const Duration(milliseconds: 220),
                         curve: Curves.easeOutCubic,
@@ -401,6 +408,71 @@ class TripTabPlaceholder extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Slim strip under the top bar on every tab: dates, status and who is on the trip (flag `enableTripHeaderStrip`).
+class _TripStrip extends ConsumerWidget {
+  const _TripStrip({required this.tripId});
+  final String tripId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final on = ref.watch(flagProvider(('enableTripHeaderStrip', tripId))).value ?? true;
+    final trip = ref.watch(tripProvider(tripId)).value;
+    if (!on || trip == null) return const SizedBox.shrink();
+    final t = context.tokens;
+    final status = tripStatus(trip.startDate, trip.endDate, ref.read(nowProvider)());
+    final headline = tripHeadline(context, status);
+    final dates = trip.startDate.isEmpty ? '' : formatDateRange(trip.startDate, trip.endDate);
+    final names = [
+      for (final m in ref.watch(tripMembersProvider(tripId)).value ?? const <Member>[])
+        if (!m.archived) m.name,
+    ];
+    return Padding(
+      key: const Key('trip-strip'),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Row(
+        children: [
+          if (headline.isNotEmpty) ...[TripStatusPill(headline), const SizedBox(width: 10)],
+          if (dates.isNotEmpty)
+            Flexible(
+              child: Text(
+                dates,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.textSecondary),
+              ),
+            ),
+          const Spacer(),
+          if (names.isNotEmpty)
+            SizedBox(
+              height: 26,
+              width: 26.0 + 16 * (names.take(4).length - 1),
+              child: Stack(
+                children: [
+                  for (final (i, n) in names.take(4).indexed)
+                    Positioned(
+                      left: 16.0 * i,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: t.bgPage, width: 2),
+                        ),
+                        child: ExcludeSemantics(child: AppAvatar(name: n, size: 26)),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          if (names.length > 4)
+            Padding(
+              padding: const EdgeInsets.only(left: 6),
+              child: Text('+${names.length - 4}', style: TextStyle(fontSize: 12, color: t.textSecondary)),
+            ),
+        ],
       ),
     );
   }

@@ -5070,3 +5070,15 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** The trip budget is kept on the device (SharedPreferences), not synced: a shared budget needs a trip column, a Supabase migration and a sync change, and the web app has no budget either. Settings and Summary are replaced without a flag, so the old layouts cannot be restored from the Ops Deck.
 * **Release Cut:** version bumped to `3.57.0` via `npm run release:minor`; six flags added (112 in total).
 
+---
+
+## Flutter v3.58.0: trip list and trip screen UX upgrades
+* **Context:** After the v3.57.0 on-device review, a list of UI/UX upgrades for the Trips list and the screens inside a trip was approved, plus a request that every member can switch settlement between group and person view.
+* **Decision:** Eight flagged additions, all in the Trip pack and default ON (120 flags in total): `enableTripListMoney`, `enableTripListSections`, `enableTripHeaderStrip`, `enableQuickAddSpeedDial`, `enableSummaryNextAction`, `enableNotesQuickCapture`, `enableCoachHints`, `enableSettlementViewSwitch`.
+  - **Trip cards:** avatars plus "You're owed / You owe / Settled up", computed with the same settlement maths as the Summary (`trip_list_money.dart`).
+  - **Sections:** with the All filter, trips are ordered Happening now, Upcoming, Past; the chosen sort holds inside each group.
+  - **Add expense:** the button offers Quick add (previously buried in the Expenses menu) or Full form.
+  - **Settlement view:** a per-viewer Group / Person switch on Who pays whom; Person view recomputes the same debts without groups. It is view state only, so balances and the trip's Fewest payments setting are untouched.
+* **Trade-offs Accepted:** Not built: Members "last active" and drag-into-groups, quick Settle on chat cards, per-trip accent from the cover photo (needs a palette library), due dates and pinned notes (data-model changes). The small avatars are hidden from semantics because their initials fail the contrast check at that size. Existing ledger tests now scroll before tapping Settle because the Next action banner pushes the list down.
+* **Release Cut:** version bumped to `3.58.0` via `npm run release:minor`.
+

@@ -44,6 +44,9 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 60, split: [s.me, s.ben]);
     await openLedger(tester, s);
+    await tester.ensureVisible(key('settle-0'));
+    await tester.drag(key('ledger-list'), const Offset(0, -150));
+    await tester.pump();
     await tester.tap(key('settle-0'));
     await settle(tester, rounds: 6);
     expect(key('settle-upi'), findsOneWidget);
