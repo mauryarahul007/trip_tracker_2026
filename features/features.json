@@ -2268,5 +2268,69 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-18T08:13:03.525Z",
     "shippedNote": "Shipped in commit 7dc8912 (v3.62.0): behind enableSavedFilters (Trip pack, default ON); swipe right toggles Personal."
+  },
+  {
+    "id": "FEAT-143",
+    "title": "Flutter: clean trip top bar, no banner or status row",
+    "description": "Flutter: clean trip top bar, no banner or status row",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T09:22:59.395Z",
+    "updatedAt": "2026-10-18T09:22:59.473Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T09:22:59.473Z",
+    "shippedNote": "Shipped in commit b25ff7b (v3.63.0): behind enableCleanTopBar (Trip pack); enableTripCoverHeader and enableTripHeaderStrip moved to Labs OFF; sync icon only when needed."
+  },
+  {
+    "id": "FEAT-144",
+    "title": "Flutter: quick action buttons, Summary focus and jump to today",
+    "description": "Flutter: quick action buttons, Summary focus and jump to today",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T09:22:59.553Z",
+    "updatedAt": "2026-10-18T09:22:59.625Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T09:22:59.625Z",
+    "shippedNote": "Shipped in commit b25ff7b (v3.63.0): behind enableContextFab, enableSummaryFocus, enableJumpToToday (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-145",
+    "title": "Flutter: quick amount chips, friendly empty states and skeleton loaders",
+    "description": "Flutter: quick amount chips, friendly empty states and skeleton loaders",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T09:22:59.696Z",
+    "updatedAt": "2026-10-18T09:22:59.763Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T09:22:59.762Z",
+    "shippedNote": "Shipped in commit b25ff7b (v3.63.0): behind enableQuickAmounts, enableCoachEmptyStates, enableSkeletonLoaders (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-146",
+    "title": "Flutter: high contrast, haptics setting, consistent sheets and Who paid labels",
+    "description": "Flutter: high contrast, haptics setting, consistent sheets and Who paid labels",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T09:22:59.841Z",
+    "updatedAt": "2026-10-18T09:22:59.912Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T09:22:59.912Z",
+    "shippedNote": "Shipped in commit b25ff7b (v3.63.0): behind enableHighContrast, enableHapticsSetting (Trip pack, default ON); Their part wording replaces Share."
   }
 ]

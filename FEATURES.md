@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **142** |
+| **Total Tracked** | **146** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **140** |
+| **✅ Shipped** | **144** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -192,6 +192,10 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-140** | Flutter: switch trips from the top-bar trip name | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7dc8912 (v3.62.0): behind enableTripSwitcher (reworded); arrows and strip swipe removed. |
 | **FEAT-141** | Flutter: undo for recorded payments and Settle all | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7dc8912 (v3.62.0): behind enableUndoSettlement (Trip pack, default ON). |
 | **FEAT-142** | Flutter: saved expense filters as one-tap chips | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7dc8912 (v3.62.0): behind enableSavedFilters (Trip pack, default ON); swipe right toggles Personal. |
+| **FEAT-143** | Flutter: clean trip top bar, no banner or status row | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b25ff7b (v3.63.0): behind enableCleanTopBar (Trip pack); enableTripCoverHeader and enableTripHeaderStrip moved to Labs OFF; sync icon only when needed. |
+| **FEAT-144** | Flutter: quick action buttons, Summary focus and jump to today | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b25ff7b (v3.63.0): behind enableContextFab, enableSummaryFocus, enableJumpToToday (Trip pack, default ON). |
+| **FEAT-145** | Flutter: quick amount chips, friendly empty states and skeleton loaders | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b25ff7b (v3.63.0): behind enableQuickAmounts, enableCoachEmptyStates, enableSkeletonLoaders (Trip pack, default ON). |
+| **FEAT-146** | Flutter: high contrast, haptics setting, consistent sheets and Who paid labels | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b25ff7b (v3.63.0): behind enableHighContrast, enableHapticsSetting (Trip pack, default ON); Their part wording replaces Share. |
 
 ---
 
