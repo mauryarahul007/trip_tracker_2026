@@ -8376,5 +8376,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-17T18:51:59.036Z",
     "resolutionNote": "Fixed in commit 561a2c1 (v3.59.0): Settings, Balances, Activity and the trip screen go back one page when something is underneath, Trips only as a last resort. Tests added."
+  },
+  {
+    "id": "BUG-290",
+    "title": "Flutter: tapping a notification replaced the whole stack, so back skipped the notification list",
+    "description": "Flutter: tapping a notification replaced the whole stack, so back skipped the notification list",
+    "severity": "low",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-18T05:03:50.107Z",
+    "updatedAt": "2026-10-18T05:03:50.312Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-18T05:03:50.311Z",
+    "resolutionNote": "Fixed in commit e14a650 (v3.60.0): with no trip open the trip is pushed so back returns to the list; with a trip open it switches in place. Tests added."
   }
 ]

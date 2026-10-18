@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **287** | All recorded bugs across sessions |
+| **Total Tracked** | **288** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **260** | Verified & closed |
+| **✅ Resolved** | **261** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -291,6 +291,7 @@
 | **BUG-287** | Flutter: checklist progress count overlapped the ring | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in commit e58c883 (v3.57.0): percentage inside the ring, count and remaining beside it. |
 | **BUG-288** | Flutter: offline cold start could hang on the superadmin check | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit e58c883 (v3.57.0): the is_superadmin check times out after 3s and keeps the session. Unit test added. |
 | **BUG-289** | Flutter: back gesture from Settings opened inside a trip went to the Trips home instead of the trip | `navigation` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 561a2c1 (v3.59.0): Settings, Balances, Activity and the trip screen go back one page when something is underneath, Trips only as a last resort. Tests added. |
+| **BUG-290** | Flutter: tapping a notification replaced the whole stack, so back skipped the notification list | `navigation` | `low` | `claude-cli` | `claude-cli` | Fixed in commit e14a650 (v3.60.0): with no trip open the trip is pushed so back returns to the list; with a trip open it switches in place. Tests added. |
 
 ---
 

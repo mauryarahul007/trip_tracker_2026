@@ -2028,5 +2028,101 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-17T18:51:59.508Z",
     "shippedNote": "Shipped in commit 561a2c1 (v3.59.0): a single switch drives Who pays whom and Who paid; the duplicate switch in Who paid is removed."
+  },
+  {
+    "id": "FEAT-128",
+    "title": "Flutter: Trips as destination-photo tiles with a Grid / List switch, pins and search inside trips",
+    "description": "Flutter: Trips as destination-photo tiles with a Grid / List switch, pins and search inside trips",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T05:03:50.402Z",
+    "updatedAt": "2026-10-18T05:03:50.510Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T05:03:50.510Z",
+    "shippedNote": "Shipped in commit e14a650 (v3.60.0): behind enableTripGridTiles, enableTripPins, enableGlobalSearch (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-129",
+    "title": "Flutter: first-run tour, sample trip and Updated caption with pull to refresh",
+    "description": "Flutter: first-run tour, sample trip and Updated caption with pull to refresh",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T05:03:50.599Z",
+    "updatedAt": "2026-10-18T05:03:50.695Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T05:03:50.694Z",
+    "shippedNote": "Shipped in commit e14a650 (v3.60.0): behind enableFirstRunTour and enableLastSyncedCaption (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-130",
+    "title": "Flutter: cover photo band, saved/syncing line, trip switcher and accent colour inside a trip",
+    "description": "Flutter: cover photo band, saved/syncing line, trip switcher and accent colour inside a trip",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T05:03:50.780Z",
+    "updatedAt": "2026-10-18T05:03:50.860Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T05:03:50.859Z",
+    "shippedNote": "Shipped in commit e14a650 (v3.60.0): behind enableTripCoverHeader, enableSyncLine, enableTripSwitcher, enableTripAccent (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-131",
+    "title": "Flutter: Today card, wrap-up prompt, spend ring, receipt gallery and Collapse Trip numbers",
+    "description": "Flutter: Today card, wrap-up prompt, spend ring, receipt gallery and Collapse Trip numbers",
+    "category": "analytics",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T05:03:50.948Z",
+    "updatedAt": "2026-10-18T05:03:51.045Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T05:03:51.045Z",
+    "shippedNote": "Shipped in commit e14a650 (v3.60.0): behind enableTodayCard, enableCloseoutPrompt, enableSpendRing, enableReceiptGallery, enableSummaryCollapse (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-132",
+    "title": "Flutter: amount keypad, smart expense defaults and Confirm on notifications",
+    "description": "Flutter: amount keypad, smart expense defaults and Confirm on notifications",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T05:03:51.134Z",
+    "updatedAt": "2026-10-18T05:03:51.222Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T05:03:51.222Z",
+    "shippedNote": "Shipped in commit e14a650 (v3.60.0): behind enableAmountKeypad, enableSmartExpenseDefaults, enableNotificationActions (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-133",
+    "title": "Flutter: sound feedback, Reduce motion, notification day groups and rolling hero numbers",
+    "description": "Flutter: sound feedback, Reduce motion, notification day groups and rolling hero numbers",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T05:03:51.312Z",
+    "updatedAt": "2026-10-18T05:03:51.420Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T05:03:51.420Z",
+    "shippedNote": "Shipped in commit e14a650 (v3.60.0): behind enableFeedbackPack, enableReduceMotion, enableNotificationDayGroups (Trip pack, default ON); photos are now kept on the device."
   }
 ]

@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **127** |
+| **Total Tracked** | **133** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **125** |
+| **✅ Shipped** | **131** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -177,6 +177,12 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-125** | Flutter: compact Trips list with hero card, pinned sections and overview line | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 561a2c1 (v3.59.0): compact rows with thumbnails, status and money; photo hero for the trip happening now; pinned Happening now / Upcoming / Past headers; overview line behind enableTripsOverview (Trip pack, default ON). |
 | **FEAT-126** | Flutter: Plan and suggestions card and redesigned Trip numbers | `analytics` | `claude-cli` | `claude-cli` | Shipped in commit 561a2c1 (v3.59.0): budget pace, daily allowance and up to three tips behind enableTripSuggestions (Trip pack, default ON); analytics reordered. |
 | **FEAT-127** | Flutter: one Groups / People switch for the Summary | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 561a2c1 (v3.59.0): a single switch drives Who pays whom and Who paid; the duplicate switch in Who paid is removed. |
+| **FEAT-128** | Flutter: Trips as destination-photo tiles with a Grid / List switch, pins and search inside trips | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableTripGridTiles, enableTripPins, enableGlobalSearch (Trip pack, default ON). |
+| **FEAT-129** | Flutter: first-run tour, sample trip and Updated caption with pull to refresh | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableFirstRunTour and enableLastSyncedCaption (Trip pack, default ON). |
+| **FEAT-130** | Flutter: cover photo band, saved/syncing line, trip switcher and accent colour inside a trip | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableTripCoverHeader, enableSyncLine, enableTripSwitcher, enableTripAccent (Trip pack, default ON). |
+| **FEAT-131** | Flutter: Today card, wrap-up prompt, spend ring, receipt gallery and Collapse Trip numbers | `analytics` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableTodayCard, enableCloseoutPrompt, enableSpendRing, enableReceiptGallery, enableSummaryCollapse (Trip pack, default ON). |
+| **FEAT-132** | Flutter: amount keypad, smart expense defaults and Confirm on notifications | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableAmountKeypad, enableSmartExpenseDefaults, enableNotificationActions (Trip pack, default ON). |
+| **FEAT-133** | Flutter: sound feedback, Reduce motion, notification day groups and rolling hero numbers | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableFeedbackPack, enableReduceMotion, enableNotificationDayGroups (Trip pack, default ON); photos are now kept on the device. |
 
 ---
 
