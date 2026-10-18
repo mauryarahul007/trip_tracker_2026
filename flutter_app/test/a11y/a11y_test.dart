@@ -139,6 +139,9 @@ void main() {
       'settings': (String _) => '/settings',
       'add expense': (String id) => '/trip/$id/expenses/new',
       'balances': (String id) => '/trip/$id/ledger',
+      'expenses': (String id) => '/trip/$id/expenses',
+      'notes': (String id) => '/trip/$id/notes',
+      'members': (String id) => '/trip/$id/members',
     }.entries) {
       testApp('${entry.key} (dark)', (tester) async {
         tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;

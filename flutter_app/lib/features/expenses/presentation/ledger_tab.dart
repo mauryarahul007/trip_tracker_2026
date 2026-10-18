@@ -38,6 +38,7 @@ import '../../../domain/models/group.dart';
 import '../../../domain/models/member.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/widgets/app_surface.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/boarding_pass_card.dart';
@@ -177,14 +178,16 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final id = widget.tripId;
     if (!_collapseChecked) {
       final collapseFlag = ref.watch(flagProvider(('enableSummaryCollapse', null))).value;
-      if (collapseFlag != null) {
+      final focusFlag = ref.watch(flagProvider(('enableSummaryFocus', id))).value;
+      if (collapseFlag != null && focusFlag != null) {
         _collapseChecked = true;
-        if (collapseFlag && ref.read(summaryCollapsePrefProvider)) _open.remove('analytics');
+        // Focus mode folds Trip numbers away until asked for; the Settings switch does the same for people who set it.
+        if (focusFlag || (collapseFlag && ref.read(summaryCollapsePrefProvider))) _open.remove('analytics');
       }
     }
     final trip = ref.watch(tripProvider(id)).value;
     final result = ref.watch(tripSettlementProvider(id));
-    if (trip == null || result == null) return const Center(child: CircularProgressIndicator());
+    if (trip == null || result == null) return const SkeletonPage();
     final cur = trip.baseCurrency;
     // The server only accepts this change from the trip owner or a superadmin (RLS), so only they get the switch;
     // for anyone else it would flip back on the next sync.
@@ -618,6 +621,14 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           ),
           const SizedBox(height: 14),
         ],
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Text(
+            l10n.ledPaidLegend,
+            key: const Key('paid-legend'),
+            style: TextStyle(fontSize: 12, color: tokens.textMuted),
+          ),
+        ),
         if (showGroups)
           for (final r in groupRows)
             Padding(
@@ -681,11 +692,22 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                   const SizedBox(width: 10),
                   Expanded(
                     flex: 3,
-                    child: Text(
-                      names[e.key] ?? '?',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          names[e.key] ?? '?',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          l10n.ledSpendShare(formatMoney(context, spend.share[e.key] ?? 0, cur)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 12, color: tokens.textSecondary),
+                        ),
+                      ],
                     ),
                   ),
                   Expanded(
@@ -2058,7 +2080,15 @@ void showSettleSnack(ScaffoldMessengerState messenger, String message, VoidCallb
       content: Text(message),
       persist: false,
       duration: const Duration(seconds: 6),
-      action: onUndo == null ? null : SnackBarAction(label: 'UNDO', onPressed: onUndo),
+      action: onUndo == null
+          ? null
+          : SnackBarAction(
+              label: 'UNDO',
+              onPressed: () {
+                AppFeedback.tap();
+                onUndo();
+              },
+            ),
     ),
   );
 }

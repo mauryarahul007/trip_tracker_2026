@@ -163,7 +163,7 @@ void main() {
     expect(find.text('No trips match your search.'), findsNothing); // the hit stands in for "no matches"
     await tester.tap(find.text('Moped rental'));
     await settle(tester, rounds: 12);
-    expect(key('trip-strip'), findsOneWidget); // opened the trip
+    expect(key('trip-title'), findsOneWidget); // opened the trip
   });
 
   testApp('search stays trip-only with its flag off', (tester) async {

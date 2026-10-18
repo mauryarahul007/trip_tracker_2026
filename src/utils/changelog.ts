@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.63.0',
+    date: '2026-10-18',
+    changes: [
+      'Behind the scenes: the Flutter app drops the banner and status row under the trip name and gathers Share, Route map and settings into one More menu (sync shows as a small icon only when needed), adds quick Add item / Add note / Add member buttons, folds Trip numbers away on the Summary until opened, shows a Jump to today chip, recent-amount chips on the expense form, friendlier empty Notes and checklist, skeleton loaders, a High contrast option, a Haptics setting and consistent bottom sheets. The Who paid list now says Their part instead of Share. No change to the web app.',
+    ],
+  },
+  {
     version: '3.62.0',
     date: '2026-10-18',
     changes: [

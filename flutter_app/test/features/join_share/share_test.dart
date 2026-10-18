@@ -10,6 +10,7 @@ import 'package:trip_tracker/data/providers.dart';
 import 'package:trip_tracker/shared/widgets/app_button.dart';
 
 import '../../support/pump_app.dart';
+import '../../support/seed.dart';
 
 Finder button(String label) => find.widgetWithText(AppButton, label);
 String where(WidgetTester t) => GoRouterState.of(t.element(find.byType(Scaffold).last)).uri.path;
@@ -84,7 +85,7 @@ void main() {
       await settle(tester);
       await tester.tap(find.text('Goa Weekend'));
       await settle(tester, rounds: 12);
-      await tester.tap(find.byTooltip('Share Trip'));
+      await tripMenu(tester, 'action-share');
       await settle(tester, rounds: 12);
       return id;
     }

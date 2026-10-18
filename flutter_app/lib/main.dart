@@ -92,7 +92,11 @@ class TripTrackerApp extends ConsumerWidget {
     final themeMode = themeModeFromPref(ref.watch(themeModePrefProvider));
     final amoled =
         ref.watch(amoledPrefProvider) && (ref.watch(flagProvider(('enableAmoledTheme', null))).value ?? false);
-    AppHaptics.enabled = ref.watch(hapticsEnabledProvider);
+    // With the Haptics setting switched off by the Superadmin there is no switch, and haptics stay on.
+    AppHaptics.enabled =
+        ref.watch(hapticsEnabledProvider) || !(ref.watch(flagProvider(('enableHapticsSetting', null))).value ?? true);
+    final contrast =
+        ref.watch(highContrastPrefProvider) && (ref.watch(flagProvider(('enableHighContrast', null))).value ?? true);
     AppFeedback.sound = ref.watch(soundFeedbackPrefProvider);
     AppFeedback.packOn = ref.watch(flagProvider(('enableFeedbackPack', null))).value ?? true;
     AppMotion.reduce =
@@ -101,8 +105,8 @@ class TripTrackerApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Trip Tracker',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      darkTheme: amoled ? AppTheme.amoled() : AppTheme.dark(),
+      theme: contrast ? AppTheme.highContrastLight() : AppTheme.light(),
+      darkTheme: contrast ? AppTheme.highContrastDark() : (amoled ? AppTheme.amoled() : AppTheme.dark()),
       themeMode: themeMode,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

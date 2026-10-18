@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/auth_state.dart';
+import '../../../core/platform/haptics.dart';
 import '../../../core/clock.dart';
 import '../../../core/format/money.dart';
 import '../../../domain/logic/expense_form_logic.dart';
@@ -24,6 +25,7 @@ import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/pull_to_refresh.dart';
 import '../../../shared/widgets/ask_text.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/widgets/undo_snackbar.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../../trips/application/trips_providers.dart';
@@ -70,9 +72,33 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
   String? _selectedId;
   bool _compact = false;
 
+  final _scroll = ScrollController();
+  final _todayKey = GlobalKey();
+  bool _away = false; // scrolled well below the top: offer Jump to today
+
+  void _onScroll() {
+    final away = _scroll.hasClients && _scroll.offset > 500;
+    if (away != _away) setState(() => _away = away);
+  }
+
+  /// Opens today's day and brings it into view (newest first, so it is near the top).
+  void _jumpToToday(String today) {
+    unawaited(AppHaptics.selection());
+    setState(() => _expandedDays.add(today));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _todayKey.currentContext;
+      if (ctx != null) {
+        unawaited(Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 300), alignment: 0.15));
+      } else if (_scroll.hasClients) {
+        unawaited(_scroll.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic));
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    _scroll.addListener(_onScroll);
     _compact = ref.read(sharedPreferencesProvider).getBool(_compactPrefKey) ?? false;
   }
 
@@ -80,6 +106,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
   void dispose() {
     _debounce?.cancel();
     _search.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -175,7 +202,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final tokens = context.tokens;
     final trip = ref.watch(tripProvider(id)).value;
     final all = ref.watch(tripExpensesProvider(id));
-    if (trip == null || all.isLoading) return const Center(child: CircularProgressIndicator());
+    if (trip == null || all.isLoading) return const SkeletonPage();
 
     final members = {for (final m in ref.watch(tripMembersProvider(id)).value ?? const <Member>[]) m.id: m};
     final categories = ref.watch(tripCategoriesProvider(id));
@@ -301,7 +328,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       );
       SliverList listFor(DayGroup g) => SliverList.builder(
         itemCount: g.expenses.length,
-        itemBuilder: (_, i) => rowFor(g.expenses[i], lastInGroup: i == g.expenses.length - 1),
+        itemBuilder: (_, i) {
+          final row = rowFor(g.expenses[i], lastInGroup: i == g.expenses.length - 1);
+          return i == 0 && g.date == _today(ref) ? KeyedSubtree(key: _todayKey, child: row) : row;
+        },
       );
       return [
         for (final g in groups) ...[
@@ -426,7 +456,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
               height: 52,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
                 children: [
                   _RunwayChip(
                     key: const Key('runway-all'),
@@ -492,6 +522,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                           label: Text(f.name),
                           materialTapTargetSize: MaterialTapTargetSize.padded,
                           onPressed: () {
+                            unawaited(AppHaptics.selection());
                             _search.text = f.filters.query;
                             _setFilters(f.filters);
                           },
@@ -506,7 +537,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                       materialTapTargetSize: MaterialTapTargetSize.padded,
                       onPressed: () async {
                         final name = await askText(context, l10n.filterSavePrompt);
-                        if (name != null) ref.read(savedFiltersProvider(id).notifier).add(name, filters);
+                        if (name != null) {
+                          unawaited(AppHaptics.success());
+                          ref.read(savedFiltersProvider(id).notifier).add(name, filters);
+                        }
                       },
                     ),
                 ],
@@ -547,6 +581,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         AppPullToRefresh(
           onRefresh: ref.read(refreshTripsProvider),
           child: CustomScrollView(
+            controller: _scroll,
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               header,
@@ -587,6 +622,23 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             ],
           ),
         ),
+        if (_flag(ref, 'enableJumpToToday', id) && _away && dayGroups.any((g) => g.date == _today(ref)))
+          Positioned(
+            top: 8,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: ActionChip(
+                key: const Key('jump-today'),
+                avatar: const Icon(Icons.vertical_align_top_rounded, size: 18),
+                label: Text(l10n.expJumpToday),
+                backgroundColor: tokens.bgSurface,
+                elevation: 3,
+                materialTapTargetSize: MaterialTapTargetSize.padded,
+                onPressed: () => _jumpToToday(_today(ref)),
+              ),
+            ),
+          ),
         AddExpenseFab(tripId: id),
       ],
     );
@@ -895,22 +947,26 @@ class _RunwayChip extends StatelessWidget {
         selected: selected,
         child: GestureDetector(
           onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: BoxDecoration(
-              color: selected ? t.primaryAccent.withValues(alpha: 0.16) : t.bgSurface,
-              borderRadius: BorderRadius.circular(99),
-              border: Border.all(color: selected ? t.primaryAccent : t.borderColor),
-              boxShadow: selected ? [BoxShadow(color: t.primaryAccent.withValues(alpha: 0.4), blurRadius: 10)] : null,
-            ),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: selected ? t.textPrimary : t.textSecondary,
+          behavior: HitTestBehavior.opaque, // the touch area is the full 48 px row, the pill itself stays 36
+          child: Center(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              height: 36,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: selected ? t.primaryAccent.withValues(alpha: 0.16) : t.bgSurface,
+                borderRadius: BorderRadius.circular(99),
+                border: Border.all(color: selected ? t.primaryAccent : t.borderColor),
+                boxShadow: selected ? [BoxShadow(color: t.primaryAccent.withValues(alpha: 0.4), blurRadius: 10)] : null,
+              ),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: selected ? t.textPrimary : t.textSecondary,
+                ),
               ),
             ),
           ),

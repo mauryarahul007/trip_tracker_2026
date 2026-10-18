@@ -30,6 +30,7 @@ class OfflineSnapshotModal extends ConsumerStatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: true, // same grab handle as every AppSheet
       useSafeArea: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => OfflineSnapshotModal(tripId: tripId),

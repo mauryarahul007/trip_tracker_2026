@@ -159,6 +159,26 @@ class AppTheme {
   static ThemeData dark() => darkTheme;
   static ThemeData amoled() => amoledTheme;
 
+  /// Darker text and stronger borders on the same surfaces (Settings > Appearance > High contrast).
+  static ThemeData highContrastLight() => _build(
+    AppTokens.light.copyWith(
+      textPrimary: const Color(0xFF000000),
+      textSecondary: const Color(0xFF1F2933),
+      textMuted: const Color(0xFF3A4450),
+      borderColor: const Color(0xFF5A6370),
+    ),
+    Brightness.light,
+  );
+  static ThemeData highContrastDark() => _build(
+    AppTokens.dark.copyWith(
+      textPrimary: const Color(0xFFFFFFFF),
+      textSecondary: const Color(0xFFE5E7EB),
+      textMuted: const Color(0xFFC9CED6),
+      borderColor: const Color(0xFF9AA3AF),
+    ),
+    Brightness.dark,
+  );
+
   static ThemeData get lightTheme => _build(AppTokens.light, Brightness.light);
   static ThemeData get darkTheme => _build(AppTokens.dark, Brightness.dark);
   static ThemeData get amoledTheme => _build(AppTokens.amoled, Brightness.dark);

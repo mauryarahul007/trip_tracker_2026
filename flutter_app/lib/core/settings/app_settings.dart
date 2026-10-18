@@ -51,6 +51,9 @@ ThemeMode themeModeFromPref(String v) => switch (v) {
 /// Pure-black dark theme; only honoured when the `enableAmoledTheme` flag is on.
 final amoledPrefProvider = _boolPref('settings.amoled', false);
 
+/// Darker text and stronger borders. Only honoured while `enableHighContrast` is on.
+final highContrastPrefProvider = _boolPref('settings.high_contrast', false);
+
 /// Jump animations to their end state. Only honoured while `enableReduceMotion` is on.
 final reduceMotionPrefProvider = _boolPref('settings.reduce_motion', false, onChange: (v) => AppMotion.reduce = v);
 

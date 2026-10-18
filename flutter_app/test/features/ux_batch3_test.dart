@@ -314,7 +314,7 @@ void main() {
         () => containerOf(tester).read(memberRepositoryProvider).watchMembers(id).first,
       );
       expect(members.map((m) => m.name), containsAll(['Sam', 'Riya']));
-      expect(key('trip-strip'), findsOneWidget); // landed inside the trip
+      expect(key('trip-title'), findsOneWidget); // landed inside the trip
     });
   });
 
@@ -384,6 +384,7 @@ void main() {
       await pumpApp(
         tester,
         user: asha,
+        flagsOn: {'enableTripHeaderStrip'},
         overrides: [tripAccentProvider.overrideWith((ref, id) async => const Color(0xFF8B2E2E))],
       );
       final id = await tripAt(tester, 'Accent Trip', 5);
@@ -395,6 +396,7 @@ void main() {
       await pumpApp(
         tester,
         user: asha,
+        flagsOn: {'enableTripHeaderStrip'},
         flagsOff: {'enableTripAccent'},
         overrides: [tripAccentProvider.overrideWith((ref, id) async => const Color(0xFF8B2E2E))],
       );
@@ -675,7 +677,7 @@ void main() {
       final s = await seedTrip(tester);
       await giveJoinCode(tester, s.tripId);
       await goTo(tester, '/trip/${s.tripId}/ledger');
-      await tester.tap(find.byTooltip('Share Trip'));
+      await tripMenu(tester, 'action-share');
       await settle(tester, rounds: 8);
       expect(key('share-invite-card'), findsOneWidget);
       await tester.tap(key('share-invite-card'));
@@ -689,7 +691,7 @@ void main() {
       final s = await seedTrip(tester);
       await giveJoinCode(tester, s.tripId);
       await goTo(tester, '/trip/${s.tripId}/ledger');
-      await tester.tap(find.byTooltip('Share Trip'));
+      await tripMenu(tester, 'action-share');
       await settle(tester, rounds: 8);
       expect(find.byKey(const Key('join-code')), findsOneWidget); // the sheet is open
       expect(key('share-invite-card'), findsNothing);
@@ -706,7 +708,7 @@ void main() {
       expect(key('amount-field'), findsOneWidget);
       await tester.binding.handlePopRoute();
       await settle(tester, rounds: 10);
-      expect(key('trip-strip'), findsOneWidget);
+      expect(key('trip-title'), findsOneWidget);
     });
 
     testApp('Latest trip opens it', (tester) async {
@@ -715,7 +717,7 @@ void main() {
       await settle(tester, rounds: 6);
       app.links.controller.add(Uri.parse('com.triptracker.app://shortcut/latest-trip'));
       await settle(tester, rounds: 16);
-      expect(key('trip-strip'), findsOneWidget);
+      expect(key('trip-title'), findsOneWidget);
     });
 
     testApp('with no trips, or the flag off, the shortcut just opens the home screen', (tester) async {
@@ -723,7 +725,7 @@ void main() {
       app.links.controller.add(Uri.parse('com.triptracker.app://shortcut/add-expense'));
       await settle(tester, rounds: 12);
       expect(key('amount-field'), findsNothing);
-      expect(key('trip-strip'), findsNothing);
+      expect(key('trip-title'), findsNothing);
     });
 
     testApp('flag off: even with a trip, the shortcut only opens home', (tester) async {
@@ -732,7 +734,7 @@ void main() {
       await settle(tester, rounds: 6);
       app.links.controller.add(Uri.parse('com.triptracker.app://shortcut/latest-trip'));
       await settle(tester, rounds: 12);
-      expect(key('trip-strip'), findsNothing);
+      expect(key('trip-title'), findsNothing);
     });
   });
 }

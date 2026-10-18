@@ -86,6 +86,16 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-18 | flutter | FLUTTER-PERSONAL-EXPENSES | [Flutter: personal expenses, left out of totals](#flutter-personal-expenses--flutter-personal-expenses-left-out-of-totals) |
 | 2026-10-18 | flutter | FLUTTER-UNDO-SETTLEMENT | [Flutter: undo a recorded payment](#flutter-undo-settlement--flutter-undo-a-recorded-payment) |
 | 2026-10-18 | flutter | FLUTTER-SAVED-FILTERS | [Flutter: saved expense filters](#flutter-saved-filters--flutter-saved-expense-filters) |
+| 2026-10-18 | flutter | FLUTTER-CLEAN-TOPBAR | [Flutter: clean trip top bar, no banner](#flutter-clean-topbar--flutter-clean-trip-top-bar-no-banner) |
+| 2026-10-18 | flutter | FLUTTER-CONTEXT-FAB | [Flutter: quick action buttons on Notes and Members](#flutter-context-fab--flutter-quick-action-buttons-on-notes-and-members) |
+| 2026-10-18 | flutter | FLUTTER-SUMMARY-FOCUS | [Flutter: Summary focus mode](#flutter-summary-focus--flutter-summary-focus-mode) |
+| 2026-10-18 | flutter | FLUTTER-JUMP-TODAY | [Flutter: jump to today](#flutter-jump-today--flutter-jump-to-today) |
+| 2026-10-18 | flutter | FLUTTER-QUICK-AMOUNTS | [Flutter: quick amount chips](#flutter-quick-amounts--flutter-quick-amount-chips) |
+| 2026-10-18 | flutter | FLUTTER-COACH-EMPTY | [Flutter: friendly empty states](#flutter-coach-empty--flutter-friendly-empty-states) |
+| 2026-10-18 | flutter | FLUTTER-SKELETONS | [Flutter: skeleton loaders](#flutter-skeletons--flutter-skeleton-loaders) |
+| 2026-10-18 | flutter | FLUTTER-HIGH-CONTRAST | [Flutter: high contrast and haptics setting](#flutter-high-contrast--flutter-high-contrast-and-haptics-setting) |
+| 2026-10-18 | flutter | FLUTTER-SHEET-HANDLES | [Flutter: consistent bottom sheets](#flutter-sheet-handles--flutter-consistent-bottom-sheets) |
+| 2026-10-18 | flutter | FLUTTER-PAID-LEGEND | [Flutter: Who paid labels](#flutter-paid-legend--flutter-who-paid-labels) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -2776,7 +2786,7 @@ Then add a row to the **Index** table.
 
 ## FLUTTER-TRIP-COVER-SYNC — Flutter: cover photo band and saved/syncing line
 
-**Flags:** `enableTripCoverHeader`, `enableSyncLine` (Trip pack, default ON).
+**Flags:** `enableTripCoverHeader` (Trip pack, default **OFF** since v3.63: the photo band under the top bar was removed from the default look), `enableSyncLine` (default ON).
 
 1. Open a trip with a destination photo: under the top bar, a slim cover photo band shows the status pill and dates; the photo glides in from the tile. Without a photo, the plain status strip shows.
 2. On the right of the strip: "All saved" when everything is synced, "Syncing N changes" while waiting, "Offline" / "Offline - N waiting" without a connection, "Sync issue - Retry" when an item is stuck (tap to retry).
@@ -3136,3 +3146,92 @@ Then add a row to the **Index** table.
 3. Saved filters are on this phone only, and a fixed date range is not saved.
 
 **Flag-OFF checks:** no Save filter chip and no saved chips.
+
+## FLUTTER-CLEAN-TOPBAR — Flutter: clean trip top bar, no banner
+
+**Flags:** `enableCleanTopBar` (Trip pack, default ON); `enableTripHeaderStrip` and `enableTripCoverHeader` (Labs, default OFF).
+
+1. Open a trip. Under the top bar there is **no** photo banner and no status/dates strip: the page starts straight at the tab content.
+2. Top bar: back, the trip name (down arrow when you have 2+ trips), the bell and one **More** menu with Share trip, Route map, Trip settings, App settings, Live location. Route map toggles the map panel; Trip settings opens the trip's settings.
+3. Go offline or make a change: a small cloud / sync icon appears in the top bar with a tooltip (Offline, Syncing, Sync issue). A stuck sync retries when tapped. When everything is saved the icon is not there.
+
+**Flag-OFF checks:** `enableCleanTopBar` OFF: the older separate Map, Share, menu, bell and Settings buttons. A Superadmin can turn `enableTripHeaderStrip` ON to bring back the status/dates strip with its "All saved" line.
+
+### Pass
+- Trip name opens the trip list; every menu action still works.
+
+## FLUTTER-CONTEXT-FAB — Flutter: quick action buttons on Notes and Members
+
+**Flags:** `enableContextFab` (Trip pack, default ON).
+
+1. Notes tab > Checklist: **Add item** button floats bottom right; Notes: **Add note**. Passes has none.
+2. Members tab: **Add member** (only if you can manage the trip).
+3. The in-page buttons are still there.
+
+**Flag-OFF checks:** no floating buttons.
+
+## FLUTTER-SUMMARY-FOCUS — Flutter: Summary focus mode
+
+**Flags:** `enableSummaryFocus` (Trip pack, default ON).
+
+1. Open Summary: balance, Who pays whom and the next action come first; **Trip numbers** is folded away. Tap its header to open it.
+2. Leaving and returning to the page folds it again.
+
+**Flag-OFF checks:** `enableSummaryFocus` OFF: Trip numbers starts open (unless Settings > Collapse Trip numbers is on).
+
+## FLUTTER-JUMP-TODAY — Flutter: jump to today
+
+**Flags:** `enableJumpToToday` (Trip pack, default ON).
+
+1. Expenses with a day group for today: scroll well down. A **Jump to today** chip appears at the top; tap it: today's day opens and scrolls into view; the chip goes.
+2. Day headers show each day's total (unchanged).
+
+**Flag-OFF checks:** no chip.
+
+## FLUTTER-QUICK-AMOUNTS — Flutter: quick amount chips
+
+**Flags:** `enableQuickAmounts` (Trip pack, default ON).
+
+1. Add expense with an empty amount: up to four chips with recently used amounts on this trip. Tap one: the amount fills. Once there is an amount, the chips step aside.
+2. A foreign currency still shows the converted amount under the field (unchanged).
+
+**Flag-OFF checks:** no chips.
+
+## FLUTTER-COACH-EMPTY — Flutter: friendly empty states
+
+**Flags:** `enableCoachEmptyStates` (Trip pack, default ON).
+
+1. A trip with no checklist items: an illustrated "Your packing list starts here" card. Notes > Notes with no notes: "No notes yet" card with an **Add note** button.
+
+**Flag-OFF checks:** plain text as before.
+
+## FLUTTER-SKELETONS — Flutter: skeleton loaders
+
+**Flags:** `enableSkeletonLoaders` (Trip pack, default ON).
+
+1. Open Summary or Expenses on a slow connection or after a cold start: soft grey blocks pulse briefly instead of a spinner. With Settings > Reduce motion on, they do not pulse.
+
+**Flag-OFF checks:** the spinner.
+
+## FLUTTER-HIGH-CONTRAST — Flutter: high contrast and haptics setting
+
+**Flags:** `enableHighContrast`, `enableHapticsSetting` (Trip pack, default ON).
+
+1. Settings > Appearance > **High contrast**: text turns black (light) or white (dark) and grey text and borders get stronger, on every screen. Off by default.
+2. Settings > Appearance > **Haptic feedback**: turns the light taps on saves, swipes, undo, tabs, quick amounts, saved filters and trip switching on or off together.
+
+**Flag-OFF checks:** `enableHighContrast` OFF: no switch. `enableHapticsSetting` OFF: no switch and haptics stay on.
+
+## FLUTTER-SHEET-HANDLES — Flutter: consistent bottom sheets
+
+**Flags:** none.
+
+1. Open the default-currency picker, What's new, the offline snapshot and the route map: each sheet has the same grab handle and rounded top as the rest, and swipes down to close.
+
+## FLUTTER-PAID-LEGEND — Flutter: Who paid labels
+
+**Flags:** none (copy only).
+
+1. Trip numbers > People: a one-line key under the chart: "Bar = money they paid. Their part = their cut of all the costs."
+2. Under each person or group: **Their part ₹X** (what they owe of the trip's costs). The bar and the right-hand amount are what they **paid**. Paid minus their part is what they are owed or owe.
+

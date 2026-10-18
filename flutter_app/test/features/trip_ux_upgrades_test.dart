@@ -32,16 +32,16 @@ Future<void> toText(WidgetTester tester, Finder f, {double delta = 300}) async {
 }
 
 void main() {
-  testApp('trip header strip shows status, dates and avatars on a tab; off with the flag', (tester) async {
-    await pumpApp(tester, user: asha);
+  testApp('trip header strip (a Labs flag, off by default) shows status and dates when turned on', (tester) async {
+    await pumpApp(tester, user: asha, flagsOn: {'enableTripHeaderStrip'});
     final s = await seedTrip(tester);
     await openLedger(tester, s);
     expect(key('trip-strip'), findsOneWidget);
     expect(find.descendant(of: key('trip-strip'), matching: find.textContaining('Oct')), findsWidgets);
   });
 
-  testApp('header strip is absent with its flag off', (tester) async {
-    await pumpApp(tester, user: asha, flagsOff: {'enableTripHeaderStrip'});
+  testApp('header strip is absent by default', (tester) async {
+    await pumpApp(tester, user: asha);
     final s = await seedTrip(tester);
     await openLedger(tester, s);
     expect(key('trip-strip'), findsNothing);
@@ -188,7 +188,7 @@ void main() {
     // The visible page is what matters: the settings page has a profile row, a trip has its header strip.
     String where() => key('settings-profile').evaluate().isNotEmpty
         ? '/settings'
-        : key('trip-strip').evaluate().isNotEmpty
+        : key('trip-title').evaluate().isNotEmpty
         ? '/trip'
         : '/';
     await settle(tester, rounds: 8);

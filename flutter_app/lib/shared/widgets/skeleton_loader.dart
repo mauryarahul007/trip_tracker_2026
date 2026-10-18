@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/platform/motion.dart';
+import '../../data/providers.dart';
 import '../theme/app_tokens.dart';
 
 /// A pulsing skeleton placeholder for content loading states.
@@ -35,7 +38,7 @@ class _SkeletonLoaderState extends State<SkeletonLoader> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled) return widget.child;
+    if (!widget.enabled || AppMotion.reduce || MediaQuery.disableAnimationsOf(context)) return widget.child;
 
     return AnimatedBuilder(
       animation: _animation,
@@ -81,6 +84,36 @@ class SkeletonCircle extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(color: tokens.borderColor.withValues(alpha: 0.6), shape: BoxShape.circle),
+    );
+  }
+}
+
+/// A whole page of soft placeholder blocks (a summary card and a few rows) shown while a tab loads. With
+/// `enableSkeletonLoaders` off it is the plain spinner.
+class SkeletonPage extends ConsumerWidget {
+  const SkeletonPage({super.key, this.rows = 5});
+  final int rows;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!(ref.watch(flagProvider(('enableSkeletonLoaders', null))).value ?? true)) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    final t = context.tokens;
+    Widget block(double h) => Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        height: h,
+        decoration: BoxDecoration(color: t.bgSurface, borderRadius: BorderRadius.circular(t.radiusMd)),
+      ),
+    );
+    return SkeletonLoader(
+      child: ListView(
+        key: const Key('skeleton-page'),
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        children: [block(120), for (var i = 0; i < rows; i++) block(64)],
+      ),
     );
   }
 }

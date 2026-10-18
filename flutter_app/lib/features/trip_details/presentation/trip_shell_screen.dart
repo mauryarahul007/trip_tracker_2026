@@ -115,6 +115,27 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
     }
   }
 
+  void _onMenu(String v) {
+    switch (v) {
+      case 'share':
+        AppSheet.show<void>(
+          context: context,
+          title: context.l10n.inviteSheetTitle,
+          builder: (_) => ShareTripSheet(tripId: widget.tripId),
+        );
+      case 'map':
+        setState(() => _mapExpanded = !_mapExpanded);
+      case 'trip-settings':
+        context.push('/trip/${widget.tripId}/settings');
+      case 'app-settings':
+        context.push('/settings');
+      default:
+        final user = ref.read(authStateProvider).user;
+        final myMember = ref.read(myMemberIdProvider(widget.tripId));
+        LiveLocationShareModal.show(context, tripId: widget.tripId, memberId: myMember ?? '', userId: user?.id ?? '');
+    }
+  }
+
   void _goTab(int branch) {
     unawaited(AppHaptics.selection());
     widget.navigationShell.goBranch(branch);
@@ -151,6 +172,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
       });
     }
 
+    final cleanBar = ref.watch(flagProvider(('enableCleanTopBar', widget.tripId))).value ?? true;
     final wide = MediaQuery.sizeOf(context).width >= kSideNavBreakpoint && tabs.length >= 2;
     final navItems = [
       for (final t in tabs)
@@ -173,61 +195,104 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
           // Bento: the app bar sits on the ground colour with an ink title; the theme supplies both.
           leading: IconButton(tooltip: l10n.actionBack, icon: const Icon(AppIcons.back, size: 20), onPressed: _leave),
           title: _TripTitle(tripId: widget.tripId, tab: currentTab.name),
-          actions: [
-            if (trip != null)
-              IconButton(
-                key: const Key('action-trip-map'),
-                icon: Icon(_mapExpanded ? Icons.map : Icons.map_outlined),
-                tooltip: 'Route Map',
-                onPressed: () => setState(() => _mapExpanded = !_mapExpanded),
-              ),
-            IconButton(
-              icon: const Icon(AppIcons.share),
-              tooltip: l10n.shareTripTitle,
-              onPressed: () => AppSheet.show<void>(
-                context: context,
-                title: l10n.inviteSheetTitle,
-                builder: (_) => ShareTripSheet(tripId: widget.tripId),
-              ),
-            ),
-            // Live location and app-level settings live in a menu so the bell and the trip gear always fit.
-            PopupMenuButton<String>(
-              key: const Key('action-trip-more'),
-              icon: const Icon(Icons.more_vert_rounded),
-              onSelected: (v) {
-                if (v == 'app-settings') {
-                  context.push('/settings');
-                } else {
-                  final user = ref.read(authStateProvider).user;
-                  final myMember = ref.read(myMemberIdProvider(widget.tripId));
-                  LiveLocationShareModal.show(
-                    context,
-                    tripId: widget.tripId,
-                    memberId: myMember ?? '',
-                    userId: user?.id ?? '',
-                  );
-                }
-              },
-              itemBuilder: (_) => [
-                const PopupMenuItem(
-                  key: Key('action-app-settings'),
-                  value: 'app-settings',
-                  child: ListTile(leading: Icon(AppIcons.settings), title: Text('App settings')),
-                ),
-                const PopupMenuItem(
-                  key: Key('action-live-location'),
-                  value: 'location',
-                  child: ListTile(leading: Icon(AppIcons.location), title: Text('Live Location Share')),
-                ),
-              ],
-            ),
-            NotificationBell(tripId: widget.tripId),
-            IconButton(
-              icon: const Icon(AppIcons.settings),
-              tooltip: l10n.navSettings,
-              onPressed: () => context.push('/trip/${widget.tripId}/settings'),
-            ),
-          ],
+          actions: cleanBar
+              ? [
+                  _SyncAction(tripId: widget.tripId),
+                  NotificationBell(tripId: widget.tripId),
+                  PopupMenuButton<String>(
+                    key: const Key('action-trip-more'),
+                    icon: const Icon(Icons.more_vert_rounded),
+                    tooltip: l10n.tripMoreMenu,
+                    onSelected: _onMenu,
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        key: const Key('action-share'),
+                        value: 'share',
+                        child: ListTile(leading: const Icon(AppIcons.share), title: Text(l10n.shareTripTitle)),
+                      ),
+                      if (trip != null)
+                        PopupMenuItem(
+                          key: const Key('action-trip-map'),
+                          value: 'map',
+                          child: ListTile(
+                            leading: Icon(_mapExpanded ? Icons.map : Icons.map_outlined),
+                            title: Text(l10n.tripRouteMap),
+                          ),
+                        ),
+                      PopupMenuItem(
+                        key: const Key('action-trip-settings'),
+                        value: 'trip-settings',
+                        child: ListTile(leading: const Icon(AppIcons.settings), title: Text(l10n.tripSettingsMenu)),
+                      ),
+                      const PopupMenuDivider(),
+                      PopupMenuItem(
+                        key: const Key('action-app-settings'),
+                        value: 'app-settings',
+                        child: ListTile(leading: const Icon(Icons.tune_rounded), title: Text(l10n.tripAppSettings)),
+                      ),
+                      const PopupMenuItem(
+                        key: Key('action-live-location'),
+                        value: 'location',
+                        child: ListTile(leading: Icon(AppIcons.location), title: Text('Live Location Share')),
+                      ),
+                    ],
+                  ),
+                ]
+              : [
+                  if (trip != null)
+                    IconButton(
+                      key: const Key('action-trip-map'),
+                      icon: Icon(_mapExpanded ? Icons.map : Icons.map_outlined),
+                      tooltip: 'Route Map',
+                      onPressed: () => setState(() => _mapExpanded = !_mapExpanded),
+                    ),
+                  IconButton(
+                    icon: const Icon(AppIcons.share),
+                    tooltip: l10n.shareTripTitle,
+                    onPressed: () => AppSheet.show<void>(
+                      context: context,
+                      title: l10n.inviteSheetTitle,
+                      builder: (_) => ShareTripSheet(tripId: widget.tripId),
+                    ),
+                  ),
+                  // Live location and app-level settings live in a menu so the bell and the trip gear always fit.
+                  PopupMenuButton<String>(
+                    key: const Key('action-trip-more'),
+                    icon: const Icon(Icons.more_vert_rounded),
+                    onSelected: (v) {
+                      if (v == 'app-settings') {
+                        context.push('/settings');
+                      } else {
+                        final user = ref.read(authStateProvider).user;
+                        final myMember = ref.read(myMemberIdProvider(widget.tripId));
+                        LiveLocationShareModal.show(
+                          context,
+                          tripId: widget.tripId,
+                          memberId: myMember ?? '',
+                          userId: user?.id ?? '',
+                        );
+                      }
+                    },
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(
+                        key: Key('action-app-settings'),
+                        value: 'app-settings',
+                        child: ListTile(leading: Icon(AppIcons.settings), title: Text('App settings')),
+                      ),
+                      const PopupMenuItem(
+                        key: Key('action-live-location'),
+                        value: 'location',
+                        child: ListTile(leading: Icon(AppIcons.location), title: Text('Live Location Share')),
+                      ),
+                    ],
+                  ),
+                  NotificationBell(tripId: widget.tripId),
+                  IconButton(
+                    icon: const Icon(AppIcons.settings),
+                    tooltip: l10n.navSettings,
+                    onPressed: () => context.push('/trip/${widget.tripId}/settings'),
+                  ),
+                ],
         ),
         body: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -258,6 +323,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                                 onOpen: () => showModalBottomSheet<void>(
                                   context: context,
                                   isScrollControlled: true,
+                                  showDragHandle: true, // same grab handle as every AppSheet
                                   useSafeArea: true,
                                   builder: (_) => TripRouteModal(trip: trip),
                                 ),
@@ -412,7 +478,7 @@ class _TripStrip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final on = ref.watch(flagProvider(('enableTripHeaderStrip', tripId))).value ?? true;
+    final on = ref.watch(flagProvider(('enableTripHeaderStrip', tripId))).value ?? false;
     final trip = ref.watch(tripProvider(tripId)).value;
     if (!on || trip == null) return const SizedBox.shrink();
     final t = context.tokens;
@@ -590,53 +656,98 @@ class _TripTitle extends ConsumerWidget {
       tag: 'trip-title-$tripId',
       child: Material(type: MaterialType.transparency, child: name),
     );
-    if (!canSwitch) return title;
-    return Semantics(
-      button: true,
-      label: '${trip?.name ?? ''}. ${l10n.tripSwitchTitle}',
-      excludeSemantics: true,
-      child: InkWell(
-        key: const Key('trip-switcher'),
-        borderRadius: BorderRadius.circular(tokens.radiusMd),
-        onTap: () => AppSheet.show<void>(
-          context: context,
-          title: l10n.tripSwitchTitle,
-          builder: (sheetCtx) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final x in others)
-                ListTile(
-                  key: Key('switch-to-${x.id}'),
-                  selected: x.id == tripId,
-                  leading: Icon(x.id == tripId ? Icons.check_circle_rounded : Icons.luggage_outlined),
-                  title: Text(x.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  subtitle: Text(
-                    [
-                      tripHeadline(sheetCtx, tripStatus(x.startDate, x.endDate, now)),
-                      if (x.startDate.isNotEmpty) formatDateRange(x.startDate, x.endDate),
-                    ].where((e) => e.isNotEmpty).join(' · '),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+    if (!canSwitch) return KeyedSubtree(key: const Key('trip-title'), child: title);
+    return KeyedSubtree(
+      key: const Key('trip-title'),
+      child: Semantics(
+        button: true,
+        label: '${trip?.name ?? ''}. ${l10n.tripSwitchTitle}',
+        excludeSemantics: true,
+        child: InkWell(
+          key: const Key('trip-switcher'),
+          borderRadius: BorderRadius.circular(tokens.radiusMd),
+          onTap: () => AppSheet.show<void>(
+            context: context,
+            title: l10n.tripSwitchTitle,
+            builder: (sheetCtx) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final x in others)
+                  ListTile(
+                    key: Key('switch-to-${x.id}'),
+                    selected: x.id == tripId,
+                    leading: Icon(x.id == tripId ? Icons.check_circle_rounded : Icons.luggage_outlined),
+                    title: Text(x.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    subtitle: Text(
+                      [
+                        tripHeadline(sheetCtx, tripStatus(x.startDate, x.endDate, now)),
+                        if (x.startDate.isNotEmpty) formatDateRange(x.startDate, x.endDate),
+                      ].where((e) => e.isNotEmpty).join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onTap: () {
+                      unawaited(AppHaptics.selection());
+                      Navigator.of(sheetCtx).pop();
+                      if (x.id != tripId) context.go('/trip/${x.id}/$tab');
+                    },
                   ),
-                  onTap: () {
-                    Navigator.of(sheetCtx).pop();
-                    if (x.id != tripId) context.go('/trip/${x.id}/$tab');
-                  },
-                ),
-            ],
+              ],
+            ),
           ),
-        ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 48),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(child: title),
-              Icon(Icons.expand_more_rounded, color: tokens.textSecondary),
-            ],
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(child: title),
+                Icon(Icons.expand_more_rounded, color: tokens.textSecondary),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The sync state as one icon in the top bar, shown only when something needs attention (offline, syncing,
+/// stuck). When everything is saved it takes no room. A stuck sync retries on tap (flag `enableSyncLine`).
+class _SyncAction extends ConsumerWidget {
+  const _SyncAction({required this.tripId});
+  final String tripId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!(ref.watch(flagProvider(('enableSyncLine', tripId))).value ?? true)) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final online = ref.watch(isOnlineProvider).value ?? true;
+    final status = ref.watch(syncStatusProvider).value ?? const SyncStatus();
+    final (String text, IconData icon, Color color)? state = status.issues > 0
+        ? (l10n.syncLineIssue, Icons.sync_problem_rounded, t.colorDanger)
+        : !online
+        ? (
+            status.pending > 0 ? l10n.syncLineOfflineWaiting(status.pending) : l10n.syncLineOffline,
+            Icons.cloud_off_rounded,
+            t.textSecondary,
+          )
+        : status.pending > 0
+        ? (l10n.syncLineSyncing(status.pending), Icons.sync_rounded, t.textSecondary)
+        : null;
+    if (state == null) return const SizedBox.shrink();
+    return IconButton(
+      key: const Key('sync-action'),
+      tooltip: state.$1,
+      icon: Icon(state.$2, color: state.$3),
+      onPressed: status.issues == 0
+          ? null
+          : () async {
+              final store = ref.read(outboxStoreProvider);
+              for (final i in ref.read(syncItemsProvider).value ?? const <OutboxItem>[]) {
+                if (i.status == OutboxStatus.poison) await store.retry(i.id);
+              }
+            },
     );
   }
 }

@@ -280,8 +280,14 @@ abstract class AppLocalizations {
   /// No description provided for @ledSpendShare.
   ///
   /// In en, this message translates to:
-  /// **'Share {amount}'**
+  /// **'Their part {amount}'**
   String ledSpendShare(String amount);
+
+  /// No description provided for @ledPaidLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Bar = money they paid. Their part = their cut of all the costs.'**
+  String get ledPaidLegend;
 
   /// No description provided for @mapNoRoute.
   ///
@@ -3222,6 +3228,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Switch trip'**
   String get tripSwitchTitle;
+
+  /// No description provided for @coachNotesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes yet'**
+  String get coachNotesTitle;
+
+  /// No description provided for @coachNotesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep tickets, hotel details and ideas here. Everyone on the trip can read them.'**
+  String get coachNotesBody;
+
+  /// No description provided for @coachChecklistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your packing list starts here'**
+  String get coachChecklistTitle;
+
+  /// No description provided for @coachChecklistBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add what to bring or book, and tick things off together. Tap Add item to begin.'**
+  String get coachChecklistBody;
+
+  /// No description provided for @expJumpToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to today'**
+  String get expJumpToday;
+
+  /// No description provided for @tripMoreMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get tripMoreMenu;
+
+  /// No description provided for @tripRouteMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Route map'**
+  String get tripRouteMap;
+
+  /// No description provided for @tripSettingsMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip settings'**
+  String get tripSettingsMenu;
+
+  /// No description provided for @tripAppSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'App settings'**
+  String get tripAppSettings;
 
   /// No description provided for @formPersonalTitle.
   ///

@@ -28,6 +28,7 @@ import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/undo_snackbar.dart';
 import '../../../shared/widgets/app_sheet.dart';
+import '../../../shared/widgets/empty_state.dart';
 import '../../chat/application/chat_providers.dart';
 import '../../chat/presentation/chat_pane.dart';
 import '../../expenses/application/expenses_providers.dart';
@@ -137,11 +138,33 @@ class _NotesTabState extends ConsumerState<NotesTab> {
         ),
       ],
     );
+    // One quick action for the pane you are on (Add item / Add note); the in-page buttons stay.
+    final fabOn = _flag('enableContextFab') && (_pane == 'checklist' || _pane == 'notes');
+    final withFab = !fabOn
+        ? content
+        : Stack(
+            children: [
+              content,
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: FloatingActionButton.extended(
+                  key: const Key('notes-fab'),
+                  heroTag: null,
+                  onPressed: () => _pane == 'notes'
+                      ? _addNote(context, trip?.notes ?? const [])
+                      : _editItem(context, trip?.checklist ?? const []),
+                  icon: const Icon(Icons.add_rounded),
+                  label: Text(_pane == 'notes' ? l10n.notesAddNote : l10n.notesAddItem),
+                ),
+              ),
+            ],
+          );
     // Desktop: planner layout, members as a third column next to notes and passes.
-    if (MediaQuery.sizeOf(context).width < 1280) return content;
+    if (MediaQuery.sizeOf(context).width < 1280) return withFab;
     return Row(
       children: [
-        Expanded(child: content),
+        Expanded(child: withFab),
         Container(
           key: const Key('planner-members'),
           width: 340,
@@ -415,7 +438,14 @@ class _NotesTabState extends ConsumerState<NotesTab> {
             ],
           ),
         ),
-        if (shown.isEmpty)
+        if (shown.isEmpty && items.isEmpty && _flag('enableCoachEmptyStates'))
+          EmptyState(
+            key: const Key('checklist-empty'),
+            icon: Icons.checklist_rounded,
+            title: l10n.coachChecklistTitle,
+            subtitle: l10n.coachChecklistBody,
+          )
+        else if (shown.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 28),
             child: Text(
@@ -627,8 +657,22 @@ class _NotesTabState extends ConsumerState<NotesTab> {
         padding: quick ? const EdgeInsets.fromLTRB(16, 8, 16, 0) : null,
         children: [
           if (quick) _quickCapture(notes),
-          Padding(padding: const EdgeInsets.all(24), child: Text(l10n.notesEmptyNotes)),
-          AppButton(key: const Key('note-add'), label: l10n.notesAddNote, onPressed: () => _addNote(context, notes)),
+          if (_flag('enableCoachEmptyStates'))
+            EmptyState(
+              key: const Key('notes-empty'),
+              icon: Icons.sticky_note_2_outlined,
+              title: l10n.coachNotesTitle,
+              subtitle: l10n.coachNotesBody,
+              action: AppButton(
+                key: const Key('note-add'),
+                label: l10n.notesAddNote,
+                onPressed: () => _addNote(context, notes),
+              ),
+            )
+          else ...[
+            Padding(padding: const EdgeInsets.all(24), child: Text(l10n.notesEmptyNotes)),
+            AppButton(key: const Key('note-add'), label: l10n.notesAddNote, onPressed: () => _addNote(context, notes)),
+          ],
         ],
       );
     }

@@ -5130,3 +5130,13 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** The web app does not know the mark and still counts those expenses. Other members still see the row and amount.
 * **Release Cut:** version bumped to `3.62.0` via `npm run release:minor`.
 
+---
+
+## Flutter v3.63.0: clean trip page and ten UI/UX enhancements
+* **Context:** The photo banner and status row under the trip name made the page heavy; the Who paid list showed an unexplained Share figure.
+* **Decision:** `enableTripCoverHeader` and `enableTripHeaderStrip` moved to Labs, default OFF (code kept); sync state became a top-bar icon shown only when needed. Nine new Trip-pack flags, all default ON (163 in total): `enableCleanTopBar`, `enableContextFab`, `enableSummaryFocus`, `enableJumpToToday`, `enableQuickAmounts`, `enableCoachEmptyStates`, `enableSkeletonLoaders`, `enableHighContrast`, `enableHapticsSetting`.
+  - **Who paid:** rows say Their part and a legend explains the bar (paid) versus their cut of the costs.
+  - **Tests:** the harness starts with `enableSummaryFocus` off so older Summary tests keep reading Trip numbers; `tripMenu()` opens the More menu.
+* **Trade-offs Accepted:** Day totals and sticky day headers already existed, so only Jump to today was added. Special full-screen sheets (passport, wrapped) keep their own look.
+* **Release Cut:** version bumped to `3.63.0` via `npm run release:minor`.
+

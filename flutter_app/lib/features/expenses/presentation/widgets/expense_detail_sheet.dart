@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/auth_state.dart';
+import '../../../../core/platform/haptics.dart';
 import '../../../../core/format/money.dart';
 import '../../../../data/providers.dart';
 import '../../../../domain/logic/category_color.dart';
@@ -257,7 +258,10 @@ class ExpenseDetailSheet extends ConsumerWidget {
                 key: const Key('detail-count-switch'),
                 contentPadding: EdgeInsets.zero,
                 value: !e.excludeFromTotals,
-                onChanged: (counted) => unawaited(repo.update(e.copyWith(excludeFromTotals: !counted))),
+                onChanged: (counted) {
+                  unawaited(AppHaptics.selection());
+                  unawaited(repo.update(e.copyWith(excludeFromTotals: !counted)));
+                },
                 title: Text(l10n.detailCountTitle),
                 subtitle: Text(l10n.detailCountSub),
               ),

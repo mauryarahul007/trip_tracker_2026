@@ -12,6 +12,7 @@ import 'package:trip_tracker/features/expenses/presentation/expenses_tab.dart';
 import 'package:trip_tracker/features/expenses/presentation/ledger_tab.dart';
 
 import '../../support/pump_app.dart';
+import '../../support/seed.dart';
 
 ProviderContainer containerOf(WidgetTester tester) =>
     ProviderScope.containerOf(tester.element(find.byType(MaterialApp)));
@@ -76,12 +77,12 @@ void main() {
     await pumpApp(tester, user: asha);
     await openTrip(tester);
     expect(find.byKey(const Key('route-panel')), findsNothing);
-    await tester.tap(find.byKey(const Key('action-trip-map')));
+    await tripMenu(tester, 'action-trip-map');
     await settle(tester, rounds: 8);
     expect(find.byKey(const Key('route-panel')), findsOneWidget);
     expect(find.text('No route yet'), findsOneWidget);
     expect(find.byKey(const Key('route-add-stops')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('action-trip-map'))); // toggles back off
+    await tripMenu(tester, 'action-trip-map'); // toggles back off
     await settle(tester, rounds: 8);
     expect(find.byKey(const Key('route-panel')), findsNothing);
   });
@@ -155,7 +156,7 @@ void main() {
   testApp('settings opens from the header and returns', (tester) async {
     await pumpApp(tester, user: asha);
     final id = await openTrip(tester);
-    await tester.tap(find.byTooltip('Settings'));
+    await tripMenu(tester, 'action-trip-settings');
     await settle(tester, rounds: 10);
     expect(location(tester), '/trip/$id/settings');
     await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));

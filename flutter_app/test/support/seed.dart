@@ -96,3 +96,10 @@ Future<void> centre(WidgetTester tester, Finder f) async {
   await Scrollable.ensureVisible(tester.element(f), alignment: 0.4);
   await tester.pump();
 }
+
+/// Opens the trip top bar's More menu and taps [itemKey] (action-share, action-trip-map, action-trip-settings...).
+Future<void> tripMenu(WidgetTester tester, String itemKey) async {
+  await tester.tap(find.byKey(const Key('action-trip-more')));
+  await settle(tester, rounds: 4);
+  await tester.tap(find.byKey(Key(itemKey)));
+}

@@ -146,10 +146,10 @@ void main() {
     await settle(tester, rounds: 12);
     await tester.tap(find.textContaining('Diana joined the trip'));
     await settle(tester, rounds: 14);
-    expect(find.byKey(const Key('trip-strip')), findsOneWidget); // landed in the trip
+    expect(find.byKey(const Key('trip-title')), findsOneWidget); // landed in the trip
     await tester.binding.handlePopRoute();
     await settle(tester, rounds: 12);
-    expect(find.byKey(const Key('trip-strip')), findsNothing);
+    expect(find.byKey(const Key('trip-title')), findsNothing);
     expect(find.textContaining('Diana joined the trip'), findsOneWidget); // back on the list, not the trips home
   });
 
@@ -166,13 +166,13 @@ void main() {
     await settle(tester, rounds: 12);
     await tester.tap(find.textContaining('Diana joined the trip'));
     await settle(tester, rounds: 14);
-    expect(find.byKey(const Key('trip-strip')), findsOneWidget);
+    expect(find.byKey(const Key('trip-title')), findsOneWidget);
     await tester.binding.handlePopRoute(); // first back: the tab visited before the row's tab
     await settle(tester, rounds: 12);
-    expect(find.byKey(const Key('trip-strip')), findsOneWidget);
+    expect(find.byKey(const Key('trip-title')), findsOneWidget);
     await tester.binding.handlePopRoute(); // second back: leaves the trip
     await settle(tester, rounds: 12);
-    expect(find.byKey(const Key('trip-strip')), findsNothing);
+    expect(find.byKey(const Key('trip-title')), findsNothing);
     expect(find.text('Goa Weekend'), findsWidgets); // the trips list
   });
 

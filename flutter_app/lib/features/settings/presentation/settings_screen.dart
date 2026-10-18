@@ -95,6 +95,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final picked = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: true, // same grab handle as every AppSheet
       builder: (ctx) => SafeArea(
         child: ListView(
           shrinkWrap: true,
@@ -224,6 +225,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           value: amoled,
           onChanged: (v) => r.read(amoledPrefProvider.notifier).set(v),
         ),
+      if (r.watch(flagProvider(('enableHighContrast', null))).value ?? true)
+        SettingsSwitchTile(
+          key: const Key('settings-high-contrast'),
+          icon: Icons.format_color_text_rounded,
+          iconColor: const Color(0xFF5A6173),
+          title: 'High contrast',
+          subtitle: 'Darker text and stronger borders, easier to read in sunlight',
+          value: r.watch(highContrastPrefProvider),
+          onChanged: (v) => r.read(highContrastPrefProvider.notifier).set(v),
+        ),
       if (r.watch(flagProvider(('enableReduceMotion', null))).value ?? true)
         SettingsSwitchTile(
           key: const Key('settings-reduce-motion'),
@@ -254,14 +265,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           value: r.watch(soundFeedbackPrefProvider),
           onChanged: (v) => r.read(soundFeedbackPrefProvider.notifier).set(v),
         ),
-      SettingsSwitchTile(
-        key: const Key('settings-haptics'),
-        icon: Icons.vibration_rounded,
-        iconColor: const Color(0xFF8B3CF7),
-        title: 'Haptic feedback',
-        value: haptics,
-        onChanged: (v) => r.read(hapticsEnabledProvider.notifier).set(v),
-      ),
+      if (r.watch(flagProvider(('enableHapticsSetting', null))).value ?? true)
+        SettingsSwitchTile(
+          key: const Key('settings-haptics'),
+          icon: Icons.vibration_rounded,
+          iconColor: const Color(0xFF8B3CF7),
+          title: 'Haptic feedback',
+          subtitle: 'Light taps on saves, swipes, undo and tabs',
+          value: haptics,
+          onChanged: (v) => r.read(hapticsEnabledProvider.notifier).set(v),
+        ),
       SettingsTile(
         key: const Key('settings-currency'),
         icon: Icons.payments_outlined,
@@ -680,6 +693,7 @@ void _showChangelog(BuildContext context) {
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    showDragHandle: true, // same grab handle as every AppSheet
     builder: (ctx) => DraggableScrollableSheet(
       expand: false,
       builder: (_, controller) => ListView(

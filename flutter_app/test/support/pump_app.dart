@@ -126,7 +126,8 @@ Future<TestApp> pumpApp(
     auth: FakeAuthRepository(user: user, paused: signInsPaused),
     social: FakeSocialAuth(hasApple: appleAvailable),
     biometric: FakeBiometric()..passes = biometricPasses,
-    flags: FakeFlags(flagsOn, flagsOff),
+    // Summary focus folds Trip numbers away; the older tests read those numbers, so they start with it off.
+    flags: FakeFlags(flagsOn, {...flagsOff, if (!flagsOn.contains('enableSummaryFocus')) 'enableSummaryFocus'}),
     prefs: prefs,
     db: AppDatabase.memory(),
     join: FakeJoinRepository(),

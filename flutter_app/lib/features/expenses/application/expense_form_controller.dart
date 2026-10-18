@@ -66,6 +66,7 @@ class FormFlags {
   bool get compactForm => _f('enableCompactExpenseForm');
   bool get explain => _f('enableExplainThisNumber');
   bool get approvalThreshold => _f('enableExpenseApprovalThreshold');
+  bool get quickAmounts => _f('enableQuickAmounts');
   bool get personalExpense => _f('enableExpenseExclusion');
   bool get chatCards => _f('enableInChatEventCards') && _f('enableTripChat');
 
@@ -92,6 +93,7 @@ class FormFlags {
     'enableInChatEventCards',
     'enableTripChat',
     'enableExpenseExclusion',
+    'enableQuickAmounts',
   ];
 }
 
@@ -923,6 +925,17 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
 
   /// Live preview of what each person will owe (entry currency).
   Map<String, double> preview() => previewShares(toInput());
+
+  /// Up to four amounts recently used on this trip (newest first, distinct), for one-tap entry.
+  List<double> get recentAmounts {
+    final seen = <double>{};
+    for (final e in _expenses) {
+      if (e.isSettlement || e.title.startsWith('Settlement:') || e.amount <= 0) continue;
+      seen.add(double.parse(e.amount.toStringAsFixed(2)));
+      if (seen.length == 4) break;
+    }
+    return seen.toList();
+  }
 
   /// The amount as the form will evaluate it (math expressions included), or null.
   double? get evaluatedAmount {

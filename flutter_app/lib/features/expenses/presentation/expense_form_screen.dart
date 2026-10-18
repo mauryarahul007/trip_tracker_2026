@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/platform/haptics.dart';
 import '../../../core/format/money.dart';
 import '../../../data/platform/receipt_picker.dart';
 import '../../../data/providers.dart';
@@ -436,6 +437,33 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                                 ),
                             ],
                           ),
+                          if (flags.quickAmounts && s.amount.trim().isEmpty && c.recentAmounts.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 8,
+                                children: [
+                                  for (final a in c.recentAmounts)
+                                    ActionChip(
+                                      key: Key('quick-amount-${a.toString()}'),
+                                      label: Text(a == a.roundToDouble() ? a.round().toString() : a.toStringAsFixed(2)),
+                                      materialTapTargetSize: MaterialTapTargetSize.padded,
+                                      onPressed: () {
+                                        unawaited(AppHaptics.selection());
+                                        final text = a == a.roundToDouble()
+                                            ? a.round().toString()
+                                            : a.toStringAsFixed(2);
+                                        _amount.value = TextEditingValue(
+                                          text: text,
+                                          selection: TextSelection.collapsed(offset: text.length),
+                                        );
+                                        c.setAmount(text);
+                                      },
+                                    ),
+                                ],
+                              ),
+                            ),
                           if (c.amountIsExpression && amountVal != null)
                             Padding(
                               padding: const EdgeInsets.only(top: 4),
@@ -645,7 +673,10 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                       key: const Key('personal-switch'),
                       contentPadding: EdgeInsets.zero,
                       value: s.excludeFromTotals,
-                      onChanged: c.setPersonal,
+                      onChanged: (v) {
+                        unawaited(AppHaptics.selection());
+                        c.setPersonal(v);
+                      },
                       title: Text(l10n.formPersonalTitle),
                       subtitle: Text(l10n.formPersonalSub),
                     ),

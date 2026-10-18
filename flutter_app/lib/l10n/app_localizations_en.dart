@@ -122,8 +122,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String ledSpendShare(String amount) {
-    return 'Share $amount';
+    return 'Their part $amount';
   }
+
+  @override
+  String get ledPaidLegend => 'Bar = money they paid. Their part = their cut of all the costs.';
 
   @override
   String get mapNoRoute => 'No route yet';
@@ -1831,6 +1834,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripSwitchTitle => 'Switch trip';
+
+  @override
+  String get coachNotesTitle => 'No notes yet';
+
+  @override
+  String get coachNotesBody => 'Keep tickets, hotel details and ideas here. Everyone on the trip can read them.';
+
+  @override
+  String get coachChecklistTitle => 'Your packing list starts here';
+
+  @override
+  String get coachChecklistBody => 'Add what to bring or book, and tick things off together. Tap Add item to begin.';
+
+  @override
+  String get expJumpToday => 'Jump to today';
+
+  @override
+  String get tripMoreMenu => 'More';
+
+  @override
+  String get tripRouteMap => 'Route map';
+
+  @override
+  String get tripSettingsMenu => 'Trip settings';
+
+  @override
+  String get tripAppSettings => 'App settings';
 
   @override
   String get formPersonalTitle => 'Just for me';
