@@ -2124,5 +2124,85 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-18T05:03:51.420Z",
     "shippedNote": "Shipped in commit e14a650 (v3.60.0): behind enableFeedbackPack, enableReduceMotion, enableNotificationDayGroups (Trip pack, default ON); photos are now kept on the device."
+  },
+  {
+    "id": "FEAT-134",
+    "title": "Flutter: Trip numbers tabs and a single Groups/Members switch",
+    "description": "Flutter: Trip numbers tabs and a single Groups/Members switch",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T06:51:56.228Z",
+    "updatedAt": "2026-10-18T06:51:56.312Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T06:51:56.312Z",
+    "shippedNote": "Shipped in commit b903b73 (v3.61.0): headline strip plus Categories/People/Days/Details tabs; top switch removed."
+  },
+  {
+    "id": "FEAT-135",
+    "title": "Flutter: settled celebration and round-amount settling",
+    "description": "Flutter: settled celebration and round-amount settling",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T06:51:56.388Z",
+    "updatedAt": "2026-10-18T06:51:56.462Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T06:51:56.462Z",
+    "shippedNote": "Shipped in commit b903b73 (v3.61.0): behind enableSettledCelebration, enableSettleRounding (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-136",
+    "title": "Flutter: app icon shortcuts, expense history and pending-sync dots",
+    "description": "Flutter: app icon shortcuts, expense history and pending-sync dots",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T06:51:56.540Z",
+    "updatedAt": "2026-10-18T06:51:56.608Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T06:51:56.607Z",
+    "shippedNote": "Shipped in commit b903b73 (v3.61.0): behind enableAppShortcuts, enableExpenseHistory, enablePendingDots (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-137",
+    "title": "Flutter: trip templates, two-pane Summary, invite picture and quick-filter chips",
+    "description": "Flutter: trip templates, two-pane Summary, invite picture and quick-filter chips",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T06:51:56.688Z",
+    "updatedAt": "2026-10-18T06:51:56.758Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T06:51:56.758Z",
+    "shippedNote": "Shipped in commit b903b73 (v3.61.0): behind enableTripTemplates, enableSummaryTwoPane, enableInviteCard, enableExpenseQuickFilterChips (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-138",
+    "title": "Flutter: bug reports and suggestions work offline",
+    "description": "Flutter: bug reports and suggestions work offline",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T06:51:56.833Z",
+    "updatedAt": "2026-10-18T06:51:56.903Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T06:51:56.902Z",
+    "shippedNote": "Shipped in commit b903b73 (v3.61.0): behind enableOfflineFeedback (Trip pack, default ON); queued on the device and sent on reconnect."
   }
 ]

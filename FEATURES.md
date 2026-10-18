@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **133** |
+| **Total Tracked** | **138** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **131** |
+| **✅ Shipped** | **136** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -183,6 +183,11 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-131** | Flutter: Today card, wrap-up prompt, spend ring, receipt gallery and Collapse Trip numbers | `analytics` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableTodayCard, enableCloseoutPrompt, enableSpendRing, enableReceiptGallery, enableSummaryCollapse (Trip pack, default ON). |
 | **FEAT-132** | Flutter: amount keypad, smart expense defaults and Confirm on notifications | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableAmountKeypad, enableSmartExpenseDefaults, enableNotificationActions (Trip pack, default ON). |
 | **FEAT-133** | Flutter: sound feedback, Reduce motion, notification day groups and rolling hero numbers | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableFeedbackPack, enableReduceMotion, enableNotificationDayGroups (Trip pack, default ON); photos are now kept on the device. |
+| **FEAT-134** | Flutter: Trip numbers tabs and a single Groups/Members switch | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b903b73 (v3.61.0): headline strip plus Categories/People/Days/Details tabs; top switch removed. |
+| **FEAT-135** | Flutter: settled celebration and round-amount settling | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b903b73 (v3.61.0): behind enableSettledCelebration, enableSettleRounding (Trip pack, default ON). |
+| **FEAT-136** | Flutter: app icon shortcuts, expense history and pending-sync dots | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b903b73 (v3.61.0): behind enableAppShortcuts, enableExpenseHistory, enablePendingDots (Trip pack, default ON). |
+| **FEAT-137** | Flutter: trip templates, two-pane Summary, invite picture and quick-filter chips | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b903b73 (v3.61.0): behind enableTripTemplates, enableSummaryTwoPane, enableInviteCard, enableExpenseQuickFilterChips (Trip pack, default ON). |
+| **FEAT-138** | Flutter: bug reports and suggestions work offline | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b903b73 (v3.61.0): behind enableOfflineFeedback (Trip pack, default ON); queued on the device and sent on reconnect. |
 
 ---
 
