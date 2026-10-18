@@ -5107,3 +5107,15 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** The sample trip is a normal trip, so it syncs when the account does. The trip accent and pins are cosmetic and device-only. The amount keypad inserts `*` and `/` because the calculator does not read the multiplication and division signs. Several flags are read only after they have resolved (tour, collapse) so a loading flag never counts as permission.
 * **Release Cut:** version bumped to `3.60.0` via `npm run release:minor`.
 
+---
+
+## Flutter v3.61.0: Trip numbers tabs, offline feedback, shortcuts and ten more polish features
+* **Context:** On-device review: the Summary's Trip numbers was too long and had a duplicate Groups/People switch; bug reports and suggestions failed offline.
+* **Decision:** Trip-pack flags, all default ON (151 in total): `enableSettledCelebration`, `enableSettleRounding`, `enableAppShortcuts`, `enableExpenseHistory`, `enablePendingDots`, `enableTripTemplates`, `enableSummaryTwoPane`, `enableInviteCard`, `enableOfflineFeedback`; `enableExpenseQuickFilterChips` moved Pro to Trip and default ON.
+  - **Trip numbers:** headline strip plus Categories / People / Days / Details tabs; the top Groups/Members switch is removed, the one beside Who paid stays.
+  - **Offline feedback:** bug reports and suggestions are queued on the device (SharedPreferences) and flushed on reconnect/resume, dropped after 5 failed tries.
+  - **Shortcuts:** Android static shortcuts open `com.triptracker.app://shortcut/...`; the app picks the latest trip (active, else next, else most recent).
+  - **Accessibility:** audit tests for the new screens; fixed unlabeled trip arrows, 48 px targets, one contrast miss, a 200% text overflow.
+* **Trade-offs Accepted:** Shortcuts are Android only. The queued feedback is device-only until sent.
+* **Release Cut:** version bumped to `3.61.0` via `npm run release:minor`.
+

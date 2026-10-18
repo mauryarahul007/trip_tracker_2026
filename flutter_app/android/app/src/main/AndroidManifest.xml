@@ -38,6 +38,8 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Long-press the icon: Add expense, Latest trip (see res/xml/shortcuts.xml per flavor) -->
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
             <!-- Custom-scheme deep links: com.triptracker.app://join/CODE etc. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>

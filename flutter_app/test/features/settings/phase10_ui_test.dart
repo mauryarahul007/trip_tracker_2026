@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trip_tracker/domain/repositories/feedback_repository.dart' show FeedbackUnavailable;
+import 'package:trip_tracker/features/feedback/application/feedback_providers.dart' show feedbackQueueProvider;
 import 'package:go_router/go_router.dart';
 import 'package:trip_tracker/app/router.dart';
 import 'package:trip_tracker/core/platform/haptics.dart';
@@ -381,6 +384,81 @@ void main() {
       );
       expect(find.byKey(const Key('version-gate-block')), findsNothing);
       expect(find.byKey(const Key('version-gate-soft')), findsNothing);
+    });
+  });
+
+  group('Feedback offline', () {
+    Future<void> submitBug(WidgetTester tester) async {
+      await tester.enterText(find.byKey(const Key('bug-title')), 'Odd total');
+      await tester.dragUntilVisible(
+        find.byKey(const Key('bug-submit')),
+        find.byType(ListView).first,
+        const Offset(0, -200),
+      );
+      await tester.tap(find.byKey(const Key('bug-submit')));
+      await settle(tester, rounds: 12);
+    }
+
+    testApp('offline, a bug report is saved on the phone and not sent; a note says it is waiting', (tester) async {
+      final app = await pumpApp(tester, user: asha, online: false);
+      await go(tester, '/settings/report-bug');
+      await submitBug(tester);
+      expect(app.feedback.bugs, isEmpty);
+      expect(tester.widget<Text>(find.byKey(const Key('bug-sent'))).data, contains('Saved on this phone'));
+      expect(find.byKey(const Key('feedback-pending')), findsOneWidget);
+      expect(app.prefs.getString('feedback.pending'), contains('Odd total'));
+    });
+
+    testApp('offline, a feature suggestion is saved too', (tester) async {
+      final app = await pumpApp(tester, user: asha, online: false);
+      await go(tester, '/settings/feature-request');
+      await tester.enterText(find.byKey(const Key('feature-title')), 'Dark map');
+      await tester.tap(find.byKey(const Key('feature-submit')));
+      await settle(tester, rounds: 12);
+      expect(app.feedback.features, isEmpty);
+      expect(tester.widget<Text>(find.byKey(const Key('feature-sent'))).data, contains('Saved on this phone'));
+      expect(find.byKey(const Key('feedback-pending')), findsOneWidget);
+    });
+
+    testApp('what was saved offline is sent when the connection is back, and the note goes away', (tester) async {
+      final app = await pumpApp(tester, user: asha);
+      final queue = containerOf(tester).read(feedbackQueueProvider.notifier);
+      // Saved earlier while offline (written the way the queue writes it).
+      SharedPreferences.setMockInitialValues({});
+      await app.prefs.setString(
+        'feedback.pending',
+        '[{"id":"feature-1","kind":"feature","createdAt":1,"attempts":0,"payload":{"title":"Saved idea","description":"","category":"general","requestedBy":"in-app-flutter","environment":{}}}]',
+      );
+      containerOf(tester).invalidate(feedbackQueueProvider);
+      expect(containerOf(tester).read(feedbackQueueProvider).length, 1);
+      expect(await queue.flush(), 1);
+      expect(app.feedback.features, ['Saved idea']);
+      expect(containerOf(tester).read(feedbackQueueProvider), isEmpty);
+    });
+
+    testApp('with the flag off nothing is kept: the old direct send is used', (tester) async {
+      final app = await pumpApp(tester, user: asha, online: false, flagsOff: {'enableOfflineFeedback'});
+      await go(tester, '/settings/report-bug');
+      await submitBug(tester);
+      expect(app.feedback.bugs.length, 1); // straight to the repository, as before
+      expect(find.byKey(const Key('feedback-pending')), findsNothing);
+      expect(app.prefs.getString('feedback.pending'), isNull);
+    });
+
+    testApp('a guest offline is not queued: there is no account to send it from', (tester) async {
+      await pumpApp(tester, user: null, online: false);
+      final queue = containerOf(tester).read(feedbackQueueProvider.notifier);
+      await expectLater(
+        queue.submitFeature(
+          title: 'x',
+          description: '',
+          category: 'general',
+          requestedBy: 'in-app-flutter',
+          environment: const {},
+        ),
+        throwsA(isA<FeedbackUnavailable>()),
+      );
+      expect(containerOf(tester).read(feedbackQueueProvider), isEmpty);
     });
   });
 

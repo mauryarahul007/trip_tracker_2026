@@ -26,6 +26,34 @@ class BugReport {
   final String actualBehavior;
   final Map<String, Object?> diagnostics;
   final String? fingerprint;
+
+  Map<String, Object?> toJson() => {
+    'title': title,
+    'description': description,
+    'severity': severity,
+    'category': category,
+    'foundBy': foundBy,
+    'environment': environment,
+    'reproSteps': reproSteps,
+    'expectedBehavior': expectedBehavior,
+    'actualBehavior': actualBehavior,
+    'diagnostics': diagnostics,
+    'fingerprint': fingerprint,
+  };
+
+  factory BugReport.fromJson(Map<String, dynamic> j) => BugReport(
+    title: j['title'] as String? ?? '',
+    description: j['description'] as String? ?? '',
+    severity: j['severity'] as String? ?? 'medium',
+    category: j['category'] as String? ?? 'general',
+    foundBy: j['foundBy'] as String? ?? 'in-app-flutter',
+    environment: Map<String, Object?>.from(j['environment'] as Map? ?? const {}),
+    reproSteps: [for (final x in (j['reproSteps'] as List? ?? const [])) '$x'],
+    expectedBehavior: j['expectedBehavior'] as String? ?? '',
+    actualBehavior: j['actualBehavior'] as String? ?? '',
+    diagnostics: Map<String, Object?>.from(j['diagnostics'] as Map? ?? const {}),
+    fingerprint: j['fingerprint'] as String?,
+  );
 }
 
 class MyBugReport {

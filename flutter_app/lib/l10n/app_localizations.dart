@@ -3103,6 +3103,132 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get keypadDone;
 
+  /// No description provided for @numbersTabCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get numbersTabCategories;
+
+  /// No description provided for @numbersTabPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get numbersTabPeople;
+
+  /// No description provided for @numbersTabDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get numbersTabDays;
+
+  /// No description provided for @numbersTabDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get numbersTabDetails;
+
+  /// No description provided for @numbersShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all {count}'**
+  String numbersShowAll(int count);
+
+  /// No description provided for @numbersShowLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get numbersShowLess;
+
+  /// No description provided for @celebrateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone is square'**
+  String get celebrateTitle;
+
+  /// No description provided for @celebrateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'All payments on this trip are settled.'**
+  String get celebrateBody;
+
+  /// No description provided for @settleRound.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay a round amount: {amount}'**
+  String settleRound(String amount);
+
+  /// No description provided for @historyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get historyAdded;
+
+  /// No description provided for @historyAddedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'by {name}, {when}'**
+  String historyAddedBy(String name, String when);
+
+  /// No description provided for @historyEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited'**
+  String get historyEdited;
+
+  /// No description provided for @pendingDotLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes waiting to sync'**
+  String get pendingDotLabel;
+
+  /// No description provided for @templateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from a template (optional)'**
+  String get templateTitle;
+
+  /// No description provided for @templateWeekend.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekend'**
+  String get templateWeekend;
+
+  /// No description provided for @templateRoadTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Road trip'**
+  String get templateRoadTrip;
+
+  /// No description provided for @templateGroupStay.
+  ///
+  /// In en, this message translates to:
+  /// **'Group stay'**
+  String get templateGroupStay;
+
+  /// No description provided for @inviteCardShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share invite picture'**
+  String get inviteCardShare;
+
+  /// No description provided for @inviteCardScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the code or enter it in Trip Tracker to join'**
+  String get inviteCardScan;
+
+  /// No description provided for @tripPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous trip'**
+  String get tripPrevious;
+
+  /// No description provided for @tripNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next trip'**
+  String get tripNext;
+
   /// No description provided for @ledYouPay.
   ///
   /// In en, this message translates to:

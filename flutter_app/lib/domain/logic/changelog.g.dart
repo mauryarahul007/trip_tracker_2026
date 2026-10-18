@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.61.0', '2026-10-18', [
+    'Behind the scenes: the Flutter app has a tidier Trip numbers section (a headline strip and Categories / People / Days / Details tabs), a celebration when a trip is fully settled, a round-amount option when settling, app icon shortcuts (Add expense, Latest trip), an added/edited line on each expense, a pending-sync dot on trips, trip templates, a two-pane Summary on wide screens, a shareable invite picture, expense quick-filter chips, and bug reports and suggestions that are saved offline and sent when you are back online. Accessibility fixes: labelled trip arrows, larger tap targets, better contrast and no overflow at large text. No change to the web app.',
+  ]),
   ChangelogEntry('3.60.0', '2026-10-18', [
     'Behind the scenes: the Flutter app shows trips as destination-photo tiles (with a Grid / List switch and pinned trips), a cover photo band and saved/syncing line inside a trip, arrows to jump between trips, a Today card and a wrap-up prompt on the Summary, a Plan and suggestions card, a spend-by-person ring, a receipt gallery, search that also finds expenses and notes, a Confirm button on notifications, smart expense defaults and an amount keypad, odometer-style rolling numbers on the hero amount, photos kept on the device, an Updated caption with pull to refresh, a first-run tour with a sample trip, sound feedback, a Reduce motion setting, Collapse Trip numbers, and a back gesture that returns to the page you came from. No change to the web app.',
   ]),
@@ -40,8 +43,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.50.1', '2026-10-09', [
     'Behind the scenes: Flutter Superadmin login now opens a Superadmin screen whose Ops Deck button signs you straight into the web portal, and web links open correctly on Android. No change to the web app.',
-  ]),
-  ChangelogEntry('3.50.0', '2026-10-09', [
-    'Behind the scenes: Flutter app now uses the web app colours (teal and orange), passes show as cards, and Superadmin login opens a Superadmin screen. No change to the web app.',
   ]),
 ];

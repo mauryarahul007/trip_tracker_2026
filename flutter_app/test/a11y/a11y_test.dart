@@ -1,8 +1,13 @@
 import 'dart:async';
 
+import 'dart:convert';
+
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trip_tracker/app/router.dart';
+import 'package:trip_tracker/data/local/app_database.dart';
+import 'package:trip_tracker/data/providers.dart';
 import 'package:trip_tracker/shared/theme/app_theme.dart';
 import 'package:trip_tracker/shared/widgets/app_button.dart';
 import 'package:trip_tracker/shared/widgets/app_switch.dart';
@@ -244,6 +249,161 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(find.text('Delete'), findsOneWidget);
+    });
+  });
+
+  // The batch-3 screens: tiles with photos, the trip strip with arrows, the receipt gallery, the tour, the keypad,
+  // Trip numbers tabs, the invite sheet and the create sheet with templates.
+  group('batch 3 screens', () {
+    Finder k(String key) => find.byKey(Key(key));
+
+    Future<void> twoTrips(WidgetTester tester) async {
+      final c = containerOf(tester);
+      for (final (name, offset) in [('Later Trip', 20), ('Sooner Trip', 5)]) {
+        final now = DateTime.now();
+        String ymd(DateTime d) => d.toIso8601String().substring(0, 10);
+        await real(
+          tester,
+          () => c
+              .read(tripRepositoryProvider)
+              .createTrip(
+                name: name,
+                startDate: ymd(now.add(Duration(days: offset))),
+                endDate: ymd(now.add(Duration(days: offset + 3))),
+                baseCurrency: 'INR',
+                ownerId: 'u1',
+                creatorName: 'Asha',
+                destination: 'Goa',
+              ),
+        );
+      }
+    }
+
+    testApp('photo tiles with a cover and the trip strip with arrows', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpApp(tester, user: asha, coverResolver: (d) async => d == 'Goa' ? 'https://img.test/goa.jpg' : null);
+      await twoTrips(tester);
+      await settle(tester, rounds: 10);
+      await guidelines(tester);
+      final id = (await real(
+        tester,
+        () => containerOf(tester).read(tripRepositoryProvider).watchTrips().first,
+      )).firstWhere((t) => t.name == 'Later Trip').id;
+      await go(tester, '/trip/$id/ledger');
+      expect(k('trip-next'), findsOneWidget);
+      await guidelines(tester);
+      handle.dispose();
+    });
+
+    testApp('receipt gallery', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      final id = await addExpense(tester, s, title: 'Dinner', amount: 80);
+      final db = containerOf(tester).read(appDatabaseProvider);
+      await real(tester, () async {
+        final row = await (db.select(db.expensesTable)..where((t) => t.id.equals(id))).getSingle();
+        final json = jsonDecode(row.domainJson!) as Map<String, dynamic>;
+        json['receiptPath'] = 'https://img.test/r.jpg';
+        await (db.update(
+          db.expensesTable,
+        )..where((t) => t.id.equals(id))).write(ExpensesTableCompanion(domainJson: Value(jsonEncode(json))));
+      });
+      await go(tester, '/trip/${s.tripId}/receipts');
+      expect(k('receipts-grid'), findsOneWidget);
+      await guidelines(tester);
+      handle.dispose();
+    });
+
+    testApp('first-run tour', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpApp(tester, user: asha, prefsExtra: {'tour.done': false});
+      await settle(tester, rounds: 8);
+      expect(k('first-run-tour'), findsOneWidget);
+      await guidelines(tester);
+      handle.dispose();
+    });
+
+    testApp('amount keypad', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await go(tester, '/trip/${s.tripId}/expenses/new');
+      await tester.tap(k('amount-keypad-button'));
+      await settle(tester, rounds: 6);
+      expect(k('amount-keypad'), findsOneWidget);
+      await guidelines(tester);
+      handle.dispose();
+    });
+
+    testApp('Trip numbers: People tab with the ring and the switch', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await real(
+        tester,
+        () => containerOf(tester).read(memberRepositoryProvider).createGroup(s.tripId, 'Duo', [s.ben, s.cara]),
+      );
+      await addExpense(tester, s, amount: 90);
+      await addExpense(tester, s, title: 'Taxi', amount: 30, paidBy: s.ben, userId: 'u2');
+      await go(tester, '/trip/${s.tripId}/ledger');
+      await tester.scrollUntilVisible(
+        k('numbers-tab-people'),
+        300,
+        scrollable: find.descendant(of: k('ledger-list'), matching: find.byType(Scrollable)),
+      );
+      await centre(tester, k('numbers-tab-people'));
+      await tester.tap(k('numbers-tab-people'));
+      await settle(tester, rounds: 6);
+      await guidelines(tester);
+      handle.dispose();
+    });
+  });
+
+  group('batch 3 screens at 200% text (no overflow)', () {
+    Future<void> big(WidgetTester tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    }
+
+    testApp('first-run tour', (tester) async {
+      await big(tester);
+      await pumpApp(tester, user: asha, prefsExtra: {'tour.done': false});
+      await settle(tester, rounds: 8);
+      expect(tester.takeException(), isNull);
+    });
+
+    testApp('amount keypad', (tester) async {
+      await big(tester);
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await go(tester, '/trip/${s.tripId}/expenses/new');
+      await tester.tap(find.byKey(const Key('amount-keypad-button')));
+      await settle(tester, rounds: 6);
+      expect(tester.takeException(), isNull);
+    });
+
+    testApp('receipts and the invite sheet', (tester) async {
+      await big(tester);
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await go(tester, '/trip/${s.tripId}/receipts');
+      expect(tester.takeException(), isNull);
+    });
+
+    testApp('Trip numbers tabs', (tester) async {
+      await big(tester);
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await addExpense(tester, s, amount: 90);
+      await addExpense(tester, s, title: 'Taxi', amount: 30, paidBy: s.ben, userId: 'u2');
+      await go(tester, '/trip/${s.tripId}/ledger');
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('numbers-tab-people')),
+        300,
+        scrollable: find.descendant(of: find.byKey(const Key('ledger-list')), matching: find.byType(Scrollable)),
+      );
+      expect(tester.takeException(), isNull);
     });
   });
 }

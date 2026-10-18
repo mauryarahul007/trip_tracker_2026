@@ -47,6 +47,10 @@ DeepLinkTarget? routeForDeepLink(Uri uri) {
       return DeepLinkTarget('/${segments.first}/$id', attribution: attribution);
     case 'reset-password':
       return DeepLinkTarget('/reset-password', attribution: attribution);
+    // App icon shortcuts: the screen is chosen in the app (it knows which trip is the latest).
+    case 'shortcut':
+      if (segments.length < 2 || !(segments[1] == 'add-expense' || segments[1] == 'latest-trip')) return null;
+      return DeepLinkTarget('/shortcut/${segments[1]}');
     default:
       return null;
   }

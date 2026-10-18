@@ -145,4 +145,24 @@ void main() {
     expect(dayBucket(DateTime(2026, 10, 10, 12).toIso8601String(), now).bucket, DayBucket.older);
     expect(dayBucket('garbage', now).bucket, DayBucket.older);
   });
+
+  test('round down to a clean amount: never up, nothing for small or already-clean amounts', () {
+    expect(roundDownToClean(287), 280);
+    expect(roundDownToClean(287.9), 280);
+    expect(roundDownToClean(12340), 12300);
+    expect(roundDownToClean(280), isNull); // already clean
+    expect(roundDownToClean(19.5), isNull); // too small to bother
+    expect(roundDownToClean(20.4), 20);
+    expect(roundDownToClean(0), isNull);
+  });
+
+  test('expense history: the author by linked user, and an edit only well after creation', () {
+    final members = [(linkedUserId: 'u1', name: 'Asha'), (linkedUserId: 'u2', name: 'Ben')];
+    final fresh = expenseHistory(createdByUserId: 'u2', createdAt: 1000, updatedAt: 20000, members: members);
+    expect((fresh.addedBy, fresh.edited), ('Ben', false)); // saved again within a minute: not an edit
+    final edited = expenseHistory(createdByUserId: 'u1', createdAt: 1000, updatedAt: 500000, members: members);
+    expect((edited.addedBy, edited.edited, edited.editedAt), ('Asha', true, 500000));
+    expect(expenseHistory(createdByUserId: 'gone', createdAt: 1, updatedAt: 1, members: members).addedBy, isNull);
+    expect(expenseHistory(createdByUserId: null, createdAt: 1, updatedAt: 1, members: members).addedBy, isNull);
+  });
 }

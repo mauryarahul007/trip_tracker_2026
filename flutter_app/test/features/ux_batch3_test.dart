@@ -2,12 +2,18 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trip_tracker/data/local/app_database.dart';
 import 'package:trip_tracker/data/providers.dart';
 import 'package:trip_tracker/features/expenses/application/expenses_providers.dart';
 import 'package:trip_tracker/features/trips/application/trip_accent.dart';
+import 'package:trip_tracker/features/trips/presentation/widgets/invite_card.dart';
+import 'package:trip_tracker/features/trips/presentation/widgets/create_trip_sheet.dart' show dateRangePickerProvider;
+import 'package:trip_tracker/features/trips/application/trips_providers.dart'
+    show pendingTripIdsProvider, syncItemsProvider;
+import 'package:trip_tracker/data/sync/outbox_store.dart' show OutboxItem;
 import 'package:trip_tracker/features/trips/presentation/widgets/trip_card.dart' show TripStatusPill;
 
 import '../support/pump_app.dart';
@@ -229,10 +235,13 @@ void main() {
       await addExpense(tester, s, title: 'Taxi', amount: 30, paidBy: s.ben, userId: 'u2');
       await goTo(tester, '/trip/${s.tripId}/ledger');
       await tester.scrollUntilVisible(
-        key('spend-ring'),
+        key('numbers-tab-people'),
         300,
         scrollable: find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable)),
       );
+      await centre(tester, key('numbers-tab-people'));
+      await tester.tap(key('numbers-tab-people'));
+      await settle(tester, rounds: 6);
       expect(key('spend-ring'), findsOneWidget);
       expect(find.text('Asha 75%'), findsOneWidget); // Asha paid 90 of 120
       await centre(tester, key('ring-chip-${s.ben}'));
@@ -248,11 +257,15 @@ void main() {
       await addExpense(tester, s, title: 'Taxi', amount: 30, paidBy: s.ben, userId: 'u2');
       await goTo(tester, '/trip/${s.tripId}/ledger');
       await tester.scrollUntilVisible(
-        key('day-timeline'),
+        key('numbers-tab-people'),
         300,
         scrollable: find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable)),
       );
+      await centre(tester, key('numbers-tab-people'));
+      await tester.tap(key('numbers-tab-people'));
+      await settle(tester, rounds: 6);
       expect(key('spend-ring'), findsNothing);
+      expect(find.text('Who paid'), findsWidgets); // the bars are still there
     });
   });
 
@@ -449,6 +462,285 @@ void main() {
         scrollable: find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable)),
       );
       expect(key('plan-card'), findsOneWidget);
+    });
+  });
+
+  group('expense history', () {
+    Future<void> openDetail(WidgetTester tester, Seed s, String title) async {
+      await goTo(tester, '/trip/${s.tripId}/expenses');
+      await tester.tap(key('tab-menu'));
+      await settle(tester);
+      await tester.tap(find.text('Expand all days')); // rows start folded under their day
+      await settle(tester);
+      await tester.tap(find.text(title));
+      await settle(tester, rounds: 8);
+    }
+
+    testApp('the detail sheet says who added the expense and when; "Edited" only after a real change', (tester) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      final id = await addExpense(tester, s, title: 'Moped', amount: 300);
+      await openDetail(tester, s, 'Moped');
+      expect(find.text('Added'), findsOneWidget);
+      expect(find.textContaining('by Asha, '), findsOneWidget); // the history line, not "Paid by Asha"
+      expect(find.text('Edited'), findsNothing);
+      Navigator.of(tester.element(find.byKey(const Key('detail-title')))).pop();
+      await settle(tester);
+
+      final db = containerOf(tester).read(appDatabaseProvider);
+      await real(tester, () async {
+        final row = await (db.select(db.expensesTable)..where((t) => t.id.equals(id))).getSingle();
+        final json = jsonDecode(row.domainJson!) as Map<String, dynamic>;
+        json['updatedAt'] = (json['createdAt'] as num).toInt() + 3600000; // an hour later
+        await (db.update(
+          db.expensesTable,
+        )..where((t) => t.id.equals(id))).write(ExpensesTableCompanion(domainJson: Value(jsonEncode(json))));
+      });
+      await settle(tester, rounds: 4);
+      await tester.tap(find.text('Moped'));
+      await settle(tester, rounds: 8);
+      expect(find.text('Edited'), findsOneWidget);
+    });
+
+    testApp('no history line with its flag off', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableExpenseHistory'});
+      final s = await seedTrip(tester);
+      await addExpense(tester, s, title: 'Moped', amount: 300);
+      await openDetail(tester, s, 'Moped');
+      expect(find.text('Added'), findsNothing);
+    });
+  });
+
+  group('pending sync dot', () {
+    testApp('a trip with unsynced changes shows the dot, in tiles and rows', (tester) async {
+      await pumpApp(tester, user: asha);
+      await seedTrip(tester);
+      await goTo(tester, '/');
+      expect(key('trip-pending-dot'), findsOneWidget); // photo tile
+      await tester.tap(key('trips-layout-toggle'));
+      await settle(tester, rounds: 6);
+      expect(key('trip-pending-dot'), findsOneWidget); // compact row
+    });
+
+    testApp('no dot with its flag off', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enablePendingDots'});
+      await seedTrip(tester);
+      await goTo(tester, '/');
+      expect(key('trip-pending-dot'), findsNothing);
+    });
+
+    test('the pending set follows the outbox: trips with queued changes, and none once it is empty', () async {
+      OutboxItem item(String id, String? trip) => OutboxItem(
+        id: id,
+        type: 'updateTripState',
+        tripId: trip,
+        payload: const {},
+        idempotencyKey: id,
+        attempts: 0,
+        status: 'pending',
+        lastError: null,
+        lastAttemptedAt: null,
+      );
+      final c = ProviderContainer(
+        overrides: [
+          syncItemsProvider.overrideWith((ref) => Stream.value([item('1', 't1'), item('2', 't1'), item('3', null)])),
+        ],
+      );
+      addTearDown(c.dispose);
+      c.listen(pendingTripIdsProvider, (_, _) {}); // keep it (and the stream under it) alive
+      await pumpEventQueue();
+      expect(c.read(pendingTripIdsProvider), {'t1'});
+      final empty = ProviderContainer(overrides: [syncItemsProvider.overrideWith((ref) => Stream.value([]))]);
+      addTearDown(empty.dispose);
+      empty.listen(pendingTripIdsProvider, (_, _) {});
+      await pumpEventQueue();
+      expect(empty.read(pendingTripIdsProvider), isEmpty);
+    });
+  });
+
+  group('trip templates', () {
+    final picker = dateRangePickerProvider.overrideWithValue(
+      (context, today, initial) async => DateTimeRange(start: DateTime(2026, 12, 1), end: DateTime(2026, 12, 5)),
+    );
+
+    Future<void> createWith(WidgetTester tester, {String? template}) async {
+      await tester.tap(key('dock-center'));
+      await settle(tester);
+      if (template != null) {
+        await tester.tap(key('template-$template'));
+        await tester.pump();
+      }
+      await tester.enterText(find.byType(TextField).at(0), 'Coorg');
+      await tester.enterText(find.byType(TextField).at(1), 'Coorg run');
+      await tester.tap(find.byIcon(Icons.date_range_rounded));
+      await settle(tester);
+      await tester.tap(find.text('Create Trip').last);
+      await settle(tester, rounds: 14);
+    }
+
+    testApp('a template adds its categories and starter checklist to the new trip', (tester) async {
+      await pumpApp(tester, user: asha, overrides: [picker]);
+      await createWith(tester, template: 'roadtrip');
+      final trip = (await real(
+        tester,
+        () => containerOf(tester).read(tripRepositoryProvider).watchTrips().first,
+      )).single;
+      final cats = await real(tester, () => containerOf(tester).read(categoryRepositoryProvider).watch(trip.id).first);
+      expect(cats.map((c) => c.name), containsAll(['Fuel', 'Tolls', 'Parking']));
+      expect(trip.checklist.length, 6);
+      expect(trip.checklist.map((i) => i.category), contains('documents'));
+    });
+
+    testApp('no template: the trip starts empty as before', (tester) async {
+      await pumpApp(tester, user: asha, overrides: [picker]);
+      await createWith(tester);
+      final trip = (await real(
+        tester,
+        () => containerOf(tester).read(tripRepositoryProvider).watchTrips().first,
+      )).single;
+      expect(trip.checklist, isEmpty);
+    });
+
+    testApp('no template chips with the flag off', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableTripTemplates'});
+      await tester.tap(key('dock-center'));
+      await settle(tester);
+      expect(key('template-roadtrip'), findsNothing);
+    });
+  });
+
+  group('two panes on wide screens', () {
+    void wide(WidgetTester tester) {
+      tester.view.physicalSize = const Size(1500, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+    }
+
+    testApp('wide: balance and plan on the left, who pays whom and Trip numbers on the right', (tester) async {
+      await pumpApp(tester, user: asha);
+      wide(tester);
+      final s = await seedTrip(tester);
+      await addExpense(tester, s, amount: 90);
+      await goTo(tester, '/trip/${s.tripId}/ledger');
+      expect(key('ledger-two-pane'), findsOneWidget);
+      expect(find.descendant(of: key('ledger-list-left'), matching: key('sticky-balance')), findsOneWidget);
+      expect(find.descendant(of: key('ledger-list'), matching: key('section-transfers')), findsOneWidget);
+      expect(find.descendant(of: key('ledger-list-left'), matching: key('section-transfers')), findsNothing);
+    });
+
+    testApp('a phone keeps one column, and so does a wide screen with the flag off', (tester) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await goTo(tester, '/trip/${s.tripId}/ledger');
+      expect(key('ledger-two-pane'), findsNothing);
+      expect(key('ledger-list'), findsOneWidget);
+    });
+
+    testApp('flag off: one column even when wide', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableSummaryTwoPane'});
+      wide(tester);
+      final s = await seedTrip(tester);
+      await goTo(tester, '/trip/${s.tripId}/ledger');
+      expect(key('ledger-two-pane'), findsNothing);
+    });
+  });
+
+  group('invite card', () {
+    test('the file name is safe', () {
+      expect(inviteCardFileName('Goa weekend'), 'invite_Goa_weekend.png');
+      expect(inviteCardFileName('  Café / Beach!  '), 'invite_Caf__Beach.png');
+      expect(inviteCardFileName(''), 'invite_trip.png');
+    });
+
+    testWidgets('the card renders to a png (with and without a photo)', (tester) async {
+      final png = await tester.runAsync(
+        () => renderInviteCardPng(
+          tripName: 'Goa weekend',
+          dates: '1–5 Dec',
+          code: 'ABC123',
+          link: 'https://app.test/join/ABC123',
+          joinLabel: 'Join code',
+          scanLabel: 'Scan to join',
+        ),
+      );
+      expect(png!.length, greaterThan(1000));
+      expect(png.sublist(0, 4), [0x89, 0x50, 0x4E, 0x47]); // a PNG file
+    });
+
+    Future<void> giveJoinCode(WidgetTester tester, String tripId) async {
+      final db = containerOf(tester).read(appDatabaseProvider);
+      await real(
+        tester,
+        () => db.customStatement(
+          "UPDATE trips SET domain_json = json_set(domain_json, '\$.joinCode', 'ABC123') WHERE id = ?",
+          [tripId],
+        ),
+      );
+    }
+
+    testApp('the share sheet offers the invite picture and shares a png', (tester) async {
+      final app = await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await giveJoinCode(tester, s.tripId);
+      await goTo(tester, '/trip/${s.tripId}/ledger');
+      await tester.tap(find.byTooltip('Share Trip'));
+      await settle(tester, rounds: 8);
+      expect(key('share-invite-card'), findsOneWidget);
+      await tester.tap(key('share-invite-card'));
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 800)));
+      await settle(tester, rounds: 8);
+      expect(app.shareService.pngs.single, startsWith('invite_'));
+    });
+
+    testApp('no invite picture button with the flag off', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableInviteCard'});
+      final s = await seedTrip(tester);
+      await giveJoinCode(tester, s.tripId);
+      await goTo(tester, '/trip/${s.tripId}/ledger');
+      await tester.tap(find.byTooltip('Share Trip'));
+      await settle(tester, rounds: 8);
+      expect(find.byKey(const Key('join-code')), findsOneWidget); // the sheet is open
+      expect(key('share-invite-card'), findsNothing);
+    });
+  });
+
+  group('app icon shortcuts', () {
+    testApp('Add expense opens the latest trip\'s form, and back lands on that trip', (tester) async {
+      final app = await pumpApp(tester, user: asha);
+      await seedTrip(tester);
+      await settle(tester, rounds: 6);
+      app.links.controller.add(Uri.parse('com.triptracker.app://shortcut/add-expense'));
+      await settle(tester, rounds: 16);
+      expect(key('amount-field'), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await settle(tester, rounds: 10);
+      expect(key('trip-strip'), findsOneWidget);
+    });
+
+    testApp('Latest trip opens it', (tester) async {
+      final app = await pumpApp(tester, user: asha);
+      await seedTrip(tester);
+      await settle(tester, rounds: 6);
+      app.links.controller.add(Uri.parse('com.triptracker.app://shortcut/latest-trip'));
+      await settle(tester, rounds: 16);
+      expect(key('trip-strip'), findsOneWidget);
+    });
+
+    testApp('with no trips, or the flag off, the shortcut just opens the home screen', (tester) async {
+      final app = await pumpApp(tester, user: asha);
+      app.links.controller.add(Uri.parse('com.triptracker.app://shortcut/add-expense'));
+      await settle(tester, rounds: 12);
+      expect(key('amount-field'), findsNothing);
+      expect(key('trip-strip'), findsNothing);
+    });
+
+    testApp('flag off: even with a trip, the shortcut only opens home', (tester) async {
+      final app = await pumpApp(tester, user: asha, flagsOff: {'enableAppShortcuts'});
+      await seedTrip(tester);
+      await settle(tester, rounds: 6);
+      app.links.controller.add(Uri.parse('com.triptracker.app://shortcut/latest-trip'));
+      await settle(tester, rounds: 12);
+      expect(key('trip-strip'), findsNothing);
     });
   });
 }

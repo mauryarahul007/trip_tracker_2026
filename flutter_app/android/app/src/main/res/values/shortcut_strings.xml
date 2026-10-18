@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shortcut_add_expense_short">Add expense</string>
+    <string name="shortcut_add_expense_long">Add an expense to your latest trip</string>
+    <string name="shortcut_latest_trip_short">Latest trip</string>
+    <string name="shortcut_latest_trip_long">Open your latest trip</string>
+</resources>

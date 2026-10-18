@@ -77,6 +77,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   var _expensesByTrip = <String, List<Expense>>{};
   var _moneyOn = false;
   var _pastFolded = false;
+  Set<String> _pendingIds = const {};
 
   bool _flagOn(String key) => ref.watch(flagProvider((key, null))).value ?? (defaultFeatureFlags[key] ?? false);
 
@@ -256,6 +257,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
       avatarNames: f.names,
       moneyText: f.money,
       moneyColor: f.color,
+      pending: _pendingIds.contains(t.id),
     );
   }
 
@@ -282,6 +284,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
             avatarNames: names,
             moneyText: money,
             moneyColor: moneyColor,
+            pending: _pendingIds.contains(t.id),
           );
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -428,6 +431,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     final overviewOn = _flagOn('enableTripsOverview');
     final gridOn = _flagOn('enableTripGridTiles');
     final searchOn = _flagOn('enableGlobalSearch');
+    _pendingIds = _flagOn('enablePendingDots') ? ref.watch(pendingTripIdsProvider) : const <String>{};
     final pinnedOn = _flagOn('enableTripPins');
     final pinnedIds = pinnedOn ? ref.watch(pinnedTripsProvider) : const <String>{};
     final query = ref.watch(tripSearchProvider);

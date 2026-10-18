@@ -1767,6 +1767,75 @@ class AppLocalizationsEn extends AppLocalizations {
   String get keypadDone => 'Done';
 
   @override
+  String get numbersTabCategories => 'Categories';
+
+  @override
+  String get numbersTabPeople => 'People';
+
+  @override
+  String get numbersTabDays => 'Days';
+
+  @override
+  String get numbersTabDetails => 'Details';
+
+  @override
+  String numbersShowAll(int count) {
+    return 'Show all $count';
+  }
+
+  @override
+  String get numbersShowLess => 'Show less';
+
+  @override
+  String get celebrateTitle => 'Everyone is square';
+
+  @override
+  String get celebrateBody => 'All payments on this trip are settled.';
+
+  @override
+  String settleRound(String amount) {
+    return 'Pay a round amount: $amount';
+  }
+
+  @override
+  String get historyAdded => 'Added';
+
+  @override
+  String historyAddedBy(String name, String when) {
+    return 'by $name, $when';
+  }
+
+  @override
+  String get historyEdited => 'Edited';
+
+  @override
+  String get pendingDotLabel => 'Changes waiting to sync';
+
+  @override
+  String get templateTitle => 'Start from a template (optional)';
+
+  @override
+  String get templateWeekend => 'Weekend';
+
+  @override
+  String get templateRoadTrip => 'Road trip';
+
+  @override
+  String get templateGroupStay => 'Group stay';
+
+  @override
+  String get inviteCardShare => 'Share invite picture';
+
+  @override
+  String get inviteCardScan => 'Scan the code or enter it in Trip Tracker to join';
+
+  @override
+  String get tripPrevious => 'Previous trip';
+
+  @override
+  String get tripNext => 'Next trip';
+
+  @override
   String get ledYouPay => 'You pay';
 
   @override

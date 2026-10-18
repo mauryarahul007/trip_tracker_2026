@@ -57,6 +57,7 @@ class _SyncLifecycleState extends ConsumerState<SyncLifecycle> with WidgetsBindi
     final c = ref.read(syncCoordinatorProvider);
     if (state == AppLifecycleState.resumed) {
       c.onForeground();
+      unawaited(ref.read(feedbackQueueProvider.notifier).flush());
       _refreshFlagsIfStale();
     }
     if (state == AppLifecycleState.paused) c.onBackground();
@@ -111,6 +112,7 @@ class _SyncLifecycleState extends ConsumerState<SyncLifecycle> with WidgetsBindi
     _flagsAt = DateTime.now();
     ref.read(flagsRepositoryProvider).refresh();
     unawaited(_flushAttribution());
+    unawaited(ref.read(feedbackQueueProvider.notifier).flush()); // reports saved while offline
   }
 
   /// First-touch attribution from a deep link; the RPC ignores repeats.
@@ -148,6 +150,7 @@ class _SyncLifecycleState extends ConsumerState<SyncLifecycle> with WidgetsBindi
     ref.listen<AsyncValue<bool>>(isOnlineProvider, (prev, next) {
       if (prev?.value == false && next.value == true && _syncing) {
         ref.read(syncCoordinatorProvider).onConnectivityRegained();
+        unawaited(ref.read(feedbackQueueProvider.notifier).flush());
       }
     });
     return widget.child;

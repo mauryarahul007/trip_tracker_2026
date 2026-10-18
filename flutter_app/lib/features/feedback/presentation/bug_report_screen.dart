@@ -15,6 +15,7 @@ import '../../../shared/widgets/app_text_field.dart';
 import '../application/feedback_providers.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
+import 'pending_feedback_note.dart';
 
 /// "Report a problem": a form plus the user's earlier reports. Recent logs are attached
 /// (scrubbed of emails, tokens and phone numbers) unless switched off.
@@ -58,9 +59,9 @@ class _BugReportScreenState extends ConsumerState<BugReportScreen> {
       final env = await ref.read(feedbackEnvironmentProvider)('settings/report-bug');
       final queue = (await ref.read(outboxStoreProvider).all()).length;
       final desc = scrubPii(_desc.text.trim());
-      final id = await ref
-          .read(feedbackRepositoryProvider)
-          .reportBug(
+      final outcome = await ref
+          .read(feedbackQueueProvider.notifier)
+          .submitBug(
             BugReport(
               title: scrubPii(title),
               description: desc,
@@ -87,7 +88,9 @@ class _BugReportScreenState extends ConsumerState<BugReportScreen> {
       _steps.clear();
       setState(() {
         _busy = false;
-        _sent = id.isEmpty ? 'Thanks, your report was sent.' : 'Thanks. Your report is $id.';
+        _sent = outcome.queued
+            ? 'Saved on this phone. It will be sent as soon as you are back online.'
+            : (outcome.caseId.isEmpty ? 'Thanks, your report was sent.' : 'Thanks. Your report is ${outcome.caseId}.');
       });
     } on FeedbackUnavailable catch (e) {
       if (mounted) {
@@ -122,6 +125,7 @@ class _BugReportScreenState extends ConsumerState<BugReportScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const PendingFeedbackNote(),
           if (!signedIn)
             const Padding(
               padding: EdgeInsets.only(bottom: 12),

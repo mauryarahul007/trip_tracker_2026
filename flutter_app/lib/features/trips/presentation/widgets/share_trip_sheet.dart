@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -13,6 +15,10 @@ import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../trip_details/application/trip_nav.dart';
+import '../../../../shared/widgets/cached_photo.dart';
+import '../../../../domain/logic/trip_utilities.dart' show formatDateRange;
+import '../../application/trips_providers.dart' show tripCoverKey, tripCoverProvider;
+import 'invite_card.dart';
 
 String shareLinkFor(String token) => '$canonicalAppOrigin/share/$token';
 
@@ -60,6 +66,34 @@ class _ShareTripSheetState extends ConsumerState<ShareTripSheet> {
         .showSnackBar(SnackBar(content: Text(context.l10n.inviteCopied), duration: const Duration(seconds: 2)));
   }
 
+  /// The invite picture (photo, name, dates, code, QR) through the share sheet.
+  Future<void> _shareCard(Trip trip, String code, String joinLink) async {
+    final l10n = context.l10n;
+    final cover = await ref.read(tripCoverProvider(tripCoverKey(trip)).future).catchError((_) => null);
+    Uint8List? photo;
+    if (cover != null && cover.isNotEmpty) {
+      try {
+        photo = await PhotoCache.instance.bytes(cover);
+      } catch (_) {
+        photo = null;
+      }
+    }
+    final dates = trip.startDate.isEmpty ? '' : formatDateRange(trip.startDate, trip.endDate);
+    final png = await renderInviteCardPng(
+      tripName: trip.name,
+      dates: dates,
+      code: code,
+      link: joinLink,
+      joinLabel: l10n.inviteJoinCode,
+      scanLabel: l10n.inviteCardScan,
+      coverBytes: photo,
+    );
+    if (!mounted) return;
+    await ref
+        .read(shareServiceProvider)
+        .sharePng(png, fileName: inviteCardFileName(trip.name), text: l10n.inviteShareText(trip.name, joinLink, code));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -73,6 +107,7 @@ class _ShareTripSheetState extends ConsumerState<ShareTripSheet> {
     final now = ref.read(nowProvider)();
     final code = trip.joinCode;
     final joinLink = code.isEmpty ? '' : buildCanonicalJoinLink(code);
+    final inviteCardOn = ref.watch(flagProvider(('enableInviteCard', widget.tripId))).value ?? true;
     final link = _link ?? _fromTrip(trip);
     final active = link?.isActive(now) ?? false;
     // Same Ops Deck flag as the web's ShareTripModal (per-trip overrides apply).
@@ -134,6 +169,16 @@ class _ShareTripSheetState extends ConsumerState<ShareTripSheet> {
                   .read(shareServiceProvider)
                   .share(l10n.inviteShareText(trip.name, joinLink, code), subject: trip.name),
             ),
+            if (inviteCardOn) ...[
+              const SizedBox(height: 8),
+              AppButton(
+                key: const Key('share-invite-card'),
+                label: l10n.inviteCardShare,
+                variant: AppButtonVariant.secondary,
+                isFullWidth: true,
+                onPressed: () => _shareCard(trip, code, joinLink),
+              ),
+            ],
             const SizedBox(height: 8),
             Row(
               children: [

@@ -163,3 +163,32 @@ enum DayBucket { today, yesterday, older }
   if (diff == 1) return (bucket: DayBucket.yesterday, day: d);
   return (bucket: DayBucket.older, day: d);
 }
+
+/// The owed [amount] rounded down to a clean figure (for example 287 to 280, 12,340 to 12,300), or null when it is
+/// already clean, too small to bother (under 20) or rounding would give nothing. Never rounds up: nobody overpays.
+double? roundDownToClean(double amount) {
+  if (amount < 20) return null;
+  final step = amount >= 10000 ? 100.0 : 10.0;
+  final r = (amount / step).floorToDouble() * step;
+  if (r <= 0 || (amount - r).abs() < 0.005) return null;
+  return r;
+}
+
+/// The history line of an expense: who added it and when, and whether it was changed afterwards. [editedAfterMs] is
+/// how long after creation counts as an edit (saving twice within a minute is not one).
+({String? addedBy, int addedAt, bool edited, int editedAt}) expenseHistory({
+  required String? createdByUserId,
+  required int createdAt,
+  required int updatedAt,
+  required Iterable<({String? linkedUserId, String name})> members,
+  int editedAfterMs = 60000,
+}) {
+  String? who;
+  for (final m in members) {
+    if (createdByUserId != null && m.linkedUserId == createdByUserId) {
+      who = m.name;
+      break;
+    }
+  }
+  return (addedBy: who, addedAt: createdAt, edited: updatedAt - createdAt > editedAfterMs, editedAt: updatedAt);
+}

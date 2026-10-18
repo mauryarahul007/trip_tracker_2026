@@ -80,6 +80,7 @@ class TripRow extends ConsumerWidget {
     this.avatarNames = const [],
     this.moneyText,
     this.moneyColor,
+    this.pending = false,
     super.key,
   });
 
@@ -90,6 +91,9 @@ class TripRow extends ConsumerWidget {
   final List<String> avatarNames;
   final String? moneyText;
   final Color? moneyColor;
+
+  /// Changes in this trip are still waiting to sync (flag `enablePendingDots`).
+  final bool pending;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -193,6 +197,7 @@ class TripRow extends ConsumerWidget {
                                         if (headline.isNotEmpty) _StatusPill(headline, phase: status.phase),
                                         if (trip.archived) _MutedTag(l10n.tripBadgeArchived),
                                         if (trip.closed) _MutedTag(l10n.tripBadgeClosed),
+                                        if (pending) const _PendingDot(),
                                       ],
                                     ),
                                   ],
@@ -473,6 +478,7 @@ class TripTile extends ConsumerWidget {
     this.avatarNames = const [],
     this.moneyText,
     this.moneyColor,
+    this.pending = false,
     super.key,
   });
 
@@ -483,6 +489,9 @@ class TripTile extends ConsumerWidget {
   final List<String> avatarNames;
   final String? moneyText;
   final Color? moneyColor;
+
+  /// Changes in this trip are still waiting to sync (flag `enablePendingDots`).
+  final bool pending;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -573,6 +582,7 @@ class TripTile extends ConsumerWidget {
                                 dot: status.phase == TripPhase.active ? t.colorSuccess : null,
                               ),
                             ),
+                          if (pending) ...[const SizedBox(width: 6), const _PendingDot(onDark: true)],
                           const Spacer(),
                           if (moneyText != null)
                             Flexible(
@@ -657,6 +667,29 @@ class _TilePill extends StatelessWidget {
           ),
         ),
       ],
+    ),
+  );
+}
+
+/// A small "waiting to sync" marker: an amber dot with a cloud, readable by a screen reader.
+class _PendingDot extends StatelessWidget {
+  const _PendingDot({this.onDark = false});
+  final bool onDark;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: context.l10n.pendingDotLabel,
+    child: Tooltip(
+      message: context.l10n.pendingDotLabel,
+      child: Container(
+        key: const Key('trip-pending-dot'),
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: onDark ? Colors.black.withValues(alpha: 0.55) : const Color(0xFFE8890C).withValues(alpha: 0.18),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.cloud_upload_outlined, size: 12, color: Color(0xFFE8890C)),
+      ),
     ),
   );
 }

@@ -160,6 +160,15 @@ final tripsSyncingProvider = StreamProvider<bool>((ref) async* {
   yield* c.pullingChanges;
 });
 
+/// Trips that still have changes of yours waiting to sync (for the small dot on a trip).
+final pendingTripIdsProvider = Provider<Set<String>>((ref) {
+  final items = ref.watch(syncItemsProvider).value ?? const <OutboxItem>[];
+  return {
+    for (final i in items)
+      if (i.tripId != null) i.tripId!,
+  };
+});
+
 final syncItemsProvider = StreamProvider<List<OutboxItem>>((ref) => ref.watch(outboxStoreProvider).watchAll());
 
 /// Pull-to-refresh: push then pull when this account syncs; no-op otherwise.

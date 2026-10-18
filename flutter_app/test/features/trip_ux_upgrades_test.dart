@@ -136,22 +136,25 @@ void main() {
       );
       await addExpense(tester, s, amount: 90); // Asha paid for three; Ben and Cara (group Duo) owe 30 each
       await openLedger(tester, s);
-      await toText(tester, key('settle-view-toggle'));
-      expect(key('settle-view-toggle'), findsOneWidget);
+      expect(key('settle-view-toggle'), findsNothing); // the switch lives in Trip numbers only
       await toText(tester, find.text('Duo pays Asha'));
       expect(find.text('Duo pays Asha'), findsOneWidget); // group view
       expect(find.text('Ben pays Asha'), findsNothing);
-      await toText(tester, find.text('Person view'), delta: -300);
-      await tester.tap(find.text('Person view'));
+      await toText(tester, key('numbers-tab-people'));
+      await centre(tester, key('numbers-tab-people'));
+      await tester.tap(key('numbers-tab-people'));
       await settle(tester, rounds: 6);
-      await toText(tester, find.text('Ben pays Asha'));
+      await toText(tester, key('spend-view-toggle'));
+      await tester.tap(find.descendant(of: key('spend-view-toggle'), matching: find.text('Members')));
+      await settle(tester, rounds: 6);
+      await toText(tester, find.text('Ben pays Asha'), delta: -300);
       expect(find.text('Ben pays Asha'), findsOneWidget);
       expect(find.text('Cara pays Asha'), findsOneWidget);
       expect(find.text('Duo pays Asha'), findsNothing);
-      await toText(tester, find.text('Group view'), delta: -300);
-      await tester.tap(find.text('Group view'));
+      await toText(tester, key('spend-view-toggle'));
+      await tester.tap(find.descendant(of: key('spend-view-toggle'), matching: find.text('Groups')));
       await settle(tester, rounds: 6);
-      await toText(tester, find.text('Duo pays Asha'));
+      await toText(tester, find.text('Duo pays Asha'), delta: -300);
       expect(find.text('Duo pays Asha'), findsOneWidget);
     });
   }

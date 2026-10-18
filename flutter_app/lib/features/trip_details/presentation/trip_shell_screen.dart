@@ -497,6 +497,7 @@ class _TripStrip extends ConsumerWidget {
           _TripArrow(
             key: const Key('trip-prev'),
             icon: Icons.chevron_left_rounded,
+            label: context.l10n.tripPrevious,
             enabled: prev != null,
             onDark: hasCover,
             onTap: () => goTrip(prev),
@@ -504,6 +505,7 @@ class _TripStrip extends ConsumerWidget {
           _TripArrow(
             key: const Key('trip-next'),
             icon: Icons.chevron_right_rounded,
+            label: context.l10n.tripNext,
             enabled: next != null,
             onDark: hasCover,
             onTap: () => goTrip(next),
@@ -573,9 +575,17 @@ class _TripStrip extends ConsumerWidget {
 
 /// A 40 px previous / next trip arrow in the strip; dimmed at either end of the list.
 class _TripArrow extends StatelessWidget {
-  const _TripArrow({required this.icon, required this.enabled, required this.onDark, required this.onTap, super.key});
+  const _TripArrow({
+    required this.icon,
+    required this.label,
+    required this.enabled,
+    required this.onDark,
+    required this.onTap,
+    super.key,
+  });
 
   final IconData icon;
+  final String label;
   final bool enabled;
   final bool onDark;
   final VoidCallback onTap;
@@ -585,6 +595,7 @@ class _TripArrow extends StatelessWidget {
     final t = context.tokens;
     final color = onDark ? Colors.white : t.textPrimary;
     return IconButton(
+      tooltip: label,
       onPressed: enabled ? onTap : null,
       constraints: const BoxConstraints(minWidth: 36, minHeight: 40),
       padding: EdgeInsets.zero,

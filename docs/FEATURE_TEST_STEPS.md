@@ -71,6 +71,18 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-18 | flutter | FLUTTER-AMOUNT-KEYPAD | [Flutter: amount keypad](#flutter-amount-keypad--flutter-amount-keypad) |
 | 2026-10-18 | flutter | FLUTTER-TRIP-ACCENT | [Flutter: trip accent colour](#flutter-trip-accent--flutter-trip-accent-colour) |
 | 2026-10-18 | flutter | FLUTTER-SUMMARY-COLLAPSE | [Flutter: collapse Trip numbers](#flutter-summary-collapse--flutter-collapse-trip-numbers) |
+| 2026-10-18 | flutter | FLUTTER-NUMBERS-TABS | [Flutter: Trip numbers with tabs](#flutter-numbers-tabs--flutter-trip-numbers-with-tabs) |
+| 2026-10-18 | flutter | FLUTTER-OFFLINE-FEEDBACK | [Flutter: bug reports and suggestions offline](#flutter-offline-feedback--flutter-bug-reports-and-suggestions-offline) |
+| 2026-10-18 | flutter | FLUTTER-SETTLED-CELEBRATION | [Flutter: settled celebration](#flutter-settled-celebration--flutter-settled-celebration) |
+| 2026-10-18 | flutter | FLUTTER-SETTLE-ROUNDING | [Flutter: round down when settling](#flutter-settle-rounding--flutter-round-down-when-settling) |
+| 2026-10-18 | flutter | FLUTTER-APP-SHORTCUTS | [Flutter: app icon shortcuts](#flutter-app-shortcuts--flutter-app-icon-shortcuts) |
+| 2026-10-18 | flutter | FLUTTER-EXPENSE-HISTORY | [Flutter: expense history line](#flutter-expense-history--flutter-expense-history-line) |
+| 2026-10-18 | flutter | FLUTTER-PENDING-DOTS | [Flutter: pending sync dot on trips](#flutter-pending-dots--flutter-pending-sync-dot-on-trips) |
+| 2026-10-18 | flutter | FLUTTER-TRIP-TEMPLATES | [Flutter: trip templates](#flutter-trip-templates--flutter-trip-templates) |
+| 2026-10-18 | flutter | FLUTTER-SUMMARY-TWO-PANE | [Flutter: Summary two panes](#flutter-summary-two-pane--flutter-summary-two-panes) |
+| 2026-10-18 | flutter | FLUTTER-INVITE-CARD | [Flutter: invite picture](#flutter-invite-card--flutter-invite-picture) |
+| 2026-10-18 | flutter | FLUTTER-QUICK-CHIPS | [Flutter: Expenses quick filter chips](#flutter-quick-chips--flutter-expenses-quick-filter-chips) |
+| 2026-10-18 | flutter | FLUTTER-A11Y-AUDIT | [Flutter: accessibility audit](#flutter-a11y-audit--flutter-accessibility-audit) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -2709,8 +2721,8 @@ Then add a row to the **Index** table.
 1. Summary > Trip numbers now starts with a "Plan and suggestions" card, above the total / per person / top category tiles.
 2. With no budget, the first tip says to set one and has a Set budget button. Set a budget: the card shows spent of budget, a bar, what is left, "X a day left for N days" and "On pace for Y".
 3. Up to 3 tips appear, for example "X over budget", "On pace to finish X over budget", "N payments are still open", "Ben paid 70% of everything...", "Food is 52% of spend", "Biggest day: 10-03, X". They never change an expense or balance.
-4. Below the card: headline numbers, category donut and rows, Who paid, Day by day, then Share summary and Open insights.
-5. Who paid follows the one Groups / People switch at the top of the Summary page.
+4. Below the card: one headline strip (total, per person, top category), then tabs: Categories, People (ring, bars, Groups / Members switch), Days (bar chart), Details (every category and day as lists). Share summary and Insights are icon buttons in the Trip numbers header.
+5. Who paid follows the one Groups / Members switch in Trip numbers > People.
 
 **Flag-OFF checks:** `enableTripSuggestions` OFF: no tips (the budget still shows if `enableTripBudget` is ON). Both OFF: no card.
 
@@ -2974,3 +2986,114 @@ Then add a row to the **Index** table.
 
 ### Pass
 - Folding hides nothing permanently.
+
+## FLUTTER-NUMBERS-TABS — Flutter: Trip numbers with tabs
+
+**Flags:** none (replaces the long stack); the Plan card follows `enableTripBudget` / `enableTripSuggestions`.
+
+1. Summary > Trip numbers (header: title and total on the left, Share summary and Insights icons on the right).
+2. Under the Plan and suggestions card: one headline strip (Total · Per person · Top category), then tabs Categories, People, Days, Details. One tab shows at a time with a short fade.
+3. Categories: the donut with legend and the top three categories; "Show all N" expands the rest. People: the ring, legend (tap a person to filter Expenses), the bars, and the Groups / Members switch. Days: a bar chart of the last 14 days; tap a bar to read that day. Details: every category and every day as lists.
+4. Nothing from the old layout is lost; every number is reachable from a tab or the header icons.
+5. The Groups / Members switch is only here: Who pays whom above follows it.
+
+### Pass
+- No overflow at 360 px or 200% text; tab chips wrap instead of scrolling.
+
+## FLUTTER-OFFLINE-FEEDBACK — Flutter: bug reports and suggestions offline
+
+**Flags:** `enableOfflineFeedback` (Trip pack, default ON).
+
+1. Signed in, turn on airplane mode. Settings > Help > Report a problem (or Suggest a feature), fill in a title, send. The message says it is saved on this phone and a note shows how many are waiting.
+2. Turn the network back on (or reopen the app online): the saved messages are sent by themselves, the note disappears, and the bug gets its case number in "my reports".
+3. A message that keeps failing while online is dropped after five tries. Guests (not signed in) still see "Sign in to send".
+
+**Flag-OFF checks:** `enableOfflineFeedback` OFF: offline sending shows the old error and nothing is kept.
+
+### Pass
+- Nothing is lost if the app is closed while messages are waiting.
+
+## FLUTTER-SETTLED-CELEBRATION — Flutter: settled celebration
+
+**Flags:** `enableSettledCelebration` (Trip pack, default ON).
+
+1. Settle the last payment on a trip that had expenses: a card "Everyone is square" with a bouncing check and a share button appears at the top, with a success tap.
+2. While anything is owed, no card.
+
+**Flag-OFF checks:** `enableSettledCelebration` OFF: only the SETTLED stamp.
+
+## FLUTTER-SETTLE-ROUNDING — Flutter: round down when settling
+
+**Flags:** `enableSettleRounding` (Trip pack, default ON).
+
+1. Settle a payment of, say, 287: the sheet offers "Pay a round amount: 280". Tap it: the amount becomes 280 and "7 remaining" shows; confirm to record 280, the 7 stays owed.
+2. A clean amount (280) or one under 20 shows no option. It never rounds up.
+
+**Flag-OFF checks:** `enableSettleRounding` OFF: no option.
+
+## FLUTTER-APP-SHORTCUTS — Flutter: app icon shortcuts
+
+**Flags:** `enableAppShortcuts` (Trip pack, default ON). Android only.
+
+1. Long-press the app icon: Add expense and Latest trip.
+2. Latest trip opens the trip happening now, else the next upcoming, else the most recent finished one. Add expense opens that trip's form; back returns to the trip.
+3. With no trips, or the flag off, both just open the home screen.
+
+### Pass
+- iOS has no shortcuts yet.
+
+## FLUTTER-EXPENSE-HISTORY — Flutter: expense history line
+
+**Flags:** `enableExpenseHistory` (Trip pack, default ON).
+
+1. Open an expense: "Added by Asha, 2 h ago". After a later change, an "Edited 10 min ago" line. Saving again within a minute does not count as an edit.
+
+**Flag-OFF checks:** `enableExpenseHistory` OFF: no history lines. It shows author and times, not a field-by-field list.
+
+## FLUTTER-PENDING-DOTS — Flutter: pending sync dot on trips
+
+**Flags:** `enablePendingDots` (Trip pack, default ON).
+
+1. Make a change offline: that trip's tile (and row) shows a small amber cloud dot. When the change syncs the dot goes.
+
+**Flag-OFF checks:** `enablePendingDots` OFF: no dot.
+
+## FLUTTER-TRIP-TEMPLATES — Flutter: trip templates
+
+**Flags:** `enableTripTemplates` (Trip pack, default ON).
+
+1. Create Trip > Start from a template: Weekend, Road trip or Group stay. Create: the trip has the extra categories (for example Fuel, Tolls, Parking) and a starter checklist you can edit. Tap the chosen chip again to start empty.
+
+**Flag-OFF checks:** `enableTripTemplates` OFF: no template chips.
+
+## FLUTTER-SUMMARY-TWO-PANE — Flutter: Summary two panes
+
+**Flags:** `enableSummaryTwoPane` (Trip pack, default ON).
+
+1. On a tablet or a phone in landscape (content at least 840 px wide): balance, Today card and plan on the left; who pays whom and Trip numbers on the right, each scrolling on its own.
+2. A phone in portrait keeps one column.
+
+**Flag-OFF checks:** `enableSummaryTwoPane` OFF: one column everywhere.
+
+## FLUTTER-INVITE-CARD — Flutter: invite picture
+
+**Flags:** `enableInviteCard` (Trip pack, default ON).
+
+1. Trip > Share: "Share invite picture" makes an image with the trip photo, name, dates, join code and a QR code and opens the share sheet. No expenses are on it.
+
+**Flag-OFF checks:** `enableInviteCard` OFF: no button.
+
+## FLUTTER-QUICK-CHIPS — Flutter: Expenses quick filter chips
+
+**Flags:** `enableExpenseQuickFilterChips` (moved from the Pro pack to the Trip pack, now default ON).
+
+1. Expenses tab: a row of one-tap chips (for example Paid by me and the categories in use) above the list; tap to filter, tap again to clear. The Filters button still opens the full sheet.
+
+**Flag-OFF checks:** OFF: no chip row.
+
+## FLUTTER-A11Y-AUDIT — Flutter: accessibility audit
+
+**Flags:** none.
+
+1. With TalkBack on: the trip arrows read "Previous trip" / "Next trip"; tab chips, legend chips and the Groups / Members switch have 48 px targets; the tour, keypad, receipts and Trip numbers tabs are readable at 200% text.
+2. The automated checks (tap targets, labels, contrast, 200% text) run in `test/a11y/a11y_test.dart` for the new screens.

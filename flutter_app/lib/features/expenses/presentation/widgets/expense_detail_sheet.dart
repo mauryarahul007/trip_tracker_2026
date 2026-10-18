@@ -12,6 +12,8 @@ import '../../../../domain/logic/category_color.dart';
 import '../../../../domain/logic/expense_list_logic.dart';
 import '../../../../domain/models/expense.dart';
 import '../../../../domain/models/expense_io.dart';
+import '../../../../domain/logic/summary_features.dart';
+import '../../../../domain/logic/trip_utilities.dart' show formatRelativeTime;
 import '../../../../domain/models/member.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_tokens.dart';
@@ -106,6 +108,14 @@ class ExpenseDetailSheet extends ConsumerWidget {
         confirmOn && e.isSettlement && e.settlementConfirmedAt == null && uid != null && recipientUserId == uid;
     final canApprove = approvalOn && e.approvalStatus == 'pending_approval' && uid != null && e.createdByUserId != uid;
     final base = trip.baseCurrency;
+
+    final historyOn = _flag(ref, 'enableExpenseHistory', tripId);
+    final history = expenseHistory(
+      createdByUserId: e.createdByUserId,
+      createdAt: e.createdAt,
+      updatedAt: e.updatedAt,
+      members: [for (final m in members.values) (linkedUserId: m.linkedUserId, name: m.name)],
+    );
 
     Widget kv(String k, String v) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -225,6 +235,15 @@ class ExpenseDetailSheet extends ConsumerWidget {
                         : '${cat.icon != null && !cat.icon!.contains(':') ? '${cat.icon} ' : ''}${cat.name}',
                   ),
                   kv(l10n.detailPaidBy, payerNames),
+                  if (historyOn) ...[
+                    kv(
+                      l10n.historyAdded,
+                      history.addedBy == null
+                          ? formatRelativeTime(history.addedAt)
+                          : l10n.historyAddedBy(history.addedBy!, formatRelativeTime(history.addedAt)),
+                    ),
+                    if (history.edited) kv(l10n.historyEdited, formatRelativeTime(history.editedAt)),
+                  ],
                 ],
               ),
             ),

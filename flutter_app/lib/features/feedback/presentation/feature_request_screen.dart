@@ -13,6 +13,7 @@ import '../../../shared/widgets/app_text_field.dart';
 import '../application/feedback_providers.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
+import 'pending_feedback_note.dart';
 
 class FeatureRequestScreen extends ConsumerStatefulWidget {
   const FeatureRequestScreen({super.key});
@@ -27,7 +28,7 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
   String _category = 'general';
   bool _busy = false;
   String? _error;
-  bool _sent = false;
+  String? _sent;
 
   @override
   void dispose() {
@@ -48,9 +49,9 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
     });
     try {
       final env = await ref.read(feedbackEnvironmentProvider)('settings/feature-request');
-      await ref
-          .read(feedbackRepositoryProvider)
-          .submitFeatureRequest(
+      final outcome = await ref
+          .read(feedbackQueueProvider.notifier)
+          .submitFeature(
             title: scrubPii(title),
             description: scrubPii(_desc.text.trim()),
             category: _category,
@@ -62,7 +63,9 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
       _desc.clear();
       setState(() {
         _busy = false;
-        _sent = true;
+        _sent = outcome.queued
+            ? 'Saved on this phone. It will be sent as soon as you are back online.'
+            : 'Thanks, we read every idea.';
       });
     } on FeedbackUnavailable catch (e) {
       if (mounted) {
@@ -108,6 +111,7 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
               child: Icon(Icons.lightbulb_outline_rounded, size: 30, color: context.tokens.warningColor),
             ),
           ),
+          const PendingFeedbackNote(),
           if (!signedIn)
             const Padding(padding: EdgeInsets.only(bottom: 12), child: Text('Sign in with an account to send ideas.')),
           AppTextField(
@@ -145,10 +149,10 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
-          if (_sent)
-            const Padding(
-              padding: EdgeInsets.only(top: 12),
-              child: Text('Thanks, we read every idea.', key: Key('feature-sent')),
+          if (_sent != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(_sent!, key: const Key('feature-sent')),
             ),
           const SizedBox(height: 16),
           AppButton(

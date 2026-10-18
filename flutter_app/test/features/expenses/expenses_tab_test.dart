@@ -249,8 +249,8 @@ void main() {
   });
 
   group('search and filters', () {
-    Future<Seed> setup(WidgetTester tester, {Set<String> flags = const {}}) async {
-      await pumpApp(tester, user: asha, flagsOn: flags);
+    Future<Seed> setup(WidgetTester tester, {Set<String> flags = const {}, Set<String> off = const {}}) async {
+      await pumpApp(tester, user: asha, flagsOn: flags, flagsOff: off);
       final s = await seedTrip(tester);
       await addExpense(tester, s, title: 'Beach lunch', amount: 120, category: 'cat-food', paidBy: s.me);
       await addExpense(
@@ -339,7 +339,7 @@ void main() {
     });
 
     testApp('chips are hidden when the flag is off', (tester) async {
-      await setup(tester);
+      await setup(tester, off: {'enableExpenseQuickFilterChips'});
       expect(find.text('Paid by me'), findsNothing);
     });
   });

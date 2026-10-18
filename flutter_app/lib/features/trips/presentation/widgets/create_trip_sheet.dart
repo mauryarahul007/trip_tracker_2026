@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../app/auth_state.dart';
 import '../../../../data/providers.dart';
 import '../../../../domain/logic/currency.dart' show defaultExchangeRates;
+import '../../../../domain/logic/trip_templates.dart';
+import '../../../../domain/models/checklist_item.dart';
 import '../../../../domain/models/trip.dart' show Trip;
 import '../../../../domain/logic/place_suggest.dart' show PlaceSuggestion, currencyForCountry;
 import '../../../../core/settings/app_settings.dart';
@@ -47,6 +50,7 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
   bool _currencyTouched = false;
   bool _nameTouched = false;
   bool _busy = false;
+  String? _template; // a starter kit id (flag `enableTripTemplates`)
   String? _nameError;
   String? _dateError;
 
@@ -119,12 +123,37 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
           creatorName: user.displayName ?? user.email?.split('@').first ?? 'Me',
           destination: destination.isEmpty ? null : destination,
         );
+    if (_template != null && (ref.read(flagProvider(('enableTripTemplates', null))).value ?? true)) {
+      await _applyTemplate(id, tripTemplateById(_template));
+    }
     if (mounted) Navigator.of(context).pop(id);
   }
+
+  /// Adds the template's extra categories and its starter checklist to the new trip.
+  Future<void> _applyTemplate(String tripId, TripTemplate? t) async {
+    if (t == null) return;
+    final cats = ref.read(categoryRepositoryProvider);
+    final have = [for (final c in await cats.watch(tripId).first) c.name];
+    for (final name in newCategoryNames(t, have)) {
+      await cats.add(tripId, name);
+    }
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await ref.read(tripRepositoryProvider).setChecklist(tripId, [
+      for (final (i, item) in t.checklist.indexed)
+        ChecklistItem(id: const Uuid().v4(), text: item.$1, category: item.$2, createdAt: now + i, updatedAt: now + i),
+    ]);
+  }
+
+  String _templateLabel(String id) => switch (id) {
+    'weekend' => context.l10n.templateWeekend,
+    'roadtrip' => context.l10n.templateRoadTrip,
+    _ => context.l10n.templateGroupStay,
+  };
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final templatesOn = ref.watch(flagProvider(('enableTripTemplates', null))).value ?? true;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
       child: SingleChildScrollView(
@@ -132,6 +161,27 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (templatesOn) ...[
+              Text(l10n.templateTitle, style: const TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  for (final t in tripTemplates)
+                    ChoiceChip(
+                      key: Key('template-${t.id}'),
+                      showCheckmark: false,
+                      shape: const StadiumBorder(),
+                      label: Text(_templateLabel(t.id)),
+                      selected: _template == t.id,
+                      // Tap the chosen one again to start empty.
+                      onSelected: (on) => setState(() => _template = on ? t.id : null),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
             DestinationField(
               controller: _destination,
               label: l10n.fieldDestination,

@@ -95,8 +95,11 @@ void main() {
     await settle(tester, rounds: 6);
     expect(tester.widget<Text>(key('budget-status')).data, contains('over budget'));
 
-    await reveal(tester, 'day-timeline');
-    expect(key('day-timeline'), findsOneWidget);
+    await reveal(tester, 'numbers-tab-days');
+    await tester.tap(key('numbers-tab-days'));
+    await settle(tester, rounds: 6);
+    expect(key('day-chart'), findsOneWidget);
+    expect(tester.widget<Text>(key('day-chart-selected')).data, contains('₹')); // the latest day is selected
   });
 
   testApp('share summary makes a png and shares it', (tester) async {
@@ -147,7 +150,7 @@ void main() {
     expect(key('budget-card'), findsOneWidget);
   });
 
-  testApp('one shared Groups / People state drives Who pays whom and Who paid, from either switch', (tester) async {
+  testApp('the single Groups / People switch in Trip numbers drives Who pays whom and Who paid', (tester) async {
     await pumpApp(tester, user: asha);
     final s = await seedTrip(tester);
     await real(
@@ -156,21 +159,22 @@ void main() {
     );
     await addExpense(tester, s, amount: 90);
     await openLedger(tester, s);
-    expect(key('settle-view-toggle'), findsOneWidget); // the page switch
-    await reveal(tester, 'spend-view-toggle');
-    expect(key('spend-view-toggle'), findsOneWidget); // and its twin in Trip numbers, same state
-    await reveal(tester, 'day-timeline');
+    expect(key('settle-view-toggle'), findsNothing); // no switch above Who pays whom
+    await reveal(tester, 'numbers-tab-people');
+    await tester.tap(key('numbers-tab-people'));
+    await settle(tester, rounds: 6);
+    expect(key('spend-view-toggle'), findsOneWidget); // the one switch, in Trip numbers
     expect(find.byWidgetPredicate((w) => w.key.toString().contains("'spend-group-")), findsWidgets); // groups
-    await reveal(tester, 'spend-view-toggle');
-    await tester.tap(find.descendant(of: key('spend-view-toggle'), matching: find.text('Members'))); // the twin switch
+    await centre(tester, key('spend-view-toggle'));
+    await tester.tap(find.descendant(of: key('spend-view-toggle'), matching: find.text('Members')));
     await settle(tester, rounds: 6);
     expect(find.byWidgetPredicate((w) => w.key.toString().contains("'spend-group-")), findsNothing); // people
     await tester.scrollUntilVisible(
-      key('settle-view-toggle'),
+      find.text('Ben pays Asha'),
       -300,
       scrollable: find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable)),
     );
-    expect(find.text('Ben pays Asha'), findsOneWidget); // the top list followed the twin switch
+    expect(find.text('Ben pays Asha'), findsOneWidget); // Who pays whom followed the switch
   });
 
   String ymd(DateTime d) => d.toIso8601String().substring(0, 10);
@@ -233,5 +237,97 @@ void main() {
     final s = await seedTrip(tester);
     await openLedger(tester, s);
     expect(key('closeout-prompt'), findsNothing);
+  });
+
+  testApp('a settled trip with payments shows the celebration; not while something is owed; off with the flag', (
+    tester,
+  ) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 60, split: [s.me, s.ben]); // Ben owes Asha
+    await openLedger(tester, s);
+    expect(key('settled-celebration'), findsNothing);
+    await tester.scrollUntilVisible(
+      key('settle-0'),
+      300,
+      scrollable: find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable)),
+    );
+    await centre(tester, key('settle-0'));
+    await tester.tap(key('settle-0'));
+    await settle(tester, rounds: 6);
+    await tester.tap(key('settle-confirm'));
+    await settle(tester, rounds: 16);
+    await tester.drag(key('ledger-list'), const Offset(0, 2000)); // back to the top
+    await settle(tester, rounds: 4);
+    expect(key('settled-celebration'), findsOneWidget);
+    expect(key('celebrate-share'), findsOneWidget);
+  });
+
+  testApp('no celebration with its flag off', (tester) async {
+    await pumpApp(tester, user: asha, flagsOff: {'enableSettledCelebration'});
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 50, split: [s.me]); // paid by and for Asha: square
+    await openLedger(tester, s);
+    expect(key('settled-celebration'), findsNothing);
+  });
+
+  testApp('a trip with no payments owed from the start also shows it', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 50, split: [s.me]);
+    await openLedger(tester, s);
+    expect(key('settled-celebration'), findsOneWidget);
+  });
+
+  Future<void> openSettleSheet(WidgetTester tester) async {
+    await tester.scrollUntilVisible(
+      key('settle-0'),
+      300,
+      scrollable: find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable)),
+    );
+    await centre(tester, key('settle-0'));
+    await tester.tap(key('settle-0'));
+    await settle(tester, rounds: 6);
+  }
+
+  testApp('settling: a round amount rounds down, leaves the rest owed, and records the round payment', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 574, split: [s.me, s.ben]); // Ben owes Asha 287
+    await openLedger(tester, s);
+    await openSettleSheet(tester);
+    expect(find.text('Pay a round amount: ₹280.00'), findsOneWidget);
+    await tester.tap(key('settle-round'));
+    await settle(tester, rounds: 4);
+    expect(
+      tester
+          .widget<TextField>(find.descendant(of: key('settle-amount'), matching: find.byType(TextField)))
+          .controller!
+          .text,
+      '280',
+    );
+    expect(find.byKey(const Key('settle-remaining')), findsOneWidget); // the 7 left shows as remaining
+    await tester.tap(key('settle-confirm'));
+    await settle(tester, rounds: 16);
+    final settlement = (await expensesOf(tester, s)).cast<Expense>().singleWhere((e) => e.isSettlement);
+    expect(settlement.amount, 280);
+  });
+
+  testApp('no round option for a clean amount or with the flag off', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 560, split: [s.me, s.ben]); // owes exactly 280
+    await openLedger(tester, s);
+    await openSettleSheet(tester);
+    expect(key('settle-round'), findsNothing);
+  });
+
+  testApp('round option is hidden with its flag off', (tester) async {
+    await pumpApp(tester, user: asha, flagsOff: {'enableSettleRounding'});
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 574, split: [s.me, s.ben]);
+    await openLedger(tester, s);
+    await openSettleSheet(tester);
+    expect(key('settle-round'), findsNothing);
   });
 }
