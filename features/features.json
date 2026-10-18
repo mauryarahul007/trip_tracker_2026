@@ -2204,5 +2204,69 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-18T06:51:56.902Z",
     "shippedNote": "Shipped in commit b903b73 (v3.61.0): behind enableOfflineFeedback (Trip pack, default ON); queued on the device and sent on reconnect."
+  },
+  {
+    "id": "FEAT-139",
+    "title": "Flutter: personal expenses left out of trip totals and settlement",
+    "description": "Flutter: personal expenses left out of trip totals and settlement",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T08:13:02.957Z",
+    "updatedAt": "2026-10-18T08:13:03.045Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T08:13:03.045Z",
+    "shippedNote": "Shipped in commit 7dc8912 (v3.62.0): behind enableExpenseExclusion (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-140",
+    "title": "Flutter: switch trips from the top-bar trip name",
+    "description": "Flutter: switch trips from the top-bar trip name",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T08:13:03.119Z",
+    "updatedAt": "2026-10-18T08:13:03.208Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T08:13:03.208Z",
+    "shippedNote": "Shipped in commit 7dc8912 (v3.62.0): behind enableTripSwitcher (reworded); arrows and strip swipe removed."
+  },
+  {
+    "id": "FEAT-141",
+    "title": "Flutter: undo for recorded payments and Settle all",
+    "description": "Flutter: undo for recorded payments and Settle all",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T08:13:03.286Z",
+    "updatedAt": "2026-10-18T08:13:03.357Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T08:13:03.357Z",
+    "shippedNote": "Shipped in commit 7dc8912 (v3.62.0): behind enableUndoSettlement (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-142",
+    "title": "Flutter: saved expense filters as one-tap chips",
+    "description": "Flutter: saved expense filters as one-tap chips",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T08:13:03.445Z",
+    "updatedAt": "2026-10-18T08:13:03.525Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T08:13:03.525Z",
+    "shippedNote": "Shipped in commit 7dc8912 (v3.62.0): behind enableSavedFilters (Trip pack, default ON); swipe right toggles Personal."
   }
 ]

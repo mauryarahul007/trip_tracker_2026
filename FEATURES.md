@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **138** |
+| **Total Tracked** | **142** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **136** |
+| **✅ Shipped** | **140** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -188,6 +188,10 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-136** | Flutter: app icon shortcuts, expense history and pending-sync dots | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b903b73 (v3.61.0): behind enableAppShortcuts, enableExpenseHistory, enablePendingDots (Trip pack, default ON). |
 | **FEAT-137** | Flutter: trip templates, two-pane Summary, invite picture and quick-filter chips | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b903b73 (v3.61.0): behind enableTripTemplates, enableSummaryTwoPane, enableInviteCard, enableExpenseQuickFilterChips (Trip pack, default ON). |
 | **FEAT-138** | Flutter: bug reports and suggestions work offline | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b903b73 (v3.61.0): behind enableOfflineFeedback (Trip pack, default ON); queued on the device and sent on reconnect. |
+| **FEAT-139** | Flutter: personal expenses left out of trip totals and settlement | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7dc8912 (v3.62.0): behind enableExpenseExclusion (Trip pack, default ON). |
+| **FEAT-140** | Flutter: switch trips from the top-bar trip name | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7dc8912 (v3.62.0): behind enableTripSwitcher (reworded); arrows and strip swipe removed. |
+| **FEAT-141** | Flutter: undo for recorded payments and Settle all | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7dc8912 (v3.62.0): behind enableUndoSettlement (Trip pack, default ON). |
+| **FEAT-142** | Flutter: saved expense filters as one-tap chips | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7dc8912 (v3.62.0): behind enableSavedFilters (Trip pack, default ON); swipe right toggles Personal. |
 
 ---
 
