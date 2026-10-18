@@ -5119,3 +5119,14 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** Shortcuts are Android only. The queued feedback is device-only until sent.
 * **Release Cut:** version bumped to `3.61.0` via `npm run release:minor`.
 
+---
+
+## Flutter v3.62.0: personal expenses, top-bar trip switcher, undo payments, saved filters
+* **Context:** A traveller needs to keep an expense that is only theirs out of the shared calculation; the previous/next arrows crowded the Summary strip.
+* **Decision:** Trip-pack flags, all default ON (154 in total): `enableExpenseExclusion`, `enableUndoSettlement`, `enableSavedFilters`; `enableTripSwitcher` now means a trip list opened from the top-bar title.
+  - **Exclusion:** `Expense.excludeFromTotals` is skipped by totals, categories, days, spend per person, insights and settlement. It rides in the server's existing `itemized_config` JSON (no migration); a pull strips it back out.
+  - **Swipe:** right toggles Personal (edit stays in the detail sheet); left still deletes.
+  - **Saved filters:** device-only, eight per trip, dates not saved.
+* **Trade-offs Accepted:** The web app does not know the mark and still counts those expenses. Other members still see the row and amount.
+* **Release Cut:** version bumped to `3.62.0` via `npm run release:minor`.
+

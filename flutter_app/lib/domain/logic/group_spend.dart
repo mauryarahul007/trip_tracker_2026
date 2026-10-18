@@ -21,7 +21,7 @@ class SpendRow {
   final share = <String, double>{};
   for (final e in all) {
     if (e.isSettlement || e.deletedAt != null || e.approvalStatus == 'pending_approval') continue;
-    if (e.title.startsWith('Settlement:')) continue;
+    if (e.title.startsWith('Settlement:') || e.excludeFromTotals) continue;
     final shares = e.paidByShares;
     if (shares != null && shares.isNotEmpty) {
       shares.forEach((k, v) => paid[k] = (paid[k] ?? 0) + v);

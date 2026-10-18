@@ -290,7 +290,7 @@ void main() {
         () => containerOf(tester).read(tripRepositoryProvider).watchTrips().first,
       )).firstWhere((t) => t.name == 'Later Trip').id;
       await go(tester, '/trip/$id/ledger');
-      expect(k('trip-next'), findsOneWidget);
+      expect(k('trip-switcher'), findsOneWidget);
       await guidelines(tester);
       handle.dispose();
     });

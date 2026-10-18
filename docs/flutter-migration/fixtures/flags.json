@@ -100,6 +100,9 @@
     "enableTripTemplates": true,
     "enableSummaryTwoPane": true,
     "enableInviteCard": true,
+    "enableExpenseExclusion": true,
+    "enableUndoSettlement": true,
+    "enableSavedFilters": true,
     "enableLastSyncedCaption": true,
     "enableTripSwitcher": true,
     "enableTripPins": true,
@@ -253,6 +256,9 @@
     "enableTripTemplates": true,
     "enableSummaryTwoPane": true,
     "enableInviteCard": true,
+    "enableExpenseExclusion": true,
+    "enableUndoSettlement": true,
+    "enableSavedFilters": true,
     "enableLastSyncedCaption": true,
     "enableTripSwitcher": true,
     "enableTripPins": true,
@@ -404,7 +410,10 @@
         "enableSummaryTwoPane",
         "enableInviteCard",
         "enableExpenseQuickFilterChips",
-        "enableOfflineFeedback"
+        "enableOfflineFeedback",
+        "enableExpenseExclusion",
+        "enableUndoSettlement",
+        "enableSavedFilters"
       ]
     },
     {

@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/auth_state.dart';
 import '../../../core/env/app_env.dart';
+import '../../../core/storage/prefs.dart';
 import '../../../data/providers.dart';
 import '../../../data/supabase/supabase_gateway.dart';
 import '../../../data/sync/conflict_store.dart';
@@ -159,3 +162,44 @@ final visibleMembersProvider = Provider.family<List<Member>, String>((ref, tripI
 
 /// Needed by [Trip] consumers that only have an id.
 final tripOrNullProvider = Provider.family<Trip?, String>((ref, id) => ref.watch(tripProvider(id)).value);
+
+/// Filters a traveller keeps for one-tap use on a trip. Device-only (not synced), like pinned trips.
+class SavedFilters extends Notifier<List<SavedFilter>> {
+  SavedFilters(this.tripId);
+  final String tripId;
+
+  String get _key => 'expenses.savedFilters.$tripId';
+
+  @override
+  List<SavedFilter> build() {
+    try {
+      final raw = ref.read(sharedPreferencesProvider).getString(_key);
+      if (raw == null) return const [];
+      return [
+        for (final j in jsonDecode(raw) as List<dynamic>) SavedFilter.fromJson((j as Map).cast<String, dynamic>()),
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  void _save() => ref.read(sharedPreferencesProvider).setString(_key, jsonEncode([for (final f in state) f.toJson()]));
+
+  /// A name used twice replaces the older filter; at most eight are kept.
+  void add(String name, ExpenseFilters filters) {
+    final n = name.trim();
+    if (n.isEmpty) return;
+    state = [...state.where((f) => f.name != n), SavedFilter(n, filters)].take(8).toList();
+    _save();
+  }
+
+  void remove(String name) {
+    state = [
+      for (final f in state)
+        if (f.name != name) f,
+    ];
+    _save();
+  }
+}
+
+final savedFiltersProvider = NotifierProvider.family<SavedFilters, List<SavedFilter>, String>(SavedFilters.new);

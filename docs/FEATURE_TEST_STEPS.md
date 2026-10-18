@@ -83,6 +83,9 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-18 | flutter | FLUTTER-INVITE-CARD | [Flutter: invite picture](#flutter-invite-card--flutter-invite-picture) |
 | 2026-10-18 | flutter | FLUTTER-QUICK-CHIPS | [Flutter: Expenses quick filter chips](#flutter-quick-chips--flutter-expenses-quick-filter-chips) |
 | 2026-10-18 | flutter | FLUTTER-A11Y-AUDIT | [Flutter: accessibility audit](#flutter-a11y-audit--flutter-accessibility-audit) |
+| 2026-10-18 | flutter | FLUTTER-PERSONAL-EXPENSES | [Flutter: personal expenses, left out of totals](#flutter-personal-expenses--flutter-personal-expenses-left-out-of-totals) |
+| 2026-10-18 | flutter | FLUTTER-UNDO-SETTLEMENT | [Flutter: undo a recorded payment](#flutter-undo-settlement--flutter-undo-a-recorded-payment) |
+| 2026-10-18 | flutter | FLUTTER-SAVED-FILTERS | [Flutter: saved expense filters](#flutter-saved-filters--flutter-saved-expense-filters) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -2884,14 +2887,14 @@ Then add a row to the **Index** table.
 
 **Flags:** `enableTripSwitcher` (Trip pack, default ON).
 
-1. Open a trip while you have two or more: the strip under the top bar has left / right arrows. Tap one, or swipe the strip sideways: the neighbouring trip opens on the same tab.
-2. The first and last trips have one arrow dimmed. A single trip shows no arrows.
-3. Next to the arrows the "saved" line shrinks to an icon; a stuck sync still says "Sync issue - Retry".
+1. Open a trip while you have two or more: the trip name in the top bar has a small down arrow. Tap it: a list of your other trips (in Trips list order, archived skipped) with status and dates; the current one is ticked.
+2. Pick another trip: it opens on the tab you were on. A single trip shows no arrow and the name is plain text.
+3. The old previous / next arrows and the swipe on the status strip are gone; the strip keeps status, dates and the saved / syncing line.
 
-**Flag-OFF checks:** `enableTripSwitcher` OFF: no arrows, no swipe.
+**Flag-OFF checks:** `enableTripSwitcher` OFF: the name is plain text; use the Trips list.
 
 ### Pass
-- The order matches the Trips list; archived trips are skipped.
+- TalkBack reads "<trip name>. Switch trip" as a button with a 48 px target.
 
 ## FLUTTER-TRIP-PINS — Flutter: pinned trips
 
@@ -3095,5 +3098,41 @@ Then add a row to the **Index** table.
 
 **Flags:** none.
 
-1. With TalkBack on: the trip arrows read "Previous trip" / "Next trip"; tab chips, legend chips and the Groups / Members switch have 48 px targets; the tour, keypad, receipts and Trip numbers tabs are readable at 200% text.
+1. With TalkBack on: the trip name reads as a "Switch trip" button; tab chips, legend chips and the Groups / Members switch have 48 px targets; the tour, keypad, receipts and Trip numbers tabs are readable at 200% text.
 2. The automated checks (tap targets, labels, contrast, 200% text) run in `test/a11y/a11y_test.dart` for the new screens.
+
+## FLUTTER-PERSONAL-EXPENSES — Flutter: personal expenses, left out of totals
+
+**Flags:** `enableExpenseExclusion` (Trip pack, default ON).
+
+1. Add expense > turn on **Just for me**: the Split section disappears; save. The row shows a small person icon (Personal).
+2. Summary: the trip total, per-person average, category and day charts, spend by person, insights and Who pays whom do **not** include it. Nobody owes anything for it.
+3. Open any expense you can edit: **Count in trip totals** switch. Turn it off: the expense leaves the totals and settlement (even if it was shared); turn it on: it returns.
+4. Swipe an expense row **right**: Personal / Count it, with an UNDO. (Swipe left still deletes.) Edit is in the detail sheet.
+5. Expenses tab: the **Personal** chip shows only left-out expenses.
+6. Edit a personal expense: the switch is on and the split stays hidden; changing the payer moves the split to the new payer.
+7. Another member opens the trip: the expense is still visible to them (only excluded from calculations). An older web app does not know the mark and still counts it.
+
+**Flag-OFF checks:** no Just for me switch, no detail switch, swipe right edits, no Personal chip. Expenses already marked stay out of totals.
+
+### Pass
+- Totals before and after turning the switch off/on differ by exactly that expense's amount.
+
+## FLUTTER-UNDO-SETTLEMENT — Flutter: undo a recorded payment
+
+**Flags:** `enableUndoSettlement` (Trip pack, default ON).
+
+1. Summary > Settle > Confirm: the toast has **UNDO** for ~6 seconds. Tap it: the payment goes to the recycle bin and the balances return.
+2. Settle all on 2+ payments: the toast has UNDO for all of them.
+
+**Flag-OFF checks:** no UNDO on the toast.
+
+## FLUTTER-SAVED-FILTERS — Flutter: saved expense filters
+
+**Flags:** `enableSavedFilters` (Trip pack, default ON).
+
+1. Expenses tab > apply any filter (search, category, Personal chip...) > **Save filter** chip appears > name it. A bookmark chip appears under the quick filters.
+2. Clear filters, then tap the saved chip: the filter returns. Hold the chip: it is removed. Up to eight per trip; same name replaces.
+3. Saved filters are on this phone only, and a fixed date range is not saved.
+
+**Flag-OFF checks:** no Save filter chip and no saved chips.

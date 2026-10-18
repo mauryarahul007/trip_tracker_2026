@@ -445,6 +445,7 @@ class DriftExpenseRepository extends _DriftRepo implements ExpenseRepository {
       disputedByUserId: editing?.disputedByUserId,
       disputeNote: editing?.disputeNote,
       isSettlement: isSettlement,
+      excludeFromTotals: s.excludeFromTotals,
       settlementConfirmedAt: editing?.settlementConfirmedAt,
       settlementConfirmedByUserId: editing?.settlementConfirmedByUserId,
       approvalStatus: approval,

@@ -66,6 +66,7 @@ class FormFlags {
   bool get compactForm => _f('enableCompactExpenseForm');
   bool get explain => _f('enableExplainThisNumber');
   bool get approvalThreshold => _f('enableExpenseApprovalThreshold');
+  bool get personalExpense => _f('enableExpenseExclusion');
   bool get chatCards => _f('enableInChatEventCards') && _f('enableTripChat');
 
   static const keys = [
@@ -90,6 +91,7 @@ class FormFlags {
     'enableExpenseApprovalThreshold',
     'enableInChatEventCards',
     'enableTripChat',
+    'enableExpenseExclusion',
   ];
 }
 
@@ -154,7 +156,11 @@ class ExpenseFormState {
     this.showDuplicateDetails = false,
     this.newExpenseId = '',
     this.epoch = 0,
+    this.excludeFromTotals = false,
   });
+
+  /// A personal expense: out of the trip's totals and settlement.
+  final bool excludeFromTotals;
 
   final String title;
   final String amount;
@@ -219,6 +225,7 @@ class ExpenseFormState {
     bool clearAutoCategory = false,
     String? ignoredDuplicateId,
     bool? showDuplicateDetails,
+    bool? excludeFromTotals,
     bool bump = false,
   }) => ExpenseFormState(
     title: title ?? this.title,
@@ -245,6 +252,7 @@ class ExpenseFormState {
     showDuplicateDetails: showDuplicateDetails ?? this.showDuplicateDetails,
     newExpenseId: newExpenseId,
     epoch: bump ? epoch + 1 : epoch,
+    excludeFromTotals: excludeFromTotals ?? this.excludeFromTotals,
   );
 
   /// Whether anything worth confirming on "close" has been entered.
@@ -319,6 +327,7 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
           tip: e.itemizedConfig?.tip == null ? '' : _numText(e.itemizedConfig!.tip!),
           discount: e.itemizedConfig?.discount == null ? '' : _numText(e.itemizedConfig!.discount!),
           newExpenseId: e.id,
+          excludeFromTotals: e.excludeFromTotals,
         );
       }
     }
@@ -563,7 +572,33 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
     }
   }
 
-  void setPayer(String id) => _set(state.copyWith(payer: id, clearError: true));
+  /// A personal expense is paid by one person and split only to them, so the payer carries the split along.
+  bool get personalOnly =>
+      state.excludeFromTotals && state.selectedIds.length == 1 && state.selectedIds.first == state.payer;
+
+  void setPayer(String id) {
+    final follow = personalOnly;
+    _set(state.copyWith(payer: id, selected: follow ? {id: true} : null, clearError: true));
+  }
+
+  /// "Just for me": paid by the payer, split to them alone, and kept out of trip totals and settlement.
+  void setPersonal(bool on) {
+    if (!on) {
+      _set(state.copyWith(excludeFromTotals: false, bump: true));
+      return;
+    }
+    _set(
+      state.copyWith(
+        excludeFromTotals: true,
+        payerMode: PayerMode.single,
+        selected: {state.payer: true},
+        splitConfig: const {},
+        splitMode: 'equal',
+        bump: true,
+      ),
+    );
+  }
+
   void setPayerMode(PayerMode m) {
     var next = state.copyWith(payerMode: m, clearError: true);
     if (m == PayerMode.multiple &&
@@ -821,6 +856,7 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
       receiptTax: state.tax,
       receiptTip: state.tip,
       receiptDiscount: state.discount,
+      excludeFromTotals: state.excludeFromTotals,
     );
   }
 

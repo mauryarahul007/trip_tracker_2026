@@ -51,8 +51,10 @@ class ExpenseFormInput {
     this.receiptTip = '',
     this.receiptDiscount = '',
     this.location,
+    this.excludeFromTotals = false,
   });
 
+  final bool excludeFromTotals;
   final String title;
   final String amountText;
   final String currency;
@@ -96,8 +98,10 @@ class ExpenseSubmission {
     this.splitConfig,
     this.itemizedConfig,
     this.location,
+    this.excludeFromTotals = false,
   });
 
+  final bool excludeFromTotals;
   final String title;
   final double amount; // always the trip's base currency
   final String currency;
@@ -268,6 +272,7 @@ ExpenseFormResult buildExpenseSubmission(ExpenseFormInput f) {
       splitConfig: finalSplitConfig.isEmpty ? null : finalSplitConfig,
       itemizedConfig: itemized,
       location: f.location,
+      excludeFromTotals: f.excludeFromTotals,
     ),
   );
 }

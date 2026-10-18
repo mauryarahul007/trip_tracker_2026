@@ -639,98 +639,110 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                     ),
                   ),
 
+                  // Personal: paid by one person, split to them alone, out of trip totals and settlement.
+                  if (flags.personalExpense && s.payerMode == PayerMode.single)
+                    SwitchListTile(
+                      key: const Key('personal-switch'),
+                      contentPadding: EdgeInsets.zero,
+                      value: s.excludeFromTotals,
+                      onChanged: c.setPersonal,
+                      title: Text(l10n.formPersonalTitle),
+                      subtitle: Text(l10n.formPersonalSub),
+                    ),
+
                   // Split
-                  section(
-                    l10n.formSplitBetween,
-                    members.isEmpty
-                        ? Text(l10n.formNoMembers)
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 4,
-                                children: [
-                                  ActionChip(
-                                    key: const Key('preset-everyone'),
-                                    label: Text(l10n.formEveryone),
-                                    onPressed: c.presetEveryone,
-                                  ),
-                                  ActionChip(
-                                    key: const Key('preset-only-payer'),
-                                    label: Text(l10n.formOnlyPayer),
-                                    onPressed: c.presetOnlyPayer,
-                                  ),
-                                  ActionChip(
-                                    key: const Key('preset-exclude-payer'),
-                                    label: Text(l10n.formExcludePayer),
-                                    onPressed: c.presetExcludePayer,
-                                  ),
-                                  if (flags.advancedSplits)
+                  if (!(flags.personalExpense && c.personalOnly))
+                    section(
+                      l10n.formSplitBetween,
+                      members.isEmpty
+                          ? Text(l10n.formNoMembers)
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 4,
+                                  children: [
                                     ActionChip(
-                                      key: const Key('preset-half'),
-                                      label: Text(l10n.formPayerHalf),
-                                      onPressed: c.presetPayerHalf,
+                                      key: const Key('preset-everyone'),
+                                      label: Text(l10n.formEveryone),
+                                      onPressed: c.presetEveryone,
                                     ),
-                                  for (final g in groups.where((g) => g.memberIds.length > 1))
-                                    FilterChip(
-                                      key: Key('group-${g.id}'),
-                                      label: Text(g.name),
-                                      selected: g.memberIds.every((m) => s.selected[m] == true),
-                                      onSelected: (on) => c.applyGroup(g.memberIds, checked: on),
+                                    ActionChip(
+                                      key: const Key('preset-only-payer'),
+                                      label: Text(l10n.formOnlyPayer),
+                                      onPressed: c.presetOnlyPayer,
                                     ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              SegmentedButton<String>(
-                                key: const Key('split-modes'),
-                                showSelectedIcon: false,
-                                segments: [
-                                  for (final m in modes)
-                                    ButtonSegment(
-                                      value: m.$1,
-                                      label: Text(m.$2, key: Key('mode-${m.$1}')),
+                                    ActionChip(
+                                      key: const Key('preset-exclude-payer'),
+                                      label: Text(l10n.formExcludePayer),
+                                      onPressed: c.presetExcludePayer,
                                     ),
-                                ],
-                                selected: {s.splitMode},
-                                onSelectionChanged: (v) => c.setSplitMode(v.first),
-                              ),
-                              const SizedBox(height: 8),
-                              for (final m in members)
-                                _MemberRow(
-                                  key: ValueKey('member-${m.id}'),
-                                  member: m,
-                                  selected: s.selected[m.id] == true,
-                                  mode: s.splitMode,
-                                  configText: s.splitConfig[m.id],
-                                  epoch: s.epoch,
-                                  onToggle: () => c.toggleMember(m.id),
-                                  onConfig: (v) => c.setSplitConfig(m.id, v),
+                                    if (flags.advancedSplits)
+                                      ActionChip(
+                                        key: const Key('preset-half'),
+                                        label: Text(l10n.formPayerHalf),
+                                        onPressed: c.presetPayerHalf,
+                                      ),
+                                    for (final g in groups.where((g) => g.memberIds.length > 1))
+                                      FilterChip(
+                                        key: Key('group-${g.id}'),
+                                        label: Text(g.name),
+                                        selected: g.memberIds.every((m) => s.selected[m] == true),
+                                        onSelected: (on) => c.applyGroup(g.memberIds, checked: on),
+                                      ),
+                                  ],
                                 ),
-                              if (s.splitMode == 'percentage' || s.splitMode == 'exact')
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    s.splitMode == 'percentage'
-                                        ? l10n.formSumStatus('${status.sum.toStringAsFixed(1)}%', '100%')
-                                        : l10n.formSumStatus(
-                                            _fmt(context, status.sum, s.currency),
-                                            _fmt(context, status.target ?? 0, s.currency),
-                                          ),
-                                    key: const Key('sum-status'),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: status.matches ? tokens.colorSuccess : tokens.colorDanger,
+                                const SizedBox(height: 8),
+                                SegmentedButton<String>(
+                                  key: const Key('split-modes'),
+                                  showSelectedIcon: false,
+                                  segments: [
+                                    for (final m in modes)
+                                      ButtonSegment(
+                                        value: m.$1,
+                                        label: Text(m.$2, key: Key('mode-${m.$1}')),
+                                      ),
+                                  ],
+                                  selected: {s.splitMode},
+                                  onSelectionChanged: (v) => c.setSplitMode(v.first),
+                                ),
+                                const SizedBox(height: 8),
+                                for (final m in members)
+                                  _MemberRow(
+                                    key: ValueKey('member-${m.id}'),
+                                    member: m,
+                                    selected: s.selected[m.id] == true,
+                                    mode: s.splitMode,
+                                    configText: s.splitConfig[m.id],
+                                    epoch: s.epoch,
+                                    onToggle: () => c.toggleMember(m.id),
+                                    onConfig: (v) => c.setSplitConfig(m.id, v),
+                                  ),
+                                if (s.splitMode == 'percentage' || s.splitMode == 'exact')
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      s.splitMode == 'percentage'
+                                          ? l10n.formSumStatus('${status.sum.toStringAsFixed(1)}%', '100%')
+                                          : l10n.formSumStatus(
+                                              _fmt(context, status.sum, s.currency),
+                                              _fmt(context, status.target ?? 0, s.currency),
+                                            ),
+                                      key: const Key('sum-status'),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: status.matches ? tokens.colorSuccess : tokens.colorDanger,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              if (s.splitMode == 'custom')
-                                Text(l10n.formSharesWeights, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
-                              if (s.splitMode == 'itemized')
-                                _Itemized(state: s, controller: c, members: members, currency: s.currency),
-                            ],
-                          ),
-                  ),
+                                if (s.splitMode == 'custom')
+                                  Text(l10n.formSharesWeights, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
+                                if (s.splitMode == 'itemized')
+                                  _Itemized(state: s, controller: c, members: members, currency: s.currency),
+                              ],
+                            ),
+                    ),
 
                   if (dupShown)
                     Container(

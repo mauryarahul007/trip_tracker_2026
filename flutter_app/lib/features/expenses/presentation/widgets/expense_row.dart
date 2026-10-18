@@ -208,6 +208,7 @@ class _ExpenseRowState extends State<ExpenseRow> {
         tokens.colorWarning,
         e.disputeNote?.isNotEmpty == true ? l10n.detailDisputedBy(e.disputeNote!) : l10n.rowDisputed,
       ),
+    if (e.excludeFromTotals) _badge(Icons.person_outline_rounded, tokens.textMuted, l10n.rowPersonal),
     if (e.approvalStatus == 'pending_approval')
       _badge(Icons.schedule_rounded, tokens.colorWarning, l10n.rowPendingApprovalTip),
     if (widget.isConflict)

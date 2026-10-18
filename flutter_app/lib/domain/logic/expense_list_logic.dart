@@ -24,6 +24,7 @@ class ExpenseFilters {
     this.amountMax = '',
     this.relation,
     this.location = '',
+    this.onlyPersonal = false,
   });
 
   final String query;
@@ -36,6 +37,9 @@ class ExpenseFilters {
   final ExpenseRelation? relation;
   final String location;
 
+  /// Only expenses kept out of the trip totals.
+  final bool onlyPersonal;
+
   bool get hasActive =>
       query.isNotEmpty ||
       categoryId.isNotEmpty ||
@@ -45,6 +49,7 @@ class ExpenseFilters {
       amountMin.isNotEmpty ||
       amountMax.isNotEmpty ||
       relation != null ||
+      onlyPersonal ||
       location.isNotEmpty;
 
   ExpenseFilters copyWith({
@@ -58,6 +63,7 @@ class ExpenseFilters {
     ExpenseRelation? relation,
     bool clearRelation = false,
     String? location,
+    bool? onlyPersonal,
   }) => ExpenseFilters(
     query: query ?? this.query,
     categoryId: categoryId ?? this.categoryId,
@@ -68,6 +74,43 @@ class ExpenseFilters {
     amountMax: amountMax ?? this.amountMax,
     relation: clearRelation ? null : (relation ?? this.relation),
     location: location ?? this.location,
+    onlyPersonal: onlyPersonal ?? this.onlyPersonal,
+  );
+
+  /// What a saved filter keeps. Dates are left out on purpose: a fixed date range goes stale.
+  Map<String, dynamic> toJson() => {
+    if (query.isNotEmpty) 'query': query,
+    if (categoryId.isNotEmpty) 'categoryId': categoryId,
+    if (memberId.isNotEmpty) 'memberId': memberId,
+    if (amountMin.isNotEmpty) 'amountMin': amountMin,
+    if (amountMax.isNotEmpty) 'amountMax': amountMax,
+    if (relation != null) 'relation': relation!.name,
+    if (location.isNotEmpty) 'location': location,
+    if (onlyPersonal) 'onlyPersonal': true,
+  };
+
+  factory ExpenseFilters.fromJson(Map<String, dynamic> j) => ExpenseFilters(
+    query: j['query'] as String? ?? '',
+    categoryId: j['categoryId'] as String? ?? '',
+    memberId: j['memberId'] as String? ?? '',
+    amountMin: j['amountMin'] as String? ?? '',
+    amountMax: j['amountMax'] as String? ?? '',
+    relation: ExpenseRelation.values.where((r) => r.name == j['relation']).firstOrNull,
+    location: j['location'] as String? ?? '',
+    onlyPersonal: j['onlyPersonal'] == true,
+  );
+}
+
+/// A named filter the traveller keeps for one-tap use on a trip.
+class SavedFilter {
+  const SavedFilter(this.name, this.filters);
+  final String name;
+  final ExpenseFilters filters;
+
+  Map<String, dynamic> toJson() => {'name': name, 'filters': filters.toJson()};
+  factory SavedFilter.fromJson(Map<String, dynamic> j) => SavedFilter(
+    j['name'] as String? ?? '',
+    ExpenseFilters.fromJson((j['filters'] as Map?)?.cast<String, dynamic>() ?? const {}),
   );
 }
 
@@ -92,6 +135,7 @@ List<Expense> filterExpenses(List<Expense> all, ExpenseFilters f, {String? myMem
               (f.relation == ExpenseRelation.paidByMe && e.paidBy == myMemberId) ||
               (f.relation == ExpenseRelation.involvesMe &&
                   (e.paidBy == myMemberId || e.splitMemberIds.contains(myMemberId)))) &&
+          (!f.onlyPersonal || e.excludeFromTotals) &&
           (f.location.isEmpty || e.location?.placeName == f.location))
         e,
   ];
@@ -150,7 +194,7 @@ class TripTotals {
 TripTotals computeTotals(List<Expense> active, {required int visibleMemberCount, required List<Category> categories}) {
   final counted = [
     for (final e in active)
-      if (!e.title.startsWith('Settlement:') && e.approvalStatus != 'pending_approval') e,
+      if (!e.title.startsWith('Settlement:') && e.approvalStatus != 'pending_approval' && !e.excludeFromTotals) e,
   ];
   final total = counted.fold<double>(0, (s, e) => s + e.amount);
   final byCat = <String, double>{for (final c in categories) c.id: 0};

@@ -91,43 +91,35 @@ void main() {
   });
 
   group('switch between trips', () {
-    testApp('arrows and a swipe on the strip jump to the neighbouring trip and keep the tab', (tester) async {
+    testApp('the trip name opens a list; picking a trip opens it on the same tab', (tester) async {
       await pumpApp(tester, user: asha);
       final later = await tripAt(tester, 'Later Trip', 20);
       final sooner = await tripAt(tester, 'Sooner Trip', 5);
-      await goTo(tester, '/trip/$later/ledger'); // newest first: Later, then Sooner
+      await goTo(tester, '/trip/$later/ledger');
       expect(appBarTitle(tester), 'Later Trip');
-      expect(
-        tester.widget<IconButton>(find.descendant(of: key('trip-prev'), matching: find.byType(IconButton))).onPressed,
-        isNull,
-      ); // first in the list
-      await tester.tap(key('trip-next'));
+      expect(key('trip-prev'), findsNothing); // the old arrows are gone
+      await tester.tap(key('trip-switcher'));
+      await settle(tester, rounds: 8);
+      expect(key('switch-to-$later'), findsOneWidget);
+      await tester.tap(key('switch-to-$sooner'));
       await settle(tester, rounds: 12);
       expect(appBarTitle(tester), 'Sooner Trip');
       expect(find.byKey(const Key('ledger-list')), findsOneWidget); // still on Summary
-      expect(
-        tester.widget<IconButton>(find.descendant(of: key('trip-next'), matching: find.byType(IconButton))).onPressed,
-        isNull,
-      ); // last in the list
-      await tester.fling(key('trip-strip'), const Offset(500, 0), 1500); // swipe right: previous trip
-      await settle(tester, rounds: 12);
-      expect(appBarTitle(tester), 'Later Trip');
-      expect(sooner, isNot(later));
     });
 
-    testApp('no arrows with a single trip or with the flag off', (tester) async {
+    testApp('no switcher with a single trip', (tester) async {
       await pumpApp(tester, user: asha);
       final only = await tripAt(tester, 'Only Trip', 5);
       await goTo(tester, '/trip/$only/ledger');
-      expect(key('trip-next'), findsNothing);
+      expect(key('trip-switcher'), findsNothing);
     });
 
-    testApp('switcher off: no arrows even with two trips', (tester) async {
+    testApp('switcher off: plain title even with two trips', (tester) async {
       await pumpApp(tester, user: asha, flagsOff: {'enableTripSwitcher'});
       final a = await tripAt(tester, 'A Trip', 5);
       await tripAt(tester, 'B Trip', 20);
       await goTo(tester, '/trip/$a/ledger');
-      expect(key('trip-next'), findsNothing);
+      expect(key('trip-switcher'), findsNothing);
     });
   });
 

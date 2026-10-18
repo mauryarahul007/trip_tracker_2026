@@ -4,15 +4,25 @@ import '../../../../core/platform/haptics.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_tokens.dart';
 
-/// Swipe right to edit (settlements can't be edited), left to delete. Edit
-/// springs back (it opens a screen); delete removes the row (caller hides it).
+/// Swipe left to delete. Swipe right toggles Personal (out of / back in the trip totals) when [onTogglePersonal] is
+/// given, else edits (settlements can't be edited). Right swipes spring back; delete removes the row (caller hides it).
 class ExpenseSwipe extends StatelessWidget {
-  const ExpenseSwipe({required this.itemKey, required this.child, required this.onDelete, this.onEdit, super.key});
+  const ExpenseSwipe({
+    required this.itemKey,
+    required this.child,
+    required this.onDelete,
+    this.onEdit,
+    this.onTogglePersonal,
+    this.isPersonal = false,
+    super.key,
+  });
 
   final Key itemKey;
   final Widget child;
   final VoidCallback onDelete;
   final VoidCallback? onEdit;
+  final VoidCallback? onTogglePersonal;
+  final bool isPersonal;
 
   Widget _bg(BuildContext context, Color color, IconData icon, String label, Alignment align) => Container(
     alignment: align,
@@ -39,8 +49,16 @@ class ExpenseSwipe extends StatelessWidget {
       children: [
         Dismissible(
           key: itemKey,
-          direction: onEdit == null ? DismissDirection.endToStart : DismissDirection.horizontal,
-          background: _bg(context, tokens.primaryAccent, Icons.edit_outlined, l10n.rowEdit, Alignment.centerLeft),
+          direction: (onEdit ?? onTogglePersonal) == null ? DismissDirection.endToStart : DismissDirection.horizontal,
+          background: onTogglePersonal != null
+              ? _bg(
+                  context,
+                  tokens.secondaryAccent,
+                  isPersonal ? Icons.groups_outlined : Icons.person_outline_rounded,
+                  isPersonal ? l10n.swipeCountAgain : l10n.swipeMakePersonal,
+                  Alignment.centerLeft,
+                )
+              : _bg(context, tokens.primaryAccent, Icons.edit_outlined, l10n.rowEdit, Alignment.centerLeft),
           secondaryBackground: _bg(
             context,
             tokens.colorDanger,
@@ -51,7 +69,7 @@ class ExpenseSwipe extends StatelessWidget {
           confirmDismiss: (dir) async {
             await AppHaptics.warning();
             if (dir == DismissDirection.startToEnd) {
-              onEdit?.call();
+              (onTogglePersonal ?? onEdit)?.call();
               return false;
             }
             return true;

@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.62.0',
+    date: '2026-10-18',
+    changes: [
+      'Behind the scenes: the Flutter app can keep a personal expense out of the trip totals and settlement (a Just for me switch on the form, a Count in trip totals switch on an expense, swipe right on a row, and a Personal filter), switches trips from the trip name in the top bar instead of arrows on the status strip, offers UNDO after recording a payment, and lets you save expense filters as one-tap chips. No change to the web app.',
+    ],
+  },
+  {
     version: '3.61.0',
     date: '2026-10-18',
     changes: [

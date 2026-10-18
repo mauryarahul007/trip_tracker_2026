@@ -1830,10 +1830,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteCardScan => 'Scan the code or enter it in Trip Tracker to join';
 
   @override
-  String get tripPrevious => 'Previous trip';
+  String get tripSwitchTitle => 'Switch trip';
 
   @override
-  String get tripNext => 'Next trip';
+  String get formPersonalTitle => 'Just for me';
+
+  @override
+  String get formPersonalSub => 'Not shared. Left out of trip totals and who pays whom.';
+
+  @override
+  String get detailCountTitle => 'Count in trip totals';
+
+  @override
+  String get detailCountSub => 'Off keeps it out of totals, charts and who pays whom.';
+
+  @override
+  String get rowPersonal => 'Personal';
+
+  @override
+  String get expPersonalChip => 'Personal';
+
+  @override
+  String get swipeMakePersonal => 'Personal';
+
+  @override
+  String get swipeCountAgain => 'Count it';
+
+  @override
+  String get expMarkedPersonal => 'Marked personal. It no longer counts in trip totals.';
+
+  @override
+  String get expCountedAgain => 'Counted in trip totals again.';
+
+  @override
+  String get filterSave => 'Save filter';
+
+  @override
+  String get filterSavePrompt => 'Name this filter';
+
+  @override
+  String get filterSavedRemove => 'Remove saved filter';
+
+  @override
+  String get filterSavedTip => 'Hold a saved filter to remove it';
 
   @override
   String get ledYouPay => 'You pay';

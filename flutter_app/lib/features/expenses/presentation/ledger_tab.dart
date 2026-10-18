@@ -21,6 +21,7 @@ import '../../../data/sync/conflict_store.dart';
 import '../../../domain/logic/category_color.dart';
 import '../../../domain/logic/currency.dart';
 import '../../../domain/logic/expense_list_logic.dart';
+import '../../../domain/repositories/repositories.dart' show ExpenseRepository;
 import '../../../domain/logic/group_spend.dart';
 import '../../../domain/logic/expense_form_logic.dart';
 import '../../../domain/logic/settle_up.dart';
@@ -120,16 +121,29 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final repo = ref.read(expenseRepositoryProvider);
     final userId = ref.read(authStateProvider).userId ?? '';
     final date = todayDateString(ref.read(nowProvider)());
-    var done = 0;
+    final undoOn = _flag(ref, 'enableUndoSettlement', widget.tripId);
+    final made = <String>[];
     for (final t in mine) {
       final plan = planSettlement(t, amount: t.amount, currency: cur, date: date, note: '');
       if (plan == null) continue;
       final r = await repo.submit(plan.submission, tripId: widget.tripId, userId: userId);
-      if (r.isOk) done++;
+      if (r.isOk) made.add(r.expenseId!);
     }
+    final done = made.length;
     if (!context.mounted) return;
     if (done > 0) AppFeedback.success();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.ledSettleAllDone(done))));
+    showSettleSnack(
+      ScaffoldMessenger.of(context),
+      l10n.ledSettleAllDone(done),
+      undoOn && done > 0 ? () => unawaited(_undoSettlements(repo, userId, made)) : null,
+    );
+  }
+
+  /// Takes recorded settlements back (they go to the recycle bin, so balances return to what they were).
+  Future<void> _undoSettlements(ExpenseRepository repo, String userId, List<String> ids) async {
+    for (final id in ids) {
+      await repo.delete(id, userId: userId);
+    }
   }
 
   Future<void> _shareSummary(Trip trip, double total, double perPerson, List<Transfer> transfers) async {
@@ -1746,14 +1760,19 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
     setState(() => _busy = true);
     final nav = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final r = await ref
-        .read(expenseRepositoryProvider)
-        .submit(plan.submission, tripId: widget.tripId, userId: ref.read(authStateProvider).userId ?? '');
+    final repo = ref.read(expenseRepositoryProvider);
+    final userId = ref.read(authStateProvider).userId ?? '';
+    final undoOn = ref.read(flagProvider(('enableUndoSettlement', widget.tripId))).value ?? false;
+    final r = await repo.submit(plan.submission, tripId: widget.tripId, userId: userId);
     if (!mounted) return;
     if (r.isOk) {
       AppFeedback.success();
       nav.pop();
-      messenger.showSnackBar(SnackBar(content: Text(l10n.ledSettledToast)));
+      showSettleSnack(
+        messenger,
+        l10n.ledSettledToast,
+        undoOn ? () => unawaited(repo.delete(r.expenseId!, userId: userId)) : null,
+      );
     } else {
       setState(() {
         _busy = false;
@@ -1825,6 +1844,7 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
     final v = _value;
     final partial = v != null && v > 0 && v < t.amount - 0.01;
     final dateNote = ref.watch(flagProvider(('enableSettlementDateNote', widget.tripId))).value ?? false;
+    ref.watch(flagProvider(('enableUndoSettlement', widget.tripId))); // loaded before Confirm reads it
     final upiOn = ref.watch(flagProvider(('enableUpiPayments', widget.tripId))).value ?? false;
     final shareOn = ref.watch(flagProvider(('enableWhatsAppSettlementShare', widget.tripId))).value ?? false;
     final roundingOn = ref.watch(flagProvider(('enableSettleRounding', widget.tripId))).value ?? true;
@@ -2028,4 +2048,17 @@ class _DayChartState extends State<_DayChart> {
       ],
     );
   }
+}
+
+/// The "payment recorded" toast; with [onUndo] it carries an UNDO that moves the payment to the recycle bin.
+void showSettleSnack(ScaffoldMessengerState messenger, String message, VoidCallback? onUndo) {
+  messenger.hideCurrentSnackBar();
+  messenger.showSnackBar(
+    SnackBar(
+      content: Text(message),
+      persist: false,
+      duration: const Duration(seconds: 6),
+      action: onUndo == null ? null : SnackBarAction(label: 'UNDO', onPressed: onUndo),
+    ),
+  );
 }

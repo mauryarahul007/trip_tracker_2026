@@ -408,8 +408,8 @@ void main() {
       expect(find.text('The recycle bin is empty'), findsOneWidget);
     });
 
-    testApp('swipe right opens the edit route', (tester) async {
-      await pumpApp(tester, user: asha);
+    testApp('swipe right opens the edit route (when Personal swiping is off)', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableExpenseExclusion'});
       final s = await seedTrip(tester);
       final id = await addExpense(tester, s, title: 'Beach lunch');
       await openExpenses(tester, s);

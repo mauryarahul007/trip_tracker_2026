@@ -23,6 +23,7 @@ import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/pull_to_refresh.dart';
+import '../../../shared/widgets/ask_text.dart';
 import '../../../shared/widgets/undo_snackbar.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../../trips/application/trips_providers.dart';
@@ -109,6 +110,20 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     UndoSnackbar.show(context: context, message: l10n.expDeleted, onUndo: () => unawaited(repo.restore(e.id)));
   }
 
+  /// Swipe right: take an expense out of (or back into) the trip totals, with an undo.
+  Future<void> _togglePersonal(Expense e) async {
+    final l10n = context.l10n;
+    final repo = ref.read(expenseRepositoryProvider);
+    final now = !e.excludeFromTotals;
+    await repo.update(e.copyWith(excludeFromTotals: now));
+    if (!mounted) return;
+    UndoSnackbar.show(
+      context: context,
+      message: now ? l10n.expMarkedPersonal : l10n.expCountedAgain,
+      onUndo: () => unawaited(repo.update(e.copyWith(excludeFromTotals: !now))),
+    );
+  }
+
   void _edit(Expense e) => context.push('/trip/$id/expenses/${e.id}/edit');
 
   void _openDetail(Expense e) {
@@ -174,6 +189,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final conflicts = ref.watch(conflictIdsProvider(id));
     final compactActive = _flag(ref, 'enableCompactLedgerView', id) && _compact;
     final quickChips = _flag(ref, 'enableExpenseQuickFilterChips', id);
+    final personalOn = _flag(ref, 'enableExpenseExclusion', id);
+    final savedOn = _flag(ref, 'enableSavedFilters', id);
+    final saved = savedOn ? ref.watch(savedFiltersProvider(id)) : const <SavedFilter>[];
     final receiptsOn = _flag(ref, 'enableReceiptGallery', id);
     final binOn = _flag(ref, 'enableRecycleBin', id);
 
@@ -255,6 +273,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       return ExpenseSwipe(
         itemKey: ValueKey('swipe-${e.id}'),
         onEdit: isActualExpense(e) ? () => _edit(e) : null,
+        onTogglePersonal: personalOn && isActualExpense(e) ? () => unawaited(_togglePersonal(e)) : null,
+        isPersonal: e.excludeFromTotals,
         onDelete: () => unawaited(_delete(e)),
         child: body,
       );
@@ -445,6 +465,50 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                     selected: filters.relation == ExpenseRelation.involvesMe,
                     onSelected: (_) => _setFilters(filters.copyWith(relation: ExpenseRelation.involvesMe)),
                   ),
+                  if (personalOn)
+                    FilterChip(
+                      key: const Key('chip-personal'),
+                      label: Text(l10n.expPersonalChip),
+                      selected: filters.onlyPersonal,
+                      onSelected: (on) => _setFilters(filters.copyWith(onlyPersonal: on)),
+                    ),
+                ],
+              ),
+            ),
+          if (saved.isNotEmpty || (savedOn && filters.hasActive))
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  for (final f in saved)
+                    Tooltip(
+                      message: l10n.filterSavedTip,
+                      child: GestureDetector(
+                        onLongPress: () => ref.read(savedFiltersProvider(id).notifier).remove(f.name),
+                        child: ActionChip(
+                          key: Key('saved-filter-${f.name}'),
+                          avatar: const Icon(Icons.bookmark_rounded, size: 16),
+                          label: Text(f.name),
+                          materialTapTargetSize: MaterialTapTargetSize.padded,
+                          onPressed: () {
+                            _search.text = f.filters.query;
+                            _setFilters(f.filters);
+                          },
+                        ),
+                      ),
+                    ),
+                  if (savedOn && filters.hasActive)
+                    ActionChip(
+                      key: const Key('save-filter'),
+                      avatar: const Icon(Icons.bookmark_add_outlined, size: 16),
+                      label: Text(l10n.filterSave),
+                      materialTapTargetSize: MaterialTapTargetSize.padded,
+                      onPressed: () async {
+                        final name = await askText(context, l10n.filterSavePrompt);
+                        if (name != null) ref.read(savedFiltersProvider(id).notifier).add(name, filters);
+                      },
+                    ),
                 ],
               ),
             ),

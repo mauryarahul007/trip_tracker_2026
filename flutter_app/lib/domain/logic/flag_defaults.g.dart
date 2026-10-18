@@ -48,6 +48,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableDuplicateDetector': true,
   'enableExpenseApprovalThreshold': false,
   'enableExpenseDisputes': false,
+  'enableExpenseExclusion': true,
   'enableExpenseHistory': true,
   'enableExpensePhotoLinking': false,
   'enableExpenseQuickFilterChips': true,
@@ -104,6 +105,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableReduceMotion': true,
   'enableRememberDefaultSplit': true,
   'enableRouteStops': false,
+  'enableSavedFilters': true,
   'enableSettingsSearch': true,
   'enableSettleAll': true,
   'enableSettleRounding': true,
@@ -149,6 +151,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableTripWrapped': true,
   'enableTripbotNlExpenses': false,
   'enableTripsOverview': true,
+  'enableUndoSettlement': true,
   'enableUpiPayments': true,
   'enableVoiceInput': true,
   'enableWeatherItineraryNudges': false,
@@ -388,6 +391,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'Dispute Flag on Expenses',
     pack: 'pro',
     description: 'Any participant can flag an expense as disputed; the flagger or a trip admin can resolve it.',
+  ),
+  'enableExpenseExclusion': (
+    label: 'Personal Expenses, Left Out of Totals (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: the expense form has a \'Just for me\' switch (paid by one person, split to them alone), an expense\'s detail sheet has a \'Count in trip totals\' switch, swiping a row right toggles Personal, rows show a Personal icon and Expenses gets a Personal filter chip. An expense that is left out of totals is also left out of the trip total, the charts, insights, spend by person and who-pays-whom. OFF: none of those controls appear. It does not hide the amount from other members (they still see the row), and turning the flag off does not put back expenses that were already marked.',
   ),
   'enableExpenseHistory': (
     label: 'Expense History Line (Flutter)',
@@ -674,6 +682,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'travel',
     description: 'Multi-city itinerary manager with arrival/departure dates and map pins.',
   ),
+  'enableSavedFilters': (
+    label: 'Saved Expense Filters (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: when filters are active on the Expenses tab a \'Save filter\' chip lets you name them; saved filters appear as one-tap chips under the quick filters (hold one to remove it, up to eight per trip). OFF: no Save filter chip and no saved chips. Saved filters live on this phone only, and a fixed date range is not saved.',
+  ),
   'enableSettingsSearch': (
     label: 'Settings Search (Flutter)',
     pack: 'trip',
@@ -878,9 +891,9 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     description: 'Flutter app: ON: the top of Trip numbers on the Summary tab shows up to 3 short tips worked out from this trip\'s own numbers (for example "On pace to go ₹X over budget", "Food is 52% of spend", "3 payments still open") with a button where it helps, next to the budget plan. OFF: no tips; the budget card still follows enableTripBudget. Tips are suggestions only: they never change an expense, split or balance, and nothing is sent anywhere.',
   ),
   'enableTripSwitcher': (
-    label: 'Switch Between Trips (Flutter)',
+    label: 'Switch Trip From the Top Bar (Flutter)',
     pack: 'trip',
-    description: 'Flutter app: ON: inside a trip, the strip under the top bar has previous and next trip arrows and can be swiped sideways to jump to the neighbouring trip, keeping the tab you are on. OFF: go back to the Trips list to pick another trip. Does not change any data.',
+    description: 'Flutter app: ON: inside a trip (when you have two or more), the trip name in the top bar has a small down arrow; tapping it lists your other trips and picking one opens it on the tab you are on. OFF: the name is plain text and you go back to the Trips list to pick another trip. The arrows and the swipe on the status strip are gone. Does not change any data.',
   ),
   'enableTripTemplates': (
     label: 'Trip Templates (Flutter)',
@@ -901,6 +914,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'Trips Overview Line (Flutter)',
     pack: 'trip',
     description: 'Flutter app: ON: the Trips list starts with one line that sums up your position across all your trips ("You\'re owed ₹4,200 across 3 trips", "You owe ..." or "All settled across 3 trips"); tapping it opens Balances. With balances in more than one currency it says so instead of mixing them. OFF: no summary line. Does not change any balance or the Balances tab.',
+  ),
+  'enableUndoSettlement': (
+    label: 'Undo for Recorded Payments (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: after you record a payment (or Settle all), the confirmation has an UNDO for a few seconds; undoing moves the payment(s) to the recycle bin so balances return to what they were. OFF: the confirmation has no UNDO (a payment can still be deleted from Expenses). It does not undo payments from earlier, and the existing UNDO on deleting an expense is unchanged.',
   ),
   'enableUpiPayments': (
     label: '1-Tap UPI on settlement rows',
@@ -1065,6 +1083,9 @@ const Map<String, List<String>> consumerPacks = {
     'enableInviteCard',
     'enableExpenseQuickFilterChips',
     'enableOfflineFeedback',
+    'enableExpenseExclusion',
+    'enableUndoSettlement',
+    'enableSavedFilters',
   ],
   'travel': [
     'enableTravelPasses',

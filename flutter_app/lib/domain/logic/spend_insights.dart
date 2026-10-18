@@ -15,7 +15,8 @@ class CategorySpend {
 }
 
 /// Settlements and deleted rows are not spending.
-Iterable<Expense> _spending(Iterable<Expense> all) => all.where((e) => !e.isSettlement && e.deletedAt == null);
+Iterable<Expense> _spending(Iterable<Expense> all) =>
+    all.where((e) => !e.isSettlement && e.deletedAt == null && !e.excludeFromTotals);
 
 /// Daily totals, oldest first. Days without spending are omitted.
 List<DaySpend> spendByDay(Iterable<Expense> all) {

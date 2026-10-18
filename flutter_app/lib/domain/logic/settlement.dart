@@ -292,7 +292,13 @@ List<Transfer> calculateDirectSettlements(
   List<Group> groups = const [],
 ]) {
   final activeTripExpenses = expenses
-      .where((e) => e.tripId == trip.id && e.deletedAt == null && e.approvalStatus != 'pending_approval')
+      .where(
+        (e) =>
+            e.tripId == trip.id &&
+            e.deletedAt == null &&
+            e.approvalStatus != 'pending_approval' &&
+            !e.excludeFromTotals,
+      )
       .toList();
 
   final groupOfMember = <String, String>{};
@@ -410,7 +416,13 @@ SettlementResult calculateSettlements(
   bool? simplifyDebts,
 ]) {
   final activeTripExpenses = expenses
-      .where((e) => e.tripId == trip.id && e.deletedAt == null && e.approvalStatus != 'pending_approval')
+      .where(
+        (e) =>
+            e.tripId == trip.id &&
+            e.deletedAt == null &&
+            e.approvalStatus != 'pending_approval' &&
+            !e.excludeFromTotals,
+      )
       .toList();
 
   final netBalances = <String, double>{};

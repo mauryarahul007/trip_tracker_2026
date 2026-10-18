@@ -3217,17 +3217,95 @@ abstract class AppLocalizations {
   /// **'Scan the code or enter it in Trip Tracker to join'**
   String get inviteCardScan;
 
-  /// No description provided for @tripPrevious.
+  /// No description provided for @tripSwitchTitle.
   ///
   /// In en, this message translates to:
-  /// **'Previous trip'**
-  String get tripPrevious;
+  /// **'Switch trip'**
+  String get tripSwitchTitle;
 
-  /// No description provided for @tripNext.
+  /// No description provided for @formPersonalTitle.
   ///
   /// In en, this message translates to:
-  /// **'Next trip'**
-  String get tripNext;
+  /// **'Just for me'**
+  String get formPersonalTitle;
+
+  /// No description provided for @formPersonalSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Not shared. Left out of trip totals and who pays whom.'**
+  String get formPersonalSub;
+
+  /// No description provided for @detailCountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Count in trip totals'**
+  String get detailCountTitle;
+
+  /// No description provided for @detailCountSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Off keeps it out of totals, charts and who pays whom.'**
+  String get detailCountSub;
+
+  /// No description provided for @rowPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal'**
+  String get rowPersonal;
+
+  /// No description provided for @expPersonalChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal'**
+  String get expPersonalChip;
+
+  /// No description provided for @swipeMakePersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal'**
+  String get swipeMakePersonal;
+
+  /// No description provided for @swipeCountAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Count it'**
+  String get swipeCountAgain;
+
+  /// No description provided for @expMarkedPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked personal. It no longer counts in trip totals.'**
+  String get expMarkedPersonal;
+
+  /// No description provided for @expCountedAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted in trip totals again.'**
+  String get expCountedAgain;
+
+  /// No description provided for @filterSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save filter'**
+  String get filterSave;
+
+  /// No description provided for @filterSavePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Name this filter'**
+  String get filterSavePrompt;
+
+  /// No description provided for @filterSavedRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove saved filter'**
+  String get filterSavedRemove;
+
+  /// No description provided for @filterSavedTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold a saved filter to remove it'**
+  String get filterSavedTip;
 
   /// No description provided for @ledYouPay.
   ///

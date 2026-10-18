@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../../shared/widgets/cached_photo.dart';
 
 import 'dart:io';
@@ -248,6 +250,18 @@ class ExpenseDetailSheet extends ConsumerWidget {
               ),
             ),
           ),
+          if (_flag(ref, 'enableExpenseExclusion', tripId) && canManage && !e.isSettlement)
+            Material(
+              type: MaterialType.transparency,
+              child: SwitchListTile(
+                key: const Key('detail-count-switch'),
+                contentPadding: EdgeInsets.zero,
+                value: !e.excludeFromTotals,
+                onChanged: (counted) => unawaited(repo.update(e.copyWith(excludeFromTotals: !counted))),
+                title: Text(l10n.detailCountTitle),
+                subtitle: Text(l10n.detailCountSub),
+              ),
+            ),
           const SizedBox(height: 16),
           Text(
             l10n.detailShares,
