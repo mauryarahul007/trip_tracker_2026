@@ -2722,7 +2722,7 @@ abstract class AppLocalizations {
   /// No description provided for @hintSwipeTrip.
   ///
   /// In en, this message translates to:
-  /// **'Tip: swipe a trip sideways to archive it, or press and hold for more.'**
+  /// **'Tip: press and hold a trip for more. In the list, swipe a row to archive it.'**
   String get hintSwipeTrip;
 
   /// No description provided for @hintTapGroup.
@@ -2856,6 +2856,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Balances in {count} currencies. Tap to see them.'**
   String tripsOverviewMulti(int count);
+
+  /// No description provided for @tripsLayoutGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo tiles'**
+  String get tripsLayoutGrid;
+
+  /// No description provided for @tripsLayoutList.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact list'**
+  String get tripsLayoutList;
+
+  /// No description provided for @syncLineSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'All saved'**
+  String get syncLineSaved;
+
+  /// No description provided for @syncLineSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Syncing 1 change} other{Syncing {count} changes}}'**
+  String syncLineSyncing(int count);
+
+  /// No description provided for @syncLineOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get syncLineOffline;
+
+  /// No description provided for @syncLineOfflineWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline · {count} waiting'**
+  String syncLineOfflineWaiting(int count);
+
+  /// No description provided for @syncLineIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync issue · Retry'**
+  String get syncLineIssue;
+
+  /// No description provided for @todayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get todayTitle;
+
+  /// No description provided for @todaySpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent today'**
+  String get todaySpent;
+
+  /// No description provided for @todayNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next up'**
+  String get todayNext;
+
+  /// No description provided for @closeoutPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This trip is over. Wrap it up:'**
+  String get closeoutPromptTitle;
+
+  /// No description provided for @closeoutStepSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything is settled'**
+  String get closeoutStepSettled;
+
+  /// No description provided for @closeoutStepSettle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 payment left to settle} other{{count} payments left to settle}}'**
+  String closeoutStepSettle(int count);
+
+  /// No description provided for @closeoutClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close trip'**
+  String get closeoutClose;
+
+  /// No description provided for @searchHitsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Found inside trips · {count}'**
+  String searchHitsTitle(int count);
+
+  /// No description provided for @notifToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get notifToday;
+
+  /// No description provided for @notifYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get notifYesterday;
+
+  /// No description provided for @notifEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get notifEarlier;
+
+  /// No description provided for @notifConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get notifConfirm;
+
+  /// No description provided for @notifConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement confirmed'**
+  String get notifConfirmed;
+
+  /// No description provided for @notifConfirmFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm. Check your connection and try again.'**
+  String get notifConfirmFailed;
+
+  /// No description provided for @lastSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {when}'**
+  String lastSynced(String when);
+
+  /// No description provided for @tripPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin to top'**
+  String get tripPin;
+
+  /// No description provided for @tripUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get tripUnpin;
+
+  /// No description provided for @tripSectionPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get tripSectionPinned;
+
+  /// No description provided for @receiptsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts'**
+  String get receiptsTitle;
+
+  /// No description provided for @receiptsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No receipts yet'**
+  String get receiptsEmptyTitle;
+
+  /// No description provided for @receiptsEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos you attach to expenses show up here.'**
+  String get receiptsEmptyHint;
+
+  /// No description provided for @receiptsOpenExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Open expense'**
+  String get receiptsOpenExpense;
+
+  /// No description provided for @tourTilesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your trips at a glance'**
+  String get tourTilesTitle;
+
+  /// No description provided for @tourTilesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Each tile shows the place, when it is, and whether you are owed or owe. The trip happening now sits on top.'**
+  String get tourTilesBody;
+
+  /// No description provided for @tourHoldTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Press and hold for more'**
+  String get tourHoldTitle;
+
+  /// No description provided for @tourHoldBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold a trip to pin it, archive it or delete it. In the list view you can also swipe a row.'**
+  String get tourHoldBody;
+
+  /// No description provided for @tourSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Inside a trip'**
+  String get tourSummaryTitle;
+
+  /// No description provided for @tourSummaryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The Summary shows who pays whom. Tap Settle when you pay someone, and the numbers roll to the new balance.'**
+  String get tourSummaryBody;
+
+  /// No description provided for @tourSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get tourSkip;
+
+  /// No description provided for @tourNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get tourNext;
+
+  /// No description provided for @tourDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get tourDone;
+
+  /// No description provided for @trySampleTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a sample trip'**
+  String get trySampleTrip;
+
+  /// No description provided for @keypadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount keypad'**
+  String get keypadTitle;
+
+  /// No description provided for @keypadDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get keypadDone;
 
   /// No description provided for @ledYouPay.
   ///

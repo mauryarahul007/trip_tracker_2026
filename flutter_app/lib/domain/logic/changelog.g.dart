@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.60.0', '2026-10-18', [
+    'Behind the scenes: the Flutter app shows trips as destination-photo tiles (with a Grid / List switch and pinned trips), a cover photo band and saved/syncing line inside a trip, arrows to jump between trips, a Today card and a wrap-up prompt on the Summary, a Plan and suggestions card, a spend-by-person ring, a receipt gallery, search that also finds expenses and notes, a Confirm button on notifications, smart expense defaults and an amount keypad, odometer-style rolling numbers on the hero amount, photos kept on the device, an Updated caption with pull to refresh, a first-run tour with a sample trip, sound feedback, a Reduce motion setting, Collapse Trip numbers, and a back gesture that returns to the page you came from. No change to the web app.',
+  ]),
   ChangelogEntry('3.59.0', '2026-10-18', [
     'Behind the scenes: the Flutter app has a compact Trips list (cover thumbnails, a status pill and your money on every row, a hero card for the trip happening now, pinned Happening now / Upcoming / Past headers and a summary line across all trips), a Plan and suggestions card at the top of Trip numbers with budget pace and tips, one Groups / People switch that drives both Who pays whom and Who paid, and the back gesture now returns to the page you came from instead of the Trips home. No change to the web app.',
   ]),
@@ -40,8 +43,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.50.0', '2026-10-09', [
     'Behind the scenes: Flutter app now uses the web app colours (teal and orange), passes show as cards, and Superadmin login opens a Superadmin screen. No change to the web app.',
-  ]),
-  ChangelogEntry('3.49.0', '2026-10-09', [
-    'Behind the scenes: Flutter Notes tab no longer overflows on trips with many passes, and passes can be sorted by time, flight leg, or traveler name. No change to the web app.',
   ]),
 ];

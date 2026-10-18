@@ -129,6 +129,39 @@ void main() {
       expect(((await expensesOf(tester, s)).single as Expense).category, 'cat-shopping');
     });
 
+    testApp('smart defaults: the next expense starts from the category used last on this trip', (tester) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await openForm(tester, s);
+      await typeTitle(tester, 'Hotel booking');
+      await tap(tester, key('cat-cat-shopping'));
+      await typeAmount(tester, '40');
+      await save(tester);
+      await openForm(tester, s);
+      await typeTitle(tester, 'zzq'); // a title that suggests nothing
+      await typeAmount(tester, '40');
+      await save(tester);
+      final cats = [for (final e in (await expensesOf(tester, s)).cast<Expense>()) e.category];
+      expect(cats, everyElement('cat-shopping'));
+      expect(cats.length, 2);
+    });
+
+    testApp('smart defaults off: the next expense starts from the standard category', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableSmartExpenseDefaults'});
+      final s = await seedTrip(tester);
+      await openForm(tester, s);
+      await typeTitle(tester, 'Hotel booking');
+      await tap(tester, key('cat-cat-shopping'));
+      await typeAmount(tester, '40');
+      await save(tester);
+      await openForm(tester, s);
+      await typeTitle(tester, 'zzq');
+      await typeAmount(tester, '40');
+      await save(tester);
+      final cats = [for (final e in (await expensesOf(tester, s)).cast<Expense>()) e.category];
+      expect(cats, contains('cat-food'));
+    });
+
     testApp('the amount field only accepts calculator characters', (tester) async {
       await pumpApp(tester, user: asha);
       final s = await seedTrip(tester);

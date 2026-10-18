@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trip_tracker/app/router.dart';
 import 'package:trip_tracker/core/platform/haptics.dart';
+import 'package:trip_tracker/core/platform/feedback.dart';
+import 'package:trip_tracker/core/platform/motion.dart';
 import 'package:trip_tracker/core/platform/push_gateway.dart';
 import 'package:trip_tracker/core/storage/prefs.dart';
 import 'package:trip_tracker/core/version/version_gate.dart';
@@ -122,6 +124,64 @@ void main() {
       await go(tester, '/settings');
       expect(find.byKey(const Key('settings-search')), findsNothing);
       expect(find.byKey(const Key('settings-open-appearance')), findsOneWidget);
+    });
+
+    testApp('reduce motion switch turns animations to their end state; absent with its flag off', (tester) async {
+      await pumpApp(tester, user: asha);
+      addTearDown(() => AppMotion.reduce = false);
+      await go(tester, '/settings');
+      await openRow(tester, 'appearance');
+      await tester.tap(find.byKey(const Key('settings-reduce-motion')));
+      await settle(tester);
+      expect(AppMotion.reduce, isTrue);
+    });
+
+    testApp('collapse trip numbers switch saves the setting; hidden with its flag off', (tester) async {
+      final app = await pumpApp(tester, user: asha);
+      await go(tester, '/settings');
+      await openRow(tester, 'appearance');
+      await tester.tap(find.byKey(const Key('settings-summary-collapse')));
+      await settle(tester);
+      expect(app.prefs.getBool('settings.summary_collapse'), isTrue);
+    });
+
+    testApp('collapse trip numbers switch is hidden with its flag off', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableSummaryCollapse'});
+      await go(tester, '/settings');
+      await openRow(tester, 'appearance');
+      expect(find.byKey(const Key('settings-summary-collapse')), findsNothing);
+    });
+
+    testApp('sound feedback switch: off by default, turns the click on; hidden with its flag off', (tester) async {
+      final app = await pumpApp(tester, user: asha);
+      addTearDown(() => AppFeedback.sound = false);
+      await go(tester, '/settings');
+      await openRow(tester, 'appearance');
+      expect(
+        tester
+            .widget<Switch>(find.descendant(of: find.byKey(const Key('settings-sound')), matching: find.byType(Switch)))
+            .value,
+        isFalse,
+      );
+      await tester.tap(find.byKey(const Key('settings-sound')));
+      await settle(tester);
+      expect(AppFeedback.sound, isTrue);
+      expect(app.prefs.getBool('settings.sound_feedback'), isTrue);
+    });
+
+    testApp('sound feedback switch is absent with its flag off', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableFeedbackPack'});
+      await go(tester, '/settings');
+      await openRow(tester, 'appearance');
+      expect(find.byKey(const Key('settings-sound')), findsNothing);
+      expect(find.byKey(const Key('settings-haptics')), findsOneWidget);
+    });
+
+    testApp('reduce motion switch is hidden with its flag off', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableReduceMotion'});
+      await go(tester, '/settings');
+      await openRow(tester, 'appearance');
+      expect(find.byKey(const Key('settings-reduce-motion')), findsNothing);
     });
 
     testApp('haptics switch turns the facade off', (tester) async {

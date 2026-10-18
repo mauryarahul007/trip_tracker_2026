@@ -26,13 +26,6 @@ Future<void> openExpenses(WidgetTester tester, Seed s) async {
   await settle(tester, rounds: 14);
 }
 
-/// Scrolls [f] to the middle of the screen, clear of the floating Add button at the bottom.
-Future<void> centre(WidgetTester tester, Finder f) async {
-  await tester.ensureVisible(f);
-  await Scrollable.ensureVisible(tester.element(f), alignment: 0.4);
-  await tester.pump();
-}
-
 void main() {
   testApp('ledger shows golden balance strings and the sticky bar', (tester) async {
     await pumpApp(tester, user: asha);
@@ -79,6 +72,7 @@ void main() {
     final server = local.copyWith(amount: 40, updatedAt: local.updatedAt + 1);
     c.read(conflictStoreProvider.notifier).setForTrip(s.tripId, [ExpenseConflict(id, local, server, 'updateExpense')]);
     await openLedger(tester, s);
+    await centre(tester, key('open-conflicts'));
     await tester.tap(key('open-conflicts'));
     await settle(tester, rounds: 4);
     await tester.tap(key('conflict-theirs-$id'));

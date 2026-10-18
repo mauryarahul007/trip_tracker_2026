@@ -1,3 +1,5 @@
+import 'cached_photo.dart';
+
 import 'package:flutter/material.dart';
 
 const List<Color> _avatarPalette = [
@@ -46,8 +48,8 @@ class AppAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     if (avatarUrl != null && avatarUrl!.isNotEmpty) {
       return ClipOval(
-        child: Image.network(
-          avatarUrl!,
+        child: Image(
+          image: CachedPhotoProvider(avatarUrl!),
           width: size,
           height: size,
           fit: BoxFit.cover,

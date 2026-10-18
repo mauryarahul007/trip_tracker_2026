@@ -1,3 +1,4 @@
+import '../models/travel_pass.dart';
 import 'settlement.dart';
 import 'settlement_share_card.dart';
 
@@ -124,4 +125,41 @@ double? dailyAllowance(double budget, double spent, int daysLeft) {
   if (budget <= 0 || daysLeft <= 0) return null;
   final left = budget - spent;
   return left <= 0 ? 0 : left / daysLeft;
+}
+
+/// The earliest pass that starts at or after [now] (passes without a parseable start are ignored).
+TravelPass? nextPass(Iterable<TravelPass> passes, DateTime now) {
+  TravelPass? best;
+  DateTime? bestAt;
+  for (final p in passes) {
+    final at = DateTime.tryParse(p.startDateTime ?? '');
+    if (at == null || at.isBefore(now)) continue;
+    if (bestAt == null || at.isBefore(bestAt)) {
+      best = p;
+      bestAt = at;
+    }
+  }
+  return best;
+}
+
+/// What was spent on the day [ymd] (yyyy-MM-dd), from per-day totals.
+double spentOn(Iterable<({String date, double total})> days, String ymd) {
+  for (final d in days) {
+    if (d.date == ymd) return d.total;
+  }
+  return 0;
+}
+
+enum DayBucket { today, yesterday, older }
+
+/// Which day bucket a notification timestamp falls in, relative to [now] (local time). Unparseable: older.
+({DayBucket bucket, DateTime? day}) dayBucket(String iso, DateTime now) {
+  final at = DateTime.tryParse(iso)?.toLocal();
+  if (at == null) return (bucket: DayBucket.older, day: null);
+  final d = DateTime(at.year, at.month, at.day);
+  final today = DateTime(now.year, now.month, now.day);
+  final diff = today.difference(d).inDays;
+  if (diff == 0) return (bucket: DayBucket.today, day: d);
+  if (diff == 1) return (bucket: DayBucket.yesterday, day: d);
+  return (bucket: DayBucket.older, day: d);
 }

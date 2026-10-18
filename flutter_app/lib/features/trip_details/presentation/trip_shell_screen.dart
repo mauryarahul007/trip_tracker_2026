@@ -1,3 +1,5 @@
+import '../../../shared/widgets/cached_photo.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -7,12 +9,17 @@ import 'package:go_router/go_router.dart';
 import '../../../app/auth_state.dart';
 import '../../../core/env/app_env.dart';
 import '../../../core/clock.dart';
+import '../../../core/network/connectivity_provider.dart';
 import '../../../core/platform/haptics.dart';
 import '../../../data/providers.dart';
 import '../../../data/realtime/realtime_manager.dart';
+import '../../../data/sync/outbox_store.dart';
+import '../../../data/sync/outbox_types.dart';
 import '../../../domain/logic/tab_trail.dart';
+import '../../../domain/logic/trip_neighbours.dart';
 import '../../../domain/logic/trip_status.dart';
 import '../../../domain/logic/trip_utilities.dart' show formatDateRange;
+import '../../../domain/models/trip.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
@@ -29,6 +36,9 @@ import '../../travel/maps/trip_route_modal.dart';
 import '../../travel/presentation/live_location_share_modal.dart';
 import '../../trips/presentation/widgets/share_trip_sheet.dart';
 import '../../trips/presentation/widgets/trip_card.dart' show TripStatusPill, tripHeadline;
+import '../../expenses/application/money_providers.dart' show allTripsProvider;
+import '../../trips/application/trip_accent.dart';
+import '../../trips/application/trips_providers.dart';
 import '../application/trip_nav.dart';
 import '../domain/trip_tabs.dart';
 
@@ -256,7 +266,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                   child: Column(
                     children: [
                       const OfflineBanner(),
-                      if (trip != null) _TripStrip(tripId: widget.tripId),
+                      if (trip != null) _TripStrip(tripId: widget.tripId, tab: currentTab.name),
                       AnimatedSize(
                         duration: const Duration(milliseconds: 220),
                         curve: Curves.easeOutCubic,
@@ -410,10 +420,14 @@ class TripTabPlaceholder extends StatelessWidget {
   }
 }
 
-/// Slim strip under the top bar on every tab: status and dates (flag `enableTripHeaderStrip`).
+/// Slim strip under the top bar on every tab: status and dates (flag `enableTripHeaderStrip`). With
+/// `enableTripCoverHeader` it becomes a cover photo band, and `enableSyncLine` adds a saved / syncing line.
 class _TripStrip extends ConsumerWidget {
-  const _TripStrip({required this.tripId});
+  const _TripStrip({required this.tripId, required this.tab});
   final String tripId;
+
+  /// The tab the traveller is on; switching trips keeps it.
+  final String tab;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -424,23 +438,224 @@ class _TripStrip extends ConsumerWidget {
     final status = tripStatus(trip.startDate, trip.endDate, ref.read(nowProvider)());
     final headline = tripHeadline(context, status);
     final dates = trip.startDate.isEmpty ? '' : formatDateRange(trip.startDate, trip.endDate);
-    return Padding(
-      key: const Key('trip-strip'),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: Row(
-        children: [
-          if (headline.isNotEmpty) ...[TripStatusPill(headline), const SizedBox(width: 10)],
-          if (dates.isNotEmpty)
-            Flexible(
-              child: Text(
-                dates,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.textSecondary),
-              ),
-            ),
+    final coverOn = ref.watch(flagProvider(('enableTripCoverHeader', tripId))).value ?? true;
+    final cover = coverOn ? ref.watch(tripCoverProvider(tripCoverKey(trip))).value : null;
+    final syncOn = ref.watch(flagProvider(('enableSyncLine', tripId))).value ?? true;
+    final accentOn = ref.watch(flagProvider(('enableTripAccent', tripId))).value ?? true;
+    final accent = accentOn ? ref.watch(tripAccentProvider(tripId)).value : null;
+    final hasCover = cover != null && cover.isNotEmpty;
+
+    // Neighbouring trips, in the order of the Trips list (active ones only), reachable by arrows or a swipe on the strip.
+    final switchOn = ref.watch(flagProvider(('enableTripSwitcher', tripId))).value ?? true;
+    final ordered = switchOn
+        ? [
+            for (final x in sortTripModels([
+              for (final x in ref.watch(allTripsProvider).value ?? const <Trip>[])
+                if (!x.archived) x,
+            ], ref.watch(tripSortProvider)))
+              x.id,
+          ]
+        : const <String>[];
+    final (previous: prev, next: next) = tripNeighbours(ordered, tripId);
+    void goTrip(String? id) {
+      if (id != null) context.go('/trip/$id/$tab');
+    }
+
+    final hasArrows = switchOn && (prev != null || next != null);
+    final row = Row(
+      children: [
+        // Status and dates take whatever room the trailing controls leave; dates shorten first.
+        Expanded(
+          child: Row(
+            children: [
+              if (headline.isNotEmpty) ...[
+                Flexible(flex: 2, child: TripStatusPill(headline, color: accent)),
+                const SizedBox(width: 10),
+              ],
+              if (dates.isNotEmpty)
+                Flexible(
+                  child: Text(
+                    dates,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: hasCover ? Colors.white : t.textSecondary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (syncOn)
+          Flexible(
+            child: _SyncLine(onDark: hasCover, compact: hasArrows),
+          ),
+        if (hasArrows) ...[
+          const SizedBox(width: 2),
+          _TripArrow(
+            key: const Key('trip-prev'),
+            icon: Icons.chevron_left_rounded,
+            enabled: prev != null,
+            onDark: hasCover,
+            onTap: () => goTrip(prev),
+          ),
+          _TripArrow(
+            key: const Key('trip-next'),
+            icon: Icons.chevron_right_rounded,
+            enabled: next != null,
+            onDark: hasCover,
+            onTap: () => goTrip(next),
+          ),
         ],
+      ],
+    );
+
+    Widget swipeable(Widget child) => switchOn
+        ? GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onHorizontalDragEnd: (d) {
+              final v = d.primaryVelocity ?? 0;
+              if (v < -300) goTrip(next); // swipe left: the next trip
+              if (v > 300) goTrip(prev);
+            },
+            child: child,
+          )
+        : child;
+
+    if (!hasCover) {
+      return swipeable(
+        Padding(key: const Key('trip-strip'), padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: row),
+      );
+    }
+    return swipeable(
+      Padding(
+        key: const Key('trip-strip'),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(t.radiusMd),
+          child: SizedBox(
+            height: 92,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                const DecoratedBox(
+                  decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF123A57), Color(0xFF1F6F78)])),
+                ),
+                Hero(
+                  tag: 'trip-photo-$tripId',
+                  child: Image(
+                    image: CachedPhotoProvider(cover),
+                    key: const Key('trip-cover'),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  ),
+                ),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.black.withValues(alpha: 0.15), Colors.black.withValues(alpha: 0.7)],
+                    ),
+                  ),
+                ),
+                Positioned(left: 12, right: 12, bottom: 10, child: row),
+              ],
+            ),
+          ),
+        ),
       ),
+    );
+  }
+}
+
+/// A 40 px previous / next trip arrow in the strip; dimmed at either end of the list.
+class _TripArrow extends StatelessWidget {
+  const _TripArrow({required this.icon, required this.enabled, required this.onDark, required this.onTap, super.key});
+
+  final IconData icon;
+  final bool enabled;
+  final bool onDark;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final color = onDark ? Colors.white : t.textPrimary;
+    return IconButton(
+      onPressed: enabled ? onTap : null,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 40),
+      padding: EdgeInsets.zero,
+      iconSize: 26,
+      color: color,
+      disabledColor: color.withValues(alpha: 0.3),
+      icon: Icon(icon),
+    );
+  }
+}
+
+/// "All saved" / "Syncing 3 changes" / "Offline - 2 waiting" / "Sync issue - Retry": local-first trust at a glance.
+class _SyncLine extends ConsumerWidget {
+  const _SyncLine({required this.onDark, this.compact = false});
+  final bool onDark;
+
+  /// Icon only unless something is wrong (room is tight next to the trip arrows); problems still say it in words.
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final online = ref.watch(isOnlineProvider).value ?? true;
+    final status = ref.watch(syncStatusProvider).value ?? const SyncStatus();
+    final (String text, IconData icon, Color color) = status.issues > 0
+        ? (l10n.syncLineIssue, Icons.sync_problem_rounded, onDark ? Colors.white : t.colorDanger)
+        : !online
+        ? (
+            status.pending > 0 ? l10n.syncLineOfflineWaiting(status.pending) : l10n.syncLineOffline,
+            Icons.cloud_off_rounded,
+            onDark ? Colors.white : t.textSecondary,
+          )
+        : status.pending > 0
+        ? (l10n.syncLineSyncing(status.pending), Icons.sync_rounded, onDark ? Colors.white : t.textSecondary)
+        : (l10n.syncLineSaved, Icons.check_circle_outline_rounded, onDark ? Colors.white70 : t.textMuted);
+    final quiet = compact && status.issues == 0; // icon only; the words stay as the tooltip and screen-reader label
+    final line = Row(
+      key: const Key('sync-line'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        if (!quiet) ...[
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+            ),
+          ),
+        ],
+      ],
+    );
+    if (quiet) {
+      return Tooltip(
+        message: text,
+        child: Semantics(label: text, child: line),
+      );
+    }
+    if (status.issues == 0) return line;
+    return InkWell(
+      key: const Key('sync-line-retry'),
+      onTap: () async {
+        final store = ref.read(outboxStoreProvider);
+        for (final i in ref.read(syncItemsProvider).value ?? const <OutboxItem>[]) {
+          if (i.status == OutboxStatus.poison) await store.retry(i.id);
+        }
+      },
+      child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: line),
     );
   }
 }

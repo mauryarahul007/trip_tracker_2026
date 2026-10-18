@@ -43,6 +43,39 @@ class TripsViewMode extends Notifier<TripsView> {
 
 final tripsViewProvider = NotifierProvider<TripsViewMode, TripsView>(TripsViewMode.new);
 
+/// Trips pinned to the top of the list, kept on this device only (not shared with other members).
+class PinnedTrips extends Notifier<Set<String>> {
+  static const _key = 'trips.pinned';
+
+  @override
+  Set<String> build() => (ref.read(sharedPreferencesProvider).getStringList(_key) ?? const []).toSet();
+
+  void toggle(String id) {
+    state = state.contains(id) ? ({...state}..remove(id)) : {...state, id};
+    ref.read(sharedPreferencesProvider).setStringList(_key, state.toList());
+  }
+}
+
+final pinnedTripsProvider = NotifierProvider<PinnedTrips, Set<String>>(PinnedTrips.new);
+
+enum TripsLayout { grid, list }
+
+/// Photo-tile grid or compact rows for the Trips list, remembered on the device. The grid is the default.
+class TripsLayoutMode extends Notifier<TripsLayout> {
+  static const _key = 'trips_layout';
+
+  @override
+  TripsLayout build() =>
+      ref.read(sharedPreferencesProvider).getString(_key) == 'list' ? TripsLayout.list : TripsLayout.grid;
+
+  void set(TripsLayout v) {
+    state = v;
+    ref.read(sharedPreferencesProvider).setString(_key, v.name);
+  }
+}
+
+final tripsLayoutProvider = NotifierProvider<TripsLayoutMode, TripsLayout>(TripsLayoutMode.new);
+
 class TripSearch extends Notifier<String> {
   @override
   String build() => '';

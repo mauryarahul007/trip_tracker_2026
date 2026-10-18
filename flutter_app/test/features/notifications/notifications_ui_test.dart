@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:trip_tracker/app/router.dart';
 import 'package:trip_tracker/data/local/app_database.dart';
 
 import '../../support/pump_app.dart';
@@ -135,5 +136,123 @@ void main() {
     await tester.drag(find.byKey(const Key('notification-banner')), const Offset(0, -200));
     await settle(tester);
     expect(find.byKey(const Key('notification-banner')), findsNothing);
+  });
+
+  testApp('Activity tab: a row opens the trip on top, and back returns to the notification list', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await insert(tester, 'a', 'member_joined', tripId: s.tripId, data: '{"type":"member_joined","memberName":"Diana"}');
+    containerOf(tester).read(routerProvider).go('/notifications'); // the bottom-bar Activity tab
+    await settle(tester, rounds: 12);
+    await tester.tap(find.textContaining('Diana joined the trip'));
+    await settle(tester, rounds: 14);
+    expect(find.byKey(const Key('trip-strip')), findsOneWidget); // landed in the trip
+    await tester.binding.handlePopRoute();
+    await settle(tester, rounds: 12);
+    expect(find.byKey(const Key('trip-strip')), findsNothing);
+    expect(find.textContaining('Diana joined the trip'), findsOneWidget); // back on the list, not the trips home
+  });
+
+  testApp('inside a trip: a row for that trip switches tab in place, and back leaves to the trips list', (
+    tester,
+  ) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await insert(tester, 'a', 'member_joined', tripId: s.tripId, data: '{"type":"member_joined","memberName":"Diana"}');
+    await settle(tester);
+    await tester.tap(find.text('Goa Weekend'));
+    await settle(tester, rounds: 12);
+    await tester.tap(find.byKey(const Key('action-notifications')));
+    await settle(tester, rounds: 12);
+    await tester.tap(find.textContaining('Diana joined the trip'));
+    await settle(tester, rounds: 14);
+    expect(find.byKey(const Key('trip-strip')), findsOneWidget);
+    await tester.binding.handlePopRoute(); // first back: the tab visited before the row's tab
+    await settle(tester, rounds: 12);
+    expect(find.byKey(const Key('trip-strip')), findsOneWidget);
+    await tester.binding.handlePopRoute(); // second back: leaves the trip
+    await settle(tester, rounds: 12);
+    expect(find.byKey(const Key('trip-strip')), findsNothing);
+    expect(find.text('Goa Weekend'), findsWidgets); // the trips list
+  });
+
+  testApp('notifications are grouped under a Today header; one continuous list with the flag off', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await insert(
+      tester,
+      'a',
+      'member_joined',
+      tripId: s.tripId,
+      at: DateTime.now().toUtc().toIso8601String(),
+      data: '{"type":"member_joined","memberName":"Diana"}',
+    );
+    await insert(tester, 'b', 'member_joined', tripId: s.tripId, data: '{"type":"member_joined","memberName":"Eve"}');
+    containerOf(tester).read(routerProvider).go('/notifications');
+    await settle(tester, rounds: 12);
+    expect(find.byKey(const Key('notif-day-Today')), findsOneWidget);
+    expect(find.byKey(const Key('notif-day-Oct 6')), findsOneWidget); // an older day gets its own header
+  });
+
+  testApp('no day headers with the flag off', (tester) async {
+    await pumpApp(tester, user: asha, flagsOff: {'enableNotificationDayGroups'});
+    final s = await seedTrip(tester);
+    await insert(
+      tester,
+      'a',
+      'member_joined',
+      tripId: s.tripId,
+      at: DateTime.now().toUtc().toIso8601String(),
+      data: '{"type":"member_joined","memberName":"Diana"}',
+    );
+    containerOf(tester).read(routerProvider).go('/notifications');
+    await settle(tester, rounds: 12);
+    expect(find.byKey(const Key('notif-day-Today')), findsNothing);
+  });
+
+  Future<void> settlementNotice(WidgetTester tester) async {
+    final s = await seedTrip(tester);
+    await addExpense(
+      tester,
+      s,
+      title: 'Settlement: Ben ➔ Asha',
+      amount: 30,
+      paidBy: s.ben,
+      split: [s.me],
+      userId: 'u2',
+    );
+    await insert(
+      tester,
+      'conf',
+      'settlement_confirmation_requested',
+      tripId: s.tripId,
+      at: DateTime.now().toUtc().toIso8601String(),
+      data: '{"type":"settlement_confirmation_requested","expenseTitle":"Settlement: Ben ➔ Asha","amount":"30","currency":"INR"}',
+    );
+    containerOf(tester).read(routerProvider).go('/notifications');
+    await settle(tester, rounds: 12);
+  }
+
+  testApp('a "please confirm" notification has a Confirm button for the recipient', (tester) async {
+    await pumpApp(tester, user: asha, flagsOn: {'enableSettlementConfirmation'});
+    await settlementNotice(tester);
+    expect(find.byKey(const Key('notif-confirm-conf')), findsOneWidget);
+  });
+
+  testApp('no Confirm button when settlement confirmation or actions are off', (tester) async {
+    await pumpApp(tester, user: asha); // enableSettlementConfirmation is off by default
+    await settlementNotice(tester);
+    expect(find.byKey(const Key('notif-confirm-conf')), findsNothing);
+  });
+
+  testApp('no Confirm button with its own flag off', (tester) async {
+    await pumpApp(
+      tester,
+      user: asha,
+      flagsOn: {'enableSettlementConfirmation'},
+      flagsOff: {'enableNotificationActions'},
+    );
+    await settlementNotice(tester);
+    expect(find.byKey(const Key('notif-confirm-conf')), findsNothing);
   });
 }

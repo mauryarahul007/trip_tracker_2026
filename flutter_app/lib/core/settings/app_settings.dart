@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../platform/feedback.dart';
 import '../platform/haptics.dart';
+import '../platform/motion.dart';
 import '../storage/prefs.dart';
 
 /// Install-scoped UI preferences (survive sign-out, like onboarding and the app lock).
@@ -48,6 +50,15 @@ ThemeMode themeModeFromPref(String v) => switch (v) {
 
 /// Pure-black dark theme; only honoured when the `enableAmoledTheme` flag is on.
 final amoledPrefProvider = _boolPref('settings.amoled', false);
+
+/// Jump animations to their end state. Only honoured while `enableReduceMotion` is on.
+final reduceMotionPrefProvider = _boolPref('settings.reduce_motion', false, onChange: (v) => AppMotion.reduce = v);
+
+/// Soft click on settle, save and undo. Off by default.
+final soundFeedbackPrefProvider = _boolPref('settings.sound_feedback', false, onChange: (v) => AppFeedback.sound = v);
+
+/// Open the Summary with Trip numbers folded away. Only honoured while `enableSummaryCollapse` is on.
+final summaryCollapsePrefProvider = _boolPref('settings.summary_collapse', false);
 
 final hapticsEnabledProvider = _boolPref('settings.haptics', true, onChange: (v) => AppHaptics.enabled = v);
 

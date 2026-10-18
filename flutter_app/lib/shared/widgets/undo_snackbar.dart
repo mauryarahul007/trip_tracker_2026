@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/platform/feedback.dart';
+
 import '../theme/app_tokens.dart';
 
 class UndoSnackbar {
@@ -24,7 +26,14 @@ class UndoSnackbar {
           message,
           style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
         ),
-        action: SnackBarAction(label: 'UNDO', textColor: tokens.primaryAccentLight, onPressed: onUndo),
+        action: SnackBarAction(
+          label: 'UNDO',
+          textColor: tokens.primaryAccentLight,
+          onPressed: () {
+            AppFeedback.tap();
+            onUndo();
+          },
+        ),
       ),
     );
   }

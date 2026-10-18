@@ -89,3 +89,10 @@ Future<void> openForm(WidgetTester tester, Seed s, {String? editId}) async {
 
 Future<List<dynamic>> expensesOf(WidgetTester tester, Seed s) =>
     real(tester, () => containerOf(tester).read(expenseRepositoryProvider).watchActive(s.tripId).first);
+
+/// Scrolls [f] to the middle of the screen, clear of the floating Add button at the bottom.
+Future<void> centre(WidgetTester tester, Finder f) async {
+  await tester.ensureVisible(f);
+  await Scrollable.ensureVisible(tester.element(f), alignment: 0.4);
+  await tester.pump();
+}

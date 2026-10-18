@@ -224,6 +224,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           value: amoled,
           onChanged: (v) => r.read(amoledPrefProvider.notifier).set(v),
         ),
+      if (r.watch(flagProvider(('enableReduceMotion', null))).value ?? true)
+        SettingsSwitchTile(
+          key: const Key('settings-reduce-motion'),
+          icon: Icons.animation_rounded,
+          iconColor: const Color(0xFF5A6173),
+          title: 'Reduce motion',
+          subtitle: 'Numbers, bars and sections jump to their final state instead of animating',
+          value: r.watch(reduceMotionPrefProvider),
+          onChanged: (v) => r.read(reduceMotionPrefProvider.notifier).set(v),
+        ),
+      if (r.watch(flagProvider(('enableSummaryCollapse', null))).value ?? true)
+        SettingsSwitchTile(
+          key: const Key('settings-summary-collapse'),
+          icon: Icons.unfold_less_rounded,
+          iconColor: const Color(0xFF16A34A),
+          title: 'Collapse Trip numbers',
+          subtitle: 'Open the Summary with the numbers and charts folded away; tap to expand',
+          value: r.watch(summaryCollapsePrefProvider),
+          onChanged: (v) => r.read(summaryCollapsePrefProvider.notifier).set(v),
+        ),
+      if (r.watch(flagProvider(('enableFeedbackPack', null))).value ?? true)
+        SettingsSwitchTile(
+          key: const Key('settings-sound'),
+          icon: Icons.volume_up_rounded,
+          iconColor: const Color(0xFF0EA5C6),
+          title: 'Sound feedback',
+          subtitle: 'A soft click when you settle, save or undo',
+          value: r.watch(soundFeedbackPrefProvider),
+          onChanged: (v) => r.read(soundFeedbackPrefProvider.notifier).set(v),
+        ),
       SettingsSwitchTile(
         key: const Key('settings-haptics'),
         icon: Icons.vibration_rounded,

@@ -14,6 +14,7 @@ class SyncCoordinator {
     required this.pull,
     required this.realtime,
     this.onPulled,
+    this.onSynced,
     this.retryEmptyAfter = const Duration(seconds: 3),
   });
 
@@ -23,6 +24,9 @@ class SyncCoordinator {
 
   /// Called with every pull's per-trip result (conflicts, etc.).
   final void Function(Map<String, PullResult> results)? onPulled;
+
+  /// Called after every pull that completed without error (drives the "Updated 2 min ago" caption).
+  final void Function()? onSynced;
 
   /// Wait before the single re-pull after a first pull that found no trips.
   final Duration retryEmptyAfter;
@@ -59,6 +63,7 @@ class SyncCoordinator {
       // Await first: `onPulled?.call(await ...)` would skip the pull when no callback is set.
       final results = await pull.syncAll();
       onPulled?.call(results);
+      onSynced?.call();
       // The session token can lag right after sign-in and RLS then shows nothing: look once more.
       if (results.isEmpty && !_retriedEmpty) {
         _retriedEmpty = true;

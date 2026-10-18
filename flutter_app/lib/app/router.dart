@@ -14,6 +14,7 @@ import '../features/notifications/presentation/notifications_screen.dart';
 import '../features/feedback/presentation/bug_report_screen.dart';
 import '../features/feedback/presentation/diagnostics_screen.dart';
 import '../features/feedback/presentation/feature_request_screen.dart';
+import '../features/expenses/presentation/receipt_gallery_screen.dart';
 import '../features/settings/presentation/flag_overrides_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/legal/presentation/terms_screen.dart';
@@ -195,6 +196,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'recycle-bin',
             name: 'trip-recycle-bin',
             builder: (context, state) => RecycleBinScreen(tripId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: 'receipts',
+            name: 'trip-receipts',
+            builder: (context, state) => ReceiptGalleryScreen(tripId: state.pathParameters['id']!),
           ),
           GoRoute(
             path: 'insights',

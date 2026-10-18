@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trip_tracker/data/providers.dart';
+import 'package:trip_tracker/features/trips/presentation/widgets/trip_row.dart';
 
 import '../../support/pump_app.dart';
 import '../../support/seed.dart';
@@ -20,7 +21,10 @@ void main() {
     await addExpense(tester, s, amount: 90); // Asha paid for three: she is owed 60
     await home(tester);
     expect(key('trip-avatars'), findsOneWidget);
-    expect(tester.widget<Text>(key('trip-money')).data, "You're owed ₹60.00");
+    expect(
+      tester.widget<Text>(find.descendant(of: key('trip-money'), matching: find.byType(Text))).data,
+      "You're owed ₹60.00",
+    );
   });
 
   testApp('trip card money and avatars are gone with the flag off', (tester) async {
@@ -114,5 +118,64 @@ void main() {
     await tester.tap(find.textContaining('PAST · 1'));
     await settle(tester, rounds: 4);
     expect(find.text('Old Trip'), findsOneWidget);
+  });
+
+  testApp('photo tiles are the default; the toggle switches to compact rows and is remembered', (tester) async {
+    final app = await pumpApp(tester, user: asha);
+    final id = await tripOn(tester, 'Later Trip', 10, 14);
+    await home(tester);
+    expect(find.byType(TripTile), findsOneWidget);
+    await tester.tap(key('trips-layout-toggle'));
+    await settle(tester, rounds: 6);
+    expect(find.byType(TripTile), findsNothing);
+    expect(key('trip-row-$id'), findsOneWidget);
+    expect(app.prefs.getString('trips_layout'), 'list');
+  });
+
+  testApp('the grid keeps the trip happening now as a wide hero', (tester) async {
+    await pumpApp(tester, user: asha);
+    await tripOn(tester, 'Now Trip', -1, 3);
+    await tripOn(tester, 'Later Trip', 10, 14);
+    await home(tester);
+    expect(find.byType(TripHeroCard), findsOneWidget);
+    expect(find.byType(TripTile), findsOneWidget);
+  });
+
+  testApp('tiles are off with their flag: only compact rows, no toggle', (tester) async {
+    await pumpApp(tester, user: asha, flagsOff: {'enableTripGridTiles'});
+    await tripOn(tester, 'Later Trip', 10, 14);
+    await home(tester);
+    expect(find.byType(TripTile), findsNothing);
+    expect(key('trips-layout-toggle'), findsNothing);
+  });
+
+  testApp('search also lists expenses and notes found inside trips, and opens the right tab', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, title: 'Moped rental', amount: 400);
+    await home(tester);
+    await tester.tap(key('trips-search-toggle'));
+    await settle(tester, rounds: 4);
+    await tester.enterText(find.byType(TextField).first, 'moped');
+    await settle(tester, rounds: 6);
+    expect(key('search-hits'), findsOneWidget);
+    expect(find.text('Moped rental'), findsOneWidget);
+    expect(find.text('No trips match your search.'), findsNothing); // the hit stands in for "no matches"
+    await tester.tap(find.text('Moped rental'));
+    await settle(tester, rounds: 12);
+    expect(key('trip-strip'), findsOneWidget); // opened the trip
+  });
+
+  testApp('search stays trip-only with its flag off', (tester) async {
+    await pumpApp(tester, user: asha, flagsOff: {'enableGlobalSearch'});
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, title: 'Moped rental', amount: 400);
+    await home(tester);
+    await tester.tap(key('trips-search-toggle'));
+    await settle(tester, rounds: 4);
+    await tester.enterText(find.byType(TextField).first, 'moped');
+    await settle(tester, rounds: 6);
+    expect(key('search-hits'), findsNothing);
+    expect(find.text('No trips match your search.'), findsOneWidget);
   });
 }

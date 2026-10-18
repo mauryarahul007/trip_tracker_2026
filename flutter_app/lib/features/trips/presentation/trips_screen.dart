@@ -9,10 +9,13 @@ import 'package:go_router/go_router.dart';
 import '../../../app/auth_state.dart';
 import '../../../core/clock.dart';
 import '../../../core/env/app_env.dart';
+import '../../../core/storage/prefs.dart' show sharedPreferencesProvider;
+import '../../../core/settings/app_settings.dart' show defaultCurrencyPrefProvider;
 import '../../../core/format/money.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/back_exit.dart';
 import '../../../domain/logic/flag_defaults.g.dart';
+import '../../../domain/logic/global_search.dart';
 import '../../../domain/logic/cross_trip_balances.dart';
 import '../../../domain/logic/trip_list_money.dart';
 import '../../../domain/logic/trip_status.dart';
@@ -35,13 +38,18 @@ import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/pull_to_refresh.dart';
+import '../../../shared/widgets/last_synced_caption.dart';
 import '../../../shared/widgets/runway_slider.dart';
+import '../../../shared/widgets/section_label.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/widgets/swipeable_row.dart';
 import '../../../shared/widgets/undo_snackbar.dart';
 import '../../expenses/application/expenses_providers.dart';
+import '../../expenses/application/money_providers.dart' show allTripsProvider;
 import '../application/trips_providers.dart';
 import 'widgets/home_dock.dart';
+import '../application/sample_trip.dart';
+import 'widgets/first_run_tour.dart';
 import 'widgets/join_code_sheet.dart';
 import 'widgets/sync_chip.dart';
 import 'widgets/trip_backdrop.dart';
@@ -168,6 +176,13 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
             title: Text(l10n.tripsStackOpen),
             onTap: () => Navigator.of(sheetCtx).pop('open'),
           ),
+          if (_flagOn('enableTripPins') && !t.archived)
+            ListTile(
+              key: const Key('stack-menu-pin'),
+              leading: Icon(ref.read(pinnedTripsProvider).contains(t.id) ? Icons.push_pin : Icons.push_pin_outlined),
+              title: Text(ref.read(pinnedTripsProvider).contains(t.id) ? l10n.tripUnpin : l10n.tripPin),
+              onTap: () => Navigator.of(sheetCtx).pop('pin'),
+            ),
           if (isOwner) ...[
             ListTile(
               key: const Key('stack-menu-archive'),
@@ -190,6 +205,8 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     switch (action) {
       case 'open':
         _open(t);
+      case 'pin':
+        ref.read(pinnedTripsProvider.notifier).toggle(t.id);
       case 'archive':
         await _setArchived(t, !t.archived);
       case 'delete':
@@ -197,7 +214,8 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     }
   }
 
-  Widget _card(Trip t, bool isOwner, {bool featured = false}) {
+  /// Your money line and colour for a trip, and who is on it (empty when `enableTripListMoney` is off).
+  ({String? money, Color? color, List<String> names}) _facts(Trip t) {
     final tokens = context.tokens;
     final members = _membersByTrip[t.id] ?? const <Member>[];
     String? money;
@@ -224,6 +242,28 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
               if (!m.archived) m.name,
           ]
         : const <String>[];
+    return (money: money, color: moneyColor, names: names);
+  }
+
+  /// A square photo tile for the grid. Press and hold opens the trip menu (a grid has no swipe).
+  Widget _tile(Trip t, bool isOwner) {
+    final f = _facts(t);
+    return TripTile(
+      trip: t,
+      now: _now,
+      onTap: () => _open(t),
+      onLongPress: () => _tripMenu(t, isOwner),
+      avatarNames: f.names,
+      moneyText: f.money,
+      moneyColor: f.color,
+    );
+  }
+
+  Widget _card(Trip t, bool isOwner, {bool featured = false}) {
+    final f = _facts(t);
+    final money = f.money;
+    final moneyColor = f.color;
+    final names = f.names;
     final hero = featured && tripStatus(t.startDate, t.endDate, _now).phase == TripPhase.active;
     final card = hero
         ? TripHeroCard(
@@ -327,6 +367,29 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     _ => TripSection.past,
   };
 
+  Future<void> _trySample() async {
+    final a = ref.read(authStateProvider);
+    final id = await createSampleTrip(
+      ref,
+      userId: a.userId ?? '',
+      userName: a.user?.displayName ?? a.userEmail?.split('@').first ?? 'You',
+      currency: ref.read(defaultCurrencyPrefProvider) ?? 'INR',
+    );
+    if (mounted) unawaited(context.push('/trip/$id/ledger'));
+  }
+
+  /// The first time the Trips list is shown, a three-card tour (once per device, flag `enableFirstRunTour`).
+  void _maybeTour() {
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (prefs.getBool('tour.done') ?? false) return;
+    // Only once the flag has actually resolved to ON: a loading flag must not count as permission.
+    if (ref.watch(flagProvider(('enableFirstRunTour', null))).value != true) return;
+    unawaited(prefs.setBool('tour.done', true));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(showFirstRunTour(context));
+    });
+  }
+
   /// Root back press: exit only on a second press inside the window.
   void _onRootBack() {
     final now = _now;
@@ -350,6 +413,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final tokens = context.tokens;
+    _maybeTour();
     final lists = ref.watch(tripListsProvider);
     final syncing = ref.watch(tripsSyncingProvider).value ?? false;
     final auth = ref.watch(authStateProvider);
@@ -362,7 +426,13 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     _moneyOn = _flagOn('enableTripListMoney');
     final sectionsOn = _flagOn('enableTripListSections');
     final overviewOn = _flagOn('enableTripsOverview');
-    if (_moneyOn || overviewOn) {
+    final gridOn = _flagOn('enableTripGridTiles');
+    final searchOn = _flagOn('enableGlobalSearch');
+    final pinnedOn = _flagOn('enableTripPins');
+    final pinnedIds = pinnedOn ? ref.watch(pinnedTripsProvider) : const <String>{};
+    final query = ref.watch(tripSearchProvider);
+    final grid = gridOn && ref.watch(tripsLayoutProvider) == TripsLayout.grid;
+    if (_moneyOn || overviewOn || searchOn) {
       _membersByTrip = {};
       for (final m in ref.watch(allMembersProvider).value ?? const <Member>[]) {
         final id = m.tripId;
@@ -391,6 +461,14 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
               : AppBar(
                   title: Text(l10n.tripsTitle),
                   actions: [
+                    if (!cards && gridOn)
+                      IconButton(
+                        key: const Key('trips-layout-toggle'),
+                        tooltip: grid ? l10n.tripsLayoutList : l10n.tripsLayoutGrid,
+                        icon: Icon(grid ? Icons.view_agenda_outlined : Icons.grid_view_rounded),
+                        onPressed: () =>
+                            ref.read(tripsLayoutProvider.notifier).set(grid ? TripsLayout.list : TripsLayout.grid),
+                      ),
                     if (!cards)
                       IconButton(
                         key: const Key('trips-search-toggle'),
@@ -566,6 +644,11 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                   ]
                                 : unsorted;
                             final archived = data.archived.where((t) => !_hidden.contains(t.id)).toList();
+                            final hits = searchOn && query.trim().isNotEmpty
+                                ? searchHits(query, ref.watch(allTripsProvider).value ?? const <Trip>[], [
+                                    for (final list in _expensesByTrip.values) ...list,
+                                  ])
+                                : const <SearchHit>[];
                             if (data.total == 0 && syncing) {
                               return ListView(
                                 key: const Key('trips-syncing'),
@@ -611,13 +694,21 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                           variant: AppButtonVariant.secondary,
                                           onPressed: () => showJoinCodeSheet(context),
                                         ),
+                                        if (_flagOn('enableFirstRunTour') && auth.isAuthenticated) ...[
+                                          const SizedBox(height: 8),
+                                          TextButton(
+                                            key: const Key('try-sample-trip'),
+                                            onPressed: _trySample,
+                                            child: Text(l10n.trySampleTrip),
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ),
                                 ],
                               );
                             }
-                            if (active.isEmpty && archived.isEmpty) {
+                            if (active.isEmpty && archived.isEmpty && hits.isEmpty) {
                               return ListView(
                                 physics: const AlwaysScrollableScrollPhysics(),
                                 children: [
@@ -646,12 +737,21 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                 .map((t) => t.id)
                                 .firstOrNull;
                             final grouped = sectionsOn && _filter == 'all';
+                            // Pinned trips lead the list (device-only); the rest keep their phase and sort order.
+                            final pinnedTrips = [
+                              for (final t in active)
+                                if (pinnedIds.contains(t.id)) t,
+                            ];
+                            final unpinned = [
+                              for (final t in active)
+                                if (!pinnedIds.contains(t.id)) t,
+                            ];
                             final sections = [
                               for (final sec in TripSection.values)
                                 (
                                   sec,
                                   [
-                                    for (final t in active)
+                                    for (final t in unpinned)
                                       if (_sectionOf(t) == sec) t,
                                   ],
                                 ),
@@ -661,13 +761,43 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                               index: n++,
                               child: _card(t, owner(t), featured: t.id == heroId),
                             );
-                            Widget list(List<Trip> trips) => SliverPadding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              sliver: SliverList.builder(
-                                itemCount: trips.length,
-                                itemBuilder: (_, i) => rowFor(trips[i]),
-                              ),
-                            );
+                            Widget list(List<Trip> trips) {
+                              if (!grid) {
+                                return SliverPadding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  sliver: SliverList.builder(
+                                    itemCount: trips.length,
+                                    itemBuilder: (_, i) => rowFor(trips[i]),
+                                  ),
+                                );
+                              }
+                              // Photo tiles: the trip happening now is a wide hero, the rest a square grid.
+                              final hero = trips.where((t) => t.id == heroId).firstOrNull;
+                              final rest = [
+                                for (final t in trips)
+                                  if (t != hero) t,
+                              ];
+                              return SliverPadding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                sliver: SliverMainAxisGroup(
+                                  slivers: [
+                                    if (hero != null)
+                                      SliverToBoxAdapter(child: _card(hero, owner(hero), featured: true)),
+                                    SliverGrid.builder(
+                                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                        maxCrossAxisExtent: 240,
+                                        mainAxisSpacing: 10,
+                                        crossAxisSpacing: 10,
+                                      ),
+                                      itemCount: rest.length,
+                                      itemBuilder: (_, i) => _tile(rest[i], owner(rest[i])),
+                                    ),
+                                    const SliverToBoxAdapter(child: SizedBox(height: 10)),
+                                  ],
+                                ),
+                              );
+                            }
+
                             String label(TripSection sec) => switch (sec) {
                               TripSection.now => l10n.tripSectionNow,
                               TripSection.upcoming => l10n.tripSectionUpcoming,
@@ -684,6 +814,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                   sliver: SliverToBoxAdapter(
                                     child: Column(
                                       children: [
+                                        const LastSyncedCaption(),
                                         ?overview,
                                         if (active.isNotEmpty)
                                           CoachHint(hintKey: 'trips-swipe', text: l10n.hintSwipeTrip),
@@ -692,6 +823,20 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                   ),
                                 ),
                                 if (grouped) ...[
+                                  if (pinnedTrips.isNotEmpty) ...[
+                                    SliverPersistentHeader(
+                                      pinned: true,
+                                      delegate: _SectionHeaderDelegate(
+                                        label: l10n.tripSectionPinned,
+                                        count: pinnedTrips.length,
+                                        folded: false,
+                                        foldable: false,
+                                        onTap: () {},
+                                        background: tokens.bgPage,
+                                      ),
+                                    ),
+                                    list(pinnedTrips),
+                                  ],
                                   for (final (sec, trips) in sections)
                                     if (trips.isNotEmpty) ...[
                                       SliverPersistentHeader(
@@ -708,7 +853,44 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                       if (!(sec == TripSection.past && _pastFolded)) list(trips),
                                     ],
                                 ] else
-                                  list(active),
+                                  list([...pinnedTrips, ...unpinned]),
+                                if (hits.isNotEmpty)
+                                  SliverPadding(
+                                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                                    sliver: SliverList.list(
+                                      key: const Key('search-hits'),
+                                      children: [
+                                        SectionLabel(l10n.searchHitsTitle(hits.length)),
+                                        for (final h in hits)
+                                          ListTile(
+                                            key: Key('hit-${h.kind.name}-${h.tripId}-${h.title}'),
+                                            contentPadding: EdgeInsets.zero,
+                                            leading: Icon(
+                                              h.kind == HitKind.expense
+                                                  ? Icons.receipt_long_outlined
+                                                  : Icons.sticky_note_2_outlined,
+                                            ),
+                                            title: Text(h.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                            subtitle: Text(
+                                              [h.tripName, if (h.detail.isNotEmpty) h.detail].join(' · '),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            trailing: h.amount == null
+                                                ? null
+                                                : Text(
+                                                    formatMoney(context, h.amount!, h.currency ?? 'INR'),
+                                                    style: const TextStyle(fontWeight: FontWeight.w700),
+                                                  ),
+                                            onTap: () => unawaited(
+                                              context.push(
+                                                '/trip/${h.tripId}/${h.kind == HitKind.expense ? 'expenses' : 'notes'}',
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
                                 if (archived.isNotEmpty)
                                   SliverPadding(
                                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1049,12 +1231,7 @@ class _SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                Expanded(
-                  child: Text(
-                    '${label.toUpperCase()} · $count',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 0.8, color: t.textMuted),
-                  ),
-                ),
+                Expanded(child: Text('${label.toUpperCase()} · $count', style: sectionLabelStyle(context))),
                 if (foldable) Icon(folded ? Icons.expand_more_rounded : Icons.expand_less_rounded, color: t.textMuted),
               ],
             ),

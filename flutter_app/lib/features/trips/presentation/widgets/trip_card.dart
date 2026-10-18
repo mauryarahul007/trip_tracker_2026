@@ -26,18 +26,23 @@ String tripHeadline(BuildContext context, TripStatus s) {
 
 /// Solid ink pill with the trip's status ("Day 3 of 8", "Starts tomorrow").
 class TripStatusPill extends StatelessWidget {
-  const TripStatusPill(this.text, {super.key});
+  const TripStatusPill(this.text, {this.color, super.key});
   final String text;
+
+  /// A trip accent (from its cover photo) instead of the standard ink; the text stays white-on-dark readable.
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      decoration: BoxDecoration(color: t.ctaBg, borderRadius: BorderRadius.circular(99)),
+      decoration: BoxDecoration(color: color ?? t.ctaBg, borderRadius: BorderRadius.circular(99)),
       child: Text(
         text,
-        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: t.ctaFg),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color == null ? t.ctaFg : Colors.white),
       ),
     );
   }

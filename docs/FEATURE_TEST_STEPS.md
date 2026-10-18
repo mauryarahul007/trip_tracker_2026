@@ -52,6 +52,25 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-17 | flutter | FLUTTER-PLAN-SUGGESTIONS | [Flutter: Plan and suggestions in Trip numbers](#flutter-plan-suggestions--flutter-plan-and-suggestions-in-trip-numbers) |
 | 2026-10-17 | flutter | FLUTTER-BACK-NAVIGATION | [Flutter: back goes to the previous page](#flutter-back-navigation--flutter-back-goes-to-the-previous-page) |
 | 2026-10-17 | flutter | FLUTTER-TRIP-LIST-REDESIGN | [Flutter: compact trips list](#flutter-trip-list-redesign--flutter-compact-trips-list) |
+| 2026-10-18 | flutter | FLUTTER-TRIP-GRID-TILES | [Flutter: Trips as photo tiles](#flutter-trip-grid-tiles--flutter-trips-as-photo-tiles) |
+| 2026-10-18 | flutter | FLUTTER-TRIP-COVER-SYNC | [Flutter: cover photo band and saved/syncing line](#flutter-trip-cover-sync--flutter-cover-photo-band-and-savedsyncing-line) |
+| 2026-10-18 | flutter | FLUTTER-TODAY-CLOSEOUT | [Flutter: Today card and trip-over prompt](#flutter-today-closeout--flutter-today-card-and-trip-over-prompt) |
+| 2026-10-18 | flutter | FLUTTER-GLOBAL-SEARCH | [Flutter: search inside trips](#flutter-global-search--flutter-search-inside-trips) |
+| 2026-10-18 | flutter | FLUTTER-SMART-EXPENSE-DEFAULTS | [Flutter: smart expense defaults](#flutter-smart-expense-defaults--flutter-smart-expense-defaults) |
+| 2026-10-18 | flutter | FLUTTER-NOTIFICATION-DAYS | [Flutter: notifications by day and back navigation](#flutter-notification-days--flutter-notifications-by-day-and-back-navigation) |
+| 2026-10-18 | flutter | FLUTTER-REDUCE-MOTION-ROLLING | [Flutter: rolling hero numbers and reduce motion](#flutter-reduce-motion-rolling--flutter-rolling-hero-numbers-and-reduce-motion) |
+| 2026-10-18 | flutter | FLUTTER-NOTIFICATION-ACTIONS | [Flutter: Confirm button on notifications](#flutter-notification-actions--flutter-confirm-button-on-notifications) |
+| 2026-10-18 | flutter | FLUTTER-PHOTO-CACHE | [Flutter: photos kept on the device](#flutter-photo-cache--flutter-photos-kept-on-the-device) |
+| 2026-10-18 | flutter | FLUTTER-LAST-SYNCED | [Flutter: Updated caption and pull to refresh](#flutter-last-synced--flutter-updated-caption-and-pull-to-refresh) |
+| 2026-10-18 | flutter | FLUTTER-TRIP-SWITCHER | [Flutter: switch between trips](#flutter-trip-switcher--flutter-switch-between-trips) |
+| 2026-10-18 | flutter | FLUTTER-TRIP-PINS | [Flutter: pinned trips](#flutter-trip-pins--flutter-pinned-trips) |
+| 2026-10-18 | flutter | FLUTTER-RECEIPT-GALLERY | [Flutter: receipt gallery](#flutter-receipt-gallery--flutter-receipt-gallery) |
+| 2026-10-18 | flutter | FLUTTER-SPEND-RING | [Flutter: spend by person ring](#flutter-spend-ring--flutter-spend-by-person-ring) |
+| 2026-10-18 | flutter | FLUTTER-FIRST-RUN-TOUR | [Flutter: first-run tour and sample trip](#flutter-first-run-tour--flutter-first-run-tour-and-sample-trip) |
+| 2026-10-18 | flutter | FLUTTER-FEEDBACK-PACK | [Flutter: sound and haptic feedback](#flutter-feedback-pack--flutter-sound-and-haptic-feedback) |
+| 2026-10-18 | flutter | FLUTTER-AMOUNT-KEYPAD | [Flutter: amount keypad](#flutter-amount-keypad--flutter-amount-keypad) |
+| 2026-10-18 | flutter | FLUTTER-TRIP-ACCENT | [Flutter: trip accent colour](#flutter-trip-accent--flutter-trip-accent-colour) |
+| 2026-10-18 | flutter | FLUTTER-SUMMARY-COLLAPSE | [Flutter: collapse Trip numbers](#flutter-summary-collapse--flutter-collapse-trip-numbers) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -2713,7 +2732,7 @@ Then add a row to the **Index** table.
 
 **Flags:** `enableTripsOverview` (new, Trip pack, default ON); the rows also follow `enableTripListMoney` and `enableTripListSections`.
 
-1. Trips home in list view: each trip is a compact row (about 96 px): a rounded cover thumbnail (or the trip's initial on a tinted block), the name, "place · dates", a small status pill, your money position on the right ("You're owed ₹X" green / "You owe ₹X" red / "Settled up"), member avatars and "N expenses". About six trips fit on one screen.
+1. Trips home with the List option chosen (see FLUTTER-TRIP-GRID-TILES for the default photo tiles): each trip is a compact row (about 96 px): a rounded cover thumbnail (or the trip's initial on a tinted block), the name, "place · dates", a small status pill, your money position on the right ("You're owed ₹X" green / "You owe ₹X" red / "Settled up"), member avatars and "N expenses". About six trips fit on one screen.
 2. The trip happening today is a larger photo card with "Day N of M" and a progress bar. Upcoming rows show "Starts in N days"; finished or archived rows are dimmed.
 3. Under the Search icon in the top bar, the search box appears; closing it clears the search.
 4. A line at the top says "You're owed ₹X across N trips" (or "You owe ...", "All settled across N trips", or "Balances in N currencies"); tapping it opens Balances.
@@ -2725,3 +2744,233 @@ Then add a row to the **Index** table.
 
 ### Pass
 - No overflow at 360 px or at 200% text; the long-press menu works for owners only for archive and delete.
+
+## FLUTTER-TRIP-GRID-TILES — Flutter: Trips as photo tiles
+
+**Flags:** `enableTripGridTiles` (Trip pack, default ON).
+
+1. Trips home (not the card stack): trips are square photo tiles, two across, each with the destination photo, a status pill top-left, your money top-right, name, dates and avatars at the bottom. The trip happening now is a wide hero card above the grid. Pinned HAPPENING NOW / UPCOMING / PAST headers still apply.
+2. A trip with no photo shows a gradient with its initial.
+3. The grid/list icon in the top bar switches to the compact rows and back; the choice is remembered. Press and hold a tile for Open / Archive / Delete (a grid has no swipe).
+4. At 200% text the tiles do not overflow.
+
+**Flag-OFF checks:** `enableTripGridTiles` OFF: compact rows only, no switch.
+
+### Pass
+- Photos load; text is readable on any photo.
+
+## FLUTTER-TRIP-COVER-SYNC — Flutter: cover photo band and saved/syncing line
+
+**Flags:** `enableTripCoverHeader`, `enableSyncLine` (Trip pack, default ON).
+
+1. Open a trip with a destination photo: under the top bar, a slim cover photo band shows the status pill and dates; the photo glides in from the tile. Without a photo, the plain status strip shows.
+2. On the right of the strip: "All saved" when everything is synced, "Syncing N changes" while waiting, "Offline" / "Offline - N waiting" without a connection, "Sync issue - Retry" when an item is stuck (tap to retry).
+
+**Flag-OFF checks:** each flag OFF removes its own part; the strip keeps status and dates.
+
+### Pass
+- The line follows airplane mode within a few seconds.
+
+## FLUTTER-TODAY-CLOSEOUT — Flutter: Today card and trip-over prompt
+
+**Flags:** `enableTodayCard`, `enableCloseoutPrompt` (Trip pack, default ON).
+
+1. While a trip is happening or about to start, the top of Summary has a Today card: Day N of M (or Starts in N days), spent today, and the next pass with its time.
+2. When the trip has ended and is not closed or archived, a "This trip is over" prompt shows: whether everything is settled (or how many payments are left), Mark as paid (when you owe), Share summary and Close trip (opens the usual close sheet).
+
+**Flag-OFF checks:** each flag OFF hides its card.
+
+### Pass
+- The cards never change data by themselves.
+
+## FLUTTER-GLOBAL-SEARCH — Flutter: search inside trips
+
+**Flags:** `enableGlobalSearch` (Trip pack, default ON).
+
+1. Trips home > search icon > type a word from an expense title or a note: a "Found inside trips" list shows matching expenses (with trip, date and amount) and notes; tap one to open that trip on Expenses / Notes.
+2. A word that matches only a trip name just filters trips as before.
+
+**Flag-OFF checks:** `enableGlobalSearch` OFF: only trips are filtered.
+
+### Pass
+- Settlements and deleted expenses never appear.
+
+## FLUTTER-SMART-EXPENSE-DEFAULTS — Flutter: smart expense defaults
+
+**Flags:** `enableSmartExpenseDefaults` (Trip pack, default ON).
+
+1. Save an expense with a payer and category. Open Add expense again on the same trip: the same payer and category are preselected (typing a title can still suggest another category).
+2. Another trip has its own remembered values.
+
+**Flag-OFF checks:** `enableSmartExpenseDefaults` OFF: the form always starts with the standard payer and category.
+
+### Pass
+- Nothing is saved until you save the expense.
+
+## FLUTTER-NOTIFICATION-DAYS — Flutter: notifications by day and back navigation
+
+**Flags:** `enableNotificationDayGroups` (Trip pack, default ON).
+
+1. Notifications are grouped under TODAY, YESTERDAY and dates.
+2. From the bottom-bar Activity tab, tap a notification: the trip opens on the right tab; back returns to the notification list.
+3. From a trip's bell, tap a notification of the same trip: the tab switches in place; back goes to the previous tab, then out of the trip.
+
+**Flag-OFF checks:** `enableNotificationDayGroups` OFF: one continuous list.
+
+### Pass
+- Back never lands on the Trips home unless nothing else is underneath.
+
+## FLUTTER-REDUCE-MOTION-ROLLING — Flutter: rolling hero numbers and reduce motion
+
+**Flags:** `enableReduceMotion` (Trip pack, default ON).
+
+1. On a trip's Summary, add an expense or settle a payment, then return to Summary: the big amount on the hero card rolls digit by digit like an odometer (up when it grows, down when it shrinks), also when you come back from the form.
+2. Settings > Appearance > Reduce motion: the digits, progress bars and sections jump straight to their final state. The phone's own "remove animations" does the same.
+
+**Flag-OFF checks:** `enableReduceMotion` OFF: no switch (the rolling still follows the phone's own setting).
+
+### Pass
+- The amount is read out as one number by a screen reader.
+
+## FLUTTER-NOTIFICATION-ACTIONS — Flutter: Confirm button on notifications
+
+**Flags:** `enableNotificationActions` (Trip pack, default ON); also needs `enableSettlementConfirmation` ON.
+
+1. Ben records a settlement that pays you. In Activity, his "Confirm settlement" notification has a Confirm button under it.
+2. Tap Confirm (online): a message says the settlement is confirmed, the notification is marked read, and the expense shows as confirmed in the trip.
+3. Offline: a message says it could not confirm; nothing changes.
+4. Someone who is not the recipient, or a settlement that is already confirmed, sees no button.
+
+**Flag-OFF checks:** either flag OFF: no button; open the notification and confirm from the expense.
+
+### Pass
+- Confirming never affects any other settlement.
+
+## FLUTTER-PHOTO-CACHE — Flutter: photos kept on the device
+
+**Flags:** none (performance; photos still load from the network when not cached).
+
+1. Open the Trips list online so the cover photos load. Close the app, turn on airplane mode and reopen: the same photos still show on the tiles, the trip band and the stack.
+2. A photo that was never loaded online shows the gradient fallback offline.
+
+### Pass
+- No broken-image icons; the cache is the phone's normal cache folder, which Android may clear when it needs space.
+
+## FLUTTER-LAST-SYNCED — Flutter: Updated caption and pull to refresh
+
+**Flags:** `enableLastSyncedCaption` (Trip pack, default ON).
+
+1. Signed in and online: the Trips list and the Summary show "Updated just now / 5m ago / 2h ago" at the top right. Pull down on either page: the list refreshes and the caption resets.
+2. Guests and offline-only accounts that never synced show no caption. The time is remembered after a restart.
+
+**Flag-OFF checks:** `enableLastSyncedCaption` OFF: no caption (pulling still refreshes).
+
+### Pass
+- The caption ages by itself while the page stays open.
+
+## FLUTTER-TRIP-SWITCHER — Flutter: switch between trips
+
+**Flags:** `enableTripSwitcher` (Trip pack, default ON).
+
+1. Open a trip while you have two or more: the strip under the top bar has left / right arrows. Tap one, or swipe the strip sideways: the neighbouring trip opens on the same tab.
+2. The first and last trips have one arrow dimmed. A single trip shows no arrows.
+3. Next to the arrows the "saved" line shrinks to an icon; a stuck sync still says "Sync issue - Retry".
+
+**Flag-OFF checks:** `enableTripSwitcher` OFF: no arrows, no swipe.
+
+### Pass
+- The order matches the Trips list; archived trips are skipped.
+
+## FLUTTER-TRIP-PINS — Flutter: pinned trips
+
+**Flags:** `enableTripPins` (Trip pack, default ON).
+
+1. Press and hold a trip > Pin to top: a PINNED header appears first with that trip, before Happening now.
+2. Press and hold it again > Unpin: it returns to its phase. Pins survive a restart and exist only on this device.
+
+**Flag-OFF checks:** `enableTripPins` OFF: no Pin option and no Pinned header.
+
+### Pass
+- A pinned trip stays visible under the Active / Upcoming filters it belongs to.
+
+## FLUTTER-RECEIPT-GALLERY — Flutter: receipt gallery
+
+**Flags:** `enableReceiptGallery` (Trip pack, default ON).
+
+1. Expenses tab > the three-dot menu > Receipts: a grid of every receipt in the trip, newest first, each with its title, date and amount. Trips with no receipts show an empty state.
+2. Tap a photo: it opens large (pinch to zoom). Open expense shows that expense.
+
+**Flag-OFF checks:** `enableReceiptGallery` OFF: no Receipts entry.
+
+### Pass
+- Settlements and deleted expenses never appear.
+
+## FLUTTER-SPEND-RING — Flutter: spend by person ring
+
+**Flags:** `enableSpendRing` (Trip pack, default ON).
+
+1. Summary > Trip numbers > Who paid: with two or more payers a ring shows each person's share of what was paid, with a legend ("Asha 75%").
+2. Tap a person in the legend: the Expenses tab opens filtered to their expenses. In Groups view the ring shows groups (no filter).
+
+**Flag-OFF checks:** `enableSpendRing` OFF: the bars only.
+
+### Pass
+- The ring and the bars below it show the same numbers.
+
+## FLUTTER-FIRST-RUN-TOUR — Flutter: first-run tour and sample trip
+
+**Flags:** `enableFirstRunTour` (Trip pack, default ON).
+
+1. First time the Trips list shows (fresh install or cleared data): a three-card tour (tiles, press and hold, inside a trip) with Skip, Next and Got it. It does not come back.
+2. With no trips, the empty state also has "Try a sample trip": it creates a small trip (Sample: Goa weekend, three travellers, four expenses) and opens it. Delete it like any trip.
+
+**Flag-OFF checks:** `enableFirstRunTour` OFF: no tour and no sample button.
+
+### Pass
+- The sample trip behaves like a real one (settle, share, delete).
+
+## FLUTTER-FEEDBACK-PACK — Flutter: sound and haptic feedback
+
+**Flags:** `enableFeedbackPack` (Trip pack, default ON).
+
+1. Settings > Appearance > Sound feedback is off by default. Turn it on: settling a payment, saving an expense and tapping UNDO give a light tap and a soft click. Off: haptic only.
+
+**Flag-OFF checks:** `enableFeedbackPack` OFF: no sound switch; save and undo have no haptic; settling keeps its old haptic.
+
+### Pass
+- Nothing clicks while the switch is off or the phone is on silent.
+
+## FLUTTER-AMOUNT-KEYPAD — Flutter: amount keypad
+
+**Flags:** `enableAmountKeypad` (Trip pack, default ON).
+
+1. Add expense: the keypad icon next to the amount opens big keys (0-9, point, + - x /, delete, Done). The amount and the "= total" line update as you type, e.g. 12 x 3 = 36.
+2. One decimal point per number; a second sign replaces the first; delete removes the last key.
+
+**Flag-OFF checks:** `enableAmountKeypad` OFF: no keypad icon.
+
+### Pass
+- A keypad amount saves exactly like a typed one.
+
+## FLUTTER-TRIP-ACCENT — Flutter: trip accent colour
+
+**Flags:** `enableTripAccent` (Trip pack, default ON).
+
+1. A trip with a cover photo tints its status pill (under the top bar) and the Day by day bars with a dark colour from the photo. Trips without a photo keep the standard colour.
+
+**Flag-OFF checks:** `enableTripAccent` OFF: standard colour everywhere.
+
+### Pass
+- White text on the pill is readable for light and dark photos.
+
+## FLUTTER-SUMMARY-COLLAPSE — Flutter: collapse Trip numbers
+
+**Flags:** `enableSummaryCollapse` (Trip pack, default ON).
+
+1. Settings > Appearance > Collapse Trip numbers: turn it on. Open a trip's Summary: Trip numbers is folded (the header still shows the total); tap it to expand.
+2. Off (default): Trip numbers open as before.
+
+**Flag-OFF checks:** `enableSummaryCollapse` OFF: no switch; a saved choice is ignored.
+
+### Pass
+- Folding hides nothing permanently.

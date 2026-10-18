@@ -1,17 +1,28 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../app/auth_state.dart';
 import '../../../data/providers.dart';
+import '../../../domain/logic/notification_actions.dart';
 import '../../../domain/logic/notifications.dart';
+import '../../../domain/logic/summary_features.dart';
+import '../../../core/clock.dart';
 import '../../../domain/logic/trip_utilities.dart' show formatRelativeTime;
+import '../../../domain/models/expense.dart';
+import '../../../domain/models/member.dart';
 import '../../../domain/models/notification_item.dart';
+import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/section_label.dart';
+import '../../expenses/application/expenses_providers.dart';
 import '../../trips/application/trips_providers.dart';
 import '../../trips/presentation/widgets/home_dock.dart';
 import '../application/notification_providers.dart';
@@ -42,7 +53,38 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     if (type == 'trip_deleted' || id == null || !mounted) return;
     final exists = (ref.read(tripsProvider).value ?? const []).any((t) => t.id == id);
     if (!exists) return;
-    context.go('/trip/$id/${notificationTabFor(type)}');
+    final target = '/trip/$id/${notificationTabFor(type)}';
+    // A second trip shell on top of an open one breaks the trip page, so with a trip already open we switch to the
+    // row's trip in place (back then leaves to the page before it). With none open (Activity tab, banner on Trips)
+    // the trip is pushed, so back returns to this list.
+    if (_tripOpenBelow(context)) {
+      context.go(target);
+    } else {
+      unawaited(context.push(target));
+    }
+  }
+
+  /// True when a trip screen is somewhere in the navigation stack.
+  static bool _tripOpenBelow(BuildContext context) {
+    bool hasTrip(RouteMatchBase m) =>
+        m.matchedLocation.startsWith('/trip/') ||
+        (m is ShellRouteMatch && m.matches.any(hasTrip)) ||
+        (m is ImperativeRouteMatch && m.matches.matches.any(hasTrip));
+    return GoRouter.of(context).routerDelegate.currentConfiguration.matches.any(hasTrip);
+  }
+
+  Future<void> _confirm(NotificationItem n, Expense e) async {
+    final userId = ref.read(authStateProvider).userId;
+    if (userId == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    try {
+      await ref.read(expenseRepositoryProvider).confirmSettlement(e.id, userId: userId);
+      await ref.read(notificationRepositoryProvider).setRead(n.id, true);
+      messenger.showSnackBar(SnackBar(content: Text(l10n.notifConfirmed)));
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.notifConfirmFailed)));
+    }
   }
 
   Future<void> _clearAll() async {
@@ -65,6 +107,23 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final userId = ref.watch(authStateProvider.select((a) => a.userId));
     final all = ref.watch(notificationsProvider).value ?? const <NotificationItem>[];
     final groupingOn = ref.watch(flagProvider(('enableNotificationGrouping', null))).value ?? false;
+    final dayGroups = ref.watch(flagProvider(('enableNotificationDayGroups', null))).value ?? true;
+    final nowDt = ref.read(nowProvider)();
+    final actionsOn =
+        (ref.watch(flagProvider(('enableNotificationActions', null))).value ?? true) &&
+        (ref.watch(flagProvider(('enableSettlementConfirmation', null))).value ?? false);
+    final allExpenses = actionsOn
+        ? (ref.watch(allActiveExpensesProvider).value ?? const <Expense>[])
+        : const <Expense>[];
+    final allMembers = actionsOn ? (ref.watch(allMembersProvider).value ?? const <Member>[]) : const <Member>[];
+    String? dayLabel(NotificationItem n) {
+      final b = dayBucket(n.createdAt, nowDt);
+      return switch (b.bucket) {
+        DayBucket.today => context.l10n.notifToday,
+        DayBucket.yesterday => context.l10n.notifYesterday,
+        DayBucket.older => b.day == null ? context.l10n.notifEarlier : DateFormat.MMMd().format(b.day!),
+      };
+    }
 
     final scoped = _scope == null ? all : all.where((n) => n.tripId == _scope).toList();
     final shown = groupingOn && _moneyOnly ? scoped.where((n) => isMoneyNotification(n.toJson())).toList() : scoped;
@@ -158,13 +217,31 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         final lead = g.first;
                         final folded = g.length > 1 && !_expanded.contains(lead.id);
                         final rows = folded ? [lead] : g;
+                        final label = dayGroups ? dayLabel(lead) : null;
+                        final prevLabel = dayGroups && i > 0 ? dayLabel(groups[i - 1].first) : null;
                         return Column(
                           children: [
+                            if (label != null && label != prevLabel)
+                              Align(
+                                key: Key('notif-day-$label'),
+                                alignment: Alignment.centerLeft,
+                                child: SectionLabel(label, padding: const EdgeInsets.fromLTRB(16, 12, 16, 4)),
+                              ),
                             for (final n in rows)
                               _Row(
                                 key: ValueKey('notif-${n.id}'),
                                 item: n,
                                 tokens: tokens,
+                                confirmable: actionsOn && n.data?['type'] == 'settlement_confirmation_requested'
+                                    ? settlementToConfirm(
+                                        tripId: n.tripId,
+                                        expenseTitle: n.data?['expenseTitle'] as String?,
+                                        userId: userId,
+                                        expenses: allExpenses,
+                                        members: allMembers,
+                                      )
+                                    : null,
+                                onConfirm: (e) => _confirm(n, e),
                                 onTap: () => _open(n),
                                 onToggleRead: () => repo.setRead(n.id, !n.read),
                                 onDelete: () => repo.delete(n.id),
@@ -195,9 +272,14 @@ class _Row extends StatelessWidget {
     required this.onTap,
     required this.onToggleRead,
     required this.onDelete,
+    required this.confirmable,
+    required this.onConfirm,
     super.key,
   });
 
+  /// The settlement this notification asks you to confirm (null: no button).
+  final Expense? confirmable;
+  final void Function(Expense) onConfirm;
   final NotificationItem item;
   final AppTokens tokens;
   final VoidCallback onTap;
@@ -221,24 +303,41 @@ class _Row extends StatelessWidget {
       onDismissed: (_) => onDelete(),
       child: Semantics(
         label: '${item.read ? 'Read' : 'Unread'} notification: $headline',
-        child: ListTile(
-          onTap: onTap,
-          leading: CircleAvatar(
-            backgroundColor: meta.color.withValues(alpha: 0.15),
-            child: Icon(meta.icon, size: 18, color: meta.color),
-          ),
-          title: Text(headline, style: TextStyle(fontWeight: item.read ? FontWeight.w500 : FontWeight.w800)),
-          subtitle: Text(
-            '${renderNotificationBody(item)}\n${formatRelativeTime(item.createdAt)}',
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-          ),
-          isThreeLine: true,
-          trailing: IconButton(
-            tooltip: item.read ? 'Mark as unread' : 'Mark as read',
-            onPressed: onToggleRead,
-            icon: Icon(item.read ? Icons.mark_email_unread_outlined : Icons.mark_email_read_outlined, size: 20),
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              onTap: onTap,
+              leading: CircleAvatar(
+                backgroundColor: meta.color.withValues(alpha: 0.15),
+                child: Icon(meta.icon, size: 18, color: meta.color),
+              ),
+              title: Text(headline, style: TextStyle(fontWeight: item.read ? FontWeight.w500 : FontWeight.w800)),
+              subtitle: Text(
+                '${renderNotificationBody(item)}\n${formatRelativeTime(item.createdAt)}',
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              isThreeLine: true,
+              trailing: IconButton(
+                tooltip: item.read ? 'Mark as unread' : 'Mark as read',
+                onPressed: onToggleRead,
+                icon: Icon(item.read ? Icons.mark_email_unread_outlined : Icons.mark_email_read_outlined, size: 20),
+              ),
+            ),
+            if (confirmable != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(72, 0, 16, 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FilledButton.tonal(
+                    key: Key('notif-confirm-${item.id}'),
+                    onPressed: () => onConfirm(confirmable!),
+                    child: Text(context.l10n.notifConfirm),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

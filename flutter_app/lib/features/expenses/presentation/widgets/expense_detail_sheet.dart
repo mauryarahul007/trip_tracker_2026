@@ -1,3 +1,5 @@
+import '../../../../shared/widgets/cached_photo.dart';
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -340,8 +342,8 @@ class _ReceiptPreview extends ConsumerWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: net
-            ? Image.network(
-                preview,
+            ? Image(
+                image: CachedPhotoProvider(preview),
                 key: const Key('detail-receipt'),
                 height: 160,
                 width: double.infinity,

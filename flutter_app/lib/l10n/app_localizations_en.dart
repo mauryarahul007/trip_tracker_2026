@@ -1508,7 +1508,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripSectionPast => 'Past';
 
   @override
-  String get hintSwipeTrip => 'Tip: swipe a trip sideways to archive it, or press and hold for more.';
+  String get hintSwipeTrip => 'Tip: press and hold a trip for more. In the list, swipe a row to archive it.';
 
   @override
   String get hintTapGroup => 'Tip: tap a group to see its members or edit it.';
@@ -1617,6 +1617,154 @@ class AppLocalizationsEn extends AppLocalizations {
   String tripsOverviewMulti(int count) {
     return 'Balances in $count currencies. Tap to see them.';
   }
+
+  @override
+  String get tripsLayoutGrid => 'Photo tiles';
+
+  @override
+  String get tripsLayoutList => 'Compact list';
+
+  @override
+  String get syncLineSaved => 'All saved';
+
+  @override
+  String syncLineSyncing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Syncing $count changes',
+      one: 'Syncing 1 change',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncLineOffline => 'Offline';
+
+  @override
+  String syncLineOfflineWaiting(int count) {
+    return 'Offline · $count waiting';
+  }
+
+  @override
+  String get syncLineIssue => 'Sync issue · Retry';
+
+  @override
+  String get todayTitle => 'Today';
+
+  @override
+  String get todaySpent => 'Spent today';
+
+  @override
+  String get todayNext => 'Next up';
+
+  @override
+  String get closeoutPromptTitle => 'This trip is over. Wrap it up:';
+
+  @override
+  String get closeoutStepSettled => 'Everything is settled';
+
+  @override
+  String closeoutStepSettle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payments left to settle',
+      one: '1 payment left to settle',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get closeoutClose => 'Close trip';
+
+  @override
+  String searchHitsTitle(int count) {
+    return 'Found inside trips · $count';
+  }
+
+  @override
+  String get notifToday => 'Today';
+
+  @override
+  String get notifYesterday => 'Yesterday';
+
+  @override
+  String get notifEarlier => 'Earlier';
+
+  @override
+  String get notifConfirm => 'Confirm';
+
+  @override
+  String get notifConfirmed => 'Settlement confirmed';
+
+  @override
+  String get notifConfirmFailed => 'Could not confirm. Check your connection and try again.';
+
+  @override
+  String lastSynced(String when) {
+    return 'Updated $when';
+  }
+
+  @override
+  String get tripPin => 'Pin to top';
+
+  @override
+  String get tripUnpin => 'Unpin';
+
+  @override
+  String get tripSectionPinned => 'Pinned';
+
+  @override
+  String get receiptsTitle => 'Receipts';
+
+  @override
+  String get receiptsEmptyTitle => 'No receipts yet';
+
+  @override
+  String get receiptsEmptyHint => 'Photos you attach to expenses show up here.';
+
+  @override
+  String get receiptsOpenExpense => 'Open expense';
+
+  @override
+  String get tourTilesTitle => 'Your trips at a glance';
+
+  @override
+  String get tourTilesBody =>
+      'Each tile shows the place, when it is, and whether you are owed or owe. The trip happening now sits on top.';
+
+  @override
+  String get tourHoldTitle => 'Press and hold for more';
+
+  @override
+  String get tourHoldBody =>
+      'Hold a trip to pin it, archive it or delete it. In the list view you can also swipe a row.';
+
+  @override
+  String get tourSummaryTitle => 'Inside a trip';
+
+  @override
+  String get tourSummaryBody =>
+      'The Summary shows who pays whom. Tap Settle when you pay someone, and the numbers roll to the new balance.';
+
+  @override
+  String get tourSkip => 'Skip';
+
+  @override
+  String get tourNext => 'Next';
+
+  @override
+  String get tourDone => 'Got it';
+
+  @override
+  String get trySampleTrip => 'Try a sample trip';
+
+  @override
+  String get keypadTitle => 'Amount keypad';
+
+  @override
+  String get keypadDone => 'Done';
 
   @override
   String get ledYouPay => 'You pay';

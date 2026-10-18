@@ -1,3 +1,5 @@
+import '../../../../shared/widgets/cached_photo.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -108,8 +110,8 @@ class TripRow extends ConsumerWidget {
         width: 64,
         height: 64,
         child: cover != null && cover.isNotEmpty
-            ? Image.network(
-                cover,
+            ? Image(
+                image: CachedPhotoProvider(cover),
                 key: Key('trip-thumb-${trip.id}'),
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => _initial(tone.bg, t.textPrimary),
@@ -358,8 +360,8 @@ class TripHeroCard extends ConsumerWidget {
               ),
               if (cover != null && cover.isNotEmpty)
                 Positioned.fill(
-                  child: Image.network(
-                    cover,
+                  child: Image(
+                    image: CachedPhotoProvider(cover),
                     key: Key('trip-thumb-${trip.id}'),
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => const SizedBox.shrink(),
@@ -457,4 +459,204 @@ class TripHeroCard extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// A square photo tile for the Trips grid: the destination photo under a dark wash, status on top-left, your
+/// money on top-right, name and dates at the bottom, like a card of the stack. Falls back to a gradient with the
+/// trip's initial when there is no photo.
+class TripTile extends ConsumerWidget {
+  const TripTile({
+    required this.trip,
+    required this.now,
+    required this.onTap,
+    this.onLongPress,
+    this.avatarNames = const [],
+    this.moneyText,
+    this.moneyColor,
+    super.key,
+  });
+
+  final Trip trip;
+  final DateTime now;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final List<String> avatarNames;
+  final String? moneyText;
+  final Color? moneyColor;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = context.tokens;
+    final status = tripStatus(trip.startDate, trip.endDate, now);
+    final headline = trip.archived ? context.l10n.tripBadgeArchived : tripHeadline(context, status);
+    final cover = ref.watch(tripCoverProvider(tripCoverKey(trip))).value;
+    final dates = trip.startDate.isNotEmpty ? formatDateRange(trip.startDate, trip.endDate) : '';
+    final over = trip.archived || status.phase == TripPhase.ended;
+
+    return Semantics(
+      button: true,
+      label: '${trip.name}. $headline${moneyText == null ? '' : '. $moneyText'}',
+      child: Material(
+        color: const Color(0xFF0B1F33),
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(t.radiusLg)),
+        child: InkWell(
+          key: Key('trip-row-${trip.id}'),
+          onTap: onTap,
+          onLongPress: onLongPress,
+          // A fixed-shape tile cannot grow with the text size: cap it here (the trip itself scales fully).
+          child: MediaQuery.withClampedTextScaling(
+            maxScaleFactor: 1.25,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF123A57), Color(0xFF1F6F78)],
+                    ),
+                  ),
+                ),
+                if (cover == null || cover.isEmpty)
+                  Center(
+                    child: Text(
+                      trip.name.trim().isEmpty ? '?' : trip.name.trim().characters.first.toUpperCase(),
+                      style: const TextStyle(
+                        fontFamily: AppTypography.fontTitle,
+                        fontSize: 54,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white24,
+                      ),
+                    ),
+                  )
+                else
+                  Hero(
+                    tag: 'trip-photo-${trip.id}',
+                    child: Image(
+                      image: CachedPhotoProvider(cover),
+                      key: Key('trip-thumb-${trip.id}'),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                    ),
+                  ),
+                // Light at the top for the chips, heavy at the bottom for the name: readable on any photo.
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.25),
+                        Colors.black.withValues(alpha: 0.05),
+                        Colors.black.withValues(alpha: 0.78),
+                      ],
+                      stops: const [0, 0.4, 1],
+                    ),
+                  ),
+                ),
+                if (over) ColoredBox(color: Colors.black.withValues(alpha: 0.18)),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (headline.isNotEmpty)
+                            Flexible(
+                              child: _TilePill(
+                                headline,
+                                key: const Key('trip-tile-status'),
+                                dot: status.phase == TripPhase.active ? t.colorSuccess : null,
+                              ),
+                            ),
+                          const Spacer(),
+                          if (moneyText != null)
+                            Flexible(
+                              child: _TilePill(moneyText!, key: const Key('trip-money'), dot: moneyColor),
+                            ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Hero(
+                        tag: 'trip-title-${trip.id}',
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: Text(
+                            trip.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: AppTypography.fontTitle,
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.4,
+                              height: 1.05,
+                              color: Colors.white,
+                              shadows: [Shadow(color: Color(0x66000000), blurRadius: 8)],
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (dates.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            dates,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white70),
+                          ),
+                        ),
+                      if (avatarNames.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: _Avatars(avatarNames, size: 20, ring: const Color(0xFF123A57)),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TilePill extends StatelessWidget {
+  const _TilePill(this.text, {this.dot, super.key});
+  final String text;
+  final Color? dot;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(99)),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (dot != null) ...[
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 5),
+        ],
+        Flexible(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white),
+          ),
+        ),
+      ],
+    ),
+  );
 }

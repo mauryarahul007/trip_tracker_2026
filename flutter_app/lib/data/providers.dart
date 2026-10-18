@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/env/app_env.dart';
@@ -92,6 +94,7 @@ final syncCoordinatorProvider = Provider<SyncCoordinator>((ref) {
       final store = ref.read(conflictStoreProvider.notifier);
       results.forEach((tripId, r) => store.setForTrip(tripId, r.conflicts));
     },
+    onSynced: () => ref.read(lastSyncedProvider.notifier).mark(),
   );
   ref.onDispose(c.dispose);
   return c;
@@ -170,3 +173,22 @@ final joinRepositoryProvider = Provider<JoinRepository>(
 final shareRepositoryProvider = Provider<ShareRepository>(
   (ref) => SupabaseShareRepository(ref.watch(supabaseGatewayProvider).client),
 );
+
+/// When the app last finished a pull from the server (remembered on the device). Null until the first one.
+class LastSynced extends Notifier<DateTime?> {
+  static const _key = 'sync.last_at';
+
+  @override
+  DateTime? build() {
+    final ms = ref.read(sharedPreferencesProvider).getInt(_key);
+    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  void mark() {
+    final now = DateTime.now();
+    state = now;
+    unawaited(ref.read(sharedPreferencesProvider).setInt(_key, now.millisecondsSinceEpoch));
+  }
+}
+
+final lastSyncedProvider = NotifierProvider<LastSynced, DateTime?>(LastSynced.new);

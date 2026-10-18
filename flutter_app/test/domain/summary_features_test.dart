@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trip_tracker/domain/logic/settlement.dart';
+import 'package:trip_tracker/domain/models/travel_pass.dart';
 import 'package:trip_tracker/domain/logic/summary_features.dart';
 
 void main() {
@@ -115,5 +116,33 @@ void main() {
     expect(dailyAllowance(1000, 1200, 3), 0);
     expect(dailyAllowance(0, 100, 3), isNull);
     expect(dailyAllowance(1000, 100, 0), isNull);
+  });
+
+  TravelPass pass(String id, String? start) =>
+      TravelPass(id: id, tripId: 't', type: 'flight', title: id, startDateTime: start, createdAt: 0, updatedAt: 0);
+
+  test('next pass: the earliest one still ahead; none when all are past or undated', () {
+    final now = DateTime(2026, 10, 18, 12);
+    final next = nextPass([
+      pass('past', '2026-10-18T08:00'),
+      pass('later', '2026-10-20T09:00'),
+      pass('soon', '2026-10-18T15:30'),
+      pass('undated', null),
+    ], now);
+    expect(next?.id, 'soon');
+    expect(nextPass([pass('past', '2026-10-01T08:00'), pass('undated', null)], now), isNull);
+  });
+
+  test('spent on a day', () {
+    expect(spentOn([(date: '2026-10-18', total: 40), (date: '2026-10-19', total: 5)], '2026-10-18'), 40);
+    expect(spentOn(const [], '2026-10-18'), 0);
+  });
+
+  test('day buckets: today, yesterday, older by calendar day (not by 24 hours)', () {
+    final now = DateTime(2026, 10, 18, 9);
+    expect(dayBucket(DateTime(2026, 10, 18, 0, 5).toIso8601String(), now).bucket, DayBucket.today);
+    expect(dayBucket(DateTime(2026, 10, 17, 23, 55).toIso8601String(), now).bucket, DayBucket.yesterday);
+    expect(dayBucket(DateTime(2026, 10, 10, 12).toIso8601String(), now).bucket, DayBucket.older);
+    expect(dayBucket('garbage', now).bucket, DayBucket.older);
   });
 }

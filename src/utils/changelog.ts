@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.60.0',
+    date: '2026-10-18',
+    changes: [
+      'Behind the scenes: the Flutter app shows trips as destination-photo tiles (with a Grid / List switch and pinned trips), a cover photo band and saved/syncing line inside a trip, arrows to jump between trips, a Today card and a wrap-up prompt on the Summary, a Plan and suggestions card, a spend-by-person ring, a receipt gallery, search that also finds expenses and notes, a Confirm button on notifications, smart expense defaults and an amount keypad, odometer-style rolling numbers on the hero amount, photos kept on the device, an Updated caption with pull to refresh, a first-run tour with a sample trip, sound feedback, a Reduce motion setting, Collapse Trip numbers, and a back gesture that returns to the page you came from. No change to the web app.',
+    ],
+  },
+  {
     version: '3.59.0',
     date: '2026-10-18',
     changes: [

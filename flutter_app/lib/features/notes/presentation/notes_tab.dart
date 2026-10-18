@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/platform/motion.dart';
+
 import '../../../core/platform/external_launcher.dart';
 import '../../../core/platform/share_service.dart';
 import '../../../data/providers.dart';
@@ -367,7 +369,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                           borderRadius: BorderRadius.circular(99),
                           child: TweenAnimationBuilder<double>(
                             tween: Tween(end: p.done / p.total),
-                            duration: const Duration(milliseconds: 300),
+                            duration: AppMotion.of(context, const Duration(milliseconds: 300)),
                             curve: Curves.easeOutCubic,
                             builder: (_, v, _) => LinearProgressIndicator(
                               value: v,
@@ -536,7 +538,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                     children: [
                       // Struck through only once ticked off; the colour eases between the two states.
                       AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 220),
+                        duration: AppMotion.of(context, const Duration(milliseconds: 220)),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,

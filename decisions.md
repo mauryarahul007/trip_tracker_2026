@@ -5094,3 +5094,16 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** The notification tap still replaces the stack (`go`): pushing a second trip shell over an open trip broke the trip page, so back from a trip opened that way still lands on Trips. Swipe-left pin was not built (needs saved state). Settings and Summary remain replaced outright, not flagged. The pinned section headers are flat slivers because a pinned header inside `SliverMainAxisGroup` fails layout on this Flutter version.
 * **Release Cut:** version bumped to `3.59.0` via `npm run release:minor`.
 
+---
+
+## Flutter v3.60.0: photo tiles, in-trip upgrades, ten polish features
+* **Context:** On-device review asked for photo tiles on the Trips list, a notification back-navigation fix, and a batch of UI/UX upgrades that make the app feel professional, smooth and streamlined.
+* **Decision:** Trip-pack flags, all default ON (142 flags in total).
+  - **Trips list:** square destination-photo tiles with a wide hero for the trip happening now and a Grid / List switch (`enableTripGridTiles`); pinned trips (`enableTripPins`, device-only); search that also finds expenses and notes (`enableGlobalSearch`); a first-run tour and a sample trip (`enableFirstRunTour`); an "Updated" caption with pull to refresh (`enableLastSyncedCaption`).
+  - **Inside a trip:** a cover photo band with a saved/syncing line (`enableTripCoverHeader`, `enableSyncLine`), previous/next trip arrows and strip swipe (`enableTripSwitcher`), an accent colour taken from the photo (`enableTripAccent`), Today card and wrap-up prompt (`enableTodayCard`, `enableCloseoutPrompt`), Plan and suggestions, spend ring (`enableSpendRing`), receipt gallery (`enableReceiptGallery`), Collapse Trip numbers (`enableSummaryCollapse`).
+  - **Money entry and feedback:** amount keypad (`enableAmountKeypad`), smart defaults (`enableSmartExpenseDefaults`), Confirm on notifications (`enableNotificationActions`), notification day groups, sound feedback (`enableFeedbackPack`), Reduce motion (`enableReduceMotion`), odometer rolling of the hero amount.
+  - **Internals:** one `myTripNet` for a person's position everywhere; a disk photo cache keyed without the query string (signed receipt URLs); one shared section-label style; photos use `CachedPhotoProvider` instead of `Image.network`.
+  - **Fix:** a notification tapped with no trip open is pushed (back returns to the list); with a trip already open it switches in place, because a second trip shell on top of an open one breaks the page.
+* **Trade-offs Accepted:** The sample trip is a normal trip, so it syncs when the account does. The trip accent and pins are cosmetic and device-only. The amount keypad inserts `*` and `/` because the calculator does not read the multiplication and division signs. Several flags are read only after they have resolved (tour, collapse) so a loading flag never counts as permission.
+* **Release Cut:** version bumped to `3.60.0` via `npm run release:minor`.
+

@@ -1,3 +1,5 @@
+import '../../../../shared/widgets/cached_photo.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -324,8 +326,8 @@ class _StackCard extends ConsumerWidget {
           fit: StackFit.expand,
           children: [
             if (cover != null && cover.isNotEmpty)
-              Image.network(
-                cover,
+              Image(
+                image: CachedPhotoProvider(cover),
                 key: Key('stack-photo-${trip.id}'),
                 fit: BoxFit.cover,
                 frameBuilder: (_, child, frame, sync) => AnimatedOpacity(

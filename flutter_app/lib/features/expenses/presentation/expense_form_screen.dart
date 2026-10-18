@@ -3,7 +3,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/platform/feedback.dart';
+
 import '../../notifications/presentation/push_prompt.dart';
+import 'widgets/amount_keypad.dart';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -122,6 +125,7 @@ class _FormBodyState extends ConsumerState<_FormBody> {
   Future<void> _save() async {
     final outcome = await _c.submit();
     if (!outcome.isOk || !mounted) return;
+    AppFeedback.saved();
     await maybeAskForPush(context, ref); // first meaningful action: the one moment we ask
     if (mounted) context.pop();
   }
@@ -408,6 +412,28 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                                   onChanged: c.setAmount,
                                 ),
                               ),
+                              if (flags.amountKeypad)
+                                IconButton(
+                                  key: const Key('amount-keypad-button'),
+                                  tooltip: l10n.keypadTitle,
+                                  icon: const Icon(Icons.dialpad_rounded),
+                                  onPressed: () {
+                                    FocusScope.of(context).unfocus();
+                                    unawaited(
+                                      showAmountKeypad(
+                                        context,
+                                        initial: _amount.text,
+                                        onChanged: (v) {
+                                          _amount.value = TextEditingValue(
+                                            text: v,
+                                            selection: TextSelection.collapsed(offset: v.length),
+                                          );
+                                          c.setAmount(v);
+                                        },
+                                      ),
+                                    );
+                                  },
+                                ),
                             ],
                           ),
                           if (c.amountIsExpression && amountVal != null)

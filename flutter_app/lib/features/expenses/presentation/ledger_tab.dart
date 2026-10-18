@@ -1,3 +1,5 @@
+import '../../../shared/widgets/cached_photo.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -10,7 +12,9 @@ import '../../../core/clock.dart';
 import '../../../core/format/money.dart';
 import '../../../core/storage/prefs.dart';
 import '../../../core/platform/external_launcher.dart';
-import '../../../core/platform/haptics.dart';
+import '../../../core/platform/feedback.dart';
+import '../../../core/settings/app_settings.dart' show summaryCollapsePrefProvider;
+import '../../../core/platform/motion.dart';
 import '../../../core/platform/share_service.dart';
 import '../../../data/providers.dart';
 import '../../../data/sync/conflict_store.dart';
@@ -53,9 +57,17 @@ import '../../../domain/logic/burn_rate.dart';
 import '../../../domain/logic/spend_insights.dart';
 import '../../../domain/models/trip.dart';
 import '../../../shared/widgets/ask_text.dart';
+import '../../../shared/widgets/last_synced_caption.dart';
+import '../../../shared/widgets/pull_to_refresh.dart';
+import '../../../shared/widgets/rolling_money.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../domain/logic/summary_features.dart';
+import '../../../domain/logic/trip_status.dart';
+import '../../trips/application/trips_providers.dart' show refreshTripsProvider;
+import '../../trips/application/trip_accent.dart';
 import '../application/trip_budget.dart';
+import '../../trips/presentation/widgets/trip_card.dart' show tripHeadline;
+import 'closeout_sheet.dart';
 import 'widgets/settlement_card.dart';
 
 /// "₹1,200.00" -> ("₹1,200", ".00") so the decimals can be dimmed (MoneyText).
@@ -77,7 +89,10 @@ class LedgerTab extends ConsumerStatefulWidget {
 }
 
 class _LedgerTabState extends ConsumerState<LedgerTab> {
-  final _open = <String>{'transfers', 'analytics'}; // history (flagged) starts folded away
+  // History (flagged) starts folded away. Trip numbers fold too when the traveller chose to collapse them: applied
+  // once, as soon as the flag has resolved (a loading flag must not count as permission), so later taps stay in charge.
+  final _open = <String>{'transfers', 'analytics'};
+  var _collapseChecked = false;
   var _personView = false; // settlement list as people, not groups (this viewer only)
 
   Future<void> _settle(BuildContext context, Transfer t) async {
@@ -110,6 +125,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
       if (r.isOk) done++;
     }
     if (!context.mounted) return;
+    if (done > 0) AppFeedback.success();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.ledSettleAllDone(done))));
   }
 
@@ -142,6 +158,13 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final l10n = context.l10n;
     final tokens = context.tokens;
     final id = widget.tripId;
+    if (!_collapseChecked) {
+      final collapseFlag = ref.watch(flagProvider(('enableSummaryCollapse', null))).value;
+      if (collapseFlag != null) {
+        _collapseChecked = true;
+        if (collapseFlag && ref.read(summaryCollapsePrefProvider)) _open.remove('analytics');
+      }
+    }
     final trip = ref.watch(tripProvider(id)).value;
     final result = ref.watch(tripSettlementProvider(id));
     if (trip == null || result == null) return const Center(child: CircularProgressIndicator());
@@ -189,7 +212,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                   ),
                   AnimatedRotation(
                     turns: open ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 200),
+                    duration: AppMotion.of(context, const Duration(milliseconds: 200)),
                     child: Icon(Icons.expand_more, color: tokens.textMuted),
                   ),
                 ],
@@ -197,7 +220,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             ),
           ),
           AnimatedSize(
-            duration: const Duration(milliseconds: 220),
+            duration: AppMotion.of(context, const Duration(milliseconds: 220)),
             curve: Curves.easeOutCubic,
             alignment: Alignment.topCenter,
             child: !open
@@ -277,6 +300,12 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final groupSpendOn = _flag(ref, 'enableGroupSpend', id) && groupLedger.hasGroups;
     final groupRows = groupSpendOn ? spendByGroup(spend.paid, spend.share, groups, names) : const <SpendRow>[];
     final showGroups = groupSpendOn && !_personView; // follows the page switch
+    // The ring shows the same rows as the bars below it: people, or groups when Groups is chosen.
+    final ringOn = _flag(ref, 'enableSpendRing', id);
+    final ringRows = showGroups
+        ? [for (final r in groupRows) (id: r.id, name: r.name, paid: r.paid, memberId: null as String?)]
+        : [for (final e in paidList) (id: e.key, name: names[e.key] ?? '?', paid: e.value, memberId: e.key as String?)];
+    final ringTotal = ringRows.fold<double>(0, (a, r) => a + r.paid);
     final paidMax = showGroups
         ? (groupRows.isEmpty ? 1.0 : groupRows.first.paid)
         : (paidList.isEmpty ? 1.0 : paidList.first.value);
@@ -305,6 +334,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
       BudgetLevel.warn => const Color(0xFFE8890C),
       BudgetLevel.ok => tokens.colorSuccess,
     };
+    final tripAccent = _flag(ref, 'enableTripAccent', id) ? ref.watch(tripAccentProvider(id)).value : null;
     // Plan and suggestions: where the budget stands and a few tips from the trip's own numbers.
     final suggestionsOn = _flag(ref, 'enableTripSuggestions', id);
     final burn = trip.startDate.isEmpty
@@ -331,6 +361,13 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           )
         : const <Suggestion>[];
     final planOn = budgetOn || tips.isNotEmpty;
+    // Today card and the trip-over prompt.
+    final nowDt = ref.read(nowProvider)();
+    final phase = tripStatus(trip.startDate, trip.endDate, nowDt).phase;
+    final todayOn = _flag(ref, 'enableTodayCard', id) && (phase == TripPhase.active || phase == TripPhase.upcoming);
+    final upNext = todayOn ? nextPass(trip.passes, nowDt) : null;
+    final closeoutOn =
+        _flag(ref, 'enableCloseoutPrompt', id) && phase == TripPhase.ended && !trip.closed && !trip.archived;
 
     Widget moneyCard(IconData icon, BentoTone tone, String label, double amount, Key key) {
       final split = _splitMoney(formatMoney(context, amount, cur));
@@ -414,642 +451,758 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
 
     return Stack(
       children: [
-        ListView(
-          key: const Key('ledger-list'),
-          padding: EdgeInsets.fromLTRB(pad, 12, pad, 120),
-          children: [
-            if (nextOn && (nextPay != null || owedToMe.isNotEmpty))
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: BentoTile(
-                  key: const Key('next-action'),
-                  tone: nextPay != null ? BentoTone.peach : BentoTone.mint,
-                  padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          nextPay != null
-                              ? l10n.ledNextPay(nextPay.toLabel, formatMoney(context, nextPay.amount, cur))
-                              : owedToMe.length == 1
-                              ? l10n.ledNextOwedOne(
-                                  owedToMe.first.fromLabel,
-                                  formatMoney(context, owedToMe.first.amount, cur),
-                                )
-                              : l10n.ledNextOwedMany(
-                                  owedToMe.length,
-                                  formatMoney(context, owedToMe.fold<double>(0, (a, t) => a + t.amount), cur),
-                                ),
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                        ),
-                      ),
-                      if (nextPay != null) ...[
-                        const SizedBox(width: 8),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(minWidth: 88, maxWidth: 120),
-                          child: AppButton(
-                            key: const Key('next-action-pay'),
-                            label: l10n.ledSettle,
-                            onPressed: () => _settle(context, nextPay),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            // 1. Hero boarding pass: what is owed, stamped SETTLED or NOT SETTLED.
-            Padding(
-              key: const Key('sticky-balance'),
-              padding: const EdgeInsets.only(bottom: 20),
-              child: BoardingPassCard(
-                tone: heroTone,
-                banner: _PassBanner(
-                  coverUrl: trip.coverImageUrl,
-                  title: trip.name,
-                  dates: tripDates,
-                  eyebrow: l10n.ledPassTitle,
-                ),
-                top: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    BentoTile.eyebrow(context, heroTone, heroLabel),
-                    const SizedBox(height: 4),
-                    // Counts to a new balance instead of jumping; no animation on first paint.
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(end: heroBalance.abs()),
-                      duration: const Duration(milliseconds: 450),
-                      curve: Curves.easeOutCubic,
-                      builder: (_, v, _) {
-                        final sp = _splitMoney(formatMoney(context, v, cur));
-                        return MoneyText(whole: sp.$1, decimals: sp.$2, fontSize: compact ? 38 : 46, color: heroColor);
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        StatusStamp(
-                          key: const Key('settle-stamp'),
-                          settled: tripSettled,
-                          text: tripSettled ? l10n.ledStampSettled : l10n.ledStampNotSettled,
-                          tone: heroTone,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            '${trip.memberIds.length} ${l10n.ledHeroTravellers}',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.end,
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: tokens.textSecondary),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                stub: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      flex: 5,
-                      child: Row(
-                        children: [
-                          field(l10n.expTotalSpent, formatMoney(context, totals.totalSpent, cur)),
-                          const SizedBox(width: 12),
-                          field(l10n.expPerPerson, formatMoney(context, totals.averageCost, cur)),
-                          const SizedBox(width: 12),
-                          field(l10n.ledHeroOpen, '${result.transfers.length}'),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(flex: 3, child: TicketBarcode(seed: trip.id, height: 44)),
-                  ],
-                ),
-              ),
-            ),
-            // Your money: what I still receive and what I still pay (people on the trip only).
-            if (iAmIn)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Row(
-                  children: [
-                    moneyCard(
-                      Icons.south_west_rounded,
-                      BentoTone.mint,
-                      l10n.ledToReceive,
-                      toReceive,
-                      const Key('money-receive'),
-                    ),
-                    const SizedBox(width: 12),
-                    moneyCard(Icons.north_east_rounded, BentoTone.peach, l10n.ledToPay, toPay, const Key('money-pay')),
-                  ],
-                ),
-              ),
-            // Settlement progress, like a goal: how much of what was owed is already paid.
-            if (progressTotal > 0.005)
-              Padding(
-                key: const Key('settle-progress'),
-                padding: const EdgeInsets.only(bottom: 20),
-                child: FlightProgressRunway(
-                  tone: heroTone,
-                  settledLabel: l10n.ledProgress,
-                  totalLabel: l10n.ledHeroOpen,
-                  settledAmount: formatMoney(context, settledSoFar, cur),
-                  totalAmount: formatMoney(context, progressTotal, cur),
-                  progress: (settledSoFar / progressTotal).clamp(0.0, 1.0),
-                  remainingTransfers: result.transfers.length,
-                  remainingLabel: outstanding < 0.01
-                      ? l10n.ledProgressDone
-                      : l10n.ledProgressLeft(result.transfers.length),
-                ),
-              ),
-            // One switch for the whole page: groups or people, for Who pays whom and Who paid. Only this viewer's view.
-            if (viewSwitchOn)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: SegmentedButton<bool>(
-                  key: const Key('settle-view-toggle'),
-                  showSelectedIcon: false,
-                  segments: [
-                    ButtonSegment(value: false, label: Text(l10n.ledViewGroups, maxLines: 1)),
-                    ButtonSegment(value: true, label: Text(l10n.ledViewPeople, maxLines: 1)),
-                  ],
-                  selected: {_personView},
-                  onSelectionChanged: (v) => setState(() => _personView = v.first),
-                ),
-              ),
-            if (conflicts.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: AppButton(
-                  key: const Key('open-conflicts'),
-                  label: l10n.conflictTitle,
-                  variant: AppButtonVariant.secondary,
-                  onPressed: () => AppSheet.show<void>(
-                    context: context,
-                    builder: (_) => ConflictSheet(tripId: id),
-                  ),
-                ),
-              ),
-            // 2. Who pays whom, and how it is worked out.
-            section(
-              'transfers',
-              l10n.ledWhoPays,
-              subtitle: allEven ? l10n.ledAllSettled : l10n.ledProgressLeft(transfers.length),
-              [
-                if (canToggle)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: SegmentedButton<bool>(
-                      key: const Key('simplify-toggle'),
-                      showSelectedIcon: false,
-                      segments: [
-                        ButtonSegment(value: true, label: Text(l10n.ledModeFewest, maxLines: 1)),
-                        ButtonSegment(value: false, label: Text(l10n.ledModePerPerson, maxLines: 1)),
-                      ],
-                      selected: {trip.simplifyDebts},
-                      onSelectionChanged: (v) => ref.read(tripRepositoryProvider).setSimplifyDebts(id, v.first),
-                    ),
-                  ),
-                if (counts != null && counts.direct > 0)
-                  Padding(
-                    key: const Key('simplify-counts'),
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Text(
-                      counts.simplified == counts.direct
-                          ? l10n.ledCountsSame(counts.direct)
-                          : l10n.ledCountsSaves(counts.simplified, counts.direct),
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: tokens.textSecondary),
-                    ),
-                  ),
-                if (settleAllOn)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: AppButton(
-                      key: const Key('settle-all'),
-                      label: l10n.ledSettleAll(
-                        myPays.length,
-                        formatMoney(context, myPays.fold<double>(0, (a, t) => a + t.amount), cur),
-                      ),
-                      onPressed: () => _settleAll(context, myPays, cur),
-                    ),
-                  ),
-                if (allEven)
-                  EmptyState(
-                    key: const Key('all-settled'),
-                    icon: Icons.check_circle_outline,
-                    title: l10n.ledAllSettled,
-                    subtitle: l10n.ledAllSettledHint,
-                  )
-                else
-                  for (final (i, t) in transfers.indexed)
-                    Padding(
-                      key: Key('transfer-$i'),
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: LuggageStubTile(
-                        tone: isMe(t.from) ? BentoTone.peach : (isMe(t.to) ? BentoTone.mint : toneFor(t.from)),
-                        badge: isMe(t.from) ? l10n.ledYouPay : (isMe(t.to) ? l10n.ledPaysYou : null),
-                        fromName: t.fromLabel,
-                        toName: t.toLabel,
-                        fromLabel: l10n.ledFrom,
-                        toLabel: l10n.ledTo,
-                        caption: l10n.ledTransfer(t.fromLabel, t.toLabel),
-                        amountText: formatMoney(context, t.amount, cur),
-                        settleLabel: l10n.ledSettle,
-                        settleKey: Key('settle-$i'),
-                        onSettle: () => _settle(context, t),
-                      ),
-                    ),
-              ],
-              bare: true,
-            ),
-            // 3. Trip analytics: totals, where the money went, who paid, and each person's balance.
-            section('analytics', l10n.ledNumbers, subtitle: formatMoney(context, totals.totalSpent, cur), [
-              if (planOn)
+        AppPullToRefresh(
+          onRefresh: ref.read(refreshTripsProvider),
+          child: ListView(
+            key: const Key('ledger-list'),
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(pad, 12, pad, 120),
+            children: [
+              const LastSyncedCaption(),
+              if (todayOn)
                 Padding(
-                  padding: const EdgeInsets.only(top: 6, bottom: 16),
+                  padding: const EdgeInsets.only(bottom: 16),
                   child: BentoTile(
-                    key: const Key('plan-card'),
-                    tone: BentoTone.lilac,
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
+                    key: const Key('today-card'),
+                    tone: BentoTone.sky,
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        BentoTile.eyebrow(context, BentoTone.lilac, l10n.planTitle),
-                        if (budgetOn) ...[
-                          const SizedBox(height: 10),
-                          InkWell(
-                            key: const Key('budget-card'),
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () => _editBudget(context, budget),
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(minHeight: 48),
-                              child: budget <= 0
-                                  ? Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 6),
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.savings_outlined),
-                                          const SizedBox(width: 10),
-                                          Expanded(
-                                            child: Text(
-                                              l10n.ledBudgetSet,
-                                              style: const TextStyle(fontWeight: FontWeight.w700),
-                                            ),
-                                          ),
-                                          Icon(Icons.chevron_right_rounded, color: tokens.textMuted),
-                                        ],
-                                      ),
-                                    )
-                                  : Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                l10n.ledBudgetOf(
-                                                  formatMoney(context, totals.totalSpent, cur),
-                                                  formatMoney(context, budget, cur),
-                                                ),
-                                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                                              ),
-                                            ),
-                                            Icon(Icons.edit_outlined, size: 18, color: tokens.textMuted),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(99),
-                                          child: TweenAnimationBuilder<double>(
-                                            tween: Tween(end: budgetState.fraction),
-                                            duration: const Duration(milliseconds: 400),
-                                            curve: Curves.easeOutCubic,
-                                            builder: (_, v, _) => LinearProgressIndicator(
-                                              key: const Key('budget-bar'),
-                                              value: v,
-                                              minHeight: 8,
-                                              backgroundColor: tokens.borderColor,
-                                              color: budgetColor,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          key: const Key('budget-status'),
-                                          budgetState.remaining >= 0
-                                              ? l10n.ledBudgetLeft(formatMoney(context, budgetState.remaining, cur))
-                                              : l10n.ledBudgetOver(formatMoney(context, -budgetState.remaining, cur)),
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: budgetColor,
-                                          ),
-                                        ),
-                                        if (allowance != null)
-                                          Text(
-                                            key: const Key('budget-daily'),
-                                            l10n.planDaily(formatMoney(context, allowance, cur), daysLeft),
-                                            style: TextStyle(fontSize: 12, color: tokens.textSecondary),
-                                          ),
-                                        if (burn != null)
-                                          Text(
-                                            l10n.planPace(formatMoney(context, burn.projectedTotal, cur)),
-                                            style: TextStyle(fontSize: 12, color: tokens.textSecondary),
-                                          ),
-                                        Text(
-                                          l10n.ledBudgetLocal,
-                                          style: TextStyle(fontSize: 11, color: tokens.textMuted),
-                                        ),
-                                      ],
-                                    ),
-                            ),
-                          ),
-                        ],
-                        if (suggestionsOn && tips.isNotEmpty) ...[
-                          if (budgetOn) Divider(height: 22, color: tokens.borderColor),
-                          if (!budgetOn) const SizedBox(height: 8),
-                          for (final (i, s) in tips.indexed)
-                            Padding(
-                              key: Key('suggestion-$i'),
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 1, right: 10),
-                                    child: Icon(Icons.lightbulb_outline_rounded, size: 18, color: tokens.textSecondary),
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      suggestionText(l10n, context, s, cur),
-                                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, height: 1.3),
-                                    ),
-                                  ),
-                                  if (s.kind == SuggestionKind.setBudget && budgetOn)
-                                    TextButton(
-                                      key: const Key('suggestion-set-budget'),
-                                      onPressed: () => _editBudget(context, budget),
-                                      child: Text(l10n.ledBudgetAction),
-                                    ),
-                                ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              BentoTile.eyebrow(context, BentoTone.sky, l10n.todayTitle),
+                              const SizedBox(height: 4),
+                              Text(
+                                tripHeadline(context, tripStatus(trip.startDate, trip.endDate, nowDt)),
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
                               ),
-                            ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsets.only(top: 6, bottom: 14),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    statTile(
-                      BentoTone.butter,
-                      l10n.expTotalSpent,
-                      formatMoney(context, totals.totalSpent, cur),
-                      const Key('stat-total'),
-                    ),
-                    const SizedBox(width: 10),
-                    statTile(
-                      BentoTone.mint,
-                      l10n.expPerPerson,
-                      formatMoney(context, totals.averageCost, cur),
-                      const Key('stat-avg'),
-                    ),
-                    if (totals.top != null) ...[
-                      const SizedBox(width: 10),
-                      statTile(
-                        BentoTone.peach,
-                        l10n.expTopCategory,
-                        '${totals.top!.name} ${totals.top!.percentage.round()}%',
-                        const Key('stat-top'),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              if (cats.isNotEmpty) ...[
-                Text(
-                  l10n.ledSpendByCategory,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
-                ),
-                const SizedBox(height: 8),
-                Center(
-                  child: SpendDonut(
-                    key: const Key('spend-donut'),
-                    values: [for (final c in cats) c.percentage],
-                    colors: [for (final c in cats) Color(categoryColorArgb(c.id))],
-                    centerLabel: l10n.expTotalSpent,
-                    centerValue: formatMoney(context, totals.totalSpent, cur),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  key: const Key('donut-legend'),
-                  alignment: WrapAlignment.center,
-                  spacing: 8,
-                  runSpacing: 6,
-                  children: [
-                    for (final c in cats)
-                      DonutLegendBadge(
-                        label: '${c.name} ${c.percentage.round()}%',
-                        color: Color(categoryColorArgb(c.id)),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                for (final c in cats)
-                  Padding(
-                    key: Key('cat-row-${c.id}'),
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 10,
-                              height: 10,
-                              decoration: BoxDecoration(shape: BoxShape.circle, color: Color(categoryColorArgb(c.id))),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                c.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                            Text(
-                              l10n.ledShareOfTotal(c.percentage.round()),
-                              style: TextStyle(fontSize: 12, color: tokens.textSecondary),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              formatMoney(context, c.amount, cur),
-                              style: const TextStyle(fontWeight: FontWeight.w800),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(99),
-                          child: TweenAnimationBuilder<double>(
-                            tween: Tween(end: (c.percentage / 100).clamp(0.02, 1.0)),
-                            duration: const Duration(milliseconds: 400),
-                            curve: Curves.easeOutCubic,
-                            builder: (_, v, _) => LinearProgressIndicator(
-                              value: v,
-                              minHeight: 6,
-                              backgroundColor: tokens.borderColor,
-                              color: Color(categoryColorArgb(c.id)),
-                            ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: 16),
-              ],
-              if (paidList.isNotEmpty) ...[
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.ledWhoPaid,
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                if (showGroups)
-                  for (final r in groupRows)
-                    Padding(
-                      key: Key('spend-group-${r.id}'),
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Row(
-                        children: [
-                          AppAvatar(name: r.name, size: 28),
-                          const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              BentoTile.eyebrow(context, BentoTone.sky, l10n.todaySpent),
+                              const SizedBox(height: 4),
+                              Text(
+                                key: const Key('today-spent'),
+                                formatMoney(
+                                  context,
+                                  spentOn([
+                                    for (final d in allDays) (date: d.date, total: d.total),
+                                  ], todayDateString(nowDt)),
+                                  cur,
+                                ),
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (upNext != null)
                           Expanded(
-                            flex: 3,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                BentoTile.eyebrow(context, BentoTone.sky, l10n.todayNext),
+                                const SizedBox(height: 4),
                                 Text(
-                                  r.name,
-                                  maxLines: 1,
+                                  key: const Key('today-next'),
+                                  upNext.title,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontWeight: FontWeight.w700),
+                                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
                                 ),
                                 Text(
-                                  l10n.ledSpendShare(formatMoney(context, r.share, cur)),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  (upNext.startDateTime ?? '').length >= 16
+                                      ? upNext.startDateTime!.substring(5, 16).replaceFirst('T', ' ')
+                                      : '',
                                   style: TextStyle(fontSize: 12, color: tokens.textSecondary),
                                 ),
                               ],
                             ),
                           ),
-                          Expanded(
-                            flex: 3,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(99),
-                              child: LinearProgressIndicator(
-                                value: (r.paid / paidMax).clamp(0.04, 1.0),
-                                minHeight: 8,
-                                backgroundColor: tokens.borderColor,
-                                color: tokens.primaryAccent,
+                      ],
+                    ),
+                  ),
+                ),
+              if (closeoutOn)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: BentoTile(
+                    key: const Key('closeout-prompt'),
+                    tone: BentoTone.butter,
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.closeoutPromptTitle,
+                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Icon(
+                              allEven ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                              size: 20,
+                              color: allEven ? tokens.colorSuccess : tokens.textSecondary,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                allEven ? l10n.closeoutStepSettled : l10n.closeoutStepSettle(transfers.length),
+                                key: const Key('closeout-settle-step'),
                               ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: [
+                            if (!allEven && settleAllOn)
+                              TextButton(
+                                key: const Key('closeout-settle-all'),
+                                onPressed: () => _settleAll(context, myPays, cur),
+                                child: Text(l10n.ledSettleAllConfirm),
+                              ),
+                            TextButton.icon(
+                              key: const Key('closeout-share'),
+                              icon: const Icon(Icons.ios_share_rounded, size: 18),
+                              label: Text(l10n.ledShareSummary),
+                              onPressed: () => _shareSummary(trip, totals.totalSpent, totals.averageCost, transfers),
+                            ),
+                            TextButton.icon(
+                              key: const Key('closeout-close'),
+                              icon: const Icon(Icons.lock_outline_rounded, size: 18),
+                              label: Text(l10n.closeoutClose),
+                              onPressed: () => AppSheet.show<void>(
+                                context: context,
+                                builder: (_) => CloseoutSheet(tripId: id),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (nextOn && (nextPay != null || owedToMe.isNotEmpty))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: BentoTile(
+                    key: const Key('next-action'),
+                    tone: nextPay != null ? BentoTone.peach : BentoTone.mint,
+                    padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            nextPay != null
+                                ? l10n.ledNextPay(nextPay.toLabel, formatMoney(context, nextPay.amount, cur))
+                                : owedToMe.length == 1
+                                ? l10n.ledNextOwedOne(
+                                    owedToMe.first.fromLabel,
+                                    formatMoney(context, owedToMe.first.amount, cur),
+                                  )
+                                : l10n.ledNextOwedMany(
+                                    owedToMe.length,
+                                    formatMoney(context, owedToMe.fold<double>(0, (a, t) => a + t.amount), cur),
+                                  ),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                        if (nextPay != null) ...[
+                          const SizedBox(width: 8),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(minWidth: 88, maxWidth: 120),
+                            child: AppButton(
+                              key: const Key('next-action-pay'),
+                              label: l10n.ledSettle,
+                              onPressed: () => _settle(context, nextPay),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              // 1. Hero boarding pass: what is owed, stamped SETTLED or NOT SETTLED.
+              Padding(
+                key: const Key('sticky-balance'),
+                padding: const EdgeInsets.only(bottom: 20),
+                child: BoardingPassCard(
+                  tone: heroTone,
+                  banner: _PassBanner(
+                    coverUrl: trip.coverImageUrl,
+                    title: trip.name,
+                    dates: tripDates,
+                    eyebrow: l10n.ledPassTitle,
+                  ),
+                  top: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      BentoTile.eyebrow(context, heroTone, heroLabel),
+                      const SizedBox(height: 4),
+                      // The digits roll like an odometer when an expense or a settlement changes the balance,
+                      // also when you come back to this page after adding one (the last shown figure is remembered).
+                      Builder(
+                        builder: (_) {
+                          final sp = _splitMoney(formatMoney(context, heroBalance.abs(), cur));
+                          return RollingMoneyText(
+                            key: const Key('hero-amount'),
+                            memoryKey: 'hero-$id',
+                            whole: sp.$1,
+                            decimals: sp.$2 ?? '',
+                            fontSize: compact ? 38 : 46,
+                            color: heroColor,
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          StatusStamp(
+                            key: const Key('settle-stamp'),
+                            settled: tripSettled,
+                            text: tripSettled ? l10n.ledStampSettled : l10n.ledStampNotSettled,
+                            tone: heroTone,
                           ),
                           const SizedBox(width: 10),
-                          SizedBox(
-                            width: 84,
+                          Expanded(
                             child: Text(
-                              formatMoney(context, r.paid, cur),
+                              '${trip.memberIds.length} ${l10n.ledHeroTravellers}',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.end,
-                              style: const TextStyle(fontWeight: FontWeight.w800),
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: tokens.textSecondary),
                             ),
                           ),
                         ],
                       ),
-                    )
-                else
-                  for (final e in paidList)
+                    ],
+                  ),
+                  stub: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        flex: 5,
+                        child: Row(
+                          children: [
+                            field(l10n.expTotalSpent, formatMoney(context, totals.totalSpent, cur)),
+                            const SizedBox(width: 12),
+                            field(l10n.expPerPerson, formatMoney(context, totals.averageCost, cur)),
+                            const SizedBox(width: 12),
+                            field(l10n.ledHeroOpen, '${result.transfers.length}'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(flex: 3, child: TicketBarcode(seed: trip.id, height: 44)),
+                    ],
+                  ),
+                ),
+              ),
+              // Your money: what I still receive and what I still pay (people on the trip only).
+              if (iAmIn)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Row(
+                    children: [
+                      moneyCard(
+                        Icons.south_west_rounded,
+                        BentoTone.mint,
+                        l10n.ledToReceive,
+                        toReceive,
+                        const Key('money-receive'),
+                      ),
+                      const SizedBox(width: 12),
+                      moneyCard(
+                        Icons.north_east_rounded,
+                        BentoTone.peach,
+                        l10n.ledToPay,
+                        toPay,
+                        const Key('money-pay'),
+                      ),
+                    ],
+                  ),
+                ),
+              // Settlement progress, like a goal: how much of what was owed is already paid.
+              if (progressTotal > 0.005)
+                Padding(
+                  key: const Key('settle-progress'),
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: FlightProgressRunway(
+                    tone: heroTone,
+                    settledLabel: l10n.ledProgress,
+                    totalLabel: l10n.ledHeroOpen,
+                    settledAmount: formatMoney(context, settledSoFar, cur),
+                    totalAmount: formatMoney(context, progressTotal, cur),
+                    progress: (settledSoFar / progressTotal).clamp(0.0, 1.0),
+                    remainingTransfers: result.transfers.length,
+                    remainingLabel: outstanding < 0.01
+                        ? l10n.ledProgressDone
+                        : l10n.ledProgressLeft(result.transfers.length),
+                  ),
+                ),
+              // One switch for the whole page: groups or people, for Who pays whom and Who paid. Only this viewer's view.
+              if (viewSwitchOn)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: SegmentedButton<bool>(
+                    key: const Key('settle-view-toggle'),
+                    showSelectedIcon: false,
+                    segments: [
+                      ButtonSegment(value: false, label: Text(l10n.ledViewGroups, maxLines: 1)),
+                      ButtonSegment(value: true, label: Text(l10n.ledViewPeople, maxLines: 1)),
+                    ],
+                    selected: {_personView},
+                    onSelectionChanged: (v) => setState(() => _personView = v.first),
+                  ),
+                ),
+              if (conflicts.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: AppButton(
+                    key: const Key('open-conflicts'),
+                    label: l10n.conflictTitle,
+                    variant: AppButtonVariant.secondary,
+                    onPressed: () => AppSheet.show<void>(
+                      context: context,
+                      builder: (_) => ConflictSheet(tripId: id),
+                    ),
+                  ),
+                ),
+              // 2. Who pays whom, and how it is worked out.
+              section(
+                'transfers',
+                l10n.ledWhoPays,
+                subtitle: allEven ? l10n.ledAllSettled : l10n.ledProgressLeft(transfers.length),
+                [
+                  if (canToggle)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
-                      child: Row(
+                      child: SegmentedButton<bool>(
+                        key: const Key('simplify-toggle'),
+                        showSelectedIcon: false,
+                        segments: [
+                          ButtonSegment(value: true, label: Text(l10n.ledModeFewest, maxLines: 1)),
+                          ButtonSegment(value: false, label: Text(l10n.ledModePerPerson, maxLines: 1)),
+                        ],
+                        selected: {trip.simplifyDebts},
+                        onSelectionChanged: (v) => ref.read(tripRepositoryProvider).setSimplifyDebts(id, v.first),
+                      ),
+                    ),
+                  if (counts != null && counts.direct > 0)
+                    Padding(
+                      key: const Key('simplify-counts'),
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        counts.simplified == counts.direct
+                            ? l10n.ledCountsSame(counts.direct)
+                            : l10n.ledCountsSaves(counts.simplified, counts.direct),
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: tokens.textSecondary),
+                      ),
+                    ),
+                  if (settleAllOn)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: AppButton(
+                        key: const Key('settle-all'),
+                        label: l10n.ledSettleAll(
+                          myPays.length,
+                          formatMoney(context, myPays.fold<double>(0, (a, t) => a + t.amount), cur),
+                        ),
+                        onPressed: () => _settleAll(context, myPays, cur),
+                      ),
+                    ),
+                  if (allEven)
+                    EmptyState(
+                      key: const Key('all-settled'),
+                      icon: Icons.check_circle_outline,
+                      title: l10n.ledAllSettled,
+                      subtitle: l10n.ledAllSettledHint,
+                    )
+                  else
+                    for (final (i, t) in transfers.indexed)
+                      Padding(
+                        key: Key('transfer-$i'),
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: LuggageStubTile(
+                          tone: isMe(t.from) ? BentoTone.peach : (isMe(t.to) ? BentoTone.mint : toneFor(t.from)),
+                          badge: isMe(t.from) ? l10n.ledYouPay : (isMe(t.to) ? l10n.ledPaysYou : null),
+                          fromName: t.fromLabel,
+                          toName: t.toLabel,
+                          fromLabel: l10n.ledFrom,
+                          toLabel: l10n.ledTo,
+                          caption: l10n.ledTransfer(t.fromLabel, t.toLabel),
+                          amountText: formatMoney(context, t.amount, cur),
+                          settleLabel: l10n.ledSettle,
+                          settleKey: Key('settle-$i'),
+                          onSettle: () => _settle(context, t),
+                        ),
+                      ),
+                ],
+                bare: true,
+              ),
+              // 3. Trip analytics: totals, where the money went, who paid, and each person's balance.
+              section('analytics', l10n.ledNumbers, subtitle: formatMoney(context, totals.totalSpent, cur), [
+                if (planOn)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6, bottom: 16),
+                    child: BentoTile(
+                      key: const Key('plan-card'),
+                      tone: BentoTone.lilac,
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          AppAvatar(name: names[e.key] ?? '?', size: 28),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            flex: 3,
-                            child: Text(
-                              names[e.key] ?? '?',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 4,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(99),
-                              child: LinearProgressIndicator(
-                                value: (e.value / paidMax).clamp(0.04, 1.0),
-                                minHeight: 8,
-                                backgroundColor: tokens.borderColor,
-                                color: tokens.primaryAccent,
+                          BentoTile.eyebrow(context, BentoTone.lilac, l10n.planTitle),
+                          if (budgetOn) ...[
+                            const SizedBox(height: 10),
+                            InkWell(
+                              key: const Key('budget-card'),
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () => _editBudget(context, budget),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(minHeight: 48),
+                                child: budget <= 0
+                                    ? Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 6),
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.savings_outlined),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: Text(
+                                                l10n.ledBudgetSet,
+                                                style: const TextStyle(fontWeight: FontWeight.w700),
+                                              ),
+                                            ),
+                                            Icon(Icons.chevron_right_rounded, color: tokens.textMuted),
+                                          ],
+                                        ),
+                                      )
+                                    : Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  l10n.ledBudgetOf(
+                                                    formatMoney(context, totals.totalSpent, cur),
+                                                    formatMoney(context, budget, cur),
+                                                  ),
+                                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                                                ),
+                                              ),
+                                              Icon(Icons.edit_outlined, size: 18, color: tokens.textMuted),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(99),
+                                            child: TweenAnimationBuilder<double>(
+                                              tween: Tween(end: budgetState.fraction),
+                                              duration: AppMotion.of(context, const Duration(milliseconds: 400)),
+                                              curve: Curves.easeOutCubic,
+                                              builder: (_, v, _) => LinearProgressIndicator(
+                                                key: const Key('budget-bar'),
+                                                value: v,
+                                                minHeight: 8,
+                                                backgroundColor: tokens.borderColor,
+                                                color: budgetColor,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            key: const Key('budget-status'),
+                                            budgetState.remaining >= 0
+                                                ? l10n.ledBudgetLeft(formatMoney(context, budgetState.remaining, cur))
+                                                : l10n.ledBudgetOver(formatMoney(context, -budgetState.remaining, cur)),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: budgetColor,
+                                            ),
+                                          ),
+                                          if (allowance != null)
+                                            Text(
+                                              key: const Key('budget-daily'),
+                                              l10n.planDaily(formatMoney(context, allowance, cur), daysLeft),
+                                              style: TextStyle(fontSize: 12, color: tokens.textSecondary),
+                                            ),
+                                          if (burn != null)
+                                            Text(
+                                              l10n.planPace(formatMoney(context, burn.projectedTotal, cur)),
+                                              style: TextStyle(fontSize: 12, color: tokens.textSecondary),
+                                            ),
+                                          Text(
+                                            l10n.ledBudgetLocal,
+                                            style: TextStyle(fontSize: 11, color: tokens.textMuted),
+                                          ),
+                                        ],
+                                      ),
                               ),
                             ),
+                          ],
+                          if (suggestionsOn && tips.isNotEmpty) ...[
+                            if (budgetOn) Divider(height: 22, color: tokens.borderColor),
+                            if (!budgetOn) const SizedBox(height: 8),
+                            for (final (i, s) in tips.indexed)
+                              Padding(
+                                key: Key('suggestion-$i'),
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 1, right: 10),
+                                      child: Icon(
+                                        Icons.lightbulb_outline_rounded,
+                                        size: 18,
+                                        color: tokens.textSecondary,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        suggestionText(l10n, context, s, cur),
+                                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, height: 1.3),
+                                      ),
+                                    ),
+                                    if (s.kind == SuggestionKind.setBudget && budgetOn)
+                                      TextButton(
+                                        key: const Key('suggestion-set-budget'),
+                                        onPressed: () => _editBudget(context, budget),
+                                        child: Text(l10n.ledBudgetAction),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, bottom: 14),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      statTile(
+                        BentoTone.butter,
+                        l10n.expTotalSpent,
+                        formatMoney(context, totals.totalSpent, cur),
+                        const Key('stat-total'),
+                      ),
+                      const SizedBox(width: 10),
+                      statTile(
+                        BentoTone.mint,
+                        l10n.expPerPerson,
+                        formatMoney(context, totals.averageCost, cur),
+                        const Key('stat-avg'),
+                      ),
+                      if (totals.top != null) ...[
+                        const SizedBox(width: 10),
+                        statTile(
+                          BentoTone.peach,
+                          l10n.expTopCategory,
+                          '${totals.top!.name} ${totals.top!.percentage.round()}%',
+                          const Key('stat-top'),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (cats.isNotEmpty) ...[
+                  Text(
+                    l10n.ledSpendByCategory,
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: SpendDonut(
+                      key: const Key('spend-donut'),
+                      values: [for (final c in cats) c.percentage],
+                      colors: [for (final c in cats) Color(categoryColorArgb(c.id))],
+                      centerLabel: l10n.expTotalSpent,
+                      centerValue: formatMoney(context, totals.totalSpent, cur),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    key: const Key('donut-legend'),
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      for (final c in cats)
+                        DonutLegendBadge(
+                          label: '${c.name} ${c.percentage.round()}%',
+                          color: Color(categoryColorArgb(c.id)),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  for (final c in cats)
+                    Padding(
+                      key: Key('cat-row-${c.id}'),
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(categoryColorArgb(c.id)),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  c.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                              Text(
+                                l10n.ledShareOfTotal(c.percentage.round()),
+                                style: TextStyle(fontSize: 12, color: tokens.textSecondary),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                formatMoney(context, c.amount, cur),
+                                style: const TextStyle(fontWeight: FontWeight.w800),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 10),
-                          SizedBox(
-                            width: 84,
-                            child: Text(
-                              formatMoney(context, e.value, cur),
-                              textAlign: TextAlign.end,
-                              style: const TextStyle(fontWeight: FontWeight.w800),
+                          const SizedBox(height: 6),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(99),
+                            child: TweenAnimationBuilder<double>(
+                              tween: Tween(end: (c.percentage / 100).clamp(0.02, 1.0)),
+                              duration: AppMotion.of(context, const Duration(milliseconds: 400)),
+                              curve: Curves.easeOutCubic,
+                              builder: (_, v, _) => LinearProgressIndicator(
+                                value: v,
+                                minHeight: 6,
+                                backgroundColor: tokens.borderColor,
+                                color: Color(categoryColorArgb(c.id)),
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                const SizedBox(height: 6),
-              ],
-              if (timelineOn && recentDays.isNotEmpty) ...[
-                Text(
-                  l10n.ledDayByDay,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
-                ),
-                const SizedBox(height: 8),
-                Column(
-                  key: const Key('day-timeline'),
-                  children: [
-                    for (final d in recentDays)
+                  const SizedBox(height: 16),
+                ],
+                if (paidList.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.ledWhoPaid,
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
+                        ),
+                      ),
+                      // The same Groups / People choice as the switch at the top of the page (one shared state).
+                      if (viewSwitchOn)
+                        SegmentedButton<bool>(
+                          key: const Key('spend-view-toggle'),
+                          showSelectedIcon: false,
+                          style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                          segments: [
+                            ButtonSegment(value: false, label: Text(l10n.ledSpendGroups, maxLines: 1)),
+                            ButtonSegment(value: true, label: Text(l10n.ledSpendMembers, maxLines: 1)),
+                          ],
+                          selected: {_personView},
+                          onSelectionChanged: (v) => setState(() => _personView = v.first),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (ringOn && ringRows.length >= 2 && ringTotal > 0) ...[
+                    Center(
+                      child: SpendDonut(
+                        key: const Key('spend-ring'),
+                        values: [for (final r in ringRows) r.paid],
+                        colors: [for (final r in ringRows) AppAvatar.colorForName(r.name)],
+                        centerLabel: l10n.ledWhoPaid,
+                        centerValue: formatMoney(context, ringRows.fold<double>(0, (a, r) => a + r.paid), cur),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        for (final r in ringRows)
+                          ActionChip(
+                            key: Key('ring-chip-${r.id}'),
+                            avatar: CircleAvatar(backgroundColor: AppAvatar.colorForName(r.name), radius: 6),
+                            label: Text('${r.name} ${(r.paid * 100 / ringTotal).round()}%'),
+                            // A person's chip shows their expenses; a group has no filter of its own.
+                            onPressed: r.memberId == null
+                                ? null
+                                : () {
+                                    ref
+                                        .read(expenseFiltersProvider(id).notifier)
+                                        .set(ExpenseFilters(memberId: r.memberId!));
+                                    context.go('/trip/$id/expenses');
+                                  },
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+                  if (showGroups)
+                    for (final r in groupRows)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
+                        key: Key('spend-group-${r.id}'),
+                        padding: const EdgeInsets.only(bottom: 10),
                         child: Row(
                           children: [
-                            SizedBox(
-                              width: 52,
-                              child: Text(
-                                d.date.length >= 10 ? d.date.substring(5) : d.date,
-                                style: TextStyle(fontSize: 12, color: tokens.textSecondary),
+                            AppAvatar(name: r.name, size: 28),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 3,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    r.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontWeight: FontWeight.w700),
+                                  ),
+                                  Text(
+                                    l10n.ledSpendShare(formatMoney(context, r.share, cur)),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(fontSize: 12, color: tokens.textSecondary),
+                                  ),
+                                ],
                               ),
                             ),
                             Expanded(
+                              flex: 3,
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(99),
                                 child: LinearProgressIndicator(
-                                  value: dayMax <= 0 ? 0 : (d.total / dayMax).clamp(0.03, 1.0),
+                                  value: (r.paid / paidMax).clamp(0.04, 1.0),
                                   minHeight: 8,
                                   backgroundColor: tokens.borderColor,
                                   color: tokens.primaryAccent,
@@ -1060,71 +1213,159 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                             SizedBox(
                               width: 84,
                               child: Text(
-                                formatMoney(context, d.total, cur),
+                                formatMoney(context, r.paid, cur),
                                 textAlign: TextAlign.end,
+                                style: const TextStyle(fontWeight: FontWeight.w800),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                  else
+                    for (final e in paidList)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          children: [
+                            AppAvatar(name: names[e.key] ?? '?', size: 28),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                names[e.key] ?? '?',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 4,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(99),
+                                child: LinearProgressIndicator(
+                                  value: (e.value / paidMax).clamp(0.04, 1.0),
+                                  minHeight: 8,
+                                  backgroundColor: tokens.borderColor,
+                                  color: tokens.primaryAccent,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              width: 84,
+                              child: Text(
+                                formatMoney(context, e.value, cur),
+                                textAlign: TextAlign.end,
+                                style: const TextStyle(fontWeight: FontWeight.w800),
                               ),
                             ),
                           ],
                         ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-              ],
-              if (_flag(ref, 'enableShareSummaryImage', id))
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    key: const Key('share-summary'),
-                    icon: const Icon(Icons.ios_share_rounded, size: 18),
-                    label: Text(l10n.ledShareSummary),
-                    onPressed: () => _shareSummary(trip, totals.totalSpent, totals.averageCost, transfers),
-                  ),
-                ),
-              if (_flag(ref, 'enableSpendInsights', id))
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    key: const Key('open-insights'),
-                    icon: const Icon(Icons.insights_rounded, size: 18),
-                    label: Text(l10n.ledOpenInsights),
-                    onPressed: () => context.push('/trip/$id/insights'),
-                  ),
-                ),
-            ]),
-            if (history)
-              section('history', l10n.ledHistory, [
-                if (settlements.isEmpty)
+                  const SizedBox(height: 6),
+                ],
+                if (timelineOn && recentDays.isNotEmpty) ...[
                   Text(
-                    l10n.ledNoHistory,
-                    key: const Key('history-empty'),
-                    style: TextStyle(color: tokens.textSecondary),
+                    l10n.ledDayByDay,
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.textSecondary),
                   ),
-                for (final e in settlements)
-                  ListTile(
-                    key: Key('history-${e.id}'),
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(e.title.replaceFirst('Settlement: ', '')),
-                    subtitle: Text('${e.date} · ${formatMoney(context, e.amount, e.currency)}'),
-                    trailing: Text(
-                      e.settlementConfirmedAt != null ? l10n.ledConfirmed : l10n.ledAwaiting,
-                      style: TextStyle(
-                        color: e.settlementConfirmedAt != null ? tokens.colorSuccess : tokens.textSecondary,
-                      ),
+                  const SizedBox(height: 8),
+                  Column(
+                    key: const Key('day-timeline'),
+                    children: [
+                      for (final d in recentDays)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 52,
+                                child: Text(
+                                  d.date.length >= 10 ? d.date.substring(5) : d.date,
+                                  style: TextStyle(fontSize: 12, color: tokens.textSecondary),
+                                ),
+                              ),
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(99),
+                                  child: LinearProgressIndicator(
+                                    value: dayMax <= 0 ? 0 : (d.total / dayMax).clamp(0.03, 1.0),
+                                    minHeight: 8,
+                                    backgroundColor: tokens.borderColor,
+                                    color: tripAccent ?? tokens.primaryAccent,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              SizedBox(
+                                width: 84,
+                                child: Text(
+                                  formatMoney(context, d.total, cur),
+                                  textAlign: TextAlign.end,
+                                  style: const TextStyle(fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                ],
+                if (_flag(ref, 'enableShareSummaryImage', id))
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      key: const Key('share-summary'),
+                      icon: const Icon(Icons.ios_share_rounded, size: 18),
+                      label: Text(l10n.ledShareSummary),
+                      onPressed: () => _shareSummary(trip, totals.totalSpent, totals.averageCost, transfers),
                     ),
-                    onTap: () => AppSheet.show<void>(
-                      context: context,
-                      builder: (sheetCtx) => ExpenseDetailSheet(
-                        tripId: id,
-                        expenseId: e.id,
-                        onEdit: () => Navigator.of(sheetCtx).pop(),
-                        onDelete: () => Navigator.of(sheetCtx).pop(),
-                      ),
+                  ),
+                if (_flag(ref, 'enableSpendInsights', id))
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      key: const Key('open-insights'),
+                      icon: const Icon(Icons.insights_rounded, size: 18),
+                      label: Text(l10n.ledOpenInsights),
+                      onPressed: () => context.push('/trip/$id/insights'),
                     ),
                   ),
               ]),
-          ],
+              if (history)
+                section('history', l10n.ledHistory, [
+                  if (settlements.isEmpty)
+                    Text(
+                      l10n.ledNoHistory,
+                      key: const Key('history-empty'),
+                      style: TextStyle(color: tokens.textSecondary),
+                    ),
+                  for (final e in settlements)
+                    ListTile(
+                      key: Key('history-${e.id}'),
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(e.title.replaceFirst('Settlement: ', '')),
+                      subtitle: Text('${e.date} · ${formatMoney(context, e.amount, e.currency)}'),
+                      trailing: Text(
+                        e.settlementConfirmedAt != null ? l10n.ledConfirmed : l10n.ledAwaiting,
+                        style: TextStyle(
+                          color: e.settlementConfirmedAt != null ? tokens.colorSuccess : tokens.textSecondary,
+                        ),
+                      ),
+                      onTap: () => AppSheet.show<void>(
+                        context: context,
+                        builder: (sheetCtx) => ExpenseDetailSheet(
+                          tripId: id,
+                          expenseId: e.id,
+                          onEdit: () => Navigator.of(sheetCtx).pop(),
+                          onDelete: () => Navigator.of(sheetCtx).pop(),
+                        ),
+                      ),
+                    ),
+                ]),
+            ],
+          ),
         ),
         AddExpenseFab(tripId: id),
       ],
@@ -1163,7 +1404,11 @@ class _PassBanner extends StatelessWidget {
           ),
           if (coverUrl != null && coverUrl!.isNotEmpty)
             Positioned.fill(
-              child: Image.network(coverUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const SizedBox.shrink()),
+              child: Image(
+                image: CachedPhotoProvider(coverUrl!),
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              ),
             ),
           // Soft teal glow top-right, and a wash so white text is readable on any photo.
           const Positioned.fill(
@@ -1328,7 +1573,7 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
         .submit(plan.submission, tripId: widget.tripId, userId: ref.read(authStateProvider).userId ?? '');
     if (!mounted) return;
     if (r.isOk) {
-      unawaited(AppHaptics.success());
+      AppFeedback.success();
       nav.pop();
       messenger.showSnackBar(SnackBar(content: Text(l10n.ledSettledToast)));
     } else {

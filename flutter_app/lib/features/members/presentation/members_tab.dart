@@ -18,6 +18,7 @@ import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/coach_hint.dart';
+import '../../../shared/widgets/section_label.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/ask_text.dart';
@@ -121,13 +122,7 @@ class MembersTab extends ConsumerWidget {
     );
   }
 
-  static TextStyle _sectionStyle(BuildContext context) => TextStyle(
-    fontFamily: AppTypography.fontBody,
-    fontSize: 12,
-    fontWeight: FontWeight.w700,
-    letterSpacing: 0.8,
-    color: context.tokens.textMuted,
-  );
+  static TextStyle _sectionStyle(BuildContext context) => sectionLabelStyle(context);
 
   Widget _row(
     BuildContext context,

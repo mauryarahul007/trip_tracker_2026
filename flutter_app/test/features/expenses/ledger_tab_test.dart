@@ -6,6 +6,7 @@ import 'package:trip_tracker/data/sync/outbox_types.dart';
 import 'package:trip_tracker/domain/models/expense.dart';
 import 'package:trip_tracker/domain/repositories/repositories.dart' show AuthUser;
 import 'package:trip_tracker/shared/widgets/app_button.dart';
+import 'package:trip_tracker/shared/widgets/rolling_money.dart';
 
 import '../../support/pump_app.dart';
 import '../../support/seed.dart';
@@ -38,13 +39,6 @@ Future<void> scrollToKey(WidgetTester tester, String k) => tester.scrollUntilVis
 String text(WidgetTester t, String k) {
   final w = t.widget(key(k));
   return w is Text ? w.data! : t.widget<Text>(find.descendant(of: key(k), matching: find.byType(Text)).last).data!;
-}
-
-/// Scrolls [f] to the middle of the screen, clear of the floating Add button at the bottom.
-Future<void> centre(WidgetTester tester, Finder f) async {
-  await tester.ensureVisible(f);
-  await Scrollable.ensureVisible(tester.element(f), alignment: 0.4);
-  await tester.pump();
 }
 
 void main() {
@@ -82,10 +76,7 @@ void main() {
     await openLedger(tester, s);
     expect(find.descendant(of: key('settle-stamp'), matching: find.text('NOT SETTLED')), findsOneWidget);
     expect(find.descendant(of: key('sticky-balance'), matching: find.text('STILL TO SETTLE')), findsOneWidget);
-    expect(
-      find.descendant(of: key('sticky-balance'), matching: find.text('₹60.00', findRichText: true)),
-      findsOneWidget,
-    ); // 30 + 30 open
+    expect(find.byWidgetPredicate((w) => w is RollingMoneyText && w.text == '₹60.00'), findsOneWidget); // 30 + 30 open
     expect(key('money-receive'), findsNothing);
     expect(key('money-pay'), findsNothing);
   });
@@ -268,6 +259,7 @@ void main() {
     expect(find.text('Cara pays Asha'), findsOneWidget);
     expect(find.text('Ben pays Asha'), findsNothing);
 
+    await centre(tester, key('simplify-toggle'));
     await tester.tap(find.descendant(of: key('simplify-toggle'), matching: find.text('Per person')));
     await settle(tester, rounds: 8);
 

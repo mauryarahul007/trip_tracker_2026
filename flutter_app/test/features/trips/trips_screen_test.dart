@@ -77,7 +77,7 @@ void main() {
   });
 
   testApp('swipe archives, shows undo, archived section lists it; undo restores', (tester) async {
-    await pumpApp(tester, user: asha);
+    await pumpApp(tester, user: asha, prefsExtra: {'trips_layout': 'list'}); // swipe belongs to the list layout
     final c = containerOf(tester);
     final id = await seedTrip(tester, c, 'Goa Weekend');
     await settle(tester);

@@ -174,6 +174,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final conflicts = ref.watch(conflictIdsProvider(id));
     final compactActive = _flag(ref, 'enableCompactLedgerView', id) && _compact;
     final quickChips = _flag(ref, 'enableExpenseQuickFilterChips', id);
+    final receiptsOn = _flag(ref, 'enableReceiptGallery', id);
     final binOn = _flag(ref, 'enableRecycleBin', id);
 
     final shown = filtered.take(_visible).toList();
@@ -355,6 +356,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                   icon: const Icon(AppIcons.more),
                   onSelected: (v) {
                     if (v == 'bin') context.push('/trip/$id/recycle-bin');
+                    if (v == 'receipts') context.push('/trip/$id/receipts');
                     if (v == 'categories') context.push('/trip/$id/categories');
                     if (v == 'tools') {
                       AppSheet.show<void>(
@@ -386,6 +388,12 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                     PopupMenuItem(value: 'tools', child: Text(l10n.expTools)),
                     if (_flag(ref, 'enableCompactLedgerView', id))
                       PopupMenuItem(value: 'compact', child: Text(l10n.expCompactView)),
+                    if (receiptsOn)
+                      PopupMenuItem(
+                        value: 'receipts',
+                        key: const Key('menu-receipts'),
+                        child: Text(l10n.receiptsTitle),
+                      ),
                     if (binOn) PopupMenuItem(value: 'bin', child: Text(l10n.expRecycleBin)),
                   ],
                 ),

@@ -1,3 +1,5 @@
+import '../../../../shared/widgets/cached_photo.dart';
+
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -29,8 +31,8 @@ class TripBackdrop extends ConsumerWidget {
               : ImageFiltered(
                   key: ValueKey(url),
                   imageFilter: ImageFilter.blur(sigmaX: 28, sigmaY: 28, tileMode: TileMode.mirror),
-                  child: Image.network(
-                    url,
+                  child: Image(
+                    image: CachedPhotoProvider(url),
                     key: const Key('stack-backdrop-photo'),
                     fit: BoxFit.cover,
                     width: double.infinity,

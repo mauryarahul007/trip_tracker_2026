@@ -1,3 +1,5 @@
+import '../../../shared/widgets/cached_photo.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -55,8 +57,8 @@ class BoardingBackdrop extends ConsumerWidget {
           duration: const Duration(milliseconds: 700),
           child: url == null
               ? const SizedBox.expand(key: ValueKey('no-photo'))
-              : Image.network(
-                  url,
+              : Image(
+                  image: CachedPhotoProvider(url),
                   key: const Key('boarding-photo'),
                   fit: BoxFit.cover,
                   width: double.infinity,

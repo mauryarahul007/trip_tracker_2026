@@ -57,6 +57,8 @@ class FormFlags {
   bool get duplicateDetector => _f('enableDuplicateDetector');
   bool get cloneLast => _f('enableCloneLastExpense');
   bool get rememberSplit => _f('enableRememberDefaultSplit');
+  bool get smartDefaults => _f('enableSmartExpenseDefaults');
+  bool get amountKeypad => _f('enableAmountKeypad');
   bool get persistentDraft => _f('enablePersistentExpenseDraft');
   bool get exclusionDefaults => _f('enableSplitExclusionDefaults');
   bool get dateRangeMembership => _f('enableDateRangeMembership');
@@ -77,6 +79,8 @@ class FormFlags {
     'enableDuplicateDetector',
     'enableCloneLastExpense',
     'enableRememberDefaultSplit',
+    'enableSmartExpenseDefaults',
+    'enableAmountKeypad',
     'enablePersistentExpenseDraft',
     'enableSplitExclusionDefaults',
     'enableDateRangeMembership',
@@ -249,6 +253,7 @@ class ExpenseFormState {
 
 String _draftKey(String tripId) => 'tt_draft_expense_$tripId';
 String _defaultSplitKey(String tripId) => 'tt-default-split:v1:$tripId';
+String _lastPayerCategoryKey(String tripId) => 'tt-last-payer-category:v1:$tripId';
 
 class ExpenseFormController extends Notifier<ExpenseFormState> {
   ExpenseFormController(this.args);
@@ -383,6 +388,21 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
             },
           );
         }
+      }
+    }
+    // Smart defaults: start from the payer and category used last on this trip (on this device).
+    if (flags.smartDefaults && !editing && draft == null) {
+      try {
+        final raw = ref.read(sharedPreferencesProvider).getString(_lastPayerCategoryKey(tripId));
+        if (raw != null) {
+          final m = jsonDecode(raw) as Map<String, dynamic>;
+          final payerId = m['payer'] as String?;
+          final cat = m['category'] as String?;
+          if (payerId != null && members.any((x) => x.id == payerId)) base0 = base0.copyWith(payer: payerId);
+          if (cat != null && _categories.any((c) => c.id == cat)) base0 = base0.copyWith(category: cat);
+        }
+      } catch (_) {
+        // A damaged remembered value just means the standard defaults.
       }
     }
     return base0;
@@ -838,12 +858,19 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
       _draftTimer?.cancel();
       await _removeDraft();
       if (!editing && flags.rememberSplit) await _rememberSplit(built.submission!);
+      if (!editing && flags.smartDefaults) await _rememberPayerAndCategory();
       state = state.copyWith(submitting: false);
       return outcome;
     } catch (e) {
       state = state.copyWith(submitting: false, error: '$e');
       return SaveOutcome.failed('$e');
     }
+  }
+
+  Future<void> _rememberPayerAndCategory() async {
+    await ref
+        .read(sharedPreferencesProvider)
+        .setString(_lastPayerCategoryKey(tripId), jsonEncode({'payer': state.payer, 'category': state.category}));
   }
 
   Future<void> _rememberSplit(ExpenseSubmission s) async {

@@ -7,7 +7,9 @@ import 'features/notifications/presentation/notification_banner_host.dart';
 import 'features/notifications/presentation/push_listener.dart';
 import 'features/notifications/presentation/reminder_scheduler.dart';
 import 'app/deep_link_listener.dart';
+import 'core/platform/feedback.dart';
 import 'core/platform/haptics.dart';
+import 'core/platform/motion.dart';
 import 'core/settings/app_settings.dart';
 import 'core/version/version_gate.dart';
 import 'data/providers.dart';
@@ -91,6 +93,10 @@ class TripTrackerApp extends ConsumerWidget {
     final amoled =
         ref.watch(amoledPrefProvider) && (ref.watch(flagProvider(('enableAmoledTheme', null))).value ?? false);
     AppHaptics.enabled = ref.watch(hapticsEnabledProvider);
+    AppFeedback.sound = ref.watch(soundFeedbackPrefProvider);
+    AppFeedback.packOn = ref.watch(flagProvider(('enableFeedbackPack', null))).value ?? true;
+    AppMotion.reduce =
+        ref.watch(reduceMotionPrefProvider) && (ref.watch(flagProvider(('enableReduceMotion', null))).value ?? true);
 
     return MaterialApp.router(
       title: 'Trip Tracker',

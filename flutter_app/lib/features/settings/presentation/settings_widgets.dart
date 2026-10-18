@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../shared/theme/app_tokens.dart';
-import '../../../shared/theme/app_typography.dart';
+import '../../../shared/widgets/section_label.dart';
 
 /// Tinted rounded icon tile shown at the start of a settings row (Horizon `.tile.sm`).
 class SettingsIcon extends StatelessWidget {
@@ -38,16 +38,7 @@ class SettingsSection extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 6),
-            child: Text(
-              title.toUpperCase(),
-              style: TextStyle(
-                fontFamily: AppTypography.fontBody,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.8,
-                color: tokens.textMuted,
-              ),
-            ),
+            child: Text(title.toUpperCase(), style: sectionLabelStyle(context)),
           ),
           // Material (not DecoratedBox) so the rows' ink ripples are visible on the card.
           Material(

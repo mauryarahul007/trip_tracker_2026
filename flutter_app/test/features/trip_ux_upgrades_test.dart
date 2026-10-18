@@ -25,6 +25,12 @@ Future<void> openTab(WidgetTester tester, Seed s, String tab) async {
   await settle(tester, rounds: 14);
 }
 
+/// Scrolls the Summary list until [f] is built (the page is taller now: cards above the transfers).
+Future<void> toText(WidgetTester tester, Finder f, {double delta = 300}) async {
+  final list = find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable));
+  await tester.scrollUntilVisible(f, delta, scrollable: list);
+}
+
 void main() {
   testApp('trip header strip shows status, dates and avatars on a tab; off with the flag', (tester) async {
     await pumpApp(tester, user: asha);
@@ -130,16 +136,22 @@ void main() {
       );
       await addExpense(tester, s, amount: 90); // Asha paid for three; Ben and Cara (group Duo) owe 30 each
       await openLedger(tester, s);
+      await toText(tester, key('settle-view-toggle'));
       expect(key('settle-view-toggle'), findsOneWidget);
+      await toText(tester, find.text('Duo pays Asha'));
       expect(find.text('Duo pays Asha'), findsOneWidget); // group view
       expect(find.text('Ben pays Asha'), findsNothing);
+      await toText(tester, find.text('Person view'), delta: -300);
       await tester.tap(find.text('Person view'));
       await settle(tester, rounds: 6);
+      await toText(tester, find.text('Ben pays Asha'));
       expect(find.text('Ben pays Asha'), findsOneWidget);
       expect(find.text('Cara pays Asha'), findsOneWidget);
       expect(find.text('Duo pays Asha'), findsNothing);
+      await toText(tester, find.text('Group view'), delta: -300);
       await tester.tap(find.text('Group view'));
       await settle(tester, rounds: 6);
+      await toText(tester, find.text('Duo pays Asha'));
       expect(find.text('Duo pays Asha'), findsOneWidget);
     });
   }
@@ -162,6 +174,7 @@ void main() {
     await addExpense(tester, s, amount: 90);
     await openLedger(tester, s);
     expect(key('settle-view-toggle'), findsNothing);
+    await toText(tester, find.text('Duo pays Asha'));
     expect(find.text('Duo pays Asha'), findsOneWidget);
   });
 

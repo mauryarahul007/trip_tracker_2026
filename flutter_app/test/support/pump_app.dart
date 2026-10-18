@@ -116,7 +116,11 @@ Future<TestApp> pumpApp(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  SharedPreferences.setMockInitialValues({if (user != null && onboarded) onboardedKey(user.id): true, ...prefsExtra});
+  SharedPreferences.setMockInitialValues({
+    if (user != null && onboarded) onboardedKey(user.id): true,
+    'tour.done': true, // the first-run tour has its own tests; elsewhere it would sit on top of the Trips list
+    ...prefsExtra,
+  });
   final prefs = await SharedPreferences.getInstance();
   final t = TestApp(
     auth: FakeAuthRepository(user: user, paused: signInsPaused),
