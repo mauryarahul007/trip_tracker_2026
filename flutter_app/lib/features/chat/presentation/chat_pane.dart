@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../app/auth_state.dart';
 import '../../../data/providers.dart';
@@ -32,6 +33,18 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
   final _scroll = ScrollController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        try {
+          unawaited(ref.read(syncCoordinatorProvider).pull.syncTrip(widget.tripId));
+        } catch (_) {}
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _input.dispose();
     _scroll.dispose();
@@ -54,6 +67,8 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     final me = ref.watch(myMemberIdProvider(widget.tripId));
     final dirty = ref.watch(dirtyIdsProvider).value ?? const <String>{};
     final showLiveBanner = ref.watch(flagProvider(('enableLiveLocationShare', widget.tripId))).value ?? false;
+    final outboxTicksOn = ref.watch(flagProvider(('enableChatOfflineOutbox', widget.tripId))).value ?? false;
+    final readReceiptsOn = ref.watch(flagProvider(('enableChatReadReceipts', widget.tripId))).value ?? false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _markSeen(messages);
     });
@@ -86,15 +101,31 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                       children: [
                         if (showDay)
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             child: Center(
-                              child: Text(
-                                _day(m.createdAt),
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontMono,
-                                  fontSize: 10.5,
-                                  letterSpacing: 1.1,
-                                  color: context.tokens.textMuted,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: context.tokens.bgSurface,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: context.tokens.borderColor.withValues(alpha: 0.6)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.04),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  _formatDayLabel(m.createdAt),
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontMono,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5,
+                                    color: context.tokens.textSecondary,
+                                  ),
                                 ),
                               ),
                             ),
@@ -107,7 +138,15 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                         else if (_isEvent(m))
                           _event(context, m, dirty.contains(m.id))
                         else
-                          _bubble(context, m, members[m.memberId]?.name ?? '', m.memberId == me, dirty.contains(m.id)),
+                          _bubble(
+                            context,
+                            m,
+                            members[m.memberId]?.name ?? '',
+                            m.memberId == me,
+                            dirty.contains(m.id),
+                            outboxTicksOn: outboxTicksOn,
+                            readReceiptsOn: readReceiptsOn,
+                          ),
                       ],
                     );
                   },
@@ -152,41 +191,112 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
 
   bool _isEvent(TripMessage m) => m.eventKind != null && m.eventKind != 'text';
 
-  Widget _bubble(BuildContext context, TripMessage m, String name, bool mine, bool pending) {
+  Widget _bubble(
+    BuildContext context,
+    TripMessage m,
+    String name,
+    bool mine,
+    bool pending, {
+    required bool outboxTicksOn,
+    required bool readReceiptsOn,
+  }) {
     final l10n = context.l10n;
+    final timeStr = _formatTime(m.createdAt);
+
+    Widget? statusIcon;
+    if (mine) {
+      if (pending) {
+        statusIcon = Icon(
+          Icons.access_time_rounded,
+          size: 11,
+          key: Key('chat-status-pending-${m.id}'),
+          color: context.tokens.textMuted,
+        );
+      } else if (readReceiptsOn) {
+        statusIcon = Icon(
+          Icons.done_all_rounded,
+          size: 14,
+          key: Key('chat-status-read-${m.id}'),
+          color: context.tokens.primaryAccent,
+        );
+      } else if (outboxTicksOn) {
+        statusIcon = Icon(
+          Icons.done_all_rounded,
+          size: 14,
+          key: Key('chat-status-sent-${m.id}'),
+          color: context.tokens.textMuted,
+        );
+      }
+    }
+
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: GestureDetector(
         key: Key('chat-bubble-${m.id}'),
         onLongPress: mine ? () => _edit(m) : null,
         child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          constraints: const BoxConstraints(maxWidth: 280),
+          margin: const EdgeInsets.symmetric(vertical: 3),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+          constraints: const BoxConstraints(maxWidth: 290),
           decoration: BoxDecoration(
             color: mine ? context.tokens.tones.mint.bg : context.tokens.bgSurface,
             boxShadow: mine ? null : context.tokens.shadowSm,
             borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(20),
-              topRight: const Radius.circular(20),
-              bottomLeft: Radius.circular(mine ? 20 : 6),
-              bottomRight: Radius.circular(mine ? 6 : 20),
+              topLeft: const Radius.circular(16),
+              topRight: const Radius.circular(16),
+              bottomLeft: Radius.circular(mine ? 16 : 4),
+              bottomRight: Radius.circular(mine ? 4 : 16),
             ),
           ),
-          child: DefaultTextStyle.merge(
-            style: TextStyle(color: context.tokens.textPrimary),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (!mine)
-                  Text(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!mine && name.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
                     name,
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: context.tokens.primaryAccent),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: context.tokens.primaryAccent,
+                    ),
                   ),
-                Text(m.body),
-                if (pending) Text(l10n.chatPending, style: const TextStyle(fontSize: 11)),
-              ],
-            ),
+                ),
+              Text(
+                m.body,
+                style: TextStyle(color: context.tokens.textPrimary, fontSize: 14.5),
+              ),
+              const SizedBox(height: 2),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (m.editedAt != null) ...[
+                    Text(
+                      'edited · ',
+                      style: TextStyle(fontSize: 10, color: context.tokens.textMuted, fontStyle: FontStyle.italic),
+                    ),
+                  ],
+                  if (timeStr.isNotEmpty)
+                    Text(
+                      timeStr,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontFamily: AppTypography.fontMono,
+                        color: context.tokens.textMuted,
+                      ),
+                    ),
+                  if (statusIcon != null) ...[
+                    const SizedBox(width: 4),
+                    statusIcon,
+                  ] else if (pending) ...[
+                    const SizedBox(width: 4),
+                    Text(l10n.chatPending, style: const TextStyle(fontSize: 10)),
+                  ],
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -195,24 +305,84 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
 
   Widget _event(BuildContext context, TripMessage m, bool pending) {
     final expenseId = m.payload?['expenseId'] as String?;
+    final isExpense = expenseId != null || (m.eventKind?.contains('expense') ?? false);
+    final isSettlement = m.eventKind?.contains('settle') ?? false;
+
     return Align(
       alignment: Alignment.center,
       child: InkWell(
         key: Key('chat-event-${m.id}'),
         onTap: expenseId == null ? null : () => _openExpense(expenseId),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 6),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          constraints: const BoxConstraints(maxWidth: 340),
           decoration: BoxDecoration(
             color: context.tokens.bgSurface,
-            boxShadow: context.tokens.shadowSm,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: context.tokens.borderColor),
+            boxShadow: context.tokens.shadowSm,
           ),
-          child: Column(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(m.body),
-              if (pending) Text(context.l10n.chatPending, style: const TextStyle(fontSize: 11)),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: isSettlement
+                      ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                      : context.tokens.primaryAccent.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    isSettlement ? '🤝' : (isExpense ? '🧾' : '📌'),
+                    style: const TextStyle(fontSize: 15),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      m.body,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: context.tokens.textPrimary,
+                      ),
+                    ),
+                    if (expenseId != null) ...[
+                      const SizedBox(height: 2),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'View expense details',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: context.tokens.primaryAccent,
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          Icon(Icons.arrow_forward_ios_rounded, size: 9, color: context.tokens.primaryAccent),
+                        ],
+                      ),
+                    ],
+                    if (pending)
+                      Text(
+                        context.l10n.chatPending,
+                        style: TextStyle(fontSize: 10.5, color: context.tokens.textMuted),
+                      ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -232,6 +402,15 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     await ref
         .read(messageRepositoryProvider)
         .send(tripId: widget.tripId, memberId: memberId, senderName: name, body: body);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _scroll.hasClients) {
+        _scroll.animateTo(
+          _scroll.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   Future<void> _edit(TripMessage m) async {
@@ -264,8 +443,30 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     );
   }
 
+  String _formatDayLabel(int ms) {
+    if (ms <= 0) return '';
+    final d = DateTime.fromMillisecondsSinceEpoch(ms).toLocal();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(d.year, d.month, d.day);
+    final diff = today.difference(target).inDays;
+
+    if (diff == 0) return 'Today';
+    if (diff == 1) return 'Yesterday';
+    return DateFormat('EEE, d MMM y').format(d);
+  }
+
   String _day(int ms) {
     final d = DateTime.fromMillisecondsSinceEpoch(ms);
     return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  }
+
+  String _formatTime(int ms) {
+    if (ms <= 0) return '';
+    final d = DateTime.fromMillisecondsSinceEpoch(ms).toLocal();
+    final hour = d.hour % 12 == 0 ? 12 : d.hour % 12;
+    final min = d.minute.toString().padLeft(2, '0');
+    final period = d.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$min $period';
   }
 }

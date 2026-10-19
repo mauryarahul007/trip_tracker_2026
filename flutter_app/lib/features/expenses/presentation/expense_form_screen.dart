@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../shared/widgets/cached_photo.dart';
+import '../../../shared/widgets/receipt_photo_viewer_dialog.dart';
 import '../../../core/platform/feedback.dart';
 
 import '../../notifications/presentation/push_prompt.dart';
@@ -219,17 +221,10 @@ class _FormBodyState extends ConsumerState<_FormBody> {
             s.receiptPath != null
                 ? Row(
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.file(
-                          File(s.receiptPath!),
-                          key: const Key('receipt-preview'),
-                          width: 64,
-                          height: 64,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) =>
-                              const SizedBox(width: 64, height: 64, child: Icon(Icons.image_outlined)),
-                        ),
+                      _FormReceiptThumbnail(
+                        editingId: args.editingId,
+                        receiptPath: s.receiptPath!,
+                        title: s.title,
                       ),
                       const SizedBox(width: 12),
                       Expanded(child: Text(l10n.formReceiptAttached)),
@@ -1100,4 +1095,86 @@ class TripFxConfigDefaults {
 extension on TripFxConfig {
   TripFxConfig copyWithRates(Map<String, double> rates) =>
       TripFxConfig(customRates: rates, markupPercent: markupPercent);
+}
+
+class _FormReceiptThumbnail extends ConsumerWidget {
+  const _FormReceiptThumbnail({
+    required this.editingId,
+    required this.receiptPath,
+    required this.title,
+  });
+
+  final String? editingId;
+  final String receiptPath;
+  final String title;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final clean = receiptPath.replaceFirst('file://', '');
+    final localExists = File(clean).existsSync();
+    final preview = localExists
+        ? clean
+        : ref.watch(receiptPreviewProvider((editingId ?? '', receiptPath))).value;
+
+    final resolved = preview ?? (clean.startsWith('http') ? clean : null);
+
+    Widget imageWidget;
+    if (resolved != null && (resolved.startsWith('http://') || resolved.startsWith('https://'))) {
+      imageWidget = Image(
+        image: CachedPhotoProvider(resolved),
+        key: const Key('receipt-preview'),
+        width: 64,
+        height: 64,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const SizedBox(width: 64, height: 64, child: Icon(Icons.image_outlined)),
+      );
+    } else if (resolved != null && File(resolved.replaceFirst('file://', '')).existsSync()) {
+      imageWidget = Image.file(
+        File(resolved.replaceFirst('file://', '')),
+        key: const Key('receipt-preview'),
+        width: 64,
+        height: 64,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const SizedBox(width: 64, height: 64, child: Icon(Icons.image_outlined)),
+      );
+    } else {
+      imageWidget = const SizedBox(
+        width: 64,
+        height: 64,
+        child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+      );
+    }
+
+    return InkWell(
+      key: const Key('receipt-preview-tap'),
+      borderRadius: BorderRadius.circular(8),
+      onTap: resolved != null
+          ? () => showReceiptPhotoViewer(
+                context,
+                previewPath: resolved,
+                title: title.isEmpty ? 'Receipt' : title,
+              )
+          : null,
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: imageWidget,
+          ),
+          Positioned(
+            bottom: 2,
+            right: 2,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.zoom_in_rounded, size: 14, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

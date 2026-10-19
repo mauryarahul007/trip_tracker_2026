@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -330,6 +331,7 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
           discount: e.itemizedConfig?.discount == null ? '' : _numText(e.itemizedConfig!.discount!),
           newExpenseId: e.id,
           excludeFromTotals: e.excludeFromTotals,
+          receiptPath: e.receiptPath,
         );
       }
     }
@@ -874,7 +876,9 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
     try {
       StagedReceipt? staged;
       final id = editing ? args.editingId! : state.newExpenseId;
-      if (state.receiptPath != null) staged = await ref.read(receiptStoreProvider).stage(id, state.receiptPath!);
+      if (state.receiptPath != null && File(state.receiptPath!).existsSync()) {
+        staged = await ref.read(receiptStoreProvider).stage(id, state.receiptPath!);
+      }
       final uid = ref.read(authStateProvider).userId ?? '';
       final outcome = await ref
           .read(expenseRepositoryProvider)

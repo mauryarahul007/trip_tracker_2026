@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../../../../shared/widgets/cached_photo.dart';
+import '../../../../shared/widgets/receipt_photo_viewer_dialog.dart';
 
 import 'dart:io';
 
@@ -189,7 +190,12 @@ class ExpenseDetailSheet extends ConsumerWidget {
               ),
             ],
           ),
-          _ReceiptPreview(expenseId: e.id, remotePath: e.receiptPath),
+          _ReceiptPreview(
+            expenseId: e.id,
+            remotePath: e.receiptPath,
+            title: e.title,
+            subtitle: '${e.date} · ${formatMoney(context, e.amount, e.currency)}',
+          ),
           if (e.currency != base) Text(e.currency, style: TextStyle(color: tokens.textMuted, fontSize: 12)),
           const SizedBox(height: 12),
           if (e.disputedAt != null)
@@ -365,9 +371,17 @@ class ExpenseDetailSheet extends ConsumerWidget {
 }
 
 class _ReceiptPreview extends ConsumerWidget {
-  const _ReceiptPreview({required this.expenseId, required this.remotePath});
+  const _ReceiptPreview({
+    required this.expenseId,
+    required this.remotePath,
+    this.title,
+    this.subtitle,
+  });
+
   final String expenseId;
   final String? remotePath;
+  final String? title;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -376,23 +390,59 @@ class _ReceiptPreview extends ConsumerWidget {
     final net = preview.startsWith('http');
     return Padding(
       padding: const EdgeInsets.only(top: 12),
-      child: ClipRRect(
+      child: InkWell(
+        key: const Key('detail-receipt-tap'),
         borderRadius: BorderRadius.circular(12),
-        child: net
-            ? Image(
-                image: CachedPhotoProvider(preview),
-                key: const Key('detail-receipt'),
-                height: 160,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              )
-            : Image.file(
-                File(preview),
-                key: const Key('detail-receipt'),
-                height: 160,
-                width: double.infinity,
-                fit: BoxFit.cover,
+        onTap: () => showReceiptPhotoViewer(
+          context,
+          previewPath: preview,
+          title: title,
+          subtitle: subtitle,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Stack(
+            children: [
+              net
+                  ? Image(
+                      image: CachedPhotoProvider(preview),
+                      key: const Key('detail-receipt'),
+                      height: 160,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    )
+                  : Image.file(
+                      File(preview),
+                      key: const Key('detail-receipt'),
+                      height: 160,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+              Positioned(
+                bottom: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.zoom_in_rounded, size: 14, color: Colors.white),
+                      SizedBox(width: 4),
+                      Text(
+                        'Tap to view',
+                        style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
               ),
+            ],
+          ),
+        ),
       ),
     );
   }

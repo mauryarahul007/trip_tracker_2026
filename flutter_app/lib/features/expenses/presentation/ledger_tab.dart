@@ -71,6 +71,7 @@ import '../application/trip_budget.dart';
 import '../../trips/presentation/widgets/trip_card.dart' show tripHeadline;
 import 'closeout_sheet.dart';
 import 'widgets/settlement_card.dart';
+import 'widgets/upi_payment_sheet.dart';
 
 /// "₹1,200.00" -> ("₹1,200", ".00") so the decimals can be dimmed (MoneyText).
 (String, String?) _splitMoney(String formatted) {
@@ -372,6 +373,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final tripAccent = _flag(ref, 'enableTripAccent', id) ? ref.watch(tripAccentProvider(id)).value : null;
     // Plan and suggestions: where the budget stands and a few tips from the trip's own numbers.
     final suggestionsOn = _flag(ref, 'enableTripSuggestions', id);
+    final burnRateOn = _flag(ref, 'enableBurnRateInsight', id);
     final burn = trip.startDate.isEmpty
         ? null
         : computeBurnRateInsight(trip.startDate, trip.endDate, totals.totalSpent, ref.read(nowProvider)());
@@ -1392,6 +1394,45 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                         ),
                       ),
                     ],
+                    if (burnRateOn && burn != null) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        key: const Key('burn-rate-pace-card'),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: tokens.tones[BentoTone.butter].bg,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFFF7A00).withValues(alpha: 0.3)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'PACE · DAY ${burn.daysElapsed} OF ${burn.daysTotal}',
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.8,
+                                color: Color(0xFFFF7A00),
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'At this pace, ~${formatMoney(context, burn.projectedTotal, cur)} by trip end',
+                              style: TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w800,
+                                color: tokens.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              '${formatMoney(context, burn.dailyAverage, cur)}/day average so far',
+                              style: TextStyle(fontSize: 12, color: tokens.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     if (suggestionsOn && tips.isNotEmpty) ...[
                       if (budgetOn) Divider(height: 22, color: tokens.borderColor),
                       if (!budgetOn) const SizedBox(height: 8),
@@ -1859,6 +1900,24 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
     }
   }
 
+  void _openUpiSheet() {
+    final trip = ref.read(tripProvider(widget.tripId)).value;
+    final amount = _value ?? widget.transfer.amount;
+    UpiPaymentSheet.show(
+      context,
+      fromName: widget.transfer.fromLabel,
+      toName: widget.transfer.toLabel,
+      toMemberId: widget.transfer.toMemberId,
+      initialUpiId: _upi.text.trim(),
+      amount: amount,
+      currency: widget.currency,
+      tripName: trip?.name,
+      onConfirmSettled: () async {
+        await _submit();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -1939,11 +1998,27 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
               onChanged: (_) => setState(() => _error = null),
             ),
             const SizedBox(height: 8),
-            AppButton(
-              key: const Key('settle-upi-pay'),
-              label: l10n.upiPay,
-              variant: AppButtonVariant.secondary,
-              onPressed: _payUpi,
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    key: const Key('settle-upi-pay'),
+                    label: l10n.upiPay,
+                    variant: AppButtonVariant.secondary,
+                    onPressed: _payUpi,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: AppButton(
+                    key: const Key('settle-upi-apps'),
+                    label: 'Apps & QR',
+                    icon: Icons.qr_code_2_rounded,
+                    variant: AppButtonVariant.secondary,
+                    onPressed: _openUpiSheet,
+                  ),
+                ),
+              ],
             ),
           ],
           if (shareOn) ...[

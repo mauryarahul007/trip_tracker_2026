@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:drift/drift.dart' show Value;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/logic/sync_merge.dart';
@@ -18,6 +20,9 @@ abstract class TripRemoteReader {
   /// Soft-deleted expenses still inside the recycle-bin window. `get_trip_changes`
   /// only returns their ids (as tombstones), so the bin needs its own read.
   Future<List<Map<String, dynamic>>> recycledExpenses(String tripId) async => const [];
+
+  /// Messages posted in this trip's chat thread.
+  Future<List<Map<String, dynamic>>> tripMessages(String tripId, {DateTime? since}) async => const [];
 }
 
 class SupabaseTripReader implements TripRemoteReader {
@@ -42,6 +47,16 @@ class SupabaseTripReader implements TripRemoteReader {
   @override
   Future<List<Map<String, dynamic>>> recycledExpenses(String tripId) async {
     final rows = await _client.from('expenses').select().eq('trip_id', tripId).not('deleted_at', 'is', null);
+    return [for (final r in rows) Map<String, dynamic>.from(r)];
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> tripMessages(String tripId, {DateTime? since}) async {
+    var query = _client.from('trip_messages').select().eq('trip_id', tripId);
+    if (since != null) {
+      query = query.gt('created_at', since.toUtc().toIso8601String());
+    }
+    final rows = await query.order('created_at', ascending: true);
     return [for (final r in rows) Map<String, dynamic>.from(r)];
   }
 }
@@ -104,6 +119,10 @@ class TripPullSync {
       } catch (_) {}
       if (_outbox.epoch == epoch) break;
     }
+    var remoteMessages = const <Map<String, dynamic>>[];
+    try {
+      remoteMessages = await _reader.tripMessages(tripId);
+    } catch (_) {}
     final queue = (await _outbox.all()).map((i) => i.toQueuedOp()).toList();
     final dirty = collectDirtyIds(queue);
 
@@ -172,6 +191,26 @@ class TripPullSync {
       for (final r in recycled) {
         if (dirty.contains(r['id'])) continue;
         await _db.into(_db.expensesTable).insertOnConflictUpdate(expenseToCompanion(expenseFromRow(r)));
+      }
+
+      for (final r in remoteMessages) {
+        final id = r['id'] as String?;
+        if (id == null || dirty.contains(id)) continue;
+        final m = messageFromRow(r);
+        await _db
+            .into(_db.tripMessagesTable)
+            .insertOnConflictUpdate(
+              TripMessagesTableCompanion.insert(
+                id: m.id,
+                tripId: m.tripId,
+                userId: m.memberId,
+                senderName: (r['sender_name'] as String?) ?? '',
+                kind: m.eventKind ?? 'text',
+                message: m.body,
+                createdAt: DateTime.fromMillisecondsSinceEpoch(m.createdAt, isUtc: true).toIso8601String(),
+                domainJson: Value(jsonEncode(m.toJson())),
+              ),
+            );
       }
 
       await _db

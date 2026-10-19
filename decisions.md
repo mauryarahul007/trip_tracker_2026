@@ -5140,3 +5140,17 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** Day totals and sticky day headers already existed, so only Jump to today was added. Special full-screen sheets (passport, wrapped) keep their own look.
 * **Release Cut:** version bumped to `3.63.0` via `npm run release:minor`.
 
+---
+
+## Flutter v3.64.0: 1-Tap UPI settlement sheet, WhatsApp-style chat timeline, layover connection buffers, and receipt photo viewer
+* **Context:** Mobile users required seamless 1-tap peer-to-peer UPI settlements matching web capabilities, persistence and modern WhatsApp-style messaging experience in trip chat, multi-leg travel pass transition with tight connection warnings, and high-fidelity receipt photo inspection.
+* **Decision:** Reused web UPI deep-link architectures and app schemes (`tez://`, `phonepe://`, `paytmmp://`, `cred://`, `bhim://`, `upi://`) inside Flutter:
+  - **1-Tap UPI Settlement (`UpiPaymentSheet`):** Added native bottom sheet featuring a 5-app quick launcher grid, dynamic QR code (`QrImageView`) for on-screen scanning, 1-tap UPI ID and payment URI clipboard copy, and "I Have Paid" instant settlement recording in the ledger.
+  - **WhatsApp Chat Experience:** Added WhatsApp-style sticky date divider capsules ("Today", "Yesterday", "EEE, d MMM y") and rich interactive event cards for expenses and settlements with 1-tap navigation to expense details.
+  - **Multi-Leg Travel Passes & Layover Warnings:** Automated progression from completed Leg 1 to upcoming Leg 2; calculated connection duration with prominent warnings (`⚠️ Tight Connection · Xh Ym at <Location>` under 90 minutes).
+  - **Budget Pace / Burn Rate:** Added ledger burn rate indicator calculating elapsed trip days, average daily burn, and projected total.
+  - **Receipt Photo Viewer:** Integrated interactive full-screen preview dialog with pinch-to-zoom and dark backdrop when tapping receipt thumbnails.
+* **Trade-offs Accepted:** UPI deep-link launching relies on installed apps on the Android/iOS device; falls back gracefully to copying the UPI ID and showing an inline snackbar if the selected app is absent.
+* **Release Cut:** version bumped to `3.64.0` via `npm run release:minor`.
+
+

@@ -127,19 +127,42 @@ double? dailyAllowance(double budget, double spent, int daysLeft) {
   return left <= 0 ? 0 : left / daysLeft;
 }
 
-/// The earliest pass that starts at or after [now] (passes without a parseable start are ignored).
+/// The earliest pass that is upcoming or currently underway (completed passes or passes without a parseable start are ignored).
 TravelPass? nextPass(Iterable<TravelPass> passes, DateTime now) {
-  TravelPass? best;
-  DateTime? bestAt;
+  TravelPass? bestActive;
+  TravelPass? bestUpcoming;
+  DateTime? bestUpcomingAt;
+
   for (final p in passes) {
-    final at = DateTime.tryParse(p.startDateTime ?? '');
-    if (at == null || at.isBefore(now)) continue;
-    if (bestAt == null || at.isBefore(bestAt)) {
-      best = p;
-      bestAt = at;
+    final startStr = p.startDateTime;
+    if (startStr == null || startStr.trim().isEmpty) continue;
+    final start = DateTime.tryParse(startStr.trim());
+    if (start == null) continue;
+
+    final endStr = p.endDateTime;
+    final end = (endStr != null && endStr.trim().isNotEmpty) ? DateTime.tryParse(endStr.trim()) : null;
+
+    // If an explicit end time has passed, the leg is completed.
+    if (end != null && (now.isAfter(end) || now.isAtSameMomentAs(end))) {
+      continue;
+    }
+
+    if (start.isBefore(now)) {
+      // Pass already departed. If it has not reached end time, it is currently underway.
+      if (end != null && now.isBefore(end)) {
+        bestActive ??= p;
+      }
+      continue;
+    }
+
+    // Pass starts at or after now. Pick the earliest upcoming.
+    if (bestUpcomingAt == null || start.isBefore(bestUpcomingAt)) {
+      bestUpcoming = p;
+      bestUpcomingAt = start;
     }
   }
-  return best;
+
+  return bestActive ?? bestUpcoming;
 }
 
 /// What was spent on the day [ymd] (yyyy-MM-dd), from per-day totals.

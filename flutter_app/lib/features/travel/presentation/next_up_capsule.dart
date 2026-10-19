@@ -11,39 +11,18 @@ import '../../../shared/theme/app_tokens.dart';
 import 'live_travel_status_modal.dart';
 import 'pass_scanner_modal.dart';
 
-class ImminentPassTarget {
-  const ImminentPassTarget({
-    required this.pass,
-    required this.status,
-    required this.countdownText,
-    required this.badgeColor,
-    required this.diffHours,
-  });
+DateTime? parsePassDateTime(String? dateStr) {
+  if (dateStr == null || dateStr.trim().isEmpty) return null;
+  final raw = dateStr.trim();
+  final direct = DateTime.tryParse(raw);
+  if (direct != null && raw.contains(':')) return direct;
 
-  final TravelPass pass;
-  final String status;
-  final String countdownText;
-  final Color badgeColor;
-  final double diffHours;
-}
-
-ImminentPassTarget? evaluateImminentPass(List<TravelPass> passes, [DateTime? referenceNow]) {
-  if (passes.isEmpty) return null;
-  final now = referenceNow ?? DateTime.now();
-
-  final candidates = <ImminentPassTarget>[];
-
-  for (final pass in passes) {
-    final startStr = pass.startDateTime;
-    if (startStr == null || startStr.trim().isEmpty) continue;
-
-    DateTime? eventTime;
-    final parsedFlight = parseFlightDate(startStr);
-    if (parsedFlight != null &&
-        parsedFlight.timeString != null &&
-        parsedFlight.year != null &&
-        parsedFlight.month != null &&
-        parsedFlight.day != null) {
+  final parsedFlight = parseFlightDate(raw);
+  if (parsedFlight != null &&
+      parsedFlight.year != null &&
+      parsedFlight.month != null &&
+      parsedFlight.day != null) {
+    if (parsedFlight.timeString != null) {
       final timeMatch = RegExp(r'(\d{1,2}):(\d{2})(?:\s*([AaPp][Mm]))?').firstMatch(parsedFlight.timeString!);
       if (timeMatch != null) {
         var h = int.parse(timeMatch.group(1)!);
@@ -51,26 +30,89 @@ ImminentPassTarget? evaluateImminentPass(List<TravelPass> passes, [DateTime? ref
         final ampm = timeMatch.group(3)?.toUpperCase();
         if (ampm == 'PM' && h < 12) h += 12;
         if (ampm == 'AM' && h == 12) h = 0;
-        eventTime = DateTime(parsedFlight.year!, parsedFlight.month!, parsedFlight.day!, h, m);
+        return DateTime(parsedFlight.year!, parsedFlight.month!, parsedFlight.day!, h, m);
       }
     }
-    eventTime ??= DateTime.tryParse(startStr);
-    if (eventTime == null) continue;
+    return DateTime(parsedFlight.year!, parsedFlight.month!, parsedFlight.day!);
+  }
+  return direct;
+}
 
-    final diffMs = eventTime.difference(now).inMilliseconds;
+class ImminentPassTarget {
+  const ImminentPassTarget({
+    required this.pass,
+    required this.status,
+    required this.countdownText,
+    required this.badgeColor,
+    required this.diffHours,
+    this.isCompleted = false,
+    this.layoverInfo,
+  });
+
+  final TravelPass pass;
+  final String status;
+  final String countdownText;
+  final Color badgeColor;
+  final double diffHours;
+  final bool isCompleted;
+  final String? layoverInfo;
+}
+
+ImminentPassTarget? evaluateImminentPass(List<TravelPass> passes, [DateTime? referenceNow]) {
+  if (passes.isEmpty) return null;
+  final now = referenceNow ?? DateTime.now();
+
+  final activeCandidates = <ImminentPassTarget>[];
+  final upcomingCandidates = <ImminentPassTarget>[];
+  final completedCandidates = <({ImminentPassTarget target, double elapsedHours})>[];
+
+  for (final pass in passes) {
+    final startTime = parsePassDateTime(pass.startDateTime);
+    if (startTime == null) continue;
+
+    var endTime = parsePassDateTime(pass.endDateTime);
+    if (endTime != null && endTime.isBefore(startTime)) {
+      endTime = endTime.add(const Duration(days: 1));
+    }
+
+    final diffMs = startTime.difference(now).inMilliseconds;
     final diffHours = diffMs / (1000 * 60 * 60);
+    final isFlight = pass.type.toLowerCase() == 'flight';
 
-    // Only include passes occurring within 36 hours (or departed < 3 hours ago)
-    if (diffHours >= -3 && diffHours <= 36) {
+    final bool isCompleted;
+    final bool isActive;
+    final bool isUpcoming;
+    final double elapsedHours;
+
+    if (endTime != null) {
+      isCompleted = now.isAfter(endTime) || now.isAtSameMomentAs(endTime);
+      isActive = !isCompleted && (now.isAfter(startTime) || now.isAtSameMomentAs(startTime));
+      isUpcoming = now.isBefore(startTime);
+      elapsedHours = now.difference(endTime).inMilliseconds / (1000 * 60 * 60);
+    } else {
+      isCompleted = diffHours < -3.0;
+      isActive = diffHours < 0 && diffHours >= -3.0;
+      isUpcoming = diffHours >= 0;
+      elapsedHours = -diffHours;
+    }
+
+    if (isActive) {
+      final countdownText = isFlight ? 'En Route / Airborne' : 'In Transit / Active';
+      activeCandidates.add(
+        ImminentPassTarget(
+          pass: pass,
+          status: 'en-route',
+          countdownText: countdownText,
+          badgeColor: const Color(0xFF10B981),
+          diffHours: diffHours,
+        ),
+      );
+    } else if (isUpcoming && diffHours <= 36.0) {
       String status;
       String countdownText;
       Color badgeColor;
 
-      if (diffHours < 0) {
-        status = 'en-route';
-        countdownText = 'En Route / Airborne';
-        badgeColor = const Color(0xFF10B981);
-      } else if (diffHours <= 1.5) {
+      if (diffHours <= 1.5) {
         status = 'boarding-soon';
         final mins = (diffMs / (1000 * 60)).round().clamp(1, 90);
         countdownText = 'Boarding in ${mins}m';
@@ -83,12 +125,13 @@ ImminentPassTarget? evaluateImminentPass(List<TravelPass> passes, [DateTime? ref
         badgeColor = const Color(0xFF2563EB);
       } else {
         status = 'today';
-        final dStr = parsedFlight?.formattedDateString ?? startStr.split('T').first;
+        final parsedFlight = parseFlightDate(pass.startDateTime);
+        final dStr = parsedFlight?.formattedDateString ?? pass.startDateTime!.split('T').first;
         countdownText = 'Tomorrow · $dStr';
         badgeColor = const Color(0xFF6366F1);
       }
 
-      candidates.add(
+      upcomingCandidates.add(
         ImminentPassTarget(
           pass: pass,
           status: status,
@@ -97,12 +140,79 @@ ImminentPassTarget? evaluateImminentPass(List<TravelPass> passes, [DateTime? ref
           diffHours: diffHours,
         ),
       );
+    } else if (isCompleted && elapsedHours <= 3.0) {
+      final countdownText = isFlight ? 'Landed / Arrived' : 'Completed / Arrived';
+      completedCandidates.add((
+        target: ImminentPassTarget(
+          pass: pass,
+          status: 'completed',
+          countdownText: countdownText,
+          badgeColor: const Color(0xFF64748B),
+          diffHours: diffHours,
+          isCompleted: true,
+        ),
+        elapsedHours: elapsedHours,
+      ));
     }
   }
 
-  if (candidates.isEmpty) return null;
-  candidates.sort((a, b) => a.diffHours.compareTo(b.diffHours));
-  return candidates.first;
+  // Priority 1: Currently active / underway leg (most recent departure first)
+  if (activeCandidates.isNotEmpty) {
+    activeCandidates.sort((a, b) => b.diffHours.compareTo(a.diffHours));
+    return activeCandidates.first;
+  }
+
+  // Priority 2: Next upcoming leg (earliest departure first)
+  if (upcomingCandidates.isNotEmpty) {
+    upcomingCandidates.sort((a, b) => a.diffHours.compareTo(b.diffHours));
+    final bestUpcoming = upcomingCandidates.first;
+
+    // Detect if there's a recently completed predecessor pass that forms a layover connection
+    String? layoverInfo;
+    for (final c in completedCandidates) {
+      final prevPass = c.target.pass;
+      final prevEndTime = parsePassDateTime(prevPass.endDateTime);
+      final nextStartTime = parsePassDateTime(bestUpcoming.pass.startDateTime);
+      if (prevEndTime != null && nextStartTime != null && nextStartTime.isAfter(prevEndTime)) {
+        final layoverMs = nextStartTime.difference(prevEndTime).inMilliseconds;
+        final layoverHours = layoverMs / (1000 * 60 * 60);
+        if (layoverHours > 0 && layoverHours <= 12) {
+          final h = layoverHours.floor();
+          final m = ((layoverHours - h) * 60).round();
+          final layoverLocation = prevPass.destination ?? bestUpcoming.pass.origin ?? '';
+          final locSuffix = layoverLocation.isNotEmpty ? ' at $layoverLocation' : '';
+          final timeStr = m > 0 ? '${h}h ${m}m' : '${h}h';
+          if (layoverHours <= 1.5) {
+            layoverInfo = '⚠️ Tight Connection · $timeStr$locSuffix';
+          } else {
+            layoverInfo = '⏱️ Layover: $timeStr$locSuffix';
+          }
+          break;
+        }
+      }
+    }
+
+    if (layoverInfo != null) {
+      return ImminentPassTarget(
+        pass: bestUpcoming.pass,
+        status: bestUpcoming.status,
+        countdownText: bestUpcoming.countdownText,
+        badgeColor: bestUpcoming.badgeColor,
+        diffHours: bestUpcoming.diffHours,
+        isCompleted: bestUpcoming.isCompleted,
+        layoverInfo: layoverInfo,
+      );
+    }
+    return bestUpcoming;
+  }
+
+  // Priority 3: Recently completed leg (only if no active or upcoming leg, within 3h of completion)
+  if (completedCandidates.isNotEmpty) {
+    completedCandidates.sort((a, b) => a.elapsedHours.compareTo(b.elapsedHours));
+    return completedCandidates.first.target;
+  }
+
+  return null;
 }
 
 /// Dynamic Next Up travel countdown capsule with gate scanner and radar integrations.
@@ -162,9 +272,13 @@ class NextUpTravelCapsule extends ConsumerWidget {
                     style: const TextStyle(fontSize: 14),
                   ),
                   const SizedBox(width: 6),
-                  const Text(
-                    'NEXT UP',
-                    style: TextStyle(
+                  Text(
+                    target.status == 'completed'
+                        ? 'COMPLETED'
+                        : target.status == 'en-route'
+                            ? 'EN ROUTE'
+                            : 'NEXT UP',
+                    style: const TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.8,
@@ -236,6 +350,26 @@ class NextUpTravelCapsule extends ConsumerWidget {
                 ),
             ],
           ),
+          if (target.layoverInfo != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              key: const Key('next-up-layover-badge'),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+              ),
+              child: Text(
+                target.layoverInfo!,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
 
           // Quick Action Buttons

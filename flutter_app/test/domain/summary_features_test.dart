@@ -133,6 +133,41 @@ void main() {
     expect(nextPass([pass('past', '2026-10-01T08:00'), pass('undated', null)], now), isNull);
   });
 
+  test('next pass: multi-leg progression selects Leg 2 once Leg 1 reaches its endDateTime', () {
+    final leg1 = TravelPass(
+      id: 'leg1',
+      tripId: 't',
+      type: 'flight',
+      title: 'Leg 1',
+      startDateTime: '2026-10-18T08:00:00',
+      endDateTime: '2026-10-18T10:00:00',
+      createdAt: 0,
+      updatedAt: 0,
+    );
+    final leg2 = TravelPass(
+      id: 'leg2',
+      tripId: 't',
+      type: 'flight',
+      title: 'Leg 2',
+      startDateTime: '2026-10-18T12:00:00',
+      endDateTime: '2026-10-18T14:00:00',
+      createdAt: 0,
+      updatedAt: 0,
+    );
+
+    // At 09:00: Leg 1 is currently underway
+    final at0900 = DateTime(2026, 10, 18, 9, 0);
+    expect(nextPass([leg1, leg2], at0900)?.id, 'leg1');
+
+    // At 10:15: Leg 1 has finished; nextPass automatically returns Leg 2
+    final at1015 = DateTime(2026, 10, 18, 10, 15);
+    expect(nextPass([leg1, leg2], at1015)?.id, 'leg2');
+
+    // At 14:30: Both legs have finished; returns null
+    final at1430 = DateTime(2026, 10, 18, 14, 30);
+    expect(nextPass([leg1, leg2], at1430), isNull);
+  });
+
   test('spent on a day', () {
     expect(spentOn([(date: '2026-10-18', total: 40), (date: '2026-10-19', total: 5)], '2026-10-18'), 40);
     expect(spentOn(const [], '2026-10-18'), 0);
