@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **162** |
+| **Total Tracked** | **163** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **160** |
+| **✅ Shipped** | **161** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -212,6 +212,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-160** | Flutter: Summary mini pass pinned on scroll | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enableSummaryUpgrades. |
 | **FEAT-161** | Flutter: settlement pass flips to show You paid and Your share | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enableYouPaidVsShare. |
 | **FEAT-162** | Flutter: Voice add expense with real speech recognition | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enableVoiceInput. |
+| **FEAT-163** | Flutter: Edit Trip takes one destination box per place | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 036887f (v3.68.2): behind enableTripHeaderActions. |
 
 ---
 

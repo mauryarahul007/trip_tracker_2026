@@ -8482,5 +8482,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-19T14:58:04.704Z",
     "resolutionNote": "Fixed in commit 4f33b89 (v3.68.1). Group settlements are recorded under the signed-in member for their own group's side (settlementPartiesForRecorder on web, planSettlement in Flutter), so a partial payment no longer flips the next one to a groupmate the insert policy rejects."
+  },
+  {
+    "id": "BUG-294",
+    "title": "Flutter: Voice add expense did not work on Android",
+    "description": "Flutter: Voice add expense did not work on Android",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-19T15:11:28.393Z",
+    "updatedAt": "2026-10-19T15:11:31.995Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-19T15:11:31.995Z",
+    "resolutionNote": "Fixed in commit 036887f (v3.68.2): Google recognizer via intent lookup, locale pick, spoken amounts, friendly errors."
   }
 ]
