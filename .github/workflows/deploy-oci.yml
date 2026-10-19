@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Deploy to OCI
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: deploy-ec2
+  group: deploy-oci
   cancel-in-progress: true
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          # This app is served from the domain root on EC2, not a
+          # This app is served from the domain root on OCI, not a
           # /trip_tracker_2026/ subpath like the GitHub Pages build.
           VITE_BASE_PATH: /
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -43,31 +43,31 @@ jobs:
       - name: Install SSH key
         uses: webfactory/ssh-agent@dc588b651fe13675774614f8e6a936a468676387 # v0.9.0
         with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+          ssh-private-key: ${{ secrets.OCI_SSH_KEY }}
 
-      - name: Trust EC2 host key
+      - name: Trust OCI host key
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
+          OCI_HOST: ${{ secrets.OCI_HOST }}
         run: |
-          ssh-keyscan -T 10 -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh-keyscan -T 10 -H "$OCI_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Rsync dist/ to server
         env:
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_HOST: ${{ secrets.EC2_HOST }}
+          OCI_USER: ${{ secrets.OCI_USER }}
+          OCI_HOST: ${{ secrets.OCI_HOST }}
         run: |
           rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o BatchMode=yes" \
             dist/ \
-            "${EC2_USER}@${EC2_HOST}:/var/www/trip-tracker-2026/dist/"
+            "${OCI_USER}@${OCI_HOST}:/var/www/trip-tracker-2026/dist/"
 
       - name: Rsync update bundle to server
         # Nested inside dist/ (nginx's existing docroot) rather than a
         # sibling path, so no server/nginx config change is needed for
         # https://trip-tracker.blackmaroon.in/updates/latest.json to resolve.
         env:
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_HOST: ${{ secrets.EC2_HOST }}
+          OCI_USER: ${{ secrets.OCI_USER }}
+          OCI_HOST: ${{ secrets.OCI_HOST }}
         run: |
           rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o BatchMode=yes" \
             update/ \
-            "${EC2_USER}@${EC2_HOST}:/var/www/trip-tracker-2026/dist/updates/"
+            "${OCI_USER}@${OCI_HOST}:/var/www/trip-tracker-2026/dist/updates/"

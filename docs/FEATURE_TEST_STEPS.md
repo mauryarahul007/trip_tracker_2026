@@ -116,6 +116,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-06 | flutter 3.44 | FLUTTER-P7-FORM-LEDGER | [Flutter: expense form and balances tab](#flutter-p7-form-ledger--flutter-expense-form-and-balances-tab) |
 | 2026-10-06 | flutter 3.44 | FLUTTER-P7-EXPENSES | [Flutter: Expenses tab (list, filters, recycle bin)](#flutter-p7-expenses--flutter-expenses-tab-list-filters-recycle-bin) |
 | 2026-10-06 | flutter 3.44 | FLUTTER-P6 | [Flutter app: auth, trips list, trip shell, join & share](#flutter-p6--flutter-app-auth-trips-list-trip-shell-join--share) |
+| 2026-10-19 | 3.43.13 | SETTLE-GROUP-RLS | [Second partial group settlement no longer fails](#settle-group-rls--second-partial-group-settlement-no-longer-fails) |
 | 2026-10-02 | 3.43.9 | MEMBERS-ROSTER | [Members roster](#members-roster--members-roster) |
 | 2026-10-02 | 3.43.8 | COLLAB-SYNC | [Shared packing, notes, and passes](#collab-sync--shared-packing-notes-and-passes) |
 | 2026-10-02 | unreleased | PASS-STUB-SIMPLIFY | [Simplified pass back (balance hero)](#pass-stub-simplify--simplified-pass-back-balance-hero) |
@@ -2353,6 +2354,9 @@ Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, ne
 ## SETTLE-GROUP-RLS — Second partial group settlement no longer fails
 
 **Commit:** `4f33b89` (BUG-293). **Migrations:** none. A settlement between a group and someone else used to be recorded under the group member with the biggest balance. After one partial payment, that could switch to the other group member. A non-organizer's next settle was then rejected with `new row violates row-level security policy for table "expenses"`. The signed-in member is now recorded for their own group's side. Fixed on web (`settlementPartiesForRecorder`) and Flutter (`planSettlement` in `flutter_app/lib/domain/logic/settle_up.dart`, used by the settle sheet and Settle all).
+## SETTLE-GROUP-RLS — Second partial group settlement no longer fails
+
+**Commit:** `ecf23b2` (BUG-293). **Migrations:** none. A settlement between a group and someone else used to be recorded under the group member with the biggest balance. After one partial payment, that could switch to the other group member. A non-organizer's next settle was then rejected with `new row violates row-level security policy for table "expenses"`. The signed-in member is now recorded for their own group's side.
 
 ### Flags
 | Behavior | Flag | Default |
@@ -2378,6 +2382,14 @@ Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, ne
 ### Pass
 - Every settlement in steps 4–8 saves with no error. Summary shows the debt as settled.
 - Settlement history lists the payments with Bob as payer (or recipient in step 6), not Charlie.
+
+### Negative checks
+- An organizer outside the group can still record the settlement. It is still recorded under the group member chosen by the app.
+- With Simplify debts OFF (direct member-to-member rows), Bob cannot settle Charlie's own row. That is unchanged.
+
+### Pass
+- Both settlements in steps 4 and 5 save with no error toast. Summary shows the debt as settled.
+- Settlement history lists both payments with Bob as payer (or recipient in step 6), not Charlie.
 
 ---
 
