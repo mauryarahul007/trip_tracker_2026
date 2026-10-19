@@ -482,6 +482,28 @@ SettlementResult calculateSettlements(
 
   if (!shouldSimplify) {
     final directTransfers = calculateDirectSettlements(trip, members, expenses, groups);
+    // A recorded settlement only cancels the exact pair it names. Paid to someone else (as "Fewest payments" does),
+    // the pair debts stay and per-person shows money owed while every real balance is square. Settled is a fact
+    // about the balances, so: all square means nothing is owed, and a list that does not add up to the real
+    // balances falls back to one that does. Groups net inside themselves, so that check is for ungrouped trips.
+    if (balances.every((b) => b.balance.abs() < 0.01)) {
+      return SettlementResult(balances: balances, transfers: const [], isSimplified: false);
+    }
+    if (groups.isEmpty) {
+      final implied = <String, double>{};
+      for (final t in directTransfers) {
+        implied[t.fromMemberId] = (implied[t.fromMemberId] ?? 0) - t.amount;
+        implied[t.toMemberId] = (implied[t.toMemberId] ?? 0) + t.amount;
+      }
+      if (balances.any((b) => ((implied[b.memberId] ?? 0) - b.balance).abs() > 0.02)) {
+        final memberNodes = buildSettlementNodes(balances, const []);
+        return SettlementResult(
+          balances: balances,
+          transfers: _matchDebtorsToCreditors(memberNodes, balances),
+          isSimplified: false,
+        );
+      }
+    }
     return SettlementResult(balances: balances, transfers: directTransfers, isSimplified: false);
   }
 

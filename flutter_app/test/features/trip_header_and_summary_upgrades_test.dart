@@ -35,7 +35,7 @@ void main() {
       await openTab(tester, s, 'ledger');
       await longPressTitle(tester);
       expect(find.text('Goa Weekend'), findsWidgets);
-      expect(find.textContaining('3 members · 1 expense'), findsWidgets);
+      expect(find.textContaining('3 members  ·  1 expense'), findsWidgets);
       for (final k in ['share', 'mute', 'edit', 'settings']) {
         expect(key('trip-action-$k'), findsOneWidget, reason: k);
       }
@@ -115,7 +115,7 @@ void main() {
       final s = await seedTrip(tester);
       await addExpense(tester, s, amount: 90);
       await openTab(tester, s, 'ledger');
-      expect(find.textContaining('3 members · 1 expense'), findsWidgets);
+      expect(find.textContaining('3 members  ·  1 expense'), findsWidgets);
       expect(key('trip-status-dot'), findsOneWidget);
       await tester.tap(key('trip-title-actions'));
       await settle(tester, rounds: 6);

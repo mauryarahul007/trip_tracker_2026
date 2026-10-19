@@ -30,6 +30,7 @@ import '../../../domain/logic/settlement.dart';
 import '../../../domain/logic/settlement_share_card.dart';
 import '../../../domain/logic/trip_utilities.dart';
 import '../../../domain/models/expense.dart';
+import '../../../domain/models/member.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
@@ -305,7 +306,9 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final myGroup = mine == null
         ? null
         : groupLedger.nodes.where((n) => n.id.startsWith('group:') && n.memberIds.contains(mine)).firstOrNull;
-    final outstanding = result.transfers.fold<double>(0, (a, t) => a + t.amount);
+    // What is still to move comes from the real balances, so the pass reads the same in Fewest payments and Per
+    // person (the list below can show more, smaller payments in Per person, never a different "settled").
+    final outstanding = groupLedger.flows.fold<double>(0, (a, t) => a + t.amount);
     // The Groups / People switch is for the Who paid card only; it is a view, not a trip setting.
     final viewSwitchOn = _flag(ref, 'enableSettlementViewSwitch', id) && groupLedger.hasGroups;
     final baseTransfers = result.transfers; // settlements stay grouped; the Who paid switch is analytics only
@@ -986,7 +989,8 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             ),
           ),
         ),
-      if (closeoutOn)
+      // Gone once everything is settled: nothing is left to prompt (Close out trip stays in the chips above).
+      if (closeoutOn && !tripSettled)
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: BentoTile(
@@ -1676,10 +1680,23 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
               contentPadding: EdgeInsets.zero,
               title: Text(e.title.replaceFirst('Settlement: ', '')),
               subtitle: Text('${e.date} · ${formatMoney(context, e.amount, e.currency)}'),
-              trailing: Text(
-                e.settlementConfirmedAt != null ? l10n.ledConfirmed : l10n.ledAwaiting,
-                style: TextStyle(color: e.settlementConfirmedAt != null ? tokens.colorSuccess : tokens.textSecondary),
-              ),
+              // The person who received the money confirms it here; everyone else just sees the state.
+              trailing: e.settlementConfirmedAt == null && _canConfirm(e)
+                  ? FilledButton.tonal(
+                      key: Key('history-confirm-${e.id}'),
+                      onPressed: () => unawaited(
+                        ref
+                            .read(expenseRepositoryProvider)
+                            .confirmSettlement(e.id, userId: ref.read(authStateProvider).userId ?? ''),
+                      ),
+                      child: const Text('Confirm received'),
+                    )
+                  : Text(
+                      e.settlementConfirmedAt != null ? l10n.ledConfirmed : l10n.ledAwaiting,
+                      style: TextStyle(
+                        color: e.settlementConfirmedAt != null ? tokens.colorSuccess : tokens.textSecondary,
+                      ),
+                    ),
               onTap: () => AppSheet.show<void>(
                 context: context,
                 builder: (sheetCtx) => ExpenseDetailSheet(
@@ -1834,6 +1851,15 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         ),
       ),
     );
+  }
+
+  /// True when I am the member this settlement was paid to (the one who must confirm it).
+  bool _canConfirm(Expense e) {
+    final uid = ref.read(authStateProvider).userId;
+    if (uid == null || !e.isSettlement || e.splitMemberIds.isEmpty) return false;
+    if (!_flag(ref, 'enableSettlementConfirmation', widget.tripId)) return false;
+    final members = ref.read(tripMembersProvider(widget.tripId)).value ?? const <Member>[];
+    return members.where((m) => m.id == e.splitMemberIds.first).firstOrNull?.linkedUserId == uid;
   }
 
   Widget _flipWrap({

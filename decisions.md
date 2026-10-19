@@ -5204,3 +5204,9 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** Speech still needs Google speech services and usually a connection. A destination that itself contains a comma splits into two boxes when edited.
 * **Release Cut:** version bumped to `3.68.2` via `npm run release:patch` (3.68.1 was taken by the settlement fix on the remote).
 
+## v3.68.3: settled is the same in Fewest payments and Per person
+* **Context:** After settling under Fewest payments, switching to Per person showed NOT SETTLED and an outstanding amount while every real balance was zero. A recorded settlement only cancels the exact pair it names, so when it was paid to a different person the pair debts stayed.
+* **Decision:** In `calculateSettlements` (TS and Dart), Per person returns no transfers when every net balance is square, and, for trips without groups, falls back to a list built from the real balances when the pair list does not add up to them. The Flutter pass, mini pass and ended-trip banner take "outstanding" from the real balances, so they read the same in both views. The Members page already used net balances. Also: header meta line gets an explicit body font and spacing; the yellow close-out card is hidden once settled; settlement History rows show Confirm received to the recipient (`enableSettlementConfirmation`).
+* **Trade-offs Accepted:** Per person after a partial payment to a different person can still list extra opposite payments (that is how pair netting works); the pass total is unaffected. Grouped trips only get the all-square rule.
+* **Release Cut:** version bumped to `3.68.3` via `npm run release:patch`.
+

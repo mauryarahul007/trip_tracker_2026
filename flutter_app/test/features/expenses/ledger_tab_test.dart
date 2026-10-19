@@ -330,6 +330,25 @@ void main() {
     expect(find.text('Awaiting confirmation'), findsOneWidget);
   });
 
+  testApp('history: the person who received the money gets a Confirm button on the row', (tester) async {
+    await pumpApp(tester, user: asha, flagsOn: {'enableSettlementHistory', 'enableSettlementConfirmation'});
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 60, split: [s.me, s.ben]);
+    await addExpense(tester, s, title: 'Settlement: Ben ➔ Asha', amount: 30, paidBy: s.ben, split: [s.me]);
+    await openLedger(tester, s);
+    await scrollToKey(tester, 'section-history');
+    await centre(tester, key('section-history'));
+    await tester.tap(key('section-history'));
+    await settle(tester, rounds: 6);
+    await tester.scrollUntilVisible(
+      find.text('Ben ➔ Asha'),
+      200,
+      scrollable: find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable)),
+    );
+    expect(find.text('Confirm received'), findsOneWidget);
+    expect(find.text('Awaiting confirmation'), findsNothing);
+  });
+
   testApp('no history section without the flag', (tester) async {
     await pumpApp(tester, user: asha, flagsOff: {'enableSettlementHistory'});
     final s = await seedTrip(tester);

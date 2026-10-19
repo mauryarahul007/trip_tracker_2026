@@ -729,7 +729,7 @@ class _TripTitle extends ConsumerWidget {
         if (trip.startDate.isNotEmpty) formatDateRange(trip.startDate, trip.endDate),
         '${counts.$1} member${counts.$1 == 1 ? '' : 's'}',
         '${counts.$2} expense${counts.$2 == 1 ? '' : 's'}',
-      ].join(' · ');
+      ].join('  ·  ');
       return KeyedSubtree(
         key: const Key('trip-title'),
         child: Semantics(
@@ -762,9 +762,9 @@ class _TripTitle extends ConsumerWidget {
                               style: TextStyle(
                                 fontFamily: AppTypography.fontTitle,
                                 fontWeight: FontWeight.w800,
-                                fontSize: 19,
+                                fontSize: 20,
                                 height: 1.15,
-                                letterSpacing: -0.3,
+                                letterSpacing: -0.2,
                                 color: tokens.textPrimary,
                               ),
                             ),
@@ -790,7 +790,15 @@ class _TripTitle extends ConsumerWidget {
                           key: const Key('trip-meta'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 12, height: 1.2, color: tokens.textSecondary),
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontBody,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                            height: 1.25,
+                            letterSpacing: 0.1,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                            color: tokens.textSecondary,
+                          ),
                         ),
                       ),
                     ],

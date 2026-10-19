@@ -137,4 +137,46 @@ void main() {
       }
     });
   });
+  group('per person view after settling with fewest payments', () {
+    final trip = Trip.fromJson({
+      'id': 't',
+      'name': 'T',
+      'memberIds': ['m1', 'm2', 'm3'],
+      'baseCurrency': 'INR',
+    });
+    final members = {
+      for (final (id, name) in [('m1', 'Alice'), ('m2', 'Bob'), ('m3', 'Charlie')])
+        id: Member(id: id, name: name, tripId: 't'),
+    };
+    Expense exp(String id, double amount, String paidBy, Map<String, double> shares, {bool settle = false}) => Expense(
+      id: id,
+      tripId: 't',
+      title: settle ? 'Settlement: x' : 'Item $id',
+      amount: amount,
+      currency: 'INR',
+      category: 'c',
+      date: '2026-10-02',
+      paidBy: paidBy,
+      splitMode: settle ? 'exact' : 'equal',
+      splitMemberIds: shares.keys.toList(),
+      resolvedShares: shares,
+      createdAt: 0,
+      updatedAt: 0,
+      isSettlement: settle,
+    );
+    final e1 = exp('e1', 60, 'm1', {'m1': 30, 'm2': 30});
+    final e2 = exp('e2', 60, 'm2', {'m2': 30, 'm3': 30});
+    final pay = exp('e3', 30, 'm3', {'m1': 30}, settle: true);
+
+    test('settled in both views once everyone is square', () {
+      for (final simplify in [true, false]) {
+        final r = calculateSettlements(trip, members, [e1, e2, pay], const [], simplify);
+        expect(r.transfers, isEmpty, reason: 'simplify=$simplify');
+      }
+    });
+
+    test('before the payment per person still lists what is owed', () {
+      expect(calculateSettlements(trip, members, [e1, e2], const [], false).transfers, hasLength(2));
+    });
+  });
 }

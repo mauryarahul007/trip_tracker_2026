@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.68.3',
+    date: '2026-10-19',
+    changes: [
+      'After everyone has settled, the trip now shows as settled in both Fewest payments and Per person, and the amount outstanding is the same in both. This is fixed on the web and in the Flutter app.',
+      'Behind the scenes (Flutter app): a clearer trip header line, the yellow close-out card disappears once the trip is settled, and a settlement paid to you has a Confirm received button in History.',
+    ],
+  },
+  {
     version: '3.68.2',
     date: '2026-10-19',
     changes: [

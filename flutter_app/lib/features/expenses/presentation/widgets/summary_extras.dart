@@ -45,7 +45,8 @@ class SummaryAttentionBar extends ConsumerWidget {
       closeoutEnabled: flag('enableTripCloseout'),
       today: today,
     );
-    final outstanding = settlement.transfers.fold<double>(0, (a, x) => a + x.amount);
+    // From the real balances, so Fewest payments and Per person always agree on whether money is still owed.
+    final outstanding = settlement.balances.fold<double>(0, (a, b) => b.balance > 0 ? a + b.balance : a);
     final ended = !trip.closed && trip.endDate.isNotEmpty && trip.endDate.compareTo(today) < 0 && outstanding > 0.009;
     if (chips.isEmpty && !ended) return const SizedBox.shrink();
 

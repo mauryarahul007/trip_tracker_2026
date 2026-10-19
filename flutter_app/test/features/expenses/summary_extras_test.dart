@@ -233,6 +233,13 @@ void main() {
     expect(find.byType(BottomSheet), findsOneWidget); // the existing close-trip sheet
   });
 
+  testApp('the wrap-up prompt is gone once the trip is settled', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester); // dated in the past, nothing owed
+    await openLedger(tester, s);
+    expect(key('closeout-prompt'), findsNothing);
+  });
+
   testApp('no wrap-up prompt with its flag off', (tester) async {
     await pumpApp(tester, user: asha, flagsOff: {'enableCloseoutPrompt'});
     final s = await seedTrip(tester);
