@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **149** |
+| **Total Tracked** | **153** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **147** |
+| **✅ Shipped** | **151** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -199,6 +199,10 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-147** | Flutter: You paid vs your share strip on Balances | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 0e14556 (v3.65.0): behind enableYouPaidVsShare (Trip pack, default ON); replaces the To receive / To pay tiles. |
 | **FEAT-148** | Flutter: balance explainer sheet | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 0e14556 (v3.65.0): behind enableBalanceExplainer (Trip pack, default ON); tap the strip to list expenses where paid differs from share. |
 | **FEAT-149** | Flutter: saved-offline message on expense save | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 0e14556 (v3.65.0): behind enableSavedOfflineToast (Trip pack, default ON). |
+| **FEAT-150** | Flutter: tidy Expenses tab rows and day headers | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4ea2901 (v3.66.0): behind enableTidyExpenses (Trip pack, default ON). |
+| **FEAT-151** | Flutter: Notes cards with pin, delete and Undo | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4ea2901 (v3.66.0): behind enableTidyNotes (Trip pack, default ON). |
+| **FEAT-152** | Flutter: tidy Members tiles with role and balance chips and search | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4ea2901 (v3.66.0): behind enableTidyMembers (Trip pack, default ON). |
+| **FEAT-153** | Flutter: edit and delete travel passes | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4ea2901 (v3.66.0): behind enablePassEditDelete (Trip pack, default ON). |
 
 ---
 
