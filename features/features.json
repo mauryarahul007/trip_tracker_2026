@@ -2332,5 +2332,53 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-18T09:22:59.912Z",
     "shippedNote": "Shipped in commit b25ff7b (v3.63.0): behind enableHighContrast, enableHapticsSetting (Trip pack, default ON); Their part wording replaces Share."
+  },
+  {
+    "id": "FEAT-147",
+    "title": "Flutter: You paid vs your share strip on Balances",
+    "description": "Flutter: You paid vs your share strip on Balances",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T08:36:04.084Z",
+    "updatedAt": "2026-10-19T08:36:04.167Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T08:36:04.167Z",
+    "shippedNote": "Shipped in commit 0e14556 (v3.65.0): behind enableYouPaidVsShare (Trip pack, default ON); replaces the To receive / To pay tiles."
+  },
+  {
+    "id": "FEAT-148",
+    "title": "Flutter: balance explainer sheet",
+    "description": "Flutter: balance explainer sheet",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T08:36:04.248Z",
+    "updatedAt": "2026-10-19T08:36:04.320Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T08:36:04.320Z",
+    "shippedNote": "Shipped in commit 0e14556 (v3.65.0): behind enableBalanceExplainer (Trip pack, default ON); tap the strip to list expenses where paid differs from share."
+  },
+  {
+    "id": "FEAT-149",
+    "title": "Flutter: saved-offline message on expense save",
+    "description": "Flutter: saved-offline message on expense save",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T08:36:04.393Z",
+    "updatedAt": "2026-10-19T08:36:04.468Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T08:36:04.468Z",
+    "shippedNote": "Shipped in commit 0e14556 (v3.65.0): behind enableSavedOfflineToast (Trip pack, default ON)."
   }
 ]
