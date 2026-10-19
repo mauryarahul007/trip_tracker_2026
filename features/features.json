@@ -2604,5 +2604,53 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-19T15:11:32.198Z",
     "shippedNote": "Shipped in commit 036887f (v3.68.2): behind enableTripHeaderActions."
+  },
+  {
+    "id": "FEAT-164",
+    "title": "Flutter: clearer trip header line",
+    "description": "Flutter: clearer trip header line",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T15:56:19.670Z",
+    "updatedAt": "2026-10-19T15:56:26.374Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T15:56:26.374Z",
+    "shippedNote": "Shipped in commit b18b0eb (v3.68.3): behind enableTripHeaderActions."
+  },
+  {
+    "id": "FEAT-165",
+    "title": "Flutter: close-out card hidden once the trip is settled",
+    "description": "Flutter: close-out card hidden once the trip is settled",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T15:56:19.894Z",
+    "updatedAt": "2026-10-19T15:56:26.588Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T15:56:26.587Z",
+    "shippedNote": "Shipped in commit b18b0eb (v3.68.3): behind enableCloseoutPrompt."
+  },
+  {
+    "id": "FEAT-166",
+    "title": "Flutter: Confirm received button on settlement history rows",
+    "description": "Flutter: Confirm received button on settlement history rows",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T15:56:20.113Z",
+    "updatedAt": "2026-10-19T15:56:26.800Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T15:56:26.800Z",
+    "shippedNote": "Shipped in commit b18b0eb (v3.68.3): behind enableSettlementConfirmation."
   }
 ]

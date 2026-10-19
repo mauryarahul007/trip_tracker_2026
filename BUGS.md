@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **292** | All recorded bugs across sessions |
+| **Total Tracked** | **293** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **265** | Verified & closed |
+| **✅ Resolved** | **266** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -296,6 +296,7 @@
 | **BUG-292** | Flutter: collapsed day totals on Expenses were hard to read | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in commit f815aa6 (v3.66.1) |
 | **BUG-293** | Second partial settlement with a group fails with an expenses RLS error | `splits-math` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 4f33b89 (v3.68.1). Group settlements are recorded under the signed-in member for their own group's side (settlementPartiesForRecorder on web, planSettlement in Flutter), so a partial payment no longer flips the next one to a groupmate the insert policy rejects. |
 | **BUG-294** | Flutter: Voice add expense did not work on Android | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 036887f (v3.68.2): Google recognizer via intent lookup, locale pick, spoken amounts, friendly errors. |
+| **BUG-295** | Per person view showed NOT SETTLED after settling with Fewest payments | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Fixed in commit b18b0eb (v3.68.3): Per person returns no transfers when all balances are square; pass amount from real balances. |
 
 ---
 

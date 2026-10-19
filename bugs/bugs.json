@@ -8508,5 +8508,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-19T15:11:31.995Z",
     "resolutionNote": "Fixed in commit 036887f (v3.68.2): Google recognizer via intent lookup, locale pick, spoken amounts, friendly errors."
+  },
+  {
+    "id": "BUG-295",
+    "title": "Per person view showed NOT SETTLED after settling with Fewest payments",
+    "description": "Per person view showed NOT SETTLED after settling with Fewest payments",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-19T15:56:19.364Z",
+    "updatedAt": "2026-10-19T15:56:26.180Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-19T15:56:26.179Z",
+    "resolutionNote": "Fixed in commit b18b0eb (v3.68.3): Per person returns no transfers when all balances are square; pass amount from real balances."
   }
 ]

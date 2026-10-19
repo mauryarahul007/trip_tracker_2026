@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **163** |
+| **Total Tracked** | **166** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **161** |
+| **✅ Shipped** | **164** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -213,6 +213,9 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-161** | Flutter: settlement pass flips to show You paid and Your share | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enableYouPaidVsShare. |
 | **FEAT-162** | Flutter: Voice add expense with real speech recognition | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enableVoiceInput. |
 | **FEAT-163** | Flutter: Edit Trip takes one destination box per place | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 036887f (v3.68.2): behind enableTripHeaderActions. |
+| **FEAT-164** | Flutter: clearer trip header line | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b18b0eb (v3.68.3): behind enableTripHeaderActions. |
+| **FEAT-165** | Flutter: close-out card hidden once the trip is settled | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b18b0eb (v3.68.3): behind enableCloseoutPrompt. |
+| **FEAT-166** | Flutter: Confirm received button on settlement history rows | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b18b0eb (v3.68.3): behind enableSettlementConfirmation. |
 
 ---
 
