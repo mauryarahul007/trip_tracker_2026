@@ -147,10 +147,11 @@ void main() {
       await toText(tester, key('spend-view-toggle'));
       await tester.tap(find.descendant(of: key('spend-view-toggle'), matching: find.text('Members')));
       await settle(tester, rounds: 6);
-      await toText(tester, find.text('Ben pays Asha'), delta: -300);
-      expect(find.text('Ben pays Asha'), findsOneWidget);
-      expect(find.text('Cara pays Asha'), findsOneWidget);
-      expect(find.text('Duo pays Asha'), findsNothing);
+      // The Who paid switch is analytics only: Who pays whom stays grouped.
+      await toText(tester, find.text('Duo pays Asha'), delta: -300);
+      expect(find.text('Duo pays Asha'), findsOneWidget);
+      expect(find.text('Ben pays Asha'), findsNothing);
+      expect(find.text('Cara pays Asha'), findsNothing);
       await toText(tester, key('spend-view-toggle'));
       await tester.tap(find.descendant(of: key('spend-view-toggle'), matching: find.text('Groups')));
       await settle(tester, rounds: 6);

@@ -3835,6 +3835,12 @@ abstract class AppLocalizations {
   /// **'Nothing to import.'**
   String get importNone;
 
+  /// No description provided for @memSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search members'**
+  String get memSearchHint;
+
   /// No description provided for @memAdd.
   ///
   /// In en, this message translates to:
@@ -4146,6 +4152,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Title'**
   String get notesPassTitle;
+
+  /// No description provided for @notesNoteDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Note deleted'**
+  String get notesNoteDeleted;
+
+  /// No description provided for @notesNotePin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin to top'**
+  String get notesNotePin;
+
+  /// No description provided for @notesNoteUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get notesNoteUnpin;
+
+  /// No description provided for @notesNoteEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited {when}'**
+  String notesNoteEdited(String when);
+
+  /// No description provided for @notesNoteMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Note options'**
+  String get notesNoteMenu;
+
+  /// No description provided for @notesEditPass.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit pass'**
+  String get notesEditPass;
+
+  /// No description provided for @notesSavePass.
+  ///
+  /// In en, this message translates to:
+  /// **'Save pass'**
+  String get notesSavePass;
+
+  /// No description provided for @notesPassMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Pass options'**
+  String get notesPassMenu;
+
+  /// No description provided for @notesPassWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Date and time'**
+  String get notesPassWhen;
+
+  /// No description provided for @notesPassPickWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Set date and time'**
+  String get notesPassPickWhen;
+
+  /// No description provided for @notesPassSeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat or room'**
+  String get notesPassSeat;
+
+  /// No description provided for @notesPassRef.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking reference'**
+  String get notesPassRef;
+
+  /// No description provided for @notesPassPassenger.
+  ///
+  /// In en, this message translates to:
+  /// **'Passenger'**
+  String get notesPassPassenger;
+
+  /// No description provided for @notesPassDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Pass deleted'**
+  String get notesPassDeleted;
+
+  /// No description provided for @notesPassDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this pass?'**
+  String get notesPassDeleteTitle;
+
+  /// No description provided for @notesPassDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It is removed for everyone on the trip. You can undo right after.'**
+  String get notesPassDeleteBody;
+
+  /// No description provided for @notesPassKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep'**
+  String get notesPassKeep;
 
   /// No description provided for @notesPassFlight.
   ///

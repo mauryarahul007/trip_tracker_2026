@@ -150,7 +150,7 @@ void main() {
     expect(key('budget-card'), findsOneWidget);
   });
 
-  testApp('the single Groups / People switch in Trip numbers drives Who pays whom and Who paid', (tester) async {
+  testApp('the Groups / People switch in Trip numbers drives Who paid only, never Who pays whom', (tester) async {
     await pumpApp(tester, user: asha);
     final s = await seedTrip(tester);
     await real(
@@ -163,18 +163,19 @@ void main() {
     await reveal(tester, 'numbers-tab-people');
     await tester.tap(key('numbers-tab-people'));
     await settle(tester, rounds: 6);
-    expect(key('spend-view-toggle'), findsOneWidget); // the one switch, in Trip numbers
+    expect(key('spend-view-toggle'), findsOneWidget); // analytics only
     expect(find.byWidgetPredicate((w) => w.key.toString().contains("'spend-group-")), findsWidgets); // groups
     await centre(tester, key('spend-view-toggle'));
     await tester.tap(find.descendant(of: key('spend-view-toggle'), matching: find.text('Members')));
     await settle(tester, rounds: 6);
     expect(find.byWidgetPredicate((w) => w.key.toString().contains("'spend-group-")), findsNothing); // people
     await tester.scrollUntilVisible(
-      find.text('Ben pays Asha'),
+      find.text('Duo pays Asha'),
       -300,
       scrollable: find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable)),
     );
-    expect(find.text('Ben pays Asha'), findsOneWidget); // Who pays whom followed the switch
+    expect(find.text('Duo pays Asha'), findsOneWidget); // Who pays whom did not follow the switch
+    expect(find.text('Ben pays Asha'), findsNothing);
   });
 
   String ymd(DateTime d) => d.toIso8601String().substring(0, 10);

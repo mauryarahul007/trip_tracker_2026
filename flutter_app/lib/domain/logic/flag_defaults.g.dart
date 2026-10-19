@@ -97,6 +97,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableOfflineMapTiles': false,
   'enableOfflineSnapshot': false,
   'enablePackingAssistant': true,
+  'enablePassEditDelete': true,
   'enablePassSorting': true,
   'enablePendingDots': true,
   'enablePersistentExpenseDraft': true,
@@ -139,6 +140,9 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableSyncLine': true,
   'enableSyncQueueInspector': false,
   'enableTabBackHistory': false,
+  'enableTidyExpenses': true,
+  'enableTidyMembers': true,
+  'enableTidyNotes': true,
   'enableTodayCard': true,
   'enableTravelPasses': true,
   'enableTravelerPassBack': true,
@@ -653,6 +657,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'trip',
     description: 'Open-Meteo destination weather analysis & airline luggage rule checklist.',
   ),
+  'enablePassEditDelete': (
+    label: 'Edit and Delete Passes (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: each travel pass has a menu to edit it (all its details are kept) or delete it with an Undo. OFF: passes can only be added. Does not change who may edit the trip, and a deleted pass is removed for everyone on the trip once synced.',
+  ),
   'enablePassSorting': (
     label: 'Pass List Sorting (Time / Leg / Name)',
     pack: 'travel',
@@ -865,6 +874,21 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'pro',
     description:
         'Back gesture / button walks through the tabs you visited (up to 5) instead of jumping straight to Expenses.',
+  ),
+  'enableTidyExpenses': (
+    label: 'Tidy Expenses Tab (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: Expenses rows become flat, clean list tiles (category icon, title, who paid and split, amount with your share or what you get back underneath) and day headers use a calm, readable style. OFF: the boarding-receipt rows with glow, perforation and barcode come back. Does not change any amount, split, filter, search or swipe action, and the compact view and the wide table are unchanged.',
+  ),
+  'enableTidyMembers': (
+    label: 'Tidy Members Tab (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: Members are clean list tiles with a role chip and a balance chip, a search box once the trip has more than 8 members, and a clear Invite button. OFF: the current Members layout. Does not change roles, groups, balances or who can invite.',
+  ),
+  'enableTidyNotes': (
+    label: 'Tidy Notes Tab (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: Notes, Checklist and Passes get one consistent header with counts, calmer cards, a two-line preview and time on each note, and a checklist progress bar per category. OFF: the current Notes layout. Does not change what is saved, who can edit, or sync.',
   ),
   'enableTodayCard': (
     label: 'Summary Today Card (Flutter)',
@@ -1122,6 +1146,10 @@ const Map<String, List<String>> consumerPacks = {
     'enableYouPaidVsShare',
     'enableBalanceExplainer',
     'enableSavedOfflineToast',
+    'enableTidyExpenses',
+    'enableTidyNotes',
+    'enableTidyMembers',
+    'enablePassEditDelete',
     'enableNotesQuickCapture',
     'enableCoachHints',
     'enableSettlementViewSwitch',

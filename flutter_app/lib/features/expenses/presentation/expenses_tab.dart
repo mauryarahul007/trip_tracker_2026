@@ -263,6 +263,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     // Desktop (board 08): rows become table rows with column headers.
     final wide = MediaQuery.sizeOf(context).width >= _kDetailPanelBreakpoint;
 
+    final tidyOn = _flag(ref, 'enableTidyExpenses', id);
     Widget rowFor(Expense e, {required bool lastInGroup}) {
       if (wide) {
         return _TableRow(
@@ -282,6 +283,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         myMemberId: myMember,
         compact: compactActive,
         colorRings: _flag(ref, 'enableCategoryColorRings', id),
+        tidy: tidyOn,
         isDirty: dirty.contains(e.id),
         isConflict: conflicts.contains(e.id),
         onTap: () => _openDetail(e),
@@ -324,6 +326,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
           background: tokens.bgPage,
           textColor: tokens.textPrimary,
           mutedColor: tokens.textMuted,
+          tidy: tidyOn,
         ),
       );
       SliverList listFor(DayGroup g) => SliverList.builder(
@@ -752,8 +755,10 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
     required this.background,
     required this.textColor,
     required this.mutedColor,
+    this.tidy = false,
   });
 
+  final bool tidy;
   final String date;
   final String label; // "OCT 14 · DAY 3"
   final String total;
@@ -791,15 +796,27 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
                 Expanded(
                   child: Text(
                     label,
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.6,
-                      color: textColor,
-                    ),
+                    style: tidy
+                        ? TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: mutedColor)
+                        : TextStyle(
+                            fontFamily: 'monospace',
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.6,
+                            color: textColor,
+                          ),
                   ),
                 ),
-                Text('$total · $count', style: TextStyle(color: mutedColor, fontSize: 13)),
+                if (tidy) ...[
+                  Text(
+                    total,
+                    style: AppTypography.moneyDisplay(
+                      fontSize: 14,
+                      color: textColor,
+                    ).copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  Text(' · $count', style: TextStyle(color: mutedColor, fontSize: 13)),
+                ] else
+                  Text('$total · $count', style: TextStyle(color: mutedColor, fontSize: 13)),
                 if (collapsible)
                   Icon(expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: mutedColor),
               ],
@@ -817,6 +834,7 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
       old.total != total ||
       old.count != count ||
       old.expanded != expanded ||
+      old.tidy != tidy ||
       old.background != background;
 }
 

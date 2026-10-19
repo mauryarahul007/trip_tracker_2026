@@ -35,7 +35,6 @@ import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_avatar.dart';
 import '../../../domain/models/group.dart';
-import '../../../domain/models/member.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
@@ -99,7 +98,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
   var _numbersTab = 'categories';
   var _allCats = false;
   bool? _wasSettled; // to notice the moment the trip becomes settled
-  var _personView = false; // settlement list as people, not groups (this viewer only)
+  var _personView = false; // Who paid card as people, not groups (this viewer only; never touches Who pays whom)
 
   Future<void> _settle(BuildContext context, Transfer t) async {
     final trip = ref.read(tripProvider(widget.tripId)).value;
@@ -273,19 +272,10 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         ? null
         : groupLedger.nodes.where((n) => n.id.startsWith('group:') && n.memberIds.contains(mine)).firstOrNull;
     final outstanding = result.transfers.fold<double>(0, (a, t) => a + t.amount);
-    // Everyone can flip the settlement list between groups and people; it is a view, not a trip setting.
+    // The Groups / People switch is for the Who paid card only; it is a view, not a trip setting.
     final viewSwitchOn = _flag(ref, 'enableSettlementViewSwitch', id) && groupLedger.hasGroups;
-    final personView = viewSwitchOn && _personView;
-    final baseTransfers = personView
-        ? calculateSettlements(
-            trip,
-            {for (final m in ref.watch(tripMembersProvider(id)).value ?? const <Member>[]) m.id: m},
-            ref.watch(tripExpensesProvider(id)).value ?? const <Expense>[],
-            const <Group>[],
-            trip.simplifyDebts,
-          ).transfers
-        : result.transfers;
-    bool isMe(String node) => mine != null && (node == 'member:$mine' || (!personView && node == myGroup?.id));
+    final baseTransfers = result.transfers; // settlements stay grouped; the Who paid switch is analytics only
+    bool isMe(String node) => mine != null && (node == 'member:$mine' || node == myGroup?.id);
     // Your own payments lead the list: what you must pay first, then what is coming to you.
     int rank(Transfer t) => isMe(t.from) ? 0 : (isMe(t.to) ? 1 : 2);
     final transfers = [...baseTransfers]..sort((a, b) => rank(a).compareTo(rank(b)));

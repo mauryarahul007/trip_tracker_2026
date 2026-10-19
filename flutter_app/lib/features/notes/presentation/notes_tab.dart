@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -83,6 +84,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     final chatFirst = _flag('enableChatFirstNav');
     final showChat = chatOn && !chatFirst;
     final passesOn = _flag('enableTravelPasses');
+    final tidyOn = _flag('enableTidyNotes');
     final packing = _flag('enablePackingAssistant');
     final unread = ref.watch(chatUnreadProvider(widget.tripId));
     if (!showChat && _pane == 'chat') _pane = 'checklist';
@@ -111,6 +113,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                       : switch (p.$1) {
                           'passes' => _countLabel(p.$2, trip?.passes.length ?? 0),
                           'checklist' => _countLabel(p.$2, trip?.checklist.length ?? 0),
+                          'notes' when tidyOn => _countLabel(p.$2, trip?.notes.length ?? 0),
                           _ => Text(p.$2, maxLines: 1, overflow: TextOverflow.ellipsis),
                         },
                 ),
@@ -187,6 +190,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     final gateScannerOn = _flag('enableGateScanner');
     final icsOn = _flag('enableIcsExport');
     final sortOn = _flag('enablePassSorting');
+    final editDeleteOn = _flag('enablePassEditDelete');
     final shown = sortOn ? sortPasses(passes, _passSort) : passes;
     // Previous pass's leg in `shown`, so a header prints only when the leg changes.
     String? lastLeg(TravelPass p) {
@@ -258,6 +262,8 @@ class _NotesTabState extends ConsumerState<NotesTab> {
               final statusInfo = getTravelStatusInfo(p);
               return PassCard(
                 pass: p,
+                onEdit: editDeleteOn ? () => unawaited(_editPass(ctx, passes, p)) : null,
+                onDelete: editDeleteOn ? () => unawaited(_deletePass(ctx, passes, p)) : null,
                 onScan: gateScannerOn ? () => PassScannerModal.show(ctx, pass: p) : null,
                 onStatus: statusInfo != null ? () => LiveTravelStatusModal.show(ctx, statusInfo) : null,
                 onTap: () {
@@ -652,6 +658,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   Widget _notes(BuildContext context, List<TripNote> notes) {
     final l10n = context.l10n;
     final quick = _flag('enableNotesQuickCapture');
+    final tidy = _flag('enableTidyNotes');
     if (notes.isEmpty) {
       return ListView(
         padding: quick ? const EdgeInsets.fromLTRB(16, 8, 16, 0) : null,
@@ -680,10 +687,13 @@ class _NotesTabState extends ConsumerState<NotesTab> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
         if (quick) _quickCapture(notes),
-        for (final n in notes)
+        for (final n in tidy ? [...notes.where((x) => x.isPinned), ...notes.where((x) => !x.isPinned)] : notes)
           _NoteCard(
             key: Key('note-${n.id}'),
             note: n,
+            tidy: tidy,
+            onPin: () => _saveNotes([for (final x in notes) x.id == n.id ? x.copyWith(isPinned: !x.isPinned) : x]),
+            onDelete: () => _deleteNote(context, notes, n),
             onContent: (text) =>
                 _saveNotes([for (final x in notes) x.id == n.id ? x.copyWith(content: text, updatedAt: _now()) : x]),
           ),
@@ -756,6 +766,22 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     );
   }
 
+  void _deleteNote(BuildContext context, List<TripNote> all, TripNote note) {
+    final repo = ref.read(tripRepositoryProvider);
+    final tripId = widget.tripId;
+    unawaited(
+      _saveNotes([
+        for (final n in all)
+          if (n.id != note.id) n,
+      ]),
+    );
+    UndoSnackbar.show(
+      context: context,
+      message: context.l10n.notesNoteDeleted,
+      onUndo: () => unawaited(repo.setNotes(tripId, all)),
+    );
+  }
+
   Future<void> _suggest(List<ChecklistItem> items) async {
     final have = {for (final i in items) i.text};
     final now = _now();
@@ -811,10 +837,70 @@ class _NotesTabState extends ConsumerState<NotesTab> {
         title: draft.title,
         origin: draft.origin.isEmpty ? null : draft.origin,
         destination: draft.destination.isEmpty ? null : draft.destination,
+        startDateTime: draft.start,
+        seatOrRoom: draft.seat.isEmpty ? null : draft.seat,
+        referenceCode: draft.reference.isEmpty ? null : draft.reference,
+        passengerName: draft.passenger.isEmpty ? null : draft.passenger,
         createdAt: now,
         updatedAt: now,
       ),
     ]);
+  }
+
+  /// Edits keep every field the dialog does not show (booking id, QR, attachment, assignees ...).
+  Future<void> _editPass(BuildContext context, List<TravelPass> passes, TravelPass pass) async {
+    final draft = await AppSheet.show<_PassDraft>(
+      context: context,
+      title: context.l10n.notesEditPass,
+      builder: (_) => _PassDialog(initial: pass),
+    );
+    if (draft == null || draft.title.isEmpty) return;
+    final edited = pass.copyWith(
+      type: draft.type,
+      title: draft.title,
+      origin: draft.origin,
+      destination: draft.destination,
+      startDateTime: draft.start ?? pass.startDateTime,
+      seatOrRoom: draft.seat,
+      referenceCode: draft.reference,
+      passengerName: draft.passenger,
+      updatedAt: _now(),
+    );
+    await ref.read(tripRepositoryProvider).setPasses(widget.tripId, [
+      for (final x in passes) x.id == pass.id ? edited : x,
+    ]);
+  }
+
+  Future<void> _deletePass(BuildContext context, List<TravelPass> passes, TravelPass pass) async {
+    final l10n = context.l10n;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.notesPassDeleteTitle),
+        content: Text(l10n.notesPassDeleteBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.notesPassKeep)),
+          TextButton(
+            key: const Key('pass-delete-confirm'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.rowDelete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    final repo = ref.read(tripRepositoryProvider);
+    final tripId = widget.tripId;
+    await repo.setPasses(tripId, [
+      for (final x in passes)
+        if (x.id != pass.id) x,
+    ]);
+    if (!context.mounted) return;
+    UndoSnackbar.show(
+      context: context,
+      message: l10n.notesPassDeleted,
+      onUndo: () => unawaited(repo.setPasses(tripId, passes)),
+    );
   }
 
   void _move(List<ChecklistItem> all, int from, int to) {
@@ -832,9 +918,21 @@ class _NotesTabState extends ConsumerState<NotesTab> {
 }
 
 class _NoteCard extends ConsumerStatefulWidget {
-  const _NoteCard({required this.note, required this.onContent, super.key});
+  const _NoteCard({
+    required this.note,
+    required this.onContent,
+    this.tidy = false,
+    this.onPin,
+    this.onDelete,
+    super.key,
+  });
   final TripNote note;
   final ValueChanged<String> onContent;
+
+  /// Card with pin, menu and edited-time (enableTidyNotes).
+  final bool tidy;
+  final VoidCallback? onPin;
+  final VoidCallback? onDelete;
 
   @override
   ConsumerState<_NoteCard> createState() => _NoteCardState();
@@ -876,8 +974,86 @@ class _NoteCardState extends ConsumerState<_NoteCard> {
     super.dispose();
   }
 
+  Widget _tidyCard(BuildContext context) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final n = widget.note;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: t.bgSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(t.radiusMd),
+          side: BorderSide(color: n.isPinned ? t.primaryAccent.withValues(alpha: 0.6) : t.borderColor),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 6, 4, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  if (n.isPinned) ...[
+                    Icon(Icons.push_pin_rounded, size: 16, color: t.primaryAccent),
+                    const SizedBox(width: 6),
+                  ],
+                  Expanded(
+                    child: Text(
+                      n.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: t.textPrimary),
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    key: Key('note-menu-${n.id}'),
+                    tooltip: l10n.notesNoteMenu,
+                    icon: Icon(Icons.more_horiz_rounded, color: t.textSecondary),
+                    onSelected: (v) => v == 'pin' ? widget.onPin?.call() : widget.onDelete?.call(),
+                    itemBuilder: (_) => [
+                      PopupMenuItem(value: 'pin', child: Text(n.isPinned ? l10n.notesNoteUnpin : l10n.notesNotePin)),
+                      PopupMenuItem(value: 'delete', child: Text(l10n.notesItemDelete)),
+                    ],
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: TextField(
+                  key: Key('note-body-${n.id}'),
+                  controller: _c,
+                  focusNode: _focus,
+                  maxLines: 4,
+                  minLines: 1,
+                  style: TextStyle(fontSize: 14.5, height: 1.35, color: t.textPrimary),
+                  decoration: const InputDecoration(isDense: true, border: InputBorder.none),
+                  onChanged: (v) {
+                    _draft = v;
+                    setState(() {});
+                    _debounce?.cancel();
+                    _debounce = Timer(const Duration(milliseconds: 400), () => widget.onContent(v));
+                  },
+                ),
+              ),
+              _Linked(text: _draft ?? _c.text),
+              if (n.updatedAt > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    l10n.notesNoteEdited(formatRelativeTime(n.updatedAt)),
+                    style: TextStyle(fontSize: 12, color: t.textMuted),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.tidy) return _tidyCard(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -989,32 +1165,70 @@ class _NoteDialogState extends State<_NoteDialog> {
 }
 
 class _PassDraft {
-  _PassDraft(this.type, this.title, this.origin, this.destination);
+  _PassDraft({
+    required this.type,
+    required this.title,
+    required this.origin,
+    required this.destination,
+    required this.start,
+    required this.seat,
+    required this.reference,
+    required this.passenger,
+  });
   final String type;
   final String title;
   final String origin;
   final String destination;
+  final String? start; // ISO local date-time, or null when not set
+  final String seat;
+  final String reference;
+  final String passenger;
 }
 
 class _PassDialog extends StatefulWidget {
-  const _PassDialog();
+  const _PassDialog({this.initial});
+
+  /// The pass being edited; null when adding.
+  final TravelPass? initial;
 
   @override
   State<_PassDialog> createState() => _PassDialogState();
 }
 
 class _PassDialogState extends State<_PassDialog> {
-  var _type = 'flight';
-  final _title = TextEditingController();
-  final _from = TextEditingController();
-  final _to = TextEditingController();
+  late var _type = const {'flight', 'train', 'stay'}.contains(widget.initial?.type) ? widget.initial!.type : 'flight';
+  late final _title = TextEditingController(text: widget.initial?.title ?? '');
+  late final _from = TextEditingController(text: widget.initial?.origin ?? '');
+  late final _to = TextEditingController(text: widget.initial?.destination ?? '');
+  late final _seat = TextEditingController(text: widget.initial?.seatOrRoom ?? '');
+  late final _ref = TextEditingController(text: widget.initial?.referenceCode ?? '');
+  late final _passenger = TextEditingController(text: widget.initial?.passengerName ?? '');
+  late String? _start = widget.initial?.startDateTime;
 
   @override
   void dispose() {
     _title.dispose();
     _from.dispose();
     _to.dispose();
+    _seat.dispose();
+    _ref.dispose();
+    _passenger.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickWhen() async {
+    final now = DateTime.now();
+    final current = DateTime.tryParse(_start ?? '') ?? now;
+    final day = await showDatePicker(
+      context: context,
+      initialDate: current,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 5),
+    );
+    if (day == null || !mounted) return;
+    final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(current));
+    if (time == null) return;
+    setState(() => _start = DateTime(day.year, day.month, day.day, time.hour, time.minute).toIso8601String());
   }
 
   @override
@@ -1084,12 +1298,52 @@ class _PassDialogState extends State<_PassDialog> {
             controller: _to,
             decoration: InputDecoration(labelText: l10n.notesPassTo),
           ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            key: const Key('pass-when'),
+            icon: const Icon(Icons.event_rounded),
+            label: Text(
+              DateTime.tryParse(_start ?? '') == null
+                  ? l10n.notesPassPickWhen
+                  : '${l10n.notesPassWhen}: ${DateFormat('d MMM · HH:mm').format(DateTime.parse(_start!))}',
+            ),
+            onPressed: _pickWhen,
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            key: const Key('pass-passenger'),
+            controller: _passenger,
+            decoration: InputDecoration(labelText: l10n.notesPassPassenger),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            key: const Key('pass-seat'),
+            controller: _seat,
+            decoration: InputDecoration(labelText: l10n.notesPassSeat),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            key: const Key('pass-ref'),
+            controller: _ref,
+            decoration: InputDecoration(labelText: l10n.notesPassRef),
+          ),
           const SizedBox(height: 16),
           AppButton(
             key: const Key('pass-save'),
-            label: l10n.notesAddPass,
-            onPressed: () =>
-                Navigator.pop(context, _PassDraft(_type, _title.text.trim(), _from.text.trim(), _to.text.trim())),
+            label: widget.initial == null ? l10n.notesAddPass : l10n.notesSavePass,
+            onPressed: () => Navigator.pop(
+              context,
+              _PassDraft(
+                type: _type,
+                title: _title.text.trim(),
+                origin: _from.text.trim(),
+                destination: _to.text.trim(),
+                start: _start,
+                seat: _seat.text.trim(),
+                reference: _ref.text.trim(),
+                passenger: _passenger.text.trim(),
+              ),
+            ),
           ),
         ],
       ),

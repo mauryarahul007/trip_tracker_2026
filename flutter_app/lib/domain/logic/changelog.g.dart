@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.66.0', '2026-10-19', [
+    'Behind the scenes: the Flutter app has cleaner Expenses rows and day headers, Notes cards you can pin or delete (with Undo) and a count on the tab, Members tiles with role and balance chips and a search box on bigger trips, and a menu to edit or delete travel passes. The Groups / People switch under Who paid now only changes that card, not Who pays whom.',
+  ]),
   ChangelogEntry('3.65.0', '2026-10-19', [
     'Behind the scenes: the Flutter Balances tab replaces the To receive / To pay tiles with one You paid / Your share / Difference strip (tap it to see which expenses move your balance), and saving an expense offline now says it is saved on your phone and will sync later.',
   ]),
@@ -40,8 +43,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.54.0', '2026-10-09', [
     'Behind the scenes: the Flutter app has a boarding-pass look for Summary, Expenses and Passes, and the Fewest / Per person switch now updates right away instead of snapping back. No change to the web app.',
-  ]),
-  ChangelogEntry('3.53.0', '2026-10-09', [
-    'Trip Members: Adding a person now requires a mandatory Gmail ID (@gmail.com) with smart auto-completion, real-time Google account preview, and automatic member claiming across Flutter and Web.',
   ]),
 ];

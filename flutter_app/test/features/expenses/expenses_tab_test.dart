@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:trip_tracker/features/expenses/presentation/widgets/settle_ticket.dart' show TicketBarcode;
 import 'package:go_router/go_router.dart';
 import 'package:trip_tracker/data/local/app_database.dart';
 import 'package:trip_tracker/data/providers.dart';
@@ -192,6 +193,31 @@ void main() {
       expect(find.byKey(const Key('row-review')), findsOneWidget);
       expect(find.text('Payer was removed — assign a new payer.'), findsOneWidget);
       expect(c, isNotNull);
+    });
+
+    testApp('tidy rows drop the receipt barcode; flag off brings the boarding-receipt row back', (tester) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await addExpense(tester, s, title: 'Plain row', amount: 60, paidBy: s.ben);
+      await openExpenses(tester, s);
+      await tester.tap(find.byKey(const Key('tab-menu')));
+      await settle(tester);
+      await tester.tap(find.text('Expand all days'));
+      await settle(tester);
+      expect(find.byKey(const Key('row-amount')), findsOneWidget);
+      expect(find.byType(TicketBarcode), findsNothing);
+    });
+
+    testApp('flag off: the receipt row keeps its barcode', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableTidyExpenses'});
+      final s = await seedTrip(tester);
+      await addExpense(tester, s, title: 'Plain row', amount: 60, paidBy: s.ben);
+      await openExpenses(tester, s);
+      await tester.tap(find.byKey(const Key('tab-menu')));
+      await settle(tester);
+      await tester.tap(find.text('Expand all days'));
+      await settle(tester);
+      expect(find.byType(TicketBarcode), findsOneWidget);
     });
 
     testApp('badges: pending approval, dispute, pending sync, sync conflict', (tester) async {

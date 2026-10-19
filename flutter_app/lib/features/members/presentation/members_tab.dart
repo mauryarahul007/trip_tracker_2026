@@ -27,12 +27,20 @@ import '../../settings/presentation/settings_widgets.dart' show SettingsIcon;
 import '../../trip_details/application/trip_nav.dart';
 import '../../trips/presentation/widgets/share_trip_sheet.dart';
 
-class MembersTab extends ConsumerWidget {
+class MembersTab extends ConsumerStatefulWidget {
   const MembersTab({required this.tripId, super.key});
   final String tripId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MembersTab> createState() => _MembersTabState();
+}
+
+class _MembersTabState extends ConsumerState<MembersTab> {
+  String get tripId => widget.tripId;
+  var _query = '';
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final members = ref.watch(tripMembersProvider(tripId)).value ?? const <Member>[];
     final groups = ref.watch(tripGroupsProvider(tripId)).value ?? const <Group>[];
@@ -42,10 +50,18 @@ class MembersTab extends ConsumerWidget {
     final canManage =
         ref.watch(isTripAdminProvider(tripId)) ||
         canManageTrip(trip, ref.watch(myMemberIdProvider(tripId)), ref.watch(isTripAdminProvider(tripId)));
+    final tidy = ref.watch(flagProvider(('enableTidyMembers', tripId))).value ?? true;
     final active = [
       for (final m in members)
         if (!m.archived) m,
     ];
+    final q = _query.trim().toLowerCase();
+    final shown = tidy && q.isNotEmpty
+        ? [
+            for (final m in active)
+              if (m.name.toLowerCase().contains(q) || (m.email ?? '').toLowerCase().contains(q)) m,
+          ]
+        : active;
     final archived = [
       for (final m in members)
         if (m.archived) m,
@@ -60,14 +76,19 @@ class MembersTab extends ConsumerWidget {
         Row(
           children: [
             Expanded(
-              child: AppButton(key: const Key('member-add'), label: l10n.memAdd, onPressed: () => _add(context, ref)),
+              child: AppButton(
+                key: const Key('member-add'),
+                label: l10n.memAdd,
+                variant: tidy ? AppButtonVariant.secondary : AppButtonVariant.primary,
+                onPressed: () => _add(context, ref),
+              ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: AppButton(
                 key: const Key('member-invite'),
                 label: l10n.memInvite,
-                variant: AppButtonVariant.secondary,
+                variant: tidy ? AppButtonVariant.primary : AppButtonVariant.secondary,
                 onPressed: () => AppSheet.show<void>(
                   context: context,
                   title: l10n.inviteSheetTitle,
@@ -78,7 +99,21 @@ class MembersTab extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 12),
-        for (final m in active) _row(context, ref, m, balances[m.id], money, canManage, trip?.baseCurrency ?? 'INR'),
+        if (tidy && active.length > 8)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: TextField(
+              key: const Key('member-search'),
+              onChanged: (v) => setState(() => _query = v),
+              decoration: InputDecoration(
+                hintText: l10n.memSearchHint,
+                prefixIcon: const Icon(Icons.search_rounded),
+                isDense: true,
+              ),
+            ),
+          ),
+        for (final m in shown)
+          _row(context, ref, m, balances[m.id], money, canManage, trip?.baseCurrency ?? 'INR', tidy: tidy),
         if (archived.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.only(top: 16, bottom: 4),
@@ -149,10 +184,12 @@ class MembersTab extends ConsumerWidget {
     double? balance,
     bool money,
     bool canManage,
-    String currency,
-  ) {
+    String currency, {
+    bool tidy = false,
+  }) {
     final l10n = context.l10n;
     final role = getMemberRole(ref.watch(tripProvider(tripId)).value, m.id);
+    if (tidy) return _tidyRow(context, ref, m, balance, money, canManage, currency, role);
     String? moneyText;
     if (money && balance != null && balance.abs() >= 0.005) {
       final amount = formatMoney(context, balance.abs(), currency);
@@ -218,6 +255,108 @@ class MembersTab extends ConsumerWidget {
                 ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Flat list tile: avatar, name, role chip and Gmail state; balance chip and actions on the right.
+  Widget _tidyRow(
+    BuildContext context,
+    WidgetRef ref,
+    Member m,
+    double? balance,
+    bool money,
+    bool canManage,
+    String currency,
+    String role,
+  ) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final showBalance = money && balance != null && balance.abs() >= 0.005;
+    final isOwed = (balance ?? 0) > 0;
+    Widget chip(String label, Color fg, Color bg, {Key? key}) => Container(
+      key: key,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(99)),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: fg),
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: m.archived ? t.bgSurfaceHover : t.bgSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(t.radiusMd),
+          side: BorderSide(color: t.borderColor),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          key: Key('member-${m.id}'),
+          leading: AppAvatar(name: m.name, avatarUrl: m.avatarUrl, size: 40),
+          title: Text(
+            m.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontWeight: FontWeight.w600, color: t.textPrimary),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                chip(
+                  _roleLabel(l10n, role),
+                  role == 'organizer' ? t.primaryAccent : t.textSecondary,
+                  role == 'organizer' ? t.primaryAccent.withValues(alpha: 0.14) : t.bgSurfaceHover,
+                  key: Key('member-role-chip-${m.id}'),
+                ),
+                if (showBalance)
+                  chip(
+                    isOwed
+                        ? l10n.ledOwed(formatMoney(context, balance.abs(), currency))
+                        : l10n.ledOwes(formatMoney(context, balance.abs(), currency)),
+                    isOwed ? t.colorSuccess : t.colorDanger,
+                    (isOwed ? t.colorSuccess : t.colorDanger).withValues(alpha: 0.12),
+                    key: Key('member-balance-${m.id}'),
+                  ),
+                if (m.email != null && m.email!.isNotEmpty)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        m.linkedUserId != null ? Icons.check_circle_outline_rounded : Icons.schedule_rounded,
+                        size: 12,
+                        color: m.linkedUserId != null ? t.colorSuccess : t.textMuted,
+                      ),
+                      const SizedBox(width: 3),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 160),
+                        child: Text(
+                          m.email!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 11.5, color: t.textMuted),
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          onTap: canManage ? () => _actions(context, ref, m, role) : null,
+          trailing: canManage
+              ? IconButton(
+                  tooltip: 'Member actions',
+                  key: Key('member-actions-${m.id}'),
+                  icon: const Icon(Icons.more_horiz_rounded),
+                  onPressed: () => _actions(context, ref, m, role),
+                )
+              : null,
         ),
       ),
     );
@@ -393,7 +532,7 @@ class _GroupDetail extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.memGroupMembers(members.length), style: MembersTab._sectionStyle(context)),
+          Text(l10n.memGroupMembers(members.length), style: sectionLabelStyle(context)),
           const SizedBox(height: 8),
           for (final m in members)
             ListTile(

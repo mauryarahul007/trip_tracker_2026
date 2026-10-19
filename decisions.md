@@ -5161,3 +5161,11 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Test fix:** `upi_and_layover_enhancements_test.dart` disabled haptics in its bare MaterialApp (the haptic await never completed), fixing the failing UPI sheet test; no app code changed.
 * **Release Cut:** version bumped to `3.65.0` via `npm run release:minor`.
 
+---
+
+## Flutter v3.66.0: tidy Expenses, Notes and Members, edit and delete passes, analytics switch
+* **Context:** The Expenses rows were decorative boarding-receipt cards, Notes had no pin or delete, Members were tinted tiles, passes could only be added, and the Groups / People switch in the Who paid card also changed Who pays whom.
+* **Decision:** Four Trip-pack flags, default ON: `enableTidyExpenses` (flat rows, calm day header; share and get-back on separate lines), `enableTidyNotes` (cards, pin, delete with Undo, edited time, count), `enableTidyMembers` (role and balance chips, search past 8 members; the balance chip sits under the name so 200% text does not overflow), `enablePassEditDelete` (menu on each pass; edit keeps fields the form does not show; delete confirms and offers Undo). The Who paid switch now has its own state and no longer drives the settlement list (bug fix, no flag).
+* **Trade-offs Accepted:** Passes are written as whole lists like notes and checklist, so a concurrent edit by someone else can overwrite; no long-press shortcut on passes.
+* **Release Cut:** version bumped to `3.66.0` via `npm run release:minor`.
+

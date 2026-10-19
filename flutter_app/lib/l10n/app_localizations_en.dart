@@ -2153,6 +2153,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importNone => 'Nothing to import.';
 
   @override
+  String get memSearchHint => 'Search members';
+
+  @override
   String get memAdd => 'Add person';
 
   @override
@@ -2312,6 +2315,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesPassTitle => 'Title';
+
+  @override
+  String get notesNoteDeleted => 'Note deleted';
+
+  @override
+  String get notesNotePin => 'Pin to top';
+
+  @override
+  String get notesNoteUnpin => 'Unpin';
+
+  @override
+  String notesNoteEdited(String when) {
+    return 'Edited $when';
+  }
+
+  @override
+  String get notesNoteMenu => 'Note options';
+
+  @override
+  String get notesEditPass => 'Edit pass';
+
+  @override
+  String get notesSavePass => 'Save pass';
+
+  @override
+  String get notesPassMenu => 'Pass options';
+
+  @override
+  String get notesPassWhen => 'Date and time';
+
+  @override
+  String get notesPassPickWhen => 'Set date and time';
+
+  @override
+  String get notesPassSeat => 'Seat or room';
+
+  @override
+  String get notesPassRef => 'Booking reference';
+
+  @override
+  String get notesPassPassenger => 'Passenger';
+
+  @override
+  String get notesPassDeleted => 'Pass deleted';
+
+  @override
+  String get notesPassDeleteTitle => 'Delete this pass?';
+
+  @override
+  String get notesPassDeleteBody => 'It is removed for everyone on the trip. You can undo right after.';
+
+  @override
+  String get notesPassKeep => 'Keep';
 
   @override
   String get notesPassFlight => 'Flight';

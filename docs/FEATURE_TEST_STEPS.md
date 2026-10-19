@@ -97,6 +97,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-18 | flutter | FLUTTER-SHEET-HANDLES | [Flutter: consistent bottom sheets](#flutter-sheet-handles--flutter-consistent-bottom-sheets) |
 | 2026-10-18 | flutter | FLUTTER-PAID-LEGEND | [Flutter: Who paid labels](#flutter-paid-legend--flutter-who-paid-labels) |
 | 2026-10-19 | flutter | FLUTTER-PAID-VS-SHARE | [Flutter: You paid vs your share, balance explainer, saved-offline toast](#flutter-paid-vs-share--flutter-you-paid-vs-your-share-balance-explainer-saved-offline-toast) |
+| 2026-10-19 | flutter | FLUTTER-TIDY-TABS | [Flutter: tidy Expenses, Notes and Members, edit and delete passes, analytics switch](#flutter-tidy-tabs--flutter-tidy-expenses-notes-and-members-edit-and-delete-passes-analytics-switch) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -3249,3 +3250,30 @@ Then add a row to the **Index** table.
 **Flag-OFF checks:** `enableYouPaidVsShare` OFF: the To receive / To pay tiles return, no strip. `enableBalanceExplainer` OFF: the strip shows but is not tappable and has no "Tap to see" line. `enableSavedOfflineToast` OFF: no message when saving offline.
 
 **Pass:** figures match the expense list; the difference is before recorded settlements, so it can differ from the hero after payments.
+
+## FLUTTER-TIDY-TABS — Flutter: tidy Expenses, Notes and Members, edit and delete passes, analytics switch
+
+**Flags:** `enableTidyExpenses`, `enableTidyNotes`, `enableTidyMembers`, `enablePassEditDelete` (Trip pack, default ON).
+
+**Expenses**
+1. Open Expenses: each row is a flat bordered tile (category tile, title, "Paid by X · Split with N", amount on the right, "Your share" under it; "Get back" in green when you paid). No glow, perforation or barcode. Day headers are calm: small spaced label, bold day total, count.
+2. Tap a row, swipe it, search, open Filters: all behave as before. Compact view and the wide table are unchanged.
+
+**Notes**
+3. The Notes pane label shows a count. Each note is a bordered card with its title, an inline editable body and "Edited 2h ago".
+4. Card menu (...) > **Pin to top**: the note moves to the top with a pin icon. **Delete**: the note goes and a snackbar offers **UNDO**, which brings it back.
+
+**Members**
+5. Each member is a flat tile with a role chip (Organizer highlighted), the Gmail state, and (with the money-row flag) a green or red balance chip. **Invite** is the filled button, **Add member** the outlined one.
+6. With more than 8 active members a **Search members** box filters by name or email.
+
+**Passes**
+7. Notes > Passes: each pass card has a (...) menu. **Edit** opens the pass with its values, now with date and time, passenger, seat or room and booking reference. Save, and the card updates; details not shown in the form (booking id, QR, attachment) are kept.
+8. **Delete** asks "Delete this pass?"; **Keep** cancels; **Delete** removes it with an **UNDO** snackbar.
+
+**Analytics switch**
+9. With groups on the trip, Trip numbers > People > switch Groups / Members: only the Who paid card changes. **Who pays whom** keeps showing group transfers; the Fewest / Per person toggle is unaffected.
+
+**Flag-OFF checks:** `enableTidyExpenses` OFF: boarding-receipt rows with barcode and the old day header. `enableTidyNotes` OFF: plain note cards, no menu, no count. `enableTidyMembers` OFF: tinted tiles, no chips, no search. `enablePassEditDelete` OFF: no (...) menu on passes.
+
+**Pass:** nothing is lost or duplicated on edit, undo restores the exact pass, and the analytics switch never changes the settlement list.

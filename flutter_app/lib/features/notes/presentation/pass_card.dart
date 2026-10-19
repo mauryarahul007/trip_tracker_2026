@@ -4,6 +4,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../domain/logic/pass_sort.dart';
 import '../../../domain/models/travel_pass.dart';
+import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/bento_tile.dart' show toneFor;
@@ -19,12 +20,16 @@ IconData passIcon(String type) => switch (type) {
 /// One travel pass as a boarding pass: route, time, passenger and seat on the main body, a vertical
 /// perforation, and a QR / action stub.
 class PassCard extends StatelessWidget {
-  const PassCard({super.key, required this.pass, this.onTap, this.onScan, this.onStatus});
+  const PassCard({super.key, required this.pass, this.onTap, this.onScan, this.onStatus, this.onEdit, this.onDelete});
 
   final TravelPass pass;
   final VoidCallback? onTap;
   final VoidCallback? onScan;
   final VoidCallback? onStatus;
+
+  /// Edit / delete menu (enablePassEditDelete); hidden when both are null.
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +92,7 @@ class PassCard extends StatelessWidget {
                                     ),
                                   ),
                                 ),
+                              if (onEdit != null || onDelete != null) const SizedBox(width: 32),
                             ],
                           ),
                           const SizedBox(height: 8),
@@ -184,6 +190,21 @@ class PassCard extends StatelessWidget {
                   ),
                 ],
               ),
+              if (onEdit != null || onDelete != null)
+                Positioned(
+                  top: 0,
+                  right: _stubWidth + 2,
+                  child: PopupMenuButton<String>(
+                    key: Key('pass-menu-${p.id}'),
+                    tooltip: context.l10n.notesPassMenu,
+                    icon: Icon(Icons.more_horiz_rounded, color: t.textSecondary),
+                    onSelected: (v) => v == 'edit' ? onEdit?.call() : onDelete?.call(),
+                    itemBuilder: (_) => [
+                      if (onEdit != null) PopupMenuItem(value: 'edit', child: Text(context.l10n.rowEdit)),
+                      if (onDelete != null) PopupMenuItem(value: 'delete', child: Text(context.l10n.rowDelete)),
+                    ],
+                  ),
+                ),
               // Vertical perforation, centred on the stub's left edge.
               Positioned(
                 top: 0,
