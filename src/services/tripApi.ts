@@ -53,6 +53,7 @@ function mapMember(row: MemberRow & { profile?: { avatar_url: string | null } | 
   return {
     id: row.id,
     name: row.name,
+    email: row.email ?? undefined,
     archived: row.archived,
     linkedUserId: row.linked_user_id,
     avatarUrl: row.profile?.avatar_url ?? undefined,
@@ -490,10 +491,16 @@ export async function deleteAllMyTrips(ownerId: string): Promise<void> {
 // Members
 // ---------------------------------------------------------------------------
 
-export async function insertMember(tripId: string, name: string, linkedUserId?: string, id?: string): Promise<Member> {
+export async function insertMember(tripId: string, name: string, linkedUserId?: string, id?: string, email?: string): Promise<Member> {
   const { data, error } = await supabase
     .from('members')
-    .insert({ ...(id ? { id } : {}), trip_id: tripId, name, ...(linkedUserId ? { linked_user_id: linkedUserId } : {}) })
+    .insert({
+      ...(id ? { id } : {}),
+      trip_id: tripId,
+      name,
+      ...(email ? { email: email.trim().toLowerCase() } : {}),
+      ...(linkedUserId ? { linked_user_id: linkedUserId } : {}),
+    })
     .select('*, profile:linked_user_id(avatar_url)')
     .single();
   if (error) throw error;
@@ -1133,7 +1140,7 @@ export async function fetchPreviousTripMembers(userId: string | null | undefined
     // Fetch members associated with these trips
     const { data: membersData, error: membersErr } = await supabase
       .from('members')
-      .select('name, linked_user_id, profile:linked_user_id(avatar_url, display_name)')
+      .select('name, email, linked_user_id, profile:linked_user_id(avatar_url, display_name)')
       .in('trip_id', tripIds);
 
     if (membersErr) {
@@ -1158,6 +1165,7 @@ export async function fetchPreviousTripMembers(userId: string | null | undefined
       name: rawName,
       linkedUserId: row.linked_user_id || null,
       avatarUrl: row.profile?.avatar_url || null,
+      email: row.email || null,
     };
 
     if (!existing) {
@@ -1168,6 +1176,9 @@ export async function fetchPreviousTripMembers(userId: string | null | undefined
         memberMap.set(normalizedName, suggestion);
       } else if (!existing.avatarUrl && suggestion.avatarUrl) {
         existing.avatarUrl = suggestion.avatarUrl;
+      }
+      if (!existing.email && suggestion.email) {
+        existing.email = suggestion.email;
       }
     }
   });
@@ -1199,14 +1210,14 @@ export async function searchRemoteMemberSuggestions(
     // 1. Search profiles for Google accounts
     const { data: profilesData } = await supabase
       .from('profiles')
-      .select('id, display_name, avatar_url')
+      .select('id, display_name, avatar_url, email')
       .ilike('display_name', `%${trimmed}%`)
       .limit(10);
 
     // 2. Search all members for previous trip participant names
     const { data: membersData } = await supabase
       .from('members')
-      .select('name, linked_user_id, profile:linked_user_id(avatar_url, display_name)')
+      .select('name, email, linked_user_id, profile:linked_user_id(avatar_url, display_name)')
       .ilike('name', `%${trimmed}%`)
       .limit(10);
 
@@ -1219,6 +1230,7 @@ export async function searchRemoteMemberSuggestions(
         name,
         linkedUserId: p.id,
         avatarUrl: p.avatar_url || null,
+        email: p.email || null,
       });
     });
 
@@ -1232,12 +1244,14 @@ export async function searchRemoteMemberSuggestions(
           name,
           linkedUserId: m.linked_user_id || null,
           avatarUrl: m.profile?.avatar_url || null,
+          email: m.email || null,
         });
       } else if (!existing.linkedUserId && m.linked_user_id) {
         memberMap.set(norm, {
           name,
           linkedUserId: m.linked_user_id,
           avatarUrl: m.profile?.avatar_url || existing.avatarUrl,
+          email: m.email || existing.email || null,
         });
       }
     });
@@ -1251,6 +1265,28 @@ export async function searchRemoteMemberSuggestions(
   } catch (err) {
     console.error('Remote member search error:', err);
     return [];
+  }
+}
+
+export async function lookupProfileByEmail(
+  email: string
+): Promise<{ id: string; display_name: string | null; avatar_url: string | null } | null> {
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) return null;
+  try {
+    const { data, error } = await supabase.rpc('lookup_profile_by_email', { p_email: trimmed });
+    if (!error && Array.isArray(data) && data.length > 0) {
+      return data[0];
+    }
+    // Fallback direct profile query
+    const { data: directData } = await supabase
+      .from('profiles')
+      .select('id, display_name, avatar_url')
+      .eq('email', trimmed)
+      .maybeSingle();
+    return (directData as { id: string; display_name: string | null; avatar_url: string | null } | null) || null;
+  } catch {
+    return null;
   }
 }
 

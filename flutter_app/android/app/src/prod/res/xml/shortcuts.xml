@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press the app icon: Add expense and Latest trip. The app decides what "latest" means and whether the
+     shortcuts are enabled (flag enableAppShortcuts); the intents just open the app with a link. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="add_expense"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_add_expense_short"
+        android:shortcutLongLabel="@string/shortcut_add_expense_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.triptracker.app"
+            android:targetClass="com.triptracker.app.MainActivity"
+            android:data="com.triptracker.app://shortcut/add-expense" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="latest_trip"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_latest_trip_short"
+        android:shortcutLongLabel="@string/shortcut_latest_trip_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.triptracker.app"
+            android:targetClass="com.triptracker.app.MainActivity"
+            android:data="com.triptracker.app://shortcut/latest-trip" />
+    </shortcut>
+</shortcuts>

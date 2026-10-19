@@ -1,0 +1,367 @@
+{
+  "trip": {
+    "id": "t1",
+    "name": "Alps Tour",
+    "startDate": "2026-10-01",
+    "endDate": "2026-10-08",
+    "baseCurrency": "EUR",
+    "ownerId": "u1",
+    "memberIds": [
+      "m1",
+      "m2",
+      "m3",
+      "m4",
+      "m5"
+    ],
+    "groupIds": [
+      "g1"
+    ],
+    "joinCode": "ALPS26",
+    "createdAt": 0,
+    "updatedAt": 0
+  },
+  "members": [
+    {
+      "id": "m1",
+      "name": "Alice",
+      "linkedUserId": "u1"
+    },
+    {
+      "id": "m2",
+      "name": "Bob",
+      "linkedUserId": "u2"
+    },
+    {
+      "id": "m3",
+      "name": "Charlie",
+      "linkedUserId": null
+    },
+    {
+      "id": "m4",
+      "name": "Diana",
+      "linkedUserId": null
+    },
+    {
+      "id": "m5",
+      "name": "Archived Evan",
+      "linkedUserId": null,
+      "archived": true
+    }
+  ],
+  "expenses": [
+    {
+      "id": "e1",
+      "tripId": "t1",
+      "title": "Chalet Dinner",
+      "amount": 100,
+      "currency": "EUR",
+      "date": "2026-10-01",
+      "paidBy": "m1",
+      "splitMode": "equal",
+      "splitMemberIds": [
+        "m1",
+        "m2",
+        "m3"
+      ],
+      "resolvedShares": {
+        "m1": 33.34,
+        "m2": 33.33,
+        "m3": 33.33
+      },
+      "createdAt": 1,
+      "updatedAt": 1,
+      "isSettlement": false
+    },
+    {
+      "id": "e2",
+      "tripId": "t1",
+      "title": "Ski Gear Rental",
+      "amount": 120,
+      "currency": "EUR",
+      "date": "2026-10-02",
+      "paidBy": "m2",
+      "splitMode": "exact",
+      "splitMemberIds": [
+        "m1",
+        "m3",
+        "m4"
+      ],
+      "resolvedShares": {
+        "m1": 50,
+        "m3": 40,
+        "m4": 30
+      },
+      "createdAt": 2,
+      "updatedAt": 2,
+      "isSettlement": false
+    },
+    {
+      "id": "e3",
+      "tripId": "t1",
+      "title": "Cable Car Pass",
+      "amount": 200,
+      "currency": "EUR",
+      "date": "2026-10-03",
+      "paidBy": "m3",
+      "splitMode": "percent",
+      "splitMemberIds": [
+        "m1",
+        "m2",
+        "m4"
+      ],
+      "resolvedShares": {
+        "m1": 100,
+        "m2": 50,
+        "m4": 50
+      },
+      "createdAt": 3,
+      "updatedAt": 3,
+      "isSettlement": false
+    },
+    {
+      "id": "e4",
+      "tripId": "t1",
+      "title": "Mountain Guide",
+      "amount": 150,
+      "currency": "EUR",
+      "date": "2026-10-04",
+      "paidBy": "m4",
+      "splitMode": "custom",
+      "splitMemberIds": [
+        "m1",
+        "m2",
+        "m3"
+      ],
+      "resolvedShares": {
+        "m1": 75,
+        "m2": 50,
+        "m3": 25
+      },
+      "createdAt": 4,
+      "updatedAt": 4,
+      "isSettlement": false
+    },
+    {
+      "id": "e5",
+      "tripId": "t1",
+      "title": "Helicopter Tour",
+      "amount": 600,
+      "currency": "EUR",
+      "date": "2026-10-05",
+      "paidBy": "m1",
+      "paidByShares": {
+        "m1": 400,
+        "m2": 200
+      },
+      "splitMode": "equal",
+      "splitMemberIds": [
+        "m1",
+        "m2",
+        "m3",
+        "m4"
+      ],
+      "resolvedShares": {
+        "m1": 150,
+        "m2": 150,
+        "m3": 150,
+        "m4": 150
+      },
+      "createdAt": 5,
+      "updatedAt": 5,
+      "isSettlement": false
+    },
+    {
+      "id": "e6",
+      "tripId": "t1",
+      "title": "Settlement: Bob to Alice",
+      "amount": 50,
+      "currency": "EUR",
+      "date": "2026-10-06",
+      "paidBy": "m2",
+      "isSettlement": true,
+      "reimbursementToMemberId": "m1",
+      "splitMemberIds": [
+        "m1"
+      ],
+      "resolvedShares": {
+        "m1": 50
+      },
+      "createdAt": 6,
+      "updatedAt": 6
+    }
+  ],
+  "results": {
+    "simplified": {
+      "balances": [
+        {
+          "memberId": "m1",
+          "name": "Alice",
+          "balance": 41.66
+        },
+        {
+          "memberId": "m2",
+          "name": "Bob",
+          "balance": 86.67
+        },
+        {
+          "memberId": "m3",
+          "name": "Charlie",
+          "balance": -48.33
+        },
+        {
+          "memberId": "m4",
+          "name": "Diana",
+          "balance": -80
+        },
+        {
+          "memberId": "m5",
+          "name": "Archived Evan",
+          "balance": 0
+        }
+      ],
+      "transfers": [
+        {
+          "from": "member:m4",
+          "to": "group:g1",
+          "fromLabel": "Diana",
+          "toLabel": "Couples (Alice & Bob)",
+          "fromMemberId": "m4",
+          "toMemberId": "m2",
+          "amount": 80
+        },
+        {
+          "from": "member:m3",
+          "to": "group:g1",
+          "fromLabel": "Charlie",
+          "toLabel": "Couples (Alice & Bob)",
+          "fromMemberId": "m3",
+          "toMemberId": "m2",
+          "amount": 48.33
+        }
+      ],
+      "isSimplified": true
+    },
+    "direct": {
+      "balances": [
+        {
+          "memberId": "m1",
+          "name": "Alice",
+          "balance": 41.66
+        },
+        {
+          "memberId": "m2",
+          "name": "Bob",
+          "balance": 86.67
+        },
+        {
+          "memberId": "m3",
+          "name": "Charlie",
+          "balance": -48.33
+        },
+        {
+          "memberId": "m4",
+          "name": "Diana",
+          "balance": -80
+        },
+        {
+          "memberId": "m5",
+          "name": "Archived Evan",
+          "balance": 0
+        }
+      ],
+      "transfers": [
+        {
+          "from": "member:m3",
+          "to": "member:m2",
+          "fromLabel": "Charlie",
+          "toLabel": "Bob",
+          "fromMemberId": "m3",
+          "toMemberId": "m2",
+          "amount": 40
+        },
+        {
+          "from": "member:m3",
+          "to": "member:m1",
+          "fromLabel": "Charlie",
+          "toLabel": "Alice",
+          "fromMemberId": "m3",
+          "toMemberId": "m1",
+          "amount": 33.33
+        },
+        {
+          "from": "member:m4",
+          "to": "member:m2",
+          "fromLabel": "Diana",
+          "toLabel": "Bob",
+          "fromMemberId": "m4",
+          "toMemberId": "m2",
+          "amount": 30
+        },
+        {
+          "from": "member:m4",
+          "to": "member:m1",
+          "fromLabel": "Diana",
+          "toLabel": "Alice",
+          "fromMemberId": "m4",
+          "toMemberId": "m1",
+          "amount": 25
+        },
+        {
+          "from": "member:m4",
+          "to": "member:m3",
+          "fromLabel": "Diana",
+          "toLabel": "Charlie",
+          "fromMemberId": "m4",
+          "toMemberId": "m3",
+          "amount": 25
+        }
+      ],
+      "isSimplified": false
+    },
+    "summary": {
+      "isFullySettled": false,
+      "totalOutstanding": 128.32999999999998,
+      "transferCount": 2,
+      "unsettledMemberCount": 4
+    },
+    "pairGroups": [
+      {
+        "fromMemberId": "m2",
+        "toMemberId": "m1",
+        "totalPaid": 50,
+        "payments": [
+          {
+            "id": "e6",
+            "tripId": "t1",
+            "title": "Settlement: Bob to Alice",
+            "amount": 50,
+            "currency": "EUR",
+            "date": "2026-10-06",
+            "paidBy": "m2",
+            "isSettlement": true,
+            "reimbursementToMemberId": "m1",
+            "splitMemberIds": [
+              "m1"
+            ],
+            "resolvedShares": {
+              "m1": 50
+            },
+            "createdAt": 6,
+            "updatedAt": 6
+          }
+        ]
+      }
+    ],
+    "singleMemberResult": {
+      "balances": [
+        {
+          "memberId": "m1",
+          "name": "Alice",
+          "balance": 0
+        }
+      ],
+      "transfers": [],
+      "isSimplified": true
+    }
+  }
+}

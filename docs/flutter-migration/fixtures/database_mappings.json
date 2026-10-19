@@ -1,0 +1,196 @@
+{
+  "trips": {
+    "dbRow": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Iceland Expedition",
+      "start_date": "2026-10-01",
+      "end_date": "2026-10-08",
+      "base_currency": "USD",
+      "owner_id": "d9b2d63d-a233-4f24-9b22-e42a9a7a9741",
+      "join_code": "ICE123",
+      "archived": false,
+      "frozen": false,
+      "closed": false,
+      "destination": "Reykjavik",
+      "stops": [],
+      "checklist": [],
+      "notes": [],
+      "passes": [],
+      "fx_config": null,
+      "member_roles": {},
+      "split_exclusion_defaults": {},
+      "category_order": null,
+      "share_token": null,
+      "share_enabled": false,
+      "share_expires_at": null,
+      "share_view_count": 0,
+      "closeout_pulse": null,
+      "closeout_pulse_at": null,
+      "splitwise_imported_at": null,
+      "splitwise_import_count": null,
+      "approval_threshold": null,
+      "created_at": "2026-10-01T00:00:00.000Z"
+    },
+    "appObject": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Iceland Expedition",
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-08",
+      "baseCurrency": "USD",
+      "ownerId": "d9b2d63d-a233-4f24-9b22-e42a9a7a9741",
+      "joinCode": "ICE123",
+      "archived": false,
+      "frozen": false,
+      "closed": false,
+      "destination": "Reykjavik",
+      "stops": [],
+      "checklist": [],
+      "notes": [],
+      "passes": [],
+      "fxConfig": null,
+      "memberRoles": {},
+      "splitExclusionDefaults": {},
+      "categoryOrder": null,
+      "shareToken": null,
+      "shareEnabled": false,
+      "shareExpiresAt": null,
+      "shareViewCount": 0,
+      "closeoutPulse": null,
+      "closeoutPulseAt": null,
+      "splitwiseImportedAt": null,
+      "splitwiseImportCount": null,
+      "approvalThreshold": null,
+      "createdAt": "2026-10-01T00:00:00.000Z"
+    }
+  },
+  "expenses": {
+    "dbRow": {
+      "id": "e29b41d4-550e-4400-a716-446655440001",
+      "trip_id": "550e8400-e29b-41d4-a716-446655440000",
+      "title": "Blue Lagoon Spa",
+      "amount": 180.5,
+      "currency": "EUR",
+      "category": "Entertainment",
+      "date": "2026-10-02",
+      "paid_by": "550e8400-e29b-41d4-a716-446655440002",
+      "paid_by_shares": null,
+      "split_mode": "equal",
+      "split_member_ids": [
+        "550e8400-e29b-41d4-a716-446655440002",
+        "550e8400-e29b-41d4-a716-446655440003"
+      ],
+      "split_config": null,
+      "itemized_config": null,
+      "resolved_shares": {
+        "550e8400-e29b-41d4-a716-446655440002": 90.25,
+        "550e8400-e29b-41d4-a716-446655440003": 90.25
+      },
+      "receipt_path": "receipts/t1/e1.jpg",
+      "photo_paths": null,
+      "disputed_at": null,
+      "disputed_by_user_id": null,
+      "dispute_note": null,
+      "settlement_confirmed_at": null,
+      "settlement_confirmed_by_user_id": null,
+      "approval_status": "confirmed",
+      "approved_by_user_id": null,
+      "is_settlement": false,
+      "created_by_user_id": "d9b2d63d-a233-4f24-9b22-e42a9a7a9741",
+      "location": {
+        "lat": 63.88,
+        "lng": -22.45
+      },
+      "deleted_at": "2026-10-03T08:00:00.000Z",
+      "deleted_by_user_id": "d9b2d63d-a233-4f24-9b22-e42a9a7a9741",
+      "created_at": "2026-10-02T12:00:00.000Z",
+      "updated_at": "2026-10-02T12:30:00.000Z"
+    },
+    "appObject": {
+      "id": "e29b41d4-550e-4400-a716-446655440001",
+      "tripId": "550e8400-e29b-41d4-a716-446655440000",
+      "title": "Blue Lagoon Spa",
+      "amount": 180.5,
+      "currency": "EUR",
+      "category": "Entertainment",
+      "date": "2026-10-02",
+      "paidBy": "550e8400-e29b-41d4-a716-446655440002",
+      "splitMode": "equal",
+      "splitMemberIds": [
+        "550e8400-e29b-41d4-a716-446655440002",
+        "550e8400-e29b-41d4-a716-446655440003"
+      ],
+      "resolvedShares": {
+        "550e8400-e29b-41d4-a716-446655440002": 90.25,
+        "550e8400-e29b-41d4-a716-446655440003": 90.25
+      },
+      "receiptPath": "receipts/t1/e1.jpg",
+      "isSettlement": false,
+      "approvalStatus": "confirmed",
+      "createdByUserId": "d9b2d63d-a233-4f24-9b22-e42a9a7a9741",
+      "location": {
+        "lat": 63.88,
+        "lng": -22.45
+      },
+      "deletedAt": 1791014400000,
+      "deletedByUserId": "d9b2d63d-a233-4f24-9b22-e42a9a7a9741",
+      "createdAt": 1790942400000,
+      "updatedAt": 1790944200000
+    }
+  },
+  "messages": {
+    "dbRow": {
+      "id": "a1b2c3d4-0000-4000-8000-000000000001",
+      "trip_id": "550e8400-e29b-41d4-a716-446655440000",
+      "member_id": "550e8400-e29b-41d4-a716-446655440002",
+      "body": "Dinner at 8?",
+      "kind": "text",
+      "payload": null,
+      "created_at": "2026-10-02T12:00:00.000Z",
+      "edited_at": null,
+      "deleted_at": null,
+      "reply_to_id": null,
+      "reactions": {
+        "👍": [
+          "550e8400-e29b-41d4-a716-446655440003"
+        ]
+      },
+      "is_pinned": true
+    },
+    "appObject": {
+      "id": "a1b2c3d4-0000-4000-8000-000000000001",
+      "tripId": "550e8400-e29b-41d4-a716-446655440000",
+      "memberId": "550e8400-e29b-41d4-a716-446655440002",
+      "body": "Dinner at 8?",
+      "eventKind": "text",
+      "createdAt": 1790942400000,
+      "reactions": {
+        "👍": [
+          "550e8400-e29b-41d4-a716-446655440003"
+        ]
+      },
+      "isPinned": true
+    }
+  },
+  "members": {
+    "dbRow": {
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "trip_id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Alice",
+      "linked_user_id": "d9b2d63d-a233-4f24-9b22-e42a9a7a9741",
+      "archived": false,
+      "join_date": "2026-10-01",
+      "leave_date": null,
+      "created_at": "2026-10-01T00:00:00.000Z"
+    },
+    "appObject": {
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "tripId": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Alice",
+      "linkedUserId": "d9b2d63d-a233-4f24-9b22-e42a9a7a9741",
+      "archived": false,
+      "joinDate": "2026-10-01",
+      "leaveDate": null,
+      "createdAt": "2026-10-01T00:00:00.000Z"
+    }
+  }
+}

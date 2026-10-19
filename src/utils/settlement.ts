@@ -288,6 +288,19 @@ export function calculateDirectSettlements(
   return transfers.sort((a, b) => b.amount - a.amount);
 }
 
+/**
+ * Balances for the Members list. A member of a group whose group is square (counted as one party, nobody in it
+ * owes or is owed) shows 0: inside a settled group the members' offsetting amounts are the group's own business,
+ * so Members agrees with the Summary pass. Keep in step with memberBalancesForDisplay in settlement.dart.
+ */
+export function memberBalancesForDisplay(balances: MemberBalance[], groups: Group[]): MemberBalance[] {
+  const squareMembers = new Set<string>();
+  buildSettlementNodes(balances, groups).forEach((n) => {
+    if (n.id.startsWith('group:') && Math.abs(n.balance) < 0.01) n.memberIds.forEach((m) => squareMembers.add(m));
+  });
+  return balances.map((b) => (squareMembers.has(b.memberId) ? { ...b, balance: 0 } : b));
+}
+
 export function calculateSettlements(
   trip: Trip,
   members: Record<string, Member>,
@@ -343,6 +356,26 @@ export function calculateSettlements(
 
   if (!shouldSimplify) {
     const directTransfers = calculateDirectSettlements(trip, members, expenses, groups);
+    // A recorded settlement only cancels the exact pair it names. Paid to someone else (as "Fewest payments" does),
+    // the pair debts stay and per-person shows money owed while every real balance is square. Settled is a fact
+    // about the balances (a group counts as one party), so: all square means nothing is owed, and a list that does
+    // not add up to the real balances falls back to one that does.
+    const nodes = buildSettlementNodes(balances, groups);
+    if (nodes.every((n) => Math.abs(n.balance) < 0.01)) {
+      return { balances, transfers: [], isSimplified: false };
+    }
+    const nodeOf: Record<string, string> = {};
+    nodes.forEach((n) => n.memberIds.forEach((m) => { nodeOf[m] = n.id; }));
+    const implied: Record<string, number> = {};
+    directTransfers.forEach((t) => {
+      const f = nodeOf[t.fromMemberId];
+      const to = nodeOf[t.toMemberId];
+      if (f) implied[f] = (implied[f] || 0) - t.amount;
+      if (to) implied[to] = (implied[to] || 0) + t.amount;
+    });
+    if (nodes.some((n) => Math.abs((implied[n.id] || 0) - n.balance) > 0.02)) {
+      return { balances, transfers: matchDebtorsToCreditors(nodes, balances), isSimplified: false };
+    }
     return { balances, transfers: directTransfers, isSimplified: false };
   }
 

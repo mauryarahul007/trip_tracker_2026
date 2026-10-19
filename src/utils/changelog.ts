@@ -9,10 +9,267 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
-    version: '3.43.13',
+    version: '3.69.0',
     date: '2026-10-19',
     changes: [
-      'Settling with a group in two or more parts now works. The second payment used to fail with a permissions error when it was recorded under your groupmate.',
+      'Behind the scenes: the Flutter app now lives on the main branch next to the web app. A push to main still deploys the website, and a green build of the Flutter app is published as an installable Android APK.',
+    ],
+  },
+  {
+    version: '3.68.5',
+    date: '2026-10-19',
+    changes: [
+      'When a whole group has settled, the Members list no longer shows its members as owed or owing. This is fixed on the web and in the Flutter app.',
+    ],
+  },
+  {
+    version: '3.68.4',
+    date: '2026-10-19',
+    changes: [
+      'When a whole group has settled, Per person now shows the trip as settled too, with no payments left to make for the people inside the group. This is fixed on the web and in the Flutter app.',
+    ],
+  },
+  {
+    version: '3.68.3',
+    date: '2026-10-19',
+    changes: [
+      'After everyone has settled, the trip now shows as settled in both Fewest payments and Per person, and the amount outstanding is the same in both. This is fixed on the web and in the Flutter app.',
+      'Behind the scenes (Flutter app): a clearer trip header line, the yellow close-out card disappears once the trip is settled, and a settlement paid to you has a Confirm received button in History.',
+    ],
+  },
+  {
+    version: '3.68.2',
+    date: '2026-10-19',
+    changes: [
+      'Behind the scenes (Flutter app): Voice add expense uses the Google recognizer, understands spoken amounts like "five hundred" or "paanch sau", shows a listening panel and explains errors with Try again.',
+      'Behind the scenes (Flutter app): Edit Trip takes one box per destination, with add and remove.',
+    ],
+  },
+  {
+    version: '3.68.1',
+    date: '2026-10-19',
+    changes: [
+      'Settling with a group in two or more parts now works. The second payment used to fail with a permissions error when it was recorded under your groupmate. Fixed on the web and in the Flutter app.',
+    ],
+  },
+  {
+    version: '3.68.0',
+    date: '2026-10-19',
+    changes: [
+      'Behind the scenes (Flutter app): a cleaner trip header (name, one line of dates, members and expenses), and Edit Trip Details is in the trip name menu and the top-bar menu.',
+      'Behind the scenes (Flutter app): select and delete several passes at once, a filters page that matches the web, a pinned mini settlement pass on Summary, and the settlement pass flips to show You paid, Your share and the difference.',
+      'Behind the scenes (Flutter app): a Voice button on Expenses that listens and fills in the expense for you to confirm.',
+    ],
+  },
+  {
+    version: '3.67.0',
+    date: '2026-10-19',
+    changes: [
+      'Behind the scenes (Flutter app): Settings is one page of cards like the web, with Appearance and Haptics (All, Important, Off), Storage and Data, Archived Trips and Backups.',
+      'Behind the scenes (Flutter app): long-press the trip name for Share, Mute, Edit Trip Details, Settings and Switch trip; the Summary gains attention chips, a close-out banner, Custom amount, Remind, How it works and an At a Glance grid.',
+    ],
+  },
+  {
+    version: '3.66.1',
+    date: '2026-10-19',
+    changes: [
+      'Behind the scenes: the Flutter Notes and Checklist panes show one Add button (the floating one) instead of two, and each collapsed day on Expenses is a clear card with a large bold total and the number of expenses.',
+    ],
+  },
+  {
+    version: '3.66.0',
+    date: '2026-10-19',
+    changes: [
+      'Behind the scenes: the Flutter app has cleaner Expenses rows and day headers, Notes cards you can pin or delete (with Undo) and a count on the tab, Members tiles with role and balance chips and a search box on bigger trips, and a menu to edit or delete travel passes. The Groups / People switch under Who paid now only changes that card, not Who pays whom.',
+    ],
+  },
+  {
+    version: '3.65.0',
+    date: '2026-10-19',
+    changes: [
+      'Behind the scenes: the Flutter Balances tab replaces the To receive / To pay tiles with one You paid / Your share / Difference strip (tap it to see which expenses move your balance), and saving an expense offline now says it is saved on your phone and will sync later.',
+    ],
+  },
+  {
+    version: '3.63.0',
+    date: '2026-10-18',
+    changes: [
+      'Behind the scenes: the Flutter app drops the banner and status row under the trip name and gathers Share, Route map and settings into one More menu (sync shows as a small icon only when needed), adds quick Add item / Add note / Add member buttons, folds Trip numbers away on the Summary until opened, shows a Jump to today chip, recent-amount chips on the expense form, friendlier empty Notes and checklist, skeleton loaders, a High contrast option, a Haptics setting and consistent bottom sheets. The Who paid list now says Their part instead of Share. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.62.0',
+    date: '2026-10-18',
+    changes: [
+      'Behind the scenes: the Flutter app can keep a personal expense out of the trip totals and settlement (a Just for me switch on the form, a Count in trip totals switch on an expense, swipe right on a row, and a Personal filter), switches trips from the trip name in the top bar instead of arrows on the status strip, offers UNDO after recording a payment, and lets you save expense filters as one-tap chips. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.61.0',
+    date: '2026-10-18',
+    changes: [
+      'Behind the scenes: the Flutter app has a tidier Trip numbers section (a headline strip and Categories / People / Days / Details tabs), a celebration when a trip is fully settled, a round-amount option when settling, app icon shortcuts (Add expense, Latest trip), an added/edited line on each expense, a pending-sync dot on trips, trip templates, a two-pane Summary on wide screens, a shareable invite picture, expense quick-filter chips, and bug reports and suggestions that are saved offline and sent when you are back online. Accessibility fixes: labelled trip arrows, larger tap targets, better contrast and no overflow at large text. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.60.0',
+    date: '2026-10-18',
+    changes: [
+      'Behind the scenes: the Flutter app shows trips as destination-photo tiles (with a Grid / List switch and pinned trips), a cover photo band and saved/syncing line inside a trip, arrows to jump between trips, a Today card and a wrap-up prompt on the Summary, a Plan and suggestions card, a spend-by-person ring, a receipt gallery, search that also finds expenses and notes, a Confirm button on notifications, smart expense defaults and an amount keypad, odometer-style rolling numbers on the hero amount, photos kept on the device, an Updated caption with pull to refresh, a first-run tour with a sample trip, sound feedback, a Reduce motion setting, Collapse Trip numbers, and a back gesture that returns to the page you came from. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.59.0',
+    date: '2026-10-18',
+    changes: [
+      'Behind the scenes: the Flutter app has a compact Trips list (cover thumbnails, a status pill and your money on every row, a hero card for the trip happening now, pinned Happening now / Upcoming / Past headers and a summary line across all trips), a Plan and suggestions card at the top of Trip numbers with budget pace and tips, one Groups / People switch that drives both Who pays whom and Who paid, and the back gesture now returns to the page you came from instead of the Trips home. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.58.0',
+    date: '2026-10-17',
+    changes: [
+      'Behind the scenes: the Flutter app shows member avatars and your money position on each trip, groups trips under Happening now / Upcoming / Past, adds a trip header strip, an Add expense choice (Quick add or Full form), a "Pay Ben" next-action banner on Summary, a Notes quick-capture box, one-time tips, and a Group view / Person view switch for settlement that every member can use. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.57.0',
+    date: '2026-10-17',
+    changes: [
+      'Behind the scenes: the Flutter app has a WhatsApp-style Settings list with search, a cleaner Summary and Settlement Pass (your payments first, Settle all, share a summary picture, day-by-day spend, a device-only trip budget), group spend by Paid and Share, editable groups with a 2-member minimum, a title-and-note popup for new notes, a clearer checklist progress card with category bars, and a quicker offline start. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.56.0',
+    date: '2026-10-10',
+    changes: [
+      'Behind the scenes: the Flutter app has a boarding-gate sign-in screen, a redesigned "Departures" card stack with an airport runway slider for New Trip and Join, and a Create Trip form that starts with the destination and suggests the trip name. Superadmin sessions are never restored automatically. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.55.0',
+    date: '2026-10-09',
+    changes: [
+      'Behind the scenes: the Flutter app has a native Superadmin portal (overview, bug ledger, users, trips, flags, analytics, audit, controls and tools) and a card-stack view for the Trips home screen with destination photos. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.54.0',
+    date: '2026-10-09',
+    changes: [
+      'Behind the scenes: the Flutter app has a boarding-pass look for Summary, Expenses and Passes, and the Fewest / Per person switch now updates right away instead of snapping back. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.53.0',
+    date: '2026-10-09',
+    changes: [
+      'Trip Members: Adding a person now requires a mandatory Gmail ID (@gmail.com) with smart auto-completion, real-time Google account preview, and automatic member claiming across Flutter and Web.',
+    ],
+  },
+  {
+    version: '3.52.0',
+    date: '2026-10-09',
+    changes: [
+      'Behind the scenes: Flutter app features Summary-first tabs, boarding pass summary hero, live Notes checklist with live editing, and realtime trip chat sync.',
+    ],
+  },
+  {
+    version: '3.51.0',
+    date: '2026-10-09',
+    changes: [
+      'Behind the scenes: the Flutter app has a new Bento look with pastel tiles, new fonts and a floating bottom bar, in light, dark and black themes. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.50.1',
+    date: '2026-10-09',
+    changes: [
+      'Behind the scenes: Flutter Superadmin login now opens a Superadmin screen whose Ops Deck button signs you straight into the web portal, and web links open correctly on Android. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.50.0',
+    date: '2026-10-09',
+    changes: [
+      'Behind the scenes: Flutter app now uses the web app colours (teal and orange), passes show as cards, and Superadmin login opens a Superadmin screen. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.49.0',
+    date: '2026-10-09',
+    changes: [
+      'Behind the scenes: Flutter Notes tab no longer overflows on trips with many passes, and passes can be sorted by time, flight leg, or traveler name. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.48.2',
+    date: '2026-10-08',
+    changes: [
+      'Behind the scenes: Flutter app now shows trips right after sign-in, suggests destinations while typing, and the Horizon navigation and Spend Insights are on by default. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.48.1',
+    date: '2026-10-08',
+    changes: [
+      'Behind the scenes: fixed the Flutter CI fixtures-drift check. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.48.0',
+    date: '2026-10-08',
+    changes: [
+      'Behind the scenes: Flutter Horizon redesign across all screens, desktop layouts, Balances and Spend Insights behind new flags. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.47.0',
+    date: '2026-10-08',
+    changes: [
+      'Behind the scenes: Flutter migration Horizon redesign, Web platform compilation with Wasm SQLite, and Google-only + Superadmin authentication gate. No change to the web app.',
+    ],
+  },
+  {
+    version: '3.46.1',
+    date: '2026-10-07',
+    changes: [
+      'Behind the scenes: fixed the Flutter Android build (core library desugaring for local notifications). No change to the web app.',
+    ],
+  },
+  {
+    version: '3.46.0',
+    date: '2026-10-07',
+    changes: [
+      'Behind the scenes: Flutter migration Phases 10-12 (notifications, settings, push and reminders, feedback, version gate, accessibility fixes, release hardening, cutover and rollout plans). No change to the web app.',
+    ],
+  },
+  {
+    version: '3.45.0',
+    date: '2026-10-06',
+    changes: [
+      'Behind the scenes: Flutter migration Phase 9 (maps, live location, receipts OCR, weather, Trip Wrapped, squad badges, traveler passport, ICS calendar export, Next Up capsule & gate scanner). No change to the web app.',
+    ],
+  },
+  {
+    version: '3.44.3',
+    date: '2026-10-06',
+    changes: [
+      'Behind the scenes: groundwork for Flutter migration Phase 8 (members, notes, chat, boarding passes). No change to the web app.',
+    ],
+  },
+  {
+    version: '3.44.2',
+    date: '2026-10-06',
+    changes: [
+      'Behind the scenes: groundwork for Flutter migration Phase 7 slices E-G (ledger loop, UPI, share card, close-out). No change to the web app.',
+    ],
+  },
+  {
+    version: '3.44.1',
+    date: '2026-10-06',
+    changes: [
+      'Behind the scenes: groundwork for the upcoming native mobile app (expense form and balances screens). No change to the web app.',
     ],
   },
   {

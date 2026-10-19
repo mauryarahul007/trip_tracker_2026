@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **99** |
-| **💡 Requested** | **2** |
+| **Total Tracked** | **167** |
+| **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **97** |
+| **✅ Shipped** | **164** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -24,6 +24,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **[FEAT-002](#feat-002)** | `ui-ux` | Test | `mauryarahul007@gmail.com` | 💡 Requested |
 | **[FEAT-024](#feat-024)** | `admin` | CI pipeline for lint, build, and test on push/PR | `claude-cli` | 💡 Requested |
+| **[FEAT-167](#feat-167)** | `ui-ux` | Automatic Android APK build from main (Flutter merged into main) | `claude-cli` | 💡 Requested |
 
 ---
 
@@ -45,6 +46,15 @@ Test
 - **Requested By**: `claude-cli` on 9/1/2026 (web)
 
 CI pipeline for lint, build, and test on push/PR
+
+---
+
+### FEAT-167: Automatic Android APK build from main (Flutter merged into main)
+
+- **Category**: `ui-ux` | **Status**: `requested`
+- **Requested By**: `claude-cli` on 10/19/2026 (web)
+
+Automatic Android APK build from main (Flutter merged into main)
 
 ---
 
@@ -149,6 +159,73 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-097** | Pass back seat-and-gate balances | `ui-ux` | `rahul` | `rahul` | Shipped in dc59c9d (v3.42.1). |
 | **FEAT-098** | Cycling destination photos on the home stack and list | `ui-ux` | `rahul` | `rahul` | Shipped in v3.43.1. ADR 246. Flag cycleDestinationCovers (Core, default ON). |
 | **FEAT-099** | Simplified pass back: one balance hero | `ui-ux` | `rahul` | `claude-cli` | Shipped in commit 1cf0b67 (v3.43.3). decisions.md #248. QA steps in FEATURE_TEST_STEPS.md: PASS-STUB-SIMPLIFY. |
+| **FEAT-100** | Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12) | `native` | `claude-cli` | `claude-cli` | Shipped in commit 42ef52a (v3.46.0). Headless-verified only; device, Firebase and store checks open (see docs/flutter-migration/BACKLOG.md). |
+| **FEAT-101** | Flutter app: Horizon redesign, Web platform Wasm SQLite, and Google + Superadmin auth gate | `native` | `rahul` | `rahul` | Shipped |
+| **FEAT-102** | Flutter app: instant trips after sign-in, destination autocomplete, Horizon nav and Spend Insights on by default | `native` | `claude-cli` | `claude-cli` | Shipped in commit 09966ab (v3.48.2): first-sync fix, destination autocomplete, Horizon flags default ON (Core pack) |
+| **FEAT-103** | Pass list sorting by time, flight leg, or traveler name (Flutter Notes tab) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7bfeccb (v3.49.0) behind enablePassSorting (Travel pack, default ON). Headless-verified only; device check pending. |
+| **FEAT-104** | Flutter web-app palette, pass cards and Superadmin screen | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 19cb764 (v3.50.0). Headless-verified only; device check pending. |
+| **FEAT-105** | Flutter Superadmin screen with single sign-on hand-off to the web Ops Deck | `admin` | `claude-cli` | `claude-cli` | Shipped in commit 1d71018 (v3.50.1). Verified on a Motorola Edge 70 Fusion; the refresh token is shared with the web app, so the Flutter session may need a new sign-in later (decision 282). |
+| **FEAT-106** | Flutter Bento redesign: pastel tiles, new fonts and floating pill navigation | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit ec6e203 (v3.51.0). Verified on a Motorola Edge 70 Fusion; side-by-side comparison with the design board still pending. |
+| **FEAT-107** | Flutter: Summary tab redesign and Add expense on Summary | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 75d35f8 (v3.52.0): boarding-pass Summary hero, progress card, donut spend report, Add expense on Summary. Verified in tests; on-device look pending user review. |
+| **FEAT-108** | Flutter: boarding-pass UI for Summary, Expenses and Passes | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 20249e8 (v3.54.0): boarding-pass Summary, receipt-card Expenses with category runway, boarding-pass Passes with QR stub, App settings entry inside a trip. Verified in tests and on a Motorola Edge 70 Fusion. |
+| **FEAT-109** | Flutter: native Superadmin portal (overview, bug ledger, users, trips, flags, features, audit, controls, tools) | `admin` | `claude-cli` | `claude-cli` | Shipped in commit 510f2a4 (v3.55.0): the Superadmin login lands in the app; same Supabase tables and RPCs as the web Ops Deck. Installed on a Motorola Edge 70 Fusion; on-device walkthrough pending user review. |
+| **FEAT-110** | Flutter: growth panels and spend analytics ported from the Ops Deck | `analytics` | `claude-cli` | `claude-cli` | Shipped in commit 510f2a4 (v3.55.0): Growth, Overview, Financial, Engagement and Health tabs; ports opsGrowthMetrics.ts and the AdminAnalyticsPage spend panels. Unit-tested on a fixed fleet. |
+| **FEAT-111** | Flutter: Trips home card-stack view with destination photos and blurred backdrop | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 510f2a4 (v3.55.0): list / cards switch behind enableTripCardStack (Trip pack, default ON); swipe right to open, left to skip, long-press menu; photo from cover or destination. |
+| **FEAT-112** | Flutter: boarding-gate login screen | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit adb88c7 (v3.56.0): boardingPassLogin flag in prod, always on dev/staging. |
+| **FEAT-113** | Flutter: Departures card stack with runway slider and destination-first Create Trip | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit adb88c7 (v3.56.0): behind enableTripCardStack; swipes flip the deck, tap opens, runway slider for New Trip / Join. |
+| **FEAT-114** | Flutter: WhatsApp-style Settings list with search | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): flat list, one page per category; search behind enableSettingsSearch (Trip pack, default ON). Replaces the old page outright. |
+| **FEAT-115** | Flutter: Summary and Settlement Pass polish | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): simpler tile, You pay / Pays you chips, own payments first, animated sections and hero amount. Replaces the old layout outright. |
+| **FEAT-116** | Flutter: group-wise spend (paid and share) | `analytics` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): Members / Groups switch on Who paid, behind enableGroupSpend (Trip pack, default ON). |
+| **FEAT-117** | Flutter: Settle all I owe and share summary picture | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): behind enableSettleAll and enableShareSummaryImage (Trip pack, default ON). |
+| **FEAT-118** | Flutter: day-by-day spend and device-only trip budget | `analytics` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): behind enableDailyTimeline and enableTripBudget (Trip pack, default ON); the budget is not synced. |
+| **FEAT-119** | Flutter: checklist category progress bars | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e58c883 (v3.57.0): behind enableChecklistCategoryProgress (Trip pack, default ON). |
+| **FEAT-120** | Flutter: trip cards show members and your money, trips grouped by phase | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 87189ac (v3.58.0): behind enableTripListMoney and enableTripListSections (Trip pack, default ON). |
+| **FEAT-121** | Flutter: trip header strip and Add expense speed dial | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 87189ac (v3.58.0): behind enableTripHeaderStrip and enableQuickAddSpeedDial (Trip pack, default ON). |
+| **FEAT-122** | Flutter: Summary next action and Notes quick capture | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 87189ac (v3.58.0): behind enableSummaryNextAction and enableNotesQuickCapture (Trip pack, default ON). |
+| **FEAT-123** | Flutter: one-time coach hints | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 87189ac (v3.58.0): behind enableCoachHints (Trip pack, default ON); dismissed tips are remembered on the device. |
+| **FEAT-124** | Flutter: settlement Group view / Person view for every member | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 87189ac (v3.58.0): behind enableSettlementViewSwitch (Trip pack, default ON); per-viewer view state, balances unchanged. |
+| **FEAT-125** | Flutter: compact Trips list with hero card, pinned sections and overview line | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 561a2c1 (v3.59.0): compact rows with thumbnails, status and money; photo hero for the trip happening now; pinned Happening now / Upcoming / Past headers; overview line behind enableTripsOverview (Trip pack, default ON). |
+| **FEAT-126** | Flutter: Plan and suggestions card and redesigned Trip numbers | `analytics` | `claude-cli` | `claude-cli` | Shipped in commit 561a2c1 (v3.59.0): budget pace, daily allowance and up to three tips behind enableTripSuggestions (Trip pack, default ON); analytics reordered. |
+| **FEAT-127** | Flutter: one Groups / People switch for the Summary | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 561a2c1 (v3.59.0): a single switch drives Who pays whom and Who paid; the duplicate switch in Who paid is removed. |
+| **FEAT-128** | Flutter: Trips as destination-photo tiles with a Grid / List switch, pins and search inside trips | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableTripGridTiles, enableTripPins, enableGlobalSearch (Trip pack, default ON). |
+| **FEAT-129** | Flutter: first-run tour, sample trip and Updated caption with pull to refresh | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableFirstRunTour and enableLastSyncedCaption (Trip pack, default ON). |
+| **FEAT-130** | Flutter: cover photo band, saved/syncing line, trip switcher and accent colour inside a trip | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableTripCoverHeader, enableSyncLine, enableTripSwitcher, enableTripAccent (Trip pack, default ON). |
+| **FEAT-131** | Flutter: Today card, wrap-up prompt, spend ring, receipt gallery and Collapse Trip numbers | `analytics` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableTodayCard, enableCloseoutPrompt, enableSpendRing, enableReceiptGallery, enableSummaryCollapse (Trip pack, default ON). |
+| **FEAT-132** | Flutter: amount keypad, smart expense defaults and Confirm on notifications | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableAmountKeypad, enableSmartExpenseDefaults, enableNotificationActions (Trip pack, default ON). |
+| **FEAT-133** | Flutter: sound feedback, Reduce motion, notification day groups and rolling hero numbers | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e14a650 (v3.60.0): behind enableFeedbackPack, enableReduceMotion, enableNotificationDayGroups (Trip pack, default ON); photos are now kept on the device. |
+| **FEAT-134** | Flutter: Trip numbers tabs and a single Groups/Members switch | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b903b73 (v3.61.0): headline strip plus Categories/People/Days/Details tabs; top switch removed. |
+| **FEAT-135** | Flutter: settled celebration and round-amount settling | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b903b73 (v3.61.0): behind enableSettledCelebration, enableSettleRounding (Trip pack, default ON). |
+| **FEAT-136** | Flutter: app icon shortcuts, expense history and pending-sync dots | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b903b73 (v3.61.0): behind enableAppShortcuts, enableExpenseHistory, enablePendingDots (Trip pack, default ON). |
+| **FEAT-137** | Flutter: trip templates, two-pane Summary, invite picture and quick-filter chips | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b903b73 (v3.61.0): behind enableTripTemplates, enableSummaryTwoPane, enableInviteCard, enableExpenseQuickFilterChips (Trip pack, default ON). |
+| **FEAT-138** | Flutter: bug reports and suggestions work offline | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b903b73 (v3.61.0): behind enableOfflineFeedback (Trip pack, default ON); queued on the device and sent on reconnect. |
+| **FEAT-139** | Flutter: personal expenses left out of trip totals and settlement | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7dc8912 (v3.62.0): behind enableExpenseExclusion (Trip pack, default ON). |
+| **FEAT-140** | Flutter: switch trips from the top-bar trip name | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7dc8912 (v3.62.0): behind enableTripSwitcher (reworded); arrows and strip swipe removed. |
+| **FEAT-141** | Flutter: undo for recorded payments and Settle all | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7dc8912 (v3.62.0): behind enableUndoSettlement (Trip pack, default ON). |
+| **FEAT-142** | Flutter: saved expense filters as one-tap chips | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 7dc8912 (v3.62.0): behind enableSavedFilters (Trip pack, default ON); swipe right toggles Personal. |
+| **FEAT-143** | Flutter: clean trip top bar, no banner or status row | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b25ff7b (v3.63.0): behind enableCleanTopBar (Trip pack); enableTripCoverHeader and enableTripHeaderStrip moved to Labs OFF; sync icon only when needed. |
+| **FEAT-144** | Flutter: quick action buttons, Summary focus and jump to today | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b25ff7b (v3.63.0): behind enableContextFab, enableSummaryFocus, enableJumpToToday (Trip pack, default ON). |
+| **FEAT-145** | Flutter: quick amount chips, friendly empty states and skeleton loaders | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b25ff7b (v3.63.0): behind enableQuickAmounts, enableCoachEmptyStates, enableSkeletonLoaders (Trip pack, default ON). |
+| **FEAT-146** | Flutter: high contrast, haptics setting, consistent sheets and Who paid labels | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b25ff7b (v3.63.0): behind enableHighContrast, enableHapticsSetting (Trip pack, default ON); Their part wording replaces Share. |
+| **FEAT-147** | Flutter: You paid vs your share strip on Balances | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 0e14556 (v3.65.0): behind enableYouPaidVsShare (Trip pack, default ON); replaces the To receive / To pay tiles. |
+| **FEAT-148** | Flutter: balance explainer sheet | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 0e14556 (v3.65.0): behind enableBalanceExplainer (Trip pack, default ON); tap the strip to list expenses where paid differs from share. |
+| **FEAT-149** | Flutter: saved-offline message on expense save | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 0e14556 (v3.65.0): behind enableSavedOfflineToast (Trip pack, default ON). |
+| **FEAT-150** | Flutter: tidy Expenses tab rows and day headers | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4ea2901 (v3.66.0): behind enableTidyExpenses (Trip pack, default ON). |
+| **FEAT-151** | Flutter: Notes cards with pin, delete and Undo | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4ea2901 (v3.66.0): behind enableTidyNotes (Trip pack, default ON). |
+| **FEAT-152** | Flutter: tidy Members tiles with role and balance chips and search | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4ea2901 (v3.66.0): behind enableTidyMembers (Trip pack, default ON). |
+| **FEAT-153** | Flutter: edit and delete travel passes | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4ea2901 (v3.66.0): behind enablePassEditDelete (Trip pack, default ON). |
+| **FEAT-154** | Flutter: one-page Settings with Haptics levels, Storage and Data, Archived Trips | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit c2a39dd (v3.67.0): behind enableSettingsDataHub (Trip pack, default ON); reuses enableGeotagging, enableDataSaverMode, enableDemoSeeding, enableHapticsSetting. |
+| **FEAT-155** | Flutter: trip header actions sheet, Edit Trip popup, members and expenses chip, stops picker | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit c2a39dd (v3.67.0): behind enableTripHeaderActions (Trip pack, default ON). |
+| **FEAT-156** | Flutter: Summary chips, close-out banner, Custom amount, Remind, How it works, At a Glance | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit c2a39dd (v3.67.0): behind enableSummaryUpgrades (Trip pack, default ON). |
+| **FEAT-157** | Flutter: clean trip header and Edit Trip in the menu | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enableTripHeaderActions. |
+| **FEAT-158** | Flutter: select and delete several passes | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enablePassEditDelete. |
+| **FEAT-159** | Flutter: web-style Expenses filters page | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind no flag, restyle. |
+| **FEAT-160** | Flutter: Summary mini pass pinned on scroll | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enableSummaryUpgrades. |
+| **FEAT-161** | Flutter: settlement pass flips to show You paid and Your share | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enableYouPaidVsShare. |
+| **FEAT-162** | Flutter: Voice add expense with real speech recognition | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enableVoiceInput. |
+| **FEAT-163** | Flutter: Edit Trip takes one destination box per place | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 036887f (v3.68.2): behind enableTripHeaderActions. |
+| **FEAT-164** | Flutter: clearer trip header line | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b18b0eb (v3.68.3): behind enableTripHeaderActions. |
+| **FEAT-165** | Flutter: close-out card hidden once the trip is settled | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b18b0eb (v3.68.3): behind enableCloseoutPrompt. |
+| **FEAT-166** | Flutter: Confirm received button on settlement history rows | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b18b0eb (v3.68.3): behind enableSettlementConfirmation. |
 
 ---
 

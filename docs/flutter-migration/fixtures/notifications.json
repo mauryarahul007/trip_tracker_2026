@@ -1,0 +1,130 @@
+{
+  "renderedCatalogue": [
+    {
+      "type": "expense_added",
+      "params": {
+        "expenseTitle": "Dinner",
+        "currency": "USD",
+        "amount": "85.00"
+      },
+      "headline": "Expense Added",
+      "body": "Dinner — USD 85.00"
+    },
+    {
+      "type": "expense_updated",
+      "params": {
+        "expenseTitle": "Dinner"
+      },
+      "headline": "Expense Updated",
+      "body": "Dinner"
+    },
+    {
+      "type": "expense_deleted",
+      "params": {
+        "expenseTitle": "Lunch"
+      },
+      "headline": "Expense Deleted",
+      "body": "Lunch"
+    },
+    {
+      "type": "expense_restored",
+      "params": {
+        "expenseTitle": "Lunch"
+      },
+      "headline": "Expense Restored",
+      "body": "Lunch"
+    },
+    {
+      "type": "member_added",
+      "params": {},
+      "headline": "Member Added",
+      "body": "You were added to Alps Roadtrip"
+    },
+    {
+      "type": "member_added_notice",
+      "params": {
+        "memberName": "Charlie"
+      },
+      "headline": "Member Added",
+      "body": "Charlie was added to the trip"
+    },
+    {
+      "type": "member_joined",
+      "params": {
+        "memberName": "Diana"
+      },
+      "headline": "Member Joined",
+      "body": "Diana joined the trip"
+    },
+    {
+      "type": "settlement_reminder",
+      "params": {
+        "toLabel": "Alice",
+        "currency": "USD",
+        "amount": "45.00"
+      },
+      "headline": "Settlement Reminder",
+      "body": "You owe Alice USD45.00 for this trip"
+    },
+    {
+      "type": "settlement_confirmation_requested",
+      "params": {
+        "currency": "USD",
+        "amount": "50.00"
+      },
+      "headline": "Confirm Settlement",
+      "body": "Someone marked USD 50.00 as paid to you — confirm you received it"
+    },
+    {
+      "type": "trip_deleted",
+      "params": {},
+      "headline": "Trip Deleted",
+      "body": "\"Alps Roadtrip\" was deleted"
+    },
+    {
+      "type": "chat_message",
+      "params": {
+        "senderName": "Alice",
+        "preview": "Hey everyone, check this out!"
+      },
+      "headline": "New Message",
+      "body": "Alice: Hey everyone, check this out!"
+    }
+  ],
+  "burstGroups": [
+    [
+      {
+        "id": "n1",
+        "userId": "u1",
+        "tripId": "t1",
+        "title": "Trip Tracker",
+        "data": {
+          "type": "expense_added",
+          "params": {
+            "expenseTitle": "Dinner",
+            "currency": "USD",
+            "amount": "85.00"
+          }
+        },
+        "createdAt": "2026-10-06T00:00:00Z",
+        "read": false
+      }
+    ],
+    [
+      {
+        "id": "n2",
+        "userId": "u1",
+        "tripId": "t1",
+        "title": "Trip Tracker",
+        "data": {
+          "type": "expense_updated",
+          "params": {
+            "expenseTitle": "Dinner"
+          }
+        },
+        "createdAt": "2026-10-06T00:01:00Z",
+        "read": false
+      }
+    ]
+  ]
+}

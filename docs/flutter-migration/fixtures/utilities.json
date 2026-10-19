@@ -1,0 +1,683 @@
+{
+  "matrix": {
+    "sortTrips": [
+      {
+        "mode": "name",
+        "result": [
+          "a",
+          "b",
+          "e",
+          "d",
+          "c"
+        ]
+      },
+      {
+        "mode": "date",
+        "result": [
+          "d",
+          "c",
+          "b",
+          "a",
+          "e"
+        ]
+      }
+    ],
+    "sortTripsInput": [
+      {
+        "id": "a",
+        "name": "alpha",
+        "startDate": "2026-01-01",
+        "createdAt": 1
+      },
+      {
+        "id": "b",
+        "name": "Beta",
+        "startDate": "2026-01-01",
+        "createdAt": 5
+      },
+      {
+        "id": "c",
+        "name": "gamma10",
+        "startDate": "2026-03-01",
+        "createdAt": 2
+      },
+      {
+        "id": "d",
+        "name": "gamma2",
+        "startDate": "",
+        "createdAt": 9
+      },
+      {
+        "id": "e",
+        "name": "Émile",
+        "startDate": "2025-12-01",
+        "updatedAt": 7,
+        "createdAt": 3
+      }
+    ],
+    "cities": [
+      {
+        "destination": "Paris, France",
+        "stops": null,
+        "result": {
+          "primary": "Paris",
+          "full": "Paris, France"
+        }
+      },
+      {
+        "destination": "Tokyo",
+        "stops": null,
+        "result": {
+          "primary": "Tokyo",
+          "full": "Tokyo"
+        }
+      },
+      {
+        "destination": "",
+        "stops": null,
+        "result": {
+          "primary": "",
+          "full": ""
+        }
+      },
+      {
+        "destination": "Goa",
+        "stops": [
+          {
+            "name": "Panjim"
+          },
+          {
+            "name": "Margao"
+          }
+        ],
+        "result": {
+          "primary": "Goa",
+          "full": "Goa"
+        }
+      },
+      {
+        "destination": null,
+        "stops": [
+          {
+            "name": "Rome"
+          }
+        ],
+        "result": {
+          "primary": "Rome",
+          "full": "Rome"
+        }
+      },
+      {
+        "destination": null,
+        "stops": null,
+        "result": {
+          "primary": "",
+          "full": ""
+        }
+      }
+    ],
+    "dateRanges": [
+      {
+        "a": "2026-10-01",
+        "b": "2026-10-08",
+        "result": "1–8 Oct"
+      },
+      {
+        "a": "2026-10-28",
+        "b": "2026-11-03",
+        "result": "28 Oct – 3 Nov"
+      },
+      {
+        "a": "2026-12-28",
+        "b": "2027-01-03",
+        "result": "28 Dec 2026 – 3 Jan 2027"
+      },
+      {
+        "a": "2026-10-05",
+        "b": "2026-10-05",
+        "result": "5–5 Oct"
+      },
+      {
+        "a": "bad",
+        "b": "worse",
+        "result": ""
+      }
+    ],
+    "tripDays": [
+      {
+        "a": "2026-10-01",
+        "b": "2026-10-03",
+        "result": 3
+      },
+      {
+        "a": "2026-10-05",
+        "b": "2026-10-01",
+        "result": null
+      },
+      {
+        "a": "x",
+        "b": "2026-10-01",
+        "result": null
+      }
+    ],
+    "relative": [
+      {
+        "ago": 0,
+        "result": "just now"
+      },
+      {
+        "ago": 30000,
+        "result": "just now"
+      },
+      {
+        "ago": 90000,
+        "result": "1m ago"
+      },
+      {
+        "ago": 7200000,
+        "result": "2h ago"
+      },
+      {
+        "ago": 259200000,
+        "result": "3d ago"
+      },
+      {
+        "ago": 3888000000,
+        "result": "1mo ago"
+      },
+      {
+        "ago": 34560000000,
+        "result": "1y ago"
+      },
+      {
+        "ago": -5000,
+        "result": "just now"
+      },
+      {
+        "ago": "invalid",
+        "result": "not-a-date"
+      }
+    ],
+    "joinLinks": [
+      {
+        "url": "com.triptracker.app://join/ABC123",
+        "result": "ABC123"
+      },
+      {
+        "url": "https://trip-tracker.blackmaroon.in/join/xyz789",
+        "result": "xyz789"
+      },
+      {
+        "url": "https://trip-tracker.blackmaroon.in/join/xyz789?x=1",
+        "result": "xyz789"
+      },
+      {
+        "url": "https://evil.example/join/ABC123",
+        "result": "ABC123"
+      },
+      {
+        "url": "com.triptracker.app://other/ABC",
+        "result": null
+      },
+      {
+        "url": "garbage",
+        "result": null
+      },
+      {
+        "url": "",
+        "result": null
+      }
+    ],
+    "upiIds": [
+      {
+        "id": "a@b",
+        "result": false
+      },
+      {
+        "id": "traveler@okhdfcbank",
+        "result": true
+      },
+      {
+        "id": "bad",
+        "result": false
+      },
+      {
+        "id": "@x",
+        "result": false
+      },
+      {
+        "id": "x@",
+        "result": false
+      },
+      {
+        "id": "",
+        "result": false
+      }
+    ],
+    "upiUris": [
+      {
+        "scheme": "gpay",
+        "result": "tez://upi/pay?pa=a%40okaxis&pn=Al%20Ice&am=12.50&cu=INR&tn=Trip%20%26%20fun"
+      },
+      {
+        "scheme": "phonepe",
+        "result": "phonepe://pay?pa=a%40okaxis&pn=Al%20Ice&am=12.50&cu=INR&tn=Trip%20%26%20fun"
+      },
+      {
+        "scheme": "paytm",
+        "result": "paytmmp://pay?pa=a%40okaxis&pn=Al%20Ice&am=12.50&cu=INR&tn=Trip%20%26%20fun"
+      },
+      {
+        "scheme": "cred",
+        "result": "cred://pay?pa=a%40okaxis&pn=Al%20Ice&am=12.50&cu=INR&tn=Trip%20%26%20fun"
+      },
+      {
+        "scheme": "upi",
+        "result": "upi://pay?pa=a%40okaxis&pn=Al%20Ice&am=12.50&cu=INR&tn=Trip%20%26%20fun"
+      },
+      {
+        "scheme": null,
+        "result": "upi://pay?pa=a%40okaxis&pn=Al%20Ice&am=12.50&cu=INR&tn=Trip%20%26%20fun"
+      }
+    ],
+    "groupNames": [
+      {
+        "names": [],
+        "result": ""
+      },
+      {
+        "names": [
+          "Alice"
+        ],
+        "result": "Alice"
+      },
+      {
+        "names": [
+          "Alice Smith",
+          "Bob"
+        ],
+        "result": "Alice & Bob"
+      },
+      {
+        "names": [
+          "A",
+          "B",
+          "C"
+        ],
+        "result": "A, B & C"
+      },
+      {
+        "names": [
+          "  Zed  ",
+          "Y",
+          "X",
+          "W"
+        ],
+        "result": "Zed, Y, X & W"
+      }
+    ],
+    "climates": [
+      {
+        "destination": "Iceland",
+        "startDate": "2026-01-15",
+        "result": {
+          "seasonName": "Winter / Cold Season",
+          "isCold": true,
+          "isRainy": false,
+          "isHot": false,
+          "estimatedTempC": -2
+        }
+      },
+      {
+        "destination": "Switzerland",
+        "startDate": "2026-10-01",
+        "result": {
+          "seasonName": "Cool Alpine",
+          "isCold": true,
+          "isRainy": false,
+          "isHot": false,
+          "estimatedTempC": 8
+        }
+      },
+      {
+        "destination": "India",
+        "startDate": "2026-05-10",
+        "result": {
+          "seasonName": "Summer / High Heat",
+          "isCold": false,
+          "isRainy": false,
+          "isHot": true,
+          "estimatedTempC": 34
+        }
+      },
+      {
+        "destination": "Australia",
+        "startDate": "2026-12-20",
+        "result": {
+          "seasonName": "Summer / High Heat",
+          "isCold": false,
+          "isRainy": false,
+          "isHot": true,
+          "estimatedTempC": 34
+        }
+      },
+      {
+        "destination": "Goa",
+        "startDate": "2026-07-01",
+        "result": {
+          "seasonName": "Monsoon / Wet Season",
+          "isCold": false,
+          "isRainy": true,
+          "isHot": true,
+          "estimatedTempC": 26
+        }
+      },
+      {
+        "destination": "Nowhere",
+        "startDate": null,
+        "result": {
+          "seasonName": "Mild / Moderate",
+          "isCold": false,
+          "isRainy": false,
+          "isHot": false,
+          "estimatedTempC": 24
+        }
+      }
+    ],
+    "syncLabels": [
+      {
+        "item": {
+          "id": "1",
+          "type": "addExpense",
+          "payload": {
+            "title": "Dinner",
+            "amount": 45
+          }
+        },
+        "result": "Add expense"
+      },
+      {
+        "item": {
+          "id": "2",
+          "type": "updateExpense",
+          "payload": {
+            "expenseData": {
+              "title": "Lunch"
+            }
+          }
+        },
+        "result": "Edit expense: Lunch"
+      },
+      {
+        "item": {
+          "id": "3",
+          "type": "deleteExpense",
+          "payload": {
+            "id": "e1"
+          }
+        },
+        "result": "Delete expense"
+      },
+      {
+        "item": {
+          "id": "4",
+          "type": "createTrip",
+          "payload": {
+            "name": "Goa"
+          }
+        },
+        "result": "Create trip: Goa"
+      },
+      {
+        "item": {
+          "id": "5",
+          "type": "addMember",
+          "payload": {
+            "name": "Bob"
+          }
+        },
+        "result": "Add member: Bob"
+      },
+      {
+        "item": {
+          "id": "6",
+          "type": "deleteMember",
+          "payload": {
+            "id": "m1"
+          }
+        },
+        "result": "Delete member"
+      },
+      {
+        "item": {
+          "id": "7",
+          "type": "createGroup",
+          "payload": {
+            "name": "Squad"
+          }
+        },
+        "result": "Create group: Squad"
+      },
+      {
+        "item": {
+          "id": "8",
+          "type": "addCategory",
+          "payload": {
+            "name": "Fuel"
+          }
+        },
+        "result": "Add category: Fuel"
+      },
+      {
+        "item": {
+          "id": "9",
+          "type": "weird",
+          "payload": {}
+        },
+        "result": "weird"
+      }
+    ]
+  },
+  "sort": {
+    "sortedByName": [
+      {
+        "id": "t1",
+        "name": "Zanzibar Retreat",
+        "startDate": "2026-11-01",
+        "createdAt": 1000
+      },
+      {
+        "id": "t3",
+        "name": "Berlin Weekend",
+        "startDate": "2026-10-15",
+        "createdAt": 1500
+      },
+      {
+        "id": "t2",
+        "name": "Amsterdam City Trip",
+        "startDate": "2026-09-01",
+        "createdAt": 2000
+      }
+    ],
+    "sortedByDate": [
+      {
+        "id": "t1",
+        "name": "Zanzibar Retreat",
+        "startDate": "2026-11-01",
+        "createdAt": 1000
+      },
+      {
+        "id": "t3",
+        "name": "Berlin Weekend",
+        "startDate": "2026-10-15",
+        "createdAt": 1500
+      },
+      {
+        "id": "t2",
+        "name": "Amsterdam City Trip",
+        "startDate": "2026-09-01",
+        "createdAt": 2000
+      }
+    ]
+  },
+  "suggestions": {
+    "suggestedName": "Tokyo trip",
+    "guessedCurr": "JPY",
+    "extractedCity": {
+      "primary": "Paris",
+      "full": "Paris, France"
+    }
+  },
+  "dates": {
+    "dateRange": "1–8 Oct",
+    "tripDay": 3,
+    "relativeTime": "1h ago"
+  },
+  "deepLink": {
+    "canonicalJoin": "https://trip-tracker.blackmaroon.in/join/ABC123",
+    "parsedJoin": "ABC123"
+  },
+  "upi": {
+    "upiUri": "upi://pay?pa=traveler%40okhdfcbank&pn=Alice&am=1500.00&cu=INR&tn=Trip%20Settlement",
+    "upiValid": true
+  },
+  "autoGroup": "Alice & Bob",
+  "travelerPassport": {
+    "trips": 2,
+    "destinations": 2,
+    "tripsSettled": 1,
+    "daysOnTheRoad": 11
+  },
+  "achievements": [
+    {
+      "id": "caffeine",
+      "title": "Caffeine Logistics",
+      "subtitle": "Fueled the expedition with 3+ coffee, tea & breakfast stops.",
+      "icon": "☕",
+      "unlocked": true,
+      "progressText": "3/3 Stops",
+      "rarity": "common"
+    },
+    {
+      "id": "midnight",
+      "title": "Midnight Odyssey",
+      "subtitle": "Kept the squad vibes glowing into the late night hours.",
+      "icon": "🌙",
+      "unlocked": false,
+      "progressText": "0/2 Night Outings",
+      "rarity": "rare"
+    },
+    {
+      "id": "lightning_settle",
+      "title": "Lightning Settlement",
+      "subtitle": "Zero outstanding debts — 100% squared up and settled.",
+      "icon": "⚡",
+      "unlocked": true,
+      "progressText": "All Squared ✓",
+      "rarity": "legendary"
+    },
+    {
+      "id": "apex_roadrunner",
+      "title": "Apex Roadrunner",
+      "subtitle": "Navigated 3+ major waypoints & transit legs across the route.",
+      "icon": "⛰️",
+      "unlocked": false,
+      "progressText": "0 Transit Legs",
+      "rarity": "rare"
+    },
+    {
+      "id": "executive_gourmet",
+      "title": "Executive Gourmet",
+      "subtitle": "35%+ of squad expedition spend invested in culinary tastings.",
+      "icon": "🍕",
+      "unlocked": true,
+      "progressText": "100% Food Spend",
+      "rarity": "common"
+    },
+    {
+      "id": "squad_harmony",
+      "title": "Squad Power",
+      "subtitle": "3+ explorers united on a seamless group journey.",
+      "icon": "👑",
+      "unlocked": false,
+      "progressText": "1 Squad Members",
+      "rarity": "common"
+    },
+    {
+      "id": "visual_chronicler",
+      "title": "Visual Chronicler",
+      "subtitle": "Saved official receipts & travel polaroids into the ledger.",
+      "icon": "📸",
+      "unlocked": false,
+      "progressText": "0 Captured",
+      "rarity": "rare"
+    }
+  ],
+  "packing": {
+    "packingSeasonal": {
+      "seasonName": "Cool Alpine",
+      "isCold": true,
+      "isRainy": false,
+      "isHot": false,
+      "estimatedTempC": 8
+    },
+    "packingSuggestions": [
+      {
+        "id": "doc-id",
+        "text": "Government Photo ID / Physical Passport",
+        "category": "documents",
+        "airplaneEligibility": "cabin-only",
+        "isFlightEssential": true,
+        "scope": "personal",
+        "cabinNote": "Must be in cabin / accessible for airport check-in and security checkpoints",
+        "defaultChecked": true,
+        "icon": "🪪"
+      },
+      {
+        "id": "doc-tickets",
+        "text": "Flight / Train Boarding Passes & Itinerary",
+        "category": "documents",
+        "airplaneEligibility": "cabin-only",
+        "isFlightEssential": true,
+        "scope": "personal",
+        "cabinNote": "Carry in cabin or store in digital passes wallet",
+        "defaultChecked": true,
+        "icon": "🎫"
+      },
+      {
+        "id": "doc-hotel",
+        "text": "Hotel / Stay Confirmation Vouchers",
+        "category": "documents",
+        "airplaneEligibility": "cabin-only",
+        "scope": "shared",
+        "cabinNote": "Keep booking reference handy for immigration / customs",
+        "defaultChecked": true,
+        "icon": "🏨"
+      },
+      {
+        "id": "doc-cash",
+        "text": "Cash & Forex / Debit Cards",
+        "category": "documents",
+        "airplaneEligibility": "cabin-only",
+        "isFlightEssential": true,
+        "scope": "personal",
+        "cabinNote": "Aviation security: never pack money or credit cards in check-in hold",
+        "defaultChecked": true,
+        "icon": "💵"
+      },
+      {
+        "id": "elec-powerbank",
+        "text": "Power Bank (10,000 - 20,000 mAh)",
+        "category": "packing",
+        "airplaneEligibility": "cabin-only",
+        "isFlightEssential": true,
+        "scope": "personal",
+        "reason": "ICAO Aviation Safety: loose lithium batteries strictly prohibited in hold",
+        "cabinNote": "Must be carried in cabin only. Prohibited in check-in baggage!",
+        "defaultChecked": true,
+        "icon": "🔋"
+      }
+    ]
+  },
+  "syncQueueLabel": "Add expense"
+}

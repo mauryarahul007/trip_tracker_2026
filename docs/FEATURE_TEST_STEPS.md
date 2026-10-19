@@ -21,6 +21,102 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-19 | 3.68.1 | SETTLE-GROUP-RLS | [Second partial group settlement no longer fails](#settle-group-rls--second-partial-group-settlement-no-longer-fails) |
+| 2026-10-08 | flutter 3.48.2 | FLUTTER-FIRSTSYNC | [Flutter: first sync, destination autocomplete, Horizon defaults](#flutter-firstsync--trips-after-sign-in-destination-autocomplete-horizon-defaults-v3482) |
+| 2026-10-08 | flutter 3.48 | FLUTTER-HORIZON | [Flutter: Horizon nav and spend insights](#flutter-horizon--horizon-nav-and-spend-insights-v3480) |
+| 2026-10-09 | flutter 3.52 | FLUTTER-SUMMARY | [Flutter: Summary tab, Add expense on Summary, map panel, live Notes](#flutter-summary--flutter-summary-tab-add-expense-on-summary-map-panel-live-notes) |
+| 2026-10-09 | flutter (unreleased) | FLUTTER-BENTO | [Flutter: Bento redesign (P0 to P5)](#flutter-bento--flutter-bento-redesign-p0-to-p5) |
+| 2026-10-09 | flutter 3.54 | FLUTTER-BOARDING | [Flutter: boarding-pass Summary, receipt Expenses, pass wallet, live-stream fix](#flutter-boarding--flutter-boarding-pass-ui-and-live-stream-fix-v3540) |
+| 2026-10-09 | flutter 3.55 | FLUTTER-SUPERADMIN | [Flutter: native Superadmin portal and analytics](#flutter-superadmin--flutter-native-superadmin-portal-and-analytics-v3550) |
+| 2026-10-09 | flutter 3.55 | FLUTTER-CARDSTACK | [Flutter: Trips card-stack view](#flutter-cardstack--flutter-trips-card-stack-view-v3550) |
+| 2026-10-10 | flutter 3.56 | FLUTTER-DEPARTURES | [Flutter: boarding-gate login, Departures stack, runway slider, destination-first Create Trip](#flutter-departures--flutter-boarding-gate-login-departures-stack-runway-slider-v3560) |
+| 2026-10-17 | flutter | FLUTTER-NOTE-POPUP | [Flutter: New note opens a title + body popup](#flutter-note-popup--new-note-opens-a-title--body-popup) |
+| 2026-10-17 | flutter | FLUTTER-GROUP-SPEND | [Flutter: group-wise spend (paid + share) on the Summary](#flutter-group-spend--group-wise-spend-paid--share-on-the-summary) |
+| 2026-10-17 | flutter | FLUTTER-GROUP-EDIT | [Flutter: group popup, edit members, 2-member minimum](#flutter-group-edit--flutter-group-popup-edit-members-2-member-minimum) |
+| 2026-10-17 | flutter | FLUTTER-CHECKLIST-RING | [Flutter: checklist progress card](#flutter-checklist-ring--flutter-checklist-progress-card) |
+| 2026-10-17 | flutter | FLUTTER-SETTINGS-LIST | [Flutter: WhatsApp-style settings](#flutter-settings-list--flutter-whatsapp-style-settings) |
+| 2026-10-17 | flutter | FLUTTER-SUMMARY-POLISH | [Flutter: Summary and Settlement Pass polish](#flutter-summary-polish--flutter-summary-and-settlement-pass-polish) |
+| 2026-10-17 | flutter | FLUTTER-SETTLE-ALL | [Flutter: settle all I owe](#flutter-settle-all--flutter-settle-all-i-owe) |
+| 2026-10-17 | flutter | FLUTTER-SHARE-SUMMARY | [Flutter: share trip summary as an image](#flutter-share-summary--flutter-share-trip-summary-as-an-image) |
+| 2026-10-17 | flutter | FLUTTER-DAY-BY-DAY | [Flutter: day-by-day spend](#flutter-day-by-day--flutter-day-by-day-spend) |
+| 2026-10-17 | flutter | FLUTTER-CHECKLIST-CATEGORIES | [Flutter: checklist category progress](#flutter-checklist-categories--flutter-checklist-category-progress) |
+| 2026-10-17 | flutter | FLUTTER-SETTINGS-SEARCH | [Flutter: settings search](#flutter-settings-search--flutter-settings-search) |
+| 2026-10-17 | flutter | FLUTTER-TRIP-BUDGET | [Flutter: trip budget (this device only)](#flutter-trip-budget--flutter-trip-budget-this-device-only) |
+| 2026-10-17 | flutter | FLUTTER-TRIP-LIST-MONEY | [Flutter: trip cards show people and your money](#flutter-trip-list-money--flutter-trip-cards-show-people-and-your-money) |
+| 2026-10-17 | flutter | FLUTTER-TRIP-LIST-SECTIONS | [Flutter: trips grouped by Happening now / Upcoming / Past](#flutter-trip-list-sections--flutter-trips-grouped-by-happening-now--upcoming--past) |
+| 2026-10-17 | flutter | FLUTTER-TRIP-STRIP | [Flutter: trip header strip](#flutter-trip-strip--flutter-trip-header-strip) |
+| 2026-10-17 | flutter | FLUTTER-ADD-SPEED-DIAL | [Flutter: Add expense speed dial](#flutter-add-speed-dial--flutter-add-expense-speed-dial) |
+| 2026-10-17 | flutter | FLUTTER-SUMMARY-NEXT-ACTION | [Flutter: Summary next action](#flutter-summary-next-action--flutter-summary-next-action) |
+| 2026-10-17 | flutter | FLUTTER-NOTES-QUICK-CAPTURE | [Flutter: Notes quick capture](#flutter-notes-quick-capture--flutter-notes-quick-capture) |
+| 2026-10-17 | flutter | FLUTTER-COACH-HINTS | [Flutter: one-time coach hints](#flutter-coach-hints--flutter-one-time-coach-hints) |
+| 2026-10-17 | flutter | FLUTTER-SETTLE-VIEW-SWITCH | [Flutter: settlement Group view / Person view](#flutter-settle-view-switch--flutter-settlement-group-view--person-view) |
+| 2026-10-17 | flutter | FLUTTER-PLAN-SUGGESTIONS | [Flutter: Plan and suggestions in Trip numbers](#flutter-plan-suggestions--flutter-plan-and-suggestions-in-trip-numbers) |
+| 2026-10-17 | flutter | FLUTTER-BACK-NAVIGATION | [Flutter: back goes to the previous page](#flutter-back-navigation--flutter-back-goes-to-the-previous-page) |
+| 2026-10-17 | flutter | FLUTTER-TRIP-LIST-REDESIGN | [Flutter: compact trips list](#flutter-trip-list-redesign--flutter-compact-trips-list) |
+| 2026-10-18 | flutter | FLUTTER-TRIP-GRID-TILES | [Flutter: Trips as photo tiles](#flutter-trip-grid-tiles--flutter-trips-as-photo-tiles) |
+| 2026-10-18 | flutter | FLUTTER-TRIP-COVER-SYNC | [Flutter: cover photo band and saved/syncing line](#flutter-trip-cover-sync--flutter-cover-photo-band-and-savedsyncing-line) |
+| 2026-10-18 | flutter | FLUTTER-TODAY-CLOSEOUT | [Flutter: Today card and trip-over prompt](#flutter-today-closeout--flutter-today-card-and-trip-over-prompt) |
+| 2026-10-18 | flutter | FLUTTER-GLOBAL-SEARCH | [Flutter: search inside trips](#flutter-global-search--flutter-search-inside-trips) |
+| 2026-10-18 | flutter | FLUTTER-SMART-EXPENSE-DEFAULTS | [Flutter: smart expense defaults](#flutter-smart-expense-defaults--flutter-smart-expense-defaults) |
+| 2026-10-18 | flutter | FLUTTER-NOTIFICATION-DAYS | [Flutter: notifications by day and back navigation](#flutter-notification-days--flutter-notifications-by-day-and-back-navigation) |
+| 2026-10-18 | flutter | FLUTTER-REDUCE-MOTION-ROLLING | [Flutter: rolling hero numbers and reduce motion](#flutter-reduce-motion-rolling--flutter-rolling-hero-numbers-and-reduce-motion) |
+| 2026-10-18 | flutter | FLUTTER-NOTIFICATION-ACTIONS | [Flutter: Confirm button on notifications](#flutter-notification-actions--flutter-confirm-button-on-notifications) |
+| 2026-10-18 | flutter | FLUTTER-PHOTO-CACHE | [Flutter: photos kept on the device](#flutter-photo-cache--flutter-photos-kept-on-the-device) |
+| 2026-10-18 | flutter | FLUTTER-LAST-SYNCED | [Flutter: Updated caption and pull to refresh](#flutter-last-synced--flutter-updated-caption-and-pull-to-refresh) |
+| 2026-10-18 | flutter | FLUTTER-TRIP-SWITCHER | [Flutter: switch between trips](#flutter-trip-switcher--flutter-switch-between-trips) |
+| 2026-10-18 | flutter | FLUTTER-TRIP-PINS | [Flutter: pinned trips](#flutter-trip-pins--flutter-pinned-trips) |
+| 2026-10-18 | flutter | FLUTTER-RECEIPT-GALLERY | [Flutter: receipt gallery](#flutter-receipt-gallery--flutter-receipt-gallery) |
+| 2026-10-18 | flutter | FLUTTER-SPEND-RING | [Flutter: spend by person ring](#flutter-spend-ring--flutter-spend-by-person-ring) |
+| 2026-10-18 | flutter | FLUTTER-FIRST-RUN-TOUR | [Flutter: first-run tour and sample trip](#flutter-first-run-tour--flutter-first-run-tour-and-sample-trip) |
+| 2026-10-18 | flutter | FLUTTER-FEEDBACK-PACK | [Flutter: sound and haptic feedback](#flutter-feedback-pack--flutter-sound-and-haptic-feedback) |
+| 2026-10-18 | flutter | FLUTTER-AMOUNT-KEYPAD | [Flutter: amount keypad](#flutter-amount-keypad--flutter-amount-keypad) |
+| 2026-10-18 | flutter | FLUTTER-TRIP-ACCENT | [Flutter: trip accent colour](#flutter-trip-accent--flutter-trip-accent-colour) |
+| 2026-10-18 | flutter | FLUTTER-SUMMARY-COLLAPSE | [Flutter: collapse Trip numbers](#flutter-summary-collapse--flutter-collapse-trip-numbers) |
+| 2026-10-18 | flutter | FLUTTER-NUMBERS-TABS | [Flutter: Trip numbers with tabs](#flutter-numbers-tabs--flutter-trip-numbers-with-tabs) |
+| 2026-10-18 | flutter | FLUTTER-OFFLINE-FEEDBACK | [Flutter: bug reports and suggestions offline](#flutter-offline-feedback--flutter-bug-reports-and-suggestions-offline) |
+| 2026-10-18 | flutter | FLUTTER-SETTLED-CELEBRATION | [Flutter: settled celebration](#flutter-settled-celebration--flutter-settled-celebration) |
+| 2026-10-18 | flutter | FLUTTER-SETTLE-ROUNDING | [Flutter: round down when settling](#flutter-settle-rounding--flutter-round-down-when-settling) |
+| 2026-10-18 | flutter | FLUTTER-APP-SHORTCUTS | [Flutter: app icon shortcuts](#flutter-app-shortcuts--flutter-app-icon-shortcuts) |
+| 2026-10-18 | flutter | FLUTTER-EXPENSE-HISTORY | [Flutter: expense history line](#flutter-expense-history--flutter-expense-history-line) |
+| 2026-10-18 | flutter | FLUTTER-PENDING-DOTS | [Flutter: pending sync dot on trips](#flutter-pending-dots--flutter-pending-sync-dot-on-trips) |
+| 2026-10-18 | flutter | FLUTTER-TRIP-TEMPLATES | [Flutter: trip templates](#flutter-trip-templates--flutter-trip-templates) |
+| 2026-10-18 | flutter | FLUTTER-SUMMARY-TWO-PANE | [Flutter: Summary two panes](#flutter-summary-two-pane--flutter-summary-two-panes) |
+| 2026-10-18 | flutter | FLUTTER-INVITE-CARD | [Flutter: invite picture](#flutter-invite-card--flutter-invite-picture) |
+| 2026-10-18 | flutter | FLUTTER-QUICK-CHIPS | [Flutter: Expenses quick filter chips](#flutter-quick-chips--flutter-expenses-quick-filter-chips) |
+| 2026-10-18 | flutter | FLUTTER-A11Y-AUDIT | [Flutter: accessibility audit](#flutter-a11y-audit--flutter-accessibility-audit) |
+| 2026-10-18 | flutter | FLUTTER-PERSONAL-EXPENSES | [Flutter: personal expenses, left out of totals](#flutter-personal-expenses--flutter-personal-expenses-left-out-of-totals) |
+| 2026-10-18 | flutter | FLUTTER-UNDO-SETTLEMENT | [Flutter: undo a recorded payment](#flutter-undo-settlement--flutter-undo-a-recorded-payment) |
+| 2026-10-18 | flutter | FLUTTER-SAVED-FILTERS | [Flutter: saved expense filters](#flutter-saved-filters--flutter-saved-expense-filters) |
+| 2026-10-18 | flutter | FLUTTER-CLEAN-TOPBAR | [Flutter: clean trip top bar, no banner](#flutter-clean-topbar--flutter-clean-trip-top-bar-no-banner) |
+| 2026-10-18 | flutter | FLUTTER-CONTEXT-FAB | [Flutter: quick action buttons on Notes and Members](#flutter-context-fab--flutter-quick-action-buttons-on-notes-and-members) |
+| 2026-10-18 | flutter | FLUTTER-SUMMARY-FOCUS | [Flutter: Summary focus mode](#flutter-summary-focus--flutter-summary-focus-mode) |
+| 2026-10-18 | flutter | FLUTTER-JUMP-TODAY | [Flutter: jump to today](#flutter-jump-today--flutter-jump-to-today) |
+| 2026-10-18 | flutter | FLUTTER-QUICK-AMOUNTS | [Flutter: quick amount chips](#flutter-quick-amounts--flutter-quick-amount-chips) |
+| 2026-10-18 | flutter | FLUTTER-COACH-EMPTY | [Flutter: friendly empty states](#flutter-coach-empty--flutter-friendly-empty-states) |
+| 2026-10-18 | flutter | FLUTTER-SKELETONS | [Flutter: skeleton loaders](#flutter-skeletons--flutter-skeleton-loaders) |
+| 2026-10-18 | flutter | FLUTTER-HIGH-CONTRAST | [Flutter: high contrast and haptics setting](#flutter-high-contrast--flutter-high-contrast-and-haptics-setting) |
+| 2026-10-18 | flutter | FLUTTER-SHEET-HANDLES | [Flutter: consistent bottom sheets](#flutter-sheet-handles--flutter-consistent-bottom-sheets) |
+| 2026-10-18 | flutter | FLUTTER-PAID-LEGEND | [Flutter: Who paid labels](#flutter-paid-legend--flutter-who-paid-labels) |
+| 2026-10-19 | flutter | FLUTTER-PAID-VS-SHARE | [Flutter: You paid vs your share, balance explainer, saved-offline toast](#flutter-paid-vs-share--flutter-you-paid-vs-your-share-balance-explainer-saved-offline-toast) |
+| 2026-10-19 | flutter | FLUTTER-TIDY-TABS | [Flutter: tidy Expenses, Notes and Members, edit and delete passes, analytics switch](#flutter-tidy-tabs--flutter-tidy-expenses-notes-and-members-edit-and-delete-passes-analytics-switch) |
+| 2026-10-19 | flutter (unreleased) | FLUTTER-SETTINGS-PAGE | [Flutter: one-page Settings like the web](#flutter-settings-page--flutter-one-page-settings-like-the-web) |
+| 2026-10-19 | flutter (unreleased) | FLUTTER-HEADER-SUMMARY | [Flutter: trip header actions, edit trip, Summary upgrades](#flutter-header-summary--flutter-trip-header-actions-edit-trip-summary-upgrades) |
+| 2026-10-19 | flutter (unreleased) | FLUTTER-UI-ROUND3 | [Flutter: clean header, pass multi-select, filters page, mini pass, voice](#flutter-ui-round3--flutter-clean-header-pass-multi-select-filters-page-mini-pass-voice) |
+| 2026-10-19 | 3.69.0 | CI-ANDROID-APK | [Automatic Android APK from main](#ci-android-apk--automatic-android-apk-from-main) |
+| 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
+| 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
+| 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
+| 2026-10-07 | flutter 3.45 | FLUTTER-P12 | [Flutter: accessibility, hardening, release checks](#flutter-p12--flutter-accessibility-hardening-release-checks) |
+| 2026-10-06 | flutter 3.45 | FLUTTER-P10E | [Flutter: push, tap routing, pass reminders](#flutter-p10e--flutter-push-tap-routing-pass-reminders) |
+| 2026-10-06 | flutter 3.45 | FLUTTER-P10D | [Flutter: feedback, diagnostics, legal, telemetry](#flutter-p10d--flutter-feedback-diagnostics-legal-telemetry) |
+| 2026-10-06 | flutter 3.45 | FLUTTER-P10C | [Flutter: notification preferences, version gate, flags](#flutter-p10c--flutter-notification-preferences-version-gate-flags) |
+| 2026-10-06 | flutter 3.45 | FLUTTER-P10B | [Flutter: settings and trip settings](#flutter-p10b--flutter-settings-and-trip-settings) |
+| 2026-10-06 | flutter 3.45 | FLUTTER-P10A | [Flutter: in-app notifications](#flutter-p10a--flutter-in-app-notifications) |
+| 2026-10-06 | flutter 3.44 | FLUTTER-P8 | [Flutter: members, notes, text chat, manual passes](#flutter-p8--flutter-members-notes-text-chat-manual-passes) |
+| 2026-10-06 | flutter 3.44 | FLUTTER-P7-LOOP | [Flutter: ledger loop, files, and exit bar](#flutter-p7-loop--flutter-ledger-loop-files-and-exit-bar) |
+| 2026-10-06 | flutter 3.44 | FLUTTER-P7-FORM-LEDGER | [Flutter: expense form and balances tab](#flutter-p7-form-ledger--flutter-expense-form-and-balances-tab) |
+| 2026-10-06 | flutter 3.44 | FLUTTER-P7-EXPENSES | [Flutter: Expenses tab (list, filters, recycle bin)](#flutter-p7-expenses--flutter-expenses-tab-list-filters-recycle-bin) |
+| 2026-10-06 | flutter 3.44 | FLUTTER-P6 | [Flutter app: auth, trips list, trip shell, join & share](#flutter-p6--flutter-app-auth-trips-list-trip-shell-join--share) |
 | 2026-10-19 | 3.43.13 | SETTLE-GROUP-RLS | [Second partial group settlement no longer fails](#settle-group-rls--second-partial-group-settlement-no-longer-fails) |
 | 2026-10-02 | 3.43.9 | MEMBERS-ROSTER | [Members roster](#members-roster--members-roster) |
 | 2026-10-02 | 3.43.8 | COLLAB-SYNC | [Shared packing, notes, and passes](#collab-sync--shared-packing-notes-and-passes) |
@@ -1720,6 +1816,545 @@ No new flag. Role changes, reminders, and group create stay on the existing Memb
 
 ---
 
+## FLUTTER-P7-FORM-LEDGER — Flutter: expense form and balances tab
+
+**Scope:** Phase 7 slices C+D in `flutter_app/`. Use a staging project, never prod.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Percent / Exact / Shares splits | `enableAdvancedSplits` | ON |
+| Itemized split | `enableItemizedSplit` | OFF |
+| Several payers | `enableMultiPayerExpenses` | OFF |
+| Currency picker + conversion | `enableCurrencyFx` | ON |
+| Receipt photo | `enableReceiptUpload` | ON |
+| "More details" fold | `enableCompactExpenseForm` | ON |
+| Duplicate warning | `enableDuplicateDetector` | ON |
+| Same as last time | `enableCloneLastExpense` | ON |
+| Explain this number | `enableExplainThisNumber` | ON |
+| Simplify-debts switch (admins) | `enableSimplifyDebtsToggle` | OFF |
+| Settlement history | `enableSettlementHistory` | OFF |
+| Date + note when settling | `enableSettlementDateNote` | OFF |
+
+### Steps
+1. Expenses tab → add. Type `12*3+4` in Amount → "= 40.00" appears; save stores 40. Letters are ignored in the field.
+2. Leave amount or title empty and Save → the web's messages ("Please enter a valid amount greater than 0.", "Please enter a title for the expense."). Untick everyone → "Please select at least one member to split the expense with."
+3. Title "Hotel" → category auto-picks (note shown) until you tap a category yourself.
+4. Percent with 60/30 → "90.0% of 100%" and Save is refused ("Split percentages sum (90.00) must equal 100%."); add 10 → saves. Exact must equal the total. Shares 2/1/1 on 100 → 50/25/25 and re-opening the expense shows the weights.
+5. Presets: Only payer, Everyone but payer, Everyone, 50% payer; a group chip selects exactly that group.
+6. Multi-payer: toggle, amounts must equal the total ("Multi-payer sum ... must equal total expense ..."); the larger payer becomes the main payer.
+7. Foreign currency: pick USD, enter 10 → "≈ ₹872.50 at 87.25" (default rates); "Set rate" changes it for this trip and syncs.
+8. Attach a receipt (camera/gallery), remove it, attach again, Save; offline it uploads later.
+9. Type the same amount + title as an existing expense today → duplicate card; "Not a duplicate" hides it.
+10. Leave the form half-typed, come back → draft banner restores it; Discard clears it. Saving clears it.
+11. Edit an expense → loads values, saves as an update, one row remains.
+12. Balances tab: each traveler shows "is owed"/"owes"; "Who pays whom" lists payments. Settle → confirm (partial amount shows "Remaining" and the partial wording; 0 is refused). With the date/note flag a date and note appear and the note joins the title.
+13. Simplify debts switch (admin, flag on) changes the list of payments. History (flag on) lists settlements as Awaiting confirmation / Confirmed; tap one to confirm if you are the receiver.
+
+### Negative checks
+- Advanced-splits off: only Equal. Multi-payer/FX/receipt/duplicate flags off: those controls are absent.
+- Closed or frozen trip: Save is refused with "This trip is closed. Reopen it to add expenses."
+- Not built yet (see BACKLOG): UPI sheet, settlement share card, close-out, cross-trip balances, categories/CSV/backup/analytics screens.
+
+### Pass
+- Shares and balances match the web for the same data.
+
+---
+## FLUTTER-P7-EXPENSES — Flutter: Expenses tab (list, filters, recycle bin)
+
+**Scope:** Phase 7 slices A+B in `flutter_app/`. The add/edit form is not built yet (the buttons open a placeholder). Use a staging project, never prod.
+
+### Flags (Ops Deck; Flutter only reads them)
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Recycle bin entry | `enableRecycleBin` | ON |
+| Dispute actions in the expense sheet | `enableExpenseDisputes` | OFF |
+| Approve pending expenses | `enableExpenseApprovalThreshold` | OFF |
+| Confirm a received settlement | `enableSettlementConfirmation` | OFF |
+| Quick filter chips (All / Paid by me / Involves me) | `enableExpenseQuickFilterChips` | OFF |
+| Compact rows toggle | `enableCompactLedgerView` | OFF |
+| Chat cards after expense events | `enableInChatEventCards` + `enableTripChat` | OFF / ON |
+
+### Steps
+1. Open a trip with expenses → Expenses tab. Top card shows Total spent, Per person, Top category. Settlements and expenses waiting for approval are **not** in the total.
+2. Days start collapsed. Tap a day header (or ⋯ → Expand all days). Settlements appear in their own section.
+3. Row shows: category tile, title, amount, "your share" (only when different), payer → split avatars (max 4 then +N), badges: receipt, disputed, pending approval, pending sync, sync conflict. A foreign-currency row has a ⇄ chip that flips between trip currency and the original currency.
+4. Remove a member who paid/was in a split → that row shows the amber "Payer was removed…" / "A split member was removed…" warning.
+5. Search a word from a title (list narrows after a moment); a nonsense word → "No expenses match these filters." Filters (icon): traveler, category, date range, min/max amount; the button shows the live count ("Show 3 expenses"); a dot appears on the icon while filters are active; "Clear filters" resets.
+6. Swipe a row **left** → deleted with 5 s UNDO; **right** → opens Edit. Rows you can't manage (not the author, not an admin) don't swipe.
+7. ⋯ → Recycle bin: restore, delete forever (asks first), Empty recycle bin (asks first, admins only). Deleted items from another device also appear within the 24 h window.
+8. Tap a row → sheet with the amount, who paid, and who owes what (shares add up to the total; the payer gets any spare cent). With the flags on: Flag as disputed (optional note) / Resolve dispute; Approve (never on your own expense); Confirm payment received (only the person who received the settlement).
+9. Airplane mode, then flag a dispute → "You're offline. Connect to the internet to do this." and nothing changes. (Same as the web: these need the server's rules.)
+10. A trip with more than 50 rows shows "Load more" at the bottom.
+11. Chips under the header: "You owe · settle up" / "You're owed · see who", "N disputes", "N invites pending", "Close out trip" (after the end date). Tapping goes to Balances / Members.
+
+### Negative checks
+- Flags off: no dispute/approve/confirm buttons, no filter chips, no compact toggle.
+- Frozen or closed trip: saving an expense (once the form exists) is refused with the web wording.
+- Guest account: the tab works locally and never syncs.
+
+### Pass
+- Numbers match the web for the same trip (total, per person, shares). Anything else is a bug.
+
+---
+
+## FLUTTER-P6 — Flutter app: auth, trips list, trip shell, join & share
+
+**Scope:** the native Flutter app (`flutter_app/`, Phase 6). Same Supabase project as the web app. **Migrations:** none. **ADR:** 262, 263.
+
+Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, never prod). Google sign-in needs the client IDs from `docs/flutter-migration/contract/GOOGLE_OAUTH_SETUP.md`. iOS items need a Mac / Codemagic build.
+
+### Flags (Ops Deck → Flags; the Flutter app only reads them)
+| Behavior | Flag | Default |
+|----------|------|---------|
+| App lock (biometrics) | `enableBiometricAuth` | OFF |
+| Chat tab first | `enableChatFirstNav` | OFF |
+| Notes tab | `enableNotesAndChecklist` / `enableTravelPasses` / `enableTripChat` | ON |
+| View-only share link section | `enableTripShareLink` | ON |
+| Sync queue review sheet | `enableSyncQueueInspector` | OFF |
+
+### A. Sign-in and session
+1. Fresh install, signed out: you see the sign-in screen (no flash of anything else). Buttons: Continue with Google; Continue with Apple **on iOS only**; email + password; Continue as guest; Try the demo (non-prod builds only).
+2. Sign in with Google. First time ever: the 3-step intro appears (Next, Next, Get started); Skip also works. Land on **My Trips**.
+3. Force-quit and reopen: splash briefly, then **My Trips** directly (no login, no intro).
+4. Sign out (⚙ menu → Sign Out), sign back in as the same user: no intro again. Sign in as a different user: intro shows once for them.
+5. Wrong password → "Invalid email or password." Airplane mode + sign in → "Can't reach the server…". Empty fields → "Enter your email and password."
+6. Ops Deck: set `signup_gate` ON → sign-in screen shows "New sign-ins are temporarily paused…", Google/Apple/sign-up disabled. Turn it off again.
+7. Forgot Password → enter email → "Check your email". Open the emailed link on the device (opens the app) → choose a new password (min 8 chars) → saved, lands on trips.
+8. ⚙ → Delete Account → confirm → account removed, back on sign-in. (Use a throwaway account.)
+
+### B. App lock (needs a device with Face ID / Touch ID / fingerprint)
+1. Ops Deck: `enableBiometricAuth` ON. In the app, enable the lock (Settings arrives in Phase 10; until then set the stored preference via a debug build).
+2. Cold start → lock screen with auto prompt. Fail twice → "Biometric verification failed. Tap to try again." and the app stays covered. Pass → app visible.
+3. Background the app 10 s and return → no prompt. Background > 30 s and return → prompt again.
+4. Lock screen → Sign Out signs out cleanly. Flag OFF → never prompts even if the preference is on.
+
+### C. Trips list
+1. Empty account: "No trips yet" with **Create Trip** and **Join with Code**.
+2. New Trip → name, destination (typing "Tokyo" suggests JPY), pick dates, Create. Leaving name blank with destination + dates fills a suggested name. Missing name/dates show inline errors. You land inside the trip.
+3. List shows newest trip first; filter icon → Name (A–Z) reorders (numbers sort naturally: Trip 2 before Trip 10; accents ignored). Search matches name or destination; no match → "No trips match your search."
+4. Card headline: "Starts in N days" / "Starts tomorrow" / "Day X of Y" / "Ended". Archived, Closed, Frozen badges.
+5. Swipe a trip you own left → Archive; snackbar with UNDO (5 s). Archived trips sit under "Archived (n)". UNDO restores.
+6. Trip ⋯ menu → Delete trip → confirm → trip disappears; UNDO within 5 s keeps it; after 5 s it is deleted for everyone. Trips owned by others show no menu/swipe.
+7. Airplane mode: create a trip, add/archive; chip says "N changes waiting to sync". Reconnect: chip clears within seconds. A rejected change shows "Sync issue: tap to review" (sheet only with `enableSyncQueueInspector`).
+8. Pull to refresh. Android back on the list: "Press back again to exit"; second press within 2 s exits.
+
+### D. Trip shell
+1. Open a trip: header has the trip name, back arrow, Share, Settings. Bottom bar: Expenses, Balances, Members, Notes (Chat only when `enableChatFirstNav` is ON, then it's first and the landing tab).
+2. Tap tabs and **swipe left/right** on the content: tab changes and the bar follows. iOS: swipe from the very left edge on the first tab still goes back; on later tabs use the arrow (known conflict, ADR 263).
+3. Android back: walks back through tabs you visited (up to 5), then leaves the trip.
+4. Turn off `enableNotesAndChecklist`, `enableTravelPasses`, `enableTripChat` → Notes tab disappears.
+5. iOS keyboard/viewport items from `contract/IOS_DEFECTS.md` that apply here (no keyboard in this screen yet; recheck in Phase 7).
+
+### E. Invite, join and share
+1. Trip → Share: shows the 6-character join code, QR, Share invite, Copy code, Copy link. A brand-new trip that hasn't synced shows "Your join code appears after this trip finishes syncing."
+2. Scan the QR / open the link on another device: signed out → invite preview ("You're invited to …", dates, who's on it) **without signing in**. Continue with Google → "Which traveler are you?" → "I'm Ben" → you land in the trip.
+3. Two phones claim the same member at once: the loser sees "That member was just claimed by someone else. Pick another."
+4. Open the invite while already a member → "You're already in …" + Open trip. Everyone claimed → "Everyone's already joined".
+5. Bad code → "Invite not found". Many wrong codes → "Too many attempts. Try again in 30s." with a countdown.
+6. Manual entry: My Trips ⚙ → Join with Code (or the box on the sign-in screen): 6 characters, otherwise "Enter the 6-character code from your invite."
+7. Guest mode opening an invite: "Guest mode can't join shared trips…".
+8. View-only link (owner/admin): Create view-only link → Share/Copy → open in a browser or the app signed out: summary with travelers, expenses, spend per currency. Turn off link → same URL shows "This link has ended". Non-owners see "Only the trip owner or an admin can manage this link." With `enableTripShareLink` OFF the whole section is hidden.
+9. Offline: creating/turning off the view-only link shows "Connect to the internet to change the view-only link."
+10. Universal links (`https://trip-tracker.blackmaroon.in/join/CODE`, `/share/TOKEN`) open the app only once the domain serves `/.well-known/` files (see `contract/DEEPLINKS.md`); the custom scheme `com.triptracker.app://join/CODE` works today.
+
+### Negative checks
+- Signed out, open `/trip/<id>` or the trips list → redirected to sign-in; `/join`, `/share`, `/live`, `/reset-password`, `/privacy`, `/terms` stay reachable.
+- No screen allows a guest to create view-only links or claim members.
+- Dark mode and 200% text size: no clipped buttons or overflow on sign-in, trips list, invite sheet.
+
+### Pass
+- Every step above behaves as written on one Android device and (when a Mac is available) one iPhone; anything that deviates is filed as a bug.
+
+---
+
+## FLUTTER-P7-LOOP — Flutter: ledger loop, files, and exit bar
+
+**Scope:** Phase 7 slices E–G in `flutter_app/`. No new flags. Use a staging project, never prod. ADR 266.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Pay with UPI on the settle sheet | `enableUpiPayments` | ON |
+| Share settlement card | `enableWhatsAppSettlementShare` | ON |
+| Close out trip chip (after the end date) | `enableTripCloseout` | ON |
+| Mood question after lock | `enableCloseoutPulse` | OFF |
+| Live FX (Frankfurter, 24h cache) | `enableCurrencyFx` | ON |
+| Sticky day headers | `enableStickyDayHeaders` | OFF |
+| Category color rings | `enableCategoryColorRings` | OFF |
+| Compact ledger | `enableCompactLedgerView` | OFF |
+| Compact summary padding | `enableCompactSummary` | ON |
+| Category drag-reorder | `enableCategoryReorder` | OFF |
+| Splitwise import button | `enableSplitwiseImport` | OFF |
+| Other-trips search hits | `enableCrossTripSearch` | OFF |
+
+### Steps
+1. Add a 90 expense paid by you, split three ways. Balances shows you "is owed ₹60.00" and the other two "owes ₹30.00". The same "is owed" line stays pinned above the list. Sections collapse when their titles are tapped.
+2. Settle the first payment. Enter `name@bank` and Pay with UPI. If no UPI app opens, a snackbar says the id was copied. Share card opens the share sheet with a PNG and a caption that names both people.
+3. With two trips that share your account, Balances shows an "Across trips" line per currency. It is hidden when you have only one trip.
+4. After a pull that conflicts, open Conflicts. Keep mine leaves your copy. Keep theirs replaces the row with the server amount and clears the badge.
+5. Set the device date after the trip end date. Expenses shows "Close out trip". Lock trip marks the trip closed. With the pulse flag on, Yes / Not this group appears and is not saved.
+6. Open an expense that has a receipt. The detail sheet shows the photo (local file, or a signed link that lasts about an hour).
+7. Expenses menu → Quick add. Type `lunch 240` and Add expense. The row title is "Lunch" and the amount is 240.
+8. Menu → Categories. Add "Snacks". Rename and delete work on that custom category. Built-ins have no delete. With reorder on, drag changes the order.
+9. Menu → Export and import. Export CSV shares a sheet whose text starts with "TRIP TRACKER — LEDGER EXPORT". Export JSON shares a backup. Import JSON asks you to confirm a valid file. With Splitwise on, pick a CSV, preview, confirm; payment rows are skipped.
+10. Turn sticky day headers on, expand a day, and scroll: the day title stays pinned. A horizontal drag that starts in the outer 28px of a row changes tabs; a drag that starts on the title still edits or deletes.
+11. Turn cross-trip search on and search two or more letters that match an expense on another trip. "Other trips" lists that row.
+12. Accessibility: at 200% text size, the expense form and the balances list still show "who pays whom" without a crash. With TalkBack or VoiceOver, focus "Add expense" and "Settle" and confirm each button's name is spoken.
+13. On a device, open a trip with about 500 expenses. Scrolling the expenses list should stay near 55 fps, and the balances tab should appear within about 300 ms after the rows are on disk.
+
+### Negative checks
+- UPI flag off: no UPI field on the settle sheet. Share flag off: no Share card button.
+- Close-out flag off, or the trip end date is still in the future: no Close out chip.
+- Sticky headers off: day titles scroll away. Color rings off: category icons have no colored border. Compact ledger off: the menu has no compact switch.
+- Splitwise flag off: the tools sheet has no Splitwise button. Cross-trip search off: a query never shows "Other trips".
+- Voice, receipt OCR, geotag, and analytics charts are absent.
+
+### Pass
+- Balances match the web for the same expenses. UPI and the share PNG are confirmed on one Android device; iOS UPI query schemes are declared but need a device with a UPI app. The 500-row fps check is a device step (the widget test only checks that Load more appears).
+
+---
+
+## FLUTTER-P12 — Flutter: accessibility, hardening, release checks
+
+**Scope:** Phase 12 work in `flutter_app/`. No new flags. Device steps; the automated half is `test/a11y/a11y_test.dart`. ADR 275.
+
+### Steps
+1. **Screen reader (iOS VoiceOver and Android TalkBack).** On login, trips list, add expense, settle up, chat send and join by code: every control is announced with a name and role, focus moves in reading order, and you can complete each task without sight. Icon-only buttons say what they do (Back, Close, Rename, Delete, Send message).
+2. **Large text.** Set the OS text size to the maximum (and bold text on). Open trips list, add expense, balances, settings, notifications and Report a problem: nothing is cut off or overlaps, and every button is still reachable by scrolling. The Theme row in Settings stacks under its title.
+3. **Dark mode.** Selected chips, the Theme control and primary buttons are readable (dark text on the bright teal button).
+4. **Reduce motion.** With the OS setting on, screen transitions and the confetti/story animations do not play at full motion.
+5. **Haptics.** Settings, Haptic feedback off: no vibration on taps or saves.
+6. **Release build smoke (B-193).** Install a signed release build from the pipeline (not a debug build). Sign in, add an expense offline then online, open Notification preferences, trigger a push, and confirm no crash. This is the check for the R8 shrinking and release signing changes.
+7. **Signing and secrets.** `tool/check_release_signing.sh <aab>` passes (not the debug key) and `tool/scan_binary_secrets.sh <aab|ipa>` reports nothing.
+8. **Backups off.** On Android, `adb shell dumpsys package com.triptracker.app | grep -i allowBackup` shows it disabled; a clean-text `http://` URL is refused by a release build.
+9. **Version rule.** `tool/release_version.sh` prints the `package.json` version and a build number above the last store build.
+
+### Negative checks
+- A debug-signed bundle makes the release job fail.
+- A binary containing a `service_role` key makes the release job fail (the anon key is allowed).
+
+### Pass
+- The automated half passes headless today (28 tests). Steps 1 to 9 are open until run on devices and the pipeline (B-151, B-193, B-197).
+
+---
+
+## FLUTTER-P10E — Flutter: push, tap routing, pass reminders
+
+**Scope:** Phase 10 slice E in `flutter_app/`. No new flags. Needs the Firebase files, a real device and a staging project (B-136, B-137, B-170). ADR 273.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Alerts to your phone | none (a device permission) | asked once |
+| Quiet-hours shift of reminders | `enableQuietHours` | OFF |
+
+### Steps
+1. Fresh install, sign in with an account. No permission prompt appears at launch.
+2. Create a trip and save its first expense. A short explanation appears ("Get trip alerts?"). Tap Not now: the OS prompt does not appear, and the question is not asked again.
+3. Settings, Notification preferences, Push notifications tile says "Off. Tap to turn on." Tap it: the OS prompt appears. Allow. The tile says "On for this device".
+4. In the database, `device_push_tokens` has one row for your user with `client = flutter`, the platform and the app version.
+5. Second account on another phone adds an expense to the trip. Your phone gets a push ("Dinner — INR 900 added"). Do this for six states: app in the foreground, in the background, and killed; signed in and (after step 8) signed out.
+6. Foreground: you see the in-app banner and hear/feel a sound, but not a second system banner. Background or killed: tap the push. The app opens on that trip's Expenses tab (Balances for a settlement, Members for "joined"). A "trip deleted" push opens the trips list.
+7. Have the second account join through an invite: you get "Diana joined the trip".
+8. Sign out. The device row is gone from `device_push_tokens`. Trigger another expense: this phone gets nothing. Sign back in: the row returns.
+9. Add a flight pass 25 hours out. Two reminders are scheduled (24 h and 3 h). Android: after a reboot they are still scheduled. Turn "Travel pass reminders" off in Settings: both are cancelled.
+10. With `enableQuietHours` on and 22:00 to 07:00 set, a 24 h reminder that would land at 02:00 arrives at 07:00 (unless that is after departure).
+11. Deny the OS prompt: the tile says "Blocked. Turn it on in your phone settings." and nothing crashes.
+
+### Negative checks
+- Build without Firebase files: the tile says "Not available in this build"; the rest of the app works.
+- A push whose `route` is something other than a trip tab path (for example a URL) is ignored for routing; it lands by type and trip.
+- Guest or demo accounts never register a token.
+
+### Pass
+- Steps 1 to 4, 9 and the negative checks pass headless today. Steps 5 to 8, 10 and 11 need devices and are open (B-170).
+
+---
+
+## FLUTTER-P10D — Flutter: feedback, diagnostics, legal, telemetry
+
+**Scope:** Phase 10 slice D in `flutter_app/`. ADR 273.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Suggest a feature row | `enableFeatureSuggestions` | OFF |
+| Growth events | `enableGrowthTelemetry` | OFF (server also refuses inserts) |
+| What's new row | `enableWhatsNewHub` | OFF |
+
+### Steps
+1. Settings, Help, Report a problem. Leave the title empty and send: "Give the problem a short title." Enter a title that includes an email address, add two steps on two lines, send. The message says "Your report is BUG-nnn". In the Ops Deck bug ledger the title shows `[email]` instead of the address, two repro steps, `client: flutter`, and recent logs with no emails or tokens.
+2. Switch "Attach recent app logs" off and send again: no `consoleLogs` in diagnostics.
+3. Your reports list shows both cases with status and severity.
+4. As a guest: the screen says to sign in, and sending shows the same.
+5. With `enableFeatureSuggestions` on: Suggest a feature sends and appears in the Ops Deck features list.
+6. Settings, Help, Diagnostics: version, environment, sync state, last log lines. Share logs opens the share sheet. In a dev or staging build, "Feature flag overrides" lets you force a flag on or off; Reset all clears them.
+7. Cause an uncaught error in a release build: one critical case appears (`found_by: auto-crash-handler`), not one per repeat. A burst of different errors files at most 5 per session, 30 seconds apart. Network errors are not filed.
+8. Privacy Policy and Terms: tap "Read the full document online" and the web page opens.
+9. With `enableGrowthTelemetry` on (server flag): opening the app twice in one UTC day creates one `app_open` row; `sync_fail`, `queue_stuck` (10 minutes online with work waiting) and `flush_ok` once per session. With it off, nothing is written.
+
+### Negative checks
+- Flag OFF: no Suggest a feature or What's new rows.
+- Prod build: the flag override screen has no effect (the store is not wired).
+
+### Pass
+- Steps 1 to 6 and 8 pass headless. Steps 7 and 9 need a release build and staging.
+
+---
+
+## FLUTTER-P10C — Flutter: notification preferences, version gate, flags
+
+**Scope:** Phase 10 slice C in `flutter_app/`. Needs staging for the server checks. ADR 273.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Quiet hours rows | `enableQuietHours` | OFF |
+| Daily digest row | `enableDigestNotifications` | OFF |
+
+### Steps
+1. Settings, Notification preferences. With both flags off you see Push notifications and Muted trips only.
+2. Turn on `enableQuietHours`. Switch quiet hours on, set From and Until. In `quiet_hours_prefs` the row has your times and your IANA zone (for example Asia/Kolkata).
+3. Turn on `enableDigestNotifications`. The digest switch writes `notification_digest_prefs`.
+4. Mute a trip here, or in Trip settings, Mute this trip. `trip_mutes` has the row. No push from that trip arrives; in-app notifications still do.
+5. Version gate: set `min_supported_version_android` above the installed version in `app_config`. Reopen (or return to) the app: a full-screen "Update required" with Update now (store page). Set it back: normal.
+6. Set only `recommended_version_android` higher: a banner "A new version is available" with Update and a dismiss.
+7. Set `maintenance_mode` true: "Back soon" with the message and Try again.
+8. Airplane mode on a cold start: no block, no banner (fail open).
+9. Flags: change a global flag in the Ops Deck. After 15 minutes in the background, returning to the app picks it up.
+
+### Negative checks
+- Flags off: no quiet hours or digest rows.
+- A broken `get_app_version_gate` response never blocks the app.
+
+### Pass
+- Steps 1, 5 to 8 (with a faked gate) and the flag matrix pass headless. Server checks need staging.
+
+---
+
+## FLUTTER-P10B — Flutter: settings and trip settings
+
+**Scope:** Phase 10 slice B in `flutter_app/`. ADR 273.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Pure black dark mode | `enableAmoledTheme` | OFF |
+| Biometric lock row | `enableBiometricAuth` | OFF |
+| Simplify debts row | `enableSimplifyDebtsToggle` | OFF |
+| Approval threshold row | `enableExpenseApprovalThreshold` | OFF |
+
+### Steps
+1. Trips list, settings icon, Settings. The screen shows Profile, Appearance, Notifications, Data, Help, About, Account (Security only with the flag).
+2. Tap your name, change it, Save: the row updates. Reopen the app: the name is kept (accounts update the profile; guests keep it on the device).
+3. Theme: choose Dark, then Light, then Auto. The app changes at once and keeps the choice after a restart.
+4. With `enableAmoledTheme` on: the pure black switch appears and, in dark mode, backgrounds are black.
+5. Haptic feedback off: taps stop vibrating. Default currency EUR: the next new trip starts in EUR, even if the destination suggests another.
+6. With `enableBiometricAuth` on: turning the lock on asks for Face ID or fingerprint; a failed prompt leaves it off.
+7. Export backup shares a `triptracker-backup-YYYY-MM-DD.json`. On a fresh install (or after Sign out), sign in, Restore backup, pick the file: the dialog says how many trips and expenses it adds and warns that a second restore duplicates. Confirm: the trips, people, archived people and expenses appear, with the right payers and splits.
+8. Restore with a file that is not JSON: a clear message, nothing added.
+9. About shows the version and build. What's new (flag) lists releases. Sign out clears the device. Delete account opens the existing screen.
+10. Open a trip, Trip settings. As the owner: Freeze trip (confirm) makes expenses read-only; Trip closed and Archive work; Categories and Recycle bin open. Turning Freeze off restores edits.
+11. As a non-owner member: Trip state is absent and Simplify debts / Approval threshold are read-only.
+
+### Negative checks
+- Flags off: no pure black, no Security section, no Simplify debts or approval rows.
+- Guest: Settings works; Report a problem asks to sign in.
+
+### Pass
+- Steps 1 to 11 pass headless except Face ID (6) and the real restore on a clean device (7), which are device steps (B-012, B-146).
+
+---
+
+## FLUTTER-P10A — Flutter: in-app notifications
+
+**Scope:** Phase 10 slice A in `flutter_app/`. Bell, list, banner. No push yet (slice E), no new flags. Needs a staging project for steps 7 and 8.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Money chip and folding of bursts | `enableNotificationGrouping` | ON |
+
+### Steps
+1. Open a trip. The header shows a bell. With unread rows it carries a badge (9+ above nine). With none, no badge.
+2. Tap the bell. The list opens on "This trip". Each row has an icon, a headline ("Expense Added"), the detail ("Dinner — USD 85.00") and a relative time. Unread headlines are bold.
+3. Switch to "All trips": rows from other trips appear.
+4. Tap a row. It turns read and you land on the matching tab (chat message to Chat, settlement to Balances, member to Members, expense to Expenses). A "trip deleted" row only marks read.
+5. Use the mark icon on a row to flip read and unread. Mark all as read clears every unread in the current scope.
+6. Swipe a row left to delete it. Clear notifications asks first, then empties the current scope.
+7. Two or more expense rows within an hour from the same person fold into one with "Show N more". Chat messages never fold.
+8. Tap Money: only settlement rows stay. If rows exist but none are money, the empty state says "No money updates".
+9. With the app open, have another account add an expense on staging. A banner slides in at the top with the headline and detail; it disappears after about 5 seconds or when swiped up; tapping it opens the list. Open the app fresh on a new install: older notifications do not pop banners.
+10. Go offline, read a row, come back online. The row stays read after the next refresh.
+
+### Negative checks
+- `enableNotificationGrouping` off: no Money chip, bursts show as separate rows.
+- Signed out: no bell data, list empty.
+- Guest or demo (no backend): bell and list work from local rows only; nothing is sent.
+
+### Pass
+- Steps 1 to 8 pass headless (widget tests). Steps 9 and 10 need a staging project; steps on real devices stay unverified (B-001, B-004).
+
+---
+
+## FLUTTER-P8 — Flutter: members, notes, text chat, manual passes
+
+**Scope:** Phase 8 slices A–D in `flutter_app/`. No new flags. No `record`, `just_audio`, `pdfrx`, `mobile_scanner`, or SQLCipher. Use a staging project for the two-account check. ADR 267.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Member balance line | `enableMemberMoneyRow` | ON |
+| Notes tab (checklist and notes) | `enableNotesAndChecklist` | ON |
+| Suggest packing | `enablePackingAssistant` | ON |
+| Text chat (quiet chat on Notes, or its own tab) | `enableTripChat` | ON |
+| Chat as the first tab | `enableChatFirstNav` | OFF |
+| Add-pass button and pass cards | `enableTravelPasses` | ON |
+| Date ranges, reactions, attachments, voice, typing, read receipts, Tripbot, document vault | matching labs/pro flags | OFF |
+
+### Steps
+1. Open a trip with three people and one expense you paid. Members lists everyone. Your row says "is owed" and the others say "owes". Turn `enableMemberMoneyRow` off and those amounts disappear; names stay.
+2. Add a person by name. Rename them. Set someone to Viewer. Archive them: they move under Archived and are not offered on a new split. They still appear in old expenses.
+3. Add a group of two people. Rename it. Delete it. Invite opens the same share sheet as the header (join code and share), not a contacts picker.
+4. Notes → Checklist. Add an item, assign it, mark it done, and move it up. "n of n" matches. Suggest packing adds the document and power-bank lines, and a second tap does not duplicate them.
+5. Notes → Notes. Add a note and type a sentence that includes `https://example.com`. The link is tappable. Keep typing while another phone updates the same note: the cursor does not jump.
+6. With chat-first off, Notes shows a Chat segment. A message from someone else shows an unread mark until you open Chat. Send a message while offline: it stays on screen with Pending, and leaves Pending after sync. Day headers group by date. Long-press your own message to edit it, or clear it to delete it.
+7. An expense, settlement, or dispute card in chat opens that expense.
+8. Turn chat-first on. Chat is its own tab and shows the same unread dot. Notes no longer has a Chat segment.
+9. With `enableTravelPasses` on and no passes, Notes shows Add pass and no pass cards. Add a flight (title, from, to). A card appears. Train and Hotel are the other types.
+10. Two accounts on staging: A adds a checklist item and a chat line; B sees both without restarting. This step needs a staging project (same limit as B-001 and B-005).
+11. On a device, open a chat with about 1,000 messages and scroll. It should stay near 55 fps. iOS keyboard: the composer stays above the keyboard. Neither check can be proven on this Linux machine.
+
+### Negative checks
+- Notes flag off and passes flag off and chat flag off: no Notes tab.
+- Packing flag off: no Suggest packing button.
+- Chat flag off: no Chat segment and no chat tab.
+- Chat-first off: Chat is not in the bottom bar.
+- Travel passes off: no Add pass control.
+- Date-range membership, contacts picker, voice notes, image attach, reactions, typing, read receipts, Tripbot, scanner, PDF import, screen brightness, and the document vault are absent.
+
+### Pass
+- Roster, roles, archive, and groups match the steps. Checklist and notes save for a non-owner member via the collab write. Chat text survives offline. Pass cards appear only after one is saved. The 1,000-message scroll and the two-account check are device/staging steps.
+
+---
+
+## FLUTTER-NOTES-OVERFLOW — Flutter: Notes tab many-passes overflow fix
+
+### Flags
+- `enableTravelPasses` ON (default for Trip pack); `enableTripChat` ON to see the Chat segment.
+
+### Steps
+1. Open a trip with 8+ passes (e.g. Sikkim Bagpacking) on a phone-size screen.
+2. Open the **Notes** bottom tab.
+3. Confirm no yellow/black "BOTTOM OVERFLOWED" stripe appears.
+4. Confirm the Checklist / Notes / Chat selector is visible below the passes area.
+5. Scroll inside the Next Up + Passes area; all passes and "Add pass" are reachable.
+6. Tap **Chat**, then **Notes**, then **Checklist**; each pane fills the remaining space.
+7. Open a trip with 0 passes (e.g. Switzerland); layout is unchanged.
+
+### Negative checks
+- `enableTravelPasses` OFF → no passes list; selector and panes still render.
+
+### Pass
+- No overflow stripe at any pass count; selector always on screen; passes scroll within a capped area (~35% of screen height).
+
+## FLUTTER-PASS-SORT — Flutter: pass list sorting (Time / Leg / Name)
+
+### Flags
+- `enablePassSorting` ON (default, Travel pack) and `enableTravelPasses` ON.
+
+### Steps
+1. Open a trip with 3+ passes across 2+ flights and several travelers (e.g. Sikkim Bagpacking) → Notes tab.
+2. Above the passes, confirm a **Time | Leg | Name** control (Time selected).
+3. Time: passes run earliest → latest; undated passes are last.
+4. Tap **Leg**: passes are grouped under a header per flight/route (e.g. `6E445 · IXB · BLR`), earliest leg first, travelers A→Z within each group; passes with no leg info sit last under `—`.
+5. Tap **Name**: passes group by passenger A→Z, each person's legs in time order; no leg headers.
+6. Leave the tab and return: sort resets to Time (not remembered).
+7. Open a trip with 1–2 passes: no sort control.
+8. Tap a pass / QR / live-status icon in each mode; each opens the correct pass.
+
+### Negative checks
+- `enablePassSorting` OFF (Ops Deck → Flags / Travel pack) → no sort control, no leg headers, passes in stored order.
+- `enableTravelPasses` OFF → no passes list at all.
+- Sorting never changes stored order (reload app with Time mode: unchanged).
+
+### Pass
+- Each mode orders as above, headers only in Leg mode, flag OFF restores the plain list.
+
+## FLUTTER-WEBTHEME — Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics
+
+### Flags
+- None new. Passes cards use `enableTravelPasses`; sort uses `enablePassSorting`.
+
+### Steps
+1. Light, dark and AMOLED themes (Settings): primary actions and headers are teal (`#0F6F63` light, `#3FCBBD` dark), accent orange, surfaces match the web app; no blue remains (trips, balances, maps, Wrapped).
+2. Notes tab with passes: each pass is a card (type icon, route, passenger, flight, date chip, QR + live-status buttons); tapping opens the scanner/status as before.
+3. Login → expand Superadmin login → sign in with a superadmin account: you land on the Superadmin screen with only **Open Ops Deck** and **Sign out** (no traveller view, no trips).
+4. Tap **Open Ops Deck**: Chrome opens the web app (`trip-tracker.blackmaroon.in`) and lands in the Superadmin portal already signed in, with no second login. Sign out returns to the Flutter login.
+5. Superadmin password field: capital letters can be typed; eye icon shows/hides.
+6. Debug builds: a failed Google sign-in shows the red banner plus a small grey line with the raw error.
+
+### Negative checks
+- Non-superadmin account in the Superadmin form → rejected, signed out, no `/admin`.
+- Force-close and reopen as the same superadmin → traveller UI (admin redirect is per login, not persisted).
+- After about an hour the web portal may refresh the shared session; reopening the Flutter app can then ask for a sign-in again (known trade-off, decision 282).
+- Web links elsewhere in the app (share links, maps) open in the browser (Android manifest `https` query).
+- Release builds never show the grey error line.
+
+### Pass
+- Palette matches the web app in all three themes; passes read as cards; superadmin login lands on `/admin`.
+
+## FLUTTER-BENTO — Flutter: Bento redesign (P0 to P5)
+
+### Flags
+- None new. Existing flags still gate their features; `enableHorizonNav` keeps the home dock.
+
+### Steps
+1. Light theme: green-grey ground, white surfaces, ink text, five pastel tiles (mint, butter, peach, sky, lilac); fonts are Bricolage Grotesque (titles, numbers) and Figtree (body).
+2. Switch Settings → Appearance to Dark and Black: tiles become deep tinted versions, text stays readable, buttons turn cream.
+3. Login: tile collage, large headline, ink Google button; Superadmin login still works.
+4. Trips: each trip is a tile (the trip happening today is the large mint tile with the flight arc); tiles spring in one after another (not with reduce-motion on).
+5. Bottom dock: floating white pill, the selected item shows its lilac pill with its label, others show only an icon, the centre ink button creates a trip. Every icon has a spoken label (TalkBack).
+6. Trip: header on the ground colour with an ink title; Expenses summary is mint/butter/peach tiles; each expense is a tile tinted by its category; Add expense has a butter amount tile and lilac selected chips.
+7. Balances (cross-trip and per trip): mint/peach/sky "you" tile, ink text, trip tiles coloured per trip.
+8. Members: one tile per person, groups in lilac.
+9. Notes → Passes: each pass is a tinted tile (same flight, same colour); Spend insights: butter/peach/mint KPI tiles and a sky chart tile.
+10. Settings: mint profile tile, section labels in Figtree; Onboarding and Splash on the ground colour.
+
+### Negative checks
+- Large text (200%) and right-to-left: no yellow overflow stripes on Login, Trips, Expenses, Balances, Members.
+- Wide window (900px+): side rail still shows, tiles stay a readable width.
+- Reduce motion: tiles appear without the spring-in.
+
+### Pass
+- Same colours and type in all three themes; every screen above reads as tiles on the ground; no overflow; all labels contrast-checked by the a11y test.
+
+## FLUTTER-SUMMARY — Flutter: Summary tab, Add expense on Summary, map panel, live Notes
+
+### Flags
+- None new. The Spend insights link and Settlement history still follow `enableSpendInsights` and `enableSettlementHistory`.
+
+### Steps
+1. Open a trip: it lands on Summary; the tab order is Summary, Expenses, Members, Notes.
+2. Summary top: boarding-pass card with trip dates, "You are owed" or "You owe" and a large amount, and a stamp (NOT SETTLED while money is owed, SETTLED at zero). Below it, To receive and To pay cards and, once there is something to settle, a progress card.
+3. Who pays whom: tickets with avatars; as admin, flip the Simplify / Direct switch and check the counts line and the tickets change; tap Settle on a ticket to open the settle sheet.
+4. Trip numbers (open by default): totals tiles, donut with a row per category, Who paid bars, per-person balances.
+5. Tap Add expense on Summary, then on Expenses: both open the expense form; save one and see Summary update.
+6. Tap the map icon in the trip header: with stops you get the map (tap it to edit the route); without stops you get "No route yet" and an Add stops button. Tap the icon again to hide it.
+7. Notes: Passes pane, checklist add / edit / delete (Undo) and tick several items; with a second account, a tick or chat message appears without refreshing.
+
+### Negative checks
+- `enableSettlementHistory` OFF: no history section. `enableSpendInsights` OFF: no insights link.
+- Non-admin member: no simplify switch.
+- 200% text: Summary scrolls with no overflow stripes.
+
+### Pass
+- All steps behave as described, no overflow, ticks stay ticked after a pull-to-refresh.
+
+## SETTLE-GROUP-RLS — Second partial group settlement no longer fails
+
+**Commit:** `4f33b89` (BUG-293). **Migrations:** none. A settlement between a group and someone else used to be recorded under the group member with the biggest balance. After one partial payment, that could switch to the other group member. A non-organizer's next settle was then rejected with `new row violates row-level security policy for table "expenses"`. The signed-in member is now recorded for their own group's side. Fixed on web (`settlementPartiesForRecorder`) and Flutter (`planSettlement` in `flutter_app/lib/domain/logic/settle_up.dart`, used by the settle sheet and Settle all).
 ## SETTLE-GROUP-RLS — Second partial group settlement no longer fails
 
 **Commit:** `ecf23b2` (BUG-293). **Migrations:** none. A settlement between a group and someone else used to be recorded under the group member with the biggest balance. After one partial payment, that could switch to the other group member. A non-organizer's next settle was then rejected with `new row violates row-level security policy for table "expenses"`. The signed-in member is now recorded for their own group's side.
@@ -1729,6 +2364,7 @@ No new flag. Role changes, reminders, and group create stay on the existing Memb
 |----------|------|---------|
 | Settle Up / custom amount | none (bug fix on the existing settle flow) | — |
 | Simplify debts (group-merged transfers) | trip setting, ON | ON |
+| Flutter Settle all | `enableSettleAll` | as already set |
 
 ### Steps
 1. As the organizer, create a trip with Alice (organizer), Bob, and Charlie. Bob signs in on a second device and joins as a contributor, not an organizer.
@@ -1737,6 +2373,16 @@ No new flag. Role changes, reminders, and group create stay on the existing Memb
 4. As Bob, open Summary, choose a custom amount on that row, enter 10, and confirm.
 5. As Bob, choose a custom amount on the same row (now ₹990), enter 990, and confirm.
 6. Repeat once with Bob as the one owed: Alice pays the group's share back to Bob & Charlie, Bob records a partial and then the rest.
+7. Flutter app: repeat steps 3–5 as Bob from the Summary tab. Tap Settle on the "Bob & Charlie → Alice" ticket, enter 10 in the settle sheet, save, then reopen it and save 990.
+8. Flutter app with `enableSettleAll` ON and two debts for Bob's group: as Bob, record a partial on one, then tap Settle all.
+
+### Negative checks
+- An organizer outside the group can still record the settlement. It is still recorded under the group member chosen by the app.
+- With Simplify debts OFF (direct member-to-member rows), Bob cannot settle Charlie's own row on web. That is unchanged.
+
+### Pass
+- Every settlement in steps 4–8 saves with no error. Summary shows the debt as settled.
+- Settlement history lists the payments with Bob as payer (or recipient in step 6), not Charlie.
 
 ### Negative checks
 - An organizer outside the group can still record the settlement. It is still recorded under the group member chosen by the app.
@@ -1774,3 +2420,1013 @@ Copy below when shipping the next customer-facing change:
 ```
 
 Then add a row to the **Index** table.
+
+## FLUTTER-HORIZON — Horizon nav and spend insights (v3.48.0)
+
+**Flags:** `enableHorizonNav`, `enableSpendInsights` (Pro pack, default OFF).
+
+1. In Ops Deck > Flags turn ON `enableHorizonNav` for your user, reopen the Flutter app.
+2. Phone width: bottom dock shows Trips, Balances, centre add, Activity, Me. Tap Balances: per-member balance bars render.
+3. Window >= 900px: dock becomes a side rail. Press Android/system back on Balances: lands on Trips, app does not exit.
+4. Window >= 1100px, open a trip Expenses: table with columns Expense, Category, Paid by, Date, Amount; selecting a row opens the detail panel.
+5. Turn ON `enableSpendInsights`: trip tools show Spend insights; day and category charts render.
+6. Window >= 1024px: login shows Night Sky pitch left, form right; Settings shows section list left that jumps to sections.
+
+**Flag-OFF checks:** both flags OFF = original bottom nav and no Spend insights entry.
+
+### Pass
+- Each step matches; no overflow at 430, 900, 1100, 1280 widths.
+
+## FLUTTER-FIRSTSYNC — Trips after sign-in, destination autocomplete, Horizon defaults (v3.48.2)
+
+**Flags:** `enableDestinationAutocomplete`, `enableHorizonNav`, `enableSpendInsights` (all default ON, Core pack).
+
+1. Sign in with Google on a fresh install. The Trips screen shows "Syncing your trips…" and then your trips, with no need to leave the screen.
+2. Tap New Trip, type "gok" in Destination: suggestions appear (Gokarna). Pick one: the trip name fills as "Gokarna trip" and the currency follows the country.
+3. Type "Munar": a "Did you mean Munnar?" chip appears; tapping it fixes the text.
+4. The bottom dock (Trips, Balances, +, Activity, Me) is visible without touching any flag.
+
+**Flag-OFF checks:** turn `enableDestinationAutocomplete` OFF: Destination is a plain field. Turn `enableHorizonNav` OFF: the older Trips menu returns.
+
+### Pass
+- Each step matches; no blank Trips screen after sign-in.
+
+## FLUTTER-BOARDING — Flutter boarding-pass UI and live-stream fix (v3.54.0)
+
+**Flags:** none (restyle of existing screens).
+
+1. Open a trip. Summary: a twilight banner with the trip name, a glowing net balance, a NOT SETTLED (or SETTLED) stamp, dates and traveller count, and a barcode stub with Total spent, Per person and Open payments.
+2. Scroll down: a runway card with an airplane marker and "% CLEARED"; under "Who pays whom", luggage-stub tiles with a Settle button. Tap Settle: the existing confirm sheet opens.
+3. As the trip owner tap "Per person": within a second the list changes to one tile per debt and the "payments instead of" line stays; tap "Fewest payments": it changes back. Neither choice flips back on its own. Do it again after pulling to refresh.
+4. Trip numbers: glowing donut with category badges below it; there is clear space above "Everyone's balance".
+5. Expenses tab: a pill row (All Expenses plus categories); tap one to filter and see the pill glow teal. Day headers read like "OCT 14 · DAY 3". Rows are receipt cards; a row where you owe shows "your share ₹X" with a barcode, and one you paid shows "you get back ₹Y".
+6. Notes > Passes: a pass shows route, time, passenger and seat, a dashed vertical tear line and a QR stub when the pass has QR data. The selector reads "Passes (2)" / "Checklist (8)".
+7. Checklist: tick an item; the circle turns teal and the strike-through fades in.
+8. Trip app bar: tap `⋮`: "App settings" opens the app settings; "Live Location Share" opens the share dialog. The gear still opens Trip settings.
+
+**Negative checks:** as a non-owner admin the Fewest / Per person control is not shown on Summary. With compact ledger view ON, expense rows keep the old compact style.
+
+### Pass
+- Each step matches; no overflow at 360 px width and at 200% text size; toggling Per person survives a sync.
+
+## FLUTTER-SUPERADMIN — Flutter native Superadmin portal and analytics (v3.55.0)
+
+**Flags:** none (reachable only after the Superadmin login).
+
+1. On the login screen open "Superadmin login" and sign in. You land in the portal inside the app (no browser opens). Bottom tabs: Overview, Bugs, Users, Trips, Flags, More.
+2. Overview: tiles for open bugs, users, trips and flag overrides; each opens its tab. "Needs attention" lists open critical / high bugs.
+3. Bugs: filter Open / Resolved / Won't fix / All and by severity; tap a bug, set status and a resolution note, Save; it leaves the Open list. "New bug" files one.
+4. Users: ban / unban and delete (both ask first); superadmins show no ban or delete; Broadcast sends a notification after confirming.
+5. Trips: filter by Active / Grounded / Closed / Archived; Ground, Archive and Delete a trip (delete confirms). Check the Audit log shows the action.
+6. Flags: sections per pack (Core, Trip, Travel, Pro, Labs, Ops) with "x/y ON"; the chips filter by pack; flip a global switch (shows OVERRIDDEN); open a flag to reset it or add / remove a per-trip or per-user override.
+7. More > Features: mark a request shipped with a note; log a new one; delete one (confirms). More > Audit log: filters and "Purge old entries" (confirms). More > Controls: toggle maintenance mode and sign-ins paused, set a maintenance window, change a number or the landing text and Save. More > Tools: Ping services, purge the recycle bin (confirms), change password.
+8. More > Analytics: Growth (loop health, funnel, ghost trips, win-back, flag use, invites, slices, closeout pulse, Splitwise, signup source, retention), Overview, Financial (currency, categories, spenders, split modes, settlement health), Engagement and Health tabs fill in; pull to refresh reloads.
+9. The open-in-browser icon in the top bar still opens the web Ops Deck already signed in.
+
+**Negative checks:** a non-superadmin account is rejected at the Superadmin login with Google guidance; with the server refusing a change, the sheet shows the error and nothing changes.
+
+### Pass
+- Each step matches; no overflow at 360 px width; changes made here show up in the web Ops Deck.
+
+## FLUTTER-CARDSTACK — Flutter Trips card-stack view (v3.55.0)
+
+**Flags:** `enableTripCardStack` (Trip pack, default ON).
+
+1. Open the app on the Trips home. The header has a list / cards button; the list is shown by default.
+2. Tap it: a stack of tall boarding-pass cards appears. Every trip is there (upcoming, ongoing, ended, and archived ones at the back); the counter reads "1 of N".
+3. Each card shows the trip photo with the destination (from when the trip was created) and a pin; a trip with no destination or photo shows a tinted gradient. The screen background is the top card's photo, blurred, and it fades to the next photo as you swipe.
+4. Swipe right (or tap the card, or press Open): the trip opens; going back shows the same card on top. Swipe left (or press Skip): the card goes to the back and the next one is on top. A short drag springs back.
+5. Long-press a card: a menu with Open, and (for trips you own) Archive / Unarchive and Delete. Delete asks first; Archive shows the undo bar.
+6. Kill and reopen the app: it opens in the view you left it in. Tap the button again to return to the list.
+
+**Flag-OFF checks:** turn `enableTripCardStack` OFF in Ops Deck > Flags: the button disappears and the Trips home is the list, even if you had chosen cards. A single trip cannot be skipped (the Skip button is disabled).
+
+### Pass
+- Each step matches; no overflow at 360 px width; swiping stays smooth with 20+ trips.
+
+## FLUTTER-DEPARTURES — Flutter boarding-gate login, Departures stack, runway slider (v3.56.0)
+
+**Flags:** `boardingPassLogin` (login, prod only), `enableTripCardStack` (Trip pack, default ON). Dev/staging builds always show the new login.
+
+1. Signed out: the login shows a destination photo, "Board with Google", a gate-code field (Join stays dim until 6 characters) and "Staff ›".
+2. Never sign in automatically as the superadmin: kill and reopen the app after a superadmin session; the login must show.
+3. Sign in, open Trips, tap the cards button. The header says "Departures" with "N TRIPS · M ACTIVE"; the filter pills are centred; no white bar above the header.
+4. Swipe the top card left (goes to the back) and right (previous card returns). Neither opens a trip. Tap the card: the trip opens. Long-press: Open / Archive / Delete menu.
+5. Slide the plane right to the end: Create Trip opens. Slide left to the end: Join opens. A short slide rolls back. Tapping the Join / New Trip labels does the same.
+6. In Create Trip, Destination is first. Type "Tokyo": the name fills "Tokyo trip". Type your own name, then change the destination: the name stays. Clear the name: the suggestion returns.
+
+**Flag-OFF checks:** `enableTripCardStack` OFF: only the list view with the dock. `boardingPassLogin` OFF on a production build: the old login.
+
+### Pass
+- Each step matches; no overflow at 360 px width.
+
+## FLUTTER-NOTE-POPUP — New note opens a title + body popup
+
+**Flags:** none (fix to the existing Notes tab).
+
+1. Open a trip > Notes > Notes pane > tap Add note.
+2. A popup opens with a Title field and a multi-line Note field, plus Save.
+3. Enter a title and a body, tap Save: the note appears with both filled in; no second step needed.
+4. Add another with only a body: the title becomes the body's first line. Add one with both empty: Save closes the popup and nothing is created.
+5. Dismiss the popup (swipe down / tap outside): no note is created.
+
+**Flag-OFF checks:** n/a (no flag).
+
+### Pass
+- Each step matches; keyboard does not hide the Save button at 360 px width.
+
+## FLUTTER-GROUP-SPEND — Group-wise spend (paid + share) on the Summary
+
+**Flags:** `enableGroupSpend` (Trip pack, default ON).
+
+1. Use a trip with at least two members in a group (Members > Add group) and a few expenses paid by different people, some split among everyone.
+2. Open the trip Summary (ledger). The "Who paid" card follows the single Groups / People switch at the top of the Summary page (there is no second switch inside the card).
+3. Members: unchanged per-person rows. Groups: one row per group with the amount its members paid (bar + amount) and "Share X" underneath, the sum of its members' split shares. Members in no group appear as their own row.
+4. Check: sum of all Paid values = sum of the Members view; the group's Paid = its members' Paid added up.
+5. A split payment (several payers) counts each payer toward their own group. Settlement transfers and pending-approval expenses are not counted.
+6. A trip with no groups: no switch, members only.
+
+**Flag-OFF checks:** turn `enableGroupSpend` OFF in Ops Deck > Flags: no switch, "Who paid" lists members only. Balances and settlements are identical either way.
+
+### Pass
+- Each step matches; rows do not overflow at 360 px width with long group names.
+
+## FLUTTER-GROUP-EDIT — Flutter: group popup, edit members, 2-member minimum
+
+**Flags:** none (fix to Members > Groups).
+
+1. Members tab > Groups: tap a group. A popup lists its members (avatar + name) with Edit group and Delete.
+2. Edit group: name and member checkboxes are pre-filled. Tick a new member / untick one, Save: the group updates.
+3. Untick down to 1 member: a hint says fewer than 2 dissolves the group. Save: the group is removed and a message says it was dissolved.
+4. Add group with fewer than 2 members picked: Save stays disabled.
+5. Remove a trip member who is in a 2-member group: the group dissolves.
+
+### Pass
+- Each step matches; sheet scrolls on a 360 px wide phone.
+
+## FLUTTER-CHECKLIST-RING — Flutter: checklist progress card
+
+**Flags:** none.
+
+1. Notes > Checklist with several items, some ticked: the ring shows a percentage inside; "N of M" and "K left" sit beside it. Nothing overlaps at 360 px or at 200% text.
+2. Tick everything: the ring shows a check mark and the text says "All done".
+3. Empty checklist: 0%.
+
+### Pass
+- No overlap in any state.
+
+## FLUTTER-SETTINGS-LIST — Flutter: WhatsApp-style settings
+
+**Flags:** `enableBiometricAuth` (Privacy and security row), `enableAmoledTheme` (inside Appearance), `enableFeatureSuggestions`, `enableWhatsNewHub`.
+
+1. Settings/Me: a profile header (tap to rename), then rows: Account, Notifications, Appearance, Data and backup, Help, About (plus Privacy and security when its flag is ON); Sign out in red and the app version at the bottom.
+2. Open each row: it is its own page with a back button. Appearance: theme, haptics, default currency. Notifications: preferences, pass reminders. Data and backup: export / restore. Help, About, Account (Delete account).
+3. Switch a toggle on a page: it repaints immediately. Errors and "backup ready" appear as a bottom message.
+
+**Flag-OFF checks:** with `enableBiometricAuth` OFF there is no Privacy and security row; with `enableAmoledTheme` OFF no Pure black row; Suggest a feature / What's new rows are absent unless their flags are ON.
+
+### Pass
+- Every old setting is still reachable; the list is flat with no cards.
+
+## FLUTTER-SUMMARY-POLISH — Flutter: Summary and Settlement Pass polish
+
+**Flags:** none (replaces the old layout). `enableGroupSpend` still controls the Members/Groups spend switch.
+
+1. Summary tab: the hero amount counts up/down when a payment changes it; section headers show a one-line summary ("2 payments left", total spent) and the chevron rotates as the section expands with a smooth animation.
+2. Who pays whom: your own payments come first. A transfer you must make has a "You pay" chip, one you receive has "Pays you". Each tile shows From → To, the amount and one Settle button.
+3. Trip numbers: category rows are compact (dot, name, %, amount, thin animated bar); the donut, "Who paid" and Insights link are unchanged.
+
+### Pass
+- No overflow at 360 px; settle flow (UPI / share / confirm) works as before.
+
+## FLUTTER-SETTLE-ALL — Flutter: settle all I owe
+
+**Flags:** `enableSettleAll` (Trip pack, default ON).
+
+1. Use a trip where you owe two or more people (e.g. Ben paid for you and him, Cara paid for you and her).
+2. Summary tab > Who pays whom: a "Settle all I owe · 2 payments · amount" button sits above the tiles.
+3. Tap it: a dialog asks "Mark 2 payments as paid?" and says no money is sent. Confirm: both payments are recorded, a toast says "2 payments recorded", and the list shows All settled.
+4. With only one payment owed, or when you owe nothing, the button is absent. It never records payments owed by or to other people.
+
+**Flag-OFF checks:** turn `enableSettleAll` OFF in Ops Deck > Flags: no button; each tile's own Settle still works.
+
+### Pass
+- Settlements appear in History and balances reach zero.
+
+## FLUTTER-SHARE-SUMMARY — Flutter: share trip summary as an image
+
+**Flags:** `enableShareSummaryImage` (Trip pack, default ON).
+
+1. Summary > Trip numbers: tap "Share summary" (above the Insights link).
+2. The share sheet opens with a picture: trip name, total spent, per person, who pays whom (max 6, "+N more" after) and a caption.
+3. Trip with nothing owed: the picture says "All settled".
+
+**Flag-OFF checks:** `enableShareSummaryImage` OFF: no button.
+
+### Pass
+- Image text is not cut off with 6+ transfers.
+
+## FLUTTER-DAY-BY-DAY — Flutter: day-by-day spend
+
+**Flags:** `enableDailyTimeline` (Trip pack, default ON).
+
+1. Summary > Trip numbers: a "Day by day" list shows one row per day with a bar and amount, most recent 14 days.
+2. Add an expense on a new date: a new row appears; totals are unchanged elsewhere.
+
+**Flag-OFF checks:** `enableDailyTimeline` OFF: no list.
+
+### Pass
+- The biggest day has the longest bar.
+
+## FLUTTER-CHECKLIST-CATEGORIES — Flutter: checklist category progress
+
+**Flags:** `enableChecklistCategoryProgress` (Trip pack, default ON).
+
+1. Notes > Checklist with items in at least two categories: under the overall ring, one thin bar per category with done/total.
+2. Tick an item: the bar and count update at once; a finished category turns green.
+
+**Flag-OFF checks:** `enableChecklistCategoryProgress` OFF: only the overall ring.
+
+### Pass
+- Categories without items are not listed.
+
+## FLUTTER-SETTINGS-SEARCH — Flutter: settings search
+
+**Flags:** `enableSettingsSearch` (Trip pack, default ON).
+
+1. Settings/Me: a "Search settings" box sits under the profile.
+2. Type "currency": the Default currency row appears in place and works. Type "backup": export and restore rows. Type "zzzz": "No settings match".
+3. Clear the box with the x: the normal category list returns.
+
+**Flag-OFF checks:** `enableSettingsSearch` OFF: no box.
+
+### Pass
+- Matches include rows from every page.
+
+## FLUTTER-TRIP-BUDGET — Flutter: trip budget (this device only)
+
+**Flags:** `enableTripBudget` (Trip pack, default ON).
+
+1. Summary > Trip numbers: a "Set a trip budget" card. Tap, enter an amount, Save.
+2. The card shows "spent of budget", a bar, and "X left"; green below 80%, orange from 80%, red and "X over budget" past 100%.
+3. Tap the card again to change or clear the budget (0 clears it).
+4. The note "Kept on this device only" is shown: the budget is not shared with other members and is not synced; a second device shows no budget.
+
+**Flag-OFF checks:** `enableTripBudget` OFF: no card. Adding expenses is never blocked by the budget.
+
+### Pass
+- The bar color and wording follow the thresholds above.
+
+## FLUTTER-TRIP-LIST-MONEY — Flutter: trip cards show people and your money
+
+**Flags:** `enableTripListMoney` (Trip pack, default ON).
+
+1. Trips list (list view): each trip card has overlapping member avatars (up to 4, then "+N") and, on the right, "You're owed ₹X" (green), "You owe ₹X" (red) or "Settled up".
+2. Add an expense on a trip and return to the list: the line updates. A trip you are not a member of shows avatars but no money line.
+
+**Flag-OFF checks:** `enableTripListMoney` OFF: no avatars and no money line.
+
+### Pass
+- The amount matches the trip's Summary hero; no overflow at 360 px.
+
+## FLUTTER-TRIP-LIST-SECTIONS — Flutter: trips grouped by Happening now / Upcoming / Past
+
+**Flags:** `enableTripListSections` (Trip pack, default ON).
+
+1. Trips list with the All filter and trips in different phases: headers HAPPENING NOW, UPCOMING and PAST group the trips in that order; the chosen sort holds inside each group.
+2. Switch the filter to Active/Upcoming/Past: no headers.
+
+**Flag-OFF checks:** `enableTripListSections` OFF: one flat list in sort order.
+
+### Pass
+- A header never repeats; archived trips stay in their folded section.
+
+## FLUTTER-TRIP-STRIP — Flutter: trip header strip
+
+**Flags:** `enableTripHeaderStrip` (Trip pack, default ON).
+
+1. Open a trip. Under the top bar, on every tab, a strip shows the status pill (Day 3 of 8 / Starts in 5 days / Ended) and the dates. It does not show account avatars.
+2. Switch tabs: the strip stays.
+
+**Flag-OFF checks:** `enableTripHeaderStrip` OFF: only the title bar.
+
+### Pass
+- The strip does not push content off screen at 360 px.
+
+## FLUTTER-ADD-SPEED-DIAL — Flutter: Add expense speed dial
+
+**Flags:** `enableQuickAddSpeedDial` (Trip pack, default ON).
+
+1. Summary or Expenses tab: tap Add expense. A sheet offers Quick add (type a sentence or speak) and Full form.
+2. Quick add opens the quick-add sheet; Full form opens the usual form.
+
+**Flag-OFF checks:** `enableQuickAddSpeedDial` OFF: the button opens the full form directly.
+
+### Pass
+- Both routes save an expense as before.
+
+## FLUTTER-SUMMARY-NEXT-ACTION — Flutter: Summary next action
+
+**Flags:** `enableSummaryNextAction` (Trip pack, default ON).
+
+1. You owe someone: the top of Summary says "Pay Ben ₹300" with a Settle button that opens that payment.
+2. Others owe you: "Ben still owes you ₹300" or "2 people still owe you ₹X", no button.
+3. Everything settled, or you are not on the trip: no banner.
+
+**Flag-OFF checks:** `enableSummaryNextAction` OFF: no banner.
+
+### Pass
+- The named person and amount match the first tile under Who pays whom.
+
+## FLUTTER-NOTES-QUICK-CAPTURE — Flutter: Notes quick capture
+
+**Flags:** `enableNotesQuickCapture` (Trip pack, default ON).
+
+1. Notes > Notes pane: a "Quick note" box is at the top. Type a title, press done: a note with that title is added and the box clears.
+2. Add note (button) still opens the title + note popup.
+
+**Flag-OFF checks:** `enableNotesQuickCapture` OFF: no box.
+
+### Pass
+- The note appears for other members after sync.
+
+## FLUTTER-COACH-HINTS — Flutter: one-time coach hints
+
+**Flags:** `enableCoachHints` (Trip pack, default ON).
+
+1. Trips list: a tip "swipe a trip sideways to archive it". Members tab (once a group exists): "tap a group to see its members or edit it".
+2. Tap the x on a tip: it disappears and stays gone after restarting the app.
+
+**Flag-OFF checks:** `enableCoachHints` OFF: no tips.
+
+### Pass
+- A dismissed tip never returns on that device.
+
+## FLUTTER-SETTLE-VIEW-SWITCH — Flutter: settlement Group view / Person view
+
+**Flags:** `enableSettlementViewSwitch` (Trip pack, default ON).
+
+1. Use a trip with a group (Members > Add group) and expenses so the group owes someone.
+2. Summary > Who pays whom: a Group view / Person view switch is shown to every member, not only the owner.
+3. Group view (default): the list settles between groups ("Duo pays Asha"). Person view: the same debts person to person ("Ben pays Asha", "Cara pays Asha"). Your own payments are still first; Settle all and the next-action banner follow the view you picked.
+4. The choice is only for you: other members keep their own view, and the trip's Fewest payments setting is unchanged.
+5. A trip with no groups shows no switch.
+
+**Flag-OFF checks:** `enableSettlementViewSwitch` OFF: no switch; Who pays whom follows the groups.
+
+### Pass
+- Both views list the same total owed; settling in either view clears the matching debt.
+
+## FLUTTER-PLAN-SUGGESTIONS — Flutter: Plan and suggestions in Trip numbers
+
+**Flags:** `enableTripSuggestions` (Trip pack, default ON); the budget part follows `enableTripBudget`.
+
+1. Summary > Trip numbers now starts with a "Plan and suggestions" card, above the total / per person / top category tiles.
+2. With no budget, the first tip says to set one and has a Set budget button. Set a budget: the card shows spent of budget, a bar, what is left, "X a day left for N days" and "On pace for Y".
+3. Up to 3 tips appear, for example "X over budget", "On pace to finish X over budget", "N payments are still open", "Ben paid 70% of everything...", "Food is 52% of spend", "Biggest day: 10-03, X". They never change an expense or balance.
+4. Below the card: one headline strip (total, per person, top category), then tabs: Categories, People (ring, bars, Groups / Members switch), Days (bar chart), Details (every category and day as lists). Share summary and Insights are icon buttons in the Trip numbers header.
+5. Who paid follows the one Groups / Members switch in Trip numbers > People.
+
+**Flag-OFF checks:** `enableTripSuggestions` OFF: no tips (the budget still shows if `enableTripBudget` is ON). Both OFF: no card.
+
+### Pass
+- Tips match the numbers; nothing overflows at 360 px.
+
+## FLUTTER-BACK-NAVIGATION — Flutter: back goes to the previous page
+
+**Flags:** none (fix).
+
+1. Open a trip, then its menu > App settings. Press the back button or swipe back: you return to the trip, not the trips list. Back again returns to the trips list.
+2. Open Settings, Balances or Activity from the bottom bar, then go back: you land on the trips list.
+3. In a trip, back still steps through previously visited tabs first.
+
+### Pass
+- Back never skips a page you came from.
+
+## FLUTTER-TRIP-LIST-REDESIGN — Flutter: compact trips list
+
+**Flags:** `enableTripsOverview` (new, Trip pack, default ON); the rows also follow `enableTripListMoney` and `enableTripListSections`.
+
+1. Trips home with the List option chosen (see FLUTTER-TRIP-GRID-TILES for the default photo tiles): each trip is a compact row (about 96 px): a rounded cover thumbnail (or the trip's initial on a tinted block), the name, "place · dates", a small status pill, your money position on the right ("You're owed ₹X" green / "You owe ₹X" red / "Settled up"), member avatars and "N expenses". About six trips fit on one screen.
+2. The trip happening today is a larger photo card with "Day N of M" and a progress bar. Upcoming rows show "Starts in N days"; finished or archived rows are dimmed.
+3. Under the Search icon in the top bar, the search box appears; closing it clears the search.
+4. A line at the top says "You're owed ₹X across N trips" (or "You owe ...", "All settled across N trips", or "Balances in N currencies"); tapping it opens Balances.
+5. With the All filter, pinned headers read HAPPENING NOW · n, UPCOMING · n, PAST · n. Tap PAST to fold or unfold it.
+6. Swipe a row sideways to archive (owners), or press and hold for Open / Archive / Delete.
+7. The cards (stack) view is unchanged.
+
+**Flag-OFF checks:** `enableTripsOverview` OFF: no summary line. `enableTripListSections` OFF: one flat list without headers. `enableTripListMoney` OFF: no avatars or money text.
+
+### Pass
+- No overflow at 360 px or at 200% text; the long-press menu works for owners only for archive and delete.
+
+## FLUTTER-TRIP-GRID-TILES — Flutter: Trips as photo tiles
+
+**Flags:** `enableTripGridTiles` (Trip pack, default ON).
+
+1. Trips home (not the card stack): trips are square photo tiles, two across, each with the destination photo, a status pill top-left, your money top-right, name, dates and avatars at the bottom. The trip happening now is a wide hero card above the grid. Pinned HAPPENING NOW / UPCOMING / PAST headers still apply.
+2. A trip with no photo shows a gradient with its initial.
+3. The grid/list icon in the top bar switches to the compact rows and back; the choice is remembered. Press and hold a tile for Open / Archive / Delete (a grid has no swipe).
+4. At 200% text the tiles do not overflow.
+
+**Flag-OFF checks:** `enableTripGridTiles` OFF: compact rows only, no switch.
+
+### Pass
+- Photos load; text is readable on any photo.
+
+## FLUTTER-TRIP-COVER-SYNC — Flutter: cover photo band and saved/syncing line
+
+**Flags:** `enableTripCoverHeader` (Trip pack, default **OFF** since v3.63: the photo band under the top bar was removed from the default look), `enableSyncLine` (default ON).
+
+1. Open a trip with a destination photo: under the top bar, a slim cover photo band shows the status pill and dates; the photo glides in from the tile. Without a photo, the plain status strip shows.
+2. On the right of the strip: "All saved" when everything is synced, "Syncing N changes" while waiting, "Offline" / "Offline - N waiting" without a connection, "Sync issue - Retry" when an item is stuck (tap to retry).
+
+**Flag-OFF checks:** each flag OFF removes its own part; the strip keeps status and dates.
+
+### Pass
+- The line follows airplane mode within a few seconds.
+
+## FLUTTER-TODAY-CLOSEOUT — Flutter: Today card and trip-over prompt
+
+**Flags:** `enableTodayCard`, `enableCloseoutPrompt` (Trip pack, default ON).
+
+1. While a trip is happening or about to start, the top of Summary has a Today card: Day N of M (or Starts in N days), spent today, and the next pass with its time.
+2. When the trip has ended and is not closed or archived, a "This trip is over" prompt shows: whether everything is settled (or how many payments are left), Mark as paid (when you owe), Share summary and Close trip (opens the usual close sheet).
+
+**Flag-OFF checks:** each flag OFF hides its card.
+
+### Pass
+- The cards never change data by themselves.
+
+## FLUTTER-GLOBAL-SEARCH — Flutter: search inside trips
+
+**Flags:** `enableGlobalSearch` (Trip pack, default ON).
+
+1. Trips home > search icon > type a word from an expense title or a note: a "Found inside trips" list shows matching expenses (with trip, date and amount) and notes; tap one to open that trip on Expenses / Notes.
+2. A word that matches only a trip name just filters trips as before.
+
+**Flag-OFF checks:** `enableGlobalSearch` OFF: only trips are filtered.
+
+### Pass
+- Settlements and deleted expenses never appear.
+
+## FLUTTER-SMART-EXPENSE-DEFAULTS — Flutter: smart expense defaults
+
+**Flags:** `enableSmartExpenseDefaults` (Trip pack, default ON).
+
+1. Save an expense with a payer and category. Open Add expense again on the same trip: the same payer and category are preselected (typing a title can still suggest another category).
+2. Another trip has its own remembered values.
+
+**Flag-OFF checks:** `enableSmartExpenseDefaults` OFF: the form always starts with the standard payer and category.
+
+### Pass
+- Nothing is saved until you save the expense.
+
+## FLUTTER-NOTIFICATION-DAYS — Flutter: notifications by day and back navigation
+
+**Flags:** `enableNotificationDayGroups` (Trip pack, default ON).
+
+1. Notifications are grouped under TODAY, YESTERDAY and dates.
+2. From the bottom-bar Activity tab, tap a notification: the trip opens on the right tab; back returns to the notification list.
+3. From a trip's bell, tap a notification of the same trip: the tab switches in place; back goes to the previous tab, then out of the trip.
+
+**Flag-OFF checks:** `enableNotificationDayGroups` OFF: one continuous list.
+
+### Pass
+- Back never lands on the Trips home unless nothing else is underneath.
+
+## FLUTTER-REDUCE-MOTION-ROLLING — Flutter: rolling hero numbers and reduce motion
+
+**Flags:** `enableReduceMotion` (Trip pack, default ON).
+
+1. On a trip's Summary, add an expense or settle a payment, then return to Summary: the big amount on the hero card rolls digit by digit like an odometer (up when it grows, down when it shrinks), also when you come back from the form.
+2. Settings > Appearance > Reduce motion: the digits, progress bars and sections jump straight to their final state. The phone's own "remove animations" does the same.
+
+**Flag-OFF checks:** `enableReduceMotion` OFF: no switch (the rolling still follows the phone's own setting).
+
+### Pass
+- The amount is read out as one number by a screen reader.
+
+## FLUTTER-NOTIFICATION-ACTIONS — Flutter: Confirm button on notifications
+
+**Flags:** `enableNotificationActions` (Trip pack, default ON); also needs `enableSettlementConfirmation` ON.
+
+1. Ben records a settlement that pays you. In Activity, his "Confirm settlement" notification has a Confirm button under it.
+2. Tap Confirm (online): a message says the settlement is confirmed, the notification is marked read, and the expense shows as confirmed in the trip.
+3. Offline: a message says it could not confirm; nothing changes.
+4. Someone who is not the recipient, or a settlement that is already confirmed, sees no button.
+
+**Flag-OFF checks:** either flag OFF: no button; open the notification and confirm from the expense.
+
+### Pass
+- Confirming never affects any other settlement.
+
+## FLUTTER-PHOTO-CACHE — Flutter: photos kept on the device
+
+**Flags:** none (performance; photos still load from the network when not cached).
+
+1. Open the Trips list online so the cover photos load. Close the app, turn on airplane mode and reopen: the same photos still show on the tiles, the trip band and the stack.
+2. A photo that was never loaded online shows the gradient fallback offline.
+
+### Pass
+- No broken-image icons; the cache is the phone's normal cache folder, which Android may clear when it needs space.
+
+## FLUTTER-LAST-SYNCED — Flutter: Updated caption and pull to refresh
+
+**Flags:** `enableLastSyncedCaption` (Trip pack, default ON).
+
+1. Signed in and online: the Trips list and the Summary show "Updated just now / 5m ago / 2h ago" at the top right. Pull down on either page: the list refreshes and the caption resets.
+2. Guests and offline-only accounts that never synced show no caption. The time is remembered after a restart.
+
+**Flag-OFF checks:** `enableLastSyncedCaption` OFF: no caption (pulling still refreshes).
+
+### Pass
+- The caption ages by itself while the page stays open.
+
+## FLUTTER-TRIP-SWITCHER — Flutter: switch between trips
+
+**Flags:** `enableTripSwitcher` (Trip pack, default ON).
+
+1. Open a trip while you have two or more: the trip name in the top bar has a small down arrow. Tap it: a list of your other trips (in Trips list order, archived skipped) with status and dates; the current one is ticked.
+2. Pick another trip: it opens on the tab you were on. A single trip shows no arrow and the name is plain text.
+3. The old previous / next arrows and the swipe on the status strip are gone; the strip keeps status, dates and the saved / syncing line.
+
+**Flag-OFF checks:** `enableTripSwitcher` OFF: the name is plain text; use the Trips list.
+
+### Pass
+- TalkBack reads "<trip name>. Switch trip" as a button with a 48 px target.
+
+## FLUTTER-TRIP-PINS — Flutter: pinned trips
+
+**Flags:** `enableTripPins` (Trip pack, default ON).
+
+1. Press and hold a trip > Pin to top: a PINNED header appears first with that trip, before Happening now.
+2. Press and hold it again > Unpin: it returns to its phase. Pins survive a restart and exist only on this device.
+
+**Flag-OFF checks:** `enableTripPins` OFF: no Pin option and no Pinned header.
+
+### Pass
+- A pinned trip stays visible under the Active / Upcoming filters it belongs to.
+
+## FLUTTER-RECEIPT-GALLERY — Flutter: receipt gallery
+
+**Flags:** `enableReceiptGallery` (Trip pack, default ON).
+
+1. Expenses tab > the three-dot menu > Receipts: a grid of every receipt in the trip, newest first, each with its title, date and amount. Trips with no receipts show an empty state.
+2. Tap a photo: it opens large (pinch to zoom). Open expense shows that expense.
+
+**Flag-OFF checks:** `enableReceiptGallery` OFF: no Receipts entry.
+
+### Pass
+- Settlements and deleted expenses never appear.
+
+## FLUTTER-SPEND-RING — Flutter: spend by person ring
+
+**Flags:** `enableSpendRing` (Trip pack, default ON).
+
+1. Summary > Trip numbers > Who paid: with two or more payers a ring shows each person's share of what was paid, with a legend ("Asha 75%").
+2. Tap a person in the legend: the Expenses tab opens filtered to their expenses. In Groups view the ring shows groups (no filter).
+
+**Flag-OFF checks:** `enableSpendRing` OFF: the bars only.
+
+### Pass
+- The ring and the bars below it show the same numbers.
+
+## FLUTTER-FIRST-RUN-TOUR — Flutter: first-run tour and sample trip
+
+**Flags:** `enableFirstRunTour` (Trip pack, default ON).
+
+1. First time the Trips list shows (fresh install or cleared data): a three-card tour (tiles, press and hold, inside a trip) with Skip, Next and Got it. It does not come back.
+2. With no trips, the empty state also has "Try a sample trip": it creates a small trip (Sample: Goa weekend, three travellers, four expenses) and opens it. Delete it like any trip.
+
+**Flag-OFF checks:** `enableFirstRunTour` OFF: no tour and no sample button.
+
+### Pass
+- The sample trip behaves like a real one (settle, share, delete).
+
+## FLUTTER-FEEDBACK-PACK — Flutter: sound and haptic feedback
+
+**Flags:** `enableFeedbackPack` (Trip pack, default ON).
+
+1. Settings > Appearance > Sound feedback is off by default. Turn it on: settling a payment, saving an expense and tapping UNDO give a light tap and a soft click. Off: haptic only.
+
+**Flag-OFF checks:** `enableFeedbackPack` OFF: no sound switch; save and undo have no haptic; settling keeps its old haptic.
+
+### Pass
+- Nothing clicks while the switch is off or the phone is on silent.
+
+## FLUTTER-AMOUNT-KEYPAD — Flutter: amount keypad
+
+**Flags:** `enableAmountKeypad` (Trip pack, default ON).
+
+1. Add expense: the keypad icon next to the amount opens big keys (0-9, point, + - x /, delete, Done). The amount and the "= total" line update as you type, e.g. 12 x 3 = 36.
+2. One decimal point per number; a second sign replaces the first; delete removes the last key.
+
+**Flag-OFF checks:** `enableAmountKeypad` OFF: no keypad icon.
+
+### Pass
+- A keypad amount saves exactly like a typed one.
+
+## FLUTTER-TRIP-ACCENT — Flutter: trip accent colour
+
+**Flags:** `enableTripAccent` (Trip pack, default ON).
+
+1. A trip with a cover photo tints its status pill (under the top bar) and the Day by day bars with a dark colour from the photo. Trips without a photo keep the standard colour.
+
+**Flag-OFF checks:** `enableTripAccent` OFF: standard colour everywhere.
+
+### Pass
+- White text on the pill is readable for light and dark photos.
+
+## FLUTTER-SUMMARY-COLLAPSE — Flutter: collapse Trip numbers
+
+**Flags:** `enableSummaryCollapse` (Trip pack, default ON).
+
+1. Settings > Appearance > Collapse Trip numbers: turn it on. Open a trip's Summary: Trip numbers is folded (the header still shows the total); tap it to expand.
+2. Off (default): Trip numbers open as before.
+
+**Flag-OFF checks:** `enableSummaryCollapse` OFF: no switch; a saved choice is ignored.
+
+### Pass
+- Folding hides nothing permanently.
+
+## FLUTTER-NUMBERS-TABS — Flutter: Trip numbers with tabs
+
+**Flags:** none (replaces the long stack); the Plan card follows `enableTripBudget` / `enableTripSuggestions`.
+
+1. Summary > Trip numbers (header: title and total on the left, Share summary and Insights icons on the right).
+2. Under the Plan and suggestions card: one headline strip (Total · Per person · Top category), then tabs Categories, People, Days, Details. One tab shows at a time with a short fade.
+3. Categories: the donut with legend and the top three categories; "Show all N" expands the rest. People: the ring, legend (tap a person to filter Expenses), the bars, and the Groups / Members switch. Days: a bar chart of the last 14 days; tap a bar to read that day. Details: every category and every day as lists.
+4. Nothing from the old layout is lost; every number is reachable from a tab or the header icons.
+5. The Groups / Members switch is only here: Who pays whom above follows it.
+
+### Pass
+- No overflow at 360 px or 200% text; tab chips wrap instead of scrolling.
+
+## FLUTTER-OFFLINE-FEEDBACK — Flutter: bug reports and suggestions offline
+
+**Flags:** `enableOfflineFeedback` (Trip pack, default ON).
+
+1. Signed in, turn on airplane mode. Settings > Help > Report a problem (or Suggest a feature), fill in a title, send. The message says it is saved on this phone and a note shows how many are waiting.
+2. Turn the network back on (or reopen the app online): the saved messages are sent by themselves, the note disappears, and the bug gets its case number in "my reports".
+3. A message that keeps failing while online is dropped after five tries. Guests (not signed in) still see "Sign in to send".
+
+**Flag-OFF checks:** `enableOfflineFeedback` OFF: offline sending shows the old error and nothing is kept.
+
+### Pass
+- Nothing is lost if the app is closed while messages are waiting.
+
+## FLUTTER-SETTLED-CELEBRATION — Flutter: settled celebration
+
+**Flags:** `enableSettledCelebration` (Trip pack, default ON).
+
+1. Settle the last payment on a trip that had expenses: a card "Everyone is square" with a bouncing check and a share button appears at the top, with a success tap.
+2. While anything is owed, no card.
+
+**Flag-OFF checks:** `enableSettledCelebration` OFF: only the SETTLED stamp.
+
+## FLUTTER-SETTLE-ROUNDING — Flutter: round down when settling
+
+**Flags:** `enableSettleRounding` (Trip pack, default ON).
+
+1. Settle a payment of, say, 287: the sheet offers "Pay a round amount: 280". Tap it: the amount becomes 280 and "7 remaining" shows; confirm to record 280, the 7 stays owed.
+2. A clean amount (280) or one under 20 shows no option. It never rounds up.
+
+**Flag-OFF checks:** `enableSettleRounding` OFF: no option.
+
+## FLUTTER-APP-SHORTCUTS — Flutter: app icon shortcuts
+
+**Flags:** `enableAppShortcuts` (Trip pack, default ON). Android only.
+
+1. Long-press the app icon: Add expense and Latest trip.
+2. Latest trip opens the trip happening now, else the next upcoming, else the most recent finished one. Add expense opens that trip's form; back returns to the trip.
+3. With no trips, or the flag off, both just open the home screen.
+
+### Pass
+- iOS has no shortcuts yet.
+
+## FLUTTER-EXPENSE-HISTORY — Flutter: expense history line
+
+**Flags:** `enableExpenseHistory` (Trip pack, default ON).
+
+1. Open an expense: "Added by Asha, 2 h ago". After a later change, an "Edited 10 min ago" line. Saving again within a minute does not count as an edit.
+
+**Flag-OFF checks:** `enableExpenseHistory` OFF: no history lines. It shows author and times, not a field-by-field list.
+
+## FLUTTER-PENDING-DOTS — Flutter: pending sync dot on trips
+
+**Flags:** `enablePendingDots` (Trip pack, default ON).
+
+1. Make a change offline: that trip's tile (and row) shows a small amber cloud dot. When the change syncs the dot goes.
+
+**Flag-OFF checks:** `enablePendingDots` OFF: no dot.
+
+## FLUTTER-TRIP-TEMPLATES — Flutter: trip templates
+
+**Flags:** `enableTripTemplates` (Trip pack, default ON).
+
+1. Create Trip > Start from a template: Weekend, Road trip or Group stay. Create: the trip has the extra categories (for example Fuel, Tolls, Parking) and a starter checklist you can edit. Tap the chosen chip again to start empty.
+
+**Flag-OFF checks:** `enableTripTemplates` OFF: no template chips.
+
+## FLUTTER-SUMMARY-TWO-PANE — Flutter: Summary two panes
+
+**Flags:** `enableSummaryTwoPane` (Trip pack, default ON).
+
+1. On a tablet or a phone in landscape (content at least 840 px wide): balance, Today card and plan on the left; who pays whom and Trip numbers on the right, each scrolling on its own.
+2. A phone in portrait keeps one column.
+
+**Flag-OFF checks:** `enableSummaryTwoPane` OFF: one column everywhere.
+
+## FLUTTER-INVITE-CARD — Flutter: invite picture
+
+**Flags:** `enableInviteCard` (Trip pack, default ON).
+
+1. Trip > Share: "Share invite picture" makes an image with the trip photo, name, dates, join code and a QR code and opens the share sheet. No expenses are on it.
+
+**Flag-OFF checks:** `enableInviteCard` OFF: no button.
+
+## FLUTTER-QUICK-CHIPS — Flutter: Expenses quick filter chips
+
+**Flags:** `enableExpenseQuickFilterChips` (moved from the Pro pack to the Trip pack, now default ON).
+
+1. Expenses tab: a row of one-tap chips (for example Paid by me and the categories in use) above the list; tap to filter, tap again to clear. The Filters button still opens the full sheet.
+
+**Flag-OFF checks:** OFF: no chip row.
+
+## FLUTTER-A11Y-AUDIT — Flutter: accessibility audit
+
+**Flags:** none.
+
+1. With TalkBack on: the trip name reads as a "Switch trip" button; tab chips, legend chips and the Groups / Members switch have 48 px targets; the tour, keypad, receipts and Trip numbers tabs are readable at 200% text.
+2. The automated checks (tap targets, labels, contrast, 200% text) run in `test/a11y/a11y_test.dart` for the new screens.
+
+## FLUTTER-PERSONAL-EXPENSES — Flutter: personal expenses, left out of totals
+
+**Flags:** `enableExpenseExclusion` (Trip pack, default ON).
+
+1. Add expense > turn on **Just for me**: the Split section disappears; save. The row shows a small person icon (Personal).
+2. Summary: the trip total, per-person average, category and day charts, spend by person, insights and Who pays whom do **not** include it. Nobody owes anything for it.
+3. Open any expense you can edit: **Count in trip totals** switch. Turn it off: the expense leaves the totals and settlement (even if it was shared); turn it on: it returns.
+4. Swipe an expense row **right**: Personal / Count it, with an UNDO. (Swipe left still deletes.) Edit is in the detail sheet.
+5. Expenses tab: the **Personal** chip shows only left-out expenses.
+6. Edit a personal expense: the switch is on and the split stays hidden; changing the payer moves the split to the new payer.
+7. Another member opens the trip: the expense is still visible to them (only excluded from calculations). An older web app does not know the mark and still counts it.
+
+**Flag-OFF checks:** no Just for me switch, no detail switch, swipe right edits, no Personal chip. Expenses already marked stay out of totals.
+
+### Pass
+- Totals before and after turning the switch off/on differ by exactly that expense's amount.
+
+## FLUTTER-UNDO-SETTLEMENT — Flutter: undo a recorded payment
+
+**Flags:** `enableUndoSettlement` (Trip pack, default ON).
+
+1. Summary > Settle > Confirm: the toast has **UNDO** for ~6 seconds. Tap it: the payment goes to the recycle bin and the balances return.
+2. Settle all on 2+ payments: the toast has UNDO for all of them.
+
+**Flag-OFF checks:** no UNDO on the toast.
+
+## FLUTTER-SAVED-FILTERS — Flutter: saved expense filters
+
+**Flags:** `enableSavedFilters` (Trip pack, default ON).
+
+1. Expenses tab > apply any filter (search, category, Personal chip...) > **Save filter** chip appears > name it. A bookmark chip appears under the quick filters.
+2. Clear filters, then tap the saved chip: the filter returns. Hold the chip: it is removed. Up to eight per trip; same name replaces.
+3. Saved filters are on this phone only, and a fixed date range is not saved.
+
+**Flag-OFF checks:** no Save filter chip and no saved chips.
+
+## FLUTTER-CLEAN-TOPBAR — Flutter: clean trip top bar, no banner
+
+**Flags:** `enableCleanTopBar` (Trip pack, default ON); `enableTripHeaderStrip` and `enableTripCoverHeader` (Labs, default OFF).
+
+1. Open a trip. Under the top bar there is **no** photo banner and no status/dates strip: the page starts straight at the tab content.
+2. Top bar: back, the trip name (down arrow when you have 2+ trips), the bell and one **More** menu with Share trip, Route map, Trip settings, App settings, Live location. Route map toggles the map panel; Trip settings opens the trip's settings.
+3. Go offline or make a change: a small cloud / sync icon appears in the top bar with a tooltip (Offline, Syncing, Sync issue). A stuck sync retries when tapped. When everything is saved the icon is not there.
+
+**Flag-OFF checks:** `enableCleanTopBar` OFF: the older separate Map, Share, menu, bell and Settings buttons. A Superadmin can turn `enableTripHeaderStrip` ON to bring back the status/dates strip with its "All saved" line.
+
+### Pass
+- Trip name opens the trip list; every menu action still works.
+
+## FLUTTER-CONTEXT-FAB — Flutter: quick action buttons on Notes and Members
+
+**Flags:** `enableContextFab` (Trip pack, default ON).
+
+1. Notes tab > Checklist: **Add item** button floats bottom right; Notes: **Add note**. Passes has none.
+2. Members tab: **Add member** (only if you can manage the trip).
+3. The in-page buttons are still there.
+
+**Flag-OFF checks:** no floating buttons.
+
+## FLUTTER-SUMMARY-FOCUS — Flutter: Summary focus mode
+
+**Flags:** `enableSummaryFocus` (Trip pack, default ON).
+
+1. Open Summary: balance, Who pays whom and the next action come first; **Trip numbers** is folded away. Tap its header to open it.
+2. Leaving and returning to the page folds it again.
+
+**Flag-OFF checks:** `enableSummaryFocus` OFF: Trip numbers starts open (unless Settings > Collapse Trip numbers is on).
+
+## FLUTTER-JUMP-TODAY — Flutter: jump to today
+
+**Flags:** `enableJumpToToday` (Trip pack, default ON).
+
+1. Expenses with a day group for today: scroll well down. A **Jump to today** chip appears at the top; tap it: today's day opens and scrolls into view; the chip goes.
+2. Day headers show each day's total (unchanged).
+
+**Flag-OFF checks:** no chip.
+
+## FLUTTER-QUICK-AMOUNTS — Flutter: quick amount chips
+
+**Flags:** `enableQuickAmounts` (Trip pack, default ON).
+
+1. Add expense with an empty amount: up to four chips with recently used amounts on this trip. Tap one: the amount fills. Once there is an amount, the chips step aside.
+2. A foreign currency still shows the converted amount under the field (unchanged).
+
+**Flag-OFF checks:** no chips.
+
+## FLUTTER-COACH-EMPTY — Flutter: friendly empty states
+
+**Flags:** `enableCoachEmptyStates` (Trip pack, default ON).
+
+1. A trip with no checklist items: an illustrated "Your packing list starts here" card. Notes > Notes with no notes: "No notes yet" card with an **Add note** button.
+
+**Flag-OFF checks:** plain text as before.
+
+## FLUTTER-SKELETONS — Flutter: skeleton loaders
+
+**Flags:** `enableSkeletonLoaders` (Trip pack, default ON).
+
+1. Open Summary or Expenses on a slow connection or after a cold start: soft grey blocks pulse briefly instead of a spinner. With Settings > Reduce motion on, they do not pulse.
+
+**Flag-OFF checks:** the spinner.
+
+## FLUTTER-HIGH-CONTRAST — Flutter: high contrast and haptics setting
+
+**Flags:** `enableHighContrast`, `enableHapticsSetting` (Trip pack, default ON).
+
+1. Settings > Appearance > **High contrast**: text turns black (light) or white (dark) and grey text and borders get stronger, on every screen. Off by default.
+2. Settings > Appearance > **Haptic feedback**: turns the light taps on saves, swipes, undo, tabs, quick amounts, saved filters and trip switching on or off together.
+
+**Flag-OFF checks:** `enableHighContrast` OFF: no switch. `enableHapticsSetting` OFF: no switch and haptics stay on.
+
+## FLUTTER-SHEET-HANDLES — Flutter: consistent bottom sheets
+
+**Flags:** none.
+
+1. Open the default-currency picker, What's new, the offline snapshot and the route map: each sheet has the same grab handle and rounded top as the rest, and swipes down to close.
+
+## FLUTTER-PAID-LEGEND — Flutter: Who paid labels
+
+**Flags:** none (copy only).
+
+1. Trip numbers > People: a one-line key under the chart: "Bar = money they paid. Their part = their cut of all the costs."
+2. Under each person or group: **Their part ₹X** (what they owe of the trip's costs). The bar and the right-hand amount are what they **paid**. Paid minus their part is what they are owed or owe.
+
+## FLUTTER-PAID-VS-SHARE — Flutter: You paid vs your share, balance explainer, saved-offline toast
+
+**Flags:** `enableYouPaidVsShare`, `enableBalanceExplainer`, `enableSavedOfflineToast` (Trip pack, default ON).
+
+1. Open a trip you are on, add an expense of 90 paid by you split 3 ways, go to Summary (Balances). Under the hero there is one strip: **You paid ₹90.00**, **Your share ₹30.00**, **Difference +₹60.00** (green), and "You paid more than your share, so others owe you (before settlements)". The two To receive / To pay tiles are gone.
+2. Have someone else pay an expense you share: Difference is negative (red) with the "you owe others" line. Equal paid and share: neutral and "You paid exactly your share".
+3. Tap the strip: a sheet "How your balance adds up" lists each expense where paid differs from share, biggest first, with Paid / share and the +/- effect. A trip with no such expense shows "No expenses move your balance yet".
+4. Turn on airplane mode, add an expense and save: a message "Saved on this phone. It will sync when you're back online." shows. Online: no message.
+5. A viewer who is not on the trip sees no strip and no tiles.
+
+**Flag-OFF checks:** `enableYouPaidVsShare` OFF: the To receive / To pay tiles return, no strip. `enableBalanceExplainer` OFF: the strip shows but is not tappable and has no "Tap to see" line. `enableSavedOfflineToast` OFF: no message when saving offline.
+
+**Pass:** figures match the expense list; the difference is before recorded settlements, so it can differ from the hero after payments.
+
+## FLUTTER-TIDY-TABS — Flutter: tidy Expenses, Notes and Members, edit and delete passes, analytics switch
+
+**Flags:** `enableTidyExpenses`, `enableTidyNotes`, `enableTidyMembers`, `enablePassEditDelete` (Trip pack, default ON).
+
+**Expenses**
+1. Open Expenses: each row is a flat bordered tile (category tile, title, "Paid by X · Split with N", amount on the right, "Your share" under it; "Get back" in green when you paid). No glow, perforation or barcode. Day headers are calm: small spaced label, bold day total, count.
+2. Collapse or expand a day: the header is a bordered card row with the day label, "N expenses", a large bold day total and a chevron, readable against the page in light and dark. Tap a row, swipe it, search, open Filters: all behave as before. Compact view and the wide table are unchanged.
+
+**Notes**
+3. On the Notes and Checklist panes there is exactly one Add control: the floating **Add note** / **Add item** button (no second Add button in the page, and the list scrolls clear of it). With `enableContextFab` OFF the in-page buttons return. The Notes pane label shows a count. Each note is a bordered card with its title, an inline editable body and "Edited 2h ago".
+4. Card menu (...) > **Pin to top**: the note moves to the top with a pin icon. **Delete**: the note goes and a snackbar offers **UNDO**, which brings it back.
+
+**Members**
+5. Each member is a flat tile with a role chip (Organizer highlighted), the Gmail state, and (with the money-row flag) a green or red balance chip. **Invite** is the filled button, **Add member** the outlined one.
+6. With more than 8 active members a **Search members** box filters by name or email.
+
+**Passes**
+7. Notes > Passes: each pass card has a (...) menu. **Edit** opens the pass with its values, now with date and time, passenger, seat or room and booking reference. Save, and the card updates; details not shown in the form (booking id, QR, attachment) are kept.
+8. **Delete** asks "Delete this pass?"; **Keep** cancels; **Delete** removes it with an **UNDO** snackbar.
+
+**Analytics switch**
+9. With groups on the trip, Trip numbers > People > switch Groups / Members: only the Who paid card changes. **Who pays whom** keeps showing group transfers; the Fewest / Per person toggle is unaffected.
+
+**Flag-OFF checks:** `enableTidyExpenses` OFF: boarding-receipt rows with barcode and the old day header. `enableTidyNotes` OFF: plain note cards, no menu, no count. `enableTidyMembers` OFF: tinted tiles, no chips, no search. `enablePassEditDelete` OFF: no (...) menu on passes.
+
+**Pass:** nothing is lost or duplicated on edit, undo restores the exact pass, and the analytics switch never changes the settlement list.
+
+## FLUTTER-SETTINGS-PAGE — Flutter: one-page Settings like the web
+
+**Flags:** `enableSettingsDataHub` (Trip pack, default ON, new). Existing: `enableGeotagging` (default ON), `enableDataSaverMode` (default OFF), `enableDemoSeeding` (default OFF), `enableHapticsSetting` (default ON), `enableFeatureSuggestions`, `enableSettingsSearch`. Test on an Android phone and an iPhone, signed in, with at least one trip that has an expense.
+
+**One page**
+1. Me tab (or Trip menu > App settings). Settings is one scrolling page of cards: THIS TRIP, APPEARANCE, NOTIFICATIONS, DATA, HELP & ABOUT, ACCOUNT. Rows have a tinted icon, title, subtitle and a switch, segmented control, badge or chevron at the right. Rows are separated by thin lines. No category drill-in rows remain except "More display options", "Backups" and "About & Legal".
+
+**This Trip** (only when you have a trip)
+2. The card is for the trip happening now, else the next one, else the latest. **Invite & Share Trip** opens the invite sheet; **Trip Tools** opens the tools sheet; **Trip settings** opens that trip's settings; **Live location** opens the 12-hour share sheet.
+3. **Close Trip** shows "<symbol><amount> still unsettled" (or "Everything is settled") and opens the close-out sheet. It is hidden once the trip is closed.
+4. **Geotag expenses**: switch on, leave the page and come back: still on. It only stores your choice on this phone for now; expenses do not get a place yet.
+
+**Appearance**
+5. **Appearance** has Light, Dark and Auto icons: tapping one changes the theme at once, and the subtitle follows ("Light", "Dark", "Follows your phone").
+6. **Haptics** has All, Important and Off. All: every tap vibrates. Important: save, settle, delete and warnings vibrate, tab switches and menu taps are silent. Off: nothing vibrates. Close and reopen the app: the choice stays. A phone that had haptics switched off before the update starts on Off.
+7. **More display options** opens Pure black, High contrast, Reduce motion, Collapse Trip numbers, Sound feedback and Default currency, as before.
+
+**Notifications**
+8. **Notifications** shows "N unread" (or "All caught up") and opens the inbox. **Notification preferences** and **Travel pass reminders** work as before.
+
+**Data**
+9. **Data saver** (needs `enableDataSaverMode`): switch persists. It only stores your choice for now.
+10. **Storage and Data**: the badge shows total size; the page shows data and cache sizes. **Clear cache** asks first; after Clear the cache size drops and trips and expenses are untouched.
+11. **Archived Trips**: subtitle counts archived trips. Restore (undo arrow) returns a trip to the list at once. The trash icon appears only on trips you own, asks first, and removes the trip for everyone.
+12. **Backups** opens Export backup and Restore backup (unchanged behaviour).
+
+**Help & About**
+13. **Report a Problem**, **Suggest a Feature** (needs `enableFeatureSuggestions`) and **Diagnostics** open as before. **Seed Demo Trip** (needs `enableDemoSeeding`) adds "Goa Weekend (Demo)" with 3 members and 4 expenses; tapping it again adds another copy.
+14. **About & Legal** shows "Version x.y.z (build)" and opens What's new, Privacy Policy and Terms.
+
+**Account**
+15. **Sign Out** and **Delete Account** are red cards. Sign Out asks first; Delete Account opens the existing delete flow.
+
+**Search:** with `enableSettingsSearch` on, typing "currency", "haptics" or "storage" lists those rows in place.
+
+**Flag-OFF checks:** `enableSettingsDataHub` OFF: Storage and Data and Archived Trips are gone (Backups stays; archived trips are still in the Trips list's folded section). `enableGeotagging` OFF: no Geotag row. `enableDataSaverMode` OFF: no Data saver row. `enableDemoSeeding` OFF: no Seed Demo Trip. `enableHapticsSetting` OFF: no Haptics row and haptics stay on every tap.
+
+**Pass:** every old setting is still reachable, switches survive an app restart, nothing is deleted without a confirmation, and every row is easy to tap (48dp) in light and dark.
+
+## FLUTTER-HEADER-SUMMARY — Flutter: trip header actions, edit trip, Summary upgrades
+
+**Flags:** `enableTripHeaderActions` and `enableSummaryUpgrades` (Trip pack, both default ON, new). Existing: `enableTripCloseout`, `enableExpenseDisputes`. Prep: a trip you own whose end date has passed, with at least one expense where someone owes money, and a second trip you do not own.
+
+**Header**
+1. Open the trip. Under the top bar the header shows the status pill, the dates, a sync line and a chip "N members · N expenses" (settlements and bin items do not count).
+2. Long-press the trip name. A sheet opens headed by the name and "dates · N members · N expenses", with **Share Trip & QR Code**, **Mute Trip Alerts**, **Edit Trip Details**, **Settings** and, if you have another trip, **Switch to Another Trip**. Tap the name briefly (with 2+ trips): the old switcher list still opens.
+3. **Share**: the invite sheet opens. **Mute**: the row flips to "Unmute Trip Alerts"; reopen the sheet to confirm; Trip settings shows the same switch. **Settings**: opens the app settings. **Switch**: opens the trip list sheet.
+4. **Edit Trip Details** (owner only): a popup with Trip name, Destination (suggestions as in New Trip) and Dates. Change the name, tap **Update Trip**: the header and Trips list show the new name at once. Clearing the name shows "Give the trip a name". **Cancel** changes nothing. Dates: pick a new range, Update: the dates change everywhere. Sign in on a second device: the change arrives after sync.
+5. On the trip you do not own: the sheet has no Edit Trip Details row.
+6. Open the route map (More menu > Route map) on a trip with stops: a "N stops" pill sits at the top left of the map; tapping it lists the stops, choosing one opens the full route.
+
+**Summary**
+7. Open the Summary tab. At the top: chips for "You owe · settle up" or "You're owed · see who", disputes, pending invites and **Close out trip**, and, because the trip dates have ended with money unsettled, a banner "Trip dates ended — close out remaining balances". Tapping the banner or Close out trip opens the close-out sheet; the You owe / You're owed chips open the payments list.
+8. Under "Who pays whom": **How it works** opens a sheet explaining Simplified and Per person (with the payment counts).
+9. On each payment card: **Custom amount** opens Settle with the amount selected, ready to type a smaller amount (it records a partial settlement as before). **Remind** appears only when someone else owes (not on your own payments); it opens the phone share sheet with "Hi <name>, a gentle reminder: you owe <name> <amount> for "<trip>"...". Nothing is sent unless you pick an app and send it.
+10. Open **Trip numbers**: the first thing is a 2x2 **At a Glance** grid: Total spent, Per-head cost, Top category, Biggest spender.
+
+**Flag-OFF checks:** `enableTripHeaderActions` OFF: no chip, long-press does nothing, no stops pill (the old header strip flag still decides if the strip shows). `enableSummaryUpgrades` OFF: no chips or banner at the top, no How it works, Custom amount or Remind, no At a Glance grid; Settle, Settle all and the toggle work as before.
+
+**Pass:** no balance or settlement number changes; every new control is at least 48dp and readable at large text and in dark mode; Remind never sends anything by itself; non-owners cannot edit a trip.
+
+## FLUTTER-UI-ROUND3 — Flutter: clean header, pass multi-select, filters page, mini pass, voice
+
+**Flags:** `enableTripHeaderActions` (header + Edit Trip), `enableSummaryUpgrades` (mini pass), `enablePassEditDelete` (Select), `enableVoiceInput` (Voice). All Trip pack, default ON.
+
+1. Open a trip. The top bar is one row (back, trip name with a small chevron, bell, menu). Under the name is one muted line: dates, members, expenses, with a status dot (green active, blue upcoming, grey ended). There is no photo strip.
+2. Tap the trip name: the actions sheet opens (Share, Mute, **Edit Trip Details**, Settings, Switch to Another Trip when you have more than one). Edit Trip Details renames the trip and keeps its dates.
+3. Open the top-bar menu: **Edit trip details** is listed there too. Sign in as a non-owner: the row shows greyed with "Only the organizer can edit".
+4. Notes > Passes (two or more passes): tap **Select**. Tick some passes, tap **Select all** (then **Clear**), tap the bin, confirm "Delete N passes?". All chosen passes go in one save and one **Undo** brings them back. **Cancel** leaves select mode.
+5. Expenses > Filters: green header with a close button; sections My expenses, Category, Paid by, Date range (two fields), Amount range; footer **Clear all** and **Show N expenses** pinned. The count updates as you pick.
+6. Summary: scroll down past the balance card. A slim pass appears under the top bar with the route, days and stops, and OUTSTANDING (or SETTLED) with the amount. Tap it to jump back to the top.
+7. Expenses: tap the red **Voice** pill, allow the microphone, say "500 lunch at the dhaba". The words appear live and the amount and category are filled in for you to confirm before saving. Needs the phone's speech service and a connection on Android.
+
+**Flag-OFF checks:** `enableTripHeaderActions` OFF restores the old title and strip, no Edit Trip entries. `enableSummaryUpgrades` OFF: no mini pass. `enablePassEditDelete` OFF: no Select. `enableVoiceInput` OFF: no Voice pill and no mic in Quick Add.
+
+**Pass:** no money numbers change; mic permission is asked only after tapping Voice; every control is at least 48dp.
+
+**Settlement pass flip (same section, `enableSummaryUpgrades` + `enableYouPaidVsShare`):**
+8. Summary: the pass has a small "↻ Your share" chip top right and the separate You paid / Your share card is gone. Tap anywhere on the pass: it turns over to show **You paid**, **Your share**, **Difference** (green if owed to you, red if you owe) and the reason. **Settlement pass** chip is on the back; tap again to turn back.
+9. On the back, tap **How your balance adds up**: the breakdown sheet opens.
+10. Not a trip member: the pass does not flip. Reduce motion on: faces swap without the turn.
+
+**Flag-OFF:** `enableSummaryUpgrades` OFF brings the old You paid / Your share card back and the pass does not flip.
+
+**Voice and Edit Trip follow-ups (same section):**
+11. Edit Trip: the destination is one box per place. **Add destination** adds a box, the minus button removes one (not shown when only one is left). Save joins them as "Goa, Gokarna, Hampi"; reopening shows one box each.
+12. Voice: tap **Voice**, allow the mic. A "Listening…" panel with a progress bar shows the words as you speak. Say "five hundred rupees lunch" or "paanch sau chai": the preview shows 500. If speech is not available or nothing is heard, a plain message and **Try again** appear. The phone needs Google speech services (and a connection on most phones).
+
+**Settled in both views, clearer header, confirm on history (same section):**
+13. Summary > Who pays whom: settle everything using **Fewest payments**, then switch to **Per person**. The pass stays **SETTLED** with all square in both views, the amount on the pass and the mini pass is the same in both, and Members shows nobody owed or owing. (Before the fix Per person showed leftover payments and NOT SETTLED.)
+14. The trip header line (dates, members, expenses) is a clear 12.5pt body font with even spacing, readable in light and dark.
+15. Once the trip is settled, the yellow close-out card near the top of Summary is gone (it still shows while payments are left). History: a settlement paid to you shows a **Confirm received** button on its row (needs `enableSettlementConfirmation`); everyone else sees "Awaiting confirmation" until the recipient confirms. Opening the row also has Confirm payment received.
+
+## CI-ANDROID-APK — Automatic Android APK from main
+
+**Flags:** none (infrastructure). Needs the repo secrets `FLUTTER_DEV_ENV_JSON_B64` and `ANDROID_SIDELOAD_KEYSTORE_B64`.
+
+1. Push a change under `flutter_app/` to `main` (or run **Android APK (latest)** from the Actions tab). Wait for **Flutter CI** to go green; **Android APK (latest)** then starts by itself.
+2. Open Releases: the **android-latest** pre-release now carries `trip-tracker-dev-vX.Y.Z-<sha>.apk` and says which commit it came from.
+3. On the phone, download and install it over **Trip Tracker (Dev)**. It updates in place (no uninstall) and you stay signed in.
+4. A red Flutter CI run must **not** produce a new release.
+
+**Pass:** the installed app shows the new version and works against the same data as the web app.
+

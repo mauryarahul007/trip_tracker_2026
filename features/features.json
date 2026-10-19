@@ -1580,5 +1580,1090 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-01T20:05:30.238Z",
     "shippedNote": "Shipped in commit 1cf0b67 (v3.43.3). decisions.md #248. QA steps in FEATURE_TEST_STEPS.md: PASS-STUB-SIMPLIFY."
+  },
+  {
+    "id": "FEAT-100",
+    "title": "Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12)",
+    "description": "Flutter app: notifications, settings, push, feedback, version gate, accessibility and release hardening (Phases 10-12)",
+    "category": "native",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-06T18:39:46.729Z",
+    "updatedAt": "2026-10-06T18:41:42.169Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-06T18:41:42.168Z",
+    "shippedNote": "Shipped in commit 42ef52a (v3.46.0). Headless-verified only; device, Firebase and store checks open (see docs/flutter-migration/BACKLOG.md)."
+  },
+  {
+    "id": "FEAT-101",
+    "title": "Flutter app: Horizon redesign, Web platform Wasm SQLite, and Google + Superadmin auth gate",
+    "description": "Flutter app: Horizon redesign, Web platform Wasm SQLite, and Google + Superadmin auth gate",
+    "category": "native",
+    "status": "shipped",
+    "requestedBy": "rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-08T09:59:59.747Z",
+    "updatedAt": "2026-10-08T09:59:59.747Z",
+    "shippedAt": "2026-10-08T09:59:59.747Z",
+    "shippedBy": "rahul",
+    "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-102",
+    "title": "Flutter app: instant trips after sign-in, destination autocomplete, Horizon nav and Spend Insights on by default",
+    "description": "Flutter app: instant trips after sign-in, destination autocomplete, Horizon nav and Spend Insights on by default",
+    "category": "native",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-08T17:55:52.881Z",
+    "updatedAt": "2026-10-08T17:55:54.188Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-08T17:55:54.187Z",
+    "shippedNote": "Shipped in commit 09966ab (v3.48.2): first-sync fix, destination autocomplete, Horizon flags default ON (Core pack)"
+  },
+  {
+    "id": "FEAT-103",
+    "title": "Pass list sorting by time, flight leg, or traveler name (Flutter Notes tab)",
+    "description": "Time / Leg / Name sort control above the Passes list for trips with 3+ passes; Leg groups passes under flight/route headers. Not persisted.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-08T19:05:31.581Z",
+    "updatedAt": "2026-10-08T19:05:31.581Z",
+    "shippedAt": "2026-10-08T19:05:31.581Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped in commit 7bfeccb (v3.49.0) behind enablePassSorting (Travel pack, default ON). Headless-verified only; device check pending."
+  },
+  {
+    "id": "FEAT-104",
+    "title": "Flutter web-app palette, pass cards and Superadmin screen",
+    "description": "Flutter theme tokens now use the web app teal/orange palette in light, dark and AMOLED; Notes passes are cards; superadmin form login lands on /admin which opens the web Ops Deck or switches to the traveller UI.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T06:41:15.345Z",
+    "updatedAt": "2026-10-09T06:41:15.345Z",
+    "shippedAt": "2026-10-09T06:41:15.345Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped in commit 19cb764 (v3.50.0). Headless-verified only; device check pending."
+  },
+  {
+    "id": "FEAT-105",
+    "title": "Flutter Superadmin screen with single sign-on hand-off to the web Ops Deck",
+    "description": "Superadmin form login in the Flutter app opens a Superadmin screen whose Open Ops Deck button signs the superadmin straight into the web portal via a session hand-off in the URL fragment. No Flutter admin UI; traveller view is not offered.",
+    "category": "admin",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T07:32:52.070Z",
+    "updatedAt": "2026-10-09T07:32:52.070Z",
+    "shippedAt": "2026-10-09T07:32:52.070Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped in commit 1d71018 (v3.50.1). Verified on a Motorola Edge 70 Fusion; the refresh token is shared with the web app, so the Flutter session may need a new sign-in later (decision 282)."
+  },
+  {
+    "id": "FEAT-106",
+    "title": "Flutter Bento redesign: pastel tiles, new fonts and floating pill navigation",
+    "description": "Design direction C (Bento) for the Flutter app: pastel tile screens, Bricolage Grotesque and Figtree fonts, floating pill nav, ink buttons, deep tinted dark and AMOLED themes, staggered tile entrance. No feature flag.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T09:12:05.384Z",
+    "updatedAt": "2026-10-09T09:12:05.384Z",
+    "shippedAt": "2026-10-09T09:12:05.384Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped in commit ec6e203 (v3.51.0). Verified on a Motorola Edge 70 Fusion; side-by-side comparison with the design board still pending."
+  },
+  {
+    "id": "FEAT-107",
+    "title": "Flutter: Summary tab redesign and Add expense on Summary",
+    "description": "Flutter: Summary tab redesign and Add expense on Summary",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T11:08:42.268Z",
+    "updatedAt": "2026-10-09T11:08:50.046Z",
+    "shippedAt": "2026-10-09T11:08:50.045Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped in commit 75d35f8 (v3.52.0): boarding-pass Summary hero, progress card, donut spend report, Add expense on Summary. Verified in tests; on-device look pending user review."
+  },
+  {
+    "id": "FEAT-108",
+    "title": "Flutter: boarding-pass UI for Summary, Expenses and Passes",
+    "description": "Flutter: boarding-pass UI for Summary, Expenses and Passes",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T14:59:57.242Z",
+    "updatedAt": "2026-10-09T14:59:57.360Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-09T14:59:57.360Z",
+    "shippedNote": "Shipped in commit 20249e8 (v3.54.0): boarding-pass Summary, receipt-card Expenses with category runway, boarding-pass Passes with QR stub, App settings entry inside a trip. Verified in tests and on a Motorola Edge 70 Fusion."
+  },
+  {
+    "id": "FEAT-109",
+    "title": "Flutter: native Superadmin portal (overview, bug ledger, users, trips, flags, features, audit, controls, tools)",
+    "description": "Flutter: native Superadmin portal (overview, bug ledger, users, trips, flags, features, audit, controls, tools)",
+    "category": "admin",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T16:46:05.171Z",
+    "updatedAt": "2026-10-09T16:46:05.276Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-09T16:46:05.276Z",
+    "shippedNote": "Shipped in commit 510f2a4 (v3.55.0): the Superadmin login lands in the app; same Supabase tables and RPCs as the web Ops Deck. Installed on a Motorola Edge 70 Fusion; on-device walkthrough pending user review."
+  },
+  {
+    "id": "FEAT-110",
+    "title": "Flutter: growth panels and spend analytics ported from the Ops Deck",
+    "description": "Flutter: growth panels and spend analytics ported from the Ops Deck",
+    "category": "analytics",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T16:46:05.352Z",
+    "updatedAt": "2026-10-09T16:46:05.463Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-09T16:46:05.463Z",
+    "shippedNote": "Shipped in commit 510f2a4 (v3.55.0): Growth, Overview, Financial, Engagement and Health tabs; ports opsGrowthMetrics.ts and the AdminAnalyticsPage spend panels. Unit-tested on a fixed fleet."
+  },
+  {
+    "id": "FEAT-111",
+    "title": "Flutter: Trips home card-stack view with destination photos and blurred backdrop",
+    "description": "Flutter: Trips home card-stack view with destination photos and blurred backdrop",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T16:46:05.538Z",
+    "updatedAt": "2026-10-09T16:46:05.646Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-09T16:46:05.646Z",
+    "shippedNote": "Shipped in commit 510f2a4 (v3.55.0): list / cards switch behind enableTripCardStack (Trip pack, default ON); swipe right to open, left to skip, long-press menu; photo from cover or destination."
+  },
+  {
+    "id": "FEAT-112",
+    "title": "Flutter: boarding-gate login screen",
+    "description": "Flutter: boarding-gate login screen",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T20:01:11.132Z",
+    "updatedAt": "2026-10-09T20:01:19.959Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-09T20:01:19.959Z",
+    "shippedNote": "Shipped in commit adb88c7 (v3.56.0): boardingPassLogin flag in prod, always on dev/staging."
+  },
+  {
+    "id": "FEAT-113",
+    "title": "Flutter: Departures card stack with runway slider and destination-first Create Trip",
+    "description": "Flutter: Departures card stack with runway slider and destination-first Create Trip",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-09T20:01:11.212Z",
+    "updatedAt": "2026-10-09T20:01:20.025Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-09T20:01:20.025Z",
+    "shippedNote": "Shipped in commit adb88c7 (v3.56.0): behind enableTripCardStack; swipes flip the deck, tap opens, runway slider for New Trip / Join."
+  },
+  {
+    "id": "FEAT-114",
+    "title": "Flutter: WhatsApp-style Settings list with search",
+    "description": "Flutter: WhatsApp-style Settings list with search",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T16:25:45.239Z",
+    "updatedAt": "2026-10-17T16:25:45.309Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T16:25:45.309Z",
+    "shippedNote": "Shipped in commit e58c883 (v3.57.0): flat list, one page per category; search behind enableSettingsSearch (Trip pack, default ON). Replaces the old page outright."
+  },
+  {
+    "id": "FEAT-115",
+    "title": "Flutter: Summary and Settlement Pass polish",
+    "description": "Flutter: Summary and Settlement Pass polish",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T16:25:45.382Z",
+    "updatedAt": "2026-10-17T16:25:45.455Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T16:25:45.455Z",
+    "shippedNote": "Shipped in commit e58c883 (v3.57.0): simpler tile, You pay / Pays you chips, own payments first, animated sections and hero amount. Replaces the old layout outright."
+  },
+  {
+    "id": "FEAT-116",
+    "title": "Flutter: group-wise spend (paid and share)",
+    "description": "Flutter: group-wise spend (paid and share)",
+    "category": "analytics",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T16:25:45.527Z",
+    "updatedAt": "2026-10-17T16:25:45.603Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T16:25:45.602Z",
+    "shippedNote": "Shipped in commit e58c883 (v3.57.0): Members / Groups switch on Who paid, behind enableGroupSpend (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-117",
+    "title": "Flutter: Settle all I owe and share summary picture",
+    "description": "Flutter: Settle all I owe and share summary picture",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T16:25:45.678Z",
+    "updatedAt": "2026-10-17T16:25:45.747Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T16:25:45.747Z",
+    "shippedNote": "Shipped in commit e58c883 (v3.57.0): behind enableSettleAll and enableShareSummaryImage (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-118",
+    "title": "Flutter: day-by-day spend and device-only trip budget",
+    "description": "Flutter: day-by-day spend and device-only trip budget",
+    "category": "analytics",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T16:25:45.820Z",
+    "updatedAt": "2026-10-17T16:25:45.897Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T16:25:45.897Z",
+    "shippedNote": "Shipped in commit e58c883 (v3.57.0): behind enableDailyTimeline and enableTripBudget (Trip pack, default ON); the budget is not synced."
+  },
+  {
+    "id": "FEAT-119",
+    "title": "Flutter: checklist category progress bars",
+    "description": "Flutter: checklist category progress bars",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T16:25:45.971Z",
+    "updatedAt": "2026-10-17T16:25:46.042Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T16:25:46.042Z",
+    "shippedNote": "Shipped in commit e58c883 (v3.57.0): behind enableChecklistCategoryProgress (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-120",
+    "title": "Flutter: trip cards show members and your money, trips grouped by phase",
+    "description": "Flutter: trip cards show members and your money, trips grouped by phase",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T17:41:48.540Z",
+    "updatedAt": "2026-10-17T17:41:48.664Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T17:41:48.663Z",
+    "shippedNote": "Shipped in commit 87189ac (v3.58.0): behind enableTripListMoney and enableTripListSections (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-121",
+    "title": "Flutter: trip header strip and Add expense speed dial",
+    "description": "Flutter: trip header strip and Add expense speed dial",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T17:41:48.795Z",
+    "updatedAt": "2026-10-17T17:41:48.922Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T17:41:48.922Z",
+    "shippedNote": "Shipped in commit 87189ac (v3.58.0): behind enableTripHeaderStrip and enableQuickAddSpeedDial (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-122",
+    "title": "Flutter: Summary next action and Notes quick capture",
+    "description": "Flutter: Summary next action and Notes quick capture",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T17:41:49.024Z",
+    "updatedAt": "2026-10-17T17:41:49.127Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T17:41:49.127Z",
+    "shippedNote": "Shipped in commit 87189ac (v3.58.0): behind enableSummaryNextAction and enableNotesQuickCapture (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-123",
+    "title": "Flutter: one-time coach hints",
+    "description": "Flutter: one-time coach hints",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T17:41:49.247Z",
+    "updatedAt": "2026-10-17T17:41:49.373Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T17:41:49.373Z",
+    "shippedNote": "Shipped in commit 87189ac (v3.58.0): behind enableCoachHints (Trip pack, default ON); dismissed tips are remembered on the device."
+  },
+  {
+    "id": "FEAT-124",
+    "title": "Flutter: settlement Group view / Person view for every member",
+    "description": "Flutter: settlement Group view / Person view for every member",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T17:41:49.526Z",
+    "updatedAt": "2026-10-17T17:41:49.643Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T17:41:49.642Z",
+    "shippedNote": "Shipped in commit 87189ac (v3.58.0): behind enableSettlementViewSwitch (Trip pack, default ON); per-viewer view state, balances unchanged."
+  },
+  {
+    "id": "FEAT-125",
+    "title": "Flutter: compact Trips list with hero card, pinned sections and overview line",
+    "description": "Flutter: compact Trips list with hero card, pinned sections and overview line",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T18:51:59.099Z",
+    "updatedAt": "2026-10-17T18:51:59.178Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T18:51:59.178Z",
+    "shippedNote": "Shipped in commit 561a2c1 (v3.59.0): compact rows with thumbnails, status and money; photo hero for the trip happening now; pinned Happening now / Upcoming / Past headers; overview line behind enableTripsOverview (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-126",
+    "title": "Flutter: Plan and suggestions card and redesigned Trip numbers",
+    "description": "Flutter: Plan and suggestions card and redesigned Trip numbers",
+    "category": "analytics",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T18:51:59.247Z",
+    "updatedAt": "2026-10-17T18:51:59.340Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T18:51:59.340Z",
+    "shippedNote": "Shipped in commit 561a2c1 (v3.59.0): budget pace, daily allowance and up to three tips behind enableTripSuggestions (Trip pack, default ON); analytics reordered."
+  },
+  {
+    "id": "FEAT-127",
+    "title": "Flutter: one Groups / People switch for the Summary",
+    "description": "Flutter: one Groups / People switch for the Summary",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-17T18:51:59.427Z",
+    "updatedAt": "2026-10-17T18:51:59.508Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-17T18:51:59.508Z",
+    "shippedNote": "Shipped in commit 561a2c1 (v3.59.0): a single switch drives Who pays whom and Who paid; the duplicate switch in Who paid is removed."
+  },
+  {
+    "id": "FEAT-128",
+    "title": "Flutter: Trips as destination-photo tiles with a Grid / List switch, pins and search inside trips",
+    "description": "Flutter: Trips as destination-photo tiles with a Grid / List switch, pins and search inside trips",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T05:03:50.402Z",
+    "updatedAt": "2026-10-18T05:03:50.510Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T05:03:50.510Z",
+    "shippedNote": "Shipped in commit e14a650 (v3.60.0): behind enableTripGridTiles, enableTripPins, enableGlobalSearch (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-129",
+    "title": "Flutter: first-run tour, sample trip and Updated caption with pull to refresh",
+    "description": "Flutter: first-run tour, sample trip and Updated caption with pull to refresh",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T05:03:50.599Z",
+    "updatedAt": "2026-10-18T05:03:50.695Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T05:03:50.694Z",
+    "shippedNote": "Shipped in commit e14a650 (v3.60.0): behind enableFirstRunTour and enableLastSyncedCaption (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-130",
+    "title": "Flutter: cover photo band, saved/syncing line, trip switcher and accent colour inside a trip",
+    "description": "Flutter: cover photo band, saved/syncing line, trip switcher and accent colour inside a trip",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T05:03:50.780Z",
+    "updatedAt": "2026-10-18T05:03:50.860Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T05:03:50.859Z",
+    "shippedNote": "Shipped in commit e14a650 (v3.60.0): behind enableTripCoverHeader, enableSyncLine, enableTripSwitcher, enableTripAccent (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-131",
+    "title": "Flutter: Today card, wrap-up prompt, spend ring, receipt gallery and Collapse Trip numbers",
+    "description": "Flutter: Today card, wrap-up prompt, spend ring, receipt gallery and Collapse Trip numbers",
+    "category": "analytics",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T05:03:50.948Z",
+    "updatedAt": "2026-10-18T05:03:51.045Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T05:03:51.045Z",
+    "shippedNote": "Shipped in commit e14a650 (v3.60.0): behind enableTodayCard, enableCloseoutPrompt, enableSpendRing, enableReceiptGallery, enableSummaryCollapse (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-132",
+    "title": "Flutter: amount keypad, smart expense defaults and Confirm on notifications",
+    "description": "Flutter: amount keypad, smart expense defaults and Confirm on notifications",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T05:03:51.134Z",
+    "updatedAt": "2026-10-18T05:03:51.222Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T05:03:51.222Z",
+    "shippedNote": "Shipped in commit e14a650 (v3.60.0): behind enableAmountKeypad, enableSmartExpenseDefaults, enableNotificationActions (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-133",
+    "title": "Flutter: sound feedback, Reduce motion, notification day groups and rolling hero numbers",
+    "description": "Flutter: sound feedback, Reduce motion, notification day groups and rolling hero numbers",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T05:03:51.312Z",
+    "updatedAt": "2026-10-18T05:03:51.420Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T05:03:51.420Z",
+    "shippedNote": "Shipped in commit e14a650 (v3.60.0): behind enableFeedbackPack, enableReduceMotion, enableNotificationDayGroups (Trip pack, default ON); photos are now kept on the device."
+  },
+  {
+    "id": "FEAT-134",
+    "title": "Flutter: Trip numbers tabs and a single Groups/Members switch",
+    "description": "Flutter: Trip numbers tabs and a single Groups/Members switch",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T06:51:56.228Z",
+    "updatedAt": "2026-10-18T06:51:56.312Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T06:51:56.312Z",
+    "shippedNote": "Shipped in commit b903b73 (v3.61.0): headline strip plus Categories/People/Days/Details tabs; top switch removed."
+  },
+  {
+    "id": "FEAT-135",
+    "title": "Flutter: settled celebration and round-amount settling",
+    "description": "Flutter: settled celebration and round-amount settling",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T06:51:56.388Z",
+    "updatedAt": "2026-10-18T06:51:56.462Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T06:51:56.462Z",
+    "shippedNote": "Shipped in commit b903b73 (v3.61.0): behind enableSettledCelebration, enableSettleRounding (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-136",
+    "title": "Flutter: app icon shortcuts, expense history and pending-sync dots",
+    "description": "Flutter: app icon shortcuts, expense history and pending-sync dots",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T06:51:56.540Z",
+    "updatedAt": "2026-10-18T06:51:56.608Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T06:51:56.607Z",
+    "shippedNote": "Shipped in commit b903b73 (v3.61.0): behind enableAppShortcuts, enableExpenseHistory, enablePendingDots (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-137",
+    "title": "Flutter: trip templates, two-pane Summary, invite picture and quick-filter chips",
+    "description": "Flutter: trip templates, two-pane Summary, invite picture and quick-filter chips",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T06:51:56.688Z",
+    "updatedAt": "2026-10-18T06:51:56.758Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T06:51:56.758Z",
+    "shippedNote": "Shipped in commit b903b73 (v3.61.0): behind enableTripTemplates, enableSummaryTwoPane, enableInviteCard, enableExpenseQuickFilterChips (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-138",
+    "title": "Flutter: bug reports and suggestions work offline",
+    "description": "Flutter: bug reports and suggestions work offline",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T06:51:56.833Z",
+    "updatedAt": "2026-10-18T06:51:56.903Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T06:51:56.902Z",
+    "shippedNote": "Shipped in commit b903b73 (v3.61.0): behind enableOfflineFeedback (Trip pack, default ON); queued on the device and sent on reconnect."
+  },
+  {
+    "id": "FEAT-139",
+    "title": "Flutter: personal expenses left out of trip totals and settlement",
+    "description": "Flutter: personal expenses left out of trip totals and settlement",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T08:13:02.957Z",
+    "updatedAt": "2026-10-18T08:13:03.045Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T08:13:03.045Z",
+    "shippedNote": "Shipped in commit 7dc8912 (v3.62.0): behind enableExpenseExclusion (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-140",
+    "title": "Flutter: switch trips from the top-bar trip name",
+    "description": "Flutter: switch trips from the top-bar trip name",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T08:13:03.119Z",
+    "updatedAt": "2026-10-18T08:13:03.208Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T08:13:03.208Z",
+    "shippedNote": "Shipped in commit 7dc8912 (v3.62.0): behind enableTripSwitcher (reworded); arrows and strip swipe removed."
+  },
+  {
+    "id": "FEAT-141",
+    "title": "Flutter: undo for recorded payments and Settle all",
+    "description": "Flutter: undo for recorded payments and Settle all",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T08:13:03.286Z",
+    "updatedAt": "2026-10-18T08:13:03.357Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T08:13:03.357Z",
+    "shippedNote": "Shipped in commit 7dc8912 (v3.62.0): behind enableUndoSettlement (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-142",
+    "title": "Flutter: saved expense filters as one-tap chips",
+    "description": "Flutter: saved expense filters as one-tap chips",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T08:13:03.445Z",
+    "updatedAt": "2026-10-18T08:13:03.525Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T08:13:03.525Z",
+    "shippedNote": "Shipped in commit 7dc8912 (v3.62.0): behind enableSavedFilters (Trip pack, default ON); swipe right toggles Personal."
+  },
+  {
+    "id": "FEAT-143",
+    "title": "Flutter: clean trip top bar, no banner or status row",
+    "description": "Flutter: clean trip top bar, no banner or status row",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T09:22:59.395Z",
+    "updatedAt": "2026-10-18T09:22:59.473Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T09:22:59.473Z",
+    "shippedNote": "Shipped in commit b25ff7b (v3.63.0): behind enableCleanTopBar (Trip pack); enableTripCoverHeader and enableTripHeaderStrip moved to Labs OFF; sync icon only when needed."
+  },
+  {
+    "id": "FEAT-144",
+    "title": "Flutter: quick action buttons, Summary focus and jump to today",
+    "description": "Flutter: quick action buttons, Summary focus and jump to today",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T09:22:59.553Z",
+    "updatedAt": "2026-10-18T09:22:59.625Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T09:22:59.625Z",
+    "shippedNote": "Shipped in commit b25ff7b (v3.63.0): behind enableContextFab, enableSummaryFocus, enableJumpToToday (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-145",
+    "title": "Flutter: quick amount chips, friendly empty states and skeleton loaders",
+    "description": "Flutter: quick amount chips, friendly empty states and skeleton loaders",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T09:22:59.696Z",
+    "updatedAt": "2026-10-18T09:22:59.763Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T09:22:59.762Z",
+    "shippedNote": "Shipped in commit b25ff7b (v3.63.0): behind enableQuickAmounts, enableCoachEmptyStates, enableSkeletonLoaders (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-146",
+    "title": "Flutter: high contrast, haptics setting, consistent sheets and Who paid labels",
+    "description": "Flutter: high contrast, haptics setting, consistent sheets and Who paid labels",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-18T09:22:59.841Z",
+    "updatedAt": "2026-10-18T09:22:59.912Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-18T09:22:59.912Z",
+    "shippedNote": "Shipped in commit b25ff7b (v3.63.0): behind enableHighContrast, enableHapticsSetting (Trip pack, default ON); Their part wording replaces Share."
+  },
+  {
+    "id": "FEAT-147",
+    "title": "Flutter: You paid vs your share strip on Balances",
+    "description": "Flutter: You paid vs your share strip on Balances",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T08:36:04.084Z",
+    "updatedAt": "2026-10-19T08:36:04.167Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T08:36:04.167Z",
+    "shippedNote": "Shipped in commit 0e14556 (v3.65.0): behind enableYouPaidVsShare (Trip pack, default ON); replaces the To receive / To pay tiles."
+  },
+  {
+    "id": "FEAT-148",
+    "title": "Flutter: balance explainer sheet",
+    "description": "Flutter: balance explainer sheet",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T08:36:04.248Z",
+    "updatedAt": "2026-10-19T08:36:04.320Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T08:36:04.320Z",
+    "shippedNote": "Shipped in commit 0e14556 (v3.65.0): behind enableBalanceExplainer (Trip pack, default ON); tap the strip to list expenses where paid differs from share."
+  },
+  {
+    "id": "FEAT-149",
+    "title": "Flutter: saved-offline message on expense save",
+    "description": "Flutter: saved-offline message on expense save",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T08:36:04.393Z",
+    "updatedAt": "2026-10-19T08:36:04.468Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T08:36:04.468Z",
+    "shippedNote": "Shipped in commit 0e14556 (v3.65.0): behind enableSavedOfflineToast (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-150",
+    "title": "Flutter: tidy Expenses tab rows and day headers",
+    "description": "Flutter: tidy Expenses tab rows and day headers",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T09:36:30.496Z",
+    "updatedAt": "2026-10-19T09:36:30.587Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T09:36:30.586Z",
+    "shippedNote": "Shipped in commit 4ea2901 (v3.66.0): behind enableTidyExpenses (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-151",
+    "title": "Flutter: Notes cards with pin, delete and Undo",
+    "description": "Flutter: Notes cards with pin, delete and Undo",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T09:36:30.677Z",
+    "updatedAt": "2026-10-19T09:36:30.758Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T09:36:30.757Z",
+    "shippedNote": "Shipped in commit 4ea2901 (v3.66.0): behind enableTidyNotes (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-152",
+    "title": "Flutter: tidy Members tiles with role and balance chips and search",
+    "description": "Flutter: tidy Members tiles with role and balance chips and search",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T09:36:30.836Z",
+    "updatedAt": "2026-10-19T09:36:30.913Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T09:36:30.913Z",
+    "shippedNote": "Shipped in commit 4ea2901 (v3.66.0): behind enableTidyMembers (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-153",
+    "title": "Flutter: edit and delete travel passes",
+    "description": "Flutter: edit and delete travel passes",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T09:36:30.992Z",
+    "updatedAt": "2026-10-19T09:36:31.073Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T09:36:31.073Z",
+    "shippedNote": "Shipped in commit 4ea2901 (v3.66.0): behind enablePassEditDelete (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-154",
+    "title": "Flutter: one-page Settings with Haptics levels, Storage and Data, Archived Trips",
+    "description": "Flutter: one-page Settings with Haptics levels, Storage and Data, Archived Trips",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T12:31:04.843Z",
+    "updatedAt": "2026-10-19T12:31:10.131Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T12:31:10.131Z",
+    "shippedNote": "Shipped in commit c2a39dd (v3.67.0): behind enableSettingsDataHub (Trip pack, default ON); reuses enableGeotagging, enableDataSaverMode, enableDemoSeeding, enableHapticsSetting."
+  },
+  {
+    "id": "FEAT-155",
+    "title": "Flutter: trip header actions sheet, Edit Trip popup, members and expenses chip, stops picker",
+    "description": "Flutter: trip header actions sheet, Edit Trip popup, members and expenses chip, stops picker",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T12:31:05.056Z",
+    "updatedAt": "2026-10-19T12:31:10.344Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T12:31:10.343Z",
+    "shippedNote": "Shipped in commit c2a39dd (v3.67.0): behind enableTripHeaderActions (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-156",
+    "title": "Flutter: Summary chips, close-out banner, Custom amount, Remind, How it works, At a Glance",
+    "description": "Flutter: Summary chips, close-out banner, Custom amount, Remind, How it works, At a Glance",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T12:31:05.269Z",
+    "updatedAt": "2026-10-19T12:31:10.556Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T12:31:10.555Z",
+    "shippedNote": "Shipped in commit c2a39dd (v3.67.0): behind enableSummaryUpgrades (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-157",
+    "title": "Flutter: clean trip header and Edit Trip in the menu",
+    "description": "Flutter: clean trip header and Edit Trip in the menu",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T14:23:35.178Z",
+    "updatedAt": "2026-10-19T14:23:41.644Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T14:23:41.644Z",
+    "shippedNote": "Shipped in commit cfd2363 (v3.68.0): behind enableTripHeaderActions."
+  },
+  {
+    "id": "FEAT-158",
+    "title": "Flutter: select and delete several passes",
+    "description": "Flutter: select and delete several passes",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T14:23:35.549Z",
+    "updatedAt": "2026-10-19T14:23:41.877Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T14:23:41.877Z",
+    "shippedNote": "Shipped in commit cfd2363 (v3.68.0): behind enablePassEditDelete."
+  },
+  {
+    "id": "FEAT-159",
+    "title": "Flutter: web-style Expenses filters page",
+    "description": "Flutter: web-style Expenses filters page",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T14:23:35.828Z",
+    "updatedAt": "2026-10-19T14:23:42.100Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T14:23:42.100Z",
+    "shippedNote": "Shipped in commit cfd2363 (v3.68.0): behind no flag, restyle."
+  },
+  {
+    "id": "FEAT-160",
+    "title": "Flutter: Summary mini pass pinned on scroll",
+    "description": "Flutter: Summary mini pass pinned on scroll",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T14:23:36.087Z",
+    "updatedAt": "2026-10-19T14:23:42.350Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T14:23:42.350Z",
+    "shippedNote": "Shipped in commit cfd2363 (v3.68.0): behind enableSummaryUpgrades."
+  },
+  {
+    "id": "FEAT-161",
+    "title": "Flutter: settlement pass flips to show You paid and Your share",
+    "description": "Flutter: settlement pass flips to show You paid and Your share",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T14:23:36.333Z",
+    "updatedAt": "2026-10-19T14:23:42.572Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T14:23:42.572Z",
+    "shippedNote": "Shipped in commit cfd2363 (v3.68.0): behind enableYouPaidVsShare."
+  },
+  {
+    "id": "FEAT-162",
+    "title": "Flutter: Voice add expense with real speech recognition",
+    "description": "Flutter: Voice add expense with real speech recognition",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T14:23:36.639Z",
+    "updatedAt": "2026-10-19T14:23:42.835Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T14:23:42.835Z",
+    "shippedNote": "Shipped in commit cfd2363 (v3.68.0): behind enableVoiceInput."
+  },
+  {
+    "id": "FEAT-163",
+    "title": "Flutter: Edit Trip takes one destination box per place",
+    "description": "Flutter: Edit Trip takes one destination box per place",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T15:11:28.614Z",
+    "updatedAt": "2026-10-19T15:11:32.199Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T15:11:32.198Z",
+    "shippedNote": "Shipped in commit 036887f (v3.68.2): behind enableTripHeaderActions."
+  },
+  {
+    "id": "FEAT-164",
+    "title": "Flutter: clearer trip header line",
+    "description": "Flutter: clearer trip header line",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T15:56:19.670Z",
+    "updatedAt": "2026-10-19T15:56:26.374Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T15:56:26.374Z",
+    "shippedNote": "Shipped in commit b18b0eb (v3.68.3): behind enableTripHeaderActions."
+  },
+  {
+    "id": "FEAT-165",
+    "title": "Flutter: close-out card hidden once the trip is settled",
+    "description": "Flutter: close-out card hidden once the trip is settled",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T15:56:19.894Z",
+    "updatedAt": "2026-10-19T15:56:26.588Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T15:56:26.587Z",
+    "shippedNote": "Shipped in commit b18b0eb (v3.68.3): behind enableCloseoutPrompt."
+  },
+  {
+    "id": "FEAT-166",
+    "title": "Flutter: Confirm received button on settlement history rows",
+    "description": "Flutter: Confirm received button on settlement history rows",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T15:56:20.113Z",
+    "updatedAt": "2026-10-19T15:56:26.800Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T15:56:26.800Z",
+    "shippedNote": "Shipped in commit b18b0eb (v3.68.3): behind enableSettlementConfirmation."
+  },
+  {
+    "id": "FEAT-167",
+    "title": "Automatic Android APK build from main (Flutter merged into main)",
+    "description": "Automatic Android APK build from main (Flutter merged into main)",
+    "category": "ui-ux",
+    "status": "requested",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T17:43:38.590Z",
+    "updatedAt": "2026-10-19T17:43:38.590Z"
   }
 ]

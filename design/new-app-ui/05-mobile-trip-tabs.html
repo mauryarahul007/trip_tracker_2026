@@ -1,0 +1,166 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Horizon · 05 Mobile — Balances, Members, Notes, Chat</title>
+<link rel="stylesheet" href="kit.css"><script src="kit.js"></script>
+<style>
+.w60{color:rgba(255,255,255,.6)}.gl{padding:9px 14px;font:600 12.5px var(--body)}
+.bar{height:10px;border-radius:99px;position:relative;background:var(--card2);flex:1;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;border-radius:99px}
+.scroll-h{display:flex;gap:8px;overflow:hidden;margin:0 -20px;padding:0 20px}
+.xfer{display:flex;align-items:center;gap:12px;padding:14px 16px}.xfer+.xfer{border-top:1px solid var(--line)}
+.dayrule{display:flex;align-items:center;gap:10px;font:600 10.5px var(--mono);letter-spacing:.12em;color:var(--ink3);text-transform:uppercase;justify-content:center;margin:14px 0 10px}
+.dayrule::before,.dayrule::after{content:"";height:1px;background:var(--line);flex:1}
+</style></head><body><div class="board">
+<span class="tag">05 · Mobile · Trip workspace · Balances · Members · Notes · Chat</span>
+<h1>The rest of the trip</h1>
+<p class="lede">Balances uses the same Ember hero language as Expenses, so “money” always looks like money. Members is people-first with role chips. Notes is the travel-planner: a Next-Up boarding capsule, passes, checklist and notes.</p>
+
+<h2>Balances &amp; settling</h2>
+<div class="grid">
+<div class="cell" data-n="01" data-cap="Balances" data-sub="iOS · light">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div data-thead></div>
+ <div class="hero ember" style="padding:20px"><div class="dots"></div><div class="eyebrow w60">You owe</div><div class="amt-xl mt8">₹2,450<span class="dec">.00</span></div><div class="hrow gap8 mt16"><span class="glass gl">Pay Aarav</span><span class="glass gl"><i data-i="dnlt" data-c="s14"></i>Owed ₹0</span></div>
+  <div class="hrow sp mt20" style="background:rgba(255,255,255,.09);border-radius:18px;padding:12px 14px"><div class="hrow gap10"><span class="avatar sm a2">A</span><div><div style="font:700 14px var(--display)">Aarav</div><div style="font-size:11.5px;opacity:.6">Paid most this trip</div></div></div><span class="btn sm" style="background:#fff;color:#0B0F1A">Settle up</span></div></div>
+ <div class="hrow sp mt20"><span class="h-sm">Who pays whom</span><div class="hrow gap8"><span class="t-sm">Simplify</span><span class="toggle on" style="transform:scale(.82);transform-origin:right"></span></div></div>
+ <div class="list mt12"><div class="xfer"><span class="avatar sm a1">R</span><i data-i="arrr" data-c="s16" style="color:var(--ink3)"></i><span class="avatar sm a2">A</span><div class="grow t-sm" style="color:var(--ink)"><b>You</b> → Aarav</div><b class="amt neg" style="font-size:15px">₹2,450</b></div><div class="xfer"><span class="avatar sm a4">K</span><i data-i="arrr" data-c="s16" style="color:var(--ink3)"></i><span class="avatar sm a3">M</span><div class="grow t-sm" style="color:var(--ink)">Kabir → Meera</div><b class="amt" style="font-size:15px">₹1,800</b></div></div>
+</div><div data-tdock="bal"></div></div></div></div>
+
+<div class="cell" data-n="02" data-cap="Balances · member breakdown" data-sub="iOS · dark · scrolled">
+<div class="phone ios" data-dark="1" data-sb="light"><div class="scr"><div class="body">
+ <div data-thead></div>
+ <div class="seg"><span class="on">Balances</span><span>Transfers</span><span>History</span></div>
+ <div class="list mt16" style="padding:6px 0">
+ <div class="li"><span class="avatar a2">A</span><div class="grow"><div class="hrow sp"><span class="tt">Aarav</span><b class="amt pos" style="font-size:15px">+₹6,120</b></div><div class="hrow gap8 mt8"><div class="bar"><i style="left:50%;width:36%;background:var(--pos)"></i></div></div></div></div>
+ <div class="li"><span class="avatar a3">M</span><div class="grow"><div class="hrow sp"><span class="tt">Meera</span><b class="amt pos" style="font-size:15px">+₹1,200</b></div><div class="hrow gap8 mt8"><div class="bar"><i style="left:50%;width:12%;background:var(--pos)"></i></div></div></div></div>
+ <div class="li"><span class="avatar a5">I</span><div class="grow"><div class="hrow sp"><span class="tt">Isha</span><span class="badge pos">settled</span></div></div></div>
+ <div class="li"><span class="avatar a4">K</span><div class="grow"><div class="hrow sp"><span class="tt">Kabir</span><b class="amt neg" style="font-size:15px">−₹4,870</b></div><div class="hrow gap8 mt8"><div class="bar"><i style="right:50%;width:30%;background:var(--neg)"></i></div></div></div></div>
+ <div class="li"><span class="avatar a1">R</span><div class="grow"><div class="hrow sp"><span class="tt">You</span><b class="amt neg" style="font-size:15px">−₹2,450</b></div><div class="hrow gap8 mt8"><div class="bar"><i style="right:50%;width:16%;background:var(--neg)"></i></div></div></div></div></div>
+ <div class="sect">Settlement history</div>
+ <div class="list"><div class="li"><span class="tile sm c-green"><i data-i="check"></i></span><div class="grow"><div class="tt">Meera → Isha</div><div class="ss">UPI · 13 Nov</div></div><b class="amt" style="font-size:15px">₹900</b></div></div>
+</div><div data-tdock="bal"></div></div></div></div>
+
+<div class="cell" data-n="03" data-cap="Settle up" data-sub="Sheet · iOS">
+<div class="phone ios"><div class="scr"><div class="body"><div data-thead></div></div><div class="dim"></div>
+ <div class="sheet" style="padding-bottom:26px"><div class="grab"></div><div class="stack" style="align-items:center;text-align:center"><div class="hrow gap10"><span class="avatar lg a1">R</span><i data-i="arrr" data-c="s20" style="color:var(--ink3)"></i><span class="avatar lg a2">A</span></div><div class="t-sm mt12">Pay Aarav</div><div class="amt-xl mt4" style="font-size:44px">₹2,450<span class="dec">.00</span></div></div>
+ <div class="list mt20" style="box-shadow:none;background:var(--card2)"><div class="li"><span class="tile sm" style="background:#fff;box-shadow:var(--shadow);color:#5B3FF0"><b class="h-sm">₹</b></span><div class="grow"><div class="tt">Pay with UPI</div><div class="ss">GPay · PhonePe · Paytm</div></div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div><div class="li"><span class="tile sm c-green"><i data-i="wallet"></i></span><div class="grow"><div class="tt">Mark as paid in cash</div></div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div><div class="li"><span class="tile sm c-stay"><i data-i="share"></i></span><div class="grow"><div class="tt">Share settlement card</div></div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div></div>
+ <p class="t-xs ctr hrow mt12" style="justify-content:center">Aarav will be asked to confirm payment received.</p></div></div></div></div>
+
+<div class="cell" data-n="04" data-cap="Settlement card" data-sub="Shareable image · Dusk">
+<div class="phone ios" data-sb="light" data-nohi="1"><div class="scr" style="background:#0B0F1A"><div class="body nodock" style="padding:0 22px">
+ <div class="hero dusk" style="margin-top:34px;padding:26px 22px 24px;min-height:620px;box-shadow:none;border-radius:34px"><div style="position:absolute;right:24px;top:24px;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#D8D9F2 60%,#9FA2D8);box-shadow:0 0 30px rgba(255,255,255,.5)"></div>
+ <div class="eyebrow w60">Trip Tracker · Settlement</div><div class="h-xl mt20" style="color:#fff">Goa Weekend</div><div style="opacity:.75;font-size:14px;margin-top:6px">12–16 Nov 2026 · 5 travelers</div>
+ <div class="glass-card mt24" style="padding:18px"><div class="eyebrow w60">Total spent</div><div class="amt-lg mt8" style="font-size:38px">₹84,320<span class="dec">.00</span></div></div>
+ <div class="stack gap10 mt16"><div class="glass-card hrow sp" style="padding:13px 16px"><span style="font:600 14px var(--body)">Rahul → Aarav</span><b style="font:700 16px var(--display)">₹2,450</b></div><div class="glass-card hrow sp" style="padding:13px 16px"><span style="font:600 14px var(--body)">Kabir → Meera</span><b style="font:700 16px var(--display)">₹1,800</b></div></div>
+ <div style="position:absolute;left:22px;right:22px;bottom:22px" class="hrow sp"><div class="hrow gap8"><span class="orb" style="width:24px;height:24px;border-radius:8px"><i data-i="plane" data-c="s14"></i></span><span style="font:700 13px var(--display)">Trip Tracker</span></div><span class="eyebrow w60">All settled ✓</span></div></div>
+</div></div></div></div>
+</div>
+
+<h2>Close-out · Members</h2>
+<div class="grid">
+<div class="cell" data-n="05" data-cap="Close out trip" data-sub="Sheet · Android">
+<div class="phone android"><div class="scr"><div class="body"><div data-thead></div></div><div class="dim"></div>
+ <div class="sheet" style="padding-bottom:26px"><div class="grab"></div><div class="stack" style="align-items:center;text-align:center"><span class="orb o3" style="width:68px;height:68px"><i data-i="check" data-c="s32"></i></span><div class="h mt16">Close out Goa Weekend?</div><p class="t-body muted mt8">2 balances are still outstanding (₹4,250). Settle up first, or lock the trip as it is.</p></div>
+ <span class="btn primary block mt20">Review and settle</span><span class="btn block mt8">Lock anyway</span><span class="btn block mt4" style="background:transparent;color:var(--ink2)">Not now</span>
+ <div class="card sm flat mt12"><div class="t-sm">Would you use Trip Tracker for the next trip with this group?</div><div class="hrow gap8 mt12"><span class="chip tint">Yes</span><span class="chip flat">Not this group</span></div></div></div></div></div></div>
+
+<div class="cell" data-n="06" data-cap="Members" data-sub="iOS">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div data-thead></div>
+ <div class="hrow sp"><div><div class="h-md">Members</div><div class="t-sm">5 travelers · 1 archived</div></div><div class="hrow gap8"><span class="btn sm soft"><i data-i="plus" data-c="s16"></i>Add</span><span class="btn sm primary"><i data-i="share" data-c="s16"></i>Invite</span></div></div>
+ <div class="list mt16">
+ <div class="li"><span class="avatar lg a1" style="width:46px;height:46px">R</span><div class="grow"><div class="tt">Rahul <span class="badge prim" style="margin-left:4px">You</span></div><div class="ss">Organizer</div></div><div class="end"><b class="amt neg" style="font-size:15px">−₹2,450</b></div></div>
+ <div class="li"><span class="avatar a2" style="width:46px;height:46px">A</span><div class="grow"><div class="tt">Aarav</div><div class="ss">Contributor</div></div><div class="end"><b class="amt pos" style="font-size:15px">+₹6,120</b></div></div>
+ <div class="li"><span class="avatar a3" style="width:46px;height:46px">M</span><div class="grow"><div class="tt">Meera</div><div class="ss">Contributor</div></div><div class="end"><b class="amt pos" style="font-size:15px">+₹1,200</b></div></div>
+ <div class="li"><span class="avatar a4" style="width:46px;height:46px">K</span><div class="grow"><div class="tt">Kabir</div><div class="ss">Contributor · invited</div></div><div class="end"><b class="amt neg" style="font-size:15px">−₹4,870</b></div></div>
+ <div class="li"><span class="avatar a5" style="width:46px;height:46px">I</span><div class="grow"><div class="tt">Isha</div><div class="ss">Viewer</div></div><div class="end"><span class="badge pos">settled</span></div></div></div>
+ <div class="sect">Groups<span class="prim">+ Add group</span></div>
+ <div class="card sm hrow sp"><div class="hrow gap10"><span class="tile sm c-stay"><i data-i="users"></i></span><div><div class="tt" style="font-weight:600">Villa crew</div><div class="t-xs">Rahul, Aarav, Meera</div></div></div><i data-i="cr" style="color:var(--ink3)"></i></div>
+</div><div data-tdock="mem"></div></div></div></div>
+
+<div class="cell" data-n="07" data-cap="Member actions" data-sub="Sheet · iOS">
+<div class="phone ios"><div class="scr"><div class="body"><div data-thead></div></div><div class="dim"></div>
+ <div class="sheet" style="padding-bottom:26px"><div class="grab"></div><div class="hrow gap12"><span class="avatar lg a4">K</span><div><div class="h-sm">Kabir</div><div class="t-xs">Contributor · −₹4,870</div></div></div>
+ <div class="eyebrow mt20">Role</div><div class="seg mt8"><span>Organizer</span><span class="on">Contributor</span><span>Viewer</span></div>
+ <div class="list mt16" style="box-shadow:none;background:var(--card2)"><div class="li"><i data-i="edit" data-c="prim"></i><div class="tt grow">Rename</div></div><div class="li"><i data-i="swap" data-c="prim"></i><div class="tt grow">Send payment reminder</div></div><div class="li"><i data-i="archive" data-c="prim"></i><div class="tt grow">Archive member</div></div></div></div></div></div></div>
+
+<div class="cell" data-n="08" data-cap="Add group" data-sub="Sheet · Android">
+<div class="phone android"><div class="scr"><div class="body"><div data-thead></div></div><div class="dim"></div>
+ <div class="sheet" style="padding-bottom:26px"><div class="grab"></div><div class="h">New group</div><p class="t-sm mt4">Groups make “split with the villa crew” a single tap.</p>
+ <div class="field focus mt16"><label>Group name</label><div class="v">Villa crew<span style="color:var(--primary)">|</span></div></div>
+ <div class="list mt12" style="box-shadow:none;background:var(--card2)"><div class="li"><span class="check on"><i data-i="check" data-c="s14"></i></span><span class="avatar sm a1">R</span><div class="tt grow">Rahul</div></div><div class="li"><span class="check on"><i data-i="check" data-c="s14"></i></span><span class="avatar sm a2">A</span><div class="tt grow">Aarav</div></div><div class="li"><span class="check on"><i data-i="check" data-c="s14"></i></span><span class="avatar sm a3">M</span><div class="tt grow">Meera</div></div><div class="li"><span class="check"></span><span class="avatar sm a4">K</span><div class="tt grow">Kabir</div></div></div>
+ <span class="btn primary block mt16">Save group</span></div></div></div></div>
+</div>
+
+<h2>Notes (travel planner) &amp; Chat</h2>
+<div class="grid">
+<div class="cell" data-n="09" data-cap="Notes · Next-Up + passes" data-sub="iOS">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div data-thead></div>
+ <div class="hero night" style="padding:18px 20px"><div class="dots"></div><div class="hrow sp"><span class="badge" style="gap:6px"><i data-i="clock" data-c="s14"></i>NEXT UP</span><span class="badge pos">On time</span></div>
+ <div class="hrow sp mt16"><div><div style="font:700 36px/1 var(--display)">BOM</div><div style="font-size:12px;opacity:.6;margin-top:4px">9:25 PM</div></div><div style="flex:1;margin:0 14px;position:relative;height:30px"><svg viewBox="0 0 120 30" style="width:100%;position:absolute;top:0"><path d="M0 24 Q60 -8 120 24" stroke="rgba(255,255,255,.25)" stroke-width="2" fill="none" stroke-dasharray="3 5"/></svg><span style="position:absolute;left:50%;top:-2px;transform:translateX(-50%) rotate(45deg);color:#7FB2FF"><i data-i="plane" data-c="s20 fill"></i></span></div><div style="text-align:right"><div style="font:700 36px/1 var(--display)">GOI</div><div style="font-size:12px;opacity:.6;margin-top:4px">10:55 PM</div></div></div>
+ <div class="dash" style="margin:16px -4px 14px"></div><div class="hrow sp"><div><div class="eyebrow w60">Boarding in</div><div style="font:700 20px var(--display);margin-top:6px">2h 14m</div></div><div class="hrow gap8"><span class="btn xs" style="background:#fff;color:#0B0F1A"><i data-i="qr" data-c="s14"></i>Pass</span><span class="btn xs" style="background:rgba(255,255,255,.14);color:#fff"><i data-i="plane" data-c="s14"></i>Radar</span></div></div></div>
+ <div class="seg mt16"><span>Checklist</span><span class="on">Passes</span><span>Notes</span><span>Chat</span></div>
+ <div class="list mt12"><div class="li"><span class="tile sm c-act"><i data-i="plane"></i></span><div class="grow"><div class="tt">IndiGo 6E 5342</div><div class="ss">Flight · BOM → GOI · Seat 14C</div></div><i data-i="qr" data-c="prim"></i></div><div class="li"><span class="tile sm c-stay"><i data-i="bed"></i></span><div class="grow"><div class="tt">Villa Saffron</div><div class="ss">Stay · Check-in 14:00</div></div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div></div>
+</div><div data-tdock="note"></div></div></div></div>
+
+<div class="cell" data-n="10" data-cap="Notes · checklist" data-sub="iOS · light">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div data-thead></div>
+ <div class="seg"><span class="on">Checklist</span><span>Passes</span><span>Notes</span><span>Chat</span></div>
+ <div class="card mt16 hrow gap16"><div class="ring" style="--p:62;--s:68px"><b>8/13</b></div><div class="grow"><div class="h-sm">Packing progress</div><div class="t-sm mt4">5 items left · 2 are urgent</div></div><span class="btn xs soft"><i data-i="spark" data-c="s14"></i>Suggest</span></div>
+ <div class="sect">Documents<span>2/3</span></div>
+ <div class="list"><div class="li" style="min-height:54px"><span class="check on round"><i data-i="check" data-c="s14"></i></span><div class="tt grow" style="text-decoration:line-through;color:var(--ink3)">Flight tickets</div></div><div class="li" style="min-height:54px"><span class="check on round"><i data-i="check" data-c="s14"></i></span><div class="tt grow" style="text-decoration:line-through;color:var(--ink3)">Villa booking PDF</div></div><div class="li" style="min-height:54px"><span class="check round"></span><div class="tt grow">ID cards</div><span class="badge warn">Urgent</span></div></div>
+ <div class="sect">Beach<span>3/5</span></div>
+ <div class="list"><div class="li" style="min-height:54px"><span class="check round"></span><div class="tt grow">Sunscreen SPF 50</div></div><div class="li" style="min-height:54px"><span class="check on round"><i data-i="check" data-c="s14"></i></span><div class="tt grow" style="text-decoration:line-through;color:var(--ink3)">Swimwear</div></div></div>
+</div><div data-tdock="note"></div></div></div></div>
+
+<div class="cell" data-n="11" data-cap="Chat (chat-first nav)" data-sub="iOS · dock swaps tabs">
+<div class="phone ios"><div class="scr"><div class="body" style="padding:0">
+ <div style="padding:0 20px"><div data-thead></div></div>
+ <div style="padding:0 16px" class="stack gap10">
+ <div class="dayrule">Today</div>
+ <div class="hrow gap8" style="align-items:flex-end"><span class="avatar sm a2">A</span><div class="bubble in">Villa gate code is 4417 👀</div></div>
+ <div class="card sm hrow gap10" style="margin:0 36px 0 38px;padding:12px;box-shadow:var(--shadow)"><span class="tile sm c-food" style="width:36px;height:36px"><i data-i="food" data-c="s18"></i></span><div class="grow"><div class="t-xs">Aarav added an expense</div><div class="tt" style="font-weight:600;font-size:14px">Beach shack dinner</div></div><b class="amt" style="font-size:15px">₹3,640</b></div>
+ <div class="bubble out">Dinner on me tomorrow 🍤</div>
+ <div class="hrow gap8" style="align-items:flex-end"><span class="avatar sm a3">M</span><div class="bubble in">Sunset cruise leaves at 5!</div></div>
+ <div class="hrow gap8" style="align-items:flex-end"><span class="avatar sm a4">K</span><div class="bubble in">Booking the scooters now</div></div></div>
+ <div style="position:absolute;left:14px;right:14px;bottom:106px" class="hrow gap8"><div class="field row grow" style="min-height:48px;border-radius:99px;background:var(--card);box-shadow:var(--shadow)"><div class="v ph" style="font-size:14.5px">Message</div></div><span class="icon-btn" style="background:var(--primary);color:#fff;box-shadow:none"><i data-i="send" data-c="s20"></i></span></div>
+</div><div data-tdock="chat"></div></div></div></div>
+
+<div class="cell" data-n="12" data-cap="Trip settings" data-sub="iOS">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="hrow" style="height:58px"><span class="icon-btn sm"><i data-i="cl"></i></span></div>
+ <div class="large-title" style="padding-top:0">Trip settings</div>
+ <div class="list"><div class="li"><span class="tile sm c-misc"><i data-i="bell"></i></span><div class="grow"><div class="tt">Mute this trip</div></div><span class="toggle"></span></div><div class="li"><span class="tile sm c-stay"><i data-i="swap"></i></span><div class="grow"><div class="tt">Simplify debts</div><div class="ss">Fewer, bigger payments</div></div><span class="toggle on"></span></div><div class="li"><span class="tile sm c-food"><i data-i="shield"></i></span><div class="grow"><div class="tt">Approval threshold</div><div class="ss">Ask organizer above ₹10,000</div></div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div></div>
+ <div class="sect">Manage</div>
+ <div class="list"><div class="li"><span class="tile sm c-act"><i data-i="tag"></i></span><div class="grow tt">Categories</div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div><div class="li"><span class="tile sm c-shop"><i data-i="trash"></i></span><div class="grow tt">Recycle bin</div><span class="badge">2</span><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div></div>
+ <div class="sect">Organizer only</div>
+ <div class="list"><div class="li"><span class="tile sm c-trans"><i data-i="lock"></i></span><div class="grow"><div class="tt">Freeze trip</div><div class="ss">No new expenses</div></div><span class="toggle"></span></div><div class="li"><span class="tile sm c-green"><i data-i="check"></i></span><div class="grow"><div class="tt">Mark trip closed</div></div><span class="toggle"></span></div><div class="li"><span class="tile sm c-misc"><i data-i="archive"></i></span><div class="grow tt">Archive</div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div></div>
+</div></div></div></div>
+</div>
+
+<div class="grid mt32">
+<div class="cell" data-n="13" data-cap="Categories" data-sub="Android">
+<div class="phone android"><div class="scr"><div class="body">
+ <div class="hrow sp" style="height:60px"><div class="hrow gap14"><i data-i="arrl"></i><div class="h-md" style="font-size:19px">Categories</div></div><i data-i="plus"></i></div>
+ <div class="list"><div class="li"><span class="tile sm c-food"><i data-i="food"></i></span><div class="grow tt">Food &amp; drinks</div><i data-i="menu" data-c="s18" style="color:var(--ink3)"></i></div><div class="li"><span class="tile sm c-stay"><i data-i="bed"></i></span><div class="grow tt">Stay</div><i data-i="menu" data-c="s18" style="color:var(--ink3)"></i></div><div class="li"><span class="tile sm c-trans"><i data-i="car"></i></span><div class="grow tt">Transport</div><i data-i="menu" data-c="s18" style="color:var(--ink3)"></i></div><div class="li"><span class="tile sm c-act"><i data-i="ticket"></i></span><div class="grow tt">Activities</div><i data-i="menu" data-c="s18" style="color:var(--ink3)"></i></div><div class="li"><span class="tile sm c-shop"><i data-i="bag"></i></span><div class="grow tt">Shopping</div><i data-i="menu" data-c="s18" style="color:var(--ink3)"></i></div></div>
+ <div class="m3fab" style="bottom:30px"><i data-i="plus"></i>Add category</div>
+</div></div></div></div>
+
+<div class="cell" data-n="14" data-cap="Expense swipe actions" data-sub="iOS · row gestures">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div data-thead></div><div class="sect" style="padding-top:0">Today</div>
+ <div style="position:relative;border-radius:28px;overflow:hidden;box-shadow:var(--shadow)"><div style="position:absolute;right:0;top:0;bottom:0;width:170px;display:flex"><span style="flex:1;background:var(--warn);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:600 11px var(--body)"><i data-i="flag" data-c="s20"></i>Dispute</span><span style="flex:1;background:var(--neg);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:600 11px var(--body)"><i data-i="trash" data-c="s20"></i>Delete</span></div>
+ <div class="li" style="background:var(--card);transform:translateX(-150px);border-radius:28px 0 0 28px;min-height:76px"><span class="tile sm c-food"><i data-i="food"></i></span><div class="grow"><div class="tt">Beach shack dinner</div><div class="ss">Paid by Aarav</div></div><div class="amt">₹3,640</div></div></div>
+ <div class="list mt12"><div class="li"><span class="tile sm c-trans"><i data-i="car"></i></span><div class="grow"><div class="tt">Scooter rental × 3</div><div class="ss">Paid by you</div></div><div class="amt">₹1,800</div></div></div>
+ <p class="t-xs mt16" style="text-align:center">Swipe left for Dispute / Delete · swipe right to Edit</p>
+</div><div data-tdock="exp"></div></div></div></div>
+
+<div class="cell" data-n="15" data-cap="Offline snapshot" data-sub="Slate · modal">
+<div class="phone ios" data-sb="light"><div class="scr" style="background:var(--slate)"><div class="body nodock" style="color:#fff">
+ <div class="hrow sp" style="height:56px"><span class="icon-btn sm glassy"><i data-i="x"></i></span><div class="h-sm" style="font-size:17px">Offline snapshot</div><span style="width:38px"></span></div>
+ <div class="stack" style="align-items:center;text-align:center;margin-top:40px"><div class="glass" style="width:80px;height:80px;border-radius:28px;display:flex;align-items:center;justify-content:center"><i data-i="cloud" data-c="s32" style="width:38px;height:38px"></i></div><div class="h-md mt20" style="color:#fff">Everything, on this phone</div><p style="opacity:.7;font-size:14px;margin-top:8px;max-width:280px;line-height:1.45">A read-only copy of balances, expenses and passes — handy when roaming.</p></div>
+ <div class="glass-card mt24" style="padding:16px"><div class="hrow sp"><span class="w60" style="font-size:13px">Last saved</span><b>Today · 9:12 AM</b></div><div class="div" style="background:rgba(255,255,255,.12)"></div><div class="hrow sp"><span class="w60" style="font-size:13px">Size</span><b>1.4 MB</b></div></div>
+ <div style="position:absolute;left:20px;right:20px;bottom:36px"><span class="btn block" style="background:#fff;color:#0B0F1A"><i data-i="download" data-c="s20"></i>Save snapshot</span></div>
+</div></div></div></div>
+</div>
+</div></body></html>

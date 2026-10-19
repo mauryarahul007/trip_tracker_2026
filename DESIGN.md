@@ -183,3 +183,14 @@ The recurring trip-list card: a circular stamp badge (`.pp-stamp`, 48px, 1.5px t
 - **Don't** drop interactive text below 16px in form inputs.
 - **Don't** apply frosted glass to a resting card or page background — it's a chrome-only treatment.
 - **Don't** invent a new pill-radius value; every pill in the system is 9999px.
+
+## Flutter app: Horizon
+
+The Flutter app (branch `flutter`, `flutter_app/`) does not use the teal and orange system above. It uses **Horizon**, defined in `design/new-app-ui/` (open `index.html`; tokens live in `kit.css`, Flutter mirrors them in `flutter_app/lib/shared/theme/app_tokens.dart`).
+
+- **Actions:** cobalt `#2F6BFF` (primary CTA gradient `#2F66F8` to `#2250E6`), pill buttons.
+- **Context surfaces:** Night Sky for travel, Ember for money, Slate for insights, Dusk for Wrapped and celebration.
+- **Type:** Plus Jakarta Sans for display and numbers, IBM Plex Sans for body, IBM Plex Mono for eyebrows and codes.
+- **Shape:** 14 / 20 / 28 / 36 px radii, big white cards on a light grey page, glass on dark surfaces.
+- **Navigation:** floating dock with a centre "+" on iOS and web, Material 3 bar on Android, left rail from 900 px wide (behind the `enableHorizonNav` flag).
+

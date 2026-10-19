@@ -4499,6 +4499,729 @@ This document logs all meaningful technical decisions, library choices, design p
   - Invisible 44px tap envelopes can slightly overlap if elements are positioned closer than 12px together; standard CSS stacking context ensures the directly clicked target takes precedence.
   - Subtler draft alerts reduce banner blindness but may be slightly less conspicuous to inattentive users.
 
+## 257. Flutter FE Foundation: Design System, Navigation Shell, CI/CD, and Supabase Gateway (Phase 2)
+* **Context:** Executing Phase 2 of the Flutter migration plan (`docs/flutter-migration/phase-02-fe-foundation.md`). We require an architected, clean Flutter app foundation (`flutter_app/`) targeting iOS 15.0+ and Android API 24+, establishing design tokens, base widgets, typed navigation, error handling, compile-safe localization, secure session storage, and automated CI pipelines without affecting the deployed web app.
+* **Decision:**
+  - **Scaffold & Flavors:** Initialized `flutter_app/` with bundle ID `com.triptracker.app`. Configured 3 environment flavors (`dev`, `staging`, `prod`) using `--dart-define-from-file` with `.gitignore` protection for secrets.
+  - **Design System:** Translated `src/index.css` and `DESIGN.md` into `AppColors`, `AppTypography`, `AppTheme` (Light, Night flight Dark, AMOLED), and `ThemeExtension<AppTokens>`. Implemented 17 accessible base components with widget tests.
+  - **Navigation Shell:** Built declarative `GoRouter` routes for all core flows (`/login`, `/reset-password`, `/privacy`, `/terms`, `/delete-account`, `/join/:code`, `/live/:token`, `/share/:token`, `/`, `/trip/:id/:tab`, `/smoke-test`). Bottom tab navigation strictly mirrors `visibleTripTabs()` and `showNotesNavTab()` semantics.
+  - **Data & Supabase Gateway:** Built `SupabaseGateway` interface and `AppSupabaseGateway` implementation with `SecureLocalStorage` backed by `flutter_secure_storage` (iOS Keychain / Android EncryptedSharedPreferences). Added staging smoke-test screen.
+  - **Resilience & Diagnostics:** Implemented `runZonedGuarded` + `FlutterError.onError`, `ErrorBoundary` recovery UI, `AppLogger`, and `CrashReporter` interface. Built real-time connectivity provider and `OfflineBanner`.
+  - **Localization:** Implemented `flutter_gen_l10n` scaffold with `app_en.arb` and `AppLocalizations`.
+  - **CI/CD:** Added path-filtered `.github/workflows/flutter-ci.yml` (format, analyze with zero issues policy, unit/widget tests, debug build). Added `flutter-android-debug` and `flutter-ios-debug` workflows in `codemagic.yaml`. Documented "no local iOS build" workflow in `flutter_app/README.md`.
+* **Trade-offs Accepted:**
+  - Feature screens are structural stubs pending Phase 5 (data layer & domain logic) and Phases 6–10 (feature implementations).
+  - iOS builds are validated via remote Codemagic runners rather than local Xcode on Linux machines.
+
+## 258. Flutter BE Native Enablement: Auth, Dual Push Delivery, Deep Links & Version Gate (Phase 3)
+* **Context:** Executing Phase 3 of the Flutter migration plan (`docs/flutter-migration/phase-03-be-native-enablement.md`). The backend must welcome native Flutter clients across iOS and Android while preserving 100% backward compatibility with the active web application (`src/`) and existing Capacitor builds. Additive-only changes (D11) are required for push notification tokens, edge function payloads, version gating, Apple sign-in fallbacks, telemetry attribution, and universal/deep link domain hosting assets.
+* **Decision:**
+  - **Multi-Client Push Tokens (Migration 0111):** Extended `device_push_tokens` with `client text check (client in ('capacitor', 'flutter', 'web'))`, `app_version text`, and `last_seen_at timestamptz default now()`. Added composite index on `(user_id, last_seen_at desc)`. Created `public.register_device_push_token` RPC supporting native metadata with `SECURITY DEFINER` and hardened search path, while keeping existing direct upserts from Capacitor unhindered.
+  - **Dual Push Delivery & FCM v1 Payload (`send-push` Edge Function):** Updated FCM dispatch to include complete APNs blocks (`aps: { alert, sound: 'default', badge, 'content-available': 1, 'mutable-content': 1 }`), `apns-priority: '10'`, Android high-priority channel `trip_updates`, and deep-link payload routing keys (`tripId`, `route`, `type`, `click_action: 'FLUTTER_NOTIFICATION_CLICK'`). Automatic token pruning implemented on FCM errors (`UNREGISTERED`, `NOT_FOUND`, `INVALID_ARGUMENT`).
+  - **Native Version Gate & Kill-Switch (Migration 0112):** Reused `app_config` key-value table to seed min/recommended versions and store URLs for iOS and Android, plus global maintenance mode. Added PostgreSQL `public.semver_compare` helper and anonymous-callable RPC `public.get_app_version_gate(p_platform text, p_app_version text)` returning `{ action: 'allow' | 'update_recommended' | 'update_required' | 'maintenance', message, store_url }`.
+  - **Auth Parity & Sign in with Apple Fallback (Migration 0113):** Hardened `public.handle_new_user()` trigger to gracefully handle Apple Sign In (Apple private relay emails `@privaterelay.appleid.com` and one-time name delivery) with multi-tiered fallback to `raw_user_meta_data->>'full_name'`, Apple name object, `display_name`, and parsed email prefixes. Added `public.record_signup_source` RPC for client attribution (`capacitor` vs `flutter` vs `web`).
+  - **Universal & Deep Link Configuration:** Created `public/.well-known/apple-app-site-association` (modern `components` and legacy `paths` for `/join/*`, `/share/*`, `/live/*`, `/reset-password*`) and `public/.well-known/assetlinks.json` for Android package `com.triptracker.app`. Documented canonical deep link formats and custom scheme (`com.triptracker.app://`) in `contract/DEEPLINKS.md`.
+  - **Setup Runbooks & Contract Documentation:** Authored `contract/AUTH_SETUP.md` (Google native OIDC, Sign in with Apple Guideline 4.8, redirect allow-list, captcha policy, and account deletion review) and `contract/PUSH_SETUP.md` (Firebase project reuse, APNs auth key, route resolution matrix). Updated `contract/API_CONTRACT.md`.
+* **Trade-offs Accepted:**
+  - Users with dual installations (Capacitor and Flutter concurrently installed) will receive dual push notifications until Capacitor is phased out in Phase 13.
+  - S3 receipt/media storage deletion upon account deletion (`delete_own_account`) remains an asynchronous cron/storage retention process (database records cascade immediately per App Store Guideline 5.1.1, while storage objects are scrubbed separately).
+
+## 259. Flutter BE Sync Contract, Idempotent Mutations, Staging Environment & Incremental Read (Phase 4)
+* **Context:** Executing Phase 4 of the Flutter migration plan (`docs/flutter-migration/phase-04-be-sync-staging-rls.md`). To prepare for the native Flutter sync engine (Phase 5), the backend must support replay-safe idempotent writes, automatic `updated_at` timestamps across all collaborative entities, an atomic incremental read query (`get_trip_changes`), soft-deleted tombstones, and a comprehensive multi-persona staging dataset.
+* **Decision:**
+  - **Comprehensive Sync Specification (`contract/SYNC.md`):** Reverse-engineered the web app's FIFO sync queue, dirty tracking (`collectDirtyExpenseIds`), rehydration merge rules (`mergeServerExpenses`), conflict detection (`detectExpenseConflicts`), collaborative field updates (`set_trip_collab_field`), and 24h recycle bin purge semantics into an actionable specification for Drift SQLite outbox synchronization.
+  - **Automatic Triggers & Composite Indexes (Migration 0114):** Added `updated_at` column to `categories`, implemented `public.set_updated_at_column()` trigger on `trips`, `members`, `groups`, `categories`, and `expenses`, and added composite indexes `(trip_id, updated_at desc)` for efficient delta range scanning. Added `replica identity full` on `trip_messages` for reliable Realtime filtered updates.
+  - **Atomic Idempotent Upsert (`upsert_expense_v1`, Migration 0115):** Implemented `public.upsert_expense_v1` RPC utilizing client-generated UUID primary keys with author/admin RLS checks. Replayed network calls update existing records cleanly instead of throwing primary key collisions.
+  - **Hardened State Transition RPCs (Migration 0115):** Hardened `confirm_settlement`, `approve_expense`, `resolve_expense_dispute`, and `claim_trip_member` to return the current record or `true` safely upon replayed execution instead of raising fatal exceptions.
+  - **Incremental Delta Read RPC (`get_trip_changes`, Migration 0115):** Created `public.get_trip_changes(p_trip_id, p_since)` returning all modified records (`trip`, `members`, `groups`, `group_members`, `categories`, `expenses`) and soft-deleted `tombstones.expenses` in a single round-trip with a high-water mark server timestamp.
+  - **Staging Dataset & Runbook (`staging_seed.sql` & `contract/STAGING_SETUP.md`):** Seeded 3 test personas (`owner`, `member`, `outsider`), multi-payer expenses, all split modes, settlements, disputes, and soft-deleted rows. Documented JWT minting and environment isolation rules ("no automated test ever points at prod").
+  - **Automated Verification:** Added `src/utils/syncIdempotencyAndRls.test.ts` (9 tests) verifying replay idempotency, incremental delta changes, and RLS isolation.
+* **Trade-offs Accepted:**
+  - `get_trip_changes` returns all group member mappings for a trip when groups change rather than a separate delta table, keeping the query simple, fast, and relational.
+  - Tombstones are retained for 24 hours (matching the existing recycle-bin grace period); clients offline for longer than 24 hours perform a full resync (`p_since = '-infinity'`).
+
+## 260. Flutter Domain Core, Pure Logic Parity, Drift SQLite Database Schema & Outbox Layer (Phase 5, v3.44.0)
+* **Context:** Executing Phase 5 of the Flutter migration plan (`docs/flutter-migration/phase-05-fe-domain-data-sync.md`). The mobile app requires a bulletproof, non-visual core engine in Dart matching the production TypeScript web app: immutable domain models, pure business logic, verified parity against frozen golden test fixtures, and a local SQLite database powered by Drift.
+* **Decision:**
+  - **Zero Flutter Imports in Domain Layer:** All domain models (`Trip`, `Member`, `Group`, `Category`, `Expense`, `ChecklistItem`, `TripNote`, `TravelPass`, `TripMessage`, `NotificationItem`) and pure business logic modules import zero Flutter code (`package:flutter`), ensuring complete testability, independence, and architectural purity.
+  - **100% Golden Fixtures Parity:** Built `fixture_runner_test.dart` asserting against all 12 frozen golden vectors generated from the production TypeScript web app (`settlement.json`, `default_split_roles.json`, `currency.json`, `quick_parser_math.json`, `collab_merge.json`, `duplicate_burn_predictive.json`, `categories.json`, `imports_exports.json`, `passes_chat_cards.json`, `notifications.json`, `utilities.json`). Float rounding parity in Dart matches JS to two decimal places using exact epsilon handling.
+  - **Database Mappings Suite:** Created `database_mappings_test.dart` validating bidirectional serialization across PostgREST DTOs (`TripDto`, `MemberDto`, `ExpenseDto`, `CategoryDto`, `GroupDto`), Drift SQLite entries, and hydrated domain models.
+  - **Hydrated Drift SQLite Schema (`lib/data/local/`):** Implemented `AppDatabase` and tables in `tables.dart` (`TripsTable`, `MembersTable`, `GroupsTable`, `GroupMembersTable`, `CategoriesTable`, `ExpensesTable`, `TripMessagesTable`, `NotificationsTable`, `OutboxTable`, `SyncMetaTable`, `SettingsKvTable`, `OfflineReceiptsTable`, `FeatureFlagsTable`) with `@DataClassName` annotations to avoid naming collisions with domain models.
+  - **Clean Code Generation Pipeline:** Scoped `drift_dev` generation via `build.yaml` to `lib/data/local/**`, upgraded `analyzer` to 14.4.0 and `drift` to 2.35.1 to match Dart 3.13 SDK, generating `app_database.g.dart` with 0 analyzer issues.
+* **Trade-offs Accepted:**
+  - Complex JSON structures (`checklist`, `notes`, `passes`, `fx_config`, `member_roles`, `payer_weights`, `split_data`) are stored as JSON text columns within Drift SQLite, mirroring the web app's hydrated state while avoiding multi-table joins on high-frequency document updates.
+
+
+## 261. Flutter Outbox Sync Engine, Repositories, Realtime, Auth & Flags Core (Phase 5 completion)
+* **Context:** Finishing Phase 5 (`phase-05-fe-domain-data-sync.md`): everything non-visual between Drift and the UI.
+* **Decision:**
+  - **Outbox (`lib/data/sync/`):** Drift-backed FIFO per entity; single-flight `SyncEngine`; exponential backoff with +/-25% jitter; permanent errors (RLS 42501, constraint 23xxx/22xxx/42xxx) and 8 transient failures quarantine the item (`poison`) without blocking other entities; a quarantined `createTrip` blocks its trip's children; offline/expired session pauses without burning attempts; crash recovery resets `in_flight` to `pending` (safe because every remote call is an upsert or keyed update). Payloads are versioned (`v: 1`) and use Postgres-shaped rows; expenses go through `upsert_expense_v1`.
+  - **Money:** unchanged from web: `double` with 2-decimal rounding in the settlement port (no minor-unit switch), proven by the settlement fixtures plus a seeded property test (200 random trips: balances sum to 0, transfers settle everyone).
+  - **Drift layout (schema v2, additive migration):** trips, expenses and trip_messages keep a full-fidelity `domain_json` beside flat query columns, because the v1 flat columns could not represent split members, resolved shares, itemized config, location, reactions, etc. Membership lists are derived from the members/groups tables on read.
+  - **Real column names, not the contract's:** mappers follow `src/services/tripApi.ts` (`category`, `paid_by`, `split_member_ids`, `resolved_shares`, `is_settlement`, `deleted_at`, trip_messages `member_id/body/payload`). `API_CONTRACT.md` §2.4/§2.7 and `database_mappings.json` use different names and must be corrected before Phase 6 relies on them.
+  - **Pull sync:** `get_trip_changes` with the stored cursor minus 10 s skew; dirty entities (any pending/failed/quarantined outbox item) are never overwritten; conflicts are returned for the resolver UI; tombstones hard-delete (per SYNC.md §8, which means the 24 h recycle bin is not mirrored to other devices; revisit in Phase 7).
+  - **Realtime:** one active trip at a time (BUG-146), channels removed on dispose, backoff resubscribe, delta resync after every SUBSCRIBED, event bursts coalesced to at most two resyncs, pause/resume with app lifecycle. Messages and notifications are persisted locally; read-cursor events are forwarded as a stream.
+  - **Flags:** `flag_defaults.g.dart` is generated from the TS registry by `scripts/export-golden-fixtures.mjs` (also writes `fixtures/flags.json`); a test fails if the Dart and TS key sets, defaults or pack membership differ. Precedence is user > trip > global > default.
+  - **Auth:** `AuthRepository` supports email, Google/Apple ID token, local-only guest/demo, `signup_gate` (fails open), delete account; sign-out flushes the outbox, wipes every table, unregisters push. Superadmin is excluded.
+* **Deferred (not built):** SQLCipher/encrypted vault and pass attachments (Phase 8, needs UI), `workmanager` background sync (foreground is the contract), passes/profile/locations/receipts/bugs repositories (built by the UI phase that needs each), `lib/` CLI harness (the `staging`-tagged test covers the flow but has not been run: no staging project here).
+* **Follow-up (same ADR):** coverage raised to 91.5% via new TS-generated matrix fixtures, which exposed and fixed 7 Dart port divergences (see HANDOFF section 5); locale money fixtures added; exporter pins `Date.now` so regeneration is byte-stable; `API_CONTRACT.md` and the mapping fixture corrected to real column names and the misleading DTO classes removed.
+* **Still open:** the staging sync suite has never been executed (no staging project/Docker/Supabase CLI available here); run it before Phase 6 depends on the engine.
+
+## 262. Flutter Phase 6: session, auth, trips list, join/share design (Flutter app)
+* **Context:** Phase 6 turns the Phase 5 engine into the app's front door.
+* **Decision:**
+  - **One router, redirect-driven.** A single `GoRouter` lives for the app's lifetime; `refreshListenable` re-runs `redirect` on auth/onboarding changes (the Phase 2 stub rebuilt the router on every auth change, resetting navigation). Order: loading -> `/splash`; signed out -> `/login` unless public (`/login /reset-password /privacy /terms /join /share /live`); signed in but not onboarded -> `/onboarding` (skipped for `/join`, and `/login?next=/join/CODE` returns to the invite; `next` is allow-listed to that shape).
+  - **Session = `AuthRepository.watchUser()`** (Supabase session or a local guest/demo). Guests/demo never sync and cannot join trips. The repository waits for local-session restore before its first emit so returning guests never see a login flash. A build with no real `SUPABASE_URL` runs local-only (`AppEnv.hasBackend`).
+  - **Install-scoped prefs (`shared_preferences`)** hold onboarding-seen and the lock preference so they survive sign-out; the Drift DB is wiped on sign-out.
+  - **App lock** needs the existing `enableBiometricAuth` flag AND a user preference; locks on cold start and after 30 s backgrounded (`shouldLockOnResume`).
+  - **Trips list is read-only over Drift streams;** writes are optimistic + outbox. New outbox types `updateTripState` (archive/freeze/close) and `deleteTrip`. Delete is committed only after the 5 s undo window closes; list actions are owner-only (admin actions arrive with Phase 10 settings).
+  - **Join flow** mirrors the web: signed out -> public `preview_trip_by_join_code`; signed in -> `lookup` then `claim_trip_member`; after claiming the trip is pulled before opening. Rate-limit errors carry a countdown. Turnstile and the honeypot are web-only and not ported.
+  - **Share:** `/share/:token` is public and counts one view; generate/revoke are online-only writes to `trips` (owner/admin RLS) and the section is hidden when `enableTripShareLink` is off.
+  - **Deep links** (`app_links`) map custom-scheme and https links through one pure function; attribution is first-touch only and flushed via `record_signup_source` after the first real sign-in. Android intent filters and the iOS URL scheme were added; **iOS Associated Domains and the hosted `.well-known` files are still manual** (custom-domain blocker in `DEEPLINKS.md`).
+  - **Riverpod auto-retry disabled** (`retry: (_, _) => null`) so failures reach the UI's explicit Retry buttons.
+* **Trade-offs accepted:** no contact picker in the invite sheet (share sheet covers it; avoids permission plumbing); QR scanning deferred to Phase 8/9 (manual code entry covers it); email/password is offered although the web is Google-only (per the phase spec); the trips home is a list, not the web's 3D stack, with a Hero title transition instead.
+
+## 263. Flutter trip shell: per-tab state, swipe, back
+* **Decision:** Tabs are five fixed `StatefulShellRoute` branches nested under `GoRoute('/trip/:id')` (go_router rejects a parameterized default branch location, and nesting also gives every trip its own shell state). A `PageView` container shows only the flag-visible tabs and calls `goBranch` on swipe; each tab's navigator is kept alive. Back walks a tab trail of up to 5 steps (port of `tabTrail.ts`), then leaves the trip; the trips list uses press-twice-to-exit (port of `doubleBackExit.ts`).
+* **Known conflict (iOS):** on tabs other than the first, a left-edge swipe pages to the previous tab instead of the interactive pop gesture; the header arrow always leaves. Needs on-device verification in Phase 12.
+* **Bugs found by tests and fixed:** `late` tab-trail field initialised after the first tab change; undo snackbars with an action never auto-dismissed (Flutter default `persist`), which would have made trip deletion never commit; `AppButton` labels overflowed at large text.
+
+## 264. Flutter Phase 7 (slices A+B): money core, expense data path, Expenses tab
+* **Context:** Phase 7 is the money core. The split resolver lived inside the zustand store module and had never been ported.
+* **Decision:**
+  - **`resolveShares` ported with 155 golden cases** generated by importing the real function in the fixture exporter (a loader hook stubs `import.meta.env`, and `window`/`localStorage` only for that import; no web code changed). Two JS quirks are preserved on purpose: custom weights use `||` (a weight of 0 counts as 1) and the largest-remainder ordering is *stable* (JS sort is, Dart's is not), tie-broken on payer then list order.
+  - **Form rules transcribed, not fixture-verified:** validation order and wording, base-currency conversion (only when `enableCurrencyFx` is on, otherwise the typed number is kept, as the web does), multi-payer allocation, approval threshold, frozen/closed checks. The code is inline in a React component, so it is covered by hand-derived tests (BACKLOG B-050/051).
+  - **One save path:** `ExpenseRepository.submit` mirrors the store's add/update (participants = non-archived members, shares, settlement detection by `Settlement:` title, approval status, creator kept on edit) and queues a single `addExpense`/`updateExpense` carrying optional `receipt` and `chat` extras. The outbox remote uploads the photo first (upsert, so replays are safe), then calls `upsert_expense_v1`, then marks the receipt uploaded and upserts the chat card (id fixed at enqueue time, so replays don't duplicate it). Storage 4xx (except 408/429) quarantines the item; 5xx/timeouts retry.
+  - **Online-only actions stay online-only** (dispute, resolve, approve, confirm settlement), like the web: server first, local copy second, `ExpenseActionException` (offline flag) on failure. Their chat cards are best effort. Queuing them is possible later because the RPCs are replay-safe (B-059).
+  - **Trip money settings** (simplify debts, approval threshold, category order, exclusion defaults) are optimistic column patches (`updateTripState`); FX config goes through `set_trip_collab_field` so any participant can write it. `expenseCount` is derived from local active expenses, not stored.
+  - **Recycle bin mirrors across devices** (closes B-025): pull sync reads soft-deleted rows besides the tombstone feed and keeps them restorable for the server's 24 h window.
+  - **Expenses tab:** same rules as the web (days collapsed by default, settlements in their own section, pending-approval rows excluded from totals, filters AND-ed with the web's exact semantics, 50-row pages on a virtualised sliver list). Sticky day headers are deferred (B-053).
+* **Bugs found by tests and fixed:** `approve`/`confirmSettlement` threw synchronously instead of returning a failed Future; `ConfirmDialog` buttons overflowed on phone widths; the filter sheet's category dropdown overflowed; a nested-transaction stall exists only under `FakeAsync` (test harness fix, B-061).
+
+## 265. Flutter Phase 7 (slices C+D): expense form and balances tab
+
+* **Date:** 2026-10-06
+* **Context:** The Expenses tab needed its add/edit form and the Balances tab needed to show debts and record payments, with numbers equal to the web.
+* **Decisions:**
+  - **Form logic stays pure and tested** (`expense_form_logic.dart`, `split_resolver.dart`); the controller (`ExpenseFormController`) only holds state, drafts and side effects, the screen only renders. Validation text is verbatim from the web.
+  - **Shares (weights) are persisted** (B-062): a deliberate divergence from a web bug.
+  - **Drafts** write 350 ms after the last edit; pending writes are flushed on dispose from a captured snapshot (Riverpod forbids reading `ref`/`state` in `onDispose`).
+  - **Settle up** reuses `ExpenseRepository.submit` with the web's exact settlement shape (`settle_up.dart`), so approval, chat card and outbox behaviour match any other expense.
+  - **Receipt staging** copies files synchronously (<= 5 MB) so it also runs under the widget-test clock (B-069).
+  - Unbuilt ledger/categories/import/analytics pieces are tracked in `docs/flutter-migration/BACKLOG.md` (B-066..B-068) rather than half-built.
+* **Verification:** `flutter analyze` clean; full Flutter test suite passes; manual steps in `docs/FEATURE_TEST_STEPS.md` (FLUTTER-P7-FORM-LEDGER).
+* **Bugs found by tests and fixed:** form receipt row overflowed on phone width; currency list hid ListTile ink under the sheet's decoration; draft flush on dispose read provider state.
+
+## 266. Flutter Phase 7 (slices E-G): ledger loop, files, exit bar (v3.44.2)
+
+* **Date:** 2026-10-06
+* **Context:** Slices A-D left the settle-and-pay loop, category/file screens, and the phase exit checks unbuilt. The pure helpers (UPI URI, share-card layout, CSV/Splitwise, quick parser) already existed.
+* **Decisions:**
+  - **No new flags.** Every new control reads `flagProvider` and the existing defaults. Analytics (`fl_chart`) is deferred (B-070) instead of shipping a chart behind a default-on flag.
+  - **UPI ids live in SharedPreferences** (`member_upi:<memberId>`). The members table has no UPI column, so this avoids a schema bump. If `url_launcher` cannot open the URI, the id is copied.
+  - **Share card PNG is drawn with dart:ui** from `settlementShareCardLayout`, then handed to `share_plus`. Widget tests record the caption through `FakeShareService.sharePng`.
+  - **Live FX** fetches Frankfurter `from=USD`, caches 24h, and falls back to `defaultExchangeRates`. Custom trip rates overlay the live map and win. Tests stub the fetcher so the form never hits the network.
+  - **Conflicts:** keep mine only dismisses the badge (the outbox row stays). Keep theirs writes the server expense and discards the queued edit.
+  - **Close-out** sets `closed` the same way as the web. The pulse question is not stored; `Trip` has no pulse field.
+  - **Sticky day headers** are sibling slivers, and the header child is exactly 48px so a pinned header's layout extent matches its paint extent. The flag stays off.
+  - **Edge zone** is a 28px hit target on both sides of a row so a horizontal drag there reaches the trip `PageView` instead of `Dismissible`.
+  - **`validateAndSanitizeBackup` is unchanged** (fixture-locked). Backup import uses a separate `summarizeBackup`.
+* **Verification:** `flutter analyze` clean on the expense tree; expense and domain widget tests pass, including balance strings, UPI/share, close-out, quick add, categories, CSV, sticky headers, cross-trip search, 500 rows, and 200% text scale. Device fps, TalkBack/VoiceOver, and a real UPI app are manual steps in `docs/FEATURE_TEST_STEPS.md` (FLUTTER-P7-LOOP).
+* **Left for later:** voice, OCR, geotag (Phase 9), push (Phase 10), analytics charts, presets tip (B-065).
+
+## 267. Flutter Phase 8: members, notes, text chat, manual passes (v3.44.3)
+
+* **Date:** 2026-10-06
+* **Context:** Chat, members, and notes were still placeholders. The member repository, collab merge, and `trip_messages` table already existed. Voice, scanners, the vault, and a second device were out of this build.
+* **Decisions:**
+  - **No new flags and no new packages.** Roster, notes, chat, and passes read `flagProvider`. `record`, `just_audio`, `pdfrx`, `mobile_scanner`, and SQLCipher stay out.
+  - **Roles** patch `trips.member_roles` through `updateTripState` (owner/admin). Checklist, notes, and passes use `setTripCollabField`, same as FX, so any member can save.
+  - **Typing:** a note keeps a local draft. A remote copy does not replace the field while it is focused or while that draft has not been saved yet.
+  - **Chat lives on Notes** unless `enableChatFirstNav` is on. Unread is a local last-seen id in SharedPreferences, gated by `enableTripChat`. Read receipts stay off.
+  - **Text sends** are optimistic rows plus outbox types `addMessage`, `editMessage`, and `deleteMessage`. The web calls those table/RPC paths online and does not queue them. Edit uses `edit_trip_message`. Delete sets `deleted_at`.
+  - **Passes** are manual flight, train, or hotel cards. The card list stays empty until one pass exists. Scanner, PDF, brightness, and the vault stay deferred (B-020).
+  - **Left out:** contacts picker (B-038), date ranges, previous-member suggestions, images, voice, reactions, typing (B-023), Tripbot, live map, OCR, and push.
+* **Verification:** `flutter analyze` on the new screens is clean. `test/features/phase8_test.dart` covers the roster (including the money line, archive, group, and invite sheet), checklist, packing suggestions, a detected link, a manual pass, the unread mark, a text bubble, and an expense card. Two-account staging, 1,000-message fps, and the iOS keyboard are manual steps in `docs/FEATURE_TEST_STEPS.md` (FLUTTER-P8).
+* **Release:** v3.44.3 (patch bump). Flutter only; the web app is untouched.
+
+## 268. Flutter Phase 9 Sub-phase 9A: Maps & Journey (Route parsing, Gazetteer, Deferred Map Hero & Journey Map)
+
+* **Date:** 2026-10-06
+* **Context:**
+  - Active trips and expense ledgers on the web feature interactive route maps (OSRM driving geometry, multi-stop itineraries, geotagged expense journey markers, Wikipedia destination photo discovery, and Photon Komoot autocomplete).
+  - Flutter migration needed parity for route parsing, gazetteer search, photo hero banners, interactive map gateways, and stop itinerary management.
+* **Decisions:**
+  - **Pure Domain Route Logic (`route_helper.dart`):** Transcribed and unit-tested `parseTripRoute`, `extractPrimaryCity`, `getItineraryRouteInfo`, `collectTripPhotoPlaces`, and geometric utilities (`median`, `squaredDist`) in pure Dart without Flutter UI or Drift database dependencies.
+  - **Offline Gazetteer & Fast Levenshtein (`place_gazetteer.dart`, `place_suggest_service.dart`):** Bundled top 100+ global destinations with country-to-currency mappings and Damerau-Levenshtein typo tolerance with Latin diacritics folding. Blends local matches (boosted by prior trip destinations) with online Photon Komoot API with 3.5s timeout.
+  - **Cover Photo & Road Route Services (`place_image_service.dart`, `road_route_service.dart`):** Ported Wikipedia REST API summary photo resolver with `normalizeWikimediaWidth` (960px/500px) and Unsplash query resolution. Built OSRM driving geometry fetcher with in-memory polyline caching and straight-line fallback.
+  - **MapGateway Platform Abstraction (`map_gateway.dart`):** Established `MapGateway` with `DefaultMapGateway` rendering interactive vector paths/pins via Flutter canvas and `FakeMapGateway` for deterministic headless widget testing.
+  - **Deferred Hero Map & Journey Map (`deferred_trip_map_hero.dart`, `trip_journey_map.dart`):** Implemented 300ms idle-mount deferral for trip map heroes so shell tab navigation stays at 60 fps, smoothly fading the destination photo once map renders. Built chronological expense journey map with category markers and tapped expense detail cards.
+  - **Collaborative Stops Persistence (`trip_route_modal.dart`, `repositories.dart`, `drift_repositories.dart`):** Stop changes save through `TripRepository.setStops`, writing to `set_trip_collab_field` (`field: 'stops'`) for real-time multiplayer syncing.
+* **Verification:**
+  - 408 tests pass (`flutter test`), including 28 dedicated unit and widget tests covering route parsing, gazetteer suggestions, image resolution, and map rendering.
+  - `flutter analyze` clean (0 warnings).
+* **Trade-offs Accepted:**
+  - Interactive map canvas uses custom high-performance vector rendering for universal platform compatibility and zero third-party mapbox/google binaries in unit test environments. Full tile-based MapLibre/Google Maps native plugin integration can be swapped via `MapGateway` if offline tile caching is needed.
+
+---
+
+## 269. Flutter Phase 9 Sub-phase 9B: Live Location & Travel Status (Geolocator, Heartbeat, Live Viewer & Flight Radar)
+
+* **Date:** 2026-10-06
+* **Context:**
+  - Parity with web application required live location sharing (`/live/:token`), 60s background heartbeat reporting, in-chat member radar banner with mini-map preview, and flight radar / train PNR live tracking portals.
+  - Device platform permissions, battery preservation, traveler privacy (12-hour automatic expiry), and headless widget test determinism were essential.
+* **Decisions:**
+  - **Platform Location Abstraction (`location_gateway.dart`):** Decoupled `geolocator: ^14.0.1` behind `LocationGateway`, providing `GeolocatorLocationGateway` for Android/iOS devices and `FakeLocationGateway` for deterministic headless testing. Documented privacy and permission requirements in `docs/PERMISSIONS.md` and added permissions to `AndroidManifest.xml` and `Info.plist`.
+  - **Pure Domain & Status Services (`location_share.dart`, `travel_status_service.dart`):** Created immutable models `MyLocationShare`, `SharedLocation`, `TripActiveShare` with 12-hour expiry logic. Ported pure airline IATA/ICAO code resolution (IndiGo, Air India, Emirates, Delta, etc.), flight date formatting, URL builders for Google Flight Search, Flightradar24, FlightAware, FlightStats, and Indian Railways 10-digit PNR / 5-digit train status generators (`ConfirmTkt`, `RailYatri`).
+  - **Data Layer & Heartbeat Service (`supabase_location_share_repository.dart`, `live_location_service.dart`):** Implemented `SupabaseLocationShareRepository` wrapping RPCs `start_location_share`, `update_location_share`, `stop_location_share`, `get_my_location_share`, `get_active_trip_location_shares`, and `get_shared_location`. `LiveLocationService` manages periodic 60s heartbeat ticks and automatically syncs positions on app lifecycle resume (`WidgetsBindingObserver`).
+  - **Non-Blocking Tactile Feedback:** Dispatched `AppHaptics` using `unawaited(...)` inside asynchronous UI handlers to avoid blocking state updates on multi-step haptic vibration delays.
+  - **UI Experiences & Feature Flag Guarding:**
+    - `LiveScreen`: Dedicated `/live/:token` viewer with live radar pulse animation, relative timestamps, and expired/ended share screens.
+    - `LiveLocationShareModal`: Bottom sheet modal with permission requesting, link generation, and one-tap stop sharing.
+    - `LiveLocationChatBanner`: Chat header banner with active traveler chips and interactive mini-map preview, strictly guarded behind `enableLiveLocationShare`.
+    - `LiveTravelStatusModal`: Interactive modal presenting direct flight radar status and PNR tracking cards, integrated into travel passes in `NotesTab`.
+* **Verification:**
+  - 13 unit tests pass in `travel_status_service_test.dart`.
+  - 9 widget/flow tests pass in `live_location_test.dart`.
+  - Full Flutter test suite and `phase8_test.dart` pass.
+  - `flutter analyze` reports 0 issues.
+  - Web `npm test` and `npm run build` pass with exit code 0.
+* **Trade-offs Accepted:**
+  - 60s heartbeat interval minimizes battery impact over high-frequency GPS polling while maintaining sufficient squad coordination accuracy.
+  - `enableLiveLocationShare` flag remains in Labs pack (default OFF in production).
+
+---
+
+## 270. Flutter Phase 9 Sub-phase 9C: Receipts OCR, Ambient Weather, Offline Snapshot & Voice Input
+
+* **Date:** 2026-10-06
+* **Context:**
+  - Active travelers need high-efficiency input tools: itemized receipt scanning (OCR) to eliminate manual receipt typing, voice input for rapid on-the-go expense entry, ambient destination weather telemetry for trip planning, and `.triptracker` offline snapshot files for cross-device portability without cloud sync dependencies.
+  - All utilities required pure-domain testability, robust offline fallbacks, zero regressions on the web codebase, and strict feature flag guarding.
+* **Decisions:**
+  - **Receipts OCR Engine (`receipt_ocr_service.dart`, `ocr_gateway.dart`, `receipt_ocr_modal.dart`):**
+    - Pure Dart receipt parsing service (`parseReceiptText`, `parseScannedReceipt`) extracting line item descriptions, item prices, subtotals, taxes (GST, CGST, VAT), tips/gratuities, discounts, and total amounts.
+    - Brand detection matching known merchants (Starbucks, Blue Tokai, McDonald's, Costa Coffee, etc.) and receipt date normalization.
+    - `OcrGateway` platform abstraction with headless `FakeOcrGateway` for deterministic test suites and `DefaultOcrGateway` for device execution.
+    - `ReceiptOcrModal` bottom sheet modal providing both photo scanning and manual text parsing, itemized review cards, and one-tap application into `ExpenseFormController.applyReceiptOcr`.
+    - Integrated into `ExpenseFormScreen` and guarded by `enableReceiptOcr` in `FormFlags`.
+  - **Ambient Destination Weather Service (`weather_service.dart`, `weather_badge.dart`):**
+    - Built lightweight destination weather indicator querying Open-Meteo REST API (`api.open-meteo.com/v1/forecast`) and Open-Meteo Geocoding with Photon Komoot fallback.
+    - WMO standard weather code mapping to daylight-aware emoji (☀️/🌙, ⛅, 🌧️, ❄️, ⛈️) and conditions.
+    - Robust destination query extraction (`extractPlaceCandidates`, `cleanPlaceQuery`) stripping route delimiters, directional words, and trip filler terms with Latin diacritic normalization.
+    - Real-time Stale-While-Revalidate (SWR) caching with in-memory cache and 20-minute freshness TTL backed by `SharedPreferences` (24-hour offline fallback).
+    - `WeatherBadge` telemetry widget with card and compact variants, animated refresh button, and integration into `NotesTab`.
+  - **Offline Snapshot & Device Transfer (`offline_snapshot_service.dart`, `offline_snapshot_modal.dart`):**
+    - Generates standalone `.triptracker` JSON bundles with format manifest (`version: '3.3.0'`, `appName: 'Trip Tracker 2026'`, `type: 'single_trip_snapshot'`), complete trip metadata, members, and expenses.
+    - Full payload validation (`validateOfflineSnapshot`) enforcing 10MB limits, JSON dictionary structure, max trip counts, and financial preview calculation (trip name, expense count, total spend).
+    - Integrated with `ShareService` and `textFilePickerProvider` in `TripToolsSheet`.
+  - **Voice Quick-Add & Platform Speech Recognition (`speech_recognition_gateway.dart`, `quick_add_sheet.dart`):**
+    - Established `SpeechRecognitionGateway` platform contract with `FakeSpeechRecognitionGateway` and `DefaultSpeechRecognitionGateway`.
+    - Integrated microphone trigger directly into `QuickAddSheet` gated by `enableVoiceInput` flag.
+    - On transcript arrival, updates text field and triggers `parseQuickExpense` for instantaneous amount and title resolution.
+* **Verification:**
+  - 5/5 unit tests in `weather_service_test.dart` and 3/3 widget tests in `weather_badge_test.dart`.
+  - 5/5 unit tests in `receipt_ocr_service_test.dart` and 2/2 widget tests in `receipt_ocr_flow_test.dart`.
+  - 4/4 tests in `offline_snapshot_test.dart`.
+  - 2/2 tests in `voice_quick_add_test.dart`.
+  - Full Flutter test suite passing (51/51 tests across all suites).
+  - `flutter analyze` reports 0 issues found.
+  - Web `npm test` (93 files, 505 tests) and `npm run build` pass with exit code 0.
+* **Trade-offs Accepted:**
+  - OCR platform integration defaults to zero-binary fallback in unit test environments while providing extensible hooks for on-device MLKit text recognition.
+  - Weather service uses free Open-Meteo and Photon Komoot REST endpoints with zero user accounts or API keys required, adhering strictly to traveler privacy.
+
+---
+
+## 271. Flutter Phase 9 Sub-phase 9D: Trip Wrapped, Squad Badges, Traveler Passport, ICS Export, Next Up Capsule & Gate Scanner
+
+* **Date:** 2026-10-06
+* **Context:**
+  - Travelers and trip squads rely on milestone summaries and social sharing to celebrate completed journeys, calendar synchronization to keep trips on device schedules, persistent lifetime travel statistics across all expeditions, and immediate boarding pass access (QR/barcode scanner) at airport gates and train stations.
+  - As part of Phase 9 of the Flutter migration, full feature parity was required for Trip Wrapped (`B-107`), Squad Achievements & Badges (`B-108`), Traveler Passport (`B-109`), Calendar (.ics) Export (`B-103`), Next Up Countdown Capsule (`B-101`), and High-Contrast Gate Scanner (`B-110`).
+  - All utilities required pure-domain separation, clean widget tests, zero regressions on the web codebase, and strict feature flag guarding.
+* **Decisions:**
+  - **Pure Dart RFC 5545 Calendar (.ics) Generator (`ics_export_service.dart`):**
+    - Built pure Dart iCalendar export engine generating valid `VCALENDAR` documents with `VEVENT` blocks for every travel pass with scheduled departure.
+    - Added RFC 5545 escaping for commas, semicolons, backslashes, and newlines; formatted UTC timestamps (`YYYYMMDDTHHMMSSZ`).
+    - Enhanced `ShareService` with `shareFile(bytes, fileName, mimeType, subject, text)` for seamless system share sheet integration across iOS, Android, and desktop.
+    - Wired into `TripToolsSheet` (`export-ics`) and `NotesTab` (`pass-export-ics`), guarded by `enableIcsExport`.
+  - **Trip Wrapped Service & Interactive Story Deck (`trip_wrapped_service.dart`, `trip_wrapped_modal.dart`):**
+    - Created pure domain archetype generator (`getTripArchetype`), member superlatives (`getMemberSuperlatives`), weekly rhythm and peak adventure day calculator (`getTripRhythm`), and member spend leaderboard (`getMemberSpendLeaderboard`).
+    - Implemented 5-slide interactive story viewer with `PageView`, night/day aesthetic toggle, vector customs visa stamp, superlatives grid, rhythm metrics, and shareable PNG card rasterization via `RepaintBoundary` with headless test fallbacks.
+    - Wired into `TripToolsSheet` (`trip-wrapped`), guarded by `enableTripWrapped`.
+  - **Squad Milestones & Achievements Engine (`achievements_service.dart`, `achievement_badge_modal.dart`):**
+    - Built milestone evaluator calculating 7 squad enamel badges (`caffeine`, `midnight`, `lightning_settle`, `apex_roadrunner`, `executive_gourmet`, `squad_harmony`, `visual_chronicler`).
+    - Created enamel pin badges modal with progress bars, locked/unlocked states, and responsive scrollable layout.
+    - Wired into `TripToolsSheet` (`trip-achievements`), guarded by `enableAchievements`.
+  - **Traveler Passport Engine & Customs Ink Stamps (`traveler_passport_service.dart`, `passport_stamp.dart`, `traveler_passport_modal.dart`):**
+    - Pure Dart calculation of lifetime travel metrics: total trips, unique destinations (case-insensitive deduplication), settled trips count, and inclusive days on the road (clipped to 366 days/trip and bounded by today for active trips).
+    - Designed dynamic vector customs visa ink stamp (`PassportStamp`) with authentic tilt angle, double ring border, destination IATA code, and `FittedBox` scaling.
+    - Created `TravelerPassportModal` displaying lifetime metrics summary and interactive destination visa stamps grid.
+    - Wired into `TripToolsSheet` (`traveler-passport`), guarded by `enableTravelerPassport`.
+  - **Next Up Travel Countdown Capsule & Fullscreen Gate Scanner (`next_up_capsule.dart`, `pass_scanner_modal.dart`):**
+    - Implemented `evaluateImminentPass` evaluating passes within temporal window (-3h to +36h) with dynamic states (`en-route`, `boarding-soon`, `upcoming`, `today`) and time formatting (`Departs in Xh Ym`, `Boarding in Xm`).
+    - Created `NextUpTravelCapsule` widget mounted above notes, showing route (`BOM → GOI`), seat/berth, countdown pill, "Show Pass" button, and "Live Status" button.
+    - Created high-contrast `PassScannerModal` with high-contrast QR code (`QrImageView`), monospace seat/berth badge, copyable booking/PNR code, and timer lifecycle management.
+* **Verification:**
+  - 5/5 unit tests in `ics_export_service_test.dart`.
+  - 6/6 unit tests in `trip_wrapped_service_test.dart`.
+  - 6/6 unit tests in `achievements_service_test.dart`.
+  - 5/5 unit tests in `traveler_passport_service_test.dart`.
+  - 1/1 widget test in `trip_wrapped_test.dart`.
+  - 2/2 widget tests in `achievements_and_passport_test.dart`.
+  - 7/7 widget tests in `next_up_capsule_and_scanner_test.dart`.
+  - 1/1 widget test in `trip_tools_sheet_9d_test.dart`.
+  - All 484 Flutter tests pass with 0 failures (`phase8_test.dart` fully passing).
+  - `flutter analyze` reports 0 issues.
+  - Web `npm test` (93 files, 505 tests) and `npm run build` pass with exit code 0.
+* **Trade-offs Accepted:**
+  - Pure Dart ICS generator avoids external heavyweight calendar packages while adhering strictly to RFC 5545 format specs.
+  - `RepaintBoundary` rasterization in `TripWrappedModal` utilizes a 50ms timeout and headless fallback to ensure test suites and headless engines never stall.
+* **Release Cut:**
+  - Version bumped to `3.45.0` via `npm run release:minor` covering complete delivery of Flutter Phase 9 (Maps, Live Location, Receipts OCR, Ambient Weather, Offline Snapshot, Trip Wrapped, Squad Milestones, Traveler Passport, ICS Calendar Export, Next Up Capsule, and Gate Scanner).
+
+
+
+
+## 272. Flutter Phase 10 Slice A: In-app notifications
+
+* **Date:** 2026-10-06
+* **Context:**
+  - Phase 10 needs the bell, list and foreground banner (`B-035`, `B-121`). The Dart `renderNotificationBody` was a stub, and `notifications.json` had been generated by calling the web function with the wrong arguments, so the fixture and the stub both held the generic sentence.
+* **Decisions:**
+  - Ported the web renderer exactly (`renderNotificationBody(NotificationItem)`), fixed the fixture generator call, regenerated only `notifications.json`.
+  - `NotificationRepository`: Drift is the read model; writes are local first then best-effort to Supabase (no outbox, flags are idempotent and `refresh` reconciles).
+  - Banner shows only unread rows created within 2 minutes that were not shown before, so history pulled by `refresh` never replays.
+  - Tap routes to the trip tab by type (`notificationTabFor`); web only opens the trip.
+  * No new flag: reuses `enableNotificationGrouping` (Trip pack, default ON).
+* **Trade-offs Accepted:**
+  - Server writes are not queued: a read flag set offline is lost if the app is killed before reconnecting, and the next `refresh` restores the server state.
+  - Verified headless only; no staging project or device yet (B-001, B-004).
+* **Release Cut:** none yet. Local only, not committed.
+
+## 273. Flutter Phase 10 Slices B-E: Settings, preferences, version gate, feedback, push
+
+* **Date:** 2026-10-06
+* **Context:**
+  - Phase 10 needs the settings tree, notification preferences, the version gate and flag refresh, feedback and telemetry, and push with local reminders. No Firebase files, device or staging project exist yet, so everything is built behind seams and verified headless.
+* **Decisions:**
+  - **Seams over plugins.** `PushGateway`, `LocalNotificationsGateway`, `PushTokenBackend`, `FeedbackRepository`, `NotificationPrefsRepository` are interfaces with fakes in `test/support/fakes.dart`; the real implementations wrap Firebase, `flutter_local_notifications` and Supabase.
+  - **Push fails soft.** Without Firebase config the gateway reports `unavailable` and the rest of the app is unaffected. The Gradle google-services plugin is not added (it fails the build without the file); the manual steps are in `contract/PUSH_SETUP.md` section 5.
+  - **Permission once, in context.** Asked after the first saved expense with an explanation; never at launch, never twice.
+  - **Foreground push** shows badge and sound only on iOS; the realtime in-app banner is the visible alert (avoids two banners). Differs from the Capacitor `alert` option on purpose.
+  - **Route allowlist.** A push `route` is used only if it is one of our `/trip/<id>/<tab>` paths; otherwise the path is rebuilt from `type` and `tripId`.
+  - **Reminders are a recomputed set.** Any change to trips, passes, the switch or quiet hours cancels and reschedules everything (inexact alarms, so no exact-alarm permission). Edits, deletes, reboot and app update share one path. Quiet hours shift a reminder to the window end unless that is after departure.
+  - **`send-push` rides the outbox.** The request is built when the expense is saved (recipients from local members) and sent after the server write; failures never fail the expense.
+  - **Version gate fails open.** Anything unreadable, offline or slow (6 s) means no gate. Re-checked on resume.
+  - **Flag overrides are dev and staging only**: the override store is not wired in prod, so a shipped build cannot be flipped locally.
+  - **PII.** Logs go through a scrubber (emails, phone numbers, tokens) into a 200-line ring buffer; bug reports and auto reports use it; crash identity is a one-way hash of the user id.
+  - **Backup restore creates new trips** (the repositories own ids); a repeat restore duplicates and the dialog says so.
+  - **Settings rows follow the web flags** (`enableAmoledTheme`, `enableBiometricAuth`, `enableFeatureSuggestions`, `enableWhatsNewHub`, `enableQuietHours`, `enableDigestNotifications`). No new flag was added.
+  - **Dependencies:** `firebase_core` 4.15, `firebase_messaging` 16.7, `flutter_local_notifications` 22.3.1 (stable), `timezone`, `flutter_timezone`, `package_info_plus`. `connectivity_plus` lowered 7.3.2 to 7.3.1 so the stable notifications plugin resolves (`dbus` conflict).
+* **Trade-offs Accepted:**
+  - Trip settings are owner-only, stricter than the server (RLS also allows admins).
+  - Legal screens stay a summary with a link to the web text until a native version is approved.
+  - Disabling the app lock needs no biometric (Phase 6 behaviour), logged as B-147.
+  - Nothing verified against Firebase, a device or staging: push, forced version gate and the server preference tables are open items (B-170 and related).
+* **Release Cut:** none yet. Local only, not committed.
+
+## 274. Flutter Phase 11: cutover operations (documents only)
+
+* **Date:** 2026-10-06
+* **Context:** Moving Capacitor users to Flutter must not lose their data, must be observable, and must be reversible. Phase 11 is backend and ops; the repo has no live project to act on.
+* **Decisions:**
+  - Specs, contracts, queries and plans were written; **no migration was applied and no web code changed**. Two migrations are drafts in `ops/ALERTS.md`.
+  - The final Capacitor release is specified as an over-the-air update (Capgo manifest), flag-gated, so it reaches installed users without store review.
+  - Guest trips are recovered by export then restore (existing `BackupService`); vault and attachments get an export-only step, and are never uploaded (the privacy policy says they stay on the device).
+  - Contract-freeze window: additive backend changes only until a sunset date at least two store release cycles after 100%.
+  - `BackupService` now accepts the web export shape (members as a map, people listed on the trip).
+  - Observability queries are run by hand; thresholds are proposals.
+* **Trade-offs Accepted:**
+  - No alerting automation, no push delivery metric, no counts of guests or vault users, until telemetry and a delivery log exist.
+  - Repeat restore still duplicates until the `import_batch_id` draft is approved.
+  - Several Flutter-only surfaces have no server kill switch (B-175).
+* **Release Cut:** version bumped to `3.46.0` via `npm run release:minor` (Flutter Phases 10-12 and the Phase 11 cutover documents).
+
+## 275. Flutter Phase 12: QA, accessibility, release hardening (prepared, not complete)
+
+* **Date:** 2026-10-07
+* **Context:** The release gate needs devices, store accounts and a staging project that do not exist here. The phase was done as far as it can be verified headless; the rest is written as ready-to-run material and logged.
+* **Decisions:**
+  - **Accessibility is a test, not a promise.** `test/a11y/a11y_test.dart` runs the Flutter guidelines (tap target, label, contrast) in light and dark, 200% text on ten screens, and RTL on shared components. Fixes went into the theme and shared widgets (chip and segmented colours, contrast-aware `AppButton`, scrolling dialog, stacked Theme row) rather than per screen.
+  - **Release builds must not use the debug key.** Signing comes from `key.properties` or env vars; CI refuses a debug-signed file. Local release runs still fall back to debug so they work.
+  - **Build numbers continue the Capacitor sequence** (commit count, floor 746) so the stores accept the update; `tool/release_version.sh` fails below the floor.
+  - **Hardening:** `allowBackup` off, cleartext only in debug, R8 shrinking, obfuscation with kept symbols, a binary secret scan that allows the anon key and rejects a `service_role` key.
+  - **Format gate fixed by formatting once** at 120 columns (the repo's style) instead of dropping the gate; generated Dart is formatted by the generator so the drift check passes.
+  - **Parity is reported honestly:** generated from the matrix, with a hand-written verdict that Tier 1 parity is not reached.
+  - **No deletion:** Capacitor items are only listed (`SUNSET_CANDIDATES.md`).
+* **Trade-offs Accepted:**
+  - R8 shrinking and the signing config are unbuilt (no Android SDK); the first release build must be smoke-tested (B-193).
+  - Release pipelines are unrun (B-197). Perf is unmeasured (budgets only).
+  - A large mechanical formatting diff (268 files) is mixed into this phase's changes.
+* **Release Cut:** version bumped to `3.46.0` via `npm run release:minor` (Flutter Phases 10-12 and the Phase 11 cutover documents).
+
+## 276. Flutter Horizon Redesign, Web Platform Support, and Superadmin Authentication Gate
+
+* **Date:** 2026-10-08
+* **Context:** The Flutter application required a full modern visual overhaul across all screens (Horizon blue palette, custom typography, dark/AMOLED modes, responsive layout with wide navigation rail, and custom surface cards). Additionally, the Flutter app was ported to run on Web with WebAssembly SQLite (IndexedDB/OPFS) and Google OAuth redirect support, plus a secure Superadmin-gated authentication barrier.
+* **Decisions:**
+  - **Horizon Design System:** Adopted Plus Jakarta Sans for titles/numbers, IBM Plex Sans for body, and IBM Plex Mono for eyebrows and amounts. Implemented token-driven theming across light (#2559E6 contrast-adjusted primary), dark (#5C8DFF primary, #080B12 background), and AMOLED surfaces with contextual color gradients (Night Sky, Ember, Slate, Dusk).
+  - **Shared Widget Suite:** Reusable `AppBottomNav` (floating dock for iOS/Web, M3 NavigationBar for Android), `AppSideNav` rail for width >= 900px, `HeroSurface`, `AppCard`, and `BrandMark`.
+  - **Web Platform Drift Support:** Split database connection via conditional imports: native SQLite via `dart:io` on mobile/desktop, and `WasmDatabase` (`sqlite3.wasm` + `drift_worker.js`) on web.
+  - **Authentication Gate:** Standard users are restricted to Google sign-in (plus Apple on iOS). Replaced public email/password and guest/demo links with a collapsed, authenticated "Superadmin login" flow that queries `is_superadmin()` in Supabase and signs non-admin accounts straight back out.
+  - **WCAG Accessibility & Quality:** Zero analysis warnings on `dart analyze lib test`, 576 automated Flutter unit, widget, and accessibility tests passing.
+* **Trade-offs Accepted:**
+  - Web receipt photo attachments and file export remain stubbed/pending web-safe file pickers.
+  - Push notifications and scheduled local notifications disabled on Web.
+* **Release Cut:** version bumped to `3.47.0` via `npm run release:minor`. Logged as `FEAT-101`.
+
+---
+
+## 277. Flutter Horizon rollout (P1-P7) and desktop polish
+* **Context:** The Flutter app needed the Horizon design (cobalt CTA, Night Sky / Ember / Slate / Dusk context surfaces) across every screen, with desktop layouts.
+* **Decision:** Restyle all screens; add Balances tab, Spend Insights screen and a home dock/rail behind new Pro-pack flags `enableHorizonNav` and `enableSpendInsights` (default OFF, TS flag count 103).
+* **Implementation:** `home_dock.dart` (dock on phones, rail >=900); expenses table + detail panel >=1100; planner third column >=1280; two-pane login/settings >=1024; Android back from Balances/Activity/Me returns to Trips.
+* **Fixture fix:** `parseQuickExpense` takes an injectable `now` (default unchanged); generator pins MOCK_DATE so `quick_parser_math` is deterministic.
+* **Trade-offs Accepted:** Some new labels are English-only until ARB regeneration; two-column add-expense dialog and full-screen settled celebration deferred.
+* **Release Cut:** version bumped to `3.48.0` via `npm run release:minor`.
+
+---
+
+---
+
+## 278. Flutter CI fixtures-drift step fix
+* **Context:** Flutter CI failed at the drift step: Node deps were not installed and generated Dart files were compared unformatted.
+* **Decision:** Run `npm ci --ignore-scripts` and `dart format` on `flutter_app/lib/domain/logic` before the diff; regenerate `changelog.g.dart`.
+* **Release Cut:** version bumped to `3.48.1` via `npm run release:patch`.
+
+---
+
+## 279. Flutter: first-sync fix, destination autocomplete, Horizon flags default ON
+* **Context:** On a phone the Trips list stayed blank after sign-in until the user left and returned; the create-trip form had no destination suggestions (the web app does); the Horizon UI sat behind off-by-default flags, so a fresh install looked unlike the mockups.
+* **Decision:** Coordinator exposes a pulling state and re-pulls once if the first pull finds no trips; the list reloads when the first pull lands and shows "Syncing your trips" meanwhile. Ported `placeSuggest` (gazetteer, fuzzy match, Photon, did-you-mean) to Dart behind `enableDestinationAutocomplete`. `enableHorizonNav` and `enableSpendInsights` are default ON and moved from the Pro to the Core pack (Pro must stay off by default).
+* **Trade-offs Accepted:** New strings are English-only until ARB regeneration; the gazetteer is copied by hand from the web list.
+* **Release Cut:** version bumped to `3.48.2` via `npm run release:patch`.
+
+## 280. Flutter Notes Tab Pass Overflow Fix and Pass Sorting
+
+* **Date:** 2026-10-09
+* **Context:** On trips with many passes (Sikkim Bagpacking, ~10) the Notes tab Column overflowed by 531px, pushing the Checklist/Notes/Chat selector off-screen. Travelers also had no way to find a person's or a flight's passes in a long list.
+* **Decisions:**
+  - **Capped, scrollable header:** the Next Up capsule and passes list sit in a `ConstrainedBox` (35% of screen height) with a `SingleChildScrollView`, so the selector and the `Expanded` pane stay visible. The whole tab is not made scrollable because the chat pane relies on `Expanded`.
+  - **Pass sorting:** Time (default) / Leg / Name control for 3+ passes, via the pure `sortPasses` in `domain/logic/pass_sort.dart` (stable, blanks last, input never mutated). Leg mode groups by `legIdentifier` (fallback origin → destination) with headers. Sort is not persisted.
+  - **Flag:** `enablePassSorting` (Travel pack, default ON); flag-count assertion bumped to 102.
+* **Trade-offs Accepted:**
+  - On small screens the passes area scrolls inside a fixed share of the height instead of using the full screen.
+  - Sort choice resets each visit.
+* **Release Cut:** version bumped to `3.49.0` via `npm run release:minor`.
+
+## 281. Flutter: web palette, pass cards, Superadmin redirect, password field
+
+* **Date:** 2026-10-09
+* **Context:** On a real device the Flutter app looked nothing like the web app on `main`, passes were plain list rows, Superadmin login dropped into the traveller UI, and masked password fields blocked capital letters.
+* **Decisions:**
+  - **Web palette via tokens:** `AppColors` / `AppTokens` now carry the `src/index.css` values (teal `#0F6F63`, orange accent, light/dark/AMOLED surfaces); hero gradients use the web header teal. Fonts were already the same. The Horizon look from decision #276 is superseded; widgets are unchanged.
+  - **Pass cards:** `PassCard` replaces `ListTile` rows (icon, route, passenger, flight, date chip, QR/status buttons).
+  - **Superadmin:** no Flutter admin UI is built. A superadmin form login sets `adminModeProvider`; the router keeps the session on `/admin`, which opens the existing web Ops Deck (`WEB_APP_URL`, default GitHub Pages) or switches to the traveller UI. Memory-only, so a cold start returns to the traveller UI.
+  - **Password fields:** `AppTextField` uses `visiblePassword` and a show/hide toggle.
+  - **Sign-in diagnostics:** debug builds show the raw exception under the error banner.
+* **Trade-offs Accepted:**
+  - Ops Deck needs a second sign-in in the browser. Device verification of the new look is pending.
+* **Release Cut:** version bumped to `3.50.0` via `npm run release:minor`.
+
+## 282. Flutter: Superadmin screen opens the web Ops Deck already signed in
+
+* **Date:** 2026-10-09
+* **Context:** After decision 281 a superadmin still landed on the traveller Trips page, the Ops Deck button did nothing on Android, and when it did open it showed a second login (the default URL was the GitHub Pages build, which is compiled with a dummy Supabase URL).
+* **Decisions:**
+  - **Admin mode set before sign-in:** `adminModeProvider` is switched on before `signInAsSuperadmin` and off again on failure. The session appearing makes the router dispose the login screen, so code after the await could no longer use `ref`. Covered by a test whose fake mimics the `is_superadmin` round trip.
+  - **Single sign-on hand-off:** `AuthRepository.sessionTokens()` returns refreshed tokens; `opsDeckUri` puts them in the URL fragment (`access_token`, `refresh_token`, `expires_in`, `token_type`, no `type`). The web app uses supabase-js implicit flow with `detectSessionInUrl`, which signs in from the fragment and clears it. Fragments are not sent to servers.
+  - **Superadmin screen:** only Open Ops Deck and Sign out. The web portal has its own traveller preview, so the Flutter traveller UI is no longer reachable for a superadmin login.
+  - **Default portal URL:** `https://trip-tracker.blackmaroon.in/` (EC2 deployment, real Supabase secrets); override with `--dart-define=WEB_APP_URL`.
+  - **Android package visibility:** `https` and `http` VIEW intents added to the manifest queries; without them url_launcher cannot open any web link.
+* **Trade-offs Accepted:**
+  - The refresh token is shared between the Flutter app and the web app; refresh-token rotation means the Flutter copy may stop working once the web app refreshes it, so the app can ask for a sign-in again later. A one-time-code hand-off through an edge function would avoid this.
+  - The first history entry in Chrome keeps the fragment; rotation makes that token useless after the web app first refreshes it.
+* **Release Cut:** version bumped to `3.50.1` via `npm run release:patch`.
+
+## 283. Flutter: Bento redesign (design direction C)
+
+* **Date:** 2026-10-09
+* **Context:** The Flutter UI looked plain next to the web app and the market. Four directions were designed (Wayfarer, Ledger, Bento, Nocturne); Bento was chosen.
+* **Decisions:**
+  - **Theme first:** the palette lives in `AppColors` / `AppTokens` (soft green-grey ground, white surfaces, ink text, five pastel tones as `BentoTones`, deep tinted versions for dark and AMOLED). Fonts are Bricolage Grotesque (titles, numbers) and Figtree (body), bundled as variable fonts with their SIL OFL texts. Existing widgets inherit the look through tokens.
+  - **Shared pieces:** `BentoTile`, `BentoEntrance` (staggered spring-in, off with reduce-motion), a floating pill `AppBottomNav` (selected item shows a lilac pill and its label; icons keep spoken labels), ink primary buttons (cream in dark), lilac selected chips.
+  - **Screens rebuilt as tiles:** Login, Trips, Expenses summary and rows, Add expense amount, Balances, Ledger summary, Members, Passes, Spend insights, Settings profile, Splash, Onboarding.
+  - **No flag:** a restyle, not a new feature; git is the rollback. The Horizon hero gradients stay for a few dark panels (Next Up capsule, receipt scan, Wrapped), retinted to ink.
+  - **Supersedes** decision 276 (Horizon) and 281's palette note.
+* **Trade-offs Accepted:**
+  - Unselected nav items show icons only, so tests find them by semantics label.
+  - The Add expense form body, Ledger lists, Notes checklist and chat, and Trip settings keep their layouts and only get new colours and fonts; they can move to tiles later.
+  - Not yet compared side by side on a device with the design board.
+* **Release Cut:** version bumped to `3.51.0` via `npm run release:minor`.
+
+## 284. Flutter: Summary-first trip tabs, boarding-pass Summary, live Notes and Chat, sync race fix
+
+* **Date:** 2026-10-09
+* **Context:** On-device testing of the Bento build showed a Notes tab that could not edit or delete checklist items, ticks that appeared to freeze, a cluttered Balances tab, a map button that did nothing, and no Add expense button outside the Expenses tab.
+* **Decisions:**
+  - **Tab order (Flutter only):** Summary is first and the landing tab, Expenses second; the web app keeps its own order. The old Balances tab is renamed Summary.
+  - **Summary tab:** boarding-pass hero with a SETTLED / NOT SETTLED stamp, trip dates, a large balance with dimmed decimals, a To receive / To pay pair, a settlement-progress card, Who pays whom tickets with avatars and the simplify-debts switch (with a counts line), and a Trip numbers section (donut, category rows, Who paid, per-person balances). Group members are shown as one group balance.
+  - **Add expense:** one shared button on both Summary and Expenses (`AddExpenseFab`, no hero tag because both tabs stay mounted).
+  - **Map button:** opens a route panel under the header (map with stops, otherwise a No route yet tile with Add stops).
+  - **Notes tab:** own Passes pane; full checklist with add, edit, delete (undo) and tap-to-tick with an optimistic overlay and an on-screen error.
+  - **Realtime:** the trip shell now opens the realtime channel (it had no callers), so Notes and Chat update live.
+  - **Sync race:** `OutboxStore.epoch` changes on every local write; `TripPullSync` refetches (up to 3 times) when it changed during a fetch, so a stale server row can no longer undo a local tick.
+  - **No new flags:** restyle and fixes to existing surfaces; the simplify switch is no longer hidden behind a Labs flag for admins.
+* **Trade-offs Accepted:**
+  - Summary-first order differs from the web app.
+  - The checklist freeze on a physical device was not reproduced in tests; the overlay and error message are defensive.
+  - The Add person flow (invite by Google email) is undecided and not part of this change.
+* **Release Cut:** version bumped to `3.52.0` via `npm run release:minor`.
+
+## 285. Member Creation with Mandatory Gmail ID Linking & Auto-Claiming
+
+* **Date:** 2026-10-09
+* **Context:** Previously, adding a person to a trip only asked for a name (with no account connection) or relied on join codes after trip creation. Travelers needed a way to link members directly to their Google accounts from creation time so trips automatically appear in their account when they sign in.
+* **Decisions:**
+  - **Mandatory Gmail:** When adding a person to a trip, providing a Gmail address is mandatory.
+  - **Domain Restriction:** The address is strictly validated to end with `@gmail.com` using case-insensitive regex (`^[a-zA-Z0-9._%+-]+@gmail\.com$`). Future expansion to other email providers can loosen this restriction.
+  - **Smart Typing Pre-fill:** In both the Flutter bottom sheet and web modal, typing a member name automatically drafts an initial `sanitized@gmail.com` candidate until the user manually touches the email input field. This speeds up entry and preserves backward-compatibility with automated tests.
+  - **Database Migration & Auto-Linking (`0116_member_email_and_autolink.sql`):**
+    - Added `email` text column to `public.members` with lower-cased indexes.
+    - `trg_autolink_member_on_email`: Trigger on `members` insert/update that queries `public.profiles` and immediately links `linked_user_id` if the user is already registered.
+    - `trg_claim_pending_members`: Trigger on `profiles` insert/update that auto-claims all pending `members` matching the email when a new user signs up with Google.
+    - RPC `public.lookup_profile_by_email` and frontend gateways for real-time profile preview (avatar, display name).
+  - **Flutter App Support:**
+    - Domain `Member` model and Postgres row mappers updated with `email`.
+    - Drift schema bumped to version 3 with additive column migration in `app_database.dart` and `tables.dart`.
+    - `_AddMemberSheet` renders Name and Gmail fields with debounced Supabase lookup.
+    - Member roster tile and member actions sheet display linked Gmail address with status indicator (success checkmark when linked, clock when pending claim).
+  - **Web App Parity:**
+    - TypeScript interfaces, `tripApi.ts`, `tripStore.ts`, and `MembersGroupsTab.tsx` updated with identical validation, debounced profile lookup, and roster email badge.
+* **Trade-offs Accepted:**
+  - Only `@gmail.com` addresses are accepted currently; users with Google Workspace custom domains or non-Google providers cannot be directly linked via this flow until the domain whitelist is expanded.
+* **Release Cut:** version bumped to `3.53.0` via `npm run release:minor`.
+
+## 286. Flutter Boarding-Pass UI (Summary, Expenses, Passes) and Live-Stream Fix
+
+* **Date:** 2026-10-09
+* **Context:** The Flutter app needed the "Aviation Boarding Pass & Travel FinTech" look from `complete_app_ui_evolution_and_plan.md`. While testing it on a device, the Summary "Fewest payments / Per person" switch appeared dead: the write reached Supabase and sync pulled the right value back, but the screen never refreshed.
+* **Decisions:**
+  - **Presentation only:** `calculateSettlements`, `calculateGroupLedger`, the settle sheet and outbox sync are untouched. No Ops Deck flag, because this restyles existing surfaces rather than adding a feature.
+  - **Widgets (`shared/widgets/`):** `BoardingPassCard`, `TicketScallopDivider`, `StatusStamp`, `FlightProgressRunway`, `LuggageStubTile`, `ReceiptCard`; `SpendDonut` gains a neon glow and `DonutLegendBadge`; `MoneyText` gains `glow`.
+  - **Summary:** twilight banner (trip cover when set), glowing net balance, NOT SETTLED / SETTLED stamp, runway progress card, luggage-stub settle tiles, legend badges under the donut, more space above "Everyone's balance". The simplify switch is shown to the trip owner only (the server RLS allows only the owner to update `trips`).
+  - **Expenses:** category pill runway with teal glow, monospace flight-log day headers ("OCT 14 · DAY 3"), receipt-card rows with a perforated footer, "your share" / "you get back" and a micro barcode. Compact rows are unchanged.
+  - **Passes:** `PassCard` is a boarding pass with a vertical perforation and a QR stub (`qr_flutter`); the pane selector shows counts and a teal selected state; checklist ticks are teal and the strike-through fades in.
+  - **Trip app bar:** a `⋮` menu adds "App settings" (the app-level settings screen, previously unreachable from inside a trip) and live location.
+  - **Live-stream root cause:** `customSelect('SELECT 1').watch()` emits once, because drift drops results equal to the previous one, so trip, group and flag streams went stale after every local write or sync pull. New `watchTables()` re-runs the loader after every write to the listed tables. Regression test `test/data/watch_tables_test.dart`.
+  - **CI hygiene:** `schema_migration_test` fixture gained the `members` table that the v3 migration needs; three files that failed `dart format --set-exit-if-changed` were formatted.
+* **Trade-offs Accepted:**
+  - The mockup's "Smart Debt Simplification" switch is still the Fewest / Per person segmented control (tests depend on it).
+  - Non-owner admins no longer see the simplify control on Summary; letting admins change it needs a server policy change that is not part of this release.
+  - `watchTables` reloads on any write to the listed tables, which can reload slightly more often than before.
+* **Release Cut:** version bumped to `3.54.0` via `npm run release:minor`.
+
+## 287. Native Superadmin Portal, Growth/Spend Analytics Port and Trips Card Stack (Flutter)
+
+* **Date:** 2026-10-09
+* **Context:** A superadmin signing in from the Flutter app was handed to the web Ops Deck in a browser. The user asked for the portal inside the app, the growth panels and spend analytics ported, and a Tinder-style card stack as a second view of the Trips home.
+* **Decisions:**
+  - **Portal in the app:** the Superadmin login (admin mode) now lands on a native portal: Overview, Bug Ledger, Users, Trips, Flags and a More hub (Analytics, Features, Audit, Controls, Tools). It calls the same Supabase tables and RPCs as the web Ops Deck (`bugs`, `features`, `profiles`, `trips`, `security_audit_logs`, `get_app_config`/`set_app_config`, `set_feature_flag_override`, `broadcast_notification`, `delete_user`, `purge_*`, `admin_*` analytics RPCs). Access is enforced by the server (RLS and SECURITY DEFINER functions); the app adds no checks. A top-bar button still opens the web Ops Deck with the session for what is not ported.
+  - **No Ops Deck flag for the portal:** it is reachable only after the Superadmin login, so it is not customer-facing.
+  - **Flags grouped by consumer pack** (Core, Trip, Travel, Pro, Labs, Ops, plus "Other"). `scripts/export-golden-fixtures.mjs` now also exports each flag's label, pack and description and the pack titles/taglines into `flag_defaults.g.dart`, so the portal reads them from the same registry as the web.
+  - **Analytics port:** `ops_growth_metrics.dart` ports `src/utils/opsGrowthMetrics.ts`; `ops_analytics.dart` ports the spend, lifecycle and engagement figures of `AdminAnalyticsPage.tsx`. Pure functions over one read of every trip, member and expense (paged 1000 rows at a time; the web read stops at 1000). Unit-tested against a hand-built fleet (`test/support/fleet_fixture.dart`). UPI-saved and recycle-bin usage rows are left out because that data is not on the server.
+  - **Signup source:** `profiles.signup_source` is jsonb on current databases; the user list parses `utm_source` instead of casting to String (the cast would have thrown).
+  - **Trips card stack:** new flag `enableTripCardStack` (Trip pack, default ON). A list / cards switch in the Trips header (choice kept in SharedPreferences, list is the default). The stack shows every trip in any state, archived ones at the back: swipe right or tap to open, swipe left or Skip to send to the back, long-press for Open / Archive / Delete (owners). Cards use the trip cover or a destination photo from the Wikipedia resolver (whole destination text, then its first place); the page background is the top card's photo, blurred.
+  - **Stale live streams fix (from 3.54.0) follow-up:** none needed; `watchTables` stays.
+* **Trade-offs Accepted:**
+  - Still web-only: the landing cover gallery, brand keyword tagging, the fleet financial integrity scanner, backup and demo data, flag presets and per-pack bulk arm/disarm.
+  - The card-stack backdrop covers the area under the app bar, not the app bar itself.
+  - Cards without a destination or cover show a tinted gradient.
+  - Skip is a no-op for a single trip.
+* **Release Cut:** version bumped to `3.55.0` via `npm run release:minor`.
+
+
+## 288. Boarding-Gate Login, Departures Card Stack and Runway Slider (Flutter)
+* **Context:** The first screen and the Trips home still looked like plain forms. A superadmin session could also be restored at cold start, and a few Summary / Notes / Trip bugs were found on device.
+* **Decision:**
+  - **Login:** boarding-gate sign-in (photo backdrop, scalloped sheet, gate-code field, Staff entry). Always on for dev/staging; production follows the existing `boardingPassLogin` flag.
+  - **Departures:** the card view (flag `enableTripCardStack`) is full-bleed under the status bar, titled "Departures" with a trip-count line, centred filter pills, and a runway slider (slide right = New Trip, left = Join; labels also tappable). Supersedes the swipe-right-to-open rule of ADR 287: left and right swipes now only flip through the deck; a tap opens a trip; long-press keeps the menu.
+  - **Create Trip:** destination first; the trip name is suggested from it until the traveler types their own.
+  - **Security:** superadmin sessions are dropped at cold start and the known superadmin ids are remembered, so the account is only used after a manual sign-in.
+  - **Fixes:** stops edits go through the trip patch (the collab RPC rejected them), checklist strikethrough only when done, trip-level SETTLED stamp, superadmin treated as trip admin.
+* **Trade-offs Accepted:** Playfair Display (SIL OFL) is bundled for these two screens only; the spend bar shows days elapsed since there is no budget.
+* **Release Cut:** version bumped to `3.56.0` via `npm run release:minor`.
+
+---
+
+## Flutter v3.57.0: notes popup, group spend and editing, Settings list, Summary polish
+* **Context:** On-device review of the Flutter app asked for a real new-note form, group-wise spend, editable groups, an overlap fix on the checklist ring, a WhatsApp-style Settings, and a more professional Summary with a clearer Settlement Pass. Offline launch also needed a bounded wait.
+* **Decision:**
+  - **New note:** a title + body sheet replaces the title-only prompt; an empty title falls back to the first body line.
+  - **Groups:** tapping a group lists its members in a popup; Edit changes name and members; fewer than 2 members dissolves the group with a message (removing a trip member already did).
+  - **Group spend:** the Summary "Who paid" card gets a Members / Groups switch showing Paid and Share per group (`enableGroupSpend`, Trip pack, default ON).
+  - **Checklist:** percentage inside the ring, the count beside it; optional per-category bars (`enableChecklistCategoryProgress`).
+  - **Settings:** a flat list with a profile header and one page per category; sign out and version at the bottom; optional search (`enableSettingsSearch`). The old long page and desktop two-pane are replaced outright, not flagged.
+  - **Summary:** the Settlement Pass tile is simpler (From to To, amount, one Settle button, "You pay" / "Pays you" chips), your payments sort first, sections show a one-line summary and animate; replaces the old layout outright. New flagged extras: Settle all (`enableSettleAll`), share summary picture (`enableShareSummaryImage`), day-by-day (`enableDailyTimeline`), trip budget (`enableTripBudget`).
+  - **Offline launch:** the superadmin check at cold start gives up after 3 seconds and keeps the session.
+* **Trade-offs Accepted:** The trip budget is kept on the device (SharedPreferences), not synced: a shared budget needs a trip column, a Supabase migration and a sync change, and the web app has no budget either. Settings and Summary are replaced without a flag, so the old layouts cannot be restored from the Ops Deck.
+* **Release Cut:** version bumped to `3.57.0` via `npm run release:minor`; six flags added (112 in total).
+
+---
+
+## Flutter v3.58.0: trip list and trip screen UX upgrades
+* **Context:** After the v3.57.0 on-device review, a list of UI/UX upgrades for the Trips list and the screens inside a trip was approved, plus a request that every member can switch settlement between group and person view.
+* **Decision:** Eight flagged additions, all in the Trip pack and default ON (120 flags in total): `enableTripListMoney`, `enableTripListSections`, `enableTripHeaderStrip`, `enableQuickAddSpeedDial`, `enableSummaryNextAction`, `enableNotesQuickCapture`, `enableCoachHints`, `enableSettlementViewSwitch`.
+  - **Trip cards:** avatars plus "You're owed / You owe / Settled up", computed with the same settlement maths as the Summary (`trip_list_money.dart`).
+  - **Sections:** with the All filter, trips are ordered Happening now, Upcoming, Past; the chosen sort holds inside each group.
+  - **Add expense:** the button offers Quick add (previously buried in the Expenses menu) or Full form.
+  - **Settlement view:** a per-viewer Group / Person switch on Who pays whom; Person view recomputes the same debts without groups. It is view state only, so balances and the trip's Fewest payments setting are untouched.
+* **Trade-offs Accepted:** Not built: Members "last active" and drag-into-groups, quick Settle on chat cards, per-trip accent from the cover photo (needs a palette library), due dates and pinned notes (data-model changes). The small avatars are hidden from semantics because their initials fail the contrast check at that size. Existing ledger tests now scroll before tapping Settle because the Next action banner pushes the list down.
+* **Release Cut:** version bumped to `3.58.0` via `npm run release:minor`.
+
+---
+
+## Flutter v3.59.0: compact trips list, Plan and suggestions, one Groups / People switch, back navigation
+* **Context:** On-device review found duplicate switches on the Summary (Who paid had its own Members / Groups switch next to the settlement Group / Person view), a long analytics section with no guidance, a tall and cluttered Trips list, and a back gesture that skipped the page you came from.
+* **Decision:**
+  - **Trips list:** compact rows (thumbnail, name, place and dates, status pill, money position, avatars) and a larger hero card for the trip happening now; colour now reflects state instead of a random pastel; the old tall `TripCard` and its overflow menu are removed (delete moved to the long-press menu). Pinned section headers with counts (Past can fold). Search became a top-bar icon. A one-line overview across trips behind `enableTripsOverview` (Trip pack, default ON, 122 flags in total).
+  - **Summary:** one Groups / People switch at the top drives Who pays whom and Who paid (the second switch is gone). Trip numbers now opens with a Plan and suggestions card: budget pace, a daily allowance and up to three rule-based tips from the trip's own numbers (`enableTripSuggestions`, Trip pack, default ON; pure logic in `summary_features.dart`).
+  - **Trip strip:** member avatars removed from the strip under the top bar (status and dates only).
+  - **Back navigation:** Settings, Balances and Activity (the shared home-body back rule) and the trip screen now go back one page when something is underneath, and to Trips only as a last resort. Fixes Settings opened from a trip landing on Trips instead of the trip.
+* **Trade-offs Accepted:** The notification tap still replaces the stack (`go`): pushing a second trip shell over an open trip broke the trip page, so back from a trip opened that way still lands on Trips. Swipe-left pin was not built (needs saved state). Settings and Summary remain replaced outright, not flagged. The pinned section headers are flat slivers because a pinned header inside `SliverMainAxisGroup` fails layout on this Flutter version.
+* **Release Cut:** version bumped to `3.59.0` via `npm run release:minor`.
+
+---
+
+## Flutter v3.60.0: photo tiles, in-trip upgrades, ten polish features
+* **Context:** On-device review asked for photo tiles on the Trips list, a notification back-navigation fix, and a batch of UI/UX upgrades that make the app feel professional, smooth and streamlined.
+* **Decision:** Trip-pack flags, all default ON (142 flags in total).
+  - **Trips list:** square destination-photo tiles with a wide hero for the trip happening now and a Grid / List switch (`enableTripGridTiles`); pinned trips (`enableTripPins`, device-only); search that also finds expenses and notes (`enableGlobalSearch`); a first-run tour and a sample trip (`enableFirstRunTour`); an "Updated" caption with pull to refresh (`enableLastSyncedCaption`).
+  - **Inside a trip:** a cover photo band with a saved/syncing line (`enableTripCoverHeader`, `enableSyncLine`), previous/next trip arrows and strip swipe (`enableTripSwitcher`), an accent colour taken from the photo (`enableTripAccent`), Today card and wrap-up prompt (`enableTodayCard`, `enableCloseoutPrompt`), Plan and suggestions, spend ring (`enableSpendRing`), receipt gallery (`enableReceiptGallery`), Collapse Trip numbers (`enableSummaryCollapse`).
+  - **Money entry and feedback:** amount keypad (`enableAmountKeypad`), smart defaults (`enableSmartExpenseDefaults`), Confirm on notifications (`enableNotificationActions`), notification day groups, sound feedback (`enableFeedbackPack`), Reduce motion (`enableReduceMotion`), odometer rolling of the hero amount.
+  - **Internals:** one `myTripNet` for a person's position everywhere; a disk photo cache keyed without the query string (signed receipt URLs); one shared section-label style; photos use `CachedPhotoProvider` instead of `Image.network`.
+  - **Fix:** a notification tapped with no trip open is pushed (back returns to the list); with a trip already open it switches in place, because a second trip shell on top of an open one breaks the page.
+* **Trade-offs Accepted:** The sample trip is a normal trip, so it syncs when the account does. The trip accent and pins are cosmetic and device-only. The amount keypad inserts `*` and `/` because the calculator does not read the multiplication and division signs. Several flags are read only after they have resolved (tour, collapse) so a loading flag never counts as permission.
+* **Release Cut:** version bumped to `3.60.0` via `npm run release:minor`.
+
+---
+
+## Flutter v3.61.0: Trip numbers tabs, offline feedback, shortcuts and ten more polish features
+* **Context:** On-device review: the Summary's Trip numbers was too long and had a duplicate Groups/People switch; bug reports and suggestions failed offline.
+* **Decision:** Trip-pack flags, all default ON (151 in total): `enableSettledCelebration`, `enableSettleRounding`, `enableAppShortcuts`, `enableExpenseHistory`, `enablePendingDots`, `enableTripTemplates`, `enableSummaryTwoPane`, `enableInviteCard`, `enableOfflineFeedback`; `enableExpenseQuickFilterChips` moved Pro to Trip and default ON.
+  - **Trip numbers:** headline strip plus Categories / People / Days / Details tabs; the top Groups/Members switch is removed, the one beside Who paid stays.
+  - **Offline feedback:** bug reports and suggestions are queued on the device (SharedPreferences) and flushed on reconnect/resume, dropped after 5 failed tries.
+  - **Shortcuts:** Android static shortcuts open `com.triptracker.app://shortcut/...`; the app picks the latest trip (active, else next, else most recent).
+  - **Accessibility:** audit tests for the new screens; fixed unlabeled trip arrows, 48 px targets, one contrast miss, a 200% text overflow.
+* **Trade-offs Accepted:** Shortcuts are Android only. The queued feedback is device-only until sent.
+* **Release Cut:** version bumped to `3.61.0` via `npm run release:minor`.
+
+---
+
+## Flutter v3.62.0: personal expenses, top-bar trip switcher, undo payments, saved filters
+* **Context:** A traveller needs to keep an expense that is only theirs out of the shared calculation; the previous/next arrows crowded the Summary strip.
+* **Decision:** Trip-pack flags, all default ON (154 in total): `enableExpenseExclusion`, `enableUndoSettlement`, `enableSavedFilters`; `enableTripSwitcher` now means a trip list opened from the top-bar title.
+  - **Exclusion:** `Expense.excludeFromTotals` is skipped by totals, categories, days, spend per person, insights and settlement. It rides in the server's existing `itemized_config` JSON (no migration); a pull strips it back out.
+  - **Swipe:** right toggles Personal (edit stays in the detail sheet); left still deletes.
+  - **Saved filters:** device-only, eight per trip, dates not saved.
+* **Trade-offs Accepted:** The web app does not know the mark and still counts those expenses. Other members still see the row and amount.
+* **Release Cut:** version bumped to `3.62.0` via `npm run release:minor`.
+
+---
+
+## Flutter v3.63.0: clean trip page and ten UI/UX enhancements
+* **Context:** The photo banner and status row under the trip name made the page heavy; the Who paid list showed an unexplained Share figure.
+* **Decision:** `enableTripCoverHeader` and `enableTripHeaderStrip` moved to Labs, default OFF (code kept); sync state became a top-bar icon shown only when needed. Nine new Trip-pack flags, all default ON (163 in total): `enableCleanTopBar`, `enableContextFab`, `enableSummaryFocus`, `enableJumpToToday`, `enableQuickAmounts`, `enableCoachEmptyStates`, `enableSkeletonLoaders`, `enableHighContrast`, `enableHapticsSetting`.
+  - **Who paid:** rows say Their part and a legend explains the bar (paid) versus their cut of the costs.
+  - **Tests:** the harness starts with `enableSummaryFocus` off so older Summary tests keep reading Trip numbers; `tripMenu()` opens the More menu.
+* **Trade-offs Accepted:** Day totals and sticky day headers already existed, so only Jump to today was added. Special full-screen sheets (passport, wrapped) keep their own look.
+* **Release Cut:** version bumped to `3.63.0` via `npm run release:minor`.
+
+---
+
+## Flutter v3.64.0: 1-Tap UPI settlement sheet, WhatsApp-style chat timeline, layover connection buffers, and receipt photo viewer
+* **Context:** Mobile users required seamless 1-tap peer-to-peer UPI settlements matching web capabilities, persistence and modern WhatsApp-style messaging experience in trip chat, multi-leg travel pass transition with tight connection warnings, and high-fidelity receipt photo inspection.
+* **Decision:** Reused web UPI deep-link architectures and app schemes (`tez://`, `phonepe://`, `paytmmp://`, `cred://`, `bhim://`, `upi://`) inside Flutter:
+  - **1-Tap UPI Settlement (`UpiPaymentSheet`):** Added native bottom sheet featuring a 5-app quick launcher grid, dynamic QR code (`QrImageView`) for on-screen scanning, 1-tap UPI ID and payment URI clipboard copy, and "I Have Paid" instant settlement recording in the ledger.
+  - **WhatsApp Chat Experience:** Added WhatsApp-style sticky date divider capsules ("Today", "Yesterday", "EEE, d MMM y") and rich interactive event cards for expenses and settlements with 1-tap navigation to expense details.
+  - **Multi-Leg Travel Passes & Layover Warnings:** Automated progression from completed Leg 1 to upcoming Leg 2; calculated connection duration with prominent warnings (`⚠️ Tight Connection · Xh Ym at <Location>` under 90 minutes).
+  - **Budget Pace / Burn Rate:** Added ledger burn rate indicator calculating elapsed trip days, average daily burn, and projected total.
+  - **Receipt Photo Viewer:** Integrated interactive full-screen preview dialog with pinch-to-zoom and dark backdrop when tapping receipt thumbnails.
+* **Trade-offs Accepted:** UPI deep-link launching relies on installed apps on the Android/iOS device; falls back gracefully to copying the UPI ID and showing an inline snackbar if the selected app is absent.
+* **Release Cut:** version bumped to `3.64.0` via `npm run release:minor`.
+
+---
+
+## Flutter v3.65.0: You paid vs your share, balance explainer, saved-offline toast
+* **Context:** The Balances tab showed To receive and To pay tiles under a hero that already said You owe / You're owed. One tile was always zero and it read like a bug.
+* **Decision:** Replace the pair with one strip (You paid, Your share, Difference) behind `enableYouPaidVsShare`; tapping it opens a sheet of the expenses where paid differs from share (`enableBalanceExplainer`); saving offline shows a saved-on-this-phone message (`enableSavedOfflineToast`). All Trip pack, default ON. Figures come from `memberSpend` / `myBalanceLines` and exclude settlements, so the strip says "before settlements" and the difference is not labelled Balance.
+* **Test fix:** `upi_and_layover_enhancements_test.dart` disabled haptics in its bare MaterialApp (the haptic await never completed), fixing the failing UPI sheet test; no app code changed.
+* **Release Cut:** version bumped to `3.65.0` via `npm run release:minor`.
+
+---
+
+## Flutter v3.66.0: tidy Expenses, Notes and Members, edit and delete passes, analytics switch
+* **Context:** The Expenses rows were decorative boarding-receipt cards, Notes had no pin or delete, Members were tinted tiles, passes could only be added, and the Groups / People switch in the Who paid card also changed Who pays whom.
+* **Decision:** Four Trip-pack flags, default ON: `enableTidyExpenses` (flat rows, calm day header; share and get-back on separate lines), `enableTidyNotes` (cards, pin, delete with Undo, edited time, count), `enableTidyMembers` (role and balance chips, search past 8 members; the balance chip sits under the name so 200% text does not overflow), `enablePassEditDelete` (menu on each pass; edit keeps fields the form does not show; delete confirms and offers Undo). The Who paid switch now has its own state and no longer drives the settlement list (bug fix, no flag).
+* **Trade-offs Accepted:** Passes are written as whole lists like notes and checklist, so a concurrent edit by someone else can overwrite; no long-press shortcut on passes.
+* **Release Cut:** version bumped to `3.66.0` via `npm run release:minor`.
+
+---
+
+## Flutter v3.66.1: one Add button on Notes and Checklist, readable day totals on Expenses
+* **Context:** With `enableContextFab` ON (default since 3.63) the Notes and Checklist panes showed the floating Add button and the in-page Add note / Add item button. The tidy day header from 3.66.0 left the day total as small text on the page background.
+* **Decision:** The in-page Add buttons (and the empty-state action) are hidden while the floating button is on; they return when `enableContextFab` is OFF. The checklist list gets bottom padding clear of the floating button. With `enableTidyExpenses` ON the day header is a bordered card row: day label, "N expenses", an 18 px bold total and a chevron.
+* **Release Cut:** version bumped to `3.66.1` via `npm run release:patch`.
+
+---
+
+## Flutter v3.67.0: one-page Settings, trip header actions, Edit Trip, Summary upgrades
+* **Context:** The Flutter Settings was a hub of drill-in pages, the trip header had only a three-dot menu, there was no way to edit a trip's name, destination or dates, and the Summary lacked the web's attention chips, Remind, Custom amount and At a Glance numbers.
+* **Decision:** Settings is one scrolling page of cards (This Trip, Appearance, Notifications, Data, Help & About, Account) with a real three-level haptics setting (`HapticsLevel`: all / important / off, migrated from the old on/off pref). New screens: Storage and Data, Archived Trips; Seed Demo Trip restores a built-in sample backup. Long-press on the trip name opens a trip actions sheet; Edit Trip Details is a popup backed by a new `TripRepository.updateTripDetails` (queued as a plain `trips` column update, owner only). The Summary gets chips, a close-out banner, How it works, Custom amount, Remind (share sheet only, nothing sent automatically) and an At a Glance grid. New flags (Trip pack, default ON): `enableSettingsDataHub`, `enableTripHeaderActions`, `enableSummaryUpgrades`; Geotag, Data saver and Seed Demo reuse `enableGeotagging`, `enableDataSaverMode`, `enableDemoSeeding`.
+* **Trade-offs Accepted:** The Geotag and Data saver switches only store a per-device preference; nothing reads them yet. Remind has no server push. The header strip now shows by default through the new flag. Several Summary tests use a tall screen or turn the new flag off because the list is longer.
+* **Release Cut:** version bumped to `3.67.0` via `npm run release:minor`.
+
+## Flutter v3.68.0: clean header, pass multi-select, filters page, mini pass, settlement pass flip, voice
+* **Context:** The v3.67.0 header looked busy (title bar plus a photo strip), Edit Trip was only reachable by long-press, passes could only be deleted one by one, the Flutter filters and Summary did not match the web, the mic in Quick Add never worked (the speech gateway was a stub), and You paid / Your share sat in a separate card under the settlement pass.
+* **Decision:** One compact header (name, chevron, one muted meta line with a status dot; tap opens the actions sheet, Edit Trip also in the top-bar menu, disabled with a reason for non-owners). Pass multi-select under `enablePassEditDelete`. Full-height filters page in web order with Clear all and a live count. A pinned mini pass on Summary once the balance card scrolls away. The settlement pass flips (`FlipCard`) to show You paid, Your share and Difference and replaces the old card. Voice uses the real `speech_to_text` engine behind the existing gateway, with a Voice pill that opens Quick Add already listening. No new flags: all reuse `enableTripHeaderActions`, `enableSummaryUpgrades`, `enableYouPaidVsShare`, `enablePassEditDelete` and `enableVoiceInput`.
+* **Trade-offs Accepted:** The cover-photo strip is no longer shown with header actions on (the old strip flag still works with actions off). Android speech needs the phone's Google speech service and a connection. New dependency and permissions: `speech_to_text`, `RECORD_AUDIO`, iOS microphone and speech usage texts.
+* **Release Cut:** version bumped to `3.68.0` via `npm run release:minor`.
+
+## Flutter v3.68.1: group settlements are recorded under the person settling (BUG-293)
+* **Context:** A settlement with a merged group was recorded under the group member with the most extreme balance (`pickRepresentative`). The expenses insert policy (0080) only accepts a non-admin's row when they are the payer or the creditor. After a partial payment the representative could flip to a groupmate, so the next settle failed with `new row violates row-level security policy for table "expenses"`.
+* **Decision:** `settlementPartiesForRecorder` (web `src/utils/settlement.ts`, Flutter `settlement.dart`) records the signed-in member for their own group's side. It is used by every web settle path (Settle Up, custom amount, UPI) and by Flutter's settle sheet and Settle all via `planSettlement`. Membership is first-group-wins, the same rule `buildSettlementNodes` uses.
+* **Trade-offs Accepted:**
+  - Client-side fix only. The insert policy stays strict, so an organizer outside the group still records under the representative.
+  - Direct (non-simplified) transfers have no group sides and are unchanged.
+* **Release Cut:** version bumped to `3.68.1` via `npm run release:patch`.
+
+## Flutter v3.68.2: voice add expense fixed, multi-destination Edit Trip
+* **Context:** Voice add did not work on the user's phone: the default Android recognition service there is a text-to-speech stub, the Flutter parser ignored spoken numbers, and the sheet gave almost no feedback. Edit Trip had a single destination box.
+* **Decision:** `speech_to_text` initialises with the intent lookup so the Google recognizer is used, picks en_IN / any English / system locale from what the engine offers, and errors map to plain messages with Try again. `normalizeSpokenNumbers` turns English and Hinglish number words into digits before the existing parser runs (only in Quick Add, so web parity fixtures are untouched). Edit Trip has one box per destination, saved comma-separated in the existing `destination` string. No new flags.
+* **Trade-offs Accepted:** Speech still needs Google speech services and usually a connection. A destination that itself contains a comma splits into two boxes when edited.
+* **Release Cut:** version bumped to `3.68.2` via `npm run release:patch` (3.68.1 was taken by the settlement fix on the remote).
+
+## v3.68.3: settled is the same in Fewest payments and Per person
+* **Context:** After settling under Fewest payments, switching to Per person showed NOT SETTLED and an outstanding amount while every real balance was zero. A recorded settlement only cancels the exact pair it names, so when it was paid to a different person the pair debts stayed.
+* **Decision:** In `calculateSettlements` (TS and Dart), Per person returns no transfers when every net balance is square, and, for trips without groups, falls back to a list built from the real balances when the pair list does not add up to them. The Flutter pass, mini pass and ended-trip banner take "outstanding" from the real balances, so they read the same in both views. The Members page already used net balances. Also: header meta line gets an explicit body font and spacing; the yellow close-out card is hidden once settled; settlement History rows show Confirm received to the recipient (`enableSettlementConfirmation`).
+* **Trade-offs Accepted:** Per person after a partial payment to a different person can still list extra opposite payments (that is how pair netting works); the pass total is unaffected. Grouped trips only get the all-square rule.
+* **Release Cut:** version bumped to `3.68.3` via `npm run release:patch`.
+
+## v3.68.4: a settled group settles its members in Per person
+* **Context:** v3.68.3 treated "settled" per member. On trips with groups, a group can be square as one party while the people inside it still hold offsetting balances (one member paid for the whole group), so Per person still listed payments and the Summary banner asked the user to pay.
+* **Decision:** `calculateSettlements` (TS and Dart) now checks Per person at the settlement-node level (a group is one node): all nodes square means no transfers, and a pair list whose per-node totals do not match the real node balances falls back to the node-level match. Fewest payments is unchanged.
+* **Trade-offs Accepted:** Per person after a partial payment can still list extra opposite payments (pair netting); the settled state is now consistent across both views.
+* **Release Cut:** version bumped to `3.68.4` via `npm run release:patch`.
+
+## v3.68.5: Members list agrees with a settled group
+* **Context:** After v3.68.4 the Summary pass and Per person were settled for a settled group, but the Members list still showed each member's own net balance, so members inside the group showed offsetting owed / owes amounts.
+* **Decision:** `memberBalancesForDisplay` (TS and Dart) zeroes the displayed balance of members of a group whose settlement node is square. Only display changes; the real balances and settlement maths are untouched. Members of a group that is not square show their own balances as before.
+* **Trade-offs Accepted:** Inside a settled group the members' offsetting amounts are no longer visible on Members.
+* **Release Cut:** version bumped to `3.68.5` via `npm run release:patch`.
+
 
 ## 257. Move production hosting from AWS EC2 to Oracle Cloud (OCI) (v3.43.12)
 * **Context:** Production web hosting for `trip-tracker.blackmaroon.in` moves from an AWS EC2 host to an OCI Ubuntu 24.04 instance (140.245.196.175) that already runs nginx and certbot for other sites.
@@ -4514,3 +5237,11 @@ This document logs all meaningful technical decisions, library choices, design p
   - Client-side fix only. The insert policy stays strict, so an organizer outside the group still records under the representative.
   - Direct (non-simplified) transfers have no group sides and are unchanged.
 * **Release Cut:** version bumped to `3.43.13` via `npm run release:patch`.
+
+## v3.69.0: Flutter merged into main; automatic Android APK from main
+* **Context:** The Flutter app lived on the long-running `flutter` branch (71 commits ahead of `main`, 4 behind). The owner wants one branch to maintain: a push to `main` should update the website and the Flutter app, with no data loss and no downtime. Web and Flutter already share one Supabase project (`cdpdlzjwmffdtyzvbtpg`), and the only path that publishes anything on a push to `main` is the web deploy (`deploy-oci.yml`, plus Pages).
+* **Decision:** (1) Safety tags `pre-flutter-merge` (main) and `flutter-pre-merge` (flutter) before anything moves. (2) Make Flutter CI green first: the format check had failed on every flutter push (9 unformatted files) and `flutter analyze` had 7 findings. (3) Merge `main` into `flutter` locally, resolving 7 conflicts (version, changelog, decisions, docs, tracker; BUG-293 had been logged on both branches for the same bug) and verifying the merged tree, then merge `flutter` into `main` through a pull request with a merge commit so history is kept and the merge reverts as one unit. (4) Add `.github/workflows/android-apk.yml`: after a green `Flutter CI` run on `main`, build the dev-flavor APK, sign it with the stable sideload keystore (the same key as the local debug builds, so phones update in place and Google sign-in keeps working) and publish it as the `android-latest` pre-release. Secrets: `FLUTTER_DEV_ENV_JSON_B64`, `ANDROID_SIDELOAD_KEYSTORE_B64`.
+* **Trade-offs Accepted:** A native app cannot update from a push to `main` the way a site does: a phone still has to install the new APK (store apps still go through the tag pipeline in `codemagic.yaml`, which has never run). The sideload APK is dev-flavor and debug-key signed, so it is not a store artifact. The Flutter prod flavor shares `com.triptracker.app` with the Capacitor store app, so a store release of Flutter updates installed Capacitor apps in place. Merged web code also reaches Capacitor installs through the live-update bundle.
+* **Rollback:** revert the merge commit on `main` (or run the OCI deploy workflow on the `pre-flutter-merge` tag). The deploy never touches data; the new migrations 0111 to 0116 only add things.
+* **Release Cut:** version bumped to `3.69.0` via `npm run release:minor`.
+

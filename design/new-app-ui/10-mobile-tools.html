@@ -1,0 +1,131 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Horizon · 10 Mobile — Trip tools &amp; developer</title>
+<link rel="stylesheet" href="kit.css"><script src="kit.js"></script>
+<style>.w60{color:rgba(255,255,255,.6)}
+.tool{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:var(--r-md);color:#fff;min-height:118px;position:relative;overflow:hidden}
+.tool .t{font:700 14.5px/1.2 var(--display)}.tool .s{font:400 11.5px/1.3 var(--body);opacity:.7}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.prev td{padding:9px 10px;font-size:13px}.prev th{padding:8px 10px}
+.ov{display:flex;gap:4px;background:var(--card2);border-radius:99px;padding:3px}
+.ov span{font:600 11px var(--body);padding:6px 10px;border-radius:99px;color:var(--ink2);white-space:nowrap}
+.ov span.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.ov span.f1{background:var(--pos-soft);color:var(--pos)}.ov span.f0{background:var(--neg-soft);color:var(--neg)}
+.code{font:500 13px var(--mono);color:var(--ink)}</style></head><body><div class="board">
+<span class="tag">10 · Mobile · Trip tools &amp; developer</span>
+<h1>Trip tools, import/export and flag overrides</h1>
+<p class="lede">Gap-fill board. Three Flutter surfaces had no Horizon mockup yet: <b>trip_tools_sheet</b>, the Splitwise/backup import flow, and <b>flag_overrides_screen</b>. Same tokens as boards 01–09. Delight launchers reuse the four context surfaces (Night Sky, Ember, Slate, Dusk) as mini tiles, so each tool reads as a doorway into its own screen. Every tile only appears when its feature flag is on.</p>
+
+<h2>Trip tools sheet</h2>
+<p class="sub">Opened from the trip header “•••”. Top half: delight launchers as a 2×2 bento of mini hero tiles (ref: Compact Data Views + Dark Mode Done Right). Bottom half: plain utility rows. Flag-off tiles disappear and the grid reflows to 1 or 3 tiles; with none left, the bento section hides entirely.</p>
+<div class="grid">
+<div class="cell" data-n="01" data-cap="Trip tools" data-sub="iOS · light · all flags on">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="hrow sp" style="height:56px"><span class="icon-btn sm"><i data-i="cl"></i></span><div class="h-sm">Goa Weekend</div><span class="icon-btn sm"><i data-i="dots"></i></span></div>
+ <div class="hero night" style="height:150px"><div class="dots"></div><div class="eyebrow w60">Day 3 of 5</div><div class="h-md mt8">Goa Weekend</div></div>
+</div><div class="dim"></div>
+<div class="sheet"><div class="grab"></div>
+ <div class="hrow sp"><div class="h">Trip tools</div><span class="icon-btn sm" style="box-shadow:none;background:var(--card2)"><i data-i="x" data-c="s18"></i></span></div>
+ <div class="tg mt16">
+  <div class="tool" style="background:var(--dusk)"><i data-i="spark"></i><div class="grow"></div><div><div class="t">Trip Wrapped</div><div class="s">Your trip in 6 cards</div></div></div>
+  <div class="tool" style="background:var(--night)"><i data-i="book"></i><div class="grow"></div><div><div class="t">Traveler Passport</div><div class="s">4 stamps · 1 new</div></div></div>
+  <div class="tool" style="background:var(--ember)"><i data-i="trophy"></i><div class="grow"></div><div><div class="t">Achievements</div><div class="s">7 of 18 unlocked</div></div></div>
+  <div class="tool" style="background:var(--slate)"><i data-i="cal"></i><div class="grow"></div><div><div class="t">Add to calendar</div><div class="s">.ics · 5 days</div></div></div>
+ </div>
+ <div class="sect">Export and import</div>
+ <div class="list" style="box-shadow:none;border:1px solid var(--line)">
+  <div class="li"><span class="tile sm c-green"><i data-i="download"></i></span><div class="grow"><div class="tt">Export CSV</div><div class="ss">Spreadsheet of all expenses</div></div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div>
+  <div class="li"><span class="tile sm c-stay"><i data-i="archive"></i></span><div class="grow"><div class="tt">Export backup</div><div class="ss">Full trip as JSON</div></div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div>
+  <div class="li"><span class="tile sm c-trans"><i data-i="wifioff"></i></span><div class="grow"><div class="tt">Offline snapshot</div><div class="ss">.triptracker file for no-signal days</div></div><i data-i="cr" data-c="s18" style="color:var(--ink3)"></i></div>
+ </div>
+</div></div></div></div>
+
+<div class="cell" data-n="02" data-cap="Trip tools · scrolled" data-sub="Android · dark · Wrapped flag off">
+<div class="phone android" data-dark="1" data-sb="light"><div class="scr"><div class="body"></div><div class="dim"></div>
+<div class="sheet" style="top:120px"><div class="grab"></div>
+ <div class="h">Trip tools</div>
+ <div class="tg mt16" style="grid-template-columns:1fr 1fr 1fr">
+  <div class="tool" style="background:var(--night);min-height:104px"><i data-i="book"></i><div class="grow"></div><div class="t" style="font-size:13px">Passport</div></div>
+  <div class="tool" style="background:var(--ember);min-height:104px"><i data-i="trophy"></i><div class="grow"></div><div class="t" style="font-size:13px">Badges</div></div>
+  <div class="tool" style="background:var(--slate);min-height:104px"><i data-i="cal"></i><div class="grow"></div><div class="t" style="font-size:13px">Calendar</div></div>
+ </div>
+ <div class="sect">Export</div>
+ <div class="list"><div class="li"><span class="tile sm c-green"><i data-i="download"></i></span><div class="grow tt">Export CSV</div></div><div class="li"><span class="tile sm c-stay"><i data-i="archive"></i></span><div class="grow tt">Export backup</div></div><div class="li"><span class="tile sm c-trans"><i data-i="wifioff"></i></span><div class="grow tt">Offline snapshot</div></div></div>
+ <div class="sect">Import</div>
+ <div class="list"><div class="li"><span class="tile sm c-food"><i data-i="upload"></i></span><div class="grow"><div class="tt">Import backup</div><div class="ss">Merges into this trip</div></div></div><div class="li"><span class="tile sm c-act"><i data-i="swap"></i></span><div class="grow"><div class="tt">Import Splitwise CSV</div><div class="ss">Bring an existing group across</div></div></div></div>
+</div></div></div></div>
+
+<div class="cell"><div class="note"><b>Why a bento, not a list.</b> Today all nine tools are one flat list with emoji labels. Splitting “fun” from “file” work makes the delight features discoverable without burying export. Emoji move out of labels; the tile surface carries the mood instead.<br><br><b>Flag behaviour.</b> 4 tiles → 2×2. 3 → one row of 3 (shown). 2 → one row of 2. 1 → a full-width tile. 0 → section hidden.</div></div>
+</div>
+
+<h2>Import flow</h2>
+<p class="sub">Picking a Splitwise CSV or backup file used to import silently. New: a preview step with member mapping, then a clear result (ref: Helpful Empty Spaces for the result state).</p>
+<div class="grid">
+<div class="cell" data-n="03" data-cap="Import preview" data-sub="iOS · light">
+<div class="phone ios"><div class="scr"><div class="body nodock">
+ <div class="hrow sp" style="height:56px"><span class="t-body prim">Cancel</span><div class="h-sm">Import Splitwise</div><span style="width:48px"></span></div>
+ <div class="card hrow gap12"><span class="tile c-act"><i data-i="note"></i></span><div class="grow"><div class="tt" style="font:600 15px var(--body)">goa-weekend.csv</div><div class="t-xs mt4">42 rows · 4 people · INR</div></div><span class="badge pos"><i data-i="check" data-c="s14"></i>Valid</span></div>
+ <div class="sect">Match people</div>
+ <div class="list">
+  <div class="li"><span class="code grow">Rahul M</span><i data-i="arrr" data-c="s16" style="color:var(--ink3)"></i><span class="avatar sm a1">R</span><span class="tt">Rahul</span></div>
+  <div class="li"><span class="code grow">Aarav S.</span><i data-i="arrr" data-c="s16" style="color:var(--ink3)"></i><span class="avatar sm a2">A</span><span class="tt">Aarav</span></div>
+  <div class="li"><span class="code grow">Meera</span><i data-i="arrr" data-c="s16" style="color:var(--ink3)"></i><span class="avatar sm a3">M</span><span class="tt">Meera</span></div>
+  <div class="li"><span class="code grow">kabir.k</span><i data-i="arrr" data-c="s16" style="color:var(--ink3)"></i><span class="chip sm tint"><i data-i="plus" data-c="s14"></i>Add as new</span></div>
+ </div>
+ <div class="sect">Preview · first 3</div>
+ <div class="card" style="padding:4px 6px"><table class="tbl prev"><tr><th>Date</th><th>What</th><th style="text-align:right">Amount</th></tr>
+  <tr><td>12 Nov</td><td>Beach shack</td><td style="text-align:right" class="amt" >₹3,240</td></tr>
+  <tr><td>12 Nov</td><td>Scooter rent</td><td style="text-align:right" class="amt">₹1,800</td></tr>
+  <tr><td style="border:0">13 Nov</td><td style="border:0">Fort entry</td><td style="text-align:right;border:0" class="amt">₹600</td></tr></table></div>
+ <div style="position:absolute;left:20px;right:20px;bottom:40px"><div class="btn primary block">Import 42 expenses</div><div class="t-xs mt8" style="text-align:center">Duplicates (same date, amount, payer) are skipped</div></div>
+</div></div></div></div>
+
+<div class="cell" data-n="04" data-cap="Import done" data-sub="iOS · light">
+<div class="phone ios"><div class="scr pattern"><div class="body nodock stack" style="align-items:center;justify-content:center;text-align:center">
+ <div class="orb o3" style="width:96px;height:96px"><i data-i="check" data-c="s40"></i></div>
+ <div class="h-lg mt24">39 expenses imported</div>
+ <div class="t-sm mt8" style="max-width:280px">3 duplicates skipped. Kabir was added as a new member and can claim his spot with the invite link.</div>
+ <div class="hrow gap8 mt20"><span class="badge pos">+39 added</span><span class="badge">3 skipped</span><span class="badge prim">+1 member</span></div>
+ <div style="position:absolute;left:20px;right:20px;bottom:40px" class="stack gap10"><div class="btn primary block">View expenses</div><div class="btn ghost block">Share invite with Kabir</div></div>
+</div></div></div></div>
+
+<div class="cell" data-n="05" data-cap="Import error" data-sub="Android · dark">
+<div class="phone android" data-dark="1" data-sb="light"><div class="scr"><div class="body nodock stack" style="align-items:center;justify-content:center;text-align:center">
+ <div class="tile lg" style="background:var(--neg-soft);color:var(--neg);width:84px;height:84px;border-radius:28px"><i data-i="x" data-c="s32"></i></div>
+ <div class="h-lg mt24">Can’t read this file</div>
+ <div class="t-sm mt8" style="max-width:290px">Row 1 has no “Cost” column. Export again from Splitwise using <b>Export as spreadsheet</b>, then try once more.</div>
+ <div style="position:absolute;left:20px;right:20px;bottom:40px" class="stack gap10"><div class="btn primary block">Pick another file</div><div class="btn ghost block">Cancel</div></div>
+</div></div></div></div>
+</div>
+
+<h2>Developer · Flag overrides</h2>
+<p class="sub">Debug-only screen (flag_overrides_screen). Stays plain on purpose, no context surfaces. Each row shows the server value and a three-state pill: <b>Server · On · Off</b>. Overridden rows tint green/red and sort to the top so a forced state is never forgotten.</p>
+<div class="grid">
+<div class="cell" data-n="06" data-cap="Flag overrides" data-sub="iOS · light">
+<div class="phone ios"><div class="scr"><div class="body nodock">
+ <div class="hrow sp" style="height:56px"><span class="icon-btn sm"><i data-i="cl"></i></span><div class="h-sm">Flag overrides</div><span class="t-body neg" style="font-weight:600">Reset all</span></div>
+ <div class="search" style="min-width:0"><i data-i="search" data-c="s18"></i>Search flags</div>
+ <div class="hrow gap8 mt12"><span class="badge warn"><i data-i="flag" data-c="s14"></i>2 overridden</span><span class="t-xs">These stay until you reset them</span></div>
+ <div class="sect">Overridden</div>
+ <div class="list">
+  <div class="li"><div class="grow"><div class="code">enableTripWrapped</div><div class="ss">Server: off</div></div><div class="ov"><span>Server</span><span class="f1">On</span><span>Off</span></div></div>
+  <div class="li"><div class="grow"><div class="code">enableIcsExport</div><div class="ss">Server: on</div></div><div class="ov"><span>Server</span><span>On</span><span class="f0">Off</span></div></div>
+ </div>
+ <div class="sect">All flags · 64</div>
+ <div class="list">
+  <div class="li"><div class="grow"><div class="code">enableAchievements</div><div class="ss">Server: on</div></div><div class="ov"><span class="on">Server</span><span>On</span><span>Off</span></div></div>
+  <div class="li"><div class="grow"><div class="code">enableBiometricAuth</div><div class="ss">Server: on</div></div><div class="ov"><span class="on">Server</span><span>On</span><span>Off</span></div></div>
+  <div class="li"><div class="grow"><div class="code">enableTravelerPassport</div><div class="ss">Server: off</div></div><div class="ov"><span class="on">Server</span><span>On</span><span>Off</span></div></div>
+ </div>
+</div></div></div></div>
+
+<div class="cell" data-n="07" data-cap="Flag overrides · search" data-sub="Android · dark">
+<div class="phone android" data-dark="1" data-sb="light"><div class="scr"><div class="body nodock">
+ <div class="hrow gap14" style="height:60px"><i data-i="arrl"></i><div class="h-md grow" style="font-size:19px">Flag overrides</div><i data-i="refresh"></i></div>
+ <div class="field row focus"><i data-i="search" data-c="s18"></i><span class="v">trav</span></div>
+ <div class="sect">2 results</div>
+ <div class="list">
+  <div class="li"><div class="grow"><div class="code">enableTravelerPassport</div><div class="ss">Server: off</div></div><div class="ov"><span class="on">Server</span><span>On</span><span>Off</span></div></div>
+  <div class="li"><div class="grow"><div class="code">enableLiveTravelStatus</div><div class="ss">Server: on</div></div><div class="ov"><span class="on">Server</span><span>On</span><span>Off</span></div></div>
+ </div>
+</div></div></div></div>
+</div>
+</div></body></html>

@@ -30,7 +30,7 @@ export default defineConfig(({ command }) => ({
   },
   server: {
     watch: {
-      ignored: ['**/graphify-out/**', '**/android/**', '**/ios/**', '**/dist/**'],
+      ignored: ['**/graphify-out/**', '**/android/**', '**/ios/**', '**/dist/**', '**/flutter_app/**'],
     },
   },
   build: {

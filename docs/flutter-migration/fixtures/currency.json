@@ -1,0 +1,140 @@
+{
+  "formatting": [
+    {
+      "currency": "USD",
+      "decimals": 2,
+      "symbol": "$",
+      "formatted_1234_56": "USD1,234.56",
+      "formatted_0": "USD0.00",
+      "moneyNumber": "1,234.56"
+    },
+    {
+      "currency": "EUR",
+      "decimals": 2,
+      "symbol": "€",
+      "formatted_1234_56": "EUR1,234.56",
+      "formatted_0": "EUR0.00",
+      "moneyNumber": "1,234.56"
+    },
+    {
+      "currency": "JPY",
+      "decimals": 0,
+      "symbol": "¥",
+      "formatted_1234_56": "JPY1,235",
+      "formatted_0": "JPY0",
+      "moneyNumber": "1,235"
+    },
+    {
+      "currency": "GBP",
+      "decimals": 2,
+      "symbol": "£",
+      "formatted_1234_56": "GBP1,234.56",
+      "formatted_0": "GBP0.00",
+      "moneyNumber": "1,234.56"
+    },
+    {
+      "currency": "INR",
+      "decimals": 2,
+      "symbol": "₹",
+      "formatted_1234_56": "INR1,234.56",
+      "formatted_0": "INR0.00",
+      "moneyNumber": "1,234.56"
+    },
+    {
+      "currency": "KRW",
+      "decimals": 0,
+      "symbol": "KRW",
+      "formatted_1234_56": "KRW1,235",
+      "formatted_0": "KRW0",
+      "moneyNumber": "1,235"
+    },
+    {
+      "currency": "VND",
+      "decimals": 0,
+      "symbol": "VND",
+      "formatted_1234_56": "VND1,235",
+      "formatted_0": "VND0",
+      "moneyNumber": "1,235"
+    }
+  ],
+  "conversions": [
+    {
+      "from": "USD",
+      "to": "EUR",
+      "amount": 100,
+      "result": {
+        "originalAmount": 100,
+        "originalCurrency": "USD",
+        "targetCurrency": "EUR",
+        "convertedAmount": 92,
+        "rate": 0.92
+      }
+    },
+    {
+      "from": "EUR",
+      "to": "USD",
+      "amount": 85,
+      "result": {
+        "originalAmount": 85,
+        "originalCurrency": "EUR",
+        "targetCurrency": "USD",
+        "convertedAmount": 92.39,
+        "rate": 1.087
+      }
+    },
+    {
+      "from": "USD",
+      "to": "JPY",
+      "amount": 50,
+      "result": {
+        "originalAmount": 50,
+        "originalCurrency": "USD",
+        "targetCurrency": "JPY",
+        "convertedAmount": 7725,
+        "rate": 154.5
+      }
+    }
+  ],
+  "countryMap": [
+    {
+      "countryCode": "US",
+      "currency": "USD"
+    },
+    {
+      "countryCode": "FR",
+      "currency": "EUR"
+    },
+    {
+      "countryCode": "JP",
+      "currency": "JPY"
+    },
+    {
+      "countryCode": "GB",
+      "currency": "GBP"
+    },
+    {
+      "countryCode": "IN",
+      "currency": "INR"
+    },
+    {
+      "countryCode": "KR",
+      "currency": "KRW"
+    },
+    {
+      "countryCode": "VN",
+      "currency": "VND"
+    },
+    {
+      "countryCode": "DE",
+      "currency": "EUR"
+    },
+    {
+      "countryCode": "AU",
+      "currency": "AUD"
+    },
+    {
+      "countryCode": "CH",
+      "currency": "CHF"
+    }
+  ]
+}

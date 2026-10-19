@@ -1,0 +1,46 @@
+{
+  "roles": [
+    {
+      "role": "owner",
+      "canAddExpense": true,
+      "canEditOwnExpense": false,
+      "canEditOthersExpense": false,
+      "canManageTrip": false,
+      "isViewer": false
+    },
+    {
+      "role": "admin",
+      "canAddExpense": true,
+      "canEditOwnExpense": false,
+      "canEditOthersExpense": false,
+      "canManageTrip": false,
+      "isViewer": false
+    },
+    {
+      "role": "member",
+      "canAddExpense": true,
+      "canEditOwnExpense": false,
+      "canEditOthersExpense": false,
+      "canManageTrip": false,
+      "isViewer": false
+    },
+    {
+      "role": "viewer",
+      "canAddExpense": true,
+      "canEditOwnExpense": false,
+      "canEditOthersExpense": false,
+      "canManageTrip": false,
+      "isViewer": false
+    }
+  ],
+  "split_copy": {
+    "input": {
+      "splitMode": "equal",
+      "splitData": {},
+      "excludedMemberIds": [
+        "m5"
+      ]
+    },
+    "output": null
+  }
+}

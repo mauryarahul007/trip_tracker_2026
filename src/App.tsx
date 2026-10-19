@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState, useMemo, useCallba
 import { flushSync } from 'react-dom';
 import { useTripStore, getTripNotificationRecipients, collectDirtyExpenseIds } from './store/tripStore';
 import { useAuthStore } from './store/authStore';
-import { calculateSettlements, summarizeSettlement } from './utils/settlement';
+import { calculateSettlements, summarizeSettlement, memberBalancesForDisplay } from './utils/settlement';
 import type { Expense, Trip, Group, Member, TripStop, AppNotification } from './types';
 import { exportTripToCSV } from './utils/csvExport';
 import { fetchPlaceCoverImage } from './services/placeImageService';
@@ -1522,7 +1522,8 @@ export default function App() {
     name: string,
     id: string | null,
     linkedUserId?: string | null,
-    dates?: { joinDate?: string | null; leaveDate?: string | null }
+    dates?: { joinDate?: string | null; leaveDate?: string | null },
+    email?: string | null
   ): Promise<{ success: boolean; error?: string }> => {
     const nameTrimmed = name.trim();
     if (!nameTrimmed) return { success: false, error: 'Member name cannot be empty.' };
@@ -1555,7 +1556,7 @@ export default function App() {
           finalLinkedUserId = existingPerson.linkedUserId;
         }
       }
-      await addMember(nameTrimmed, finalLinkedUserId ?? undefined);
+      await addMember(nameTrimmed, finalLinkedUserId ?? undefined, email);
       // Only fires for members added directly with a known account (e.g.
       // picked from a "people you've traveled with before" suggestion) —
       // a bare placeholder member has no linked user to notify yet, and
@@ -2931,7 +2932,7 @@ export default function App() {
                 activeTripMembers={activeTripMembers.filter((m) => m.id !== pendingDeleteMemberId)}
                 visibleMembers={visibleMembers.filter((m) => m.id !== pendingDeleteMemberId)}
                 archivedMembers={archivedMembers.filter((m) => m.id !== pendingDeleteMemberId)}
-                balances={balances}
+                balances={memberBalancesForDisplay(balances, visibleTripGroups)}
                 currencySymbol={activeTrip ? getCurrencySymbol(activeTrip.baseCurrency) : ''}
                 onToggleArchiveMember={extendedUndoOn ? handleToggleArchiveMember : toggleArchiveMember}
                 onSaveMember={handleSaveMember}

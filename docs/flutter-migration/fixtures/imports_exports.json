@@ -1,0 +1,40 @@
+{
+  "parsedSplitwise": {
+    "rows": [
+      {
+        "date": "2026-10-01",
+        "description": "Groceries",
+        "categoryLabel": "Food",
+        "cost": 100,
+        "currency": "USD",
+        "isPayment": false,
+        "nets": {
+          "Alice": 50,
+          "Bob": 50
+        }
+      },
+      {
+        "date": "2026-10-02",
+        "description": "Dinner",
+        "categoryLabel": "Food",
+        "cost": 80,
+        "currency": "USD",
+        "isPayment": false,
+        "nets": {
+          "Alice": 40,
+          "Bob": 40
+        }
+      }
+    ],
+    "personNames": [
+      "Alice",
+      "Bob"
+    ],
+    "errors": []
+  },
+  "validatedBackup": {
+    "valid": false,
+    "error": "Empty or invalid JSON payload."
+  },
+  "ics": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Trip Tracker//Trip Passes//EN\r\nCALSCALE:GREGORIAN\r\nEND:VCALENDAR"
+}

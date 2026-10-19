@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **269** | All recorded bugs across sessions |
+| **Total Tracked** | **295** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **242** | Verified & closed |
+| **✅ Resolved** | **268** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -272,7 +272,33 @@
 | **BUG-266** | Trip members cannot see each other's packing, notes, or passes | `p2p-sync` | `high` | `rahul` | `rahul` | Fixed in commit 01f7333 (v3.43.8, migration 0109). Members can save packing, notes, and passes, and an open trip refetches them. |
 | **BUG-267** | Members tab looks like luggage tags | `ui-ux` | `low` | `rahul` | `rahul` | Fixed in commit c303812 (v3.43.9). One solid row per person, a single role control, and no airplane coach on Members. |
 | **BUG-268** | v3.43.9 failed to build | `general` | `high` | `rahul` | `rahul` | Fixed in commit 112d02e (v3.43.10). The coach click only adds an expense, because it no longer renders on Members. |
-| **BUG-293** | Second partial settlement with a group fails with an expenses RLS error | `splits-math` | `high` | `claude-cli` | `claude-cli` | Fixed in commit ecf23b2 (v3.43.13). Group settlements are recorded under the signed-in member for their own group's side (settlementPartiesForRecorder), so a partial payment no longer flips the next one to a groupmate the insert policy rejects. |
+| **BUG-269** | Flutter ledger could not show a receipt, pay, share, or close a trip | `ui-ux` | `medium` | `rahul` | `rahul` | Fixed in commit 6011605 (v3.44.2). The Flutter ledger shows the receipt, pays or shares a settlement, and locks the trip. Categories, CSV, and text quick-add are included. |
+| **BUG-270** | Flutter Members, Notes, and Chat tabs were empty placeholders | `ui-ux` | `medium` | `rahul` | `rahul` | Fixed in commit 012c03a (v3.44.3). The Flutter Members, Notes, and Chat tabs now work: roster, roles, groups, checklist, notes, packing suggestions, manual passes, and offline text chat with unread mark. |
+| **BUG-271** | Flutter Android build fails: flutter_local_notifications needs core library desugaring | `general` | `high` | `claude-cli` | `claude-cli` | Fixed in commit cfe5b04 (v3.46.1): enabled core library desugaring in flutter_app/android/app/build.gradle.kts |
+| **BUG-272** | Flutter quick_parser_math fixture failed: TS parseQuickExpense used real clock | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit df20847 (v3.48.0): parseQuickExpense takes injectable now; fixture generator pins MOCK_DATE |
+| **BUG-273** | Flutter CI fixtures-drift step fails: deps not installed, generated Dart unformatted | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 5badf99 (v3.48.1): workflow runs npm ci and dart format before drift diff |
+| **BUG-276** | Vite dev server crashes on Windows with EBUSY watching flutter_app build cache | `general` | `medium` | `rahul` | `rahul` | Ignore flutter_app directory in vite.config.ts server.watch to avoid EBUSY on Windows |
+| **BUG-277** | Flutter Notes tab overflows by 531px on trips with many passes, hiding Checklist/Notes/Chat selector | `general` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 7bfeccb (v3.49.0): capsule + passes capped to 35% screen height inside a scroll view. Regression widget test added; manual QA in docs/FEATURE_TEST_STEPS.md (FLUTTER-NOTES-OVERFLOW). Not yet verified on a device. |
+| **BUG-278** | Flutter masked password fields block capital letters (Superadmin login, reset password) | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 19cb764 (v3.50.0): AppTextField password fields use TextInputType.visiblePassword and have a show/hide toggle; widget test added. Not yet verified on a device. |
+| **BUG-279** | Flutter Superadmin login lands on traveller UI and Ops Deck button cannot open web links on Android | `general` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 1d71018 (v3.50.1): admin mode set before sign-in, https/http manifest queries added, portal URL points at the EC2 deployment. Regression test added. Confirmed on a Motorola Edge 70 Fusion over adb. |
+| **BUG-280** | Flutter: trip header map button did nothing; checklist ticks undone by stale sync; Notes and Chat not live | `navigation` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 75d35f8 (v3.52.0): map button opens a route panel, outbox epoch guard stops stale pulls undoing local ticks, trip shell opens realtime. |
+| **BUG-281** | Flutter: screens stayed stale after local writes and sync pulls (Fewest/Per person switch looked dead) | `offline-sync` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 20249e8 (v3.54.0): trip, group and flag streams used customSelect('SELECT 1').watch(), which drift emits once; replaced by watchTables() that reloads after every write. Regression test added. Confirmed on a Motorola Edge 70 Fusion over adb. |
+| **BUG-282** | Flutter: Superadmin user list would crash on object-type profiles.signup_source | `general` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 510f2a4 (v3.55.0): signup_source is jsonb on current databases; the user list now reads utm_source instead of casting to String. Covered by the admin portal and metrics tests. |
+| **BUG-283** | Flutter: superadmin session restored automatically at cold start | `auth` | `high` | `claude-cli` | `claude-cli` | Fixed in commit adb88c7 (v3.56.0): superadmin sessions dropped at cold start; only manual sign-in. Test added. |
+| **BUG-284** | Flutter: stops edits refused, checklist unchecked items struck through, false SETTLED stamp | `general` | `high` | `claude-cli` | `claude-cli` | Fixed in commit adb88c7 (v3.56.0): stops edits go via trip patch, checklist strikethrough only when done, trip-level SETTLED. Tests added. |
+| **BUG-285** | Flutter: New note asked only for a title, then made you type the body inline | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit e58c883 (v3.57.0): Add note opens a Title + Note sheet; empty title falls back to the first line. Test updated. |
+| **BUG-286** | Flutter: group members not visible, and groups could only be renamed | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit e58c883 (v3.57.0): tapping a group lists members in a popup; Edit changes members; fewer than 2 dissolves the group with a message. Tests added. |
+| **BUG-287** | Flutter: checklist progress count overlapped the ring | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in commit e58c883 (v3.57.0): percentage inside the ring, count and remaining beside it. |
+| **BUG-288** | Flutter: offline cold start could hang on the superadmin check | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit e58c883 (v3.57.0): the is_superadmin check times out after 3s and keeps the session. Unit test added. |
+| **BUG-289** | Flutter: back gesture from Settings opened inside a trip went to the Trips home instead of the trip | `navigation` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 561a2c1 (v3.59.0): Settings, Balances, Activity and the trip screen go back one page when something is underneath, Trips only as a last resort. Tests added. |
+| **BUG-290** | Flutter: tapping a notification replaced the whole stack, so back skipped the notification list | `navigation` | `low` | `claude-cli` | `claude-cli` | Fixed in commit e14a650 (v3.60.0): with no trip open the trip is pushed so back returns to the list; with a trip open it switches in place. Tests added. |
+| **BUG-291** | Flutter: Notes and Checklist showed two Add buttons | `navigation` | `low` | `claude-cli` | `claude-cli` | Fixed in commit f815aa6 (v3.66.1) |
+| **BUG-292** | Flutter: collapsed day totals on Expenses were hard to read | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in commit f815aa6 (v3.66.1) |
+| **BUG-293** | Second partial settlement with a group fails with an expenses RLS error | `splits-math` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 4f33b89 (v3.68.1). Group settlements are recorded under the signed-in member for their own group's side (settlementPartiesForRecorder on web, planSettlement in Flutter), so a partial payment no longer flips the next one to a groupmate the insert policy rejects. (also landed on main as commit ecf23b2, v3.43.13, before the flutter branch was merged) |
+| **BUG-294** | Flutter: Voice add expense did not work on Android | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 036887f (v3.68.2): Google recognizer via intent lookup, locale pick, spoken amounts, friendly errors. |
+| **BUG-295** | Per person view showed NOT SETTLED after settling with Fewest payments | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Fixed in commit b18b0eb (v3.68.3): Per person returns no transfers when all balances are square; pass amount from real balances. |
+| **BUG-296** | Group settled but Per person still showed payments to make | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Fixed in commit b995240 (v3.68.4): Per person checks settlement nodes (a group is one party); all square means no transfers. |
+| **BUG-297** | Members list showed owed/owes for members of a settled group | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit a7f3659 (v3.68.5): memberBalancesForDisplay zeroes members of a square group on Members. |
 
 ---
 

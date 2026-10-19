@@ -1,0 +1,94 @@
+{
+  "cases": [
+    {
+      "id": "cat-food",
+      "color": "#6366f1"
+    },
+    {
+      "id": "cat-stay",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "cat-travel",
+      "color": "#db2777"
+    },
+    {
+      "id": "cat-activities",
+      "color": "#10b981"
+    },
+    {
+      "id": "cat-shopping",
+      "color": "#f59e0b"
+    },
+    {
+      "id": "cat-misc",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "a",
+      "color": "hsl(97, 65%, 55%)"
+    },
+    {
+      "id": "custom-1",
+      "color": "hsl(357, 65%, 55%)"
+    },
+    {
+      "id": "3f2b8c1e-9a77-4c1d-8e2a-0a1b2c3d4e5f",
+      "color": "hsl(54, 65%, 55%)"
+    },
+    {
+      "id": "Fuel 🚗",
+      "color": "hsl(148, 65%, 55%)"
+    },
+    {
+      "id": "ZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+      "color": "hsl(104, 65%, 55%)"
+    },
+    {
+      "id": "",
+      "color": "hsl(0, 65%, 55%)"
+    },
+    {
+      "id": "é",
+      "color": "hsl(233, 65%, 55%)"
+    }
+  ],
+  "defaults": [
+    {
+      "id": "cat-food",
+      "name": "Food & Dining",
+      "icon": "🍔",
+      "isCustom": false
+    },
+    {
+      "id": "cat-stay",
+      "name": "Stay & Hotel",
+      "icon": "🏨",
+      "isCustom": false
+    },
+    {
+      "id": "cat-travel",
+      "name": "Travel & Transport",
+      "icon": "✈️",
+      "isCustom": false
+    },
+    {
+      "id": "cat-activities",
+      "name": "Activities & Sightseeing",
+      "icon": "🎟️",
+      "isCustom": false
+    },
+    {
+      "id": "cat-shopping",
+      "name": "Shopping",
+      "icon": "🛍️",
+      "isCustom": false
+    },
+    {
+      "id": "cat-misc",
+      "name": "Misc & Others",
+      "icon": "📦",
+      "isCustom": false
+    }
+  ]
+}

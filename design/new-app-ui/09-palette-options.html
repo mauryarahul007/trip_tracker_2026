@@ -1,0 +1,59 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Horizon · 09 Palette options</title>
+<link rel="stylesheet" href="kit.css"><script src="kit.js"></script>
+<style>.opt{display:contents}.sw{display:flex;gap:8px;margin:10px 0 4px}.sw i{width:44px;height:44px;border-radius:14px;box-shadow:var(--shadow)}
+.colh{grid-column:span 2}</style>
+</head><body><div class="board">
+<span class="tag">09 · Palette options</span>
+<h1>Three directions, same system</h1>
+<p class="lede">Every screen in this kit is built from tokens, so the palette can be swapped without redrawing anything. <b>A · Horizon</b> (recommended) is a cobalt blue with Night Sky and Ember surfaces. <b>B · Teal + Orange</b> keeps continuity with the current app’s teal and orange. <b>C · Dusk Violet</b> is the most expressive and the most “travel-night” option. Each option below shows Trips home and Balances.</p>
+
+<h2>A · Horizon — recommended</h2>
+<div class="sw"><i style="background:#2F6BFF"></i><i style="background:#22D3EE"></i><i style="background:#7C5CFF"></i><i style="background:linear-gradient(165deg,#1B2E6B,#050A1F)"></i><i style="background:linear-gradient(180deg,#7A3F1A,#0C0705)"></i></div>
+<p class="t-body muted" style="max-width:720px">Neutral, trustworthy blue for actions. Money lives on warm Ember, travel lives on deep Night Sky, so colour tells you which job you’re doing. Reads well in light and dark and gives the strongest contrast for amounts.</p>
+<div class="grid"><div class="opt" id="A"></div></div>
+
+<h2>B · Teal + Orange — continuity</h2>
+<div class="sw"><i style="background:#0F6F63"></i><i style="background:#3FA396"></i><i style="background:#FF8A1F"></i><i style="background:linear-gradient(165deg,#14554D,#030A09)"></i><i style="background:linear-gradient(180deg,#8A4A1D,#0C0705)"></i></div>
+<p class="t-body muted" style="max-width:720px">Closest to the current Flutter theme. Lowest change for existing users; the orange CTA is loud and friendly, but teal plus orange is a common pairing so it feels less distinctive.</p>
+<div class="grid"><div class="opt" id="B"></div></div>
+
+<h2>C · Dusk Violet — expressive</h2>
+<div class="sw"><i style="background:#6A4DF5"></i><i style="background:#9A7BFF"></i><i style="background:#C45BFF"></i><i style="background:linear-gradient(165deg,#2A2A73,#05061A)"></i><i style="background:linear-gradient(180deg,#8C3F6E,#0D0610)"></i></div>
+<p class="t-body muted" style="max-width:720px">Most memorable, strongest fit for the Trip Wrapped moments and the dark theme. Violet needs more care for accessibility on small text, so body copy stays on neutral ink.</p>
+<div class="grid"><div class="opt" id="C"></div></div>
+</div>
+
+<script>
+function screens(){return `
+<div class="cell" data-cap="Trips home" data-sub="__T__">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="hrow sp" style="height:58px"><div class="hrow gap12"><span class="avatar lg a1" style="width:44px;height:44px;font-size:16px">R</span><div><div class="t-xs">Thu, 8 Oct</div><div class="h-sm" style="font-size:17px">Good morning, Rahul</div></div></div><span class="icon-btn sm"><i data-i="bell"></i><i class="pip"></i></span></div>
+ <div data-hero class="mt8"></div>
+ <div class="hrow sp" style="margin-top:22px"><div class="h-md">My trips</div><span class="chip on sm">All</span></div>
+ <div data-trip="bali" class="mt12"></div>
+</div>
+<div class="dock"><div class="it on"><i data-i="home"></i>Trips</div><div class="it"><i data-i="swap"></i>Balances</div><div class="fab"><i data-i="plus" data-c="s28"></i></div><div class="it"><i data-i="bell"></i>Activity<span class="bd">3</span></div><div class="it"><i data-i="user"></i>Me</div></div></div></div></div>
+<div class="cell" data-cap="Balances" data-sub="__T__">
+<div class="phone ios"><div class="scr"><div class="body">
+ <div class="large-title" style="padding-top:16px">Balances</div>
+ <div class="hero" style="background:var(--ember);color:#fff;padding:22px"><div class="eyebrow" style="color:rgba(255,255,255,.6)">YOU OWE</div><div style="font:800 44px var(--display);margin-top:6px">₹2,450</div>
+  <div class="hrow sp mt16" style="background:rgba(255,255,255,.1);border-radius:18px;padding:12px"><div class="hrow gap10"><span class="avatar a2" style="width:36px;height:36px">A</span><div><div class="h-sm" style="font-size:14px;color:#fff">Pay Aarav</div><div style="font-size:11px;opacity:.6">UPI · cash</div></div></div><span class="btn sm" style="background:#fff;color:#111">Settle up</span></div></div>
+ <div class="eyebrow mt20">WHO PAYS WHOM</div>
+ <div class="list mt8"><div class="xfer"><span class="avatar a1" style="width:34px;height:34px">R</span><i data-i="cr" data-c="s16"></i><span class="avatar a2" style="width:34px;height:34px">A</span><div class="grow h-sm" style="font-size:14px">You pay Aarav</div><b style="color:var(--neg)">₹2,450</b></div>
+ <div class="xfer"><span class="avatar a4" style="width:34px;height:34px">K</span><i data-i="cr" data-c="s16"></i><span class="avatar a3" style="width:34px;height:34px">M</span><div class="grow h-sm" style="font-size:14px">Kabir pays Meera</div><b>₹1,800</b></div></div>
+ <span class="btn primary block mt16">Settle up</span>
+</div>
+<div class="dock"><div class="it"><i data-i="home"></i>Trips</div><div class="it on"><i data-i="swap"></i>Balances</div><div class="fab"><i data-i="plus" data-c="s28"></i></div><div class="it"><i data-i="bell"></i>Activity</div><div class="it"><i data-i="user"></i>Me</div></div></div></div></div>
+<div class="cell" data-cap="Dark" data-sub="__T__ · dark">
+<div class="phone ios" data-dark="1" data-sb="light"><div class="scr"><div class="body">
+ <div class="large-title" style="padding-top:16px">Balances</div>
+ <div class="hero" style="background:var(--ember);color:#fff;padding:22px"><div class="eyebrow" style="color:rgba(255,255,255,.6)">YOU OWE</div><div style="font:800 44px var(--display);margin-top:6px">₹2,450</div>
+  <span class="btn sm mt16" style="background:#fff;color:#111">Settle up</span></div>
+ <div class="list mt16"><div class="xfer"><span class="avatar a1" style="width:34px;height:34px">R</span><i data-i="cr" data-c="s16"></i><span class="avatar a2" style="width:34px;height:34px">A</span><div class="grow h-sm" style="font-size:14px">You pay Aarav</div><b style="color:var(--neg)">₹2,450</b></div></div>
+ <span class="btn primary block mt16">Settle up</span>
+</div>
+<div class="dock"><div class="it"><i data-i="home"></i>Trips</div><div class="it on"><i data-i="swap"></i>Balances</div><div class="fab"><i data-i="plus" data-c="s28"></i></div><div class="it"><i data-i="bell"></i>Activity</div><div class="it"><i data-i="user"></i>Me</div></div></div></div></div>`}
+const T={A:['Horizon',''],B:['Teal + Orange','theme-b'],C:['Dusk Violet','theme-c']};
+for(const k in T){const el=document.getElementById(k);el.className='opt '+T[k][1];el.innerHTML=screens().replace(/__T__/g,T[k][0]);}
+</script>
+</body></html>

@@ -1,0 +1,1445 @@
+{
+  "note": "Mirrors formatMoneyNumber() with an explicit locale",
+  "cases": [
+    {
+      "locale": "en-US",
+      "currency": "USD",
+      "amount": 0,
+      "result": "0.00"
+    },
+    {
+      "locale": "en-US",
+      "currency": "USD",
+      "amount": 5,
+      "result": "5.00"
+    },
+    {
+      "locale": "en-US",
+      "currency": "USD",
+      "amount": 0.005,
+      "result": "0.01"
+    },
+    {
+      "locale": "en-US",
+      "currency": "USD",
+      "amount": 1234.5,
+      "result": "1,234.50"
+    },
+    {
+      "locale": "en-US",
+      "currency": "USD",
+      "amount": 1234.565,
+      "result": "1,234.57"
+    },
+    {
+      "locale": "en-US",
+      "currency": "USD",
+      "amount": 99999.995,
+      "result": "100,000.00"
+    },
+    {
+      "locale": "en-US",
+      "currency": "USD",
+      "amount": 123450,
+      "result": "123,450.00"
+    },
+    {
+      "locale": "en-US",
+      "currency": "USD",
+      "amount": 1234567.891,
+      "result": "1,234,567.89"
+    },
+    {
+      "locale": "en-US",
+      "currency": "USD",
+      "amount": -9876.5,
+      "result": "-9,876.50"
+    },
+    {
+      "locale": "en-US",
+      "currency": "USD",
+      "amount": 100000000,
+      "result": "100,000,000.00"
+    },
+    {
+      "locale": "en-US",
+      "currency": "JPY",
+      "amount": 0,
+      "result": "0"
+    },
+    {
+      "locale": "en-US",
+      "currency": "JPY",
+      "amount": 5,
+      "result": "5"
+    },
+    {
+      "locale": "en-US",
+      "currency": "JPY",
+      "amount": 0.005,
+      "result": "0"
+    },
+    {
+      "locale": "en-US",
+      "currency": "JPY",
+      "amount": 1234.5,
+      "result": "1,235"
+    },
+    {
+      "locale": "en-US",
+      "currency": "JPY",
+      "amount": 1234.565,
+      "result": "1,235"
+    },
+    {
+      "locale": "en-US",
+      "currency": "JPY",
+      "amount": 99999.995,
+      "result": "100,000"
+    },
+    {
+      "locale": "en-US",
+      "currency": "JPY",
+      "amount": 123450,
+      "result": "123,450"
+    },
+    {
+      "locale": "en-US",
+      "currency": "JPY",
+      "amount": 1234567.891,
+      "result": "1,234,568"
+    },
+    {
+      "locale": "en-US",
+      "currency": "JPY",
+      "amount": -9876.5,
+      "result": "-9,877"
+    },
+    {
+      "locale": "en-US",
+      "currency": "JPY",
+      "amount": 100000000,
+      "result": "100,000,000"
+    },
+    {
+      "locale": "en-US",
+      "currency": "KWD",
+      "amount": 0,
+      "result": "0.00"
+    },
+    {
+      "locale": "en-US",
+      "currency": "KWD",
+      "amount": 5,
+      "result": "5.00"
+    },
+    {
+      "locale": "en-US",
+      "currency": "KWD",
+      "amount": 0.005,
+      "result": "0.01"
+    },
+    {
+      "locale": "en-US",
+      "currency": "KWD",
+      "amount": 1234.5,
+      "result": "1,234.50"
+    },
+    {
+      "locale": "en-US",
+      "currency": "KWD",
+      "amount": 1234.565,
+      "result": "1,234.57"
+    },
+    {
+      "locale": "en-US",
+      "currency": "KWD",
+      "amount": 99999.995,
+      "result": "100,000.00"
+    },
+    {
+      "locale": "en-US",
+      "currency": "KWD",
+      "amount": 123450,
+      "result": "123,450.00"
+    },
+    {
+      "locale": "en-US",
+      "currency": "KWD",
+      "amount": 1234567.891,
+      "result": "1,234,567.89"
+    },
+    {
+      "locale": "en-US",
+      "currency": "KWD",
+      "amount": -9876.5,
+      "result": "-9,876.50"
+    },
+    {
+      "locale": "en-US",
+      "currency": "KWD",
+      "amount": 100000000,
+      "result": "100,000,000.00"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "USD",
+      "amount": 0,
+      "result": "0.00"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "USD",
+      "amount": 5,
+      "result": "5.00"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "USD",
+      "amount": 0.005,
+      "result": "0.01"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "USD",
+      "amount": 1234.5,
+      "result": "1,234.50"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "USD",
+      "amount": 1234.565,
+      "result": "1,234.57"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "USD",
+      "amount": 99999.995,
+      "result": "1,00,000.00"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "USD",
+      "amount": 123450,
+      "result": "1,23,450.00"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "USD",
+      "amount": 1234567.891,
+      "result": "12,34,567.89"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "USD",
+      "amount": -9876.5,
+      "result": "-9,876.50"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "USD",
+      "amount": 100000000,
+      "result": "10,00,00,000.00"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "JPY",
+      "amount": 0,
+      "result": "0"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "JPY",
+      "amount": 5,
+      "result": "5"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "JPY",
+      "amount": 0.005,
+      "result": "0"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "JPY",
+      "amount": 1234.5,
+      "result": "1,235"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "JPY",
+      "amount": 1234.565,
+      "result": "1,235"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "JPY",
+      "amount": 99999.995,
+      "result": "1,00,000"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "JPY",
+      "amount": 123450,
+      "result": "1,23,450"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "JPY",
+      "amount": 1234567.891,
+      "result": "12,34,568"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "JPY",
+      "amount": -9876.5,
+      "result": "-9,877"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "JPY",
+      "amount": 100000000,
+      "result": "10,00,00,000"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "KWD",
+      "amount": 0,
+      "result": "0.00"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "KWD",
+      "amount": 5,
+      "result": "5.00"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "KWD",
+      "amount": 0.005,
+      "result": "0.01"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "KWD",
+      "amount": 1234.5,
+      "result": "1,234.50"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "KWD",
+      "amount": 1234.565,
+      "result": "1,234.57"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "KWD",
+      "amount": 99999.995,
+      "result": "1,00,000.00"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "KWD",
+      "amount": 123450,
+      "result": "1,23,450.00"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "KWD",
+      "amount": 1234567.891,
+      "result": "12,34,567.89"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "KWD",
+      "amount": -9876.5,
+      "result": "-9,876.50"
+    },
+    {
+      "locale": "en-IN",
+      "currency": "KWD",
+      "amount": 100000000,
+      "result": "10,00,00,000.00"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "USD",
+      "amount": 0,
+      "result": "0,00"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "USD",
+      "amount": 5,
+      "result": "5,00"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "USD",
+      "amount": 0.005,
+      "result": "0,01"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "USD",
+      "amount": 1234.5,
+      "result": "1.234,50"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "USD",
+      "amount": 1234.565,
+      "result": "1.234,57"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "USD",
+      "amount": 99999.995,
+      "result": "100.000,00"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "USD",
+      "amount": 123450,
+      "result": "123.450,00"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "USD",
+      "amount": 1234567.891,
+      "result": "1.234.567,89"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "USD",
+      "amount": -9876.5,
+      "result": "-9.876,50"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "USD",
+      "amount": 100000000,
+      "result": "100.000.000,00"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "JPY",
+      "amount": 0,
+      "result": "0"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "JPY",
+      "amount": 5,
+      "result": "5"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "JPY",
+      "amount": 0.005,
+      "result": "0"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "JPY",
+      "amount": 1234.5,
+      "result": "1.235"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "JPY",
+      "amount": 1234.565,
+      "result": "1.235"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "JPY",
+      "amount": 99999.995,
+      "result": "100.000"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "JPY",
+      "amount": 123450,
+      "result": "123.450"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "JPY",
+      "amount": 1234567.891,
+      "result": "1.234.568"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "JPY",
+      "amount": -9876.5,
+      "result": "-9.877"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "JPY",
+      "amount": 100000000,
+      "result": "100.000.000"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "KWD",
+      "amount": 0,
+      "result": "0,00"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "KWD",
+      "amount": 5,
+      "result": "5,00"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "KWD",
+      "amount": 0.005,
+      "result": "0,01"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "KWD",
+      "amount": 1234.5,
+      "result": "1.234,50"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "KWD",
+      "amount": 1234.565,
+      "result": "1.234,57"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "KWD",
+      "amount": 99999.995,
+      "result": "100.000,00"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "KWD",
+      "amount": 123450,
+      "result": "123.450,00"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "KWD",
+      "amount": 1234567.891,
+      "result": "1.234.567,89"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "KWD",
+      "amount": -9876.5,
+      "result": "-9.876,50"
+    },
+    {
+      "locale": "de-DE",
+      "currency": "KWD",
+      "amount": 100000000,
+      "result": "100.000.000,00"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "USD",
+      "amount": 0,
+      "result": "0,00"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "USD",
+      "amount": 5,
+      "result": "5,00"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "USD",
+      "amount": 0.005,
+      "result": "0,01"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "USD",
+      "amount": 1234.5,
+      "result": "1 234,50"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "USD",
+      "amount": 1234.565,
+      "result": "1 234,57"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "USD",
+      "amount": 99999.995,
+      "result": "100 000,00"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "USD",
+      "amount": 123450,
+      "result": "123 450,00"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "USD",
+      "amount": 1234567.891,
+      "result": "1 234 567,89"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "USD",
+      "amount": -9876.5,
+      "result": "-9 876,50"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "USD",
+      "amount": 100000000,
+      "result": "100 000 000,00"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "JPY",
+      "amount": 0,
+      "result": "0"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "JPY",
+      "amount": 5,
+      "result": "5"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "JPY",
+      "amount": 0.005,
+      "result": "0"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "JPY",
+      "amount": 1234.5,
+      "result": "1 235"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "JPY",
+      "amount": 1234.565,
+      "result": "1 235"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "JPY",
+      "amount": 99999.995,
+      "result": "100 000"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "JPY",
+      "amount": 123450,
+      "result": "123 450"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "JPY",
+      "amount": 1234567.891,
+      "result": "1 234 568"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "JPY",
+      "amount": -9876.5,
+      "result": "-9 877"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "JPY",
+      "amount": 100000000,
+      "result": "100 000 000"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "KWD",
+      "amount": 0,
+      "result": "0,00"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "KWD",
+      "amount": 5,
+      "result": "5,00"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "KWD",
+      "amount": 0.005,
+      "result": "0,01"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "KWD",
+      "amount": 1234.5,
+      "result": "1 234,50"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "KWD",
+      "amount": 1234.565,
+      "result": "1 234,57"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "KWD",
+      "amount": 99999.995,
+      "result": "100 000,00"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "KWD",
+      "amount": 123450,
+      "result": "123 450,00"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "KWD",
+      "amount": 1234567.891,
+      "result": "1 234 567,89"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "KWD",
+      "amount": -9876.5,
+      "result": "-9 876,50"
+    },
+    {
+      "locale": "fr-FR",
+      "currency": "KWD",
+      "amount": 100000000,
+      "result": "100 000 000,00"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "USD",
+      "amount": 0,
+      "result": "0.00"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "USD",
+      "amount": 5,
+      "result": "5.00"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "USD",
+      "amount": 0.005,
+      "result": "0.01"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "USD",
+      "amount": 1234.5,
+      "result": "1,234.50"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "USD",
+      "amount": 1234.565,
+      "result": "1,234.57"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "USD",
+      "amount": 99999.995,
+      "result": "100,000.00"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "USD",
+      "amount": 123450,
+      "result": "123,450.00"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "USD",
+      "amount": 1234567.891,
+      "result": "1,234,567.89"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "USD",
+      "amount": -9876.5,
+      "result": "-9,876.50"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "USD",
+      "amount": 100000000,
+      "result": "100,000,000.00"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "JPY",
+      "amount": 0,
+      "result": "0"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "JPY",
+      "amount": 5,
+      "result": "5"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "JPY",
+      "amount": 0.005,
+      "result": "0"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "JPY",
+      "amount": 1234.5,
+      "result": "1,235"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "JPY",
+      "amount": 1234.565,
+      "result": "1,235"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "JPY",
+      "amount": 99999.995,
+      "result": "100,000"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "JPY",
+      "amount": 123450,
+      "result": "123,450"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "JPY",
+      "amount": 1234567.891,
+      "result": "1,234,568"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "JPY",
+      "amount": -9876.5,
+      "result": "-9,877"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "JPY",
+      "amount": 100000000,
+      "result": "100,000,000"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "KWD",
+      "amount": 0,
+      "result": "0.00"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "KWD",
+      "amount": 5,
+      "result": "5.00"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "KWD",
+      "amount": 0.005,
+      "result": "0.01"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "KWD",
+      "amount": 1234.5,
+      "result": "1,234.50"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "KWD",
+      "amount": 1234.565,
+      "result": "1,234.57"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "KWD",
+      "amount": 99999.995,
+      "result": "100,000.00"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "KWD",
+      "amount": 123450,
+      "result": "123,450.00"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "KWD",
+      "amount": 1234567.891,
+      "result": "1,234,567.89"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "KWD",
+      "amount": -9876.5,
+      "result": "-9,876.50"
+    },
+    {
+      "locale": "ja-JP",
+      "currency": "KWD",
+      "amount": 100000000,
+      "result": "100,000,000.00"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "USD",
+      "amount": 0,
+      "result": "٠٫٠٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "USD",
+      "amount": 5,
+      "result": "٥٫٠٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "USD",
+      "amount": 0.005,
+      "result": "٠٫٠١"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "USD",
+      "amount": 1234.5,
+      "result": "١٬٢٣٤٫٥٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "USD",
+      "amount": 1234.565,
+      "result": "١٬٢٣٤٫٥٧"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "USD",
+      "amount": 99999.995,
+      "result": "١٠٠٬٠٠٠٫٠٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "USD",
+      "amount": 123450,
+      "result": "١٢٣٬٤٥٠٫٠٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "USD",
+      "amount": 1234567.891,
+      "result": "١٬٢٣٤٬٥٦٧٫٨٩"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "USD",
+      "amount": -9876.5,
+      "result": "؜-٩٬٨٧٦٫٥٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "USD",
+      "amount": 100000000,
+      "result": "١٠٠٬٠٠٠٬٠٠٠٫٠٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "JPY",
+      "amount": 0,
+      "result": "٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "JPY",
+      "amount": 5,
+      "result": "٥"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "JPY",
+      "amount": 0.005,
+      "result": "٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "JPY",
+      "amount": 1234.5,
+      "result": "١٬٢٣٥"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "JPY",
+      "amount": 1234.565,
+      "result": "١٬٢٣٥"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "JPY",
+      "amount": 99999.995,
+      "result": "١٠٠٬٠٠٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "JPY",
+      "amount": 123450,
+      "result": "١٢٣٬٤٥٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "JPY",
+      "amount": 1234567.891,
+      "result": "١٬٢٣٤٬٥٦٨"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "JPY",
+      "amount": -9876.5,
+      "result": "؜-٩٬٨٧٧"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "JPY",
+      "amount": 100000000,
+      "result": "١٠٠٬٠٠٠٬٠٠٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "KWD",
+      "amount": 0,
+      "result": "٠٫٠٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "KWD",
+      "amount": 5,
+      "result": "٥٫٠٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "KWD",
+      "amount": 0.005,
+      "result": "٠٫٠١"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "KWD",
+      "amount": 1234.5,
+      "result": "١٬٢٣٤٫٥٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "KWD",
+      "amount": 1234.565,
+      "result": "١٬٢٣٤٫٥٧"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "KWD",
+      "amount": 99999.995,
+      "result": "١٠٠٬٠٠٠٫٠٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "KWD",
+      "amount": 123450,
+      "result": "١٢٣٬٤٥٠٫٠٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "KWD",
+      "amount": 1234567.891,
+      "result": "١٬٢٣٤٬٥٦٧٫٨٩"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "KWD",
+      "amount": -9876.5,
+      "result": "؜-٩٬٨٧٦٫٥٠"
+    },
+    {
+      "locale": "ar-EG",
+      "currency": "KWD",
+      "amount": 100000000,
+      "result": "١٠٠٬٠٠٠٬٠٠٠٫٠٠"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "USD",
+      "amount": 0,
+      "result": "0.00"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "USD",
+      "amount": 5,
+      "result": "5.00"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "USD",
+      "amount": 0.005,
+      "result": "0.01"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "USD",
+      "amount": 1234.5,
+      "result": "1,234.50"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "USD",
+      "amount": 1234.565,
+      "result": "1,234.57"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "USD",
+      "amount": 99999.995,
+      "result": "1,00,000.00"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "USD",
+      "amount": 123450,
+      "result": "1,23,450.00"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "USD",
+      "amount": 1234567.891,
+      "result": "12,34,567.89"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "USD",
+      "amount": -9876.5,
+      "result": "-9,876.50"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "USD",
+      "amount": 100000000,
+      "result": "10,00,00,000.00"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "JPY",
+      "amount": 0,
+      "result": "0"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "JPY",
+      "amount": 5,
+      "result": "5"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "JPY",
+      "amount": 0.005,
+      "result": "0"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "JPY",
+      "amount": 1234.5,
+      "result": "1,235"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "JPY",
+      "amount": 1234.565,
+      "result": "1,235"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "JPY",
+      "amount": 99999.995,
+      "result": "1,00,000"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "JPY",
+      "amount": 123450,
+      "result": "1,23,450"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "JPY",
+      "amount": 1234567.891,
+      "result": "12,34,568"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "JPY",
+      "amount": -9876.5,
+      "result": "-9,877"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "JPY",
+      "amount": 100000000,
+      "result": "10,00,00,000"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "KWD",
+      "amount": 0,
+      "result": "0.00"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "KWD",
+      "amount": 5,
+      "result": "5.00"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "KWD",
+      "amount": 0.005,
+      "result": "0.01"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "KWD",
+      "amount": 1234.5,
+      "result": "1,234.50"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "KWD",
+      "amount": 1234.565,
+      "result": "1,234.57"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "KWD",
+      "amount": 99999.995,
+      "result": "1,00,000.00"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "KWD",
+      "amount": 123450,
+      "result": "1,23,450.00"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "KWD",
+      "amount": 1234567.891,
+      "result": "12,34,567.89"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "KWD",
+      "amount": -9876.5,
+      "result": "-9,876.50"
+    },
+    {
+      "locale": "hi-IN",
+      "currency": "KWD",
+      "amount": 100000000,
+      "result": "10,00,00,000.00"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "USD",
+      "amount": 0,
+      "result": "0,00"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "USD",
+      "amount": 5,
+      "result": "5,00"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "USD",
+      "amount": 0.005,
+      "result": "0,01"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "USD",
+      "amount": 1234.5,
+      "result": "1234,50"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "USD",
+      "amount": 1234.565,
+      "result": "1234,57"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "USD",
+      "amount": 99999.995,
+      "result": "100.000,00"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "USD",
+      "amount": 123450,
+      "result": "123.450,00"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "USD",
+      "amount": 1234567.891,
+      "result": "1.234.567,89"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "USD",
+      "amount": -9876.5,
+      "result": "-9876,50"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "USD",
+      "amount": 100000000,
+      "result": "100.000.000,00"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "JPY",
+      "amount": 0,
+      "result": "0"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "JPY",
+      "amount": 5,
+      "result": "5"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "JPY",
+      "amount": 0.005,
+      "result": "0"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "JPY",
+      "amount": 1234.5,
+      "result": "1235"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "JPY",
+      "amount": 1234.565,
+      "result": "1235"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "JPY",
+      "amount": 99999.995,
+      "result": "100.000"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "JPY",
+      "amount": 123450,
+      "result": "123.450"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "JPY",
+      "amount": 1234567.891,
+      "result": "1.234.568"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "JPY",
+      "amount": -9876.5,
+      "result": "-9877"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "JPY",
+      "amount": 100000000,
+      "result": "100.000.000"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "KWD",
+      "amount": 0,
+      "result": "0,00"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "KWD",
+      "amount": 5,
+      "result": "5,00"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "KWD",
+      "amount": 0.005,
+      "result": "0,01"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "KWD",
+      "amount": 1234.5,
+      "result": "1234,50"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "KWD",
+      "amount": 1234.565,
+      "result": "1234,57"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "KWD",
+      "amount": 99999.995,
+      "result": "100.000,00"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "KWD",
+      "amount": 123450,
+      "result": "123.450,00"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "KWD",
+      "amount": 1234567.891,
+      "result": "1.234.567,89"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "KWD",
+      "amount": -9876.5,
+      "result": "-9876,50"
+    },
+    {
+      "locale": "es-ES",
+      "currency": "KWD",
+      "amount": 100000000,
+      "result": "100.000.000,00"
+    }
+  ]
+}

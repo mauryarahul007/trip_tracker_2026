@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateSettlements, calculateGroupInternalTransfers, settlementPartiesForRecorder, summarizeSettlement } from './settlement';
+import { calculateSettlements, memberBalancesForDisplay, calculateGroupInternalTransfers, settlementPartiesForRecorder, summarizeSettlement } from './settlement';
 import type { Trip, Member, Expense, Group } from '../types';
 
 describe('Settlement Utilities', () => {
@@ -312,6 +312,51 @@ describe('Settlement Utilities', () => {
       unsettledMemberCount: 2,
     });
     expect(summarizeSettlement([], []).isFullySettled).toBe(true);
+  });
+
+  describe('Per person view after settling with Fewest payments', () => {
+    const base = { tripId: 't1', currency: 'EUR', category: 'Food', date: '2026-08-02', createdAt: 0, updatedAt: 0, createdByUserId: 'u1', isSettlement: false, splitMode: 'equal' as const };
+    // Alice paid 60 for Alice+Bob (Bob owes 30); Bob paid 60 for Bob+Charlie (Charlie owes 30).
+    const e1: Expense = { ...base, id: 'e1', title: 'Lunch', amount: 60, paidBy: 'm1', splitMemberIds: ['m1', 'm2'], resolvedShares: { m1: 30, m2: 30 } };
+    const e2: Expense = { ...base, id: 'e2', title: 'Cab', amount: 60, paidBy: 'm2', splitMemberIds: ['m2', 'm3'], resolvedShares: { m2: 30, m3: 30 } };
+    // Fewest payments: Charlie pays Alice 30 straight (not the pair Charlie owes).
+    const pay: Expense = { ...base, id: 'e3', title: 'Settlement: Charlie ➔ Alice', amount: 30, category: 'cat-misc', paidBy: 'm3', splitMode: 'exact', splitMemberIds: ['m1'], resolvedShares: { m1: 30 }, isSettlement: true };
+
+    it('is settled in both views once everyone is square', () => {
+      const fewest = calculateSettlements(trip, members, [e1, e2, pay], [], { simplifyDebts: true });
+      const perPerson = calculateSettlements(trip, members, [e1, e2, pay], [], { simplifyDebts: false });
+      expect(fewest.transfers).toEqual([]);
+      expect(perPerson.transfers).toEqual([]);
+      expect(perPerson.balances.every((b) => Math.abs(b.balance) < 0.01)).toBe(true);
+    });
+
+    it('a settled group settles its members too, in Per person', () => {
+      const couple: Group = { id: 'g1', name: 'Bob & Charlie', memberIds: ['m2', 'm3'], tripId: 't1', createdAt: 0, updatedAt: 0 } as Group;
+      const dinner: Expense = { ...base, id: 'd1', title: 'Dinner', amount: 90, paidBy: 'm1', splitMemberIds: ['m1', 'm2', 'm3'], resolvedShares: { m1: 30, m2: 30, m3: 30 } };
+      // Bob settles the whole group's 60 with Alice.
+      const groupPay: Expense = { ...pay, id: 'g-pay', title: 'Settlement: Bob & Charlie ➔ Alice', amount: 60, paidBy: 'm2', resolvedShares: { m1: 60 } };
+      const per = calculateSettlements(trip, members, [dinner, groupPay], [couple], { simplifyDebts: false });
+      const few = calculateSettlements(trip, members, [dinner, groupPay], [couple], { simplifyDebts: true });
+      expect(few.transfers).toEqual([]);
+      expect(per.transfers).toEqual([]);
+    });
+
+    it('Members list: a settled group shows square for its members', () => {
+      const couple: Group = { id: 'g1', name: 'Bob & Charlie', memberIds: ['m2', 'm3'] };
+      const dinner: Expense = { ...base, id: 'd1', title: 'Dinner', amount: 90, paidBy: 'm1', splitMemberIds: ['m1', 'm2', 'm3'], resolvedShares: { m1: 30, m2: 30, m3: 30 } };
+      const groupPay: Expense = { ...pay, id: 'g-pay', title: 'Settlement: Bob & Charlie ➔ Alice', amount: 60, paidBy: 'm2', resolvedShares: { m1: 60 } };
+      const { balances } = calculateSettlements(trip, members, [dinner, groupPay], [couple], { simplifyDebts: false });
+      expect(balances.find((b) => b.memberId === 'm2')?.balance).toBe(30); // real, offsetting
+      expect(memberBalancesForDisplay(balances, [couple]).every((b) => b.balance === 0)).toBe(true);
+      // still owed: the group is not square, so nothing is hidden
+      const open = calculateSettlements(trip, members, [dinner], [couple], { simplifyDebts: false }).balances;
+      expect(memberBalancesForDisplay(open, [couple])).toEqual(open);
+    });
+
+    it('before the payment both views still show what is owed', () => {
+      const perPerson = calculateSettlements(trip, members, [e1, e2], [], { simplifyDebts: false });
+      expect(perPerson.transfers).toHaveLength(2);
+    });
   });
 });
 
