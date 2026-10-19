@@ -100,6 +100,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-19 | flutter | FLUTTER-TIDY-TABS | [Flutter: tidy Expenses, Notes and Members, edit and delete passes, analytics switch](#flutter-tidy-tabs--flutter-tidy-expenses-notes-and-members-edit-and-delete-passes-analytics-switch) |
 | 2026-10-19 | flutter (unreleased) | FLUTTER-SETTINGS-PAGE | [Flutter: one-page Settings like the web](#flutter-settings-page--flutter-one-page-settings-like-the-web) |
 | 2026-10-19 | flutter (unreleased) | FLUTTER-HEADER-SUMMARY | [Flutter: trip header actions, edit trip, Summary upgrades](#flutter-header-summary--flutter-trip-header-actions-edit-trip-summary-upgrades) |
+| 2026-10-19 | flutter (unreleased) | FLUTTER-UI-ROUND3 | [Flutter: clean header, pass multi-select, filters page, mini pass, voice](#flutter-ui-round3--flutter-clean-header-pass-multi-select-filters-page-mini-pass-voice) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -3340,3 +3341,26 @@ Then add a row to the **Index** table.
 **Flag-OFF checks:** `enableTripHeaderActions` OFF: no chip, long-press does nothing, no stops pill (the old header strip flag still decides if the strip shows). `enableSummaryUpgrades` OFF: no chips or banner at the top, no How it works, Custom amount or Remind, no At a Glance grid; Settle, Settle all and the toggle work as before.
 
 **Pass:** no balance or settlement number changes; every new control is at least 48dp and readable at large text and in dark mode; Remind never sends anything by itself; non-owners cannot edit a trip.
+
+## FLUTTER-UI-ROUND3 — Flutter: clean header, pass multi-select, filters page, mini pass, voice
+
+**Flags:** `enableTripHeaderActions` (header + Edit Trip), `enableSummaryUpgrades` (mini pass), `enablePassEditDelete` (Select), `enableVoiceInput` (Voice). All Trip pack, default ON.
+
+1. Open a trip. The top bar is one row (back, trip name with a small chevron, bell, menu). Under the name is one muted line: dates, members, expenses, with a status dot (green active, blue upcoming, grey ended). There is no photo strip.
+2. Tap the trip name: the actions sheet opens (Share, Mute, **Edit Trip Details**, Settings, Switch to Another Trip when you have more than one). Edit Trip Details renames the trip and keeps its dates.
+3. Open the top-bar menu: **Edit trip details** is listed there too. Sign in as a non-owner: the row shows greyed with "Only the organizer can edit".
+4. Notes > Passes (two or more passes): tap **Select**. Tick some passes, tap **Select all** (then **Clear**), tap the bin, confirm "Delete N passes?". All chosen passes go in one save and one **Undo** brings them back. **Cancel** leaves select mode.
+5. Expenses > Filters: green header with a close button; sections My expenses, Category, Paid by, Date range (two fields), Amount range; footer **Clear all** and **Show N expenses** pinned. The count updates as you pick.
+6. Summary: scroll down past the balance card. A slim pass appears under the top bar with the route, days and stops, and OUTSTANDING (or SETTLED) with the amount. Tap it to jump back to the top.
+7. Expenses: tap the red **Voice** pill, allow the microphone, say "500 lunch at the dhaba". The words appear live and the amount and category are filled in for you to confirm before saving. Needs the phone's speech service and a connection on Android.
+
+**Flag-OFF checks:** `enableTripHeaderActions` OFF restores the old title and strip, no Edit Trip entries. `enableSummaryUpgrades` OFF: no mini pass. `enablePassEditDelete` OFF: no Select. `enableVoiceInput` OFF: no Voice pill and no mic in Quick Add.
+
+**Pass:** no money numbers change; mic permission is asked only after tapping Voice; every control is at least 48dp.
+
+**Settlement pass flip (same section, `enableSummaryUpgrades` + `enableYouPaidVsShare`):**
+8. Summary: the pass has a small "↻ Your share" chip top right and the separate You paid / Your share card is gone. Tap anywhere on the pass: it turns over to show **You paid**, **Your share**, **Difference** (green if owed to you, red if you owe) and the reason. **Settlement pass** chip is on the back; tap again to turn back.
+9. On the back, tap **How your balance adds up**: the breakdown sheet opens.
+10. Not a trip member: the pass does not flip. Reduce motion on: faces swap without the turn.
+
+**Flag-OFF:** `enableSummaryUpgrades` OFF brings the old You paid / Your share card back and the pass does not flip.

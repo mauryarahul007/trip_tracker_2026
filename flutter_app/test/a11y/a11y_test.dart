@@ -284,7 +284,12 @@ void main() {
 
     testApp('photo tiles with a cover and the trip strip with arrows', (tester) async {
       final handle = tester.ensureSemantics();
-      await pumpApp(tester, user: asha, coverResolver: (d) async => d == 'Goa' ? 'https://img.test/goa.jpg' : null);
+      await pumpApp(
+        tester,
+        user: asha,
+        coverResolver: (d) async => d == 'Goa' ? 'https://img.test/goa.jpg' : null,
+        flagsOff: {'enableTripHeaderActions'},
+      );
       await twoTrips(tester);
       await settle(tester, rounds: 10);
       await guidelines(tester);

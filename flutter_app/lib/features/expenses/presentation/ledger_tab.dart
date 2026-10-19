@@ -15,6 +15,7 @@ import '../../../core/platform/external_launcher.dart';
 import '../../../core/platform/feedback.dart';
 import '../../../core/settings/app_settings.dart' show summaryCollapsePrefProvider;
 import '../../../core/platform/motion.dart';
+import '../../../shared/widgets/flip_card.dart';
 import '../../../core/platform/share_service.dart';
 import '../../../data/providers.dart';
 import '../../../data/sync/conflict_store.dart';
@@ -100,6 +101,27 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
   var _allCats = false;
   bool? _wasSettled; // to notice the moment the trip becomes settled
   var _personView = false; // Who paid card as people, not groups (this viewer only; never touches Who pays whom)
+
+  /// Once the big balance card has scrolled away, a slim pass with the amount still owed stays pinned (phone layout).
+  final _scroll = ScrollController();
+  var _showMini = false;
+  var _flipped = false; // settlement pass shows its reverse (your share)
+  static const _miniAfter = 360.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(() {
+      final show = _scroll.hasClients && _scroll.offset > _miniAfter;
+      if (show != _showMini) setState(() => _showMini = show);
+    });
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
 
   Future<void> _settle(BuildContext context, Transfer t, {bool focusAmount = false}) async {
     final trip = ref.read(tripProvider(widget.tripId)).value;
@@ -315,6 +337,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         : (heroBalance > 0 ? tokens.colorSuccess : tokens.colorDanger);
     final counts = ref.watch(tripSettlementCountsProvider(id));
     final upgradesOn = _flag(ref, 'enableSummaryUpgrades', id);
+    final flipOn = iAmIn && upgradesOn && _flag(ref, 'enableYouPaidVsShare', id);
     final totals = computeTotals(
       ref.watch(tripExpensesProvider(id)).value ?? const <Expense>[],
       visibleMemberCount: ref.watch(visibleMembersProvider(id)).length,
@@ -1094,80 +1117,110 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
       Padding(
         key: const Key('sticky-balance'),
         padding: const EdgeInsets.only(bottom: 20),
-        child: BoardingPassCard(
-          tone: heroTone,
-          banner: _PassBanner(
-            coverUrl: trip.coverImageUrl,
-            title: trip.name,
-            dates: tripDates,
-            eyebrow: l10n.ledPassTitle,
-          ),
-          top: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              BentoTile.eyebrow(context, heroTone, heroLabel),
-              const SizedBox(height: 4),
-              // The digits roll like an odometer when an expense or a settlement changes the balance,
-              // also when you come back to this page after adding one (the last shown figure is remembered).
-              Builder(
-                builder: (_) {
-                  final sp = _splitMoney(formatMoney(context, heroBalance.abs(), cur));
-                  return RollingMoneyText(
-                    key: const Key('hero-amount'),
-                    memoryKey: 'hero-$id',
-                    whole: sp.$1,
-                    decimals: sp.$2 ?? '',
-                    fontSize: compact ? 38 : 46,
-                    color: heroColor,
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  StatusStamp(
-                    key: const Key('settle-stamp'),
-                    settled: tripSettled,
-                    text: tripSettled ? l10n.ledStampSettled : l10n.ledStampNotSettled,
-                    tone: heroTone,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      '${trip.memberIds.length} ${l10n.ledHeroTravellers}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: tokens.textSecondary),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          stub: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                flex: 5,
-                child: Row(
+        child: _flipWrap(
+          on: flipOn,
+          back: () {
+            final paid = spend.paid[mine] ?? 0.0, share = spend.share[mine] ?? 0.0;
+            final diff = double.parse((paid - share).toStringAsFixed(2));
+            final even = diff.abs() < 0.01;
+            return PassBack(
+              title: trip.name,
+              eyebrow: l10n.ledYourShare,
+              chipLabel: l10n.ledPassTitle,
+              paid: formatMoney(context, paid, cur),
+              share: formatMoney(context, share, cur),
+              diff: '${diff > 0.005 ? '+' : (diff < -0.005 ? '-' : '')}${formatMoney(context, diff.abs(), cur)}',
+              diffColor: even ? tokens.textPrimary : (diff > 0 ? tokens.colorSuccess : tokens.colorDanger),
+              why: even ? l10n.ledPaidEven : (diff > 0 ? l10n.ledPaidMore : l10n.ledPaidLess),
+              labels: (l10n.ledYouPaid, l10n.ledYourShare, l10n.ledDifference),
+              explainLabel: l10n.ledExplainTitle,
+              onExplain: _flag(ref, 'enableBalanceExplainer', id)
+                  ? () => _showBalanceExplainer(
+                      context,
+                      l10n,
+                      cur,
+                      myBalanceLines(ref.read(tripExpensesProvider(id)).value ?? const <Expense>[], mine!),
+                    )
+                  : null,
+            );
+          },
+          chipLabel: l10n.ledYourShare,
+          flipLabel: _flipped ? l10n.ledPassTitle : l10n.ledYourShare,
+          front: BoardingPassCard(
+            tone: heroTone,
+            banner: _PassBanner(
+              coverUrl: trip.coverImageUrl,
+              title: trip.name,
+              dates: tripDates,
+              eyebrow: l10n.ledPassTitle,
+            ),
+            top: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                BentoTile.eyebrow(context, heroTone, heroLabel),
+                const SizedBox(height: 4),
+                // The digits roll like an odometer when an expense or a settlement changes the balance,
+                // also when you come back to this page after adding one (the last shown figure is remembered).
+                Builder(
+                  builder: (_) {
+                    final sp = _splitMoney(formatMoney(context, heroBalance.abs(), cur));
+                    return RollingMoneyText(
+                      key: const Key('hero-amount'),
+                      memoryKey: 'hero-$id',
+                      whole: sp.$1,
+                      decimals: sp.$2 ?? '',
+                      fontSize: compact ? 38 : 46,
+                      color: heroColor,
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                Row(
                   children: [
-                    field(l10n.expTotalSpent, formatMoney(context, totals.totalSpent, cur)),
-                    const SizedBox(width: 12),
-                    field(l10n.expPerPerson, formatMoney(context, totals.averageCost, cur)),
-                    const SizedBox(width: 12),
-                    field(l10n.ledHeroOpen, '${result.transfers.length}'),
+                    StatusStamp(
+                      key: const Key('settle-stamp'),
+                      settled: tripSettled,
+                      text: tripSettled ? l10n.ledStampSettled : l10n.ledStampNotSettled,
+                      tone: heroTone,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        '${trip.memberIds.length} ${l10n.ledHeroTravellers}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: tokens.textSecondary),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(flex: 3, child: TicketBarcode(seed: trip.id, height: 44)),
-            ],
+              ],
+            ),
+            stub: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: Row(
+                    children: [
+                      field(l10n.expTotalSpent, formatMoney(context, totals.totalSpent, cur)),
+                      const SizedBox(width: 12),
+                      field(l10n.expPerPerson, formatMoney(context, totals.averageCost, cur)),
+                      const SizedBox(width: 12),
+                      field(l10n.ledHeroOpen, '${result.transfers.length}'),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(flex: 3, child: TicketBarcode(seed: trip.id, height: 44)),
+              ],
+            ),
           ),
         ),
       ),
       // Your money: what I still receive and what I still pay (people on the trip only).
-      if (iAmIn && _flag(ref, 'enableYouPaidVsShare', id))
+      if (iAmIn && !flipOn && _flag(ref, 'enableYouPaidVsShare', id))
         _paidVsShareStrip(
           context: context,
           tokens: tokens,
@@ -1184,7 +1237,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                 )
               : null,
         )
-      else if (iAmIn)
+      else if (iAmIn && !flipOn)
         Padding(
           padding: const EdgeInsets.only(bottom: 20),
           child: Row(
@@ -1665,6 +1718,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
               }
               return ListView(
                 key: const Key('ledger-list'),
+                controller: _scroll,
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: padding,
                 children: [...topChildren, ...restChildren],
@@ -1672,6 +1726,40 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             },
           ),
         ),
+        if (upgradesOn)
+          Positioned(
+            top: 8,
+            left: 12,
+            right: 12,
+            child: AnimatedSwitcher(
+              duration: AppMotion.of(context, const Duration(milliseconds: 200)),
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: SlideTransition(
+                  position: Tween(begin: const Offset(0, -0.4), end: Offset.zero).animate(anim),
+                  child: child,
+                ),
+              ),
+              child: _showMini
+                  ? MiniPassBar(
+                      key: const Key('mini-pass'),
+                      route: tripRouteText(trip),
+                      meta: [
+                        if (tripDays(trip) > 0) '${tripDays(trip)} Day${tripDays(trip) == 1 ? '' : 's'}',
+                        if (trip.stops.isNotEmpty) '${trip.stops.length} Stop${trip.stops.length == 1 ? '' : 's'}',
+                      ].join(' · '),
+                      label: tripSettled ? 'SETTLED' : 'OUTSTANDING',
+                      amount: formatMoney(context, outstanding, cur),
+                      amountColor: tripSettled ? tokens.colorSuccess : tokens.colorDanger,
+                      onTap: () => _scroll.animateTo(
+                        0,
+                        duration: AppMotion.of(context, const Duration(milliseconds: 300)),
+                        curve: Curves.easeOutCubic,
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ),
         AddExpenseFab(tripId: id),
       ],
     );
@@ -1735,6 +1823,29 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _flipWrap({
+    required bool on,
+    required Widget front,
+    required Widget Function() back,
+    required String chipLabel,
+    required String flipLabel,
+  }) {
+    if (!on) return front;
+    return FlipCard(
+      key: const Key('pass-flip'),
+      flipped: _flipped,
+      label: 'Flip to $flipLabel',
+      onTap: () => setState(() => _flipped = !_flipped),
+      front: Stack(
+        children: [
+          front,
+          Positioned(top: 12, right: 12, child: FlipChip(chipLabel, key: const Key('pass-flip-chip'))),
+        ],
+      ),
+      back: back(),
     );
   }
 

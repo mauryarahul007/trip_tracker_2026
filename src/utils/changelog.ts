@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.68.0',
+    date: '2026-10-19',
+    changes: [
+      'Behind the scenes (Flutter app): a cleaner trip header (name, one line of dates, members and expenses), and Edit Trip Details is in the trip name menu and the top-bar menu.',
+      'Behind the scenes (Flutter app): select and delete several passes at once, a filters page that matches the web, a pinned mini settlement pass on Summary, and the settlement pass flips to show You paid, Your share and the difference.',
+      'Behind the scenes (Flutter app): a Voice button on Expenses that listens and fills in the expense for you to confirm.',
+    ],
+  },
+  {
     version: '3.67.0',
     date: '2026-10-19',
     changes: [

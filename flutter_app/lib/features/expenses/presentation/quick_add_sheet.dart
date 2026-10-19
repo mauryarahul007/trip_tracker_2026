@@ -21,8 +21,11 @@ import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
 
 class QuickAddSheet extends ConsumerStatefulWidget {
-  const QuickAddSheet({required this.tripId, super.key});
+  const QuickAddSheet({required this.tripId, this.autoListen = false, super.key});
   final String tripId;
+
+  /// Start the microphone as soon as the sheet opens (the Voice button on Expenses).
+  final bool autoListen;
 
   @override
   ConsumerState<QuickAddSheet> createState() => _QuickAddSheetState();
@@ -35,6 +38,12 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
   bool _busy = false;
   bool _isListening = false;
   SpeechRecognitionSession? _speechSession;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.autoListen) WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_toggleVoiceInput()));
+  }
 
   @override
   void dispose() {

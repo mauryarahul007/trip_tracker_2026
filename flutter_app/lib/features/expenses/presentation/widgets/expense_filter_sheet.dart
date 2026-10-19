@@ -8,15 +8,13 @@ import '../../../../domain/models/member.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/app_typography.dart';
-import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
-import '../../../trips/presentation/widgets/create_trip_sheet.dart' show dateRangePickerProvider;
 
 String _ymd(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-/// Filter drawer: traveler, category, dates, amount range, relation. The
+/// Full-height filters page (web parity): my expenses, category, paid by, date range, amount range. The
 /// button shows how many expenses the current choices would leave.
 class ExpenseFilterSheet extends ConsumerStatefulWidget {
   const ExpenseFilterSheet({
@@ -52,9 +50,45 @@ class _ExpenseFilterSheetState extends ConsumerState<ExpenseFilterSheet> {
     super.dispose();
   }
 
-  Future<void> _pickDates() async {
-    final r = await ref.read(dateRangePickerProvider)(context, DateTime.now(), null);
-    if (r != null) setState(() => _f = _f.copyWith(dateFrom: _ymd(r.start), dateTo: _ymd(r.end)));
+  Future<void> _pickDate({required bool from}) async {
+    final current = DateTime.tryParse(from ? _f.dateFrom : _f.dateTo);
+    final now = DateTime.now();
+    final d = await showDatePicker(
+      context: context,
+      initialDate: current ?? now,
+      firstDate: DateTime(now.year - 5),
+      lastDate: DateTime(now.year + 5),
+    );
+    if (d == null) return;
+    setState(() => _f = from ? _f.copyWith(dateFrom: _ymd(d)) : _f.copyWith(dateTo: _ymd(d)));
+  }
+
+  Widget _dateField(Key key, String value, String hint, {required bool from}) {
+    final t = context.tokens;
+    return InkWell(
+      key: key,
+      borderRadius: BorderRadius.circular(14),
+      onTap: () => _pickDate(from: from),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 52),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          border: Border.all(color: t.borderColor),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                value.isEmpty ? hint : value,
+                style: TextStyle(color: value.isEmpty ? t.textMuted : t.textPrimary, fontSize: 15),
+              ),
+            ),
+            Icon(Icons.calendar_today_outlined, size: 18, color: t.textSecondary),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _label(String text) => Text(
@@ -71,124 +105,186 @@ class _ExpenseFilterSheetState extends ConsumerState<ExpenseFilterSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final t = context.tokens;
     final count = filterExpenses(widget.all, _f, myMemberId: widget.myMemberId).length;
-    final hasDates = _f.dateFrom.isNotEmpty || _f.dateTo.isNotEmpty;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _label(l10n.filterTraveler),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              for (final m in widget.members)
-                ChoiceChip(
-                  key: Key('filter-member-${m.id}'),
-                  showCheckmark: false,
-                  shape: const StadiumBorder(),
-                  avatar: AppAvatar(name: m.name, size: 22),
-                  label: Text(m.name, overflow: TextOverflow.ellipsis),
-                  selected: _f.memberId == m.id,
-                  onSelected: (on) => setState(() => _f = _f.copyWith(memberId: on ? m.id : '')),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _label(l10n.filterCategory),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              for (final c in widget.categories)
-                ChoiceChip(
-                  key: Key('filter-category-${c.id}'),
-                  showCheckmark: false,
-                  shape: const StadiumBorder(),
-                  label: Text('${c.icon != null && !c.icon!.contains(':') ? '${c.icon} ' : ''}${c.name}'),
-                  selected: _f.categoryId == c.id,
-                  onSelected: (on) => setState(() => _f = _f.copyWith(categoryId: on ? c.id : '')),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            key: const Key('filter-dates'),
-            onPressed: _pickDates,
-            icon: const Icon(Icons.date_range_rounded),
-            label: Text(hasDates ? '${_f.dateFrom} → ${_f.dateTo}' : '${l10n.filterFrom} / ${l10n.filterTo}'),
-            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-          ),
-          const SizedBox(height: 12),
-          Row(
+    Widget chips(List<Widget> children) => Wrap(spacing: 8, runSpacing: 6, children: children);
+    ChoiceChip chip({
+      Key? key,
+      required String label,
+      required bool selected,
+      required ValueChanged<bool> onSelected,
+    }) => ChoiceChip(
+      key: key,
+      showCheckmark: false,
+      shape: const StadiumBorder(),
+      label: Text(label, overflow: TextOverflow.ellipsis),
+      selected: selected,
+      onSelected: onSelected,
+    );
+    return Column(
+      children: [
+        // Branded header with a close button, like the web filters page.
+        Container(
+          color: t.primaryAccent,
+          padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
+          child: Row(
             children: [
               Expanded(
-                child: AppTextField(
-                  controller: _min,
-                  label: l10n.filterMin,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  onChanged: (v) => setState(() => _f = _f.copyWith(amountMin: v)),
+                child: Text(
+                  l10n.expFilters,
+                  key: const Key('filters-title'),
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontTitle,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: t.ctaFg,
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: AppTextField(
-                  controller: _max,
-                  label: l10n.filterMax,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  onChanged: (v) => setState(() => _f = _f.copyWith(amountMax: v)),
-                ),
+              IconButton(
+                key: const Key('filters-close'),
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                icon: Icon(Icons.close_rounded, color: t.ctaFg),
+                onPressed: () => Navigator.of(context).pop(),
               ),
             ],
           ),
-          if (widget.myMemberId != null) ...[
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                ChoiceChip(
-                  showCheckmark: false,
-                  shape: const StadiumBorder(),
-                  label: Text(l10n.expPaidByMe),
-                  selected: _f.relation == ExpenseRelation.paidByMe,
-                  onSelected: (s) => setState(
-                    () => _f = s ? _f.copyWith(relation: ExpenseRelation.paidByMe) : _f.copyWith(clearRelation: true),
-                  ),
+                if (widget.myMemberId != null) ...[
+                  _label('My expenses'),
+                  const SizedBox(height: 8),
+                  chips([
+                    chip(
+                      key: const Key('filter-paid-by-me'),
+                      label: l10n.expPaidByMe,
+                      selected: _f.relation == ExpenseRelation.paidByMe,
+                      onSelected: (s) => setState(
+                        () =>
+                            _f = s ? _f.copyWith(relation: ExpenseRelation.paidByMe) : _f.copyWith(clearRelation: true),
+                      ),
+                    ),
+                    chip(
+                      key: const Key('filter-included'),
+                      label: "I'm included in",
+                      selected: _f.relation == ExpenseRelation.involvesMe,
+                      onSelected: (s) => setState(
+                        () => _f = s
+                            ? _f.copyWith(relation: ExpenseRelation.involvesMe)
+                            : _f.copyWith(clearRelation: true),
+                      ),
+                    ),
+                  ]),
+                  const SizedBox(height: 20),
+                ],
+                _label(l10n.filterCategory),
+                const SizedBox(height: 8),
+                chips([
+                  for (final c in widget.categories)
+                    chip(
+                      key: Key('filter-category-${c.id}'),
+                      label: '${c.icon != null && !c.icon!.contains(':') ? '${c.icon} ' : ''}${c.name}',
+                      selected: _f.categoryId == c.id,
+                      onSelected: (on) => setState(() => _f = _f.copyWith(categoryId: on ? c.id : '')),
+                    ),
+                ]),
+                const SizedBox(height: 20),
+                _label('Paid by'),
+                const SizedBox(height: 8),
+                chips([
+                  for (final m in widget.members)
+                    chip(
+                      key: Key('filter-member-${m.id}'),
+                      label: m.name,
+                      selected: _f.memberId == m.id,
+                      onSelected: (on) => setState(() => _f = _f.copyWith(memberId: on ? m.id : '')),
+                    ),
+                ]),
+                const SizedBox(height: 20),
+                _label('Date range'),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(child: _dateField(const Key('filter-date-from'), _f.dateFrom, 'dd/mm/yyyy', from: true)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text('to', style: TextStyle(color: t.textMuted)),
+                    ),
+                    Expanded(child: _dateField(const Key('filter-date-to'), _f.dateTo, 'dd/mm/yyyy', from: false)),
+                  ],
                 ),
-                ChoiceChip(
-                  showCheckmark: false,
-                  shape: const StadiumBorder(),
-                  label: Text(l10n.expInvolvesMe),
-                  selected: _f.relation == ExpenseRelation.involvesMe,
-                  onSelected: (s) => setState(
-                    () => _f = s ? _f.copyWith(relation: ExpenseRelation.involvesMe) : _f.copyWith(clearRelation: true),
-                  ),
+                const SizedBox(height: 20),
+                _label('Amount range'),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppTextField(
+                        controller: _min,
+                        hint: 'Min',
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        onChanged: (v) => setState(() => _f = _f.copyWith(amountMin: v)),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text('to', style: TextStyle(color: t.textMuted)),
+                    ),
+                    Expanded(
+                      child: AppTextField(
+                        controller: _max,
+                        hint: 'Max',
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        onChanged: (v) => setState(() => _f = _f.copyWith(amountMax: v)),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-          const SizedBox(height: 20),
-          AppButton(
-            label: l10n.filterResults(count),
-            isFullWidth: true,
-            onPressed: () {
-              widget.onApply(_f);
-              Navigator.of(context).pop();
-            },
           ),
-          TextButton(
-            onPressed: () {
-              widget.onApply(ExpenseFilters(query: _f.query));
-              Navigator.of(context).pop();
-            },
-            child: Text(l10n.expClearFilters),
+        ),
+        // Pinned footer: Clear all beside the live result count.
+        Material(
+          color: t.bgSurface,
+          elevation: 6,
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+              child: Row(
+                children: [
+                  OutlinedButton(
+                    key: const Key('filter-clear-all'),
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(96, 52)),
+                    onPressed: () {
+                      widget.onApply(ExpenseFilters(query: _f.query));
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Clear all'),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppButton(
+                      label: l10n.filterResults(count),
+                      isFullWidth: true,
+                      onPressed: () {
+                        widget.onApply(_f);
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -53,6 +53,8 @@ class NotesTab extends ConsumerStatefulWidget {
 
 class _NotesTabState extends ConsumerState<NotesTab> {
   PassSort _passSort = PassSort.time;
+  var _selecting = false; // pass multi-select (needs enablePassEditDelete)
+  final _picked = <String>{};
   var _pane = 'checklist';
 
   /// Ticks the user just made, shown at once and cleared when the stored list agrees. Keeps the checklist
@@ -209,7 +211,9 @@ class _NotesTabState extends ConsumerState<NotesTab> {
             children: [
               Expanded(
                 child: Text(
-                  passes.isEmpty ? l10n.notesPasses : '${l10n.notesPasses} · ${passes.length}',
+                  _selecting
+                      ? '${_picked.length} selected'
+                      : (passes.isEmpty ? l10n.notesPasses : '${l10n.notesPasses} · ${passes.length}'),
                   style: TextStyle(
                     fontFamily: AppTypography.fontTitle,
                     fontSize: 20,
@@ -218,12 +222,47 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                   ),
                 ),
               ),
-              AppButton(
-                key: const Key('pass-add'),
-                label: l10n.notesAddPass,
-                icon: Icons.add_rounded,
-                onPressed: () => _addPass(context, passes),
-              ),
+              if (_selecting) ...[
+                TextButton(
+                  key: const Key('pass-select-all'),
+                  onPressed: () => setState(() {
+                    if (_picked.length == passes.length) {
+                      _picked.clear();
+                    } else {
+                      _picked.addAll(passes.map((x) => x.id));
+                    }
+                  }),
+                  child: Text(_picked.length == passes.length ? 'Clear' : 'Select all'),
+                ),
+                IconButton(
+                  key: const Key('pass-delete-selected'),
+                  tooltip: 'Delete selected',
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  onPressed: _picked.isEmpty ? null : () => unawaited(_deletePicked(context, passes)),
+                ),
+                IconButton(
+                  key: const Key('pass-select-cancel'),
+                  tooltip: 'Cancel',
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => setState(() {
+                    _selecting = false;
+                    _picked.clear();
+                  }),
+                ),
+              ] else ...[
+                if (editDeleteOn && passes.length > 1)
+                  TextButton(
+                    key: const Key('pass-select'),
+                    onPressed: () => setState(() => _selecting = true),
+                    child: const Text('Select'),
+                  ),
+                AppButton(
+                  key: const Key('pass-add'),
+                  label: l10n.notesAddPass,
+                  icon: Icons.add_rounded,
+                  onPressed: () => _addPass(context, passes),
+                ),
+              ],
             ],
           ),
         ),
@@ -260,7 +299,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
           Builder(
             builder: (ctx) {
               final statusInfo = getTravelStatusInfo(p);
-              return PassCard(
+              final card = PassCard(
                 pass: p,
                 onEdit: editDeleteOn ? () => unawaited(_editPass(ctx, passes, p)) : null,
                 onDelete: editDeleteOn ? () => unawaited(_deletePass(ctx, passes, p)) : null,
@@ -273,6 +312,17 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                     LiveTravelStatusModal.show(ctx, statusInfo);
                   }
                 },
+              );
+              if (!_selecting) return card;
+              return Row(
+                children: [
+                  Checkbox(
+                    key: Key('pass-pick-${p.id}'),
+                    value: _picked.contains(p.id),
+                    onChanged: (v) => setState(() => v == true ? _picked.add(p.id) : _picked.remove(p.id)),
+                  ),
+                  Expanded(child: AbsorbPointer(child: card)),
+                ],
               );
             },
           ),
@@ -881,6 +931,44 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     await ref.read(tripRepositoryProvider).setPasses(widget.tripId, [
       for (final x in passes) x.id == pass.id ? edited : x,
     ]);
+  }
+
+  Future<void> _deletePicked(BuildContext context, List<TravelPass> passes) async {
+    final n = _picked.length;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Delete $n pass${n == 1 ? '' : 'es'}?'),
+        content: Text(context.l10n.notesPassDeleteBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.notesPassKeep)),
+          TextButton(
+            key: const Key('pass-delete-selected-confirm'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(context.l10n.rowDelete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    final repo = ref.read(tripRepositoryProvider);
+    final tripId = widget.tripId;
+    final gone = {..._picked};
+    await repo.setPasses(tripId, [
+      for (final x in passes)
+        if (!gone.contains(x.id)) x,
+    ]);
+    if (!mounted) return;
+    setState(() {
+      _selecting = false;
+      _picked.clear();
+    });
+    if (!context.mounted) return;
+    UndoSnackbar.show(
+      context: context,
+      message: '$n pass${n == 1 ? '' : 'es'} deleted',
+      onUndo: () => unawaited(repo.setPasses(tripId, passes)),
+    );
   }
 
   Future<void> _deletePass(BuildContext context, List<TravelPass> passes, TravelPass pass) async {

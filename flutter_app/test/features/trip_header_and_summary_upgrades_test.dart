@@ -1,4 +1,3 @@
-
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,8 +18,9 @@ Future<void> openTab(WidgetTester tester, Seed s, String tab) async {
   await settle(tester, rounds: 14);
 }
 
+/// Opens the trip actions sheet (a tap on the trip name).
 Future<void> longPressTitle(WidgetTester tester) async {
-  await tester.longPress(find.byKey(const Key('trip-title')));
+  await tester.tap(find.byKey(const Key('trip-title-actions')));
   await settle(tester, rounds: 6);
 }
 
@@ -28,7 +28,7 @@ void main() {
   setUpAll(() => driftRuntimeOptions.dontWarnAboutMultipleDatabases = true);
 
   group('Trip header actions', () {
-    testApp('long-press on the trip name opens the sheet with its meta line and actions', (tester) async {
+    testApp('tapping the trip name opens the sheet with its meta line and actions', (tester) async {
       await pumpApp(tester, user: asha);
       final s = await seedTrip(tester);
       await addExpense(tester, s, amount: 90);
@@ -78,25 +78,29 @@ void main() {
       final s = await seedTrip(tester, owner: 'u1');
       await openTab(tester, s, 'ledger');
       await longPressTitle(tester);
-      expect(key('trip-action-edit'), findsNothing);
+      // Shown but disabled, with the reason, so the option is discoverable.
+      expect(tester.widget<ListTile>(key('trip-action-edit')).enabled, isFalse);
+      expect(find.text('Only the organizer can edit'), findsOneWidget);
       expect(key('trip-action-share'), findsOneWidget);
     });
 
-    testApp('header shows the members and expenses chip; flag off removes the chip and the long-press sheet', (
-      tester,
-    ) async {
+    testApp('the title carries one meta line (dates, members, expenses) and a tap opens the actions', (tester) async {
       await pumpApp(tester, user: asha);
       final s = await seedTrip(tester);
       await addExpense(tester, s, amount: 90);
       await openTab(tester, s, 'ledger');
-      expect(key('trip-counts-chip'), findsOneWidget);
+      expect(find.textContaining('3 members · 1 expense'), findsWidgets);
+      expect(key('trip-status-dot'), findsOneWidget);
+      await tester.tap(key('trip-title-actions'));
+      await settle(tester, rounds: 6);
+      expect(key('trip-action-share'), findsOneWidget);
     });
 
     testApp('flag off: no chip, no long-press sheet', (tester) async {
       await pumpApp(tester, user: asha, flagsOff: {'enableTripHeaderActions'});
       final s = await seedTrip(tester);
       await openTab(tester, s, 'ledger');
-      expect(key('trip-counts-chip'), findsNothing);
+      expect(key('trip-meta'), findsNothing);
       await tester.longPress(find.byKey(const Key('trip-title')));
       await settle(tester, rounds: 4);
       expect(key('trip-action-share'), findsNothing);

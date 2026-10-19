@@ -53,7 +53,8 @@ class TripActionsSheet extends ConsumerWidget {
       go();
     }
 
-    Widget row(Key key, IconData icon, String title, String subtitle, VoidCallback onTap) => ListTile(
+    Widget row(Key key, IconData icon, String title, String subtitle, VoidCallback? onTap) => ListTile(
+      enabled: onTap != null,
       key: key,
       minTileHeight: 56,
       leading: SettingsIcon(icon),
@@ -110,20 +111,21 @@ class TripActionsSheet extends ConsumerWidget {
             nav.pop();
           },
         ),
-        if (canEdit)
-          row(
-            const Key('trip-action-edit'),
-            Icons.edit_outlined,
-            'Edit Trip Details',
-            'Name, dates, destination',
-            () => act(
-              () => AppSheet.show<bool>(
-                context: root,
-                title: 'Edit Trip',
-                builder: (_) => EditTripSheet(tripId: tripId),
-              ),
-            ),
-          ),
+        row(
+          const Key('trip-action-edit'),
+          Icons.edit_outlined,
+          'Edit Trip Details',
+          canEdit ? 'Name, dates, destination' : 'Only the organizer can edit',
+          canEdit
+              ? () => act(
+                  () => AppSheet.show<bool>(
+                    context: root,
+                    title: 'Edit Trip',
+                    builder: (_) => EditTripSheet(tripId: tripId),
+                  ),
+                )
+              : null,
+        ),
         row(
           const Key('trip-action-settings'),
           Icons.settings_outlined,

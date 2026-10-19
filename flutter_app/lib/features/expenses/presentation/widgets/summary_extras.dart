@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../../shared/theme/app_typography.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,6 +10,7 @@ import '../../../../domain/logic/expense_form_logic.dart' show todayDateString;
 import '../../../../domain/logic/expense_list_logic.dart';
 import '../../../../domain/models/expense.dart';
 import '../../../../domain/models/member.dart';
+import '../../../../domain/models/trip.dart';
 import '../../../../core/clock.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/widgets/app_sheet.dart';
@@ -107,6 +111,303 @@ class SummaryAttentionBar extends ConsumerWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Whole days from the trip's first to last day (inclusive); 0 when the dates are missing or reversed.
+int tripDays(Trip trip) {
+  final a = DateTime.tryParse(trip.startDate);
+  final b = DateTime.tryParse(trip.endDate);
+  if (a == null || b == null || b.isBefore(a)) return 0;
+  return b.difference(a).inDays + 1;
+}
+
+/// The small "↻ Your share" label that says a pass turns over (the whole pass is the tap target).
+class FlipChip extends StatelessWidget {
+  const FlipChip(this.label, {super.key});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(99)),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.flip_rounded, size: 14, color: Colors.white),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Reverse of the settlement pass: what you paid, your share and the difference, with the reason.
+class PassBack extends StatelessWidget {
+  const PassBack({
+    required this.title,
+    required this.eyebrow,
+    required this.paid,
+    required this.share,
+    required this.diff,
+    required this.diffColor,
+    required this.why,
+    required this.labels,
+    required this.chipLabel,
+    this.onExplain,
+    this.explainLabel = '',
+    super.key,
+  });
+
+  final String title;
+  final String eyebrow;
+  final String paid;
+  final String share;
+  final String diff;
+  final Color diffColor;
+  final String why;
+
+  /// You paid / Your share / Difference.
+  final (String, String, String) labels;
+  final String chipLabel;
+  final VoidCallback? onExplain;
+  final String explainLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    Widget cell(String label, String value, Color color) => Expanded(
+      child: Column(
+        children: [
+          Text(
+            label.toUpperCase(),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: AppTypography.fontMono,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1,
+              color: t.textMuted,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: color),
+          ),
+        ],
+      ),
+    );
+    return DefaultTextStyle.merge(
+      style: TextStyle(color: t.textPrimary),
+      child: Container(
+        key: const Key('pass-back'),
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: t.bgSurface,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: t.borderColor.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 16, offset: const Offset(0, 4)),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 14, 14, 14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [Color(0xFF0B1F33), Color(0xFF123A57), Color(0xFF1F6F78)]),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          eyebrow.toUpperCase(),
+                          style: const TextStyle(
+                            fontFamily: AppTypography.fontMono,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.6,
+                            color: Colors.white70,
+                          ),
+                        ),
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: AppTypography.fontTitle,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  FlipChip(chipLabel),
+                ],
+              ),
+            ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (_, c) => FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: SizedBox(
+                    width: c.maxWidth,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              cell(labels.$1, paid, t.textPrimary),
+                              cell(labels.$2, share, t.textPrimary),
+                              cell(labels.$3, diff, diffColor),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            why,
+                            key: const Key('pass-back-why'),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 13, color: t.textSecondary),
+                          ),
+                          if (onExplain != null) ...[
+                            const SizedBox(height: 12),
+                            OutlinedButton(
+                              key: const Key('pass-back-explain'),
+                              onPressed: onExplain,
+                              child: Text(explainLabel),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "Gangtok → Lachung → Pelling": the stops, else the destination, else the trip name.
+String tripRouteText(Trip trip) {
+  final stops = [
+    for (final s in trip.stops)
+      if (s.name.isNotEmpty) s.name,
+  ];
+  if (stops.isNotEmpty) return stops.join(' → ');
+  final d = trip.destination?.trim() ?? '';
+  return d.isNotEmpty ? d : trip.name;
+}
+
+/// The slim pass pinned under the top bar once the balance card has scrolled away.
+class MiniPassBar extends StatelessWidget {
+  const MiniPassBar({
+    required this.route,
+    required this.meta,
+    required this.label,
+    required this.amount,
+    required this.amountColor,
+    required this.onTap,
+    super.key,
+  });
+
+  final String route;
+  final String meta;
+  final String label;
+  final String amount;
+  final Color amountColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Material(
+      color: t.bgSurface,
+      elevation: 3,
+      shadowColor: Colors.black26,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 6, 6, 6),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: t.primaryAccent, borderRadius: BorderRadius.circular(6)),
+                  child: Text(
+                    'PASS',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.8, color: t.ctaFg),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        route,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      if (meta.isNotEmpty)
+                        Text(
+                          meta,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 12, color: t.textSecondary),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: t.textMuted,
+                      ),
+                    ),
+                    Text(
+                      amount,
+                      style: TextStyle(fontWeight: FontWeight.w800, color: amountColor),
+                    ),
+                  ],
+                ),
+                const Icon(Icons.keyboard_arrow_up_rounded),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

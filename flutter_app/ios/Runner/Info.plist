@@ -84,6 +84,10 @@
 	<string>Trip Tracker lets you pick a receipt photo from your library.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Trip Tracker uses Face ID to unlock the app.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Used only when you tap Voice to say an expense out loud.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Turns what you say into an expense you can review before saving.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Trip Tracker shares your live location with trip members when you turn on Live Location Share.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

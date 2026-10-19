@@ -82,8 +82,10 @@ void main() {
     expect(key('money-pay'), findsNothing);
   });
 
-  testApp('paid vs share strip replaces the two tiles and the explainer lists the expense', (tester) async {
-    await pumpApp(tester, user: asha);
+  testApp('paid vs share strip (upgrades off) replaces the two tiles and the explainer lists the expense', (
+    tester,
+  ) async {
+    await pumpApp(tester, user: asha, flagsOff: {'enableSummaryUpgrades'});
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 90); // Asha paid 90, her share 30: +60
     await openLedger(tester, s);

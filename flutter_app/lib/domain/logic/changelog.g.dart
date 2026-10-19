@@ -8,6 +8,11 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.68.0', '2026-10-19', [
+    'Behind the scenes (Flutter app): a cleaner trip header (name, one line of dates, members and expenses), and Edit Trip Details is in the trip name menu and the top-bar menu.',
+    'Behind the scenes (Flutter app): select and delete several passes at once, a filters page that matches the web, a pinned mini settlement pass on Summary, and the settlement pass flips to show You paid, Your share and the difference.',
+    'Behind the scenes (Flutter app): a Voice button on Expenses that listens and fills in the expense for you to confirm.',
+  ]),
   ChangelogEntry('3.67.0', '2026-10-19', [
     'Behind the scenes (Flutter app): Settings is one page of cards like the web, with Appearance and Haptics (All, Important, Off), Storage and Data, Archived Trips and Backups.',
     'Behind the scenes (Flutter app): long-press the trip name for Share, Mute, Edit Trip Details, Settings and Switch trip; the Summary gains attention chips, a close-out banner, Custom amount, Remind, How it works and an At a Glance grid.',
@@ -41,8 +46,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.57.0', '2026-10-17', [
     'Behind the scenes: the Flutter app has a WhatsApp-style Settings list with search, a cleaner Summary and Settlement Pass (your payments first, Settle all, share a summary picture, day-by-day spend, a device-only trip budget), group spend by Paid and Share, editable groups with a 2-member minimum, a title-and-note popup for new notes, a clearer checklist progress card with category bars, and a quicker offline start. No change to the web app.',
-  ]),
-  ChangelogEntry('3.56.0', '2026-10-10', [
-    'Behind the scenes: the Flutter app has a boarding-gate sign-in screen, a redesigned "Departures" card stack with an airport runway slider for New Trip and Join, and a Create Trip form that starts with the destination and suggests the trip name. Superadmin sessions are never restored automatically. No change to the web app.',
   ]),
 ];

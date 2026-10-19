@@ -177,16 +177,22 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
 
   Future<void> _openFilters() async {
     final all = ref.read(tripExpensesProvider(id)).value ?? const <Expense>[];
-    await AppSheet.show<void>(
+    final height = MediaQuery.sizeOf(context).height;
+    await showModalBottomSheet<void>(
       context: context,
-      title: context.l10n.expFilters,
-      builder: (_) => ExpenseFilterSheet(
-        initial: ref.read(expenseFiltersProvider(id)),
-        all: all,
-        members: ref.read(tripMembersProvider(id)).value ?? const <Member>[],
-        categories: ref.read(tripCategoriesProvider(id)),
-        myMemberId: ref.read(myMemberIdProvider(id)),
-        onApply: _setFilters,
+      isScrollControlled: true,
+      useSafeArea: true,
+      clipBehavior: Clip.antiAlias,
+      builder: (_) => SizedBox(
+        height: height * 0.92,
+        child: ExpenseFilterSheet(
+          initial: ref.read(expenseFiltersProvider(id)),
+          all: all,
+          members: ref.read(tripMembersProvider(id)).value ?? const <Member>[],
+          categories: ref.read(tripCategoriesProvider(id)),
+          myMemberId: ref.read(myMemberIdProvider(id)),
+          onApply: _setFilters,
+        ),
       ),
     );
   }
@@ -399,6 +405,20 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                     onChanged: _onSearch,
                   ),
                 ),
+                if (_flag(ref, 'enableVoiceInput', id))
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: ActionChip(
+                      key: const Key('voice-add'),
+                      avatar: Icon(Icons.mic_rounded, size: 18, color: context.tokens.colorDanger),
+                      label: const Text('Voice'),
+                      onPressed: () => AppSheet.show<void>(
+                        context: context,
+                        title: 'Voice expense',
+                        builder: (_) => QuickAddSheet(tripId: id, autoListen: true),
+                      ),
+                    ),
+                  ),
                 IconButton(
                   key: const Key('open-filters'),
                   tooltip: l10n.expFilters,

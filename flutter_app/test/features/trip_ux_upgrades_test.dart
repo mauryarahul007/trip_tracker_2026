@@ -33,7 +33,7 @@ Future<void> toText(WidgetTester tester, Finder f, {double delta = 300}) async {
 
 void main() {
   testApp('trip header strip (a Labs flag, off by default) shows status and dates when turned on', (tester) async {
-    await pumpApp(tester, user: asha, flagsOn: {'enableTripHeaderStrip'});
+    await pumpApp(tester, user: asha, flagsOn: {'enableTripHeaderStrip'}, flagsOff: {'enableTripHeaderActions'});
     final s = await seedTrip(tester);
     await openLedger(tester, s);
     expect(key('trip-strip'), findsOneWidget);

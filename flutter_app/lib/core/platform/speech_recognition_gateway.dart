@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 /// Contract representing a running speech recognition session.
 abstract class SpeechRecognitionSession {
@@ -90,13 +91,34 @@ class FakeSpeechRecognitionGateway implements SpeechRecognitionGateway {
   }
 }
 
-/// Default platform speech recognition gateway.
+/// Real microphone gateway over the device speech service (Android Google speech, iOS SFSpeech).
 class DefaultSpeechRecognitionGateway implements SpeechRecognitionGateway {
-  @override
-  Future<bool> isSupported() async => false;
+  final _stt = stt.SpeechToText();
+  var _ready = false;
+  void Function(String)? _onError;
+  void Function()? _onEnd;
+
+  /// Initialising asks for the microphone / speech permission, so support and permission share one call.
+  Future<bool> _init() async {
+    if (_ready) return true;
+    try {
+      _ready = await _stt.initialize(
+        onError: (e) => _onError?.call(e.errorMsg),
+        onStatus: (st) {
+          if (st == 'done' || st == 'notListening') _onEnd?.call();
+        },
+      );
+    } on Object {
+      _ready = false;
+    }
+    return _ready;
+  }
 
   @override
-  Future<bool> requestPermission() async => false;
+  Future<bool> isSupported() => _init();
+
+  @override
+  Future<bool> requestPermission() => _init();
 
   @override
   SpeechRecognitionSession startListening({
@@ -105,11 +127,19 @@ class DefaultSpeechRecognitionGateway implements SpeechRecognitionGateway {
     required void Function() onEnd,
     String? locale,
   }) {
-    Timer.run(() {
-      onError('Speech recognition not available on this platform.');
-      onEnd();
-    });
-    return _SimpleSession(onStop: () {}, onCancel: () {});
+    _onError = onError;
+    _onEnd = onEnd;
+    unawaited(
+      _stt.listen(
+        onResult: (r) => onResult(r.recognizedWords, r.finalResult),
+        listenOptions: stt.SpeechListenOptions(
+          partialResults: true,
+          cancelOnError: true,
+          localeId: locale ?? 'en_IN',
+        ),
+      ),
+    );
+    return _SimpleSession(onStop: () => unawaited(_stt.stop()), onCancel: () => unawaited(_stt.cancel()));
   }
 }
 

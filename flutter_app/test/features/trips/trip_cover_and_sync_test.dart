@@ -33,7 +33,7 @@ Future<String?> goa(String d) async => d == 'Goa' ? 'https://img.test/goa.jpg' :
 
 void main() {
   testApp('the destination photo is on the tile and becomes the band under the trip top bar', (tester) async {
-    await pumpApp(tester, user: asha, coverResolver: goa, flagsOn: {'enableTripCoverHeader', 'enableTripHeaderStrip'});
+    await pumpApp(tester, user: asha, coverResolver: goa, flagsOn: {'enableTripCoverHeader', 'enableTripHeaderStrip'}, flagsOff: {'enableTripHeaderActions'});
     final id = await goaTrip(tester);
     await settle(tester, rounds: 10);
     expect(key('trip-thumb-$id'), findsOneWidget); // the grid tile
@@ -79,7 +79,7 @@ void main() {
   });
 
   testApp('the strip (when turned on) still shows the saved line', (tester) async {
-    await pumpApp(tester, user: asha, flagsOn: {'enableTripHeaderStrip'});
+    await pumpApp(tester, user: asha, flagsOn: {'enableTripHeaderStrip'}, flagsOff: {'enableTripHeaderActions'});
     final id = await goaTrip(tester);
     await openTrip(tester, id);
     expect(find.descendant(of: key('sync-line'), matching: find.text('All saved')), findsOneWidget);

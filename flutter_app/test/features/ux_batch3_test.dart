@@ -98,7 +98,9 @@ void main() {
       await goTo(tester, '/trip/$later/ledger');
       expect(appBarTitle(tester), 'Later Trip');
       expect(key('trip-prev'), findsNothing); // the old arrows are gone
-      await tester.tap(key('trip-switcher'));
+      await tester.tap(key('trip-title-actions'));
+      await settle(tester, rounds: 8);
+      await tester.tap(key('trip-action-switch'));
       await settle(tester, rounds: 8);
       expect(key('switch-to-$later'), findsOneWidget);
       await tester.tap(key('switch-to-$sooner'));
@@ -385,6 +387,7 @@ void main() {
         tester,
         user: asha,
         flagsOn: {'enableTripHeaderStrip'},
+        flagsOff: {'enableTripHeaderActions'},
         overrides: [tripAccentProvider.overrideWith((ref, id) async => const Color(0xFF8B2E2E))],
       );
       final id = await tripAt(tester, 'Accent Trip', 5);
@@ -397,7 +400,7 @@ void main() {
         tester,
         user: asha,
         flagsOn: {'enableTripHeaderStrip'},
-        flagsOff: {'enableTripAccent'},
+        flagsOff: {'enableTripAccent', 'enableTripHeaderActions'},
         overrides: [tripAccentProvider.overrideWith((ref, id) async => const Color(0xFF8B2E2E))],
       );
       final id = await tripAt(tester, 'Plain Trip', 5);
