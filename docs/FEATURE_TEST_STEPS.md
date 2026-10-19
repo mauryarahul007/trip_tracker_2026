@@ -1722,7 +1722,7 @@ No new flag. Role changes, reminders, and group create stay on the existing Memb
 
 ## SETTLE-GROUP-RLS — Second partial group settlement no longer fails
 
-**Commit:** see BUG-293. **Migrations:** none. A settlement between a group and someone else used to be recorded under the group member with the biggest balance. After one partial payment, that could switch to the other group member. A non-organizer's next settle was then rejected with `new row violates row-level security policy for table "expenses"`. The signed-in member is now recorded for their own group's side.
+**Commit:** `ecf23b2` (BUG-293). **Migrations:** none. A settlement between a group and someone else used to be recorded under the group member with the biggest balance. After one partial payment, that could switch to the other group member. A non-organizer's next settle was then rejected with `new row violates row-level security policy for table "expenses"`. The signed-in member is now recorded for their own group's side.
 
 ### Flags
 | Behavior | Flag | Default |

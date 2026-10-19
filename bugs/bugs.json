@@ -7907,6 +7907,6 @@
     "updatedAt": "2026-10-19T14:58:04.704Z",
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-19T14:58:04.704Z",
-    "resolutionNote": "Fixed in v3.43.13. Group settlements are recorded under the signed-in member for their own group's side (settlementPartiesForRecorder), so a partial payment no longer flips the next one to a groupmate the insert policy rejects."
+    "resolutionNote": "Fixed in commit ecf23b2 (v3.43.13). Group settlements are recorded under the signed-in member for their own group's side (settlementPartiesForRecorder), so a partial payment no longer flips the next one to a groupmate the insert policy rejects."
   }
 ]
