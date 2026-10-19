@@ -18,10 +18,7 @@ DateTime? parsePassDateTime(String? dateStr) {
   if (direct != null && raw.contains(':')) return direct;
 
   final parsedFlight = parseFlightDate(raw);
-  if (parsedFlight != null &&
-      parsedFlight.year != null &&
-      parsedFlight.month != null &&
-      parsedFlight.day != null) {
+  if (parsedFlight != null && parsedFlight.year != null && parsedFlight.month != null && parsedFlight.day != null) {
     if (parsedFlight.timeString != null) {
       final timeMatch = RegExp(r'(\d{1,2}):(\d{2})(?:\s*([AaPp][Mm]))?').firstMatch(parsedFlight.timeString!);
       if (timeMatch != null) {
@@ -276,8 +273,8 @@ class NextUpTravelCapsule extends ConsumerWidget {
                     target.status == 'completed'
                         ? 'COMPLETED'
                         : target.status == 'en-route'
-                            ? 'EN ROUTE'
-                            : 'NEXT UP',
+                        ? 'EN ROUTE'
+                        : 'NEXT UP',
                     style: const TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w900,
@@ -362,11 +359,7 @@ class NextUpTravelCapsule extends ConsumerWidget {
               ),
               child: Text(
                 target.layoverInfo!,
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
+                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Colors.white),
               ),
             ),
           ],

@@ -25,27 +25,34 @@ class _FakeChatReader extends TripRemoteReader {
 
   @override
   Future<Map<String, dynamic>> tripChanges(String tripId, DateTime? since) async => {
-        'server_time': '2026-10-19T10:00:00.000Z',
-        'trip': {
-          'id': 'trip-1',
-          'name': 'Paris Trip',
-          'owner_id': 'u1',
-          'start_date': '2026-11-01',
-          'end_date': '2026-11-10',
-          'base_currency': 'EUR',
-          'join_code': 'PARIS',
-          'created_at': '2026-10-01T00:00:00Z',
-          'updated_at': '2026-10-01T00:00:00Z',
-        },
-        'members': [
-          {'id': 'm1', 'trip_id': 'trip-1', 'name': 'Alice', 'user_id': 'u1', 'created_at': '2026-10-01T00:00:00Z', 'updated_at': '2026-10-01T00:00:00Z'},
-        ],
-        'groups': [],
-        'group_members': [],
-        'categories': [],
-        'expenses': [],
-        'tombstones': {'expenses': []},
-      };
+    'server_time': '2026-10-19T10:00:00.000Z',
+    'trip': {
+      'id': 'trip-1',
+      'name': 'Paris Trip',
+      'owner_id': 'u1',
+      'start_date': '2026-11-01',
+      'end_date': '2026-11-10',
+      'base_currency': 'EUR',
+      'join_code': 'PARIS',
+      'created_at': '2026-10-01T00:00:00Z',
+      'updated_at': '2026-10-01T00:00:00Z',
+    },
+    'members': [
+      {
+        'id': 'm1',
+        'trip_id': 'trip-1',
+        'name': 'Alice',
+        'user_id': 'u1',
+        'created_at': '2026-10-01T00:00:00Z',
+        'updated_at': '2026-10-01T00:00:00Z',
+      },
+    ],
+    'groups': <Object?>[],
+    'group_members': <Object?>[],
+    'categories': <Object?>[],
+    'expenses': <Object?>[],
+    'tombstones': {'expenses': <Object?>[]},
+  };
 
   @override
   Future<List<Map<String, dynamic>>> tripMessages(String tripId, {DateTime? since}) async => tripMessagesList;
@@ -108,19 +115,15 @@ void main() {
         createdAt: DateTime(2026, 10, 19, 14, 25).millisecondsSinceEpoch,
       );
 
-      final flags = FakeFlags(
-        {'enableChatOfflineOutbox', 'enableTripChat'},
-        {},
-      );
+      final flags = FakeFlags({'enableChatOfflineOutbox', 'enableTripChat'}, {});
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
             tripMessagesProvider('trip-1').overrideWith((ref) => Stream.value([msg])),
-            tripMembersProvider('trip-1').overrideWith(
-              (ref) => Stream.value([const Member(id: 'm1', name: 'Alice', tripId: 'trip-1')]),
-            ),
+            tripMembersProvider('trip-1')
+                .overrideWith((ref) => Stream.value([const Member(id: 'm1', name: 'Alice', tripId: 'trip-1')])),
             myMemberIdProvider('trip-1').overrideWithValue('m1'),
             flagsRepositoryProvider.overrideWithValue(flags),
             dirtyIdsProvider.overrideWith((ref) => Stream.value(const <String>{})),
@@ -128,9 +131,7 @@ void main() {
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: ChatPane(tripId: 'trip-1'),
-            ),
+            home: Scaffold(body: ChatPane(tripId: 'trip-1')),
           ),
         ),
       );

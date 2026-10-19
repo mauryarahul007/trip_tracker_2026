@@ -113,13 +113,13 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
   }
 
   Map<String, dynamic> _buildUpiDetails() => {
-        'payeeUpiId': _upiController.text.trim(),
-        'payeeName': widget.toName,
-        'amount': widget.amount,
-        'note': widget.tripName != null && widget.tripName!.isNotEmpty
-            ? 'Settlement for ${widget.tripName}'
-            : 'Trip Settlement',
-      };
+    'payeeUpiId': _upiController.text.trim(),
+    'payeeName': widget.toName,
+    'amount': widget.amount,
+    'note': widget.tripName != null && widget.tripName!.isNotEmpty
+        ? 'Settlement for ${widget.tripName}'
+        : 'Trip Settlement',
+  };
 
   Future<void> _launchApp(String scheme) async {
     final upiId = _upiController.text.trim();
@@ -311,8 +311,14 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
               filled: true,
               fillColor: tokens.bgSurface,
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: tokens.borderColor)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: tokens.borderColor)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: tokens.borderColor),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: tokens.borderColor),
+              ),
             ),
             onChanged: (_) => setState(() => _error = null),
           ),
@@ -365,11 +371,7 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
                       const SizedBox(height: 8),
                       const Text(
                         'Scan with any UPI app to pay',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF475569),
-                        ),
+                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
                       ),
                     ],
                   ),

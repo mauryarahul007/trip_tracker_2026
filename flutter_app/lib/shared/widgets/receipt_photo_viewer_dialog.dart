@@ -29,13 +29,7 @@ Future<void> showReceiptPhotoViewer(
 }
 
 class ReceiptPhotoViewerDialog extends StatelessWidget {
-  const ReceiptPhotoViewerDialog({
-    required this.previewPath,
-    this.title,
-    this.subtitle,
-    this.actionButton,
-    super.key,
-  });
+  const ReceiptPhotoViewerDialog({required this.previewPath, this.title, this.subtitle, this.actionButton, super.key});
 
   final String previewPath;
   final String? title;
@@ -75,10 +69,7 @@ class ReceiptPhotoViewerDialog extends StatelessWidget {
         children: [
           Icon(Icons.broken_image_outlined, color: Colors.white54, size: 48),
           SizedBox(height: 12),
-          Text(
-            'Unable to load receipt photo',
-            style: TextStyle(color: Colors.white70, fontSize: 14),
-          ),
+          Text('Unable to load receipt photo', style: TextStyle(color: Colors.white70, fontSize: 14)),
         ],
       ),
     );
@@ -91,11 +82,7 @@ class ReceiptPhotoViewerDialog extends StatelessWidget {
       child: Stack(
         children: [
           Positioned.fill(
-            child: InteractiveViewer(
-              minScale: 0.8,
-              maxScale: 5.0,
-              child: Center(child: _buildImage(context)),
-            ),
+            child: InteractiveViewer(minScale: 0.8, maxScale: 5.0, child: Center(child: _buildImage(context))),
           ),
           // Top bar with gradient backdrop for contrast
           Positioned(
@@ -134,11 +121,7 @@ class ReceiptPhotoViewerDialog extends StatelessWidget {
                                 title!,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
                               ),
                             if (subtitle != null && subtitle!.isNotEmpty)
                               Text(
@@ -160,10 +143,7 @@ class ReceiptPhotoViewerDialog extends StatelessWidget {
             SafeArea(
               child: Align(
                 alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: actionButton!,
-                ),
+                child: Padding(padding: const EdgeInsets.all(16), child: actionButton!),
               ),
             ),
         ],

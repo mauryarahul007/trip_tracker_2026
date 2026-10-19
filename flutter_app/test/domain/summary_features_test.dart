@@ -134,7 +134,7 @@ void main() {
   });
 
   test('next pass: multi-leg progression selects Leg 2 once Leg 1 reaches its endDateTime', () {
-    final leg1 = TravelPass(
+    const leg1 = TravelPass(
       id: 'leg1',
       tripId: 't',
       type: 'flight',
@@ -144,7 +144,7 @@ void main() {
       createdAt: 0,
       updatedAt: 0,
     );
-    final leg2 = TravelPass(
+    const leg2 = TravelPass(
       id: 'leg2',
       tripId: 't',
       type: 'flight',

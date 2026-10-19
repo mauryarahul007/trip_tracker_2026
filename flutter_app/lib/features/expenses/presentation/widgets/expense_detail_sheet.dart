@@ -371,12 +371,7 @@ class ExpenseDetailSheet extends ConsumerWidget {
 }
 
 class _ReceiptPreview extends ConsumerWidget {
-  const _ReceiptPreview({
-    required this.expenseId,
-    required this.remotePath,
-    this.title,
-    this.subtitle,
-  });
+  const _ReceiptPreview({required this.expenseId, required this.remotePath, this.title, this.subtitle});
 
   final String expenseId;
   final String? remotePath;
@@ -393,12 +388,7 @@ class _ReceiptPreview extends ConsumerWidget {
       child: InkWell(
         key: const Key('detail-receipt-tap'),
         borderRadius: BorderRadius.circular(12),
-        onTap: () => showReceiptPhotoViewer(
-          context,
-          previewPath: preview,
-          title: title,
-          subtitle: subtitle,
-        ),
+        onTap: () => showReceiptPhotoViewer(context, previewPath: preview, title: title, subtitle: subtitle),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Stack(
@@ -423,10 +413,7 @@ class _ReceiptPreview extends ConsumerWidget {
                 right: 8,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+                  decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(16)),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

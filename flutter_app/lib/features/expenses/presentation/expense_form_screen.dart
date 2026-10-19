@@ -226,11 +226,7 @@ class _FormBodyState extends ConsumerState<_FormBody> {
             s.receiptPath != null
                 ? Row(
                     children: [
-                      _FormReceiptThumbnail(
-                        editingId: args.editingId,
-                        receiptPath: s.receiptPath!,
-                        title: s.title,
-                      ),
+                      _FormReceiptThumbnail(editingId: args.editingId, receiptPath: s.receiptPath!, title: s.title),
                       const SizedBox(width: 12),
                       Expanded(child: Text(l10n.formReceiptAttached)),
                       TextButton(
@@ -1103,11 +1099,7 @@ extension on TripFxConfig {
 }
 
 class _FormReceiptThumbnail extends ConsumerWidget {
-  const _FormReceiptThumbnail({
-    required this.editingId,
-    required this.receiptPath,
-    required this.title,
-  });
+  const _FormReceiptThumbnail({required this.editingId, required this.receiptPath, required this.title});
 
   final String? editingId;
   final String receiptPath;
@@ -1117,9 +1109,7 @@ class _FormReceiptThumbnail extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final clean = receiptPath.replaceFirst('file://', '');
     final localExists = File(clean).existsSync();
-    final preview = localExists
-        ? clean
-        : ref.watch(receiptPreviewProvider((editingId ?? '', receiptPath))).value;
+    final preview = localExists ? clean : ref.watch(receiptPreviewProvider((editingId ?? '', receiptPath))).value;
 
     final resolved = preview ?? (clean.startsWith('http') ? clean : null);
 
@@ -1154,27 +1144,17 @@ class _FormReceiptThumbnail extends ConsumerWidget {
       key: const Key('receipt-preview-tap'),
       borderRadius: BorderRadius.circular(8),
       onTap: resolved != null
-          ? () => showReceiptPhotoViewer(
-                context,
-                previewPath: resolved,
-                title: title.isEmpty ? 'Receipt' : title,
-              )
+          ? () => showReceiptPhotoViewer(context, previewPath: resolved, title: title.isEmpty ? 'Receipt' : title)
           : null,
       child: Stack(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: imageWidget,
-          ),
+          ClipRRect(borderRadius: BorderRadius.circular(8), child: imageWidget),
           Positioned(
             bottom: 2,
             right: 2,
             child: Container(
               padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(
-                color: Colors.black54,
-                shape: BoxShape.circle,
-              ),
+              decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
               child: const Icon(Icons.zoom_in_rounded, size: 14, color: Colors.white),
             ),
           ),

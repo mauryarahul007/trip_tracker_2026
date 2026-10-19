@@ -256,17 +256,10 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                   padding: const EdgeInsets.only(bottom: 2),
                   child: Text(
                     name,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      color: context.tokens.primaryAccent,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: context.tokens.primaryAccent),
                   ),
                 ),
-              Text(
-                m.body,
-                style: TextStyle(color: context.tokens.textPrimary, fontSize: 14.5),
-              ),
+              Text(m.body, style: TextStyle(color: context.tokens.textPrimary, fontSize: 14.5)),
               const SizedBox(height: 2),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -337,10 +330,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                   shape: BoxShape.circle,
                 ),
                 child: Center(
-                  child: Text(
-                    isSettlement ? '🤝' : (isExpense ? '🧾' : '📌'),
-                    style: const TextStyle(fontSize: 15),
-                  ),
+                  child: Text(isSettlement ? '🤝' : (isExpense ? '🧾' : '📌'), style: const TextStyle(fontSize: 15)),
                 ),
               ),
               const SizedBox(width: 10),
@@ -351,11 +341,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                   children: [
                     Text(
                       m.body,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: context.tokens.textPrimary,
-                      ),
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.tokens.textPrimary),
                     ),
                     if (expenseId != null) ...[
                       const SizedBox(height: 2),
@@ -376,10 +362,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                       ),
                     ],
                     if (pending)
-                      Text(
-                        context.l10n.chatPending,
-                        style: TextStyle(fontSize: 10.5, color: context.tokens.textMuted),
-                      ),
+                      Text(context.l10n.chatPending, style: TextStyle(fontSize: 10.5, color: context.tokens.textMuted)),
                   ],
                 ),
               ),
