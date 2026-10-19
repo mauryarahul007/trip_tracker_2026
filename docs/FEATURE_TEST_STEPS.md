@@ -2352,7 +2352,7 @@ Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, ne
 
 ## SETTLE-GROUP-RLS — Second partial group settlement no longer fails
 
-**Commit:** see BUG-293. **Migrations:** none. A settlement between a group and someone else used to be recorded under the group member with the biggest balance. After one partial payment, that could switch to the other group member. A non-organizer's next settle was then rejected with `new row violates row-level security policy for table "expenses"`. The signed-in member is now recorded for their own group's side. Fixed on web (`settlementPartiesForRecorder`) and Flutter (`planSettlement` in `flutter_app/lib/domain/logic/settle_up.dart`, used by the settle sheet and Settle all).
+**Commit:** `4f33b89` (BUG-293). **Migrations:** none. A settlement between a group and someone else used to be recorded under the group member with the biggest balance. After one partial payment, that could switch to the other group member. A non-organizer's next settle was then rejected with `new row violates row-level security policy for table "expenses"`. The signed-in member is now recorded for their own group's side. Fixed on web (`settlementPartiesForRecorder`) and Flutter (`planSettlement` in `flutter_app/lib/domain/logic/settle_up.dart`, used by the settle sheet and Settle all).
 
 ### Flags
 | Behavior | Flag | Default |

@@ -8478,9 +8478,9 @@
     "actualBehavior": "new row violates row-level security policy for table \"expenses\"",
     "diagnostics": {},
     "createdAt": "2026-10-19T14:55:05.546Z",
-    "updatedAt": "2026-10-19T14:57:54.046Z",
+    "updatedAt": "2026-10-19T14:58:04.704Z",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-10-19T14:57:54.046Z",
-    "resolutionNote": "Fixed in v3.68.1. Group settlements are recorded under the signed-in member for their own group's side (settlementPartiesForRecorder on web, planSettlement in Flutter), so a partial payment no longer flips the next one to a groupmate the insert policy rejects."
+    "resolvedAt": "2026-10-19T14:58:04.704Z",
+    "resolutionNote": "Fixed in commit 4f33b89 (v3.68.1). Group settlements are recorded under the signed-in member for their own group's side (settlementPartiesForRecorder on web, planSettlement in Flutter), so a partial payment no longer flips the next one to a groupmate the insert policy rejects."
   }
 ]
