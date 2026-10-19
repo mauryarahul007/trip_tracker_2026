@@ -185,6 +185,17 @@ void main() {
       }
     });
 
+    test('Members list: a settled group shows square for its members, otherwise nothing is hidden', () {
+      const couple = Group(id: 'g1', name: 'Bob & Charlie', memberIds: ['m2', 'm3']);
+      final dinner = exp('d1', 90, 'm1', {'m1': 30, 'm2': 30, 'm3': 30});
+      final groupPay = exp('g-pay', 60, 'm2', {'m1': 60}, settle: true);
+      final settled = calculateSettlements(trip, members, [dinner, groupPay], const [couple], false).balances;
+      expect(settled.firstWhere((b) => b.memberId == 'm2').balance, 30); // real, offsetting
+      expect(memberBalancesForDisplay(settled, const [couple]).values.every((v) => v == 0), isTrue);
+      final open = calculateSettlements(trip, members, [dinner], const [couple], false).balances;
+      expect(memberBalancesForDisplay(open, const [couple]), {for (final b in open) b.memberId: b.balance});
+    });
+
     test('before the payment per person still lists what is owed', () {
       expect(calculateSettlements(trip, members, [e1, e2], const [], false).transfers, hasLength(2));
     });

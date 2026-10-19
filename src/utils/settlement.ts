@@ -288,6 +288,19 @@ export function calculateDirectSettlements(
   return transfers.sort((a, b) => b.amount - a.amount);
 }
 
+/**
+ * Balances for the Members list. A member of a group whose group is square (counted as one party, nobody in it
+ * owes or is owed) shows 0: inside a settled group the members' offsetting amounts are the group's own business,
+ * so Members agrees with the Summary pass. Keep in step with memberBalancesForDisplay in settlement.dart.
+ */
+export function memberBalancesForDisplay(balances: MemberBalance[], groups: Group[]): MemberBalance[] {
+  const squareMembers = new Set<string>();
+  buildSettlementNodes(balances, groups).forEach((n) => {
+    if (n.id.startsWith('group:') && Math.abs(n.balance) < 0.01) n.memberIds.forEach((m) => squareMembers.add(m));
+  });
+  return balances.map((b) => (squareMembers.has(b.memberId) ? { ...b, balance: 0 } : b));
+}
+
 export function calculateSettlements(
   trip: Trip,
   members: Record<string, Member>,

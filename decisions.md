@@ -5216,3 +5216,9 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** Per person after a partial payment can still list extra opposite payments (pair netting); the settled state is now consistent across both views.
 * **Release Cut:** version bumped to `3.68.4` via `npm run release:patch`.
 
+## v3.68.5: Members list agrees with a settled group
+* **Context:** After v3.68.4 the Summary pass and Per person were settled for a settled group, but the Members list still showed each member's own net balance, so members inside the group showed offsetting owed / owes amounts.
+* **Decision:** `memberBalancesForDisplay` (TS and Dart) zeroes the displayed balance of members of a group whose settlement node is square. Only display changes; the real balances and settlement maths are untouched. Members of a group that is not square show their own balances as before.
+* **Trade-offs Accepted:** Inside a settled group the members' offsetting amounts are no longer visible on Members.
+* **Release Cut:** version bumped to `3.68.5` via `npm run release:patch`.
+

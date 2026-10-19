@@ -66,7 +66,10 @@ class _MembersTabState extends ConsumerState<MembersTab> {
       for (final m in members)
         if (m.archived) m,
     ];
-    final balances = {for (final b in settlement?.balances ?? const <MemberBalance>[]) b.memberId: b.balance};
+    final balances = memberBalancesForDisplay(
+      settlement?.balances ?? const <MemberBalance>[],
+      ref.watch(tripGroupsProvider(tripId)).value ?? const <Group>[],
+    );
 
     final fabOn = (ref.watch(flagProvider(('enableContextFab', tripId))).value ?? true) && canManage;
     final list = ListView(

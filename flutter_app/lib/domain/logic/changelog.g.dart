@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.68.5', '2026-10-19', [
+    'When a whole group has settled, the Members list no longer shows its members as owed or owing. This is fixed on the web and in the Flutter app.',
+  ]),
   ChangelogEntry('3.68.4', '2026-10-19', [
     'When a whole group has settled, Per person now shows the trip as settled too, with no payments left to make for the people inside the group. This is fixed on the web and in the Flutter app.',
   ]),
@@ -45,8 +48,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.62.0', '2026-10-18', [
     'Behind the scenes: the Flutter app can keep a personal expense out of the trip totals and settlement (a Just for me switch on the form, a Count in trip totals switch on an expense, swipe right on a row, and a Personal filter), switches trips from the trip name in the top bar instead of arrows on the status strip, offers UNDO after recording a payment, and lets you save expense filters as one-tap chips. No change to the web app.',
-  ]),
-  ChangelogEntry('3.61.0', '2026-10-18', [
-    'Behind the scenes: the Flutter app has a tidier Trip numbers section (a headline strip and Categories / People / Days / Details tabs), a celebration when a trip is fully settled, a round-amount option when settling, app icon shortcuts (Add expense, Latest trip), an added/edited line on each expense, a pending-sync dot on trips, trip templates, a two-pane Summary on wide screens, a shareable invite picture, expense quick-filter chips, and bug reports and suggestions that are saved offline and sent when you are back online. Accessibility fixes: labelled trip arrows, larger tap targets, better contrast and no overflow at large text. No change to the web app.',
   ]),
 ];

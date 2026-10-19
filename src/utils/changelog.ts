@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.68.5',
+    date: '2026-10-19',
+    changes: [
+      'When a whole group has settled, the Members list no longer shows its members as owed or owing. This is fixed on the web and in the Flutter app.',
+    ],
+  },
+  {
     version: '3.68.4',
     date: '2026-10-19',
     changes: [

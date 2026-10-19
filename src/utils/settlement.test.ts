@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateSettlements, calculateGroupInternalTransfers, settlementPartiesForRecorder, summarizeSettlement } from './settlement';
+import { calculateSettlements, memberBalancesForDisplay, calculateGroupInternalTransfers, settlementPartiesForRecorder, summarizeSettlement } from './settlement';
 import type { Trip, Member, Expense, Group } from '../types';
 
 describe('Settlement Utilities', () => {
@@ -339,6 +339,18 @@ describe('Settlement Utilities', () => {
       const few = calculateSettlements(trip, members, [dinner, groupPay], [couple], { simplifyDebts: true });
       expect(few.transfers).toEqual([]);
       expect(per.transfers).toEqual([]);
+    });
+
+    it('Members list: a settled group shows square for its members', () => {
+      const couple: Group = { id: 'g1', name: 'Bob & Charlie', memberIds: ['m2', 'm3'] };
+      const dinner: Expense = { ...base, id: 'd1', title: 'Dinner', amount: 90, paidBy: 'm1', splitMemberIds: ['m1', 'm2', 'm3'], resolvedShares: { m1: 30, m2: 30, m3: 30 } };
+      const groupPay: Expense = { ...pay, id: 'g-pay', title: 'Settlement: Bob & Charlie ➔ Alice', amount: 60, paidBy: 'm2', resolvedShares: { m1: 60 } };
+      const { balances } = calculateSettlements(trip, members, [dinner, groupPay], [couple], { simplifyDebts: false });
+      expect(balances.find((b) => b.memberId === 'm2')?.balance).toBe(30); // real, offsetting
+      expect(memberBalancesForDisplay(balances, [couple]).every((b) => b.balance === 0)).toBe(true);
+      // still owed: the group is not square, so nothing is hidden
+      const open = calculateSettlements(trip, members, [dinner], [couple], { simplifyDebts: false }).balances;
+      expect(memberBalancesForDisplay(open, [couple])).toEqual(open);
     });
 
     it('before the payment both views still show what is owed', () => {

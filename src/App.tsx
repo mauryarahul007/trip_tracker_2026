@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState, useMemo, useCallba
 import { flushSync } from 'react-dom';
 import { useTripStore, getTripNotificationRecipients, collectDirtyExpenseIds } from './store/tripStore';
 import { useAuthStore } from './store/authStore';
-import { calculateSettlements, summarizeSettlement } from './utils/settlement';
+import { calculateSettlements, summarizeSettlement, memberBalancesForDisplay } from './utils/settlement';
 import type { Expense, Trip, Group, Member, TripStop, AppNotification } from './types';
 import { exportTripToCSV } from './utils/csvExport';
 import { fetchPlaceCoverImage } from './services/placeImageService';
@@ -2932,7 +2932,7 @@ export default function App() {
                 activeTripMembers={activeTripMembers.filter((m) => m.id !== pendingDeleteMemberId)}
                 visibleMembers={visibleMembers.filter((m) => m.id !== pendingDeleteMemberId)}
                 archivedMembers={archivedMembers.filter((m) => m.id !== pendingDeleteMemberId)}
-                balances={balances}
+                balances={memberBalancesForDisplay(balances, visibleTripGroups)}
                 currencySymbol={activeTrip ? getCurrencySymbol(activeTrip.baseCurrency) : ''}
                 onToggleArchiveMember={extendedUndoOn ? handleToggleArchiveMember : toggleArchiveMember}
                 onSaveMember={handleSaveMember}

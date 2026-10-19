@@ -429,6 +429,21 @@ List<Transfer> calculateDirectSettlements(
   return transfers;
 }
 
+/// Each member's balance for display. A member of a group whose group is square (nobody in it owes or is owed
+/// once the group is counted as one party) shows 0: inside a settled group the members' offsetting amounts are
+/// the group's own business, so the Members page agrees with the Summary pass.
+Map<String, double> memberBalancesForDisplay(List<MemberBalance> balances, List<Group> groups) {
+  final out = {for (final b in balances) b.memberId: b.balance};
+  for (final n in buildSettlementNodes(balances, groups)) {
+    if (n.id.startsWith('group:') && n.balance.abs() < 0.01) {
+      for (final m in n.memberIds) {
+        out[m] = 0.0;
+      }
+    }
+  }
+  return out;
+}
+
 SettlementResult calculateSettlements(
   Trip trip,
   Map<String, Member> members,
