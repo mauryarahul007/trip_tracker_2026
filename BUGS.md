@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **293** | All recorded bugs across sessions |
+| **Total Tracked** | **294** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **266** | Verified & closed |
+| **✅ Resolved** | **267** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -297,6 +297,7 @@
 | **BUG-293** | Second partial settlement with a group fails with an expenses RLS error | `splits-math` | `high` | `claude-cli` | `claude-cli` | Fixed in commit 4f33b89 (v3.68.1). Group settlements are recorded under the signed-in member for their own group's side (settlementPartiesForRecorder on web, planSettlement in Flutter), so a partial payment no longer flips the next one to a groupmate the insert policy rejects. |
 | **BUG-294** | Flutter: Voice add expense did not work on Android | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 036887f (v3.68.2): Google recognizer via intent lookup, locale pick, spoken amounts, friendly errors. |
 | **BUG-295** | Per person view showed NOT SETTLED after settling with Fewest payments | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Fixed in commit b18b0eb (v3.68.3): Per person returns no transfers when all balances are square; pass amount from real balances. |
+| **BUG-296** | Group settled but Per person still showed payments to make | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Fixed in commit b995240 (v3.68.4): Per person checks settlement nodes (a group is one party); all square means no transfers. |
 
 ---
 

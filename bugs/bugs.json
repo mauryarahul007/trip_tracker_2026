@@ -8534,5 +8534,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-19T15:56:26.179Z",
     "resolutionNote": "Fixed in commit b18b0eb (v3.68.3): Per person returns no transfers when all balances are square; pass amount from real balances."
+  },
+  {
+    "id": "BUG-296",
+    "title": "Group settled but Per person still showed payments to make",
+    "description": "Group settled but Per person still showed payments to make",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-19T16:35:06.627Z",
+    "updatedAt": "2026-10-19T16:35:07.048Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-19T16:35:07.048Z",
+    "resolutionNote": "Fixed in commit b995240 (v3.68.4): Per person checks settlement nodes (a group is one party); all square means no transfers."
   }
 ]
