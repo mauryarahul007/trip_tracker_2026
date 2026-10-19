@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-19 | 3.68.1 | SETTLE-GROUP-RLS | [Second partial group settlement no longer fails](#settle-group-rls--second-partial-group-settlement-no-longer-fails) |
 | 2026-10-08 | flutter 3.48.2 | FLUTTER-FIRSTSYNC | [Flutter: first sync, destination autocomplete, Horizon defaults](#flutter-firstsync--trips-after-sign-in-destination-autocomplete-horizon-defaults-v3482) |
 | 2026-10-08 | flutter 3.48 | FLUTTER-HORIZON | [Flutter: Horizon nav and spend insights](#flutter-horizon--horizon-nav-and-spend-insights-v3480) |
 | 2026-10-09 | flutter 3.52 | FLUTTER-SUMMARY | [Flutter: Summary tab, Add expense on Summary, map panel, live Notes](#flutter-summary--flutter-summary-tab-add-expense-on-summary-map-panel-live-notes) |
@@ -2348,6 +2349,37 @@ Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, ne
 
 ### Pass
 - All steps behave as described, no overflow, ticks stay ticked after a pull-to-refresh.
+
+## SETTLE-GROUP-RLS — Second partial group settlement no longer fails
+
+**Commit:** see BUG-293. **Migrations:** none. A settlement between a group and someone else used to be recorded under the group member with the biggest balance. After one partial payment, that could switch to the other group member. A non-organizer's next settle was then rejected with `new row violates row-level security policy for table "expenses"`. The signed-in member is now recorded for their own group's side. Fixed on web (`settlementPartiesForRecorder`) and Flutter (`planSettlement` in `flutter_app/lib/domain/logic/settle_up.dart`, used by the settle sheet and Settle all).
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Settle Up / custom amount | none (bug fix on the existing settle flow) | — |
+| Simplify debts (group-merged transfers) | trip setting, ON | ON |
+| Flutter Settle all | `enableSettleAll` | as already set |
+
+### Steps
+1. As the organizer, create a trip with Alice (organizer), Bob, and Charlie. Bob signs in on a second device and joins as a contributor, not an organizer.
+2. Put Bob and Charlie in one group.
+3. Alice adds a ₹1000 expense she paid, split equally between Bob and Charlie only. Summary shows "Bob & Charlie → Alice ₹1000".
+4. As Bob, open Summary, choose a custom amount on that row, enter 10, and confirm.
+5. As Bob, choose a custom amount on the same row (now ₹990), enter 990, and confirm.
+6. Repeat once with Bob as the one owed: Alice pays the group's share back to Bob & Charlie, Bob records a partial and then the rest.
+7. Flutter app: repeat steps 3–5 as Bob from the Summary tab. Tap Settle on the "Bob & Charlie → Alice" ticket, enter 10 in the settle sheet, save, then reopen it and save 990.
+8. Flutter app with `enableSettleAll` ON and two debts for Bob's group: as Bob, record a partial on one, then tap Settle all.
+
+### Negative checks
+- An organizer outside the group can still record the settlement. It is still recorded under the group member chosen by the app.
+- With Simplify debts OFF (direct member-to-member rows), Bob cannot settle Charlie's own row on web. That is unchanged.
+
+### Pass
+- Every settlement in steps 4–8 saves with no error. Summary shows the debt as settled.
+- Settlement history lists the payments with Bob as payer (or recipient in step 6), not Charlie.
+
+---
 
 ## Template for the next feature
 

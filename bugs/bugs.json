@@ -8454,5 +8454,33 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-19T10:15:40.004Z",
     "resolutionNote": "Fixed in commit f815aa6 (v3.66.1)"
+  },
+  {
+    "id": "BUG-293",
+    "title": "Second partial settlement with a group fails with an expenses RLS error",
+    "description": "A settlement involving a merged group is recorded under the group member with the most extreme balance (pickRepresentative). The expenses insert policy only accepts a non-admin's row when they are the payer or the creditor. A partial payment can flip the representative to a groupmate, so the next settle by a non-organizer was rejected.",
+    "severity": "high",
+    "category": "splits-math",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Put Bob and Charlie in a group",
+      "Alice pays 1000 split between Bob and Charlie",
+      "As Bob (contributor), settle a custom 10",
+      "As Bob, settle the remaining 990"
+    ],
+    "expectedBehavior": "Both settlements save.",
+    "actualBehavior": "new row violates row-level security policy for table \"expenses\"",
+    "diagnostics": {},
+    "createdAt": "2026-10-19T14:55:05.546Z",
+    "updatedAt": "2026-10-19T14:57:54.046Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-19T14:57:54.046Z",
+    "resolutionNote": "Fixed in v3.68.1. Group settlements are recorded under the signed-in member for their own group's side (settlementPartiesForRecorder on web, planSettlement in Flutter), so a partial payment no longer flips the next one to a groupmate the insert policy rejects."
   }
 ]

@@ -147,9 +147,19 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final userId = ref.read(authStateProvider).userId ?? '';
     final date = todayDateString(ref.read(nowProvider)());
     final undoOn = _flag(ref, 'enableUndoSettlement', widget.tripId);
+    final me = ref.read(myMemberIdProvider(widget.tripId));
+    final groups = ref.read(tripGroupsProvider(widget.tripId)).value ?? const <Group>[];
     final made = <String>[];
     for (final t in mine) {
-      final plan = planSettlement(t, amount: t.amount, currency: cur, date: date, note: '');
+      final plan = planSettlement(
+        t,
+        amount: t.amount,
+        currency: cur,
+        date: date,
+        note: '',
+        recorderMemberId: me,
+        groups: groups,
+      );
       if (plan == null) continue;
       final r = await repo.submit(plan.submission, tripId: widget.tripId, userId: userId);
       if (r.isOk) made.add(r.expenseId!);
@@ -2081,6 +2091,8 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
       currency: widget.currency,
       date: dateNote ? _date : todayDateString(ref.read(nowProvider)()),
       note: dateNote ? _note.text : '',
+      recorderMemberId: ref.read(myMemberIdProvider(widget.tripId)),
+      groups: ref.read(tripGroupsProvider(widget.tripId)).value ?? const [],
     );
     if (plan == null) {
       setState(() => _error = l10n.ledAmountInvalid);

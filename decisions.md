@@ -5190,3 +5190,10 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** The cover-photo strip is no longer shown with header actions on (the old strip flag still works with actions off). Android speech needs the phone's Google speech service and a connection. New dependency and permissions: `speech_to_text`, `RECORD_AUDIO`, iOS microphone and speech usage texts.
 * **Release Cut:** version bumped to `3.68.0` via `npm run release:minor`.
 
+## Flutter v3.68.1: group settlements are recorded under the person settling (BUG-293)
+* **Context:** A settlement with a merged group was recorded under the group member with the most extreme balance (`pickRepresentative`). The expenses insert policy (0080) only accepts a non-admin's row when they are the payer or the creditor. After a partial payment the representative could flip to a groupmate, so the next settle failed with `new row violates row-level security policy for table "expenses"`.
+* **Decision:** `settlementPartiesForRecorder` (web `src/utils/settlement.ts`, Flutter `settlement.dart`) records the signed-in member for their own group's side. It is used by every web settle path (Settle Up, custom amount, UPI) and by Flutter's settle sheet and Settle all via `planSettlement`. Membership is first-group-wins, the same rule `buildSettlementNodes` uses.
+* **Trade-offs Accepted:**
+  - Client-side fix only. The insert policy stays strict, so an organizer outside the group still records under the representative.
+  - Direct (non-simplified) transfers have no group sides and are unchanged.
+* **Release Cut:** version bumped to `3.68.1` via `npm run release:patch`.

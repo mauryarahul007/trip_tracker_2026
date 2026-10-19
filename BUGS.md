@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **290** | All recorded bugs across sessions |
+| **Total Tracked** | **291** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **263** | Verified & closed |
+| **✅ Resolved** | **264** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -294,6 +294,7 @@
 | **BUG-290** | Flutter: tapping a notification replaced the whole stack, so back skipped the notification list | `navigation` | `low` | `claude-cli` | `claude-cli` | Fixed in commit e14a650 (v3.60.0): with no trip open the trip is pushed so back returns to the list; with a trip open it switches in place. Tests added. |
 | **BUG-291** | Flutter: Notes and Checklist showed two Add buttons | `navigation` | `low` | `claude-cli` | `claude-cli` | Fixed in commit f815aa6 (v3.66.1) |
 | **BUG-292** | Flutter: collapsed day totals on Expenses were hard to read | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in commit f815aa6 (v3.66.1) |
+| **BUG-293** | Second partial settlement with a group fails with an expenses RLS error | `splits-math` | `high` | `claude-cli` | `claude-cli` | Fixed in v3.68.1. Group settlements are recorded under the signed-in member for their own group's side (settlementPartiesForRecorder on web, planSettlement in Flutter), so a partial payment no longer flips the next one to a groupmate the insert policy rejects. |
 
 ---
 

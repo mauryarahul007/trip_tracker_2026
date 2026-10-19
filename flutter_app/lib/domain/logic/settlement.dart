@@ -195,6 +195,27 @@ List<SettlementNode> buildSettlementNodes(List<MemberBalance> balances, List<Gro
   return nodeMap.values.toList();
 }
 
+/// The member ids to record a settlement under when [recorderMemberId] taps
+/// Settle (web: `settlementPartiesForRecorder`). The expenses insert policy
+/// only lets a non-admin record a row where they are the payer or the
+/// creditor, but [_pickRepresentative] can name a groupmate -- and a partial
+/// payment can flip which groupmate it names -- so a recorder inside a merged
+/// group node stands in for that side. First group wins, as in [buildSettlementNodes].
+({String fromMemberId, String toMemberId}) settlementPartiesForRecorder(
+  Transfer t,
+  String? recorderMemberId,
+  List<Group> groups,
+) {
+  final unchanged = (fromMemberId: t.fromMemberId, toMemberId: t.toMemberId);
+  final me = recorderMemberId;
+  if (me == null || me == t.fromMemberId || me == t.toMemberId) return unchanged;
+  final recorderNode = groups.where((g) => g.memberIds.contains(me)).firstOrNull;
+  if (recorderNode == null) return unchanged;
+  if (t.from == 'group:${recorderNode.id}') return (fromMemberId: me, toMemberId: t.toMemberId);
+  if (t.to == 'group:${recorderNode.id}') return (fromMemberId: t.fromMemberId, toMemberId: me);
+  return unchanged;
+}
+
 String _pickRepresentative(List<String> memberIds, List<MemberBalance> balances, String direction) {
   if (memberIds.isEmpty) return '';
   var best = memberIds[0];

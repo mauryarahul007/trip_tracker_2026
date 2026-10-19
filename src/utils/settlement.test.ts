@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateSettlements, calculateGroupInternalTransfers, summarizeSettlement } from './settlement';
+import { calculateSettlements, calculateGroupInternalTransfers, settlementPartiesForRecorder, summarizeSettlement } from './settlement';
 import type { Trip, Member, Expense, Group } from '../types';
 
 describe('Settlement Utilities', () => {
@@ -89,6 +89,69 @@ describe('Settlement Utilities', () => {
     expect(transfers[0].fromMemberId).toBe('m2');
     expect(transfers[0].toMemberId).toBe('m3');
     expect(transfers[0].amount).toBe(10);
+  });
+
+  describe('settlementPartiesForRecorder', () => {
+    const couple: Group = { id: 'g1', name: 'Bob & Charlie', memberIds: ['m2', 'm3'] };
+    const hotel: Expense = {
+      id: 'e1',
+      tripId: 't1',
+      title: 'Hotel',
+      amount: 1000,
+      currency: 'EUR',
+      category: 'Stay',
+      date: '2026-08-02',
+      paidBy: 'm1',
+      splitMode: 'equal',
+      splitMemberIds: ['m2', 'm3'],
+      resolvedShares: { m2: 500, m3: 500 },
+      createdAt: 0,
+      updatedAt: 0,
+      isSettlement: false,
+      createdByUserId: 'u1',
+    };
+    const bobPaysTen: Expense = {
+      ...hotel,
+      id: 'e2',
+      title: 'Settlement: Bob & Charlie ➔ Alice',
+      amount: 10,
+      paidBy: 'm2',
+      splitMode: 'exact',
+      splitMemberIds: ['m1'],
+      splitConfig: { m1: 10 },
+      resolvedShares: { m1: 10 },
+      isSettlement: true,
+      createdByUserId: 'u2',
+    };
+
+    it('keeps Bob as payer after his partial payment flips the group representative to Charlie', () => {
+      const { transfers } = calculateSettlements(trip, members, [hotel, bobPaysTen], [couple]);
+      expect(transfers).toHaveLength(1);
+      expect(transfers[0].from).toBe('group:g1');
+      expect(transfers[0].amount).toBe(990);
+      // Charlie now has the bigger debt, so the raw transfer names him --
+      // recording that as Bob would fail the expenses insert policy.
+      expect(transfers[0].fromMemberId).toBe('m3');
+
+      expect(settlementPartiesForRecorder(transfers[0], 'm2', [couple])).toEqual({ fromMemberId: 'm2', toMemberId: 'm1' });
+    });
+
+    it('records a creditor-side group member as the recipient', () => {
+      const t = { from: 'member:m1', to: 'group:g1', fromLabel: 'Alice', toLabel: 'Bob & Charlie', fromMemberId: 'm1', toMemberId: 'm3', amount: 40 };
+      expect(settlementPartiesForRecorder(t, 'm2', [couple])).toEqual({ fromMemberId: 'm1', toMemberId: 'm2' });
+    });
+
+    it('leaves the transfer alone for a recorder outside both sides or without a member', () => {
+      const t = { from: 'group:g1', to: 'member:m1', fromLabel: 'Bob & Charlie', toLabel: 'Alice', fromMemberId: 'm3', toMemberId: 'm1', amount: 40 };
+      expect(settlementPartiesForRecorder(t, 'm4', [couple])).toEqual({ fromMemberId: 'm3', toMemberId: 'm1' });
+      expect(settlementPartiesForRecorder(t, null, [couple])).toEqual({ fromMemberId: 'm3', toMemberId: 'm1' });
+      expect(settlementPartiesForRecorder(t, 'm1', [couple])).toEqual({ fromMemberId: 'm3', toMemberId: 'm1' });
+    });
+
+    it('does not swap in a groupmate on a direct (member-to-member) transfer', () => {
+      const t = { from: 'member:m3', to: 'member:m1', fromLabel: 'Charlie', toLabel: 'Alice', fromMemberId: 'm3', toMemberId: 'm1', amount: 40 };
+      expect(settlementPartiesForRecorder(t, 'm2', [couple])).toEqual({ fromMemberId: 'm3', toMemberId: 'm1' });
+    });
   });
 
   it('distinguishes simplified greedy settlement from direct bilateral debts', () => {

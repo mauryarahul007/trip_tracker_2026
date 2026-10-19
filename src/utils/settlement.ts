@@ -99,6 +99,28 @@ function pickRepresentative(
   }, memberIds[0]);
 }
 
+// The member ids to record a settlement under when `recorderMemberId` taps
+// Settle. The expenses insert policy only lets a non-admin record a row
+// where they are the payer or the creditor, but pickRepresentative can name
+// a groupmate -- and a partial payment can flip which groupmate it names --
+// so a recorder inside a merged group node stands in for that side. Group
+// membership is resolved first-group-wins, same as buildSettlementNodes.
+export function settlementPartiesForRecorder(
+  transfer: Transfer,
+  recorderMemberId: string | null | undefined,
+  groups: Group[]
+): { fromMemberId: string; toMemberId: string } {
+  const { fromMemberId, toMemberId } = transfer;
+  if (!recorderMemberId || recorderMemberId === fromMemberId || recorderMemberId === toMemberId) {
+    return { fromMemberId, toMemberId };
+  }
+  const recorderNode = groups.find((g) => g.memberIds.includes(recorderMemberId));
+  if (!recorderNode) return { fromMemberId, toMemberId };
+  if (transfer.from === `group:${recorderNode.id}`) return { fromMemberId: recorderMemberId, toMemberId };
+  if (transfer.to === `group:${recorderNode.id}`) return { fromMemberId, toMemberId: recorderMemberId };
+  return { fromMemberId, toMemberId };
+}
+
 // Greedy debtor/creditor matching shared by the top-level (merged-group)
 // settlement and by per-group internal settlement.
 function matchDebtorsToCreditors(nodes: SettlementNode[], balances: MemberBalance[]): Transfer[] {

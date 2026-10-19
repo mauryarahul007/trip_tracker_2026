@@ -1,3 +1,4 @@
+import '../models/group.dart';
 import 'expense_form_logic.dart';
 import 'settlement.dart';
 
@@ -11,7 +12,9 @@ class SettleUpPlan {
 }
 
 /// Null when the amount is not positive. [note] is only used when non-empty
-/// (the caller passes '' when the date/note flag is off).
+/// (the caller passes '' when the date/note flag is off). [recorderMemberId]
+/// and [groups] let the signed-in member take their own group's side; see
+/// [settlementPartiesForRecorder].
 SettleUpPlan? planSettlement(
   Transfer t, {
   required double amount,
@@ -19,8 +22,11 @@ SettleUpPlan? planSettlement(
   required String date,
   String note = '',
   double? totalDebt,
+  String? recorderMemberId,
+  List<Group> groups = const [],
 }) {
   if (!(amount > 0)) return null;
+  final parties = settlementPartiesForRecorder(t, recorderMemberId, groups);
   final total = totalDebt ?? t.amount;
   final n = note.trim();
   final title = n.isEmpty
@@ -35,10 +41,10 @@ SettleUpPlan? planSettlement(
       currency: currency,
       category: 'cat-misc',
       date: date,
-      paidBy: t.fromMemberId,
+      paidBy: parties.fromMemberId,
       splitMode: 'exact',
-      splitMemberIds: [t.toMemberId],
-      splitConfig: {t.toMemberId: amount},
+      splitMemberIds: [parties.toMemberId],
+      splitConfig: {parties.toMemberId: amount},
     ),
   );
 }

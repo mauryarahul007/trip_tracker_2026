@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import type { Expense, Group, Member, Trip } from '../types';
 import type { MemberBalance, Transfer } from '../utils/settlement';
+import { settlementPartiesForRecorder } from '../utils/settlement';
 import { IconEdit, IconShare, IconClose, IconSparkles, IconMembers } from './Icons';
 import { formatAmount, getCurrencySymbol, formatMoneyNumber } from '../utils/currency';
 import { sendPushNotification } from '../services/pushApi';
@@ -496,7 +497,8 @@ function TransferRow({
             onClick={() => {
               triggerHaptic('success');
               fireCelebration();
-              onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel, t.amount);
+              const parties = settlementPartiesForRecorder(t, myMemberId, groups);
+              onSettle(parties.fromMemberId, parties.toMemberId, t.amount, t.fromLabel, t.toLabel, t.amount);
             }}
             className="traveler-settlement-btn-settle"
             style={{
@@ -558,7 +560,8 @@ function TransferRow({
                 onClick={() => {
                   triggerHaptic('success');
                   fireCelebration();
-                  onSettle(t.fromMemberId, t.toMemberId, settleAmount, t.fromLabel, t.toLabel, t.amount);
+                  const parties = settlementPartiesForRecorder(t, myMemberId, groups);
+                  onSettle(parties.fromMemberId, parties.toMemberId, settleAmount, t.fromLabel, t.toLabel, t.amount);
                   onToggleCustom();
                   onCustomChange('');
                 }}
@@ -1436,9 +1439,10 @@ export function BalancesSettlements({
           onClose={() => setUpiTargetTransfer(null)}
           onConfirmSettled={() => {
             const amt = parseFloat(customAmounts[`${upiTargetTransfer.from}|${upiTargetTransfer.to}`]) || upiTargetTransfer.amount;
+            const parties = settlementPartiesForRecorder(upiTargetTransfer, myMemberId, groups);
             onSettle(
-              upiTargetTransfer.fromMemberId,
-              upiTargetTransfer.toMemberId,
+              parties.fromMemberId,
+              parties.toMemberId,
               amt,
               upiTargetTransfer.fromLabel,
               upiTargetTransfer.toLabel,
