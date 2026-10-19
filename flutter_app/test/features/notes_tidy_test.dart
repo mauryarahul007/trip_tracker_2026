@@ -54,4 +54,20 @@ void main() {
     expect(key('note-n1'), findsOneWidget);
     expect(key('note-menu-n1'), findsNothing);
   });
+
+  testApp('one Add control per pane: the floating button, not a second one in the page', (tester) async {
+    await setup(tester);
+    expect(key('notes-fab'), findsOneWidget);
+    expect(key('note-add'), findsNothing);
+    await tester.tap(find.descendant(of: key('notes-panes'), matching: find.textContaining('Check')));
+    await settle(tester, rounds: 4);
+    expect(key('notes-fab'), findsOneWidget);
+    expect(key('check-add'), findsNothing);
+  });
+
+  testApp('floating Add off: the in-page buttons come back', (tester) async {
+    await setup(tester, flagsOff: {'enableContextFab'});
+    expect(key('notes-fab'), findsNothing);
+    expect(key('note-add'), findsOneWidget);
+  });
 }

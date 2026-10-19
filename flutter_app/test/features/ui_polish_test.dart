@@ -148,7 +148,7 @@ void main() {
       await tester.tap(find.descendant(of: key('notes-panes'), matching: find.text('Notes')));
       await settle(tester, rounds: 4);
       expect(key('notes-empty'), findsOneWidget);
-      expect(key('note-add'), findsOneWidget);
+      expect(key('notes-fab'), findsOneWidget);
     });
 
     testApp('flag off: plain empty text', (tester) async {

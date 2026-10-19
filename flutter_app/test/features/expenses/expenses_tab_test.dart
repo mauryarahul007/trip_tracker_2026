@@ -208,6 +208,17 @@ void main() {
       expect(find.byType(TicketBarcode), findsNothing);
     });
 
+    testApp('tidy day header: a card row with a big total and the expense count', (tester) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await addExpense(tester, s, title: 'Plain row', amount: 60, paidBy: s.ben);
+      await openExpenses(tester, s);
+      final total = find.byWidgetPredicate((w) => w.key.toString().contains("'day-total-"));
+      expect(total, findsOneWidget);
+      expect((tester.widget<Text>(total).style?.fontSize ?? 0), greaterThanOrEqualTo(17));
+      expect(find.text('1 expense'), findsOneWidget);
+    });
+
     testApp('flag off: the receipt row keeps its barcode', (tester) async {
       await pumpApp(tester, user: asha, flagsOff: {'enableTidyExpenses'});
       final s = await seedTrip(tester);

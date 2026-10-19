@@ -327,6 +327,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
           textColor: tokens.textPrimary,
           mutedColor: tokens.textMuted,
           tidy: tidyOn,
+          surface: tokens.bgSurface,
+          border: tokens.borderColor,
+          countText: l10n.expDayCount(g.expenses.length),
         ),
       );
       SliverList listFor(DayGroup g) => SliverList.builder(
@@ -755,10 +758,16 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
     required this.background,
     required this.textColor,
     required this.mutedColor,
+    required this.surface,
+    required this.border,
+    this.countText = '',
     this.tidy = false,
   });
 
   final bool tidy;
+  final Color surface;
+  final Color border;
+  final String countText; // "3 expenses", tidy header only
   final String date;
   final String label; // "OCT 14 · DAY 3"
   final String total;
@@ -771,61 +780,115 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
   final Color textColor;
   final Color mutedColor;
 
-  static const _h = 48.0;
+  double get _h => tidy ? 64.0 : 48.0;
 
   @override
   double get minExtent => _h;
   @override
   double get maxExtent => _h;
 
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => Material(
+  Widget _tidyHeader(BuildContext context) => Material(
     color: background,
     child: Semantics(
       button: collapsible,
       label: semantics,
-      child: InkWell(
-        key: Key('day-$date'),
-        onTap: collapsible ? onTap : null,
-        child: SizedBox(
-          height: _h,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    label,
-                    style: tidy
-                        ? TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: mutedColor)
-                        : TextStyle(
-                            fontFamily: 'monospace',
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+        child: Material(
+          color: surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(color: border),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            key: Key('day-$date'),
+            onTap: collapsible ? onTap : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.6,
                             color: textColor,
                           ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(countText, style: TextStyle(fontSize: 12, color: mutedColor)),
+                      ],
+                    ),
                   ),
-                ),
-                if (tidy) ...[
+                  const SizedBox(width: 8),
                   Text(
                     total,
+                    key: Key('day-total-$date'),
                     style: AppTypography.moneyDisplay(
-                      fontSize: 14,
+                      fontSize: 18,
                       color: textColor,
-                    ).copyWith(fontWeight: FontWeight.w700),
+                    ).copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.2),
                   ),
-                  Text(' · $count', style: TextStyle(color: mutedColor, fontSize: 13)),
-                ] else
-                  Text('$total · $count', style: TextStyle(color: mutedColor, fontSize: 13)),
-                if (collapsible)
-                  Icon(expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: mutedColor),
-              ],
+                  if (collapsible) ...[
+                    const SizedBox(width: 6),
+                    Icon(expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: textColor),
+                  ],
+                ],
+              ),
             ),
           ),
         ),
       ),
     ),
   );
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => tidy
+      ? _tidyHeader(context)
+      : Material(
+          color: background,
+          child: Semantics(
+            button: collapsible,
+            label: semantics,
+            child: InkWell(
+              key: Key('day-$date'),
+              onTap: collapsible ? onTap : null,
+              child: SizedBox(
+                height: _h,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.6,
+                            color: textColor,
+                          ),
+                        ),
+                      ),
+                      Text('$total · $count', style: TextStyle(color: mutedColor, fontSize: 13)),
+                      if (collapsible)
+                        Icon(expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: mutedColor),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
 
   @override
   bool shouldRebuild(_DayHeader old) =>

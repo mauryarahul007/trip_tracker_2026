@@ -306,7 +306,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     final dest = trip?.destination?.isNotEmpty == true ? trip!.destination : trip?.name;
     return ListView(
       key: const Key('checklist'),
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+      padding: EdgeInsets.fromLTRB(16, 4, 16, _flag('enableContextFab') ? 88 : 32), // clear of the floating Add
       children: [
         BentoTile(
           tone: BentoTone.mint,
@@ -364,14 +364,16 @@ class _NotesTabState extends ConsumerState<NotesTab> {
           ),
         ),
         const SizedBox(height: 12),
-        // Add sits right under the progress, not at the end of a long list.
-        AppButton(
-          key: const Key('check-add'),
-          label: l10n.notesAddItem,
-          icon: Icons.add_rounded,
-          isFullWidth: true,
-          onPressed: () => _editItem(context, items),
-        ),
+        // Add sits right under the progress, not at the end of a long list. With the floating Add item button on
+        // screen there is no second one here.
+        if (!_flag('enableContextFab'))
+          AppButton(
+            key: const Key('check-add'),
+            label: l10n.notesAddItem,
+            icon: Icons.add_rounded,
+            isFullWidth: true,
+            onPressed: () => _editItem(context, items),
+          ),
         if (_flag('enableChecklistCategoryProgress') && items.isNotEmpty) ...[
           const SizedBox(height: 12),
           Column(
@@ -659,6 +661,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     final l10n = context.l10n;
     final quick = _flag('enableNotesQuickCapture');
     final tidy = _flag('enableTidyNotes');
+    final fab = _flag('enableContextFab'); // the floating Add note button is on screen: no second one in the page
     if (notes.isEmpty) {
       return ListView(
         padding: quick ? const EdgeInsets.fromLTRB(16, 8, 16, 0) : null,
@@ -670,15 +673,22 @@ class _NotesTabState extends ConsumerState<NotesTab> {
               icon: Icons.sticky_note_2_outlined,
               title: l10n.coachNotesTitle,
               subtitle: l10n.coachNotesBody,
-              action: AppButton(
+              action: fab
+                  ? null
+                  : AppButton(
+                      key: const Key('note-add'),
+                      label: l10n.notesAddNote,
+                      onPressed: () => _addNote(context, notes),
+                    ),
+            )
+          else ...[
+            Padding(padding: const EdgeInsets.all(24), child: Text(l10n.notesEmptyNotes)),
+            if (!fab)
+              AppButton(
                 key: const Key('note-add'),
                 label: l10n.notesAddNote,
                 onPressed: () => _addNote(context, notes),
               ),
-            )
-          else ...[
-            Padding(padding: const EdgeInsets.all(24), child: Text(l10n.notesEmptyNotes)),
-            AppButton(key: const Key('note-add'), label: l10n.notesAddNote, onPressed: () => _addNote(context, notes)),
           ],
         ],
       );
@@ -697,7 +707,9 @@ class _NotesTabState extends ConsumerState<NotesTab> {
             onContent: (text) =>
                 _saveNotes([for (final x in notes) x.id == n.id ? x.copyWith(content: text, updatedAt: _now()) : x]),
           ),
-        AppButton(key: const Key('note-add'), label: l10n.notesAddNote, onPressed: () => _addNote(context, notes)),
+        if (!fab)
+          AppButton(key: const Key('note-add'), label: l10n.notesAddNote, onPressed: () => _addNote(context, notes)),
+        if (fab) const SizedBox(height: 72), // room under the last note for the floating button
       ],
     );
   }

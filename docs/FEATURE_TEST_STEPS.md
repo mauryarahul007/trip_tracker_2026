@@ -3257,10 +3257,10 @@ Then add a row to the **Index** table.
 
 **Expenses**
 1. Open Expenses: each row is a flat bordered tile (category tile, title, "Paid by X · Split with N", amount on the right, "Your share" under it; "Get back" in green when you paid). No glow, perforation or barcode. Day headers are calm: small spaced label, bold day total, count.
-2. Tap a row, swipe it, search, open Filters: all behave as before. Compact view and the wide table are unchanged.
+2. Collapse or expand a day: the header is a bordered card row with the day label, "N expenses", a large bold day total and a chevron, readable against the page in light and dark. Tap a row, swipe it, search, open Filters: all behave as before. Compact view and the wide table are unchanged.
 
 **Notes**
-3. The Notes pane label shows a count. Each note is a bordered card with its title, an inline editable body and "Edited 2h ago".
+3. On the Notes and Checklist panes there is exactly one Add control: the floating **Add note** / **Add item** button (no second Add button in the page, and the list scrolls clear of it). With `enableContextFab` OFF the in-page buttons return. The Notes pane label shows a count. Each note is a bordered card with its title, an inline editable body and "Edited 2h ago".
 4. Card menu (...) > **Pin to top**: the note moves to the top with a pin icon. **Delete**: the note goes and a snackbar offers **UNDO**, which brings it back.
 
 **Members**

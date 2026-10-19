@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.66.1',
+    date: '2026-10-19',
+    changes: [
+      'Behind the scenes: the Flutter Notes and Checklist panes show one Add button (the floating one) instead of two, and each collapsed day on Expenses is a clear card with a large bold total and the number of expenses.',
+    ],
+  },
+  {
     version: '3.66.0',
     date: '2026-10-19',
     changes: [

@@ -2023,6 +2023,12 @@ abstract class AppLocalizations {
   /// **'Expense deleted'**
   String get expDeleted;
 
+  /// No description provided for @expDayCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 expense} other{{count} expenses}}'**
+  String expDayCount(int count);
+
   /// No description provided for @expRestored.
   ///
   /// In en, this message translates to:

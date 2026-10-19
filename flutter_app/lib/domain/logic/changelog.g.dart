@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.66.1', '2026-10-19', [
+    'Behind the scenes: the Flutter Notes and Checklist panes show one Add button (the floating one) instead of two, and each collapsed day on Expenses is a clear card with a large bold total and the number of expenses.',
+  ]),
   ChangelogEntry('3.66.0', '2026-10-19', [
     'Behind the scenes: the Flutter app has cleaner Expenses rows and day headers, Notes cards you can pin or delete (with Undo) and a count on the tab, Members tiles with role and balance chips and a search box on bigger trips, and a menu to edit or delete travel passes. The Groups / People switch under Who paid now only changes that card, not Who pays whom.',
   ]),
@@ -40,8 +43,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.55.0', '2026-10-09', [
     'Behind the scenes: the Flutter app has a native Superadmin portal (overview, bug ledger, users, trips, flags, analytics, audit, controls and tools) and a card-stack view for the Trips home screen with destination photos. No change to the web app.',
-  ]),
-  ChangelogEntry('3.54.0', '2026-10-09', [
-    'Behind the scenes: the Flutter app has a boarding-pass look for Summary, Expenses and Passes, and the Fewest / Per person switch now updates right away instead of snapping back. No change to the web app.',
   ]),
 ];

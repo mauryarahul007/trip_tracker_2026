@@ -5169,3 +5169,10 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** Passes are written as whole lists like notes and checklist, so a concurrent edit by someone else can overwrite; no long-press shortcut on passes.
 * **Release Cut:** version bumped to `3.66.0` via `npm run release:minor`.
 
+---
+
+## Flutter v3.66.1: one Add button on Notes and Checklist, readable day totals on Expenses
+* **Context:** With `enableContextFab` ON (default since 3.63) the Notes and Checklist panes showed the floating Add button and the in-page Add note / Add item button. The tidy day header from 3.66.0 left the day total as small text on the page background.
+* **Decision:** The in-page Add buttons (and the empty-state action) are hidden while the floating button is on; they return when `enableContextFab` is OFF. The checklist list gets bottom padding clear of the floating button. With `enableTidyExpenses` ON the day header is a bordered card row: day label, "N expenses", an 18 px bold total and a chevron.
+* **Release Cut:** version bumped to `3.66.1` via `npm run release:patch`.
+
