@@ -28,12 +28,15 @@ import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../chat/application/chat_providers.dart';
+import '../../../domain/logic/expense_list_logic.dart' show isActualExpense;
+import '../../../domain/models/expense.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../../notifications/presentation/notification_bell.dart';
 import '../../travel/maps/trip_route_panel.dart';
 import '../../travel/maps/trip_route_modal.dart';
 import '../../travel/presentation/live_location_share_modal.dart';
 import '../../trips/presentation/widgets/share_trip_sheet.dart';
+import 'widgets/trip_actions_sheet.dart';
 import '../../trips/presentation/widgets/trip_card.dart' show TripStatusPill, tripHeadline;
 import '../../expenses/application/money_providers.dart' show allTripsProvider;
 import '../../trips/application/trip_accent.dart';
@@ -320,6 +323,8 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                         child: _mapExpanded && trip != null
                             ? TripRoutePanel(
                                 trip: trip,
+                                showStops:
+                                    ref.watch(flagProvider(('enableTripHeaderActions', widget.tripId))).value ?? true,
                                 onOpen: () => showModalBottomSheet<void>(
                                   context: context,
                                   isScrollControlled: true,
@@ -469,6 +474,15 @@ class TripTabPlaceholder extends StatelessWidget {
 
 /// Slim strip under the top bar on every tab: status and dates (flag `enableTripHeaderStrip`). With
 /// `enableTripCoverHeader` it becomes a cover photo band, and `enableSyncLine` adds a saved / syncing line.
+/// (members, expenses) shown in the header chip: active members, and real expenses (not settlements or bin items).
+(int, int) _tripCounts(WidgetRef ref, String tripId) => (
+  ref.watch(visibleMembersProvider(tripId)).length,
+  [
+    for (final e in ref.watch(tripExpensesProvider(tripId)).value ?? const <Expense>[])
+      if (isActualExpense(e) && e.deletedAt == null) e,
+  ].length,
+);
+
 class _TripStrip extends ConsumerWidget {
   const _TripStrip({required this.tripId, required this.tab});
   final String tripId;
@@ -478,7 +492,8 @@ class _TripStrip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final on = ref.watch(flagProvider(('enableTripHeaderStrip', tripId))).value ?? false;
+    final actionsOn = ref.watch(flagProvider(('enableTripHeaderActions', tripId))).value ?? true;
+    final on = actionsOn || (ref.watch(flagProvider(('enableTripHeaderStrip', tripId))).value ?? false);
     final trip = ref.watch(tripProvider(tripId)).value;
     if (!on || trip == null) return const SizedBox.shrink();
     final t = context.tokens;
@@ -492,7 +507,35 @@ class _TripStrip extends ConsumerWidget {
     final accent = accentOn ? ref.watch(tripAccentProvider(tripId)).value : null;
     final hasCover = cover != null && cover.isNotEmpty;
 
-    final row = Row(
+    final counts = actionsOn ? _tripCounts(ref, tripId) : null;
+    final onCover = hasCover ? Colors.white : t.textSecondary;
+    final chip = counts == null
+        ? null
+        : Container(
+            key: const Key('trip-counts-chip'),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: hasCover ? Colors.white.withValues(alpha: 0.18) : t.bgSurfaceHover,
+              borderRadius: BorderRadius.circular(99),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.people_outline_rounded, size: 14, color: onCover),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    '${counts.$1} member${counts.$1 == 1 ? '' : 's'} · ${counts.$2} expense${counts.$2 == 1 ? '' : 's'}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: onCover),
+                  ),
+                ),
+              ],
+            ),
+          );
+
+    final statusRow = Row(
       children: [
         // Status and dates take whatever room the trailing controls leave; dates shorten first.
         Expanded(
@@ -521,6 +564,17 @@ class _TripStrip extends ConsumerWidget {
         if (syncOn) Flexible(child: _SyncLine(onDark: hasCover)),
       ],
     );
+    final row = chip == null
+        ? statusRow
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              statusRow,
+              const SizedBox(height: 6),
+              Align(alignment: Alignment.centerLeft, child: chip),
+            ],
+          );
 
     if (!hasCover) {
       return Padding(key: const Key('trip-strip'), padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: row);
@@ -531,7 +585,7 @@ class _TripStrip extends ConsumerWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(t.radiusMd),
         child: SizedBox(
-          height: 92,
+          height: chip == null ? 92 : 112,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -656,7 +710,53 @@ class _TripTitle extends ConsumerWidget {
       tag: 'trip-title-$tripId',
       child: Material(type: MaterialType.transparency, child: name),
     );
-    if (!canSwitch) return KeyedSubtree(key: const Key('trip-title'), child: title);
+    final actionsOn = ref.watch(flagProvider(('enableTripHeaderActions', tripId))).value ?? true;
+    if (!canSwitch) {
+      return KeyedSubtree(
+        key: const Key('trip-title'),
+        child: actionsOn
+            ? GestureDetector(
+                key: const Key('trip-title-actions'),
+                behavior: HitTestBehavior.opaque,
+                onLongPress: () => TripActionsSheet.show(context, tripId: tripId),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: Align(alignment: Alignment.centerLeft, child: title),
+                ),
+              )
+            : title,
+      );
+    }
+    void openSwitcher() => AppSheet.show<void>(
+      context: context,
+      title: l10n.tripSwitchTitle,
+      builder: (sheetCtx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final x in others)
+            ListTile(
+              key: Key('switch-to-${x.id}'),
+              selected: x.id == tripId,
+              leading: Icon(x.id == tripId ? Icons.check_circle_rounded : Icons.luggage_outlined),
+              title: Text(x.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: Text(
+                [
+                  tripHeadline(sheetCtx, tripStatus(x.startDate, x.endDate, now)),
+                  if (x.startDate.isNotEmpty) formatDateRange(x.startDate, x.endDate),
+                ].where((e) => e.isNotEmpty).join(' · '),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onTap: () {
+                unawaited(AppHaptics.selection());
+                Navigator.of(sheetCtx).pop();
+                if (x.id != tripId) context.go('/trip/${x.id}/$tab');
+              },
+            ),
+        ],
+      ),
+    );
+
     return KeyedSubtree(
       key: const Key('trip-title'),
       child: Semantics(
@@ -666,35 +766,8 @@ class _TripTitle extends ConsumerWidget {
         child: InkWell(
           key: const Key('trip-switcher'),
           borderRadius: BorderRadius.circular(tokens.radiusMd),
-          onTap: () => AppSheet.show<void>(
-            context: context,
-            title: l10n.tripSwitchTitle,
-            builder: (sheetCtx) => Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final x in others)
-                  ListTile(
-                    key: Key('switch-to-${x.id}'),
-                    selected: x.id == tripId,
-                    leading: Icon(x.id == tripId ? Icons.check_circle_rounded : Icons.luggage_outlined),
-                    title: Text(x.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    subtitle: Text(
-                      [
-                        tripHeadline(sheetCtx, tripStatus(x.startDate, x.endDate, now)),
-                        if (x.startDate.isNotEmpty) formatDateRange(x.startDate, x.endDate),
-                      ].where((e) => e.isNotEmpty).join(' · '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    onTap: () {
-                      unawaited(AppHaptics.selection());
-                      Navigator.of(sheetCtx).pop();
-                      if (x.id != tripId) context.go('/trip/${x.id}/$tab');
-                    },
-                  ),
-              ],
-            ),
-          ),
+          onTap: openSwitcher,
+          onLongPress: actionsOn ? () => TripActionsSheet.show(context, tripId: tripId, onSwitch: openSwitcher) : null,
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 48),
             child: Row(

@@ -63,7 +63,28 @@ final soundFeedbackPrefProvider = _boolPref('settings.sound_feedback', false, on
 /// Open the Summary with Trip numbers folded away. Only honoured while `enableSummaryCollapse` is on.
 final summaryCollapsePrefProvider = _boolPref('settings.summary_collapse', false);
 
-final hapticsEnabledProvider = _boolPref('settings.haptics', true, onChange: (v) => AppHaptics.enabled = v);
+/// 'all' | 'important' | 'off'. Falls back to the old on/off `settings.haptics` switch so nobody's choice resets.
+final hapticsLevelPrefProvider = NotifierProvider<_PrefNotifier<HapticsLevel>, HapticsLevel>(
+  () => _PrefNotifier<HapticsLevel>(
+    'settings.haptics_level',
+    HapticsLevel.all,
+    (p, k) {
+      final v = p.getString(k) as String?;
+      if (v != null) return HapticsLevel.values.asNameMap()[v];
+      return p.getBool('settings.haptics') == false ? HapticsLevel.off : null;
+    },
+    (p, k, v) async {
+      AppHaptics.level = v;
+      await p.setString(k, v.name);
+    },
+  ),
+);
+
+/// Save a place with each expense. Stored per device; nothing reads it until the expense form captures a location.
+final geotagExpensesPrefProvider = _boolPref('settings.geotag_expenses', false);
+
+/// Keep the trip map collapsed and skip celebration animations. Only honoured while `enableDataSaverMode` is on.
+final dataSaverPrefProvider = _boolPref('settings.data_saver', false);
 
 /// Pass reminders (local notifications). Default on, like the web.
 final passRemindersEnabledProvider = _boolPref('settings.pass_reminders', true);

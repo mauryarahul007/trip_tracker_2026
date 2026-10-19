@@ -15,7 +15,9 @@ import '../features/feedback/presentation/bug_report_screen.dart';
 import '../features/feedback/presentation/diagnostics_screen.dart';
 import '../features/feedback/presentation/feature_request_screen.dart';
 import '../features/expenses/presentation/receipt_gallery_screen.dart';
+import '../features/settings/presentation/archived_trips_screen.dart';
 import '../features/settings/presentation/flag_overrides_screen.dart';
+import '../features/settings/presentation/storage_data_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/legal/presentation/terms_screen.dart';
 import '../features/smoke_test/presentation/smoke_test_screen.dart';
@@ -227,6 +229,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: 'notifications', builder: (context, state) => const NotificationPrefsScreen()),
           GoRoute(path: 'report-bug', builder: (context, state) => const BugReportScreen()),
           GoRoute(path: 'feature-request', builder: (context, state) => const FeatureRequestScreen()),
+          GoRoute(path: 'storage', builder: (context, state) => const StorageDataScreen()),
+          GoRoute(path: 'archived', builder: (context, state) => const ArchivedTripsScreen()),
           GoRoute(path: 'diagnostics', builder: (context, state) => const DiagnosticsScreen()),
           GoRoute(path: 'flag-overrides', builder: (context, state) => const FlagOverridesScreen()),
         ],

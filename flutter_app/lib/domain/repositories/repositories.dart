@@ -31,6 +31,16 @@ abstract class TripRepository {
   /// Optimistic archive / freeze / close (any subset). Owner/admin only on the server (RLS).
   Future<void> setTripState(String id, {bool? archived, bool? frozen, bool? closed});
 
+  /// Name, destination and dates (a plain `trips` column update: owner or superadmin on the server).
+  /// A null or blank [destination] clears it.
+  Future<void> updateTripDetails(
+    String id, {
+    required String name,
+    required String startDate,
+    required String endDate,
+    String? destination,
+  });
+
   /// Removes the trip locally now and on the server on next sync (cascades).
   Future<void> deleteTrip(String id);
 

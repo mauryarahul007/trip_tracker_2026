@@ -98,6 +98,8 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-18 | flutter | FLUTTER-PAID-LEGEND | [Flutter: Who paid labels](#flutter-paid-legend--flutter-who-paid-labels) |
 | 2026-10-19 | flutter | FLUTTER-PAID-VS-SHARE | [Flutter: You paid vs your share, balance explainer, saved-offline toast](#flutter-paid-vs-share--flutter-you-paid-vs-your-share-balance-explainer-saved-offline-toast) |
 | 2026-10-19 | flutter | FLUTTER-TIDY-TABS | [Flutter: tidy Expenses, Notes and Members, edit and delete passes, analytics switch](#flutter-tidy-tabs--flutter-tidy-expenses-notes-and-members-edit-and-delete-passes-analytics-switch) |
+| 2026-10-19 | flutter (unreleased) | FLUTTER-SETTINGS-PAGE | [Flutter: one-page Settings like the web](#flutter-settings-page--flutter-one-page-settings-like-the-web) |
+| 2026-10-19 | flutter (unreleased) | FLUTTER-HEADER-SUMMARY | [Flutter: trip header actions, edit trip, Summary upgrades](#flutter-header-summary--flutter-trip-header-actions-edit-trip-summary-upgrades) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -3277,3 +3279,64 @@ Then add a row to the **Index** table.
 **Flag-OFF checks:** `enableTidyExpenses` OFF: boarding-receipt rows with barcode and the old day header. `enableTidyNotes` OFF: plain note cards, no menu, no count. `enableTidyMembers` OFF: tinted tiles, no chips, no search. `enablePassEditDelete` OFF: no (...) menu on passes.
 
 **Pass:** nothing is lost or duplicated on edit, undo restores the exact pass, and the analytics switch never changes the settlement list.
+
+## FLUTTER-SETTINGS-PAGE — Flutter: one-page Settings like the web
+
+**Flags:** `enableSettingsDataHub` (Trip pack, default ON, new). Existing: `enableGeotagging` (default ON), `enableDataSaverMode` (default OFF), `enableDemoSeeding` (default OFF), `enableHapticsSetting` (default ON), `enableFeatureSuggestions`, `enableSettingsSearch`. Test on an Android phone and an iPhone, signed in, with at least one trip that has an expense.
+
+**One page**
+1. Me tab (or Trip menu > App settings). Settings is one scrolling page of cards: THIS TRIP, APPEARANCE, NOTIFICATIONS, DATA, HELP & ABOUT, ACCOUNT. Rows have a tinted icon, title, subtitle and a switch, segmented control, badge or chevron at the right. Rows are separated by thin lines. No category drill-in rows remain except "More display options", "Backups" and "About & Legal".
+
+**This Trip** (only when you have a trip)
+2. The card is for the trip happening now, else the next one, else the latest. **Invite & Share Trip** opens the invite sheet; **Trip Tools** opens the tools sheet; **Trip settings** opens that trip's settings; **Live location** opens the 12-hour share sheet.
+3. **Close Trip** shows "<symbol><amount> still unsettled" (or "Everything is settled") and opens the close-out sheet. It is hidden once the trip is closed.
+4. **Geotag expenses**: switch on, leave the page and come back: still on. It only stores your choice on this phone for now; expenses do not get a place yet.
+
+**Appearance**
+5. **Appearance** has Light, Dark and Auto icons: tapping one changes the theme at once, and the subtitle follows ("Light", "Dark", "Follows your phone").
+6. **Haptics** has All, Important and Off. All: every tap vibrates. Important: save, settle, delete and warnings vibrate, tab switches and menu taps are silent. Off: nothing vibrates. Close and reopen the app: the choice stays. A phone that had haptics switched off before the update starts on Off.
+7. **More display options** opens Pure black, High contrast, Reduce motion, Collapse Trip numbers, Sound feedback and Default currency, as before.
+
+**Notifications**
+8. **Notifications** shows "N unread" (or "All caught up") and opens the inbox. **Notification preferences** and **Travel pass reminders** work as before.
+
+**Data**
+9. **Data saver** (needs `enableDataSaverMode`): switch persists. It only stores your choice for now.
+10. **Storage and Data**: the badge shows total size; the page shows data and cache sizes. **Clear cache** asks first; after Clear the cache size drops and trips and expenses are untouched.
+11. **Archived Trips**: subtitle counts archived trips. Restore (undo arrow) returns a trip to the list at once. The trash icon appears only on trips you own, asks first, and removes the trip for everyone.
+12. **Backups** opens Export backup and Restore backup (unchanged behaviour).
+
+**Help & About**
+13. **Report a Problem**, **Suggest a Feature** (needs `enableFeatureSuggestions`) and **Diagnostics** open as before. **Seed Demo Trip** (needs `enableDemoSeeding`) adds "Goa Weekend (Demo)" with 3 members and 4 expenses; tapping it again adds another copy.
+14. **About & Legal** shows "Version x.y.z (build)" and opens What's new, Privacy Policy and Terms.
+
+**Account**
+15. **Sign Out** and **Delete Account** are red cards. Sign Out asks first; Delete Account opens the existing delete flow.
+
+**Search:** with `enableSettingsSearch` on, typing "currency", "haptics" or "storage" lists those rows in place.
+
+**Flag-OFF checks:** `enableSettingsDataHub` OFF: Storage and Data and Archived Trips are gone (Backups stays; archived trips are still in the Trips list's folded section). `enableGeotagging` OFF: no Geotag row. `enableDataSaverMode` OFF: no Data saver row. `enableDemoSeeding` OFF: no Seed Demo Trip. `enableHapticsSetting` OFF: no Haptics row and haptics stay on every tap.
+
+**Pass:** every old setting is still reachable, switches survive an app restart, nothing is deleted without a confirmation, and every row is easy to tap (48dp) in light and dark.
+
+## FLUTTER-HEADER-SUMMARY — Flutter: trip header actions, edit trip, Summary upgrades
+
+**Flags:** `enableTripHeaderActions` and `enableSummaryUpgrades` (Trip pack, both default ON, new). Existing: `enableTripCloseout`, `enableExpenseDisputes`. Prep: a trip you own whose end date has passed, with at least one expense where someone owes money, and a second trip you do not own.
+
+**Header**
+1. Open the trip. Under the top bar the header shows the status pill, the dates, a sync line and a chip "N members · N expenses" (settlements and bin items do not count).
+2. Long-press the trip name. A sheet opens headed by the name and "dates · N members · N expenses", with **Share Trip & QR Code**, **Mute Trip Alerts**, **Edit Trip Details**, **Settings** and, if you have another trip, **Switch to Another Trip**. Tap the name briefly (with 2+ trips): the old switcher list still opens.
+3. **Share**: the invite sheet opens. **Mute**: the row flips to "Unmute Trip Alerts"; reopen the sheet to confirm; Trip settings shows the same switch. **Settings**: opens the app settings. **Switch**: opens the trip list sheet.
+4. **Edit Trip Details** (owner only): a popup with Trip name, Destination (suggestions as in New Trip) and Dates. Change the name, tap **Update Trip**: the header and Trips list show the new name at once. Clearing the name shows "Give the trip a name". **Cancel** changes nothing. Dates: pick a new range, Update: the dates change everywhere. Sign in on a second device: the change arrives after sync.
+5. On the trip you do not own: the sheet has no Edit Trip Details row.
+6. Open the route map (More menu > Route map) on a trip with stops: a "N stops" pill sits at the top left of the map; tapping it lists the stops, choosing one opens the full route.
+
+**Summary**
+7. Open the Summary tab. At the top: chips for "You owe · settle up" or "You're owed · see who", disputes, pending invites and **Close out trip**, and, because the trip dates have ended with money unsettled, a banner "Trip dates ended — close out remaining balances". Tapping the banner or Close out trip opens the close-out sheet; the You owe / You're owed chips open the payments list.
+8. Under "Who pays whom": **How it works** opens a sheet explaining Simplified and Per person (with the payment counts).
+9. On each payment card: **Custom amount** opens Settle with the amount selected, ready to type a smaller amount (it records a partial settlement as before). **Remind** appears only when someone else owes (not on your own payments); it opens the phone share sheet with "Hi <name>, a gentle reminder: you owe <name> <amount> for "<trip>"...". Nothing is sent unless you pick an app and send it.
+10. Open **Trip numbers**: the first thing is a 2x2 **At a Glance** grid: Total spent, Per-head cost, Top category, Biggest spender.
+
+**Flag-OFF checks:** `enableTripHeaderActions` OFF: no chip, long-press does nothing, no stops pill (the old header strip flag still decides if the strip shows). `enableSummaryUpgrades` OFF: no chips or banner at the top, no How it works, Custom amount or Remind, no At a Glance grid; Settle, Settle all and the toggle work as before.
+
+**Pass:** no balance or settlement number changes; every new control is at least 48dp and readable at large text and in dark mode; Remind never sends anything by itself; non-owners cannot edit a trip.

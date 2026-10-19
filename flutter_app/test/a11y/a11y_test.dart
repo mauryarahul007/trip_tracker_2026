@@ -396,7 +396,7 @@ void main() {
 
     testApp('Trip numbers tabs', (tester) async {
       await big(tester);
-      await pumpApp(tester, user: asha);
+      await pumpApp(tester, user: asha, flagsOff: {'enableSummaryUpgrades'});
       final s = await seedTrip(tester);
       await addExpense(tester, s, amount: 90);
       await addExpense(tester, s, title: 'Taxi', amount: 30, paidBy: s.ben, userId: 'u2');

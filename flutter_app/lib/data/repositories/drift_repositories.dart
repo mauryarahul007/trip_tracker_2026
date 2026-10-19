@@ -185,6 +185,22 @@ class DriftTripRepository extends _DriftRepo implements TripRepository {
   });
 
   @override
+  Future<void> updateTripDetails(
+    String id, {
+    required String name,
+    required String startDate,
+    required String endDate,
+    String? destination,
+  }) {
+    final dest = (destination == null || destination.trim().isEmpty) ? null : destination.trim();
+    return _columnPatch(
+      id,
+      {'name': name.trim(), 'destination': dest, 'startDate': startDate, 'endDate': endDate},
+      {'name': name.trim(), 'destination': dest, 'start_date': startDate, 'end_date': endDate},
+    );
+  }
+
+  @override
   Future<void> setSimplifyDebts(String id, bool value) =>
       _columnPatch(id, {'simplifyDebts': value}, {'simplify_debts': value});
 

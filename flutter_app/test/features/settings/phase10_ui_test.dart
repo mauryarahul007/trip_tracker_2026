@@ -9,6 +9,8 @@ import 'package:trip_tracker/features/feedback/application/feedback_providers.da
 import 'package:go_router/go_router.dart';
 import 'package:trip_tracker/app/router.dart';
 import 'package:trip_tracker/core/platform/haptics.dart';
+import 'package:trip_tracker/core/settings/app_settings.dart';
+import 'package:trip_tracker/features/settings/application/settings_data.dart';
 import 'package:trip_tracker/core/platform/feedback.dart';
 import 'package:trip_tracker/core/platform/motion.dart';
 import 'package:trip_tracker/core/platform/push_gateway.dart';
@@ -26,19 +28,40 @@ import '../../support/pump_app.dart';
 import '../../support/seed.dart';
 
 Future<void> go(WidgetTester t, String path) async {
+  if (path == '/settings') {
+    // Settings is one long page; a tall screen builds every row so tests can find them without scrolling.
+    t.view.physicalSize = const Size(800, 4000);
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.reset);
+  }
   unawaited(containerOf(t).read(routerProvider).push<void>(path));
   await settle(t, rounds: 10);
 }
 
 /// Settings is a flat list; each category opens its own page.
 Future<void> openRow(WidgetTester t, String name) async {
-  await t.tap(find.byKey(Key('settings-open-$name')));
+  final key = switch (name) {
+    'appearance' => 'settings-open-display', // the extra display and sound options
+    'data' => 'settings-backups',
+    'about' => 'settings-open-about',
+    _ => null, // notifications, security and help rows sit on the main page
+  };
+  if (key == null) return;
+  await t.tap(find.byKey(Key(key)));
   await settle(t, rounds: 6);
 }
 
 Future<void> back(WidgetTester t) async {
   await t.pageBack();
   await settle(t, rounds: 6);
+}
+
+class _FakeStorage implements StorageGateway {
+  int cleared = 0;
+  @override
+  Future<StorageUsage> usage() async => const StorageUsage(dataBytes: 2 * 1024 * 1024, cacheBytes: 512 * 1024);
+  @override
+  Future<void> clearCache() async => cleared++;
 }
 
 const named = AuthUser(id: 'u1', email: 'a@b.c', displayName: 'Asha', provider: 'email');
@@ -51,12 +74,11 @@ void main() {
       final app = await pumpApp(tester, user: named);
       await go(tester, '/settings');
       expect(find.text('Asha'), findsWidgets);
-      expect(find.textContaining('3.45.0'), findsOneWidget);
+      expect(find.textContaining('3.45.0'), findsWidgets); // About row and footer
       expect(find.byKey(const Key('settings-amoled')), findsNothing); // Pro flag off
       expect(find.byKey(const Key('settings-biometric')), findsNothing); // Pro flag off
 
-      await openRow(tester, 'appearance');
-      await tester.tap(find.text('Dark'));
+      await tester.tap(find.byKey(const Key('segment-dark')));
       await settle(tester);
       expect(app.prefs.getString('settings.theme'), 'dark');
       expect(tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode, ThemeMode.dark);
@@ -80,7 +102,6 @@ void main() {
       await tester.tap(find.byKey(const Key('settings-biometric')));
       await settle(tester);
       expect(containerOf(tester).read(biometricLockEnabledProvider), isFalse);
-      await back(tester);
       await openRow(tester, 'appearance');
       expect(find.byKey(const Key('settings-amoled')), findsOneWidget);
     });
@@ -92,7 +113,6 @@ void main() {
       expect(find.byKey(const Key('settings-feature-request')), findsNothing);
       expect(find.byKey(const Key('settings-report-bug')), findsOneWidget);
       expect(find.byKey(const Key('settings-diagnostics')), findsOneWidget);
-      await back(tester);
       await openRow(tester, 'about');
       expect(find.byKey(const Key('settings-whats-new')), findsNothing);
     });
@@ -102,7 +122,6 @@ void main() {
       await go(tester, '/settings');
       await openRow(tester, 'help');
       expect(find.byKey(const Key('settings-feature-request')), findsOneWidget);
-      await back(tester);
       await openRow(tester, 'about');
       await tester.tap(find.byKey(const Key('settings-whats-new')));
       await settle(tester);
@@ -116,7 +135,7 @@ void main() {
       await tester.enterText(find.byKey(const Key('settings-search')), 'currency');
       await tester.pump();
       expect(find.byKey(const Key('settings-currency')), findsOneWidget);
-      expect(find.byKey(const Key('settings-open-appearance')), findsNothing);
+      expect(find.byKey(const Key('settings-open-display')), findsNothing);
       await tester.enterText(find.byKey(const Key('settings-search')), 'zzzz');
       await tester.pump();
       expect(find.byKey(const Key('settings-search-empty')), findsOneWidget);
@@ -126,7 +145,7 @@ void main() {
       await pumpApp(tester, user: asha, flagsOff: {'enableSettingsSearch'});
       await go(tester, '/settings');
       expect(find.byKey(const Key('settings-search')), findsNothing);
-      expect(find.byKey(const Key('settings-open-appearance')), findsOneWidget);
+      expect(find.byKey(const Key('settings-open-display')), findsOneWidget);
     });
 
     testApp('reduce motion switch turns animations to their end state; absent with its flag off', (tester) async {
@@ -175,9 +194,9 @@ void main() {
     testApp('sound feedback switch is absent with its flag off', (tester) async {
       await pumpApp(tester, user: asha, flagsOff: {'enableFeedbackPack'});
       await go(tester, '/settings');
+      expect(find.byKey(const Key('settings-haptics')), findsOneWidget); // on the main page now
       await openRow(tester, 'appearance');
       expect(find.byKey(const Key('settings-sound')), findsNothing);
-      expect(find.byKey(const Key('settings-haptics')), findsOneWidget);
     });
 
     testApp('reduce motion switch is hidden with its flag off', (tester) async {
@@ -187,14 +206,127 @@ void main() {
       expect(find.byKey(const Key('settings-reduce-motion')), findsNothing);
     });
 
-    testApp('haptics switch turns the facade off', (tester) async {
-      await pumpApp(tester, user: asha);
+    testApp('haptics has three levels: Important keeps key actions and silences taps; Off silences all', (
+      tester,
+    ) async {
+      final app = await pumpApp(tester, user: asha);
+      addTearDown(() => AppHaptics.level = HapticsLevel.all);
       await go(tester, '/settings');
-      await openRow(tester, 'appearance');
-      await tester.tap(find.byKey(const Key('settings-haptics')));
+      await tester.tap(find.byKey(const Key('segment-important')));
+      await settle(tester);
+      expect(AppHaptics.level, HapticsLevel.important);
+      expect(app.prefs.getString('settings.haptics_level'), 'important');
+      await tester.tap(find.byKey(const Key('segment-off')));
       await settle(tester);
       expect(AppHaptics.enabled, isFalse);
-      AppHaptics.enabled = true;
+      expect(app.prefs.getString('settings.haptics_level'), 'off');
+    });
+
+    testApp('an old "haptics off" choice carries over to the new level', (tester) async {
+      await pumpApp(tester, user: asha, prefsExtra: {'settings.haptics': false});
+      addTearDown(() => AppHaptics.level = HapticsLevel.all);
+      expect(containerOf(tester).read(hapticsLevelPrefProvider), HapticsLevel.off);
+    });
+
+    testApp('one page, sectioned like the web: Appearance, Notifications, Data, Help & About, Account', (tester) async {
+      await pumpApp(tester, user: asha);
+      await go(tester, '/settings');
+      for (final h in ['APPEARANCE', 'NOTIFICATIONS', 'DATA', 'HELP & ABOUT', 'ACCOUNT']) {
+        expect(find.text(h), findsOneWidget, reason: h);
+      }
+      expect(find.text('THIS TRIP'), findsNothing); // no trips yet
+      expect(find.byKey(const Key('settings-signout')), findsOneWidget);
+      expect(find.byKey(const Key('settings-delete')), findsOneWidget);
+    });
+
+    testApp('This Trip shows the live trip, its unsettled amount, and the geotag switch persists', (tester) async {
+      final app = await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await addExpense(tester, s, amount: 300);
+      await go(tester, '/settings');
+      expect(find.text('THIS TRIP'), findsOneWidget);
+      expect(find.byKey(const Key('settings-trip-share')), findsOneWidget);
+      expect(find.byKey(const Key('settings-live-location')), findsOneWidget);
+      expect(find.textContaining('still unsettled'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('settings-geotag')));
+      await settle(tester);
+      expect(app.prefs.getBool('settings.geotag_expenses'), isTrue);
+    });
+
+    testApp('geotag row is hidden with its flag off', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableGeotagging'});
+      await seedTrip(tester);
+      await go(tester, '/settings');
+      expect(find.byKey(const Key('settings-geotag')), findsNothing);
+    });
+
+    testApp('data saver switch appears with its flag and persists; absent with it off', (tester) async {
+      final off = await pumpApp(tester, user: asha);
+      await go(tester, '/settings');
+      expect(find.byKey(const Key('settings-data-saver')), findsNothing);
+      expect(off.prefs.getBool('settings.data_saver'), isNull);
+    });
+
+    testApp('data saver switch saves the setting', (tester) async {
+      final app = await pumpApp(tester, user: asha, flagsOn: {'enableDataSaverMode'});
+      await go(tester, '/settings');
+      await tester.tap(find.byKey(const Key('settings-data-saver')));
+      await settle(tester);
+      expect(app.prefs.getBool('settings.data_saver'), isTrue);
+    });
+
+    testApp('Storage and Archived rows follow their flag', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableSettingsDataHub'});
+      await go(tester, '/settings');
+      expect(find.byKey(const Key('settings-storage')), findsNothing);
+      expect(find.byKey(const Key('settings-archived')), findsNothing);
+      expect(find.byKey(const Key('settings-backups')), findsOneWidget);
+    });
+
+    testApp('Storage and Data shows sizes and clear cache asks first, then clears', (tester) async {
+      final gw = _FakeStorage();
+      await pumpApp(tester, user: asha, overrides: [storageGatewayProvider.overrideWithValue(gw)]);
+      await go(tester, '/settings/storage');
+      expect(find.text('2.0 MB'), findsOneWidget);
+      expect(find.text('512.0 KB'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('storage-clear-cache')));
+      await settle(tester);
+      expect(gw.cleared, 0); // nothing happens until confirmed
+      await tester.tap(find.text('Clear'));
+      await settle(tester);
+      expect(gw.cleared, 1);
+    });
+
+    testApp('Archived Trips lists archived trips and restores one', (tester) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester, owner: 'u1');
+      final c = containerOf(tester);
+      await real(tester, () => c.read(tripRepositoryProvider).setTripState(s.tripId, archived: true));
+      await go(tester, '/settings/archived');
+      expect(find.byKey(Key('archived-${s.tripId}')), findsOneWidget);
+      await tester.tap(find.byKey(Key('archived-restore-${s.tripId}')));
+      await settle(tester);
+      expect(find.byKey(Key('archived-${s.tripId}')), findsNothing);
+      expect(find.text('No archived trips'), findsOneWidget);
+    });
+
+    testApp('Seed Demo Trip is flag-gated and adds a sample trip', (tester) async {
+      await pumpApp(tester, user: asha);
+      await go(tester, '/settings');
+      expect(find.byKey(const Key('settings-seed-demo')), findsNothing);
+    });
+
+    testApp('Seed Demo Trip adds Goa Weekend (Demo) with its members and expenses', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableDemoSeeding'});
+      await go(tester, '/settings');
+      await tester.tap(find.byKey(const Key('settings-seed-demo')));
+      await settle(tester);
+      final c = containerOf(tester);
+      final trips = await real(tester, () => c.read(tripRepositoryProvider).watchTrips().first);
+      expect(trips.map((t) => t.name), contains('Goa Weekend (Demo)'));
+      final id = trips.firstWhere((t) => t.name == 'Goa Weekend (Demo)').id;
+      final expenses = await real(tester, () => c.read(expenseRepositoryProvider).watchAllActive().first);
+      expect(expenses.where((e) => e.tripId == id), hasLength(4));
     });
 
     testApp('rename updates the profile', (tester) async {

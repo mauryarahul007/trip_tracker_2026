@@ -103,7 +103,7 @@ void main() {
   });
 
   testApp('share summary makes a png and shares it', (tester) async {
-    final app = await pumpApp(tester, user: asha);
+    final app = await pumpApp(tester, user: asha, flagsOff: {'enableSummaryUpgrades'});
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 90);
     await openLedger(tester, s);

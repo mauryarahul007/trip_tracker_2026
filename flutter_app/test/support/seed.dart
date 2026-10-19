@@ -90,8 +90,21 @@ Future<void> openForm(WidgetTester tester, Seed s, {String? editId}) async {
 Future<List<dynamic>> expensesOf(WidgetTester tester, Seed s) =>
     real(tester, () => containerOf(tester).read(expenseRepositoryProvider).watchActive(s.tripId).first);
 
+/// The Summary is a long lazy list; a tall screen builds all of it so a test can find any row without scrolling.
+void tallScreen(WidgetTester tester, {double height = 2600}) {
+  tester.view.physicalSize = Size(430, height);
+  addTearDown(tester.view.resetPhysicalSize);
+}
+
+/// A long list only builds the rows near the screen; scroll the page until [f] has been built.
+Future<void> buildIfLazy(WidgetTester tester, Finder f) async {
+  if (f.evaluate().isNotEmpty) return;
+  await tester.scrollUntilVisible(f, 300, scrollable: find.byType(Scrollable).hitTestable().first, maxScrolls: 40);
+}
+
 /// Scrolls [f] to the middle of the screen, clear of the floating Add button at the bottom.
 Future<void> centre(WidgetTester tester, Finder f) async {
+  await buildIfLazy(tester, f);
   await tester.ensureVisible(f);
   await Scrollable.ensureVisible(tester.element(f), alignment: 0.4);
   await tester.pump();

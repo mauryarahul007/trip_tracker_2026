@@ -93,8 +93,9 @@ class TripTrackerApp extends ConsumerWidget {
     final amoled =
         ref.watch(amoledPrefProvider) && (ref.watch(flagProvider(('enableAmoledTheme', null))).value ?? false);
     // With the Haptics setting switched off by the Superadmin there is no switch, and haptics stay on.
-    AppHaptics.enabled =
-        ref.watch(hapticsEnabledProvider) || !(ref.watch(flagProvider(('enableHapticsSetting', null))).value ?? true);
+    AppHaptics.level = (ref.watch(flagProvider(('enableHapticsSetting', null))).value ?? true)
+        ? ref.watch(hapticsLevelPrefProvider)
+        : HapticsLevel.all;
     final contrast =
         ref.watch(highContrastPrefProvider) && (ref.watch(flagProvider(('enableHighContrast', null))).value ?? true);
     AppFeedback.sound = ref.watch(soundFeedbackPrefProvider);

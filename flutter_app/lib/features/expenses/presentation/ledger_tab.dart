@@ -69,6 +69,7 @@ import '../../trips/application/trip_accent.dart';
 import '../application/trip_budget.dart';
 import '../../trips/presentation/widgets/trip_card.dart' show tripHeadline;
 import 'closeout_sheet.dart';
+import 'widgets/summary_extras.dart';
 import 'widgets/settlement_card.dart';
 import 'widgets/upi_payment_sheet.dart';
 
@@ -100,12 +101,13 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
   bool? _wasSettled; // to notice the moment the trip becomes settled
   var _personView = false; // Who paid card as people, not groups (this viewer only; never touches Who pays whom)
 
-  Future<void> _settle(BuildContext context, Transfer t) async {
+  Future<void> _settle(BuildContext context, Transfer t, {bool focusAmount = false}) async {
     final trip = ref.read(tripProvider(widget.tripId)).value;
     if (trip == null) return;
     await AppSheet.show<void>(
       context: context,
-      builder: (_) => _SettleSheet(tripId: widget.tripId, transfer: t, currency: trip.baseCurrency),
+      builder: (_) =>
+          _SettleSheet(tripId: widget.tripId, transfer: t, currency: trip.baseCurrency, focusAmount: focusAmount),
     );
   }
 
@@ -312,6 +314,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         ? tokens.textPrimary
         : (heroBalance > 0 ? tokens.colorSuccess : tokens.colorDanger);
     final counts = ref.watch(tripSettlementCountsProvider(id));
+    final upgradesOn = _flag(ref, 'enableSummaryUpgrades', id);
     final totals = computeTotals(
       ref.watch(tripExpensesProvider(id)).value ?? const <Expense>[],
       visibleMemberCount: ref.watch(visibleMembersProvider(id)).length,
@@ -881,6 +884,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     // The Summary in two lists so a wide screen can show them side by side (flag `enableSummaryTwoPane`).
     final topChildren = <Widget>[
       const LastSyncedCaption(),
+      if (upgradesOn) SummaryAttentionBar(tripId: id, onTransfers: () => setState(() => _open.add('transfers'))),
       if (todayOn)
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
@@ -1259,6 +1263,21 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: tokens.textSecondary),
               ),
             ),
+          if (upgradesOn && counts != null)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                key: const Key('how-it-works'),
+                onPressed: () => AppSheet.show<void>(
+                  context: context,
+                  title: 'How it works',
+                  builder: (_) => HowSettlementsWorkSheet(simplified: counts.simplified, direct: counts.direct),
+                ),
+                icon: const Icon(Icons.help_outline_rounded, size: 18),
+                label: const Text('How it works'),
+                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+              ),
+            ),
           if (settleAllOn)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -1279,10 +1298,10 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
               subtitle: l10n.ledAllSettledHint,
             )
           else
-            for (final (i, t) in transfers.indexed)
+            for (final (i, t) in transfers.indexed) ...[
               Padding(
                 key: Key('transfer-$i'),
-                padding: const EdgeInsets.only(bottom: 14),
+                padding: EdgeInsets.only(bottom: upgradesOn ? 0 : 14),
                 child: LuggageStubTile(
                   tone: isMe(t.from) ? BentoTone.peach : (isMe(t.to) ? BentoTone.mint : toneFor(t.from)),
                   badge: isMe(t.from) ? l10n.ledYouPay : (isMe(t.to) ? l10n.ledPaysYou : null),
@@ -1297,6 +1316,27 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                   onSettle: () => _settle(context, t),
                 ),
               ),
+              if (upgradesOn)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: TransferExtras(
+                    onCustom: () => _settle(context, t, focusAmount: true),
+                    onRemind: isMe(t.from)
+                        ? null
+                        : () => ref
+                              .read(shareServiceProvider)
+                              .share(
+                                reminderMessage(
+                                  from: t.fromLabel,
+                                  to: t.toLabel,
+                                  amount: formatMoney(context, t.amount, cur),
+                                  trip: trip.name,
+                                ),
+                                subject: 'Settle up: ${trip.name}',
+                              ),
+                  ),
+                ),
+            ],
         ],
         bare: true,
       ),
@@ -1307,6 +1347,13 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         actions: numbersActions,
         subtitle: formatMoney(context, totals.totalSpent, cur),
         [
+          if (upgradesOn)
+            AtAGlanceGrid(
+              total: formatMoney(context, totals.totalSpent, cur),
+              perHead: formatMoney(context, totals.averageCost, cur),
+              topCategory: totals.top?.name,
+              topSpender: paidList.isEmpty ? null : names[paidList.first.key],
+            ),
           if (planOn)
             Padding(
               padding: const EdgeInsets.only(top: 6, bottom: 16),
@@ -1879,7 +1926,10 @@ class _FlightArcPainter extends CustomPainter {
 }
 
 class _SettleSheet extends ConsumerStatefulWidget {
-  const _SettleSheet({required this.tripId, required this.transfer, required this.currency});
+  const _SettleSheet({required this.tripId, required this.transfer, required this.currency, this.focusAmount = false});
+
+  /// Open with the amount selected for typing (the Custom amount action).
+  final bool focusAmount;
   final String tripId;
   final Transfer transfer;
   final String currency;
@@ -1889,7 +1939,10 @@ class _SettleSheet extends ConsumerStatefulWidget {
 }
 
 class _SettleSheetState extends ConsumerState<_SettleSheet> {
-  late final _amount = TextEditingController(text: widget.transfer.amount.toStringAsFixed(2));
+  late final _amount = TextEditingController(text: widget.transfer.amount.toStringAsFixed(2))
+    ..selection = widget.focusAmount
+        ? TextSelection(baseOffset: 0, extentOffset: widget.transfer.amount.toStringAsFixed(2).length)
+        : const TextSelection.collapsed(offset: -1);
   final _note = TextEditingController();
   late final _upi = TextEditingController(
     text: ref.read(sharedPreferencesProvider).getString('member_upi:${widget.transfer.toMemberId}') ?? '',
@@ -2061,6 +2114,7 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
           AppTextField(
             key: const Key('settle-amount'),
             controller: _amount,
+            autofocus: widget.focusAmount,
             label: l10n.ledAmount,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             onChanged: (_) => setState(() => _error = null),

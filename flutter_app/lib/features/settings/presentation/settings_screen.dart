@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/auth_state.dart';
 import '../../../core/clock.dart';
+import '../../../core/platform/haptics.dart' show HapticsLevel;
 import '../../../core/platform/share_service.dart';
 import '../../../core/settings/app_settings.dart';
 import '../../../data/backup/backup_service.dart';
@@ -20,7 +21,18 @@ import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../auth/application/app_lock.dart';
-import '../../expenses/presentation/trip_tools_sheet.dart' show textFilePickerProvider;
+import '../../../domain/logic/currency.dart' show getCurrencySymbol, formatAmount;
+import '../../../domain/logic/latest_trip.dart';
+import '../../../domain/models/trip.dart';
+import '../../../shared/widgets/app_sheet.dart';
+import '../../expenses/application/expenses_providers.dart' show myMemberIdProvider, tripSettlementProvider;
+import '../../expenses/presentation/closeout_sheet.dart';
+import '../../expenses/presentation/trip_tools_sheet.dart' show TripToolsSheet, textFilePickerProvider;
+import '../../notifications/application/notification_providers.dart' show unreadNotificationCountProvider;
+import '../../travel/presentation/live_location_share_modal.dart';
+import '../../trips/application/trips_providers.dart' show tripsProvider;
+import '../../trips/presentation/widgets/share_trip_sheet.dart';
+import '../application/settings_data.dart';
 import '../../trips/presentation/widgets/home_dock.dart';
 import 'settings_widgets.dart';
 
@@ -156,6 +168,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _say(r.ok ? 'Restored ${r.trips} trip(s) and ${r.expenses} expense(s).' : (r.error ?? 'Restore failed.'));
   }
 
+  Future<void> _seedDemo() async {
+    final user = ref.read(authStateProvider).user;
+    if (user == null) return;
+    final r = await ref
+        .read(backupServiceProvider)
+        .restore(buildDemoBackupJson(ref.read(nowProvider)()), userId: user.id, userName: user.displayName ?? 'Me');
+    _say(r.ok ? 'Added the demo trip "Goa Weekend (Demo)".' : (r.error ?? 'Could not add the demo trip.'));
+  }
+
   Future<void> _signOut() async {
     final ok = await ConfirmDialog.show(
       context: context,
@@ -175,46 +196,55 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  /// Theme and haptics sit on the main page as segmented rows (web `Appearance` section).
   List<Widget> _appearanceRows(WidgetRef r) {
     final themeMode = r.watch(themeModePrefProvider);
+    return [
+      SettingsSegmentedTile<String>(
+        key: const Key('settings-theme'),
+        icon: Icons.wb_sunny_outlined,
+        title: 'Appearance',
+        subtitle: switch (themeMode) {
+          'light' => 'Light',
+          'dark' => 'Dark',
+          _ => 'Follows your phone',
+        },
+        value: themeMode,
+        options: const [
+          ('light', 'Light', Icons.wb_sunny_outlined),
+          ('dark', 'Dark', Icons.nightlight_outlined),
+          ('system', 'Auto', Icons.smartphone_rounded),
+        ],
+        onChanged: (v) => r.read(themeModePrefProvider.notifier).set(v),
+      ),
+      if (r.watch(flagProvider(('enableHapticsSetting', null))).value ?? true)
+        SettingsSegmentedTile<HapticsLevel>(
+          key: const Key('settings-haptics'),
+          icon: Icons.vibration_rounded,
+          iconColor: const Color(0xFF8B3CF7),
+          title: 'Haptics',
+          subtitle: switch (r.watch(hapticsLevelPrefProvider)) {
+            HapticsLevel.all => 'Every tap',
+            HapticsLevel.important => 'Key actions only',
+            HapticsLevel.off => 'Off',
+          },
+          value: r.watch(hapticsLevelPrefProvider),
+          options: const [
+            (HapticsLevel.all, 'All', null),
+            (HapticsLevel.important, 'Important', null),
+            (HapticsLevel.off, 'Off', null),
+          ],
+          onChanged: (v) => r.read(hapticsLevelPrefProvider.notifier).set(v),
+        ),
+    ];
+  }
+
+  /// The rest of the display and feedback options, one tap away from Appearance.
+  List<Widget> _displayRows(WidgetRef r) {
     final amoled = r.watch(amoledPrefProvider);
     final amoledFlag = r.watch(flagProvider(('enableAmoledTheme', null))).value ?? false;
-    final haptics = r.watch(hapticsEnabledProvider);
     final currency = r.watch(defaultCurrencyPrefProvider);
     return [
-      // Not a ListTile trailing: three segments do not fit beside the title at large text sizes.
-      Padding(
-        key: const Key('settings-theme'),
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Theme', style: TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                for (final o in const [
-                  ('light', 'Light', Icons.wb_sunny_outlined),
-                  ('dark', 'Dark', Icons.nightlight_outlined),
-                  ('system', 'Auto', Icons.tune_rounded),
-                ])
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: _ThemeOption(
-                        key: Key('theme-${o.$1}'),
-                        label: o.$2,
-                        icon: o.$3,
-                        selected: themeMode == o.$1,
-                        onTap: () => r.read(themeModePrefProvider.notifier).set(o.$1),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
       if (amoledFlag)
         SettingsSwitchTile(
           key: const Key('settings-amoled'),
@@ -265,16 +295,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           value: r.watch(soundFeedbackPrefProvider),
           onChanged: (v) => r.read(soundFeedbackPrefProvider.notifier).set(v),
         ),
-      if (r.watch(flagProvider(('enableHapticsSetting', null))).value ?? true)
-        SettingsSwitchTile(
-          key: const Key('settings-haptics'),
-          icon: Icons.vibration_rounded,
-          iconColor: const Color(0xFF8B3CF7),
-          title: 'Haptic feedback',
-          subtitle: 'Light taps on saves, swipes, undo and tabs',
-          value: haptics,
-          onChanged: (v) => r.read(hapticsEnabledProvider.notifier).set(v),
-        ),
       SettingsTile(
         key: const Key('settings-currency'),
         icon: Icons.payments_outlined,
@@ -287,6 +307,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   List<Widget> _notificationRows(WidgetRef r) => [
+    SettingsTile(
+      key: const Key('settings-inbox'),
+      icon: Icons.notifications_none_rounded,
+      iconColor: const Color(0xFF2F6BFF),
+      title: 'Notifications',
+      subtitle: switch (r.watch(unreadNotificationCountProvider)) {
+        0 => 'All caught up',
+        final n => '$n unread',
+      },
+      onTap: () => context.push('/notifications'),
+    ),
     SettingsTile(
       key: const Key('settings-notifications'),
       icon: Icons.notifications_none_rounded,
@@ -353,6 +384,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title: 'Suggest a feature',
         onTap: () => context.push('/settings/feature-request'),
       ),
+    if (r.watch(flagProvider(('enableDemoSeeding', null))).value ?? false)
+      SettingsTile(
+        key: const Key('settings-seed-demo'),
+        icon: Icons.auto_awesome_rounded,
+        iconColor: const Color(0xFF8B3CF7),
+        title: 'Seed Demo Trip',
+        subtitle: 'Try the app with a sample trip, expenses and splits',
+        onTap: _seedDemo,
+      ),
     SettingsTile(
       key: const Key('settings-diagnostics'),
       icon: Icons.monitor_heart_outlined,
@@ -401,18 +441,150 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   List<Widget> _accountRows(WidgetRef r) => [
     SettingsTile(
       key: const Key('settings-delete'),
-      title: 'Delete account',
-      subtitle: 'Permanently removes your account and its data',
+      title: 'Delete Account',
+      subtitle: 'Permanently delete your account and owned trips',
       icon: Icons.delete_outline_rounded,
       danger: true,
       onTap: () => context.push('/delete-account'),
     ),
   ];
 
+  List<Widget> _dataSaverRows(WidgetRef r) => [
+    if (r.watch(flagProvider(('enableDataSaverMode', null))).value ?? false)
+      SettingsSwitchTile(
+        key: const Key('settings-data-saver'),
+        icon: Icons.data_saver_on_rounded,
+        iconColor: const Color(0xFF0EA5C6),
+        title: 'Data saver',
+        subtitle: r.watch(dataSaverPrefProvider) ? 'Map stays collapsed' : 'Map opens as usual',
+        value: r.watch(dataSaverPrefProvider),
+        onChanged: (v) => r.read(dataSaverPrefProvider.notifier).set(v),
+      ),
+  ];
+
+  /// "This Trip" rows for the trip the user is most likely in (happening now, else next, else latest).
+  List<Widget> _tripRows(WidgetRef r, String tripId) {
+    final trip = r.watch(tripsProvider).value?.where((t) => t.id == tripId).firstOrNull;
+    if (trip == null) return const [];
+    final result = r.watch(tripSettlementProvider(tripId));
+    final outstanding = result?.transfers.fold<double>(0, (s, t) => s + t.amount) ?? 0;
+    final symbol = getCurrencySymbol(trip.baseCurrency);
+    final geotagFlag = r.watch(flagProvider(('enableGeotagging', null))).value ?? true;
+    return [
+      SettingsTile(
+        key: const Key('settings-trip-share'),
+        icon: Icons.person_add_alt_1_outlined,
+        title: 'Invite & Share Trip',
+        subtitle: trip.name,
+        onTap: () => AppSheet.show<void>(
+          context: context,
+          title: 'Invite travelers',
+          builder: (_) => ShareTripSheet(tripId: tripId),
+        ),
+      ),
+      SettingsTile(
+        key: const Key('settings-trip-tools'),
+        icon: Icons.build_outlined,
+        iconColor: const Color(0xFF0EA5C6),
+        title: 'Trip Tools',
+        subtitle: 'Splits, exports and quick actions',
+        onTap: () => AppSheet.show<void>(
+          context: context,
+          builder: (_) => TripToolsSheet(tripId: tripId),
+        ),
+      ),
+      SettingsTile(
+        key: const Key('settings-trip-settings'),
+        icon: Icons.tune_rounded,
+        iconColor: const Color(0xFF5A6173),
+        title: 'Trip settings',
+        subtitle: 'Money rules, categories, freeze and archive',
+        onTap: () => context.push('/trip/$tripId/settings'),
+      ),
+      if (geotagFlag)
+        SettingsSwitchTile(
+          key: const Key('settings-geotag'),
+          icon: Icons.place_outlined,
+          iconColor: const Color(0xFFE8890C),
+          title: 'Geotag expenses',
+          subtitle: 'Save a place with each expense',
+          value: r.watch(geotagExpensesPrefProvider),
+          onChanged: (v) => r.read(geotagExpensesPrefProvider.notifier).set(v),
+        ),
+      SettingsTile(
+        key: const Key('settings-live-location'),
+        icon: Icons.my_location_rounded,
+        iconColor: const Color(0xFFE5484D),
+        title: 'Live location',
+        subtitle: 'Share your position for 12 hours',
+        onTap: () => LiveLocationShareModal.show(
+          context,
+          tripId: tripId,
+          memberId: r.read(myMemberIdProvider(tripId)) ?? '',
+          userId: r.read(authStateProvider).userId ?? '',
+        ),
+      ),
+      if (!trip.closed)
+        SettingsTile(
+          key: const Key('settings-close-trip'),
+          icon: Icons.verified_user_outlined,
+          iconColor: const Color(0xFF16A34A),
+          title: 'Close Trip',
+          subtitle: result == null
+              ? 'Settle up and lock the trip'
+              : outstanding <= 0
+              ? 'Everything is settled'
+              : '${formatAmount(outstanding, symbol)} still unsettled',
+          onTap: () => AppSheet.show<void>(
+            context: context,
+            builder: (_) => CloseoutSheet(tripId: tripId),
+          ),
+        ),
+    ];
+  }
+
+  List<Widget> _dataSectionRows(WidgetRef r) {
+    final hub = r.watch(flagProvider(('enableSettingsDataHub', null))).value ?? true;
+    final archived = (r.watch(tripsProvider).value ?? const <Trip>[]).where((t) => t.archived).length;
+    final size = r.watch(storageUsageProvider).value;
+    return [
+      ..._dataSaverRows(r),
+      if (hub)
+        SettingsTile(
+          key: const Key('settings-storage'),
+          icon: Icons.pie_chart_outline_rounded,
+          iconColor: const Color(0xFF2F6BFF),
+          title: 'Storage and Data',
+          subtitle: 'Space used on this phone and cache',
+          trailing: size == null ? null : SettingsBadge(formatBytes(size.totalBytes)),
+          onTap: () => context.push('/settings/storage'),
+        ),
+      if (hub)
+        SettingsTile(
+          key: const Key('settings-archived'),
+          icon: Icons.archive_outlined,
+          iconColor: const Color(0xFF8B3CF7),
+          title: 'Archived Trips',
+          subtitle: archived == 0 ? 'No archived trips' : '$archived archived',
+          onTap: () => context.push('/settings/archived'),
+        ),
+      SettingsTile(
+        key: const Key('settings-backups'),
+        icon: Icons.download_rounded,
+        iconColor: const Color(0xFF0EA5C6),
+        title: 'Backups',
+        subtitle: 'Export or restore all your trips as a JSON file',
+        onTap: () => _open('Backups', _dataRows),
+      ),
+    ];
+  }
+
   /// Every settings row from every page that matches [q] (tiles only: they carry a title and subtitle).
   List<Widget> _matches(String q, bool security) {
     final all = [
       ..._appearanceRows(ref),
+      ..._displayRows(ref),
+      ..._dataSaverRows(ref),
       ..._notificationRows(ref),
       if (security) ..._securityRows(ref),
       ..._dataRows(ref),
@@ -426,7 +598,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       for (final w in all)
         if (w is SettingsTile
             ? hit(w.title) || hit(w.subtitle)
-            : w is SettingsSwitchTile && (hit(w.title) || hit(w.subtitle)))
+            : w is SettingsSwitchTile
+            ? hit(w.title) || hit(w.subtitle)
+            : w is SettingsSegmentedTile && (hit(w.title) || hit(w.subtitle)))
           w,
     ];
   }
@@ -438,6 +612,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final biometricFlag = ref.watch(flagProvider(('enableBiometricAuth', null))).value ?? false;
     final version = ref.watch(appVersionProvider).value;
     final isLocal = auth.isLocalOnly;
+    final tripId = latestTripId(ref.watch(tripsProvider).value ?? const [], ref.watch(nowProvider)());
     final tokens = context.tokens;
 
     final horizon = ref.watch(horizonNavProvider);
@@ -543,71 +718,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                 ] else ...[
-                  SettingsTile(
-                    key: const Key('settings-open-account'),
-                    icon: Icons.key_rounded,
-                    iconColor: const Color(0xFF16A34A),
-                    title: 'Account',
-                    subtitle: 'Delete account',
-                    onTap: () => _open('Account', _accountRows),
-                  ),
-                  SettingsTile(
-                    key: const Key('settings-open-notifications'),
-                    icon: Icons.notifications_none_rounded,
-                    iconColor: const Color(0xFF2F6BFF),
-                    title: 'Notifications',
-                    subtitle: 'Quiet hours, digest, pass reminders',
-                    onTap: () => _open('Notifications', _notificationRows),
-                  ),
-                  SettingsTile(
-                    key: const Key('settings-open-appearance'),
-                    icon: Icons.palette_outlined,
-                    iconColor: const Color(0xFF8B3CF7),
+                  if (tripId != null) SettingsSection(title: 'This Trip', children: _tripRows(ref, tripId)),
+                  SettingsSection(
                     title: 'Appearance',
-                    subtitle: 'Theme, haptics, default currency',
-                    onTap: () => _open('Appearance', _appearanceRows),
+                    children: [
+                      ..._appearanceRows(ref),
+                      SettingsTile(
+                        key: const Key('settings-open-display'),
+                        icon: Icons.palette_outlined,
+                        iconColor: const Color(0xFF8B3CF7),
+                        title: 'More display options',
+                        subtitle: 'Contrast, motion, sound, default currency',
+                        onTap: () => _open('Display and sound', _displayRows),
+                      ),
+                    ],
                   ),
-                  SettingsTile(
-                    key: const Key('settings-open-data'),
-                    icon: Icons.cloud_download_outlined,
-                    iconColor: const Color(0xFF0EA5C6),
-                    title: 'Data and backup',
-                    subtitle: 'Export or restore your trips',
-                    onTap: () => _open('Data and backup', _dataRows),
-                  ),
-                  if (biometricFlag)
-                    SettingsTile(
-                      key: const Key('settings-open-security'),
-                      icon: Icons.lock_outline_rounded,
-                      iconColor: const Color(0xFF16A34A),
-                      title: 'Privacy and security',
-                      subtitle: 'App lock',
-                      onTap: () => _open('Privacy and security', _securityRows),
-                    ),
-                  SettingsTile(
-                    key: const Key('settings-open-help'),
-                    icon: Icons.help_outline_rounded,
-                    iconColor: const Color(0xFFE8890C),
-                    title: 'Help',
-                    subtitle: 'Report a problem, diagnostics',
-                    onTap: () => _open('Help', _helpRows),
-                  ),
-                  SettingsTile(
-                    key: const Key('settings-open-about'),
-                    icon: Icons.info_outline_rounded,
-                    iconColor: const Color(0xFF5A6173),
-                    title: 'About',
-                    subtitle: "What's new, privacy, terms",
-                    onTap: () => _open('About', _aboutRows),
+                  SettingsSection(title: 'Notifications', children: _notificationRows(ref)),
+                  if (biometricFlag) SettingsSection(title: 'Privacy and security', children: _securityRows(ref)),
+                  SettingsSection(title: 'Data', children: _dataSectionRows(ref)),
+                  SettingsSection(
+                    title: 'Help & About',
+                    children: [
+                      ..._helpRows(ref),
+                      SettingsTile(
+                        key: const Key('settings-open-about'),
+                        icon: Icons.info_outline_rounded,
+                        iconColor: const Color(0xFF5A6173),
+                        title: 'About & Legal',
+                        subtitle: version == null
+                            ? "What's new, privacy, terms"
+                            : 'Version ${version.version} (${version.build})',
+                        onTap: () => _open('About & Legal', _aboutRows),
+                      ),
+                    ],
                   ),
                 ],
-                Divider(height: 24, color: tokens.borderColor),
-                SettingsTile(
-                  key: const Key('settings-signout'),
-                  icon: Icons.logout_rounded,
-                  title: 'Sign out',
-                  danger: true,
-                  onTap: _signOut,
+                SettingsSection(
+                  title: 'Account',
+                  children: [
+                    SettingsTile(
+                      key: const Key('settings-signout'),
+                      icon: Icons.logout_rounded,
+                      title: 'Sign Out',
+                      subtitle: 'Sign out on this device',
+                      danger: true,
+                      onTap: _signOut,
+                    ),
+                    ..._accountRows(ref),
+                  ],
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 20),
@@ -646,43 +804,6 @@ class _SettingsPage extends StatelessWidget {
           child: Consumer(
             builder: (context, r, _) => ListView(padding: const EdgeInsets.only(bottom: 32), children: rows(r)),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ThemeOption extends StatelessWidget {
-  const _ThemeOption({required this.label, required this.icon, required this.selected, required this.onTap, super.key});
-
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.tokens;
-    final color = selected ? t.primaryAccent : t.textSecondary;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: selected ? t.primaryAccent.withValues(alpha: 0.1) : t.bgSurfaceHover,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: selected ? t.primaryAccent : Colors.transparent, width: 2),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: TextStyle(fontWeight: FontWeight.w600, color: color),
-            ),
-          ],
         ),
       ),
     );

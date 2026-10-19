@@ -40,8 +40,8 @@ void main() {
     expect(find.descendant(of: key('trip-strip'), matching: find.textContaining('Oct')), findsWidgets);
   });
 
-  testApp('header strip is absent by default', (tester) async {
-    await pumpApp(tester, user: asha);
+  testApp('header strip is absent with both header flags off', (tester) async {
+    await pumpApp(tester, user: asha, flagsOff: {'enableTripHeaderActions'});
     final s = await seedTrip(tester);
     await openLedger(tester, s);
     expect(key('trip-strip'), findsNothing);

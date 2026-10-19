@@ -410,7 +410,12 @@ void main() {
     testApp('with the setting on, Summary opens with Trip numbers folded; tapping the header expands them', (
       tester,
     ) async {
-      await pumpApp(tester, user: asha, prefsExtra: {'settings.summary_collapse': true});
+      await pumpApp(
+        tester,
+        user: asha,
+        prefsExtra: {'settings.summary_collapse': true},
+        flagsOff: {'enableSummaryUpgrades'},
+      );
       final s = await seedTrip(tester);
       await addExpense(tester, s, amount: 90);
       await goTo(tester, '/trip/${s.tripId}/ledger');

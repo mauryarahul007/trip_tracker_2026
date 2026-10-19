@@ -10,10 +10,13 @@ import 'deferred_trip_map_hero.dart';
 /// The route panel under the trip header (the map button toggles it). With stops it is the map, tap to open the
 /// full route editor; without stops it says so plainly and offers to add them, instead of an empty dark band.
 class TripRoutePanel extends StatelessWidget {
-  const TripRoutePanel({required this.trip, required this.onOpen, super.key});
+  const TripRoutePanel({required this.trip, required this.onOpen, this.showStops = false, super.key});
 
   final Trip trip;
   final VoidCallback onOpen;
+
+  /// A "N stops" picker over the map (flag `enableTripHeaderActions`); choosing a stop opens the full route.
+  final bool showStops;
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +41,36 @@ class TripRoutePanel extends StatelessWidget {
                         child: InkWell(onTap: onOpen),
                       ),
                     ),
+                    if (showStops && trip.stops.isNotEmpty)
+                      Positioned(
+                        left: 10,
+                        top: 10,
+                        child: Material(
+                          color: t.ctaBg,
+                          borderRadius: BorderRadius.circular(99),
+                          child: PopupMenuButton<String>(
+                            key: const Key('route-stops-picker'),
+                            tooltip: 'Route stops',
+                            onSelected: (_) => onOpen(),
+                            itemBuilder: (_) => [
+                              for (final s in trip.stops) PopupMenuItem(value: s.id, child: Text(s.name)),
+                            ],
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '${trip.stops.length} stop${trip.stops.length == 1 ? '' : 's'}',
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: t.ctaFg),
+                                  ),
+                                  Icon(Icons.expand_more_rounded, size: 16, color: t.ctaFg),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     Positioned(
                       right: 10,
                       bottom: 10,

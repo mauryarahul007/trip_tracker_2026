@@ -15,6 +15,7 @@ import '../../support/seed.dart';
 Finder key(String k) => find.byKey(Key(k));
 
 Future<void> openLedger(WidgetTester tester, Seed s) async {
+  tallScreen(tester);
   await settle(tester);
   GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/trip/${s.tripId}/ledger');
   await settle(tester, rounds: 14);

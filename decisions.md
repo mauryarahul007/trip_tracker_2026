@@ -5176,3 +5176,11 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** The in-page Add buttons (and the empty-state action) are hidden while the floating button is on; they return when `enableContextFab` is OFF. The checklist list gets bottom padding clear of the floating button. With `enableTidyExpenses` ON the day header is a bordered card row: day label, "N expenses", an 18 px bold total and a chevron.
 * **Release Cut:** version bumped to `3.66.1` via `npm run release:patch`.
 
+---
+
+## Flutter v3.67.0: one-page Settings, trip header actions, Edit Trip, Summary upgrades
+* **Context:** The Flutter Settings was a hub of drill-in pages, the trip header had only a three-dot menu, there was no way to edit a trip's name, destination or dates, and the Summary lacked the web's attention chips, Remind, Custom amount and At a Glance numbers.
+* **Decision:** Settings is one scrolling page of cards (This Trip, Appearance, Notifications, Data, Help & About, Account) with a real three-level haptics setting (`HapticsLevel`: all / important / off, migrated from the old on/off pref). New screens: Storage and Data, Archived Trips; Seed Demo Trip restores a built-in sample backup. Long-press on the trip name opens a trip actions sheet; Edit Trip Details is a popup backed by a new `TripRepository.updateTripDetails` (queued as a plain `trips` column update, owner only). The Summary gets chips, a close-out banner, How it works, Custom amount, Remind (share sheet only, nothing sent automatically) and an At a Glance grid. New flags (Trip pack, default ON): `enableSettingsDataHub`, `enableTripHeaderActions`, `enableSummaryUpgrades`; Geotag, Data saver and Seed Demo reuse `enableGeotagging`, `enableDataSaverMode`, `enableDemoSeeding`.
+* **Trade-offs Accepted:** The Geotag and Data saver switches only store a per-device preference; nothing reads them yet. Remind has no server push. The header strip now shows by default through the new flag. Several Summary tests use a tall screen or turn the new flag off because the list is longer.
+* **Release Cut:** version bumped to `3.67.0` via `npm run release:minor`.
+

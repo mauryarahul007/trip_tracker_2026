@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.67.0',
+    date: '2026-10-19',
+    changes: [
+      'Behind the scenes (Flutter app): Settings is one page of cards like the web, with Appearance and Haptics (All, Important, Off), Storage and Data, Archived Trips and Backups.',
+      'Behind the scenes (Flutter app): long-press the trip name for Share, Mute, Edit Trip Details, Settings and Switch trip; the Summary gains attention chips, a close-out banner, Custom amount, Remind, How it works and an At a Glance grid.',
+    ],
+  },
+  {
     version: '3.66.1',
     date: '2026-10-19',
     changes: [

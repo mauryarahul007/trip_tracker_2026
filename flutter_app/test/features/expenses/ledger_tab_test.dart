@@ -17,6 +17,7 @@ const outsider = AuthUser(id: 'u9', email: 'x@y.z', provider: 'email');
 const benUser = AuthUser(id: 'u2', email: 'ben@b.c', provider: 'email');
 
 Future<void> openLedger(WidgetTester tester, Seed s) async {
+  tallScreen(tester);
   await settle(tester);
   GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/trip/${s.tripId}/ledger');
   await settle(tester, rounds: 14);

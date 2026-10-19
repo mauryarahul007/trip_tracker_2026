@@ -101,7 +101,7 @@ void main() {
 
   group('Summary focus', () {
     testApp('Trip numbers start folded away; the header opens them', (tester) async {
-      await pumpApp(tester, user: asha, flagsOn: {'enableSummaryFocus'});
+      await pumpApp(tester, user: asha, flagsOn: {'enableSummaryFocus'}, flagsOff: {'enableSummaryUpgrades'});
       final s = await seedTrip(tester);
       await addExpense(tester, s, amount: 90);
       await goTo(tester, '/trip/${s.tripId}/ledger');
@@ -163,7 +163,7 @@ void main() {
     Future<void> openAppearance(WidgetTester tester) async {
       unawaited(containerOf(tester).read(routerProvider).push<void>('/settings'));
       await settle(tester, rounds: 10);
-      await tester.tap(key('settings-open-appearance'));
+      await tester.tap(key('settings-open-display'));
       await settle(tester, rounds: 6);
     }
 
@@ -183,7 +183,8 @@ void main() {
 
     testApp('Haptics switch only with its flag; without it haptics stay on', (tester) async {
       await pumpApp(tester, user: asha, flagsOff: {'enableHapticsSetting'}, prefsExtra: {'settings.haptics': false});
-      await openAppearance(tester);
+      unawaited(containerOf(tester).read(routerProvider).push<void>('/settings'));
+      await settle(tester, rounds: 10);
       expect(key('settings-haptics'), findsNothing);
       expect(AppHaptics.enabled, isTrue);
     });
