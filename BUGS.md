@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **268** | All recorded bugs across sessions |
+| **Total Tracked** | **269** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **241** | Verified & closed |
+| **✅ Resolved** | **242** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -272,6 +272,7 @@
 | **BUG-266** | Trip members cannot see each other's packing, notes, or passes | `p2p-sync` | `high` | `rahul` | `rahul` | Fixed in commit 01f7333 (v3.43.8, migration 0109). Members can save packing, notes, and passes, and an open trip refetches them. |
 | **BUG-267** | Members tab looks like luggage tags | `ui-ux` | `low` | `rahul` | `rahul` | Fixed in commit c303812 (v3.43.9). One solid row per person, a single role control, and no airplane coach on Members. |
 | **BUG-268** | v3.43.9 failed to build | `general` | `high` | `rahul` | `rahul` | Fixed in commit 112d02e (v3.43.10). The coach click only adds an expense, because it no longer renders on Members. |
+| **BUG-293** | Second partial settlement with a group fails with an expenses RLS error | `splits-math` | `high` | `claude-cli` | `claude-cli` | Fixed in v3.43.13. Group settlements are recorded under the signed-in member for their own group's side (settlementPartiesForRecorder), so a partial payment no longer flips the next one to a groupmate the insert policy rejects. |
 
 ---
 

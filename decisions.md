@@ -4506,3 +4506,11 @@ This document logs all meaningful technical decisions, library choices, design p
   - Renamed `.github/workflows/deploy-ec2.yml` to `deploy-oci.yml`; build, live-update packaging and rsync steps are unchanged. Secrets renamed to `OCI_SSH_KEY`, `OCI_HOST`, `OCI_USER`.
   - Added an nginx vhost on the OCI host (SPA fallback, long cache for hashed assets, no-cache for `index.html` and `updates/latest.json`) and issued a Let's Encrypt certificate with certbot.
 * **Trade-offs Accepted:** The OCI host is shared with other sites, so a bad nginx change could affect them; every reload is preceded by `nginx -t`. Old `EC2_*` secrets become unused and should be deleted from GitHub.
+
+## 258. Group settlements are recorded under the person settling (v3.43.13, BUG-293)
+* **Context:** A settlement with a merged group was recorded under the group member with the most extreme balance (`pickRepresentative`). The expenses insert policy (0080) only accepts a non-admin's row when they are the payer or the creditor. After a partial payment the representative could flip to a groupmate, so the next settle failed with `new row violates row-level security policy for table "expenses"`.
+* **Decision:** `settlementPartiesForRecorder` in `src/utils/settlement.ts` records the signed-in member for their own group's side. Settle Up, custom amount, and UPI "mark settled" in `BalancesSettlements.tsx` all use it. Membership is first-group-wins, the same rule `buildSettlementNodes` uses. The same fix ships on the `flutter` branch (v3.68.1).
+* **Trade-offs Accepted:**
+  - Client-side fix only. The insert policy stays strict, so an organizer outside the group still records under the representative.
+  - Direct (non-simplified) transfers have no group sides and are unchanged.
+* **Release Cut:** version bumped to `3.43.13` via `npm run release:patch`.

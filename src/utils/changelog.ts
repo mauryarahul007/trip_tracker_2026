@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.43.13',
+    date: '2026-10-19',
+    changes: [
+      'Settling with a group in two or more parts now works. The second payment used to fail with a permissions error when it was recorded under your groupmate.',
+    ],
+  },
+  {
     version: '3.43.11',
     date: '2026-10-05',
     changes: [

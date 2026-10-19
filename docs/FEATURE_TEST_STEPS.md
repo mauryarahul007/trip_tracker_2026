@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-19 | 3.43.13 | SETTLE-GROUP-RLS | [Second partial group settlement no longer fails](#settle-group-rls--second-partial-group-settlement-no-longer-fails) |
 | 2026-10-02 | 3.43.9 | MEMBERS-ROSTER | [Members roster](#members-roster--members-roster) |
 | 2026-10-02 | 3.43.8 | COLLAB-SYNC | [Shared packing, notes, and passes](#collab-sync--shared-packing-notes-and-passes) |
 | 2026-10-02 | unreleased | PASS-STUB-SIMPLIFY | [Simplified pass back (balance hero)](#pass-stub-simplify--simplified-pass-back-balance-hero) |
@@ -1716,6 +1717,34 @@ No new flag. Role changes, reminders, and group create stay on the existing Memb
 
 ### Pass
 - The Members tab reads as a list: one role per person, the balance on the right, and groups in the same quiet card style.
+
+---
+
+## SETTLE-GROUP-RLS — Second partial group settlement no longer fails
+
+**Commit:** see BUG-293. **Migrations:** none. A settlement between a group and someone else used to be recorded under the group member with the biggest balance. After one partial payment, that could switch to the other group member. A non-organizer's next settle was then rejected with `new row violates row-level security policy for table "expenses"`. The signed-in member is now recorded for their own group's side.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Settle Up / custom amount | none (bug fix on the existing settle flow) | — |
+| Simplify debts (group-merged transfers) | trip setting, ON | ON |
+
+### Steps
+1. As the organizer, create a trip with Alice (organizer), Bob, and Charlie. Bob signs in on a second device and joins as a contributor, not an organizer.
+2. Put Bob and Charlie in one group.
+3. Alice adds a ₹1000 expense she paid, split equally between Bob and Charlie only. Summary shows "Bob & Charlie → Alice ₹1000".
+4. As Bob, open Summary, choose a custom amount on that row, enter 10, and confirm.
+5. As Bob, choose a custom amount on the same row (now ₹990), enter 990, and confirm.
+6. Repeat once with Bob as the one owed: Alice pays the group's share back to Bob & Charlie, Bob records a partial and then the rest.
+
+### Negative checks
+- An organizer outside the group can still record the settlement. It is still recorded under the group member chosen by the app.
+- With Simplify debts OFF (direct member-to-member rows), Bob cannot settle Charlie's own row. That is unchanged.
+
+### Pass
+- Both settlements in steps 4 and 5 save with no error toast. Summary shows the debt as settled.
+- Settlement history lists both payments with Bob as payer (or recipient in step 6), not Charlie.
 
 ---
 
