@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.65.0',
+    date: '2026-10-19',
+    changes: [
+      'Behind the scenes: the Flutter Balances tab replaces the To receive / To pay tiles with one You paid / Your share / Difference strip (tap it to see which expenses move your balance), and saving an expense offline now says it is saved on your phone and will sync later.',
+    ],
+  },
+  {
     version: '3.63.0',
     date: '2026-10-18',
     changes: [

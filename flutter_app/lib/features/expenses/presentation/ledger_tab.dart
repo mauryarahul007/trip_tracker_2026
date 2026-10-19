@@ -1173,7 +1173,24 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         ),
       ),
       // Your money: what I still receive and what I still pay (people on the trip only).
-      if (iAmIn)
+      if (iAmIn && _flag(ref, 'enableYouPaidVsShare', id))
+        _paidVsShareStrip(
+          context: context,
+          tokens: tokens,
+          l10n: l10n,
+          cur: cur,
+          paid: spend.paid[mine] ?? 0.0,
+          share: spend.share[mine] ?? 0.0,
+          explain: _flag(ref, 'enableBalanceExplainer', id)
+              ? () => _showBalanceExplainer(
+                  context,
+                  l10n,
+                  cur,
+                  myBalanceLines(ref.read(tripExpensesProvider(id)).value ?? const <Expense>[], mine),
+                )
+              : null,
+        )
+      else if (iAmIn)
         Padding(
           padding: const EdgeInsets.only(bottom: 20),
           child: Row(
@@ -1419,11 +1436,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                             const SizedBox(height: 3),
                             Text(
                               'At this pace, ~${formatMoney(context, burn.projectedTotal, cur)} by trip end',
-                              style: TextStyle(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w800,
-                                color: tokens.textPrimary,
-                              ),
+                              style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: tokens.textPrimary),
                             ),
                             Text(
                               '${formatMoney(context, burn.dailyAverage, cur)}/day average so far',
@@ -1624,6 +1637,105 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         ),
         AddExpenseFab(tripId: id),
       ],
+    );
+  }
+
+  /// "You paid X, your share Y, difference Z": why you owe or are owed, before recorded settlements.
+  Widget _paidVsShareStrip({
+    required BuildContext context,
+    required AppTokens tokens,
+    required AppLocalizations l10n,
+    required String cur,
+    required double paid,
+    required double share,
+    required VoidCallback? explain,
+  }) {
+    final diff = double.parse((paid - share).toStringAsFixed(2));
+    final tone = diff.abs() < 0.01 ? tokens.textPrimary : (diff > 0 ? tokens.colorSuccess : tokens.colorDanger);
+    final why = diff.abs() < 0.01 ? l10n.ledPaidEven : (diff > 0 ? l10n.ledPaidMore : l10n.ledPaidLess);
+    Widget cell(String label, String value, Color color) => Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tokens.textSecondary),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color),
+          ),
+        ],
+      ),
+    );
+    final diffText = '${diff > 0.005 ? '+' : (diff < -0.005 ? '-' : '')}${formatMoney(context, diff.abs(), cur)}';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: BentoTile(
+        key: const Key('paid-vs-share'),
+        padding: const EdgeInsets.all(14),
+        onTap: explain,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                cell(l10n.ledYouPaid, formatMoney(context, paid, cur), tokens.textPrimary),
+                cell(l10n.ledYourShare, formatMoney(context, share, cur), tokens.textPrimary),
+                cell(l10n.ledDifference, diffText, tone),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(why, style: TextStyle(fontSize: 12, color: tokens.textSecondary)),
+            if (explain != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                l10n.ledExplainTap,
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tokens.primaryAccent),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showBalanceExplainer(BuildContext context, AppLocalizations l10n, String cur, List<BalanceLine> lines) {
+    AppSheet.show<void>(
+      context: context,
+      title: l10n.ledExplainTitle,
+      builder: (ctx) {
+        final tokens = ctx.tokens;
+        if (lines.isEmpty) {
+          return Padding(
+            key: const Key('balance-explainer'),
+            padding: const EdgeInsets.all(20),
+            child: Text(l10n.ledExplainEmpty, style: TextStyle(color: tokens.textSecondary)),
+          );
+        }
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.6),
+          child: ListView(
+            key: const Key('balance-explainer'),
+            shrinkWrap: true,
+            children: [
+              for (final l in lines)
+                ListTile(
+                  title: Text(l.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text(l10n.ledExplainRow(formatMoney(ctx, l.paid, cur), formatMoney(ctx, l.share, cur))),
+                  trailing: Text(
+                    '${l.diff > 0 ? '+' : '-'}${formatMoney(ctx, l.diff.abs(), cur)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: l.diff > 0 ? tokens.colorSuccess : tokens.colorDanger,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

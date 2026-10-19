@@ -12,6 +12,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableAmountKeypad': true,
   'enableAppShortcuts': true,
   'enableAutoCurrencyDetection': false,
+  'enableBalanceExplainer': true,
   'enableBiometricAuth': false,
   'enableBurnRateInsight': false,
   'enableCalmHaptics': true,
@@ -113,6 +114,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableRememberDefaultSplit': true,
   'enableRouteStops': false,
   'enableSavedFilters': true,
+  'enableSavedOfflineToast': true,
   'enableSettingsSearch': true,
   'enableSettleAll': true,
   'enableSettleRounding': true,
@@ -166,6 +168,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableWeatherItineraryNudges': false,
   'enableWhatsAppSettlementShare': true,
   'enableWhatsNewHub': false,
+  'enableYouPaidVsShare': true,
 };
 
 /// Superadmin-facing text for each flag (`FEATURE_FLAGS_META`): label, pack id, what ON / OFF does.
@@ -215,6 +218,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'pro',
     description:
         'Suggests the local currency on the expense form from device GPS location (reuses existing Geotag consent).',
+  ),
+  'enableBalanceExplainer': (
+    label: 'Balance Explainer (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: tapping the You paid vs Your share strip opens a sheet listing each expense where what you paid differs from your share, so you can see how your balance adds up. OFF: the strip is not tappable. Needs You Paid vs Your Share to be ON. Does not edit or settle anything.',
   ),
   'enableBiometricAuth': (
     label: 'Biometric Screen Lock (WebAuthn)',
@@ -731,6 +739,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'trip',
     description: 'Flutter app: ON: when filters are active on the Expenses tab a \'Save filter\' chip lets you name them; saved filters appear as one-tap chips under the quick filters (hold one to remove it, up to eight per trip). OFF: no Save filter chip and no saved chips. Saved filters live on this phone only, and a fixed date range is not saved.',
   ),
+  'enableSavedOfflineToast': (
+    label: 'Saved Offline Toast (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: saving an expense while the phone is offline shows "Saved on this phone. It will sync when you\'re back online." OFF: the save closes the form with no message. Does not change how or when data syncs, and shows nothing when online.',
+  ),
   'enableSettingsSearch': (
     label: 'Settings Search (Flutter)',
     pack: 'trip',
@@ -999,6 +1012,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'labs',
     description: 'Makes the version in Settings → About tappable, opening an iOS-style \'What\'s New\' screen with this release\'s changes.',
   ),
+  'enableYouPaidVsShare': (
+    label: 'You Paid vs Your Share (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: under the Balances hero, one strip shows "You paid", "Your share" and the difference, in place of the two To receive / To pay tiles, with a line saying why others owe you or you owe them. OFF: the To receive / To pay tiles come back. Does not change any balance, split or settlement, and the figures are before recorded settlements.',
+  ),
 };
 
 /// Pack display info for the Superadmin portal (`CONSUMER_PACKS`): code, title, tagline, in rail order.
@@ -1101,6 +1119,9 @@ const Map<String, List<String>> consumerPacks = {
     'enableTripListSections',
     'enableQuickAddSpeedDial',
     'enableSummaryNextAction',
+    'enableYouPaidVsShare',
+    'enableBalanceExplainer',
+    'enableSavedOfflineToast',
     'enableNotesQuickCapture',
     'enableCoachHints',
     'enableSettlementViewSwitch',

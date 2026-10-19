@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.65.0', '2026-10-19', [
+    'Behind the scenes: the Flutter Balances tab replaces the To receive / To pay tiles with one You paid / Your share / Difference strip (tap it to see which expenses move your balance), and saving an expense offline now says it is saved on your phone and will sync later.',
+  ]),
   ChangelogEntry('3.63.0', '2026-10-18', [
     'Behind the scenes: the Flutter app drops the banner and status row under the trip name and gathers Share, Route map and settings into one More menu (sync shows as a small icon only when needed), adds quick Add item / Add note / Add member buttons, folds Trip numbers away on the Summary until opened, shows a Jump to today chip, recent-amount chips on the expense form, friendlier empty Notes and checklist, skeleton loaders, a High contrast option, a Haptics setting and consistent bottom sheets. The Who paid list now says Their part instead of Share. No change to the web app.',
   ]),
@@ -40,8 +43,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.53.0', '2026-10-09', [
     'Trip Members: Adding a person now requires a mandatory Gmail ID (@gmail.com) with smart auto-completion, real-time Google account preview, and automatic member claiming across Flutter and Web.',
-  ]),
-  ChangelogEntry('3.52.0', '2026-10-09', [
-    'Behind the scenes: Flutter app features Summary-first tabs, boarding pass summary hero, live Notes checklist with live editing, and realtime trip chat sync.',
   ]),
 ];

@@ -5153,4 +5153,11 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** UPI deep-link launching relies on installed apps on the Android/iOS device; falls back gracefully to copying the UPI ID and showing an inline snackbar if the selected app is absent.
 * **Release Cut:** version bumped to `3.64.0` via `npm run release:minor`.
 
+---
+
+## Flutter v3.65.0: You paid vs your share, balance explainer, saved-offline toast
+* **Context:** The Balances tab showed To receive and To pay tiles under a hero that already said You owe / You're owed. One tile was always zero and it read like a bug.
+* **Decision:** Replace the pair with one strip (You paid, Your share, Difference) behind `enableYouPaidVsShare`; tapping it opens a sheet of the expenses where paid differs from share (`enableBalanceExplainer`); saving offline shows a saved-on-this-phone message (`enableSavedOfflineToast`). All Trip pack, default ON. Figures come from `memberSpend` / `myBalanceLines` and exclude settlements, so the strip says "before settlements" and the difference is not labelled Balance.
+* **Test fix:** `upi_and_layover_enhancements_test.dart` disabled haptics in its bare MaterialApp (the haptic await never completed), fixing the failing UPI sheet test; no app code changed.
+* **Release Cut:** version bumped to `3.65.0` via `npm run release:minor`.
 

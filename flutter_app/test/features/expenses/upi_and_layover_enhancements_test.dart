@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trip_tracker/core/platform/haptics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,7 +45,10 @@ void main() {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       prefs = await SharedPreferences.getInstance();
+      AppHaptics.enabled = false; // no platform-channel handler here: the haptic await would never complete
     });
+
+    tearDown(() => AppHaptics.enabled = true);
 
     testWidgets('renders UPI settlement sheet with amount, app grid and dynamic QR toggle', (tester) async {
       bool settledConfirmed = false;
@@ -112,7 +116,7 @@ void main() {
       // Tap Mark as Settled
       await tester.ensureVisible(find.byKey(const Key('upi-confirm-settled-btn')));
       await tester.tap(find.byKey(const Key('upi-confirm-settled-btn')));
-      await tester.pump();
+      await tester.pumpAndSettle(); // haptics and saving the UPI id are async before the callback fires
       expect(settledConfirmed, isTrue);
     });
   });
@@ -192,10 +196,7 @@ void main() {
           ],
           child: MaterialApp(
             home: Scaffold(
-              body: NextUpTravelCapsule(
-                trip: sampleTrip,
-                passes: [leg1, leg2],
-              ),
+              body: NextUpTravelCapsule(trip: sampleTrip, passes: [leg1, leg2]),
             ),
           ),
         ),

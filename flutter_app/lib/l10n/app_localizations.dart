@@ -181,6 +181,72 @@ abstract class AppLocalizations {
   /// **'To pay'**
   String get ledToPay;
 
+  /// No description provided for @ledYouPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'You paid'**
+  String get ledYouPaid;
+
+  /// No description provided for @ledYourShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Your share'**
+  String get ledYourShare;
+
+  /// No description provided for @ledDifference.
+  ///
+  /// In en, this message translates to:
+  /// **'Difference'**
+  String get ledDifference;
+
+  /// No description provided for @ledPaidMore.
+  ///
+  /// In en, this message translates to:
+  /// **'You paid more than your share, so others owe you (before settlements)'**
+  String get ledPaidMore;
+
+  /// No description provided for @ledPaidLess.
+  ///
+  /// In en, this message translates to:
+  /// **'You paid less than your share, so you owe others (before settlements)'**
+  String get ledPaidLess;
+
+  /// No description provided for @ledPaidEven.
+  ///
+  /// In en, this message translates to:
+  /// **'You paid exactly your share'**
+  String get ledPaidEven;
+
+  /// No description provided for @ledExplainTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How your balance adds up'**
+  String get ledExplainTitle;
+
+  /// No description provided for @ledExplainTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to see which expenses'**
+  String get ledExplainTap;
+
+  /// No description provided for @ledExplainEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No expenses move your balance yet'**
+  String get ledExplainEmpty;
+
+  /// No description provided for @ledExplainRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid {paid} · share {share}'**
+  String ledExplainRow(String paid, String share);
+
+  /// No description provided for @expSavedOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this phone. It will sync when you\'re back online.'**
+  String get expSavedOffline;
+
   /// No description provided for @ledProgress.
   ///
   /// In en, this message translates to:

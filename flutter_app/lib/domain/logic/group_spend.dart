@@ -15,13 +15,41 @@ class SpendRow {
   final int memberCount;
 }
 
+bool _countsTowardSpend(Expense e) =>
+    !(e.isSettlement ||
+        e.deletedAt != null ||
+        e.approvalStatus == 'pending_approval' ||
+        e.title.startsWith('Settlement:') ||
+        e.excludeFromTotals);
+
+/// One expense where what [me] paid differs from what [me] owes for it.
+class BalanceLine {
+  const BalanceLine({required this.title, required this.date, required this.paid, required this.share});
+  final String title;
+  final String date;
+  final double paid;
+  final double share;
+  double get diff => paid - share;
+}
+
+/// Expenses that move [me]'s balance (paid != share), biggest effect first.
+List<BalanceLine> myBalanceLines(Iterable<Expense> all, String me) {
+  final out = <BalanceLine>[];
+  for (final e in all.where(_countsTowardSpend)) {
+    final shares = e.paidByShares;
+    final paid = (shares != null && shares.isNotEmpty) ? (shares[me] ?? 0.0) : (e.paidBy == me ? e.amount : 0.0);
+    final share = e.resolvedShares[me] ?? 0.0;
+    if ((paid - share).abs() > 0.005) out.add(BalanceLine(title: e.title, date: e.date, paid: paid, share: share));
+  }
+  out.sort((a, b) => b.diff.abs().compareTo(a.diff.abs()));
+  return out;
+}
+
 /// Paid and share per member (settlement transfers and pending approvals excluded), keyed by member id.
 ({Map<String, double> paid, Map<String, double> share}) memberSpend(Iterable<Expense> all) {
   final paid = <String, double>{};
   final share = <String, double>{};
-  for (final e in all) {
-    if (e.isSettlement || e.deletedAt != null || e.approvalStatus == 'pending_approval') continue;
-    if (e.title.startsWith('Settlement:') || e.excludeFromTotals) continue;
+  for (final e in all.where(_countsTowardSpend)) {
     final shares = e.paidByShares;
     if (shares != null && shares.isNotEmpty) {
       shares.forEach((k, v) => paid[k] = (paid[k] ?? 0) + v);

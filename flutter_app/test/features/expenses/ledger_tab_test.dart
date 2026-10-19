@@ -81,6 +81,29 @@ void main() {
     expect(key('money-pay'), findsNothing);
   });
 
+  testApp('paid vs share strip replaces the two tiles and the explainer lists the expense', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 90); // Asha paid 90, her share 30: +60
+    await openLedger(tester, s);
+    expect(key('paid-vs-share'), findsOneWidget);
+    expect(key('money-receive'), findsNothing);
+    expect(key('money-pay'), findsNothing);
+    expect(find.descendant(of: key('paid-vs-share'), matching: find.text('+₹60.00')), findsOneWidget);
+    await tester.tap(key('paid-vs-share'));
+    await settle(tester, rounds: 4);
+    expect(key('balance-explainer'), findsOneWidget);
+  });
+
+  testApp('flag off: the To receive / To pay tiles come back', (tester) async {
+    await pumpApp(tester, user: asha, flagsOff: {'enableYouPaidVsShare'});
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 90);
+    await openLedger(tester, s);
+    expect(key('paid-vs-share'), findsNothing);
+    expect(key('money-receive'), findsOneWidget);
+  });
+
   group('who may flip Fewest / Per person', () {
     testApp('the owner can', (tester) async {
       await pumpApp(tester, user: asha);

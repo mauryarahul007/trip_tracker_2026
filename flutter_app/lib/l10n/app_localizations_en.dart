@@ -59,6 +59,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledToPay => 'To pay';
 
   @override
+  String get ledYouPaid => 'You paid';
+
+  @override
+  String get ledYourShare => 'Your share';
+
+  @override
+  String get ledDifference => 'Difference';
+
+  @override
+  String get ledPaidMore => 'You paid more than your share, so others owe you (before settlements)';
+
+  @override
+  String get ledPaidLess => 'You paid less than your share, so you owe others (before settlements)';
+
+  @override
+  String get ledPaidEven => 'You paid exactly your share';
+
+  @override
+  String get ledExplainTitle => 'How your balance adds up';
+
+  @override
+  String get ledExplainTap => 'Tap to see which expenses';
+
+  @override
+  String get ledExplainEmpty => 'No expenses move your balance yet';
+
+  @override
+  String ledExplainRow(String paid, String share) {
+    return 'Paid $paid · share $share';
+  }
+
+  @override
+  String get expSavedOffline => 'Saved on this phone. It will sync when you\'re back online.';
+
+  @override
   String get ledProgress => 'Settlement progress';
 
   @override

@@ -96,6 +96,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-18 | flutter | FLUTTER-HIGH-CONTRAST | [Flutter: high contrast and haptics setting](#flutter-high-contrast--flutter-high-contrast-and-haptics-setting) |
 | 2026-10-18 | flutter | FLUTTER-SHEET-HANDLES | [Flutter: consistent bottom sheets](#flutter-sheet-handles--flutter-consistent-bottom-sheets) |
 | 2026-10-18 | flutter | FLUTTER-PAID-LEGEND | [Flutter: Who paid labels](#flutter-paid-legend--flutter-who-paid-labels) |
+| 2026-10-19 | flutter | FLUTTER-PAID-VS-SHARE | [Flutter: You paid vs your share, balance explainer, saved-offline toast](#flutter-paid-vs-share--flutter-you-paid-vs-your-share-balance-explainer-saved-offline-toast) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -3235,3 +3236,16 @@ Then add a row to the **Index** table.
 1. Trip numbers > People: a one-line key under the chart: "Bar = money they paid. Their part = their cut of all the costs."
 2. Under each person or group: **Their part ₹X** (what they owe of the trip's costs). The bar and the right-hand amount are what they **paid**. Paid minus their part is what they are owed or owe.
 
+## FLUTTER-PAID-VS-SHARE — Flutter: You paid vs your share, balance explainer, saved-offline toast
+
+**Flags:** `enableYouPaidVsShare`, `enableBalanceExplainer`, `enableSavedOfflineToast` (Trip pack, default ON).
+
+1. Open a trip you are on, add an expense of 90 paid by you split 3 ways, go to Summary (Balances). Under the hero there is one strip: **You paid ₹90.00**, **Your share ₹30.00**, **Difference +₹60.00** (green), and "You paid more than your share, so others owe you (before settlements)". The two To receive / To pay tiles are gone.
+2. Have someone else pay an expense you share: Difference is negative (red) with the "you owe others" line. Equal paid and share: neutral and "You paid exactly your share".
+3. Tap the strip: a sheet "How your balance adds up" lists each expense where paid differs from share, biggest first, with Paid / share and the +/- effect. A trip with no such expense shows "No expenses move your balance yet".
+4. Turn on airplane mode, add an expense and save: a message "Saved on this phone. It will sync when you're back online." shows. Online: no message.
+5. A viewer who is not on the trip sees no strip and no tiles.
+
+**Flag-OFF checks:** `enableYouPaidVsShare` OFF: the To receive / To pay tiles return, no strip. `enableBalanceExplainer` OFF: the strip shows but is not tappable and has no "Tap to see" line. `enableSavedOfflineToast` OFF: no message when saving offline.
+
+**Pass:** figures match the expense list; the difference is before recorded settlements, so it can differ from the hero after payments.

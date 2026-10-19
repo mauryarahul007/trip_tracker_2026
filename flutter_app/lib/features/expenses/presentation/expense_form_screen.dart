@@ -17,6 +17,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/platform/haptics.dart';
 import '../../../core/format/money.dart';
 import '../../../data/platform/receipt_picker.dart';
+import '../../../core/network/connectivity_provider.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/category_color.dart';
 import '../../../domain/logic/currency.dart';
@@ -129,6 +130,10 @@ class _FormBodyState extends ConsumerState<_FormBody> {
     final outcome = await _c.submit();
     if (!outcome.isOk || !mounted) return;
     AppFeedback.saved();
+    final offline = !(ref.read(isOnlineProvider).value ?? true);
+    if (offline && ref.read(flagProvider(('enableSavedOfflineToast', args.tripId))).value == true) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.expSavedOffline)));
+    }
     await maybeAskForPush(context, ref); // first meaningful action: the one moment we ask
     if (mounted) context.pop();
   }
