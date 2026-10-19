@@ -57,6 +57,32 @@ void main() {
       expect(trips.single.startDate, '2026-10-01'); // dates are kept when only the name changes
     });
 
+    testApp('Edit Trip: one box per destination, add and remove, saved comma-separated', (tester) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await openTab(tester, s, 'ledger');
+      await longPressTitle(tester);
+      await tester.tap(key('trip-action-edit'));
+      await settle(tester, rounds: 6);
+      expect(find.byType(TextField), findsNWidgets(2)); // name + one destination
+      await tester.tap(key('edit-trip-add-destination'));
+      await settle(tester, rounds: 3);
+      await tester.tap(key('edit-trip-add-destination'));
+      await settle(tester, rounds: 3);
+      final boxes = find.byType(TextField);
+      expect(boxes, findsNWidgets(4));
+      await tester.enterText(boxes.at(1), '');
+      await tester.enterText(boxes.at(1), 'Goa');
+      await tester.enterText(boxes.at(2), 'Gokarna');
+      await tester.enterText(boxes.at(3), 'Hampi');
+      await tester.tap(key('edit-trip-remove-destination-0')); // drop Goa
+      await settle(tester, rounds: 3);
+      await tester.tap(key('edit-trip-save'));
+      await settle(tester, rounds: 6);
+      final trips = await real(tester, () => containerOf(tester).read(tripRepositoryProvider).watchTrips().first);
+      expect(trips.single.destination, 'Gokarna, Hampi');
+    });
+
     testApp('an empty name is refused', (tester) async {
       await pumpApp(tester, user: asha);
       final s = await seedTrip(tester);

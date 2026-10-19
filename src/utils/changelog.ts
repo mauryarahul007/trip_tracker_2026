@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.68.2',
+    date: '2026-10-19',
+    changes: [
+      'Behind the scenes (Flutter app): Voice add expense uses the Google recognizer, understands spoken amounts like "five hundred" or "paanch sau", shows a listening panel and explains errors with Try again.',
+      'Behind the scenes (Flutter app): Edit Trip takes one box per destination, with add and remove.',
+    ],
+  },
+  {
     version: '3.68.1',
     date: '2026-10-19',
     changes: [

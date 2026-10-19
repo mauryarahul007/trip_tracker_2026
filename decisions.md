@@ -5197,3 +5197,10 @@ This document logs all meaningful technical decisions, library choices, design p
   - Client-side fix only. The insert policy stays strict, so an organizer outside the group still records under the representative.
   - Direct (non-simplified) transfers have no group sides and are unchanged.
 * **Release Cut:** version bumped to `3.68.1` via `npm run release:patch`.
+
+## Flutter v3.68.2: voice add expense fixed, multi-destination Edit Trip
+* **Context:** Voice add did not work on the user's phone: the default Android recognition service there is a text-to-speech stub, the Flutter parser ignored spoken numbers, and the sheet gave almost no feedback. Edit Trip had a single destination box.
+* **Decision:** `speech_to_text` initialises with the intent lookup so the Google recognizer is used, picks en_IN / any English / system locale from what the engine offers, and errors map to plain messages with Try again. `normalizeSpokenNumbers` turns English and Hinglish number words into digits before the existing parser runs (only in Quick Add, so web parity fixtures are untouched). Edit Trip has one box per destination, saved comma-separated in the existing `destination` string. No new flags.
+* **Trade-offs Accepted:** Speech still needs Google speech services and usually a connection. A destination that itself contains a comma splits into two boxes when edited.
+* **Release Cut:** version bumped to `3.68.2` via `npm run release:patch` (3.68.1 was taken by the settlement fix on the remote).
+

@@ -62,13 +62,15 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
 
     final isSupported = await gateway.isSupported();
     if (!isSupported) {
-      setState(() => _error = 'Speech recognition not supported on this device.');
+      setState(
+        () => _error = 'Voice input is not available on this phone. Install or enable Google speech services, or type the expense.',
+      );
       return;
     }
 
     final permGranted = await gateway.requestPermission();
     if (!permGranted) {
-      setState(() => _error = 'Microphone permission not granted.');
+      setState(() => _error = speechErrorText('permission'));
       return;
     }
 
@@ -91,7 +93,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
         unawaited(AppHaptics.warning());
         setState(() {
           _isListening = false;
-          _error = err;
+          _error = speechErrorText(err);
         });
       },
       onEnd: () {
@@ -107,7 +109,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
     final members = ref.read(tripMembersProvider(widget.tripId)).value ?? const [];
     final mine = ref.read(myMemberIdProvider(widget.tripId));
     setState(() {
-      _parsed = parseQuickExpense(raw, cats, expenses, members, mine, ref.read(nowProvider)());
+      _parsed = parseQuickExpense(normalizeSpokenNumbers(raw), cats, expenses, members, mine, ref.read(nowProvider)());
       _error = null;
     });
   }
@@ -196,6 +198,30 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
               ],
             ],
           ),
+          if (_isListening)
+            Padding(
+              key: const Key('quick-add-listening'),
+              padding: const EdgeInsets.only(top: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.mic, color: tokens.colorDanger),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _text.text.isEmpty ? 'Listening… say "500 lunch at the dhaba"' : _text.text,
+                          style: TextStyle(color: tokens.textSecondary, fontStyle: FontStyle.italic),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const LinearProgressIndicator(),
+                ],
+              ),
+            ),
           if (p != null && p.amount != null)
             Padding(
               padding: const EdgeInsets.only(top: 12),
@@ -219,7 +245,17 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
           if (_error != null)
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: Text(_error!, key: const Key('quick-add-error')),
+              child: Row(
+                children: [
+                  Expanded(child: Text(_error!, key: const Key('quick-add-error'))),
+                  if (voiceEnabled)
+                    TextButton(
+                      key: const Key('quick-add-retry'),
+                      onPressed: _busy || _isListening ? null : _toggleVoiceInput,
+                      child: const Text('Try again'),
+                    ),
+                ],
+              ),
             ),
           const SizedBox(height: 12),
           AppButton(

@@ -48,6 +48,42 @@ void main() {
       expect(fakeGateway.stopCallCount, equals(1));
     });
 
+    testWidgets('autoListen starts the mic on open, spoken words become the amount, errors read plainly', (
+      tester,
+    ) async {
+      final fake = FakeSpeechRecognitionGateway(simulatedTranscript: 'five hundred rupees lunch');
+      Future<void> pump(FakeSpeechRecognitionGateway g) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              speechRecognitionGatewayProvider.overrideWithValue(g),
+              tripProvider('t-voice').overrideWith((ref) => Stream.value(trip)),
+              tripExpensesProvider('t-voice').overrideWith((ref) => Stream.value(const [])),
+              tripMembersProvider('t-voice').overrideWith((ref) => Stream.value(const [])),
+              tripCategoriesProvider('t-voice').overrideWithValue(const []),
+              flagProvider(('enableVoiceInput', 't-voice')).overrideWith((ref) => Stream.value(true)),
+            ],
+            child: const MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(body: QuickAddSheet(tripId: 't-voice', autoListen: true)),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      await pump(fake);
+      expect(fake.startListeningCallCount, 1);
+      expect(find.byKey(const Key('quick-add-preview')), findsOneWidget);
+      expect(find.textContaining('500'), findsWidgets);
+
+      await tester.pumpWidget(const SizedBox()); // a fresh sheet, so initState runs again
+      await pump(FakeSpeechRecognitionGateway(simulatedError: 'error_no_match'));
+      expect(find.text("Didn't catch that. Tap the mic and try again."), findsOneWidget);
+      expect(find.byKey(const Key('quick-add-retry')), findsOneWidget);
+    });
+
     testWidgets('QuickAddSheet mic button populates speech transcript into input', (tester) async {
       final fakeGateway = FakeSpeechRecognitionGateway(simulatedTranscript: 'Burger 350');
 

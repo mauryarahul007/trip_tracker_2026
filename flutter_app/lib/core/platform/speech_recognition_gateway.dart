@@ -91,27 +91,56 @@ class FakeSpeechRecognitionGateway implements SpeechRecognitionGateway {
   }
 }
 
+/// Plain-words reason for a speech engine error code, with what to do next.
+String speechErrorText(String code) {
+  final c = code.toLowerCase();
+  if (c.contains('no_match') || c.contains('speech_timeout')) return "Didn't catch that. Tap the mic and try again.";
+  if (c.contains('permission')) return 'Microphone permission is off. Allow it in the phone settings for this app.';
+  if (c.contains('network')) return 'Speech needs an internet connection on this phone. Check it and try again.';
+  if (c.contains('language')) return 'This phone has no speech model for that language. Install it in Google settings.';
+  if (c.contains('busy')) return 'The speech service is busy. Wait a moment and try again.';
+  if (c.contains('audio')) return 'Could not use the microphone. Close other apps using it and try again.';
+  return 'Voice input failed ($code). Tap the mic to try again, or type the expense.';
+}
+
 /// Real microphone gateway over the device speech service (Android Google speech, iOS SFSpeech).
 class DefaultSpeechRecognitionGateway implements SpeechRecognitionGateway {
   final _stt = stt.SpeechToText();
   var _ready = false;
+  String? _locale;
   void Function(String)? _onError;
   void Function()? _onEnd;
 
   /// Initialising asks for the microphone / speech permission, so support and permission share one call.
+  /// The intent lookup picks the Google recognizer even when the phone's default service is a text-to-speech stub.
   Future<bool> _init() async {
     if (_ready) return true;
     try {
       _ready = await _stt.initialize(
+        options: [stt.SpeechToText.androidIntentLookup],
         onError: (e) => _onError?.call(e.errorMsg),
         onStatus: (st) {
           if (st == 'done' || st == 'notListening') _onEnd?.call();
         },
       );
+      if (_ready) _locale = await _pickLocale();
     } on Object {
       _ready = false;
     }
     return _ready;
+  }
+
+  /// English (India) when the engine has it, else any English, else the phone's own language.
+  Future<String?> _pickLocale() async {
+    final all = await _stt.locales();
+    String? find(bool Function(String id) test) {
+      for (final l in all) {
+        if (test(l.localeId.replaceAll('-', '_').toLowerCase())) return l.localeId;
+      }
+      return null;
+    }
+
+    return find((id) => id == 'en_in') ?? find((id) => id.startsWith('en_')) ?? (await _stt.systemLocale())?.localeId;
   }
 
   @override
@@ -135,7 +164,9 @@ class DefaultSpeechRecognitionGateway implements SpeechRecognitionGateway {
         listenOptions: stt.SpeechListenOptions(
           partialResults: true,
           cancelOnError: true,
-          localeId: locale ?? 'en_IN',
+          localeId: locale ?? _locale,
+          listenFor: const Duration(seconds: 30),
+          pauseFor: const Duration(seconds: 3),
         ),
       ),
     );

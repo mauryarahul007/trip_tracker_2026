@@ -29,7 +29,8 @@ class EditTripSheet extends ConsumerStatefulWidget {
 
 class _EditTripSheetState extends ConsumerState<EditTripSheet> {
   late final TextEditingController _name;
-  late final TextEditingController _destination;
+  // One box per destination; stored as one comma-separated string so the rest of the app keeps working.
+  final _destinations = <TextEditingController>[];
   DateTimeRange? _range;
   String? _nameError;
   String? _dateError;
@@ -40,7 +41,13 @@ class _EditTripSheetState extends ConsumerState<EditTripSheet> {
     super.initState();
     final trip = ref.read(tripProvider(widget.tripId)).value;
     _name = TextEditingController(text: trip?.name ?? '');
-    _destination = TextEditingController(text: trip?.destination ?? '');
+    final saved = [
+      for (final d in (trip?.destination ?? '').split(','))
+        if (d.trim().isNotEmpty) d.trim(),
+    ];
+    for (final d in saved.isEmpty ? [''] : saved) {
+      _destinations.add(TextEditingController(text: d));
+    }
     final start = DateTime.tryParse(trip?.startDate ?? '');
     final end = DateTime.tryParse(trip?.endDate ?? '');
     if (start != null && end != null) _range = DateTimeRange(start: start, end: end);
@@ -49,7 +56,9 @@ class _EditTripSheetState extends ConsumerState<EditTripSheet> {
   @override
   void dispose() {
     _name.dispose();
-    _destination.dispose();
+    for (final c in _destinations) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -74,7 +83,10 @@ class _EditTripSheetState extends ConsumerState<EditTripSheet> {
         .updateTripDetails(
           widget.tripId,
           name: _name.text,
-          destination: _destination.text,
+          destination: [
+            for (final c in _destinations)
+              if (c.text.trim().isNotEmpty) c.text.trim(),
+          ].join(', '),
           startDate: _iso(_range!.start),
           endDate: _iso(_range!.end),
         );
@@ -83,6 +95,11 @@ class _EditTripSheetState extends ConsumerState<EditTripSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final pastDestinations = [
+      for (final t in ref.watch(tripsProvider).value ?? const <Trip>[])
+        for (final d in (t.destination ?? '').split(','))
+          if (d.trim().isNotEmpty) d.trim(),
+    ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
       child: SingleChildScrollView(
@@ -98,15 +115,41 @@ class _EditTripSheetState extends ConsumerState<EditTripSheet> {
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
-            DestinationField(
-              controller: _destination,
-              label: 'Destination (optional)',
-              enabled: ref.watch(flagProvider(('enableDestinationAutocomplete', null))).value ?? true,
-              pastDestinations: [
-                for (final t in ref.watch(tripsProvider).value ?? const <Trip>[])
-                  if ((t.destination ?? '').trim().isNotEmpty) t.destination!.trim(),
-              ],
-              onChanged: (_) {},
+            for (var i = 0; i < _destinations.length; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: DestinationField(
+                        key: ObjectKey(_destinations[i]),
+                        controller: _destinations[i],
+                        label: _destinations.length == 1 ? 'Destination (optional)' : 'Destination ${i + 1}',
+                        enabled: ref.watch(flagProvider(('enableDestinationAutocomplete', null))).value ?? true,
+                        pastDestinations: pastDestinations,
+                        onChanged: (_) {},
+                      ),
+                    ),
+                    if (_destinations.length > 1)
+                      IconButton(
+                        key: Key('edit-trip-remove-destination-$i'),
+                        tooltip: 'Remove destination',
+                        constraints: const BoxConstraints(minWidth: 48, minHeight: 56),
+                        icon: const Icon(Icons.remove_circle_outline_rounded),
+                        onPressed: () => setState(() => _destinations.removeAt(i).dispose()),
+                      ),
+                  ],
+                ),
+              ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                key: const Key('edit-trip-add-destination'),
+                onPressed: () => setState(() => _destinations.add(TextEditingController())),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Add destination'),
+              ),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(

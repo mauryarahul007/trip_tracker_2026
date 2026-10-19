@@ -3396,3 +3396,8 @@ Then add a row to the **Index** table.
 10. Not a trip member: the pass does not flip. Reduce motion on: faces swap without the turn.
 
 **Flag-OFF:** `enableSummaryUpgrades` OFF brings the old You paid / Your share card back and the pass does not flip.
+
+**Voice and Edit Trip follow-ups (same section):**
+11. Edit Trip: the destination is one box per place. **Add destination** adds a box, the minus button removes one (not shown when only one is left). Save joins them as "Goa, Gokarna, Hampi"; reopening shows one box each.
+12. Voice: tap **Voice**, allow the mic. A "Listening…" panel with a progress bar shows the words as you speak. Say "five hundred rupees lunch" or "paanch sau chai": the preview shows 500. If speech is not available or nothing is heard, a plain message and **Try again** appear. The phone needs Google speech services (and a connection on most phones).
+

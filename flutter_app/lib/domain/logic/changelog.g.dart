@@ -8,6 +8,13 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.68.2', '2026-10-19', [
+    'Behind the scenes (Flutter app): Voice add expense uses the Google recognizer, understands spoken amounts like "five hundred" or "paanch sau", shows a listening panel and explains errors with Try again.',
+    'Behind the scenes (Flutter app): Edit Trip takes one box per destination, with add and remove.',
+  ]),
+  ChangelogEntry('3.68.1', '2026-10-19', [
+    'Settling with a group in two or more parts now works. The second payment used to fail with a permissions error when it was recorded under your groupmate. Fixed on the web and in the Flutter app.',
+  ]),
   ChangelogEntry('3.68.0', '2026-10-19', [
     'Behind the scenes (Flutter app): a cleaner trip header (name, one line of dates, members and expenses), and Edit Trip Details is in the trip name menu and the top-bar menu.',
     'Behind the scenes (Flutter app): select and delete several passes at once, a filters page that matches the web, a pinned mini settlement pass on Summary, and the settlement pass flips to show You paid, Your share and the difference.',
@@ -40,11 +47,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.59.0', '2026-10-18', [
     'Behind the scenes: the Flutter app has a compact Trips list (cover thumbnails, a status pill and your money on every row, a hero card for the trip happening now, pinned Happening now / Upcoming / Past headers and a summary line across all trips), a Plan and suggestions card at the top of Trip numbers with budget pace and tips, one Groups / People switch that drives both Who pays whom and Who paid, and the back gesture now returns to the page you came from instead of the Trips home. No change to the web app.',
-  ]),
-  ChangelogEntry('3.58.0', '2026-10-17', [
-    'Behind the scenes: the Flutter app shows member avatars and your money position on each trip, groups trips under Happening now / Upcoming / Past, adds a trip header strip, an Add expense choice (Quick add or Full form), a "Pay Ben" next-action banner on Summary, a Notes quick-capture box, one-time tips, and a Group view / Person view switch for settlement that every member can use. No change to the web app.',
-  ]),
-  ChangelogEntry('3.57.0', '2026-10-17', [
-    'Behind the scenes: the Flutter app has a WhatsApp-style Settings list with search, a cleaner Summary and Settlement Pass (your payments first, Settle all, share a summary picture, day-by-day spend, a device-only trip budget), group spend by Paid and Share, editable groups with a 2-member minimum, a title-and-note popup for new notes, a clearer checklist progress card with category bars, and a quicker offline start. No change to the web app.',
   ]),
 ];
