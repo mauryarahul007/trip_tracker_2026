@@ -2492,5 +2492,101 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-19T12:31:10.555Z",
     "shippedNote": "Shipped in commit c2a39dd (v3.67.0): behind enableSummaryUpgrades (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-157",
+    "title": "Flutter: clean trip header and Edit Trip in the menu",
+    "description": "Flutter: clean trip header and Edit Trip in the menu",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T14:23:35.178Z",
+    "updatedAt": "2026-10-19T14:23:41.644Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T14:23:41.644Z",
+    "shippedNote": "Shipped in commit cfd2363 (v3.68.0): behind enableTripHeaderActions."
+  },
+  {
+    "id": "FEAT-158",
+    "title": "Flutter: select and delete several passes",
+    "description": "Flutter: select and delete several passes",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T14:23:35.549Z",
+    "updatedAt": "2026-10-19T14:23:41.877Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T14:23:41.877Z",
+    "shippedNote": "Shipped in commit cfd2363 (v3.68.0): behind enablePassEditDelete."
+  },
+  {
+    "id": "FEAT-159",
+    "title": "Flutter: web-style Expenses filters page",
+    "description": "Flutter: web-style Expenses filters page",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T14:23:35.828Z",
+    "updatedAt": "2026-10-19T14:23:42.100Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T14:23:42.100Z",
+    "shippedNote": "Shipped in commit cfd2363 (v3.68.0): behind no flag, restyle."
+  },
+  {
+    "id": "FEAT-160",
+    "title": "Flutter: Summary mini pass pinned on scroll",
+    "description": "Flutter: Summary mini pass pinned on scroll",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T14:23:36.087Z",
+    "updatedAt": "2026-10-19T14:23:42.350Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T14:23:42.350Z",
+    "shippedNote": "Shipped in commit cfd2363 (v3.68.0): behind enableSummaryUpgrades."
+  },
+  {
+    "id": "FEAT-161",
+    "title": "Flutter: settlement pass flips to show You paid and Your share",
+    "description": "Flutter: settlement pass flips to show You paid and Your share",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T14:23:36.333Z",
+    "updatedAt": "2026-10-19T14:23:42.572Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T14:23:42.572Z",
+    "shippedNote": "Shipped in commit cfd2363 (v3.68.0): behind enableYouPaidVsShare."
+  },
+  {
+    "id": "FEAT-162",
+    "title": "Flutter: Voice add expense with real speech recognition",
+    "description": "Flutter: Voice add expense with real speech recognition",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T14:23:36.639Z",
+    "updatedAt": "2026-10-19T14:23:42.835Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T14:23:42.835Z",
+    "shippedNote": "Shipped in commit cfd2363 (v3.68.0): behind enableVoiceInput."
   }
 ]

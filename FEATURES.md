@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **156** |
+| **Total Tracked** | **162** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **154** |
+| **✅ Shipped** | **160** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -206,6 +206,12 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-154** | Flutter: one-page Settings with Haptics levels, Storage and Data, Archived Trips | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit c2a39dd (v3.67.0): behind enableSettingsDataHub (Trip pack, default ON); reuses enableGeotagging, enableDataSaverMode, enableDemoSeeding, enableHapticsSetting. |
 | **FEAT-155** | Flutter: trip header actions sheet, Edit Trip popup, members and expenses chip, stops picker | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit c2a39dd (v3.67.0): behind enableTripHeaderActions (Trip pack, default ON). |
 | **FEAT-156** | Flutter: Summary chips, close-out banner, Custom amount, Remind, How it works, At a Glance | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit c2a39dd (v3.67.0): behind enableSummaryUpgrades (Trip pack, default ON). |
+| **FEAT-157** | Flutter: clean trip header and Edit Trip in the menu | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enableTripHeaderActions. |
+| **FEAT-158** | Flutter: select and delete several passes | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enablePassEditDelete. |
+| **FEAT-159** | Flutter: web-style Expenses filters page | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind no flag, restyle. |
+| **FEAT-160** | Flutter: Summary mini pass pinned on scroll | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enableSummaryUpgrades. |
+| **FEAT-161** | Flutter: settlement pass flips to show You paid and Your share | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enableYouPaidVsShare. |
+| **FEAT-162** | Flutter: Voice add expense with real speech recognition | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit cfd2363 (v3.68.0): behind enableVoiceInput. |
 
 ---
 
