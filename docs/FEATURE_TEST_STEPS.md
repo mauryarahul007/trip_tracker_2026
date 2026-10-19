@@ -102,6 +102,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-10-19 | flutter (unreleased) | FLUTTER-SETTINGS-PAGE | [Flutter: one-page Settings like the web](#flutter-settings-page--flutter-one-page-settings-like-the-web) |
 | 2026-10-19 | flutter (unreleased) | FLUTTER-HEADER-SUMMARY | [Flutter: trip header actions, edit trip, Summary upgrades](#flutter-header-summary--flutter-trip-header-actions-edit-trip-summary-upgrades) |
 | 2026-10-19 | flutter (unreleased) | FLUTTER-UI-ROUND3 | [Flutter: clean header, pass multi-select, filters page, mini pass, voice](#flutter-ui-round3--flutter-clean-header-pass-multi-select-filters-page-mini-pass-voice) |
+| 2026-10-19 | 3.69.0 | CI-ANDROID-APK | [Automatic Android APK from main](#ci-android-apk--automatic-android-apk-from-main) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-WEBTHEME | [Flutter: web palette, pass cards, Superadmin redirect, sign-in diagnostics](#flutter-webtheme--flutter-web-palette-pass-cards-superadmin-redirect-sign-in-diagnostics) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-PASS-SORT | [Flutter: pass list sorting (Time / Leg / Name)](#flutter-pass-sort--flutter-pass-list-sorting-time--leg--name) |
 | 2026-10-09 | flutter 3.49 | FLUTTER-NOTES-OVERFLOW | [Flutter: Notes tab many-passes overflow fix](#flutter-notes-overflow--flutter-notes-tab-many-passes-overflow-fix) |
@@ -3417,4 +3418,15 @@ Then add a row to the **Index** table.
 13. Summary > Who pays whom: settle everything using **Fewest payments**, then switch to **Per person**. The pass stays **SETTLED** with all square in both views, the amount on the pass and the mini pass is the same in both, and Members shows nobody owed or owing. (Before the fix Per person showed leftover payments and NOT SETTLED.)
 14. The trip header line (dates, members, expenses) is a clear 12.5pt body font with even spacing, readable in light and dark.
 15. Once the trip is settled, the yellow close-out card near the top of Summary is gone (it still shows while payments are left). History: a settlement paid to you shows a **Confirm received** button on its row (needs `enableSettlementConfirmation`); everyone else sees "Awaiting confirmation" until the recipient confirms. Opening the row also has Confirm payment received.
+
+## CI-ANDROID-APK — Automatic Android APK from main
+
+**Flags:** none (infrastructure). Needs the repo secrets `FLUTTER_DEV_ENV_JSON_B64` and `ANDROID_SIDELOAD_KEYSTORE_B64`.
+
+1. Push a change under `flutter_app/` to `main` (or run **Android APK (latest)** from the Actions tab). Wait for **Flutter CI** to go green; **Android APK (latest)** then starts by itself.
+2. Open Releases: the **android-latest** pre-release now carries `trip-tracker-dev-vX.Y.Z-<sha>.apk` and says which commit it came from.
+3. On the phone, download and install it over **Trip Tracker (Dev)**. It updates in place (no uninstall) and you stay signed in.
+4. A red Flutter CI run must **not** produce a new release.
+
+**Pass:** the installed app shows the new version and works against the same data as the web app.
 

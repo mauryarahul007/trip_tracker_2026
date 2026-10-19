@@ -1,0 +1,98 @@
+name: Android APK (latest)
+
+# Builds an installable Android APK of the Flutter app after Flutter CI passes on main, and publishes it as
+# the "android-latest" pre-release (replaced on every run). Install it on a phone from the release page.
+#
+# - Runs only for a green Flutter CI run on main (workflow_run), so a failing build is never published.
+# - Dev flavor (com.triptracker.app.dev) against the same backend as the web app; it installs next to the store app.
+# - Signed with the keystore in the ANDROID_SIDELOAD_KEYSTORE_B64 secret, the same key as the local debug builds,
+#   so each new APK updates the installed one in place (a fresh CI key every run would force an uninstall) and
+#   Google sign-in (registered for that key's SHA-1) keeps working.
+# - Not a store release: Play / TestFlight go through the tag-based pipeline in codemagic.yaml
+#   (docs/flutter-migration/store/RELEASE_PIPELINE.md).
+#
+# One-time secrets: FLUTTER_DEV_ENV_JSON_B64 (base64 of flutter_app/env/dev.json) and
+# ANDROID_SIDELOAD_KEYSTORE_B64 (base64 of the keystore).
+
+on:
+  workflow_run:
+    workflows: ['Flutter CI']
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    name: Build and publish APK
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter_app
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+          fetch-depth: 0 # the build number is the commit count
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Write the build environment and signing key
+        env:
+          ENV_B64: ${{ secrets.FLUTTER_DEV_ENV_JSON_B64 }}
+          KEYSTORE_B64: ${{ secrets.ANDROID_SIDELOAD_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$ENV_B64" ] || [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::Missing secret FLUTTER_DEV_ENV_JSON_B64 or ANDROID_SIDELOAD_KEYSTORE_B64"; exit 1
+          fi
+          echo "$ENV_B64" | base64 -d > env/dev.json
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/sideload.keystore"
+
+      - run: flutter pub get
+
+      - name: Build the dev APK
+        env:
+          TT_KEYSTORE_PATH: ${{ runner.temp }}/sideload.keystore
+          TT_KEYSTORE_PASSWORD: android
+          TT_KEY_ALIAS: androiddebugkey
+          TT_KEY_PASSWORD: android
+        run: |
+          flags="$(TT_MIN_BUILD_NUMBER=746 tool/release_version.sh)"
+          flutter build apk --release --flavor dev -t lib/main.dart --dart-define-from-file=env/dev.json $flags
+          version="$(node -p "require('../package.json').version")"
+          cp build/app/outputs/flutter-apk/app-dev-release.apk "../trip-tracker-dev-v${version}-${SHA::7}.apk"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trip-tracker-dev-apk
+          path: trip-tracker-dev-*.apk
+          retention-days: 14
+
+      - name: Publish the android-latest pre-release
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete android-latest --cleanup-tag --yes || true
+          gh release create android-latest trip-tracker-dev-*.apk \
+            --prerelease --target "$SHA" \
+            --title "Android APK (latest): v${VERSION}" \
+            --notes "Dev-flavor build of the Flutter app from main at ${SHA::7} (v${VERSION}). Install on a phone to update the Trip Tracker (Dev) app in place. Replaced on every green build of main."

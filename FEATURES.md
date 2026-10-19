@@ -9,8 +9,8 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **166** |
-| **💡 Requested** | **2** |
+| **Total Tracked** | **167** |
+| **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
 | **✅ Shipped** | **164** |
@@ -24,6 +24,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **[FEAT-002](#feat-002)** | `ui-ux` | Test | `mauryarahul007@gmail.com` | 💡 Requested |
 | **[FEAT-024](#feat-024)** | `admin` | CI pipeline for lint, build, and test on push/PR | `claude-cli` | 💡 Requested |
+| **[FEAT-167](#feat-167)** | `ui-ux` | Automatic Android APK build from main (Flutter merged into main) | `claude-cli` | 💡 Requested |
 
 ---
 
@@ -45,6 +46,15 @@ Test
 - **Requested By**: `claude-cli` on 9/1/2026 (web)
 
 CI pipeline for lint, build, and test on push/PR
+
+---
+
+### FEAT-167: Automatic Android APK build from main (Flutter merged into main)
+
+- **Category**: `ui-ux` | **Status**: `requested`
+- **Requested By**: `claude-cli` on 10/19/2026 (web)
+
+Automatic Android APK build from main (Flutter merged into main)
 
 ---
 

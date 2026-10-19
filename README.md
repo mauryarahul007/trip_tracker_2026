@@ -55,6 +55,7 @@ A **mobile-first, offline-capable, multi-user** trip-expense splitter. Create a 
 ### Native apps
 - **Two mobile clients share one Supabase backend** (see [Flutter migration](docs/flutter-migration/README.md)):
   - **Flutter app** in [`flutter_app/`](flutter_app/README.md): native UI for iOS and Android, offline-first with an outbox, push, maps, live location, OCR. Built behind the same Ops Deck feature flags. Release pipeline and rollout plan: [`ROLLOUT.md`](docs/flutter-migration/ROLLOUT.md), [`store/RELEASE_PIPELINE.md`](docs/flutter-migration/store/RELEASE_PIPELINE.md).
+  - **Latest Android build of the Flutter app:** every green push to `main` that changes `flutter_app/` publishes an installable APK as the [`android-latest` release](../../releases/tag/android-latest) (workflow `android-apk.yml`, dev flavor, same backend as the web app). Open it on the phone and install to update in place. Web changes deploy on push to `main` as before; store releases (Play / TestFlight) stay on the tag pipeline above.
   - **Capacitor builds** (the current store apps) sharing the web codebase, kept until the cutover window ends ([`SUNSET_CANDIDATES.md`](docs/flutter-migration/SUNSET_CANDIDATES.md)).
 - The web app is unchanged by the migration and keeps deploying from `main`.
 - Built via Codemagic (manually triggered — see [Native app builds](#native-app-builds-codemagic) below)

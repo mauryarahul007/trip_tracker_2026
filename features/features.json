@@ -2652,5 +2652,18 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-19T15:56:26.800Z",
     "shippedNote": "Shipped in commit b18b0eb (v3.68.3): behind enableSettlementConfirmation."
+  },
+  {
+    "id": "FEAT-167",
+    "title": "Automatic Android APK build from main (Flutter merged into main)",
+    "description": "Automatic Android APK build from main (Flutter merged into main)",
+    "category": "ui-ux",
+    "status": "requested",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T17:43:38.590Z",
+    "updatedAt": "2026-10-19T17:43:38.590Z"
   }
 ]
