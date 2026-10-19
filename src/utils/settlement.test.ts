@@ -330,6 +330,17 @@ describe('Settlement Utilities', () => {
       expect(perPerson.balances.every((b) => Math.abs(b.balance) < 0.01)).toBe(true);
     });
 
+    it('a settled group settles its members too, in Per person', () => {
+      const couple: Group = { id: 'g1', name: 'Bob & Charlie', memberIds: ['m2', 'm3'], tripId: 't1', createdAt: 0, updatedAt: 0 } as Group;
+      const dinner: Expense = { ...base, id: 'd1', title: 'Dinner', amount: 90, paidBy: 'm1', splitMemberIds: ['m1', 'm2', 'm3'], resolvedShares: { m1: 30, m2: 30, m3: 30 } };
+      // Bob settles the whole group's 60 with Alice.
+      const groupPay: Expense = { ...pay, id: 'g-pay', title: 'Settlement: Bob & Charlie ➔ Alice', amount: 60, paidBy: 'm2', resolvedShares: { m1: 60 } };
+      const per = calculateSettlements(trip, members, [dinner, groupPay], [couple], { simplifyDebts: false });
+      const few = calculateSettlements(trip, members, [dinner, groupPay], [couple], { simplifyDebts: true });
+      expect(few.transfers).toEqual([]);
+      expect(per.transfers).toEqual([]);
+    });
+
     it('before the payment both views still show what is owed', () => {
       const perPerson = calculateSettlements(trip, members, [e1, e2], [], { simplifyDebts: false });
       expect(perPerson.transfers).toHaveLength(2);

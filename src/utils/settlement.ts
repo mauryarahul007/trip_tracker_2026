@@ -345,21 +345,23 @@ export function calculateSettlements(
     const directTransfers = calculateDirectSettlements(trip, members, expenses, groups);
     // A recorded settlement only cancels the exact pair it names. Paid to someone else (as "Fewest payments" does),
     // the pair debts stay and per-person shows money owed while every real balance is square. Settled is a fact
-    // about the balances, so: all square means nothing is owed, and a list that does not add up to the real
-    // balances falls back to one that does. Groups net inside themselves, so that check is for ungrouped trips.
-    if (balances.every((b) => Math.abs(b.balance) < 0.01)) {
+    // about the balances (a group counts as one party), so: all square means nothing is owed, and a list that does
+    // not add up to the real balances falls back to one that does.
+    const nodes = buildSettlementNodes(balances, groups);
+    if (nodes.every((n) => Math.abs(n.balance) < 0.01)) {
       return { balances, transfers: [], isSimplified: false };
     }
-    if (groups.length === 0) {
-      const implied: Record<string, number> = {};
-      directTransfers.forEach((t) => {
-        if (t.fromMemberId) implied[t.fromMemberId] = (implied[t.fromMemberId] || 0) - t.amount;
-        if (t.toMemberId) implied[t.toMemberId] = (implied[t.toMemberId] || 0) + t.amount;
-      });
-      if (balances.some((b) => Math.abs((implied[b.memberId] || 0) - b.balance) > 0.02)) {
-        const memberNodes = buildSettlementNodes(balances, []);
-        return { balances, transfers: matchDebtorsToCreditors(memberNodes, balances), isSimplified: false };
-      }
+    const nodeOf: Record<string, string> = {};
+    nodes.forEach((n) => n.memberIds.forEach((m) => { nodeOf[m] = n.id; }));
+    const implied: Record<string, number> = {};
+    directTransfers.forEach((t) => {
+      const f = nodeOf[t.fromMemberId];
+      const to = nodeOf[t.toMemberId];
+      if (f) implied[f] = (implied[f] || 0) - t.amount;
+      if (to) implied[to] = (implied[to] || 0) + t.amount;
+    });
+    if (nodes.some((n) => Math.abs((implied[n.id] || 0) - n.balance) > 0.02)) {
+      return { balances, transfers: matchDebtorsToCreditors(nodes, balances), isSimplified: false };
     }
     return { balances, transfers: directTransfers, isSimplified: false };
   }

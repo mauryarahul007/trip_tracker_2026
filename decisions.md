@@ -5210,3 +5210,9 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** Per person after a partial payment to a different person can still list extra opposite payments (that is how pair netting works); the pass total is unaffected. Grouped trips only get the all-square rule.
 * **Release Cut:** version bumped to `3.68.3` via `npm run release:patch`.
 
+## v3.68.4: a settled group settles its members in Per person
+* **Context:** v3.68.3 treated "settled" per member. On trips with groups, a group can be square as one party while the people inside it still hold offsetting balances (one member paid for the whole group), so Per person still listed payments and the Summary banner asked the user to pay.
+* **Decision:** `calculateSettlements` (TS and Dart) now checks Per person at the settlement-node level (a group is one node): all nodes square means no transfers, and a pair list whose per-node totals do not match the real node balances falls back to the node-level match. Fewest payments is unchanged.
+* **Trade-offs Accepted:** Per person after a partial payment can still list extra opposite payments (pair netting); the settled state is now consistent across both views.
+* **Release Cut:** version bumped to `3.68.4` via `npm run release:patch`.
+
