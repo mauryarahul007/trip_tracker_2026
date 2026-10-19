@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **153** |
+| **Total Tracked** | **156** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **151** |
+| **✅ Shipped** | **154** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -203,6 +203,9 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-151** | Flutter: Notes cards with pin, delete and Undo | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4ea2901 (v3.66.0): behind enableTidyNotes (Trip pack, default ON). |
 | **FEAT-152** | Flutter: tidy Members tiles with role and balance chips and search | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4ea2901 (v3.66.0): behind enableTidyMembers (Trip pack, default ON). |
 | **FEAT-153** | Flutter: edit and delete travel passes | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4ea2901 (v3.66.0): behind enablePassEditDelete (Trip pack, default ON). |
+| **FEAT-154** | Flutter: one-page Settings with Haptics levels, Storage and Data, Archived Trips | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit c2a39dd (v3.67.0): behind enableSettingsDataHub (Trip pack, default ON); reuses enableGeotagging, enableDataSaverMode, enableDemoSeeding, enableHapticsSetting. |
+| **FEAT-155** | Flutter: trip header actions sheet, Edit Trip popup, members and expenses chip, stops picker | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit c2a39dd (v3.67.0): behind enableTripHeaderActions (Trip pack, default ON). |
+| **FEAT-156** | Flutter: Summary chips, close-out banner, Custom amount, Remind, How it works, At a Glance | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit c2a39dd (v3.67.0): behind enableSummaryUpgrades (Trip pack, default ON). |
 
 ---
 

@@ -2444,5 +2444,53 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-19T09:36:31.073Z",
     "shippedNote": "Shipped in commit 4ea2901 (v3.66.0): behind enablePassEditDelete (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-154",
+    "title": "Flutter: one-page Settings with Haptics levels, Storage and Data, Archived Trips",
+    "description": "Flutter: one-page Settings with Haptics levels, Storage and Data, Archived Trips",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T12:31:04.843Z",
+    "updatedAt": "2026-10-19T12:31:10.131Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T12:31:10.131Z",
+    "shippedNote": "Shipped in commit c2a39dd (v3.67.0): behind enableSettingsDataHub (Trip pack, default ON); reuses enableGeotagging, enableDataSaverMode, enableDemoSeeding, enableHapticsSetting."
+  },
+  {
+    "id": "FEAT-155",
+    "title": "Flutter: trip header actions sheet, Edit Trip popup, members and expenses chip, stops picker",
+    "description": "Flutter: trip header actions sheet, Edit Trip popup, members and expenses chip, stops picker",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T12:31:05.056Z",
+    "updatedAt": "2026-10-19T12:31:10.344Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T12:31:10.343Z",
+    "shippedNote": "Shipped in commit c2a39dd (v3.67.0): behind enableTripHeaderActions (Trip pack, default ON)."
+  },
+  {
+    "id": "FEAT-156",
+    "title": "Flutter: Summary chips, close-out banner, Custom amount, Remind, How it works, At a Glance",
+    "description": "Flutter: Summary chips, close-out banner, Custom amount, Remind, How it works, At a Glance",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-19T12:31:05.269Z",
+    "updatedAt": "2026-10-19T12:31:10.556Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-19T12:31:10.555Z",
+    "shippedNote": "Shipped in commit c2a39dd (v3.67.0): behind enableSummaryUpgrades (Trip pack, default ON)."
   }
 ]
