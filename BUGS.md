@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **294** | All recorded bugs across sessions |
+| **Total Tracked** | **295** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **267** | Verified & closed |
+| **✅ Resolved** | **268** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -298,6 +298,7 @@
 | **BUG-294** | Flutter: Voice add expense did not work on Android | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 036887f (v3.68.2): Google recognizer via intent lookup, locale pick, spoken amounts, friendly errors. |
 | **BUG-295** | Per person view showed NOT SETTLED after settling with Fewest payments | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Fixed in commit b18b0eb (v3.68.3): Per person returns no transfers when all balances are square; pass amount from real balances. |
 | **BUG-296** | Group settled but Per person still showed payments to make | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Fixed in commit b995240 (v3.68.4): Per person checks settlement nodes (a group is one party); all square means no transfers. |
+| **BUG-297** | Members list showed owed/owes for members of a settled group | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit a7f3659 (v3.68.5): memberBalancesForDisplay zeroes members of a square group on Members. |
 
 ---
 
