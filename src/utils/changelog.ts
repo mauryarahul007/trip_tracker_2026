@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.69.1',
+    date: '2026-10-20',
+    changes: [
+      'Scrolling down the Expenses tab to reach Settlements no longer triggers a pull-to-refresh. A refresh now needs a deliberate pull from the very top.',
+    ],
+  },
+  {
     version: '3.69.0',
     date: '2026-10-19',
     changes: [
