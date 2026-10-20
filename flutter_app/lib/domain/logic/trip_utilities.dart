@@ -738,6 +738,9 @@ String describeSyncItem(Map<String, dynamic> item) {
       return named('Update group', p['name']);
     case 'deleteGroup':
       return 'Delete group';
+    case 'addMessage':
+      final body = p['body'];
+      return named('Send message', body is String ? (body.length > 40 ? body.substring(0, 40) : body) : null);
     case 'addCategory':
       return named('Add category', p['name']);
     case 'deleteCategory':

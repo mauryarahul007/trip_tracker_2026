@@ -2950,13 +2950,13 @@ abstract class AppLocalizations {
   /// No description provided for @syncLineSaved.
   ///
   /// In en, this message translates to:
-  /// **'All saved'**
+  /// **'Saved'**
   String get syncLineSaved;
 
   /// No description provided for @syncLineSyncing.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{Syncing 1 change} other{Syncing {count} changes}}'**
+  /// **'Waiting'**
   String syncLineSyncing(int count);
 
   /// No description provided for @syncLineOffline.
@@ -2974,7 +2974,7 @@ abstract class AppLocalizations {
   /// No description provided for @syncLineIssue.
   ///
   /// In en, this message translates to:
-  /// **'Sync issue · Retry'**
+  /// **'Failed'**
   String get syncLineIssue;
 
   /// No description provided for @todayTitle.

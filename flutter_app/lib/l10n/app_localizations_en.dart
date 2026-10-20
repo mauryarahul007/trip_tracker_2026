@@ -1669,17 +1669,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripsLayoutList => 'Compact list';
 
   @override
-  String get syncLineSaved => 'All saved';
+  String get syncLineSaved => 'Saved';
 
   @override
   String syncLineSyncing(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Syncing $count changes',
-      one: 'Syncing 1 change',
-    );
-    return '$_temp0';
+    return count < 0 ? 'Waiting' : 'Waiting';
   }
 
   @override
@@ -1691,7 +1685,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get syncLineIssue => 'Sync issue · Retry';
+  String get syncLineIssue => 'Failed';
 
   @override
   String get todayTitle => 'Today';

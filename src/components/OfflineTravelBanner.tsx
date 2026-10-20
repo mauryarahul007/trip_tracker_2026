@@ -36,13 +36,16 @@ export const OfflineTravelBanner: React.FC = () => {
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
+    const openDrawer = () => setShowDrawer(true);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    window.addEventListener('tt-open-sync-drawer', openDrawer);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('tt-open-sync-drawer', openDrawer);
     };
   }, []);
 
@@ -50,6 +53,13 @@ export const OfflineTravelBanner: React.FC = () => {
   if (isOnline && syncQueue.length === 0) {
     return null;
   }
+
+  const failedCount = syncQueue.filter((item) => item.lastError || item.needsAttention).length;
+  const pillLabel = failedCount > 0
+    ? `Failed ${failedCount}`
+    : !isOnline
+      ? (syncQueue.length > 0 ? `Waiting · ${syncQueue.length}` : 'Saved on this device')
+      : (syncQueue.length > 0 ? 'Waiting' : 'Saved');
 
   const handleManualSync = async () => {
     if (!navigator.onLine) {
@@ -108,8 +118,7 @@ export const OfflineTravelBanner: React.FC = () => {
         >
           <span style={{ fontSize: '13px' }}>{!isOnline ? '✈️' : '☁️'}</span>
           <span>
-            {!isOnline ? 'In-Flight Mode' : 'Online Sync'}
-            {syncQueue.length > 0 ? ` · ${syncQueue.length} staged offline` : ' · Saved locally'}
+            {pillLabel}
           </span>
           <span
             style={{
@@ -202,7 +211,7 @@ export const OfflineTravelBanner: React.FC = () => {
                 </div>
               ) : (
                 syncQueue.map((item, idx) => {
-                  const failed = inspectorOn && !!item.lastError;
+                  const failed = !!(item.lastError || item.needsAttention);
                   return (
                   <div
                     key={item.id || idx}
@@ -213,7 +222,7 @@ export const OfflineTravelBanner: React.FC = () => {
                       gap: '10px',
                       padding: '10px 12px',
                       background: 'var(--bg-surface)',
-                      border: `1px solid ${item.needsAttention && inspectorOn ? 'var(--color-danger, #DC2626)' : 'var(--border-color)'}`,
+                      border: `1px solid ${failed ? 'var(--color-danger, #DC2626)' : 'var(--border-color)'}`,
                       borderRadius: '8px',
                       fontSize: '12px',
                     }}
@@ -222,7 +231,7 @@ export const OfflineTravelBanner: React.FC = () => {
                       <span style={{ color: failed ? 'var(--color-danger, #DC2626)' : 'var(--accent-orange)' }}>●</span>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 600, color: 'var(--text-primary)', overflowWrap: 'anywhere' }}>
-                          {inspectorOn ? describeSyncItem(item) : item.type.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                          {describeSyncItem(item)}
                         </div>
                         {failed && (
                           <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '2px', overflowWrap: 'anywhere' }}>
@@ -231,9 +240,9 @@ export const OfflineTravelBanner: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    {inspectorOn ? (
+                    {(failed || inspectorOn) ? (
                       <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                        {isOnline && (
+                        {failed && isOnline && (
                           <button
                             type="button"
                             className="secondary-btn"
@@ -244,6 +253,7 @@ export const OfflineTravelBanner: React.FC = () => {
                             Retry
                           </button>
                         )}
+                        {inspectorOn && (
                         <button
                           type="button"
                           className="secondary-btn"
@@ -261,6 +271,7 @@ export const OfflineTravelBanner: React.FC = () => {
                         >
                           {confirmDiscardId === item.id ? 'Confirm?' : 'Discard'}
                         </button>
+                        )}
                       </div>
                     ) : (
                       <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-family-mono)', fontSize: '11px' }}>

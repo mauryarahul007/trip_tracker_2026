@@ -590,7 +590,6 @@ export function SettingsView({
     reader.onload = () => {
       const text = String(reader.result || '');
       setImportJson?.(text);
-      onImport?.(text);
     };
     reader.onerror = () => {
       setImportFileError('Could not read that file.');

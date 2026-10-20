@@ -109,6 +109,9 @@ export function SettingsBackupsScreen({
               >
                 <IconUpload size={15} className="icon-sm" /> {importStatus === 'pending' ? 'Restoring...' : 'Choose Backup File...'}
               </button>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
+                Importing a backup creates new trips. Importing the same file twice creates duplicates.
+              </p>
               {importJson && (
                 <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
                   Loaded {formatBytes(new Blob([importJson]).size)} of backup data. Review and restore below.

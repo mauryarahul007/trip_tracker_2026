@@ -78,6 +78,11 @@ class ConflictSheet extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(c.local.title, style: const TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          Text(
+            '${c.local.title} changed on another device. Choose which version to keep.',
+            style: TextStyle(color: context.tokens.textSecondary, fontSize: 13),
+          ),
           const SizedBox(height: 8),
           IntrinsicHeight(
             child: Row(

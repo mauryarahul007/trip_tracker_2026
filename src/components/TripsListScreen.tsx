@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member, TripStop } from '../types';
-import { IconArchive, IconMapPin, IconSearch, IconPlus, IconEdit, IconTrash, IconCopy, IconRefresh, IconLayers, IconList, IconQrCode, IconX, IconShield, IconPlane, IconSparkles } from './Icons';
+import { IconArchive, IconMapPin, IconSearch, IconPlus, IconEdit, IconTrash, IconCopy, IconRefresh, IconLayers, IconList, IconQrCode, IconX, IconShield, IconSparkles } from './Icons';
 import { ActionSheet } from './common/ActionSheet';
 import { DateRangePicker } from './DateRangePicker';
 import { getCurrencySymbol } from '../utils/currency';
@@ -13,6 +13,7 @@ import { DestinationInput } from './DestinationInput';
 import { newId } from '../utils/uuid';
 import { useTripStore } from '../store/tripStore';
 import { TripStack, CrossfadePhoto, useCyclingTripPhoto, useDestinationWeather, getFallbackTravelPhoto, PEEK_COVER_WIDTH } from './TripStack';
+import { QuietStatus } from './QuietStatus';
 import { sortTrips, type TripSortMode } from '../utils/tripSort';
 import { HomeAmbientBackdrop } from './HomeAmbientBackdrop';
 import { OnboardingSwipe } from './OnboardingSwipe';
@@ -22,8 +23,6 @@ import { triggerHaptic } from '../utils/haptics';
 import { preloadModule } from '../utils/modulePreload';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
-import { fetchAppFlag } from '../services/tripApi';
-import { asCopyString, DEFAULT_EMPTY_TRIP_BLURB } from '../utils/landingCopy';
 import { readStackChrome } from '../utils/stackChrome';
 import { TripSlideLauncher } from './TripSlideLauncher';
 
@@ -351,7 +350,6 @@ export function TripsListScreen({
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [showJoinTrip, setShowJoinTrip] = useState(false);
   const [joinCode, setJoinCode] = useState('');
-  const [emptyTripBlurb, setEmptyTripBlurb] = useState(DEFAULT_EMPTY_TRIP_BLURB);
   const [honeypotVal, setHoneypotVal] = useState('');
   const [showList, setShowList] = useState(false);
   const [viewMode, setViewMode] = useState<'stack' | 'grid'>(() => {
@@ -502,12 +500,6 @@ export function TripsListScreen({
   useEffect(() => {
     preloadModule(() => import('./ExpenseForm'));
     preloadModule(() => import('./TripMapHero'));
-  }, []);
-
-  useEffect(() => {
-    fetchAppFlag('empty_trip_blurb')
-      .then((v) => setEmptyTripBlurb(asCopyString(v, DEFAULT_EMPTY_TRIP_BLURB)))
-      .catch(() => {});
   }, []);
 
   const handleStepperScrub = (clientX: number) => {
@@ -1096,16 +1088,11 @@ export function TripsListScreen({
         {/* Trips List Grid */}
         {trips.length === 0 ? (
           <div className="luxury-boarding-empty">
-            <div className="luxury-boarding-glow" aria-hidden="true" />
-            <div className="luxury-boarding-badge">
-              <IconPlane size={13} /> READY FOR DEPARTURE
-            </div>
-            <h2 className="luxury-boarding-title">Where will your next journey begin?</h2>
-            <p className="luxury-boarding-subtitle">
-              {isFirstRun
-                ? 'Coordinate travelers, log shared expenses in real-time, and settle balances effortlessly on your next expedition.'
-                : emptyTripBlurb}
-            </p>
+            <QuietStatus
+              sentence="No trips yet. Create one to start splitting expenses."
+              actionLabel="Create trip"
+              onAction={() => setShowAddTrip(true)}
+            />
 
             <div className="luxury-boarding-chips-section">
               <span className="luxury-boarding-chips-label">QUICK INSPIRATION</span>

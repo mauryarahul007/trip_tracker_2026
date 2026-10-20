@@ -592,7 +592,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
 
     final Widget empty = active.isEmpty
         ? EmptyState(
-            icon: AppIcons.expenses,
+            plain: true,
             title: l10n.expNone,
             subtitle: l10n.expNoneBody,
             action: AppButton(label: l10n.expAdd, onPressed: () => context.push('/trip/$id/expenses/new')),

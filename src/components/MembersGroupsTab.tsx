@@ -6,8 +6,9 @@ import type { MemberBalance } from '../utils/settlement';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { fetchPreviousTripMembers, searchRemoteMemberSuggestions, lookupProfileByEmail } from '../services/tripApi';
-import { IconCheck, IconEdit, IconTrash, IconMembers, IconTag, IconBell } from './Icons';
+import { IconCheck, IconEdit, IconTrash, IconTag, IconBell } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
+import { QuietStatus } from './QuietStatus';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -1047,21 +1048,11 @@ export function MembersGroupsTab({
 
       {/* Members list */}
       {activeTripMembers.length === 0 ? (
-        <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed', marginBottom: '32px' }}>
-          <div className="ledger-rule" />
-          <div className="ledger-empty-prompt">
-            <span className="ledger-badge" aria-hidden="true">
-              <IconMembers size={14} className="icon-sm" />
-            </span>
-            <p>No one's on this trip yet. Add the first member to start splitting costs.</p>
-            {isAdmin && (
-              <button type="button" className="gradient-btn" style={{ marginTop: '12px' }} onClick={() => setShowAddForm(true)}>
-                Add First Member
-              </button>
-            )}
-          </div>
-          <div className="ledger-rule" />
-        </div>
+        <QuietStatus
+          sentence="No one is on this trip yet."
+          actionLabel={isAdmin ? 'Add a member' : undefined}
+          onAction={isAdmin ? () => setShowAddForm(true) : undefined}
+        />
       ) : (
         <div className="luggage-list">
           {visibleMembers.map((member) => {

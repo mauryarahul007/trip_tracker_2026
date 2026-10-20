@@ -301,11 +301,11 @@ export function JoinTripScreen() {
               <IconClock size={32} />
             </div>
           )}
-          <h2 style={{ marginBottom: '8px' }}>{isLocked ? 'Cooldown Active' : 'Something went wrong'}</h2>
+          <h2 style={{ marginBottom: '8px' }}>{isLocked ? 'Wait a moment, then try the code again.' : 'This join link did not load.'}</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>
             {isLocked
-              ? `Too many incorrect join attempts. For security, please wait ${formatCooldown(lockoutSeconds)} before trying again.`
-              : errorMessage}
+              ? `Too many tries. Wait ${formatCooldown(lockoutSeconds)} and try again.`
+              : (errorMessage || 'Your other trips are still on this device.')}
           </p>
           <button
             type="button"

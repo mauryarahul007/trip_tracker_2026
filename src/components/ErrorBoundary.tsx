@@ -32,6 +32,10 @@ export class ErrorBoundary extends Component<Props, State> {
     void autoReportError(error.message, error.stack || errorInfo.componentStack || undefined, 'react-crash');
   }
 
+  private handleRetry = () => {
+    this.setState({ hasError: false, error: null, errorInfo: null, copied: false });
+  };
+
   private handleReload = () => {
     window.location.reload();
   };
@@ -65,32 +69,12 @@ export class ErrorBoundary extends Component<Props, State> {
           }}
         >
           <div className="glass-card" style={{ maxWidth: '440px', width: '100%', padding: '24px', borderRadius: '16px' }}>
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>💥</div>
-            <h2 style={{ color: 'var(--color-danger, #ef4444)', marginBottom: '8px', fontSize: '18px', fontWeight: 600 }}>
-              Application Render Crash
+            <h2 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>
+              This screen hit a problem
             </h2>
-            <p style={{ color: 'var(--text-secondary, #64748b)', fontSize: '13px', marginBottom: '16px', lineHeight: '1.5' }}>
-              An unexpected error occurred while rendering. You can copy the diagnostic crash report directly for Antigravity or Claude CLI.
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: '0 0 16px', lineHeight: 1.5 }}>
+              Your trips and expenses are still on this device. Try again, or reload if it keeps happening.
             </p>
-
-            {this.state.error?.message && (
-              <pre
-                style={{
-                  background: 'rgba(226, 115, 90, 0.08)',
-                  color: 'var(--color-danger, #ef4444)',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  fontSize: '11px',
-                  fontFamily: 'var(--font-family-mono, monospace)',
-                  marginBottom: '16px',
-                  overflowX: 'auto',
-                  textAlign: 'left',
-                  maxHeight: '120px',
-                }}
-              >
-                {this.state.error.message}
-              </pre>
-            )}
 
             {this.state.copied && (
               <div
@@ -104,7 +88,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   marginBottom: '12px',
                 }}
               >
-                ✅ Copied AI Crash Report to clipboard!
+                Report copied
               </div>
             )}
 
@@ -112,28 +96,26 @@ export class ErrorBoundary extends Component<Props, State> {
               <button
                 type="button"
                 className="gradient-btn"
-                style={{ width: '100%', padding: '10px', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}
-                onClick={this.handleReload}
+                style={{ width: '100%', padding: '10px', fontSize: '14px', cursor: 'pointer' }}
+                onClick={this.handleRetry}
               >
-                🔄 Reload Application
+                Try again
               </button>
-
               <button
                 type="button"
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  fontSize: '12px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-color, #cbd5e1)',
-                  background: 'var(--bg-card, #ffffff)',
-                  color: 'inherit',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                }}
+                className="secondary-btn"
+                style={{ width: '100%', padding: '10px', fontSize: '14px', cursor: 'pointer' }}
+                onClick={this.handleReload}
+              >
+                Reload
+              </button>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ width: '100%', padding: '8px', fontSize: '13px', cursor: 'pointer' }}
                 onClick={this.handleCopyReport}
               >
-                📋 Copy Crash Report for Claude / Antigravity
+                Copy report
               </button>
             </div>
           </div>

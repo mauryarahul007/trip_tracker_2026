@@ -57,9 +57,9 @@ export function ConflictResolverModal({
             <IconAlertCircle size={20} />
           </div>
           <div>
-            <h3 id="conflict-dialog-title" style={{ fontSize: '18px', margin: 0 }}>Sync Conflict Detected</h3>
+            <h3 id="conflict-dialog-title" style={{ fontSize: '18px', margin: 0 }}>{localExpense.title} changed on another device</h3>
             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
-              This expense was modified on another device while you were offline.
+              Choose which version to keep. Closing this does not pick a side.
             </p>
           </div>
         </div>

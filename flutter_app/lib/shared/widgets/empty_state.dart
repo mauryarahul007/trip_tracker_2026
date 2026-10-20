@@ -9,12 +9,38 @@ class EmptyState extends StatelessWidget {
   final String title;
   final String subtitle;
   final Widget? action;
+  final bool plain;
 
-  const EmptyState({super.key, this.icon, this.emoji, required this.title, required this.subtitle, this.action});
+  const EmptyState({
+    super.key,
+    this.icon,
+    this.emoji,
+    required this.title,
+    required this.subtitle,
+    this.action,
+    this.plain = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
+    if (plain) {
+      final sentence = subtitle.trim().isEmpty ? title : '$title $subtitle';
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              sentence,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 15, height: 1.4, color: tokens.textSecondary),
+            ),
+            if (action != null) ...[const SizedBox(height: 14), action!],
+          ],
+        ),
+      );
+    }
 
     return CustomPaint(
       painter: _DotsPainter(tokens.textMuted.withValues(alpha: 0.22)),

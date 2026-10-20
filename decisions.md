@@ -5251,3 +5251,9 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** A real refresh needs a longer, more deliberate pull. The Trips list shares the hook and gets the same behavior.
 * **Release Cut:** version bumped to `3.69.1` via `npm run release:patch`.
 
+## v3.69.2: Failure language, Shares weights, and sync the traveler can see
+* **Context:** Crash screens spoke to developers, a failed sync did not name the change, and editing a Shares expense on the web dropped the weights (Flutter already kept them). Closing a conflict treated dismiss as accepting the other device.
+* **Decision:** Traveler copy on web and Flutter, with the diagnostic text only behind Copy report. Failed queue rows are named and can be retried; Discard stays behind the sync inspector. `splitConfigForSave` keeps custom, exact, and percentage weights on edit. Closing a conflict snoozes it. Trip headers show Saved, Waiting, or Failed N. Empty money screens use one sentence and one action. Flutter trip rows use the passport vocabulary, reduce motion skips the card flight, and turning app lock off requires biometrics. No new feature flag.
+* **Trade-offs Accepted:** Staging sync-twice and a two-phone mid-flush conflict still need a staging project and two phones. Backup and CSV parsing stay on the UI isolate until a profile shows a long frame.
+* **Release Cut:** version bumped to `3.69.2` via `npm run release:patch`.
+

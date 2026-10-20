@@ -115,6 +115,14 @@ class _MembersTabState extends ConsumerState<MembersTab> {
               ),
             ),
           ),
+        if (shown.isEmpty && active.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              'No one is on this trip yet.',
+              style: TextStyle(color: context.tokens.textSecondary, fontSize: 14),
+            ),
+          ),
         for (final m in shown)
           _row(context, ref, m, balances[m.id], money, canManage, trip?.baseCurrency ?? 'INR', tidy: tidy),
         if (archived.isNotEmpty) ...[

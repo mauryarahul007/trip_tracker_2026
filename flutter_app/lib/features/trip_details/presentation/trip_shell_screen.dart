@@ -13,8 +13,6 @@ import '../../../core/network/connectivity_provider.dart';
 import '../../../core/platform/haptics.dart';
 import '../../../data/providers.dart';
 import '../../../data/realtime/realtime_manager.dart';
-import '../../../data/sync/outbox_store.dart';
-import '../../../data/sync/outbox_types.dart';
 import '../../../domain/logic/tab_trail.dart';
 import '../../../domain/logic/trip_status.dart';
 import '../../../domain/logic/trip_utilities.dart' show formatDateRange;
@@ -36,6 +34,7 @@ import '../../travel/maps/trip_route_panel.dart';
 import '../../travel/maps/trip_route_modal.dart';
 import '../../travel/presentation/live_location_share_modal.dart';
 import '../../trips/presentation/widgets/share_trip_sheet.dart';
+import '../../trips/presentation/widgets/sync_chip.dart';
 import 'widgets/edit_trip_sheet.dart';
 import 'widgets/trip_actions_sheet.dart';
 import '../../trips/presentation/widgets/trip_card.dart' show TripStatusPill, tripHeadline;
@@ -609,10 +608,10 @@ class _SyncLine extends ConsumerWidget {
     final online = ref.watch(isOnlineProvider).value ?? true;
     final status = ref.watch(syncStatusProvider).value ?? const SyncStatus();
     final (String text, IconData icon, Color color) = status.issues > 0
-        ? (l10n.syncLineIssue, Icons.sync_problem_rounded, onDark ? Colors.white : t.colorDanger)
+        ? ('${l10n.syncLineIssue} ${status.issues}', Icons.sync_problem_rounded, onDark ? Colors.white : t.colorDanger)
         : !online
         ? (
-            status.pending > 0 ? l10n.syncLineOfflineWaiting(status.pending) : l10n.syncLineOffline,
+            status.pending > 0 ? l10n.syncLineSyncing(status.pending) : l10n.syncLineOffline,
             Icons.cloud_off_rounded,
             onDark ? Colors.white : t.textSecondary,
           )
@@ -638,12 +637,7 @@ class _SyncLine extends ConsumerWidget {
     if (status.issues == 0) return line;
     return InkWell(
       key: const Key('sync-line-retry'),
-      onTap: () async {
-        final store = ref.read(outboxStoreProvider);
-        for (final i in ref.read(syncItemsProvider).value ?? const <OutboxItem>[]) {
-          if (i.status == OutboxStatus.poison) await store.retry(i.id);
-        }
-      },
+      onTap: () => showSyncReviewSheet(context),
       child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: line),
     );
   }
@@ -853,10 +847,10 @@ class _SyncAction extends ConsumerWidget {
     final online = ref.watch(isOnlineProvider).value ?? true;
     final status = ref.watch(syncStatusProvider).value ?? const SyncStatus();
     final (String text, IconData icon, Color color)? state = status.issues > 0
-        ? (l10n.syncLineIssue, Icons.sync_problem_rounded, t.colorDanger)
+        ? ('${l10n.syncLineIssue} ${status.issues}', Icons.sync_problem_rounded, t.colorDanger)
         : !online
         ? (
-            status.pending > 0 ? l10n.syncLineOfflineWaiting(status.pending) : l10n.syncLineOffline,
+            status.pending > 0 ? l10n.syncLineSyncing(status.pending) : l10n.syncLineOffline,
             Icons.cloud_off_rounded,
             t.textSecondary,
           )
@@ -868,14 +862,7 @@ class _SyncAction extends ConsumerWidget {
       key: const Key('sync-action'),
       tooltip: state.$1,
       icon: Icon(state.$2, color: state.$3),
-      onPressed: status.issues == 0
-          ? null
-          : () async {
-              final store = ref.read(outboxStoreProvider);
-              for (final i in ref.read(syncItemsProvider).value ?? const <OutboxItem>[]) {
-                if (i.status == OutboxStatus.poison) await store.retry(i.id);
-              }
-            },
+      onPressed: status.issues == 0 ? null : () => showSyncReviewSheet(context),
     );
   }
 }

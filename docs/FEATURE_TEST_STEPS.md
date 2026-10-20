@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-20 | 3.69.2 | STABILITY-POLISH | [Failure copy, sync status, Shares weights](#stability-polish--failure-copy-sync-status-and-shares-weights) |
 | 2026-10-20 | 3.69.1 | PTR-SCROLL | [Scrolling no longer triggers pull-to-refresh](#ptr-scroll--scrolling-no-longer-triggers-pull-to-refresh) |
 | 2026-10-19 | 3.68.1 | SETTLE-GROUP-RLS | [Second partial group settlement no longer fails](#settle-group-rls--second-partial-group-settlement-no-longer-fails) |
 | 2026-10-08 | flutter 3.48.2 | FLUTTER-FIRSTSYNC | [Flutter: first sync, destination autocomplete, Horizon defaults](#flutter-firstsync--trips-after-sign-in-destination-autocomplete-horizon-defaults-v3482) |
@@ -2392,6 +2393,36 @@ Run: `flutter run --dart-define-from-file=env/staging.json` (staging project, ne
 ### Pass
 - Both settlements in steps 4 and 5 save with no error toast. Summary shows the debt as settled.
 - Settlement history lists both payments with Bob as payer (or recipient in step 6), not Charlie.
+
+---
+
+## STABILITY-POLISH — Failure copy, sync status, and Shares weights
+
+**Flags:** none. These are fixes on existing Core surfaces.
+
+### Steps
+1. On web, open a trip. The header sync pill reads **Saved** when nothing is queued.
+2. Turn the network off, add an expense, and confirm the pill and the offline banner say **Waiting**. Open the banner: the row is named (for example "Add expense: Dinner") and is not a raw type name.
+3. If a queued change fails, the pill reads **Failed N**. Tap it. The existing queue opens and that row has **Retry**.
+4. Add an expense with split mode **Shares**, weights 2 and 1. Save, edit the title, save again. Reopen the expense: the weights are still 2 and 1, and the balances are not an equal split.
+5. Settings → backup → Import. The screen says a second import of the same file creates duplicate trips before you restore.
+6. On Flutter, the trip header shows **Saved**, **Waiting**, or **Failed N**. Failed opens the same review sheet, and each failed row can be retried.
+7. Flutter trip rows show a destination eyebrow when a destination exists, a round stamp, a dashed rule above the footer, and money in a monospace figure.
+8. Settings → turn app lock off. The phone asks for biometrics. Cancelling leaves app lock on.
+
+### Negative checks
+- Closing a sync-conflict sheet does not keep the other device's copy. The expense stays in conflict until you choose Keep my version or Accept cloud version.
+- With the sync inspector flag off, a failed row can still be retried. Discard stays behind that flag.
+
+### Pass
+- Shares weights survive an edit.
+- Failed sync items are named and can be retried from the existing list.
+- Crash and tab-error panels say the trip data is still on the device, and the diagnostic text is only in Copy report.
+
+### Device proof (needs staging and a phone)
+- Run the Flutter staging sync suite twice: create an expense offline, flush, replay the same write, and see one server row.
+- On two phones, edit the same expense, then kill one app mid-flush. Resolve it only from the conflict sheet, which names the expense.
+- Walk create trip → add expense → who owes whom on web at desktop and phone width, and on Flutter Android.
 
 ---
 

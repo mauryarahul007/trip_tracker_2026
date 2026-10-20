@@ -160,6 +160,20 @@ class TripRow extends ConsumerWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    if ((trip.destination ?? '').trim().isNotEmpty)
+                                      Text(
+                                        (trip.destination ?? '').trim().toUpperCase(),
+                                        key: Key('trip-eyebrow-${trip.id}'),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontFamily: AppTypography.fontMono,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 0.8,
+                                          color: t.textMuted,
+                                        ),
+                                      ),
                                     Hero(
                                       tag: 'trip-title-${trip.id}',
                                       child: Material(
@@ -204,6 +218,7 @@ class TripRow extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(width: 8),
+                              _Stamp(letter: trip.name.trim().isEmpty ? '?' : trip.name.trim().characters.first.toUpperCase()),
                               if (moneyText != null)
                                 ConstrainedBox(
                                   constraints: const BoxConstraints(maxWidth: 110),
@@ -214,8 +229,10 @@ class TripRow extends ConsumerWidget {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
+                                      fontFamily: AppTypography.fontMono,
+                                      fontFeatures: AppTypography.tabularFigures,
                                       fontSize: 13,
-                                      fontWeight: FontWeight.w800,
+                                      fontWeight: FontWeight.w700,
                                       color: moneyColor ?? t.textSecondary,
                                     ),
                                   ),
@@ -225,6 +242,8 @@ class TripRow extends ConsumerWidget {
                           ),
                           if (avatarNames.isNotEmpty || trip.expenseCount > 0) ...[
                             const SizedBox(height: 10),
+                            _Dash(color: t.borderColor),
+                            const SizedBox(height: 8),
                             Row(
                               children: [
                                 _Avatars(avatarNames, size: 22, ring: t.bgSurface),
@@ -271,6 +290,55 @@ class TripRow extends ConsumerWidget {
       ),
     ),
   );
+}
+
+class _Stamp extends StatelessWidget {
+  const _Stamp({required this.letter});
+  final String letter;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Container(
+      width: 28,
+      height: 28,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: t.primaryAccent, width: 1.5),
+      ),
+      child: Text(
+        letter,
+        style: TextStyle(fontFamily: AppTypography.fontMono, fontSize: 11, fontWeight: FontWeight.w700, color: t.primaryAccent),
+      ),
+    );
+  }
+}
+
+class _Dash extends StatelessWidget {
+  const _Dash({required this.color});
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        final count = (box.maxWidth / 8).floor().clamp(1, 80);
+        return Row(
+          children: [
+            for (var i = 0; i < count; i++)
+              Expanded(
+                child: Container(
+                  height: 1.5,
+                  margin: const EdgeInsets.symmetric(horizontal: 1),
+                  color: i.isEven ? color : Colors.transparent,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _StatusPill extends StatelessWidget {

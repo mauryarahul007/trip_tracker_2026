@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.69.2',
+    date: '2026-10-20',
+    changes: [
+      'If a screen fails, the app says your trips are still on this device and lets you try again. A failed sync names the change and offers Retry.',
+      'Editing an expense that uses Shares keeps the weights. Closing a conflict no longer picks the other device’s version.',
+    ],
+  },
+  {
     version: '3.69.1',
     date: '2026-10-20',
     changes: [

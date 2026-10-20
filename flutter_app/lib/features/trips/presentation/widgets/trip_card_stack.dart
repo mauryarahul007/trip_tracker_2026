@@ -91,6 +91,10 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
   }
 
   Future<void> _fly(Offset to) async {
+    if (MediaQuery.disableAnimationsOf(context)) {
+      if (mounted) setState(() => _drag = to);
+      return;
+    }
     _from = _drag;
     _to = to;
     _flying = true;

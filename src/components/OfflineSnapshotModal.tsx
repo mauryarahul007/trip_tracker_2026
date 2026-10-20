@@ -203,7 +203,7 @@ export function OfflineSnapshotModal({
             Import Snapshot File
           </div>
           <p style={{ margin: '0 0 12px 0', fontSize: '12.5px', color: 'var(--text-muted)' }}>
-            Select a .triptracker or .json file from another device or backup.
+            Select a .triptracker or .json file from another device or backup. Importing creates new trips. Importing the same file twice creates duplicates.
           </p>
 
           <input

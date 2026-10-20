@@ -129,7 +129,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _toggleLock(bool on) async {
     final ok = await ref.read(biometricLockEnabledProvider.notifier).setEnabled(on);
-    if (!ok) _say('Biometric lock needs a device with Face ID, fingerprint or a screen lock set up.');
+    if (!ok) {
+      _say(
+        on
+            ? 'Biometric lock needs a device with Face ID, fingerprint or a screen lock set up.'
+            : 'App lock stays on until this phone confirms it is you.',
+      );
+    }
   }
 
   Future<void> _export() async {

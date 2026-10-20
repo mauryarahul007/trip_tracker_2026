@@ -111,6 +111,7 @@
   --border-radius-sm: 10px;
   --border-radius-md: 14px;
   --border-radius-lg: 20px;
+  --border-radius-pill: 9999px;
   /* Named properties, not `all`: `all` also animated width/height/padding
      changes (layout work every frame on low-end Android). */
   --transition-smooth: color 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
@@ -1000,7 +1001,7 @@ button, [role="button"], input, select, a {
   background: var(--bg-surface);
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 14px;
+  font-size: 16px;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   box-sizing: border-box;
