@@ -127,10 +127,7 @@ class _DefaultErrorViewState extends State<_DefaultErrorView> {
               const SizedBox(height: 8),
               OutlinedButton(
                 onPressed: _copy,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(44),
-                ),
+                style: OutlinedButton.styleFrom(foregroundColor: Colors.white, minimumSize: const Size.fromHeight(44)),
                 child: const Text('Copy report'),
               ),
             ],

@@ -73,8 +73,7 @@ class _SyncSheet extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         TextButton(onPressed: () => store.retry(i.id), child: Text(l10n.syncRetry)),
-                        if (inspector)
-                          TextButton(onPressed: () => store.discard(i.id), child: Text(l10n.syncDiscard)),
+                        if (inspector) TextButton(onPressed: () => store.discard(i.id), child: Text(l10n.syncDiscard)),
                       ],
                     )
                   : null,

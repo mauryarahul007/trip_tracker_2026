@@ -218,7 +218,11 @@ class TripRow extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              _Stamp(letter: trip.name.trim().isEmpty ? '?' : trip.name.trim().characters.first.toUpperCase()),
+                              _Stamp(
+                                letter: trip.name.trim().isEmpty
+                                    ? '?'
+                                    : trip.name.trim().characters.first.toUpperCase(),
+                              ),
                               if (moneyText != null)
                                 ConstrainedBox(
                                   constraints: const BoxConstraints(maxWidth: 110),
@@ -309,7 +313,12 @@ class _Stamp extends StatelessWidget {
       ),
       child: Text(
         letter,
-        style: TextStyle(fontFamily: AppTypography.fontMono, fontSize: 11, fontWeight: FontWeight.w700, color: t.primaryAccent),
+        style: TextStyle(
+          fontFamily: AppTypography.fontMono,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: t.primaryAccent,
+        ),
       ),
     );
   }
