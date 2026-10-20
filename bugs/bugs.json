@@ -8638,5 +8638,110 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-20T09:17:47.939Z",
     "resolutionNote": "Fixed in 95b1f0a (v3.69.2). Shares weights persist on edit, crash and sync failures use traveler copy with Retry, and closing a conflict no longer accepts the other device."
+  },
+  {
+    "id": "BUG-300",
+    "title": "Flutter trip-shell back arrow skips tab-trail",
+    "description": "AppBar back button in the trip detail shell called _leave() directly instead of _onBack(), bypassing the tab-trail popped by the hardware/system back gesture (PopScope).",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "flutter",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open a trip",
+      "Switch from Expenses to Ledger tab",
+      "Tap the AppBar back arrow (not system back)"
+    ],
+    "expectedBehavior": "Tapping the AppBar back arrow returns to the previous tab (Expenses), matching system/hardware back behavior.",
+    "actualBehavior": "AppBar back arrow always exited the trip straight to the trips list, ignoring tab history.",
+    "diagnostics": {},
+    "createdAt": "2026-10-20T10:42:31.331Z",
+    "updatedAt": "2026-10-20T10:44:37.230Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-20T10:44:37.229Z",
+    "resolutionNote": "trip_shell_screen.dart: AppBar back IconButton now calls _onBack() (tab-trail aware) instead of _leave(). Commit 3f27382."
+  },
+  {
+    "id": "BUG-301",
+    "title": "Web passport-card destination/name text overflow on long trip names",
+    "description": ".pp-dest and .pp-name had no overflow handling, so a long destination or trip name could wrap and collide with the reserved stamp icon area or overflow the passport card.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Create a trip with a long destination name and long trip name",
+      "View the trip card in the Trips list"
+    ],
+    "expectedBehavior": "Long text truncates with an ellipsis on one line, stamp icon stays clear.",
+    "actualBehavior": "Text could wrap onto multiple lines and collide with the top-right stamp badge.",
+    "diagnostics": {},
+    "createdAt": "2026-10-20T10:42:32.683Z",
+    "updatedAt": "2026-10-20T10:44:38.092Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-20T10:44:38.091Z",
+    "resolutionNote": "index.css: added overflow:hidden; text-overflow:ellipsis; white-space:nowrap to .pp-dest and .pp-name. Commit 3f27382."
+  },
+  {
+    "id": "BUG-302",
+    "title": "Flutter chat tab empty state inconsistent with other tabs",
+    "description": "Chat tab showed a bare centered Text for the empty state while every other trip tab (trips list, expenses, notes) uses the shared EmptyState widget.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "flutter",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open a new trip with no chat messages",
+      "View the Chat tab"
+    ],
+    "expectedBehavior": "Chat empty state uses the same EmptyState widget/styling as other tabs.",
+    "actualBehavior": "Chat showed only plain text, no shared empty-state treatment.",
+    "diagnostics": {},
+    "createdAt": "2026-10-20T10:42:34.751Z",
+    "updatedAt": "2026-10-20T10:44:38.557Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-20T10:44:38.556Z",
+    "resolutionNote": "chat_pane.dart: empty state now uses shared EmptyState widget (plain mode) instead of a bare Text. Commit 3f27382."
+  },
+  {
+    "id": "BUG-303",
+    "title": "Flutter AnimatedNumber and ConfettiBurst ignore reduced-motion setting",
+    "description": "AnimatedNumber's TweenAnimationBuilder and ConfettiBurst's particle animation did not consult AppMotion/MediaQuery.disableAnimationsOf, so they kept animating when the OS or in-app reduced-motion setting was on.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "flutter",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Enable Reduce Motion (OS accessibility setting) or the app's enableReduceMotion flag",
+      "Trigger a balance counter update or a settlement celebration"
+    ],
+    "expectedBehavior": "Numbers jump straight to their final value and no confetti particle sweep plays.",
+    "actualBehavior": "Numeric count-up animation and confetti particle burst played at full motion regardless of the setting.",
+    "diagnostics": {},
+    "createdAt": "2026-10-20T10:42:37.185Z",
+    "updatedAt": "2026-10-20T10:44:39.004Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-20T10:44:39.004Z",
+    "resolutionNote": "animated_number.dart and confetti_burst.dart now route their animation duration through AppMotion.of(context, ...), collapsing to instant/no-op under reduced motion. Commit 3f27382."
   }
 ]

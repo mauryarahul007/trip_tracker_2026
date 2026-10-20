@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+
+import '../../core/platform/motion.dart';
 
 /// A lightweight confetti particle burst for celebrating settlements and achievements.
 class ConfettiBurst extends StatefulWidget {
@@ -25,13 +28,14 @@ class ConfettiBurstState extends State<ConfettiBurst> with SingleTickerProviderS
 
     if (widget.playOnStart) {
       _initParticles();
-      _controller.forward();
+      unawaited(_controller.animateTo(1, duration: AppMotion.of(context, _controller.duration!)));
     }
   }
 
   void play() {
     _initParticles();
-    _controller.forward(from: 0.0);
+    _controller.value = 0.0;
+    unawaited(_controller.animateTo(1, duration: AppMotion.of(context, _controller.duration!)));
   }
 
   void _initParticles() {

@@ -6269,6 +6269,9 @@ input:checked + .toggle-slider:before {
   text-transform: uppercase;
   color: var(--text-muted);
   padding-right: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .pp-name {
   font-family: var(--font-family-title);
@@ -6278,6 +6281,9 @@ input:checked + .toggle-slider:before {
   margin-top: 3px;
   line-height: 1.2;
   padding-right: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .pp-meta {
   font-family: var(--font-family-mono);

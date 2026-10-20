@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/platform/motion.dart';
 import '../theme/app_typography.dart';
 
 /// Smoothly animates numeric transitions for currency values, counters, and statistics.
@@ -31,7 +32,7 @@ class AnimatedNumber extends StatelessWidget {
 
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0.0, end: value),
-      duration: duration,
+      duration: AppMotion.of(context, duration),
       curve: curve,
       builder: (context, val, _) {
         final formatted = val.toStringAsFixed(decimalPlaces);

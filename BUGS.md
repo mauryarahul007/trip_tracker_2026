@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **297** | All recorded bugs across sessions |
+| **Total Tracked** | **301** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **270** | Verified & closed |
+| **✅ Resolved** | **274** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -301,6 +301,10 @@
 | **BUG-297** | Members list showed owed/owes for members of a settled group | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit a7f3659 (v3.68.5): memberBalancesForDisplay zeroes members of a square group on Members. |
 | **BUG-298** | Scrolling Expenses toward Settlements triggered pull-to-refresh | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commits 892dbbc and cc0135c (v3.69.1): usePullToRefresh resets anchor each touchstart, only arms gestures starting at scrollTop 0, higher thresholds and damping. cc0135c adds the missing 3.69.1 changelog entry that failed CI. |
 | **BUG-299** | Shares edit dropped weights and failures spoke to developers | `splits-math` | `high` | `claude-cli` | `claude-cli` | Fixed in 95b1f0a (v3.69.2). Shares weights persist on edit, crash and sync failures use traveler copy with Retry, and closing a conflict no longer accepts the other device. |
+| **BUG-300** | Flutter trip-shell back arrow skips tab-trail | `navigation` | `medium` | `claude-cli` | `claude-cli` | trip_shell_screen.dart: AppBar back IconButton now calls _onBack() (tab-trail aware) instead of _leave(). Commit 3f27382. |
+| **BUG-301** | Web passport-card destination/name text overflow on long trip names | `ui-ux` | `low` | `claude-cli` | `claude-cli` | index.css: added overflow:hidden; text-overflow:ellipsis; white-space:nowrap to .pp-dest and .pp-name. Commit 3f27382. |
+| **BUG-302** | Flutter chat tab empty state inconsistent with other tabs | `ui-ux` | `low` | `claude-cli` | `claude-cli` | chat_pane.dart: empty state now uses shared EmptyState widget (plain mode) instead of a bare Text. Commit 3f27382. |
+| **BUG-303** | Flutter AnimatedNumber and ConfettiBurst ignore reduced-motion setting | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | animated_number.dart and confetti_burst.dart now route their animation duration through AppMotion.of(context, ...), collapsing to instant/no-op under reduced motion. Commit 3f27382. |
 
 ---
 

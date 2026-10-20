@@ -202,7 +202,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
         maxContentWidth: null,
         appBar: AppBar(
           // Bento: the app bar sits on the ground colour with an ink title; the theme supplies both.
-          leading: IconButton(tooltip: l10n.actionBack, icon: const Icon(AppIcons.back, size: 20), onPressed: _leave),
+          leading: IconButton(tooltip: l10n.actionBack, icon: const Icon(AppIcons.back, size: 20), onPressed: _onBack),
           title: _TripTitle(tripId: widget.tripId, tab: currentTab.name),
           actions: cleanBar
               ? [

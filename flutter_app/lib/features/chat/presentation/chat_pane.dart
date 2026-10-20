@@ -14,6 +14,7 @@ import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/ask_text.dart';
+import '../../../shared/widgets/empty_state.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../../expenses/presentation/widgets/expense_detail_sheet.dart';
 import '../../travel/presentation/live_location_chat_banner.dart';
@@ -87,7 +88,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
           ),
         Expanded(
           child: messages.isEmpty
-              ? Center(child: Text(l10n.chatEmpty))
+              ? EmptyState(title: l10n.chatEmpty, subtitle: '', plain: true)
               : ListView.builder(
                   key: const Key('chat-list'),
                   controller: _scroll,
