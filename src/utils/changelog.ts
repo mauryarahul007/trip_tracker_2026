@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.69.3',
+    date: '2026-10-20',
+    changes: [
+      'The back arrow inside a trip now retraces the tabs you visited before leaving the trip.',
+      'Long destinations and trip names on passport cards are cut off with an ellipsis instead of colliding with the stamp.',
+      'The Chat tab’s empty state matches the other tabs. Counters and confetti respect Reduce Motion.',
+    ],
+  },
+  {
     version: '3.69.2',
     date: '2026-10-20',
     changes: [

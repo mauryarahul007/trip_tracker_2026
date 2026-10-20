@@ -8,6 +8,18 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.69.3', '2026-10-20', [
+    'The back arrow inside a trip now retraces the tabs you visited before leaving the trip.',
+    'Long destinations and trip names on passport cards are cut off with an ellipsis instead of colliding with the stamp.',
+    'The Chat tab’s empty state matches the other tabs. Counters and confetti respect Reduce Motion.',
+  ]),
+  ChangelogEntry('3.69.2', '2026-10-20', [
+    'If a screen fails, the app says your trips are still on this device and lets you try again. A failed sync names the change and offers Retry.',
+    'Editing an expense that uses Shares keeps the weights. Closing a conflict no longer picks the other device’s version.',
+  ]),
+  ChangelogEntry('3.69.1', '2026-10-20', [
+    'Scrolling down the Expenses tab to reach Settlements no longer triggers a pull-to-refresh. A refresh now needs a deliberate pull from the very top.',
+  ]),
   ChangelogEntry('3.69.0', '2026-10-19', [
     'Behind the scenes: the Flutter app now lives on the main branch next to the web app. A push to main still deploys the website, and a green build of the Flutter app is published as an installable Android APK.',
   ]),
@@ -39,14 +51,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.66.1', '2026-10-19', [
     'Behind the scenes: the Flutter Notes and Checklist panes show one Add button (the floating one) instead of two, and each collapsed day on Expenses is a clear card with a large bold total and the number of expenses.',
-  ]),
-  ChangelogEntry('3.66.0', '2026-10-19', [
-    'Behind the scenes: the Flutter app has cleaner Expenses rows and day headers, Notes cards you can pin or delete (with Undo) and a count on the tab, Members tiles with role and balance chips and a search box on bigger trips, and a menu to edit or delete travel passes. The Groups / People switch under Who paid now only changes that card, not Who pays whom.',
-  ]),
-  ChangelogEntry('3.65.0', '2026-10-19', [
-    'Behind the scenes: the Flutter Balances tab replaces the To receive / To pay tiles with one You paid / Your share / Difference strip (tap it to see which expenses move your balance), and saving an expense offline now says it is saved on your phone and will sync later.',
-  ]),
-  ChangelogEntry('3.63.0', '2026-10-18', [
-    'Behind the scenes: the Flutter app drops the banner and status row under the trip name and gathers Share, Route map and settings into one More menu (sync shows as a small icon only when needed), adds quick Add item / Add note / Add member buttons, folds Trip numbers away on the Summary until opened, shows a Jump to today chip, recent-amount chips on the expense form, friendlier empty Notes and checklist, skeleton loaders, a High contrast option, a Haptics setting and consistent bottom sheets. The Who paid list now says Their part instead of Share. No change to the web app.',
   ]),
 ];
