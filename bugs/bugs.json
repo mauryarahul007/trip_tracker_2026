@@ -8586,5 +8586,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-19T17:15:19.806Z",
     "resolutionNote": "Fixed in commit a7f3659 (v3.68.5): memberBalancesForDisplay zeroes members of a square group on Members."
+  },
+  {
+    "id": "BUG-298",
+    "title": "Scrolling Expenses toward Settlements triggered pull-to-refresh",
+    "description": "Scrolling Expenses toward Settlements triggered pull-to-refresh",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-20T03:08:32.716Z",
+    "updatedAt": "2026-10-20T03:08:36.485Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-20T03:08:36.485Z",
+    "resolutionNote": "Fixed in commit 892dbbc (v3.69.1): usePullToRefresh resets anchor each touchstart, only arms gestures starting at scrollTop 0, higher thresholds and damping."
   }
 ]
