@@ -299,7 +299,7 @@
 | **BUG-295** | Per person view showed NOT SETTLED after settling with Fewest payments | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Fixed in commit b18b0eb (v3.68.3): Per person returns no transfers when all balances are square; pass amount from real balances. |
 | **BUG-296** | Group settled but Per person still showed payments to make | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Fixed in commit b995240 (v3.68.4): Per person checks settlement nodes (a group is one party); all square means no transfers. |
 | **BUG-297** | Members list showed owed/owes for members of a settled group | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit a7f3659 (v3.68.5): memberBalancesForDisplay zeroes members of a square group on Members. |
-| **BUG-298** | Scrolling Expenses toward Settlements triggered pull-to-refresh | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 892dbbc (v3.69.1): usePullToRefresh resets anchor each touchstart, only arms gestures starting at scrollTop 0, higher thresholds and damping. |
+| **BUG-298** | Scrolling Expenses toward Settlements triggered pull-to-refresh | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commits 892dbbc and cc0135c (v3.69.1): usePullToRefresh resets anchor each touchstart, only arms gestures starting at scrollTop 0, higher thresholds and damping. cc0135c adds the missing 3.69.1 changelog entry that failed CI. |
 
 ---
 

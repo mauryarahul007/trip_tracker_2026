@@ -8608,9 +8608,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-10-20T03:08:32.716Z",
-    "updatedAt": "2026-10-20T03:08:36.485Z",
+    "updatedAt": "2026-10-20T03:27:46.202Z",
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-20T03:08:36.485Z",
-    "resolutionNote": "Fixed in commit 892dbbc (v3.69.1): usePullToRefresh resets anchor each touchstart, only arms gestures starting at scrollTop 0, higher thresholds and damping."
+    "resolutionNote": "Fixed in commits 892dbbc and cc0135c (v3.69.1): usePullToRefresh resets anchor each touchstart, only arms gestures starting at scrollTop 0, higher thresholds and damping. cc0135c adds the missing 3.69.1 changelog entry that failed CI."
   }
 ]
