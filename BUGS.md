@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **296** | All recorded bugs across sessions |
+| **Total Tracked** | **297** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **269** | Verified & closed |
+| **✅ Resolved** | **270** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -300,6 +300,7 @@
 | **BUG-296** | Group settled but Per person still showed payments to make | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Fixed in commit b995240 (v3.68.4): Per person checks settlement nodes (a group is one party); all square means no transfers. |
 | **BUG-297** | Members list showed owed/owes for members of a settled group | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit a7f3659 (v3.68.5): memberBalancesForDisplay zeroes members of a square group on Members. |
 | **BUG-298** | Scrolling Expenses toward Settlements triggered pull-to-refresh | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commits 892dbbc and cc0135c (v3.69.1): usePullToRefresh resets anchor each touchstart, only arms gestures starting at scrollTop 0, higher thresholds and damping. cc0135c adds the missing 3.69.1 changelog entry that failed CI. |
+| **BUG-299** | Shares edit dropped weights and failures spoke to developers | `splits-math` | `high` | `claude-cli` | `claude-cli` | Fixed in 95b1f0a (v3.69.2). Shares weights persist on edit, crash and sync failures use traveler copy with Retry, and closing a conflict no longer accepts the other device. |
 
 ---
 

@@ -8612,5 +8612,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-20T03:08:36.485Z",
     "resolutionNote": "Fixed in commits 892dbbc and cc0135c (v3.69.1): usePullToRefresh resets anchor each touchstart, only arms gestures starting at scrollTop 0, higher thresholds and damping. cc0135c adds the missing 3.69.1 changelog entry that failed CI."
+  },
+  {
+    "id": "BUG-299",
+    "title": "Shares edit dropped weights and failures spoke to developers",
+    "description": "Shares edit dropped weights and failures spoke to developers",
+    "severity": "high",
+    "category": "splits-math",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-20T09:17:25.048Z",
+    "updatedAt": "2026-10-20T09:17:47.940Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-20T09:17:47.939Z",
+    "resolutionNote": "Fixed in 95b1f0a (v3.69.2). Shares weights persist on edit, crash and sync failures use traveler copy with Retry, and closing a conflict no longer accepts the other device."
   }
 ]
