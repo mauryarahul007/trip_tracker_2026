@@ -8743,5 +8743,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-20T10:44:39.004Z",
     "resolutionNote": "animated_number.dart and confetti_burst.dart now route their animation duration through AppMotion.of(context, ...), collapsing to instant/no-op under reduced motion. Commit 3f27382."
+  },
+  {
+    "id": "BUG-304",
+    "title": "Flutter sync conflict sheet only compared amount and date",
+    "description": "Flutter sync conflict sheet only compared amount and date",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-20T12:40:38.596Z",
+    "updatedAt": "2026-10-20T12:40:43.648Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-20T12:40:43.647Z",
+    "resolutionNote": "conflict_sheet.dart: replaced the amount/date cards with a field table (Amount, Date, Title, Category, Paid by, Split) that lists only differing fields and collapses the rest; Keep mine/Keep theirs use one button style; removed hardcoded English sentence. Commit 0804547."
   }
 ]

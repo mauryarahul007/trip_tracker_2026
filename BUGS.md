@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **301** | All recorded bugs across sessions |
+| **Total Tracked** | **302** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **274** | Verified & closed |
+| **✅ Resolved** | **275** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -305,6 +305,7 @@
 | **BUG-301** | Web passport-card destination/name text overflow on long trip names | `ui-ux` | `low` | `claude-cli` | `claude-cli` | index.css: added overflow:hidden; text-overflow:ellipsis; white-space:nowrap to .pp-dest and .pp-name. Commit 3f27382. |
 | **BUG-302** | Flutter chat tab empty state inconsistent with other tabs | `ui-ux` | `low` | `claude-cli` | `claude-cli` | chat_pane.dart: empty state now uses shared EmptyState widget (plain mode) instead of a bare Text. Commit 3f27382. |
 | **BUG-303** | Flutter AnimatedNumber and ConfettiBurst ignore reduced-motion setting | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | animated_number.dart and confetti_burst.dart now route their animation duration through AppMotion.of(context, ...), collapsing to instant/no-op under reduced motion. Commit 3f27382. |
+| **BUG-304** | Flutter sync conflict sheet only compared amount and date | `ui-ux` | `low` | `claude-cli` | `claude-cli` | conflict_sheet.dart: replaced the amount/date cards with a field table (Amount, Date, Title, Category, Paid by, Split) that lists only differing fields and collapses the rest; Keep mine/Keep theirs use one button style; removed hardcoded English sentence. Commit 0804547. |
 
 ---
 
