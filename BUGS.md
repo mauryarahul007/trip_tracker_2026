@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **302** | All recorded bugs across sessions |
+| **Total Tracked** | **305** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **275** | Verified & closed |
+| **✅ Resolved** | **278** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -306,6 +306,9 @@
 | **BUG-302** | Flutter chat tab empty state inconsistent with other tabs | `ui-ux` | `low` | `claude-cli` | `claude-cli` | chat_pane.dart: empty state now uses shared EmptyState widget (plain mode) instead of a bare Text. Commit 3f27382. |
 | **BUG-303** | Flutter AnimatedNumber and ConfettiBurst ignore reduced-motion setting | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | animated_number.dart and confetti_burst.dart now route their animation duration through AppMotion.of(context, ...), collapsing to instant/no-op under reduced motion. Commit 3f27382. |
 | **BUG-304** | Flutter sync conflict sheet only compared amount and date | `ui-ux` | `low` | `claude-cli` | `claude-cli` | conflict_sheet.dart: replaced the amount/date cards with a field table (Amount, Date, Title, Category, Paid by, Split) that lists only differing fields and collapses the rest; Keep mine/Keep theirs use one button style; removed hardcoded English sentence. Commit 0804547. |
+| **BUG-305** | Flutter deck Add expense button hidden behind the runway dock | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | trip_card_stack.dart: quick-add button moved inside the card area so the floating runway dock no longer covers it. Commit 3442fa1. |
+| **BUG-306** | Flutter new-expense form errors shown at the end of the scrolling form, out of view | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | expense_form_screen.dart: error banner moved into a pinned strip above Save; expense_form_controller.dart showError() so Save and add another on an untouched form says First add an expense. Commit 3442fa1. |
+| **BUG-307** | Flutter Save and add another confirmation snackbar covers the button | `ui-ux` | `low` | `claude-cli` | `claude-cli` | expense_form_screen.dart: the Saved snackbar is now an inline notice in the pinned strip, so it cannot cover Save and add another. Commit 3442fa1. |
 
 ---
 

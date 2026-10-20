@@ -8769,5 +8769,83 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-20T12:40:43.647Z",
     "resolutionNote": "conflict_sheet.dart: replaced the amount/date cards with a field table (Amount, Date, Title, Category, Paid by, Split) that lists only differing fields and collapses the rest; Keep mine/Keep theirs use one button style; removed hardcoded English sentence. Commit 0804547."
+  },
+  {
+    "id": "BUG-305",
+    "title": "Flutter deck Add expense button hidden behind the runway dock",
+    "description": "Flutter deck Add expense button hidden behind the runway dock",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-20T14:21:59.887Z",
+    "updatedAt": "2026-10-20T14:22:06.866Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-20T14:22:06.865Z",
+    "resolutionNote": "trip_card_stack.dart: quick-add button moved inside the card area so the floating runway dock no longer covers it. Commit 3442fa1."
+  },
+  {
+    "id": "BUG-306",
+    "title": "Flutter new-expense form errors shown at the end of the scrolling form, out of view",
+    "description": "Flutter new-expense form errors shown at the end of the scrolling form, out of view",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-20T14:22:00.134Z",
+    "updatedAt": "2026-10-20T14:22:07.089Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-20T14:22:07.088Z",
+    "resolutionNote": "expense_form_screen.dart: error banner moved into a pinned strip above Save; expense_form_controller.dart showError() so Save and add another on an untouched form says First add an expense. Commit 3442fa1."
+  },
+  {
+    "id": "BUG-307",
+    "title": "Flutter Save and add another confirmation snackbar covers the button",
+    "description": "Flutter Save and add another confirmation snackbar covers the button",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-20T14:22:00.356Z",
+    "updatedAt": "2026-10-20T14:22:07.305Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-20T14:22:07.305Z",
+    "resolutionNote": "expense_form_screen.dart: the Saved snackbar is now an inline notice in the pinned strip, so it cannot cover Save and add another. Commit 3442fa1."
   }
 ]
