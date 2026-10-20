@@ -1673,7 +1673,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String syncLineSyncing(int count) {
-    return count < 0 ? 'Waiting' : 'Waiting';
+    return 'Waiting';
   }
 
   @override
@@ -2040,6 +2040,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get conflictEmpty => 'No conflicts to resolve.';
+
+  @override
+  String get conflictFieldAmount => 'Amount';
+
+  @override
+  String get conflictFieldDate => 'Date';
+
+  @override
+  String get conflictFieldTitle => 'Title';
+
+  @override
+  String get conflictFieldCategory => 'Category';
+
+  @override
+  String get conflictFieldPaidBy => 'Paid by';
+
+  @override
+  String get conflictFieldSplit => 'Split';
+
+  @override
+  String conflictSameFields(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count other fields are the same',
+      one: '1 other field is the same',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get upiPay => 'Pay with UPI';

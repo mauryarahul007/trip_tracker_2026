@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-20 | unreleased | CONFLICT-DIFF | [Sync conflict sheet shows what changed](#conflict-diff--sync-conflict-sheet-shows-what-changed) |
 | 2026-10-20 | 3.69.2 | STABILITY-POLISH | [Failure copy, sync status, Shares weights](#stability-polish--failure-copy-sync-status-and-shares-weights) |
 | 2026-10-20 | 3.69.1 | PTR-SCROLL | [Scrolling no longer triggers pull-to-refresh](#ptr-scroll--scrolling-no-longer-triggers-pull-to-refresh) |
 | 2026-10-19 | 3.68.1 | SETTLE-GROUP-RLS | [Second partial group settlement no longer fails](#settle-group-rls--second-partial-group-settlement-no-longer-fails) |
@@ -3473,3 +3474,17 @@ Then add a row to the **Index** table.
 5. Pull down only about 40px and release. Pass: indicator springs back, no refresh.
 6. Pull diagonally. Pass: no refresh.
 7. Repeat steps 4 and 5 on the Trips list. Pass: same behavior.
+
+## CONFLICT-DIFF — Sync conflict sheet shows what changed
+
+**Version:** unreleased · **Flags:** none (UX fix on an existing surface) · **Device:** two devices, or one phone plus the web app, on the same trip.
+
+1. On device A, go offline and change an expense's amount (say 90 to 60) and its category.
+2. On device B, change the same expense's amount (90 to 40) and who paid, then let it sync.
+3. Bring device A online, open the trip, then open the sync conflict sheet (Ledger or Expenses banner).
+4. Pass: only the changed fields are listed (Amount, Category, Paid by), bold on a yellow tint, with "On this phone" and "On the server" columns. A line reads "3 other fields are the same" for Date, Title and Split.
+5. Pass: **Keep mine** and **Keep theirs** look identical in weight; neither is pre-emphasised.
+6. Tap **Keep theirs**. Pass: the expense shows the server values and the conflict disappears. Repeat with **Keep mine** on a second conflict. Pass: local values stay and the conflict disappears.
+7. Pass: the sentence "<title> changed on another device…" no longer appears under each expense title; only the sheet intro does.
+
+**Negative checks:** an expense with no conflict never shows the sheet ("No conflicts to resolve." if opened directly). Nothing in Settings or the Ops Deck changes.

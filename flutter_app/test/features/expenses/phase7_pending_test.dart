@@ -83,6 +83,23 @@ void main() {
     expect(c.read(conflictStoreProvider)[s.tripId] ?? const <ExpenseConflict>[], isEmpty);
   });
 
+  testApp('conflict sheet lists the edited field and collapses the rest', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    final id = await addExpense(tester, s, title: 'Beach lunch', amount: 90);
+    final c = containerOf(tester);
+    final local = (await real(tester, () => c.read(expenseRepositoryProvider).watchActive(s.tripId).first)).single;
+    final server = local.copyWith(amount: 40, updatedAt: local.updatedAt + 1);
+    c.read(conflictStoreProvider.notifier).setForTrip(s.tripId, [ExpenseConflict(id, local, server, 'updateExpense')]);
+    await openLedger(tester, s);
+    await centre(tester, key('open-conflicts'));
+    await tester.tap(key('open-conflicts'));
+    await settle(tester, rounds: 4);
+    expect(find.text('Amount'), findsOneWidget);
+    expect(find.text('Category'), findsNothing);
+    expect(find.text('5 other fields are the same'), findsOneWidget);
+  });
+
   testApp('close out locks the trip after the end date', (tester) async {
     await pumpApp(tester, user: asha, overrides: [nowProvider.overrideWithValue(() => DateTime(2026, 10, 20))]);
     final s = await seedTrip(tester);

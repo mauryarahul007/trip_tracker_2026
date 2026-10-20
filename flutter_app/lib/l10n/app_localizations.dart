@@ -3631,6 +3631,48 @@ abstract class AppLocalizations {
   /// **'No conflicts to resolve.'**
   String get conflictEmpty;
 
+  /// No description provided for @conflictFieldAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get conflictFieldAmount;
+
+  /// No description provided for @conflictFieldDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get conflictFieldDate;
+
+  /// No description provided for @conflictFieldTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get conflictFieldTitle;
+
+  /// No description provided for @conflictFieldCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get conflictFieldCategory;
+
+  /// No description provided for @conflictFieldPaidBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid by'**
+  String get conflictFieldPaidBy;
+
+  /// No description provided for @conflictFieldSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Split'**
+  String get conflictFieldSplit;
+
+  /// No description provided for @conflictSameFields.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 other field is the same} other{{count} other fields are the same}}'**
+  String conflictSameFields(int count);
+
   /// No description provided for @upiPay.
   ///
   /// In en, this message translates to:

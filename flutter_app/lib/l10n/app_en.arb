@@ -1052,6 +1052,18 @@
   "conflictLocal": "On this phone",
   "conflictServer": "On the server",
   "conflictEmpty": "No conflicts to resolve.",
+  "conflictFieldAmount": "Amount",
+  "conflictFieldDate": "Date",
+  "conflictFieldTitle": "Title",
+  "conflictFieldCategory": "Category",
+  "conflictFieldPaidBy": "Paid by",
+  "conflictFieldSplit": "Split",
+  "conflictSameFields": "{count, plural, =1{1 other field is the same} other{{count} other fields are the same}}",
+  "@conflictSameFields": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "upiPay": "Pay with UPI",
   "upiHint": "Payee UPI id",
   "upiInvalid": "Enter a UPI id like name@bank.",
