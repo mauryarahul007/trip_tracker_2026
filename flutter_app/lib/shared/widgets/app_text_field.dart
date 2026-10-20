@@ -81,7 +81,7 @@ class _AppTextFieldState extends State<AppTextField> {
           style: TextStyle(fontSize: 16, color: tokens.textPrimary),
           decoration: InputDecoration(
             hintText: widget.hintText ?? widget.hint,
-            hintStyle: TextStyle(color: tokens.textMuted, fontSize: 15),
+            hintStyle: TextStyle(color: tokens.textMuted, fontSize: 16),
             errorText: widget.errorText,
             errorStyle: TextStyle(color: tokens.colorDanger, fontSize: 12),
             prefixIcon: widget.prefixIcon,

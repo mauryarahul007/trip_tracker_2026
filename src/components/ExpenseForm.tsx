@@ -19,6 +19,7 @@ import {
 import { captureCurrentExpenseLocation, detectCurrencyFromLocation } from '../utils/geolocation';
 import { isMemberPresentOnDate } from '../utils/memberDateRange';
 import { useTripStore, getOrderedCategories } from '../store/tripStore';
+import { splitConfigForSave } from '../utils/splitConfigForSave';
 import { triggerHaptic } from '../utils/haptics';
 import { convertCurrency, POPULAR_CURRENCIES } from '../utils/currencyConverter';
 import { parseReceiptText, type ExtractedReceiptData } from '../utils/receiptOcr';
@@ -937,12 +938,13 @@ export function ExpenseForm({
 
     setFormError('');
 
-    const finalSplitConfig: Record<string, number> = {};
-    if (splitMode === 'percentage' || splitMode === 'exact') {
+    const numberedConfig: Record<string, number> = {};
+    if (splitMode === 'percentage' || splitMode === 'exact' || splitMode === 'custom') {
       splitSelectedIds.forEach((id) => {
-        finalSplitConfig[id] = parseFloat(splitConfig[id] || '') || 0;
+        numberedConfig[id] = parseFloat(splitConfig[id] || '') || 0;
       });
     }
+    const finalSplitConfig = splitConfigForSave(splitMode, numberedConfig, editingExpense?.splitConfig);
 
     setIsSubmitting(true);
     try {
@@ -1015,7 +1017,7 @@ export function ExpenseForm({
         paidByShares: finalPaidByShares,
         splitMode,
         splitMemberIds: splitSelectedIds,
-        splitConfig: Object.keys(finalSplitConfig).length > 0 ? finalSplitConfig : undefined,
+        splitConfig: finalSplitConfig,
         itemizedConfig: finalItemizedConfig,
         receiptImage: receiptImage || undefined,
         location: location || null,
@@ -1030,16 +1032,10 @@ export function ExpenseForm({
           trip?.id &&
           useTripStore.getState().isFeatureEnabled('enableRememberDefaultSplit', { tripId: trip.id })
         ) {
-          const rememberedConfig: Record<string, number> = {};
-          if (splitMode === 'percentage' || splitMode === 'exact') {
-            splitSelectedIds.forEach((id) => {
-              rememberedConfig[id] = parseFloat(splitConfig[id] || '') || 0;
-            });
-          }
           saveDefaultSplit(trip.id, {
             splitMode,
             splitMemberIds: splitSelectedIds,
-            splitConfig: Object.keys(rememberedConfig).length > 0 ? rememberedConfig : undefined,
+            splitConfig: finalSplitConfig,
           });
         }
       }

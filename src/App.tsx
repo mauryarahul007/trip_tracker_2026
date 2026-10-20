@@ -914,6 +914,7 @@ export default function App() {
   const syncQueue = useTripStore((s) => s.syncQueue);
   const dirtyExpenseIds = useMemo(() => collectDirtyExpenseIds(syncQueue), [syncQueue]);
   const pendingConflicts = useTripStore((s) => s.pendingConflicts);
+  const [snoozedConflictId, setSnoozedConflictId] = useState<string | null>(null);
   const conflictExpenseIds = useMemo(
     () => new Set(pendingConflicts.map((c) => c.expenseId)),
     [pendingConflicts]
@@ -921,7 +922,6 @@ export default function App() {
   const resolveConflictKeepLocal = useTripStore((s) => s.resolveConflictKeepLocal);
   const resolveConflictAcceptServer = useTripStore((s) => s.resolveConflictAcceptServer);
   const sessionExpired = useTripStore((s) => s.sessionExpired);
-  const lastBackendSyncedAt = useTripStore((s) => s.lastBackendSyncedAt);
   const processQueue = useTripStore((s) => s.processQueue);
   const refreshActiveTripExpenses = useTripStore((s) => s.refreshActiveTripExpenses);
 
@@ -1158,31 +1158,32 @@ export default function App() {
   // 4. 'out-of-sync': Local changes in queue that couldn't be sent.
   // 5. 'synced': Connected and up-to-date.
   type SyncStatus = 'offline' | 'syncing' | 'session-expired' | 'out-of-sync' | 'synced';
+  const failedSyncCount = syncQueue.filter((item) => item.lastError || item.needsAttention).length;
   const syncStatus: SyncStatus = useMemo(() => {
+    if (failedSyncCount > 0) return 'out-of-sync';
     if (!isOnline) return 'offline';
     if (isSyncing) return 'syncing';
     if (sessionExpired) return 'session-expired';
     if (syncQueue.length > 0) return 'out-of-sync';
     return 'synced';
-  }, [isOnline, isSyncing, sessionExpired, syncQueue.length]);
+  }, [isOnline, isSyncing, sessionExpired, syncQueue.length, failedSyncCount]);
 
   const syncStatusLabel = useMemo(() => {
-    if (syncStatus === 'offline') return syncQueue.length > 0 ? `Offline (${syncQueue.length} queued)` : 'Offline';
-    if (syncStatus === 'syncing') return 'Syncing…';
+    if (failedSyncCount > 0) return `Failed ${failedSyncCount}`;
+    if (syncStatus === 'offline') return syncQueue.length > 0 ? 'Waiting' : 'Saved';
+    if (syncStatus === 'syncing' || syncStatus === 'out-of-sync') return 'Waiting';
     if (syncStatus === 'session-expired') return 'Session expired';
-    if (syncStatus === 'out-of-sync') return `Out of sync (${syncQueue.length})`;
-    if (!lastBackendSyncedAt) return 'Synced';
-    const diffMins = Math.floor((Date.now() - lastBackendSyncedAt) / 60000);
-    if (diffMins < 1) return 'Synced just now';
-    if (diffMins < 60) return `Synced ${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `Synced ${diffHours}h ago`;
-    return 'Synced';
-  }, [syncStatus, syncQueue.length, lastBackendSyncedAt]);
+    return 'Saved';
+  }, [syncStatus, syncQueue.length, failedSyncCount]);
 
   const handleSyncClick = async () => {
     if (syncStatus === 'session-expired') {
       signOut();
+      return;
+    }
+    if (failedSyncCount > 0) {
+      triggerHaptic('light');
+      window.dispatchEvent(new Event('tt-open-sync-drawer'));
       return;
     }
     if (!isOnline || isSyncing) return;
@@ -2697,15 +2698,15 @@ export default function App() {
                 onClick={handleSyncClick}
                 disabled={syncStatus === 'offline'}
                 title={
-                  syncStatus === 'offline'
-                    ? "No connection — changes are saved on this device and will sync once you're back online."
-                    : syncStatus === 'syncing'
-                    ? 'Syncing changes with cloud server…'
+                  failedSyncCount > 0
+                    ? 'Some changes did not sync. Tap to review and retry.'
+                    : syncStatus === 'offline'
+                    ? 'No connection. Changes stay on this device until you are back online.'
+                    : syncStatus === 'syncing' || syncStatus === 'out-of-sync'
+                    ? 'Changes are waiting to sync.'
                     : syncStatus === 'session-expired'
                     ? 'Your session expired. Tap to sign in again.'
-                    : syncStatus === 'out-of-sync'
-                    ? 'Local changes not yet synced with the server. Tap to sync now.'
-                    : `Last synced: ${syncStatusLabel}`
+                    : 'Saved'
                 }
                 aria-label={`Backend Sync Status: ${syncStatusLabel}`}
                 aria-live="polite"
@@ -3014,6 +3015,7 @@ export default function App() {
                   onOpenSmartQuickAdd={isFeatureEnabled('enableVoiceInput') ? handleOpenSmartQuickAdd : undefined}
                   dirtyExpenseIds={dirtyExpenseIds}
                   conflictExpenseIds={conflictExpenseIds}
+                  onReviewConflict={() => setSnoozedConflictId(null)}
                 />
                 </div>
                 </TabErrorBoundary>
@@ -3477,7 +3479,7 @@ export default function App() {
         </Suspense>
       )}
 
-      {pendingConflicts.length > 0 && activeTrip && (
+      {pendingConflicts.length > 0 && activeTrip && snoozedConflictId !== pendingConflicts[0].expenseId && (
         <Suspense fallback={<SheetSkeleton />}>
           <ConflictResolverModal
             localExpense={pendingConflicts[0].local}
@@ -3485,7 +3487,7 @@ export default function App() {
             currency={activeTrip.baseCurrency}
             onKeepLocal={() => void resolveConflictKeepLocal(pendingConflicts[0].expenseId)}
             onAcceptServer={() => resolveConflictAcceptServer(pendingConflicts[0].expenseId)}
-            onClose={() => resolveConflictAcceptServer(pendingConflicts[0].expenseId)}
+            onClose={() => setSnoozedConflictId(pendingConflicts[0].expenseId)}
           />
         </Suspense>
       )}

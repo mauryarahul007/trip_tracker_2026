@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { IconSearch, IconEdit, IconAlertCircle, IconClose, IconCalendar, IconChevronRight, IconFilter, IconCamera, IconFlag, IconClock, IconSync, IconMapPin, IconMic } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
+import { QuietStatus } from './QuietStatus';
 import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol, formatAmount, formatMoneyNumber } from '../utils/currency';
 import { convertCurrency } from '../utils/currencyConverter';
@@ -125,6 +126,7 @@ type Props = {
   onOpenSmartQuickAdd?: (autoListen?: boolean) => void;
   dirtyExpenseIds?: Set<string>;
   conflictExpenseIds?: Set<string>;
+  onReviewConflict?: () => void;
 };
 
 export function ExpenseList({
@@ -173,6 +175,7 @@ export function ExpenseList({
   onOpenSmartQuickAdd,
   dirtyExpenseIds,
   conflictExpenseIds,
+  onReviewConflict,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
@@ -421,7 +424,15 @@ export function ExpenseList({
                   <span style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--color-warning)' }} title="Pending approval — excluded from balances until a second member approves it" aria-label="Pending approval"><IconClock size={13} /></span>
                 )}
                 {isConflict ? (
-                  <span style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--color-danger)' }} title="Sync conflict — choose which version to keep" aria-label="Sync conflict"><IconAlertCircle size={13} /></span>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onReviewConflict?.(); }}
+                    style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--color-danger)', background: 'none', border: 0, padding: 0, cursor: 'pointer' }}
+                    title="Sync conflict — choose which version to keep"
+                    aria-label={`Review sync conflict for ${exp.title}`}
+                  >
+                    <IconAlertCircle size={13} />
+                  </button>
                 ) : isDirty ? (
                   <span style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--text-muted)' }} title="Pending sync" aria-label="Pending sync"><IconSync size={13} /></span>
                 ) : null}
@@ -1066,145 +1077,11 @@ export function ExpenseList({
             <div className="ledger-rule" />
           </div>
         ) : (
-          <div
-            className="glass-card"
-            style={{
-              padding: '28px 20px',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '16px',
-              borderRadius: '20px',
-              background: 'linear-gradient(180deg, var(--bg-surface) 0%, rgba(63, 203, 189, 0.05) 100%)',
-              border: '1.5px solid var(--border-color)',
-            }}
-          >
-            <div
-              style={{
-                width: '52px',
-                height: '52px',
-                borderRadius: '50%',
-                background: 'rgba(63, 203, 189, 0.12)',
-                color: 'var(--primary-accent)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '24px',
-                border: '1px solid rgba(63, 203, 189, 0.25)',
-              }}
-            >
-              🧭
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '16.5px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px 0' }}>
-                Start Your Expedition Ledger
-              </h3>
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, maxWidth: '300px', lineHeight: 1.4 }}>
-                Log your first group expense or tap a quick template below:
-              </p>
-            </div>
-
-            {/* Quick Starter Cards Grid */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '8px',
-                width: '100%',
-                maxWidth: '360px',
-              }}
-            >
-              {[
-                { label: 'Flights / Transit', icon: '✈️', title: 'Flight Tickets', catKeyword: 'travel' },
-                { label: 'Stay & Hotel', icon: '🏨', title: 'Hotel Booking', catKeyword: 'stay' },
-                { label: 'Squad Meal', icon: '🍽️', title: 'Group Dinner', catKeyword: 'food' },
-                { label: 'Activities & Entry', icon: '🎟️', title: 'Sightseeing Passes', catKeyword: 'activities' },
-              ].map((template) => {
-                const matchedCat = categories.find((c) =>
-                  c.id.toLowerCase().includes(template.catKeyword) || c.name.toLowerCase().includes(template.catKeyword)
-                );
-                return (
-                  <button
-                    key={template.label}
-                    type="button"
-                    className="quick-starter-btn"
-                    onClick={() => {
-                      triggerHaptic('light');
-                      onAddExpense?.({
-                        title: template.title,
-                        category: matchedCat?.id || categories[0]?.id || '',
-                      });
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '11px 12px',
-                      background: 'var(--bg-surface)',
-                      border: '1.5px solid var(--border-color)',
-                      borderRadius: '12px',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      transition: 'transform 0.15s ease, border-color 0.15s ease, background 0.15s ease',
-                    }}
-                  >
-                    <span style={{ fontSize: '16px', flexShrink: 0 }}>{template.icon}</span>
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {template.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '6px' }}>
-              {onOpenSmartQuickAdd && isFeatureEnabled('enableVoiceInput') && (
-                <button
-                  type="button"
-                  className="secondary-btn"
-                  onClick={() => {
-                    triggerHaptic('medium');
-                    onOpenSmartQuickAdd(true);
-                  }}
-                  style={{
-                    padding: '10px 18px',
-                    fontSize: '13px',
-                    borderRadius: '9999px',
-                    fontWeight: 700,
-                    color: 'var(--color-danger, #ef4444)',
-                    borderColor: 'rgba(239, 68, 68, 0.35)',
-                    background: 'rgba(239, 68, 68, 0.06)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}
-                >
-                  <IconMic size={16} />
-                  <span>Speak Expense</span>
-                </button>
-              )}
-              {onAddExpense && (
-                <button
-                  type="button"
-                  className="primary-btn"
-                  onClick={() => {
-                    triggerHaptic('light');
-                    onAddExpense();
-                  }}
-                  style={{
-                    padding: '10px 22px',
-                    fontSize: '13px',
-                    borderRadius: '9999px',
-                    fontWeight: 700,
-                  }}
-                >
-                  + Log Custom Expense
-                </button>
-              )}
-            </div>
-          </div>
+          <QuietStatus
+            sentence="No expenses yet. Add one to start splitting this trip."
+            actionLabel="Add expense"
+            onAction={() => onAddExpense?.()}
+          />
         )
       ) : (
         <>

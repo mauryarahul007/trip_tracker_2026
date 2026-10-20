@@ -146,8 +146,8 @@ void main() {
           ),
         ],
       );
-      expect(find.text('Sync issue: tap to review'), findsOneWidget);
-      await tester.tap(find.text('Sync issue: tap to review'));
+      expect(find.text('Failed 1'), findsOneWidget);
+      await tester.tap(find.text('Failed 1'));
       await settle(tester);
       expect(find.text('Sync queue'), findsOneWidget);
       expect(find.text('42501 rls'), findsOneWidget);

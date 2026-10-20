@@ -14,10 +14,10 @@ class BiometricLockEnabled extends Notifier<bool> {
   /// Enabling requires a successful prompt so a user can't lock themselves
   /// out of a device without biometrics.
   Future<bool> setEnabled(bool on, {String reason = 'Enable app lock'}) async {
-    if (on) {
-      final svc = ref.read(biometricServiceProvider);
-      if (!await svc.isAvailable() || !await svc.authenticate(reason)) return false;
-    }
+    final svc = ref.read(biometricServiceProvider);
+    if (!await svc.isAvailable()) return false;
+    final prompt = on ? reason : 'Turn off app lock';
+    if (!await svc.authenticate(prompt)) return false;
     await ref.read(sharedPreferencesProvider).setBool(_enabledKey, on);
     state = on;
     return true;

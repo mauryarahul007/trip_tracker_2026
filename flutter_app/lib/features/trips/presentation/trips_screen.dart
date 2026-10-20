@@ -624,7 +624,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                             physics: const AlwaysScrollableScrollPhysics(),
                             children: [
                               EmptyState(
-                                icon: AppIcons.alert,
+                                plain: true,
                                 title: l10n.tripsLoadError,
                                 subtitle: l10n.errorGenericMessage,
                                 action: AppButton(
@@ -685,7 +685,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                 physics: const AlwaysScrollableScrollPhysics(),
                                 children: [
                                   EmptyState(
-                                    icon: AppIcons.expenses,
+                                    plain: true,
                                     title: l10n.emptyTripsTitle,
                                     subtitle: l10n.emptyTripsSubtitle,
                                     action: Column(

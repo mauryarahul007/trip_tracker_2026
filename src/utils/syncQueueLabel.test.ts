@@ -15,6 +15,9 @@ describe('describeSyncItem', () => {
     expect(describeSyncItem({ type: 'toggleArchiveMember', payload: { archived: true } })).toBe('Archive member');
     expect(describeSyncItem({ type: 'toggleArchiveMember', payload: { archived: false } })).toBe('Unarchive member');
   });
+  it('names a queued chat message', () => {
+    expect(describeSyncItem({ type: 'addMessage', payload: { body: 'Meet at the gate' } })).toBe('Send message: Meet at the gate');
+  });
   it('humanizes unknown types', () => {
     expect(describeSyncItem({ type: 'somethingNew', payload: null })).toBe('something new');
   });

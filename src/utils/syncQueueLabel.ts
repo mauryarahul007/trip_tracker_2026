@@ -26,6 +26,7 @@ export function describeSyncItem(item: QueueItemLike): string {
     case 'deleteGroup': return 'Delete group';
     case 'addCategory': return named('Add category', p.name);
     case 'deleteCategory': return 'Delete category';
+    case 'addMessage': return named('Send message', typeof p.body === 'string' ? p.body.slice(0, 40) : undefined);
     default: return item.type.replace(/([A-Z])/g, ' $1').toLowerCase();
   }
 }

@@ -10,22 +10,41 @@ type Props = {
 type State = {
   hasError: boolean;
   error: Error | null;
+  errorInfo: ErrorInfo | null;
+  copied: boolean;
 };
 
 export class TabErrorBoundary extends Component<Props, State> {
-  public state: State = { hasError: false, error: null };
+  public state: State = { hasError: false, error: null, errorInfo: null, copied: false };
 
-  public static getDerivedStateFromError(error: Error): State {
+  public static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    this.setState({ errorInfo });
     diagnosticLogger.log('error', `Tab crash (${this.props.label ?? 'unknown'}): ${error.message}`, errorInfo.componentStack);
     console.error('TabErrorBoundary caught:', error, errorInfo);
   }
 
   private handleRetry = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null, errorInfo: null, copied: false });
+  };
+
+  private handleCopyReport = async () => {
+    const snapshot = await diagnosticLogger.captureSnapshot();
+    const label = this.props.label ?? 'this section';
+    const md = diagnosticLogger.formatReportForAI(
+      `Tab problem: ${label}`,
+      `${this.state.error?.message || 'Unknown'}\n\n${this.state.errorInfo?.componentStack || ''}`,
+      'high',
+      'general',
+      `1. Open the ${label} tab`,
+      snapshot
+    );
+    await navigator.clipboard.writeText(md);
+    this.setState({ copied: true });
+    setTimeout(() => this.setState({ copied: false }), 3000);
   };
 
   public render() {
@@ -42,30 +61,36 @@ export class TabErrorBoundary extends Component<Props, State> {
           }}
         >
           <div style={{ display: 'inline-flex', color: 'var(--color-warning)' }}><IconAlertCircle size={28} /></div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0, lineHeight: 1.5 }}>
-            {this.props.label ? `The ${this.props.label} tab` : 'This section'} ran into an error.
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0, lineHeight: 1.5, maxWidth: '320px' }}>
+            {this.props.label ? `The ${this.props.label} tab hit a problem.` : 'This section hit a problem.'}{' '}
+            Your trip data is still on this device.
           </p>
-          {this.state.error?.message ? (
-            <p
-              style={{
-                color: 'var(--text-muted)',
-                fontSize: '11px',
-                margin: 0,
-                lineHeight: 1.4,
-                maxWidth: '280px',
-                wordBreak: 'break-word',
-              }}
-            >
-              {this.state.error.message}
-            </p>
+          {this.state.copied ? (
+            <p style={{ color: 'var(--color-success, #15803d)', fontSize: '12px', margin: 0 }}>Report copied</p>
           ) : null}
           <button
             type="button"
             className="gradient-btn"
-            style={{ padding: '8px 20px', fontSize: '13px', borderRadius: '8px', cursor: 'pointer' }}
+            style={{ padding: '8px 20px', fontSize: '13px', cursor: 'pointer' }}
             onClick={this.handleRetry}
           >
             Try again
+          </button>
+          <button
+            type="button"
+            className="secondary-btn"
+            style={{ padding: '8px 20px', fontSize: '13px', cursor: 'pointer' }}
+            onClick={() => window.location.reload()}
+          >
+            Reload
+          </button>
+          <button
+            type="button"
+            className="secondary-btn"
+            style={{ padding: '8px 20px', fontSize: '13px', cursor: 'pointer' }}
+            onClick={() => { void this.handleCopyReport(); }}
+          >
+            Copy report
           </button>
         </div>
       );

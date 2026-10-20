@@ -33,20 +33,21 @@ class SyncChip extends ConsumerWidget {
         child: ActionChip(
           avatar: Icon(issue ? AppIcons.alert : AppIcons.sync, size: 16, color: color),
           label: Text(
-            issue ? l10n.syncIssue : l10n.syncPending(status.pending),
+            issue ? 'Failed ${status.issues}' : l10n.syncPending(status.pending),
             style: TextStyle(color: color, fontSize: 12),
           ),
           side: BorderSide(color: color.withValues(alpha: 0.4)),
           backgroundColor: color.withValues(alpha: 0.08),
-          onPressed: inspector ? () => _openSheet(context) : null,
+          onPressed: issue || inspector ? () => showSyncReviewSheet(context) : null,
         ),
       ),
     );
   }
+}
 
-  void _openSheet(BuildContext context) {
-    AppSheet.show<void>(context: context, title: context.l10n.syncSheetTitle, builder: (_) => const _SyncSheet());
-  }
+/// The existing retry list. Failed items can be retried from here.
+void showSyncReviewSheet(BuildContext context) {
+  AppSheet.show<void>(context: context, title: context.l10n.syncSheetTitle, builder: (_) => const _SyncSheet());
 }
 
 class _SyncSheet extends ConsumerWidget {
@@ -57,6 +58,7 @@ class _SyncSheet extends ConsumerWidget {
     final l10n = context.l10n;
     final items = ref.watch(syncItemsProvider).value ?? const <OutboxItem>[];
     final store = ref.read(outboxStoreProvider);
+    final inspector = ref.watch(flagProvider(('enableSyncQueueInspector', null))).value ?? false;
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.6),
       child: ListView(
@@ -66,12 +68,12 @@ class _SyncSheet extends ConsumerWidget {
             ListTile(
               title: Text(describeSyncItem({'id': i.id, 'type': i.type, 'payload': i.payload})),
               subtitle: i.lastError == null ? null : Text(i.lastError!, maxLines: 2, overflow: TextOverflow.ellipsis),
-              trailing: i.status == OutboxStatus.poison
+              trailing: (i.status == OutboxStatus.poison || (i.lastError ?? '').isNotEmpty)
                   ? Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         TextButton(onPressed: () => store.retry(i.id), child: Text(l10n.syncRetry)),
-                        TextButton(onPressed: () => store.discard(i.id), child: Text(l10n.syncDiscard)),
+                        if (inspector) TextButton(onPressed: () => store.discard(i.id), child: Text(l10n.syncDiscard)),
                       ],
                     )
                   : null,

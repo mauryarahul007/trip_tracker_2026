@@ -10,6 +10,7 @@ import { useTripStore } from '../store/tripStore';
 import { avatarColorForName } from '../utils/avatarColor';
 import { initial } from '../utils/initials';
 import { triggerHaptic } from '../utils/haptics';
+import { QuietStatus } from './QuietStatus';
 import { UpiPaymentModal } from './UpiPaymentModal';
 import {
   canvasToPngFile,
@@ -1299,39 +1300,7 @@ export function BalancesSettlements({
 
         {/* Transfer Cards List with Smart Grouping */}
         {transfers.length === 0 ? (
-          <div
-            className="traveler-settlement-card"
-            style={{
-              padding: '24px',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '10px',
-            }}
-          >
-            <div
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                background: 'rgba(16, 185, 129, 0.12)',
-                color: 'var(--color-success)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '22px',
-              }}
-            >
-              ✓
-            </div>
-            <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-              All Balances Settled
-            </h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
-              Every member is squared away — nothing left to settle!
-            </p>
-          </div>
+          <QuietStatus sentence="Everyone is settled. Nothing left to pay." />
         ) : (
           (() => {
             const myTransfers = transfers.filter(

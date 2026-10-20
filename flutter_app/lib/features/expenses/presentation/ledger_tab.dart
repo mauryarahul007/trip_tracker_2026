@@ -1359,6 +1359,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             ),
           if (allEven)
             EmptyState(
+              plain: true,
               key: const Key('all-settled'),
               icon: Icons.check_circle_outline,
               title: l10n.ledAllSettled,

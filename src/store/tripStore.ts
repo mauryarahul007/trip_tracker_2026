@@ -7,6 +7,7 @@ import { trackGrowthEvent } from '../utils/growthTelemetry';
 import { hydrateFlagSet } from '../utils/flagPresets';
 import { buildAutoGroupName } from '../utils/groupNaming';
 import { copyDefaultSplit } from '../utils/defaultSplit';
+import { splitConfigForSave } from '../utils/splitConfigForSave';
 import { getCurrencyDecimals } from '../utils/currency';
 import { newId } from '../utils/uuid';
 import { applyLiveCollabRow, mergeTripRoster } from '../utils/tripCollabMerge';
@@ -2977,6 +2978,7 @@ export const useTripStore = create<TripStore>()(
       const updatedExpense: Expense = {
         ...existing,
         ...expenseDataWithoutPreview,
+        splitConfig: splitConfigForSave(expenseData.splitMode, expenseData.splitConfig, existing.splitConfig),
         resolvedShares,
         updatedAt: Date.now(),
       };
