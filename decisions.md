@@ -5245,3 +5245,9 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Rollback:** revert the merge commit on `main` (or run the OCI deploy workflow on the `pre-flutter-merge` tag). The deploy never touches data; the new migrations 0111 to 0116 only add things.
 * **Release Cut:** version bumped to `3.69.0` via `npm run release:minor`.
 
+## v3.69.1: Pull-to-refresh no longer fires while scrolling Expenses
+* **Context:** Scrolling toward Settlements on the Expenses tab was read as a pull-to-refresh. `usePullToRefresh` returned early on `touchstart` when the pane was scrolled, leaving a stale start Y, and `touchmove` then measured from it once the pane reached the top. Start (14px) and commit (70px) thresholds were also low.
+* **Decision:** Every `touchstart` resets the anchor and drag state. Only gestures that begin at `scrollTop === 0`, with the pane at rest for 150 ms, can pull. Start threshold is 32px, commit 90px, drag damped 0.6, and horizontal drift limited to half the vertical travel. `shouldStartPull` is exported and unit tested.
+* **Trade-offs Accepted:** A real refresh needs a longer, more deliberate pull. The Trips list shares the hook and gets the same behavior.
+* **Release Cut:** version bumped to `3.69.1` via `npm run release:patch`.
+

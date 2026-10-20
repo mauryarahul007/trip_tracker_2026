@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-20 | 3.69.1 | PTR-SCROLL | [Scrolling no longer triggers pull-to-refresh](#ptr-scroll--scrolling-no-longer-triggers-pull-to-refresh) |
 | 2026-10-19 | 3.68.1 | SETTLE-GROUP-RLS | [Second partial group settlement no longer fails](#settle-group-rls--second-partial-group-settlement-no-longer-fails) |
 | 2026-10-08 | flutter 3.48.2 | FLUTTER-FIRSTSYNC | [Flutter: first sync, destination autocomplete, Horizon defaults](#flutter-firstsync--trips-after-sign-in-destination-autocomplete-horizon-defaults-v3482) |
 | 2026-10-08 | flutter 3.48 | FLUTTER-HORIZON | [Flutter: Horizon nav and spend insights](#flutter-horizon--horizon-nav-and-spend-insights-v3480) |
@@ -3430,3 +3431,14 @@ Then add a row to the **Index** table.
 
 **Pass:** the installed app shows the new version and works against the same data as the web app.
 
+## PTR-SCROLL — Scrolling no longer triggers pull-to-refresh
+
+**Version:** 3.69.1 · **Flags:** none (bug fix) · **Device:** phone or touch emulation.
+
+1. Open a trip with enough expenses to scroll, on the Expenses tab.
+2. Scroll down quickly to Settlements at the bottom. Pass: no refresh indicator appears.
+3. Flick back up to the top in one swipe. Pass: no refresh indicator, no refresh.
+4. Scroll to the top, wait about half a second, then pull down about 150px slowly. Pass: indicator appears and expenses refresh on release.
+5. Pull down only about 40px and release. Pass: indicator springs back, no refresh.
+6. Pull diagonally. Pass: no refresh.
+7. Repeat steps 4 and 5 on the Trips list. Pass: same behavior.
