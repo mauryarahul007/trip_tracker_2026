@@ -911,6 +911,9 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
     }
   }
 
+  /// A message for the pinned strip above the buttons; it clears on the next edit like any other form error.
+  void showError(String message) => state = state.copyWith(error: message);
+
   /// After "Save and add another": a blank form for the next expense, seeded by the same remembered defaults.
   void resetForNext() {
     _saved = false;

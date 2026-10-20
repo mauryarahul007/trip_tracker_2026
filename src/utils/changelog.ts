@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.71.1',
+    date: '2026-10-20',
+    changes: [
+      'The Add expense button under the top trip card is no longer hidden behind the Join / New Trip bar.',
+      'Mistakes on the new-expense form now show right above the Save buttons, so you always see why a save did not happen. Save and add another on an empty form says: First add an expense.',
+      'The Saved message after Save and add another no longer covers the button.',
+    ],
+  },
+  {
     version: '3.71.0',
     date: '2026-10-20',
     changes: [

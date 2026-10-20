@@ -1238,6 +1238,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formSaveAndAdd => 'Save and add another';
 
   @override
+  String get formAddFirst => 'First add an expense.';
+
+  @override
   String get formSavedAddNext => 'Saved. Add the next one.';
 
   @override

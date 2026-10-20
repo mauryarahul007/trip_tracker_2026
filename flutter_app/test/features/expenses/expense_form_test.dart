@@ -95,6 +95,7 @@ void main() {
       await tap(tester, key('save-and-add'));
       await settle(tester, rounds: 14);
       expect(find.text('Add expense'), findsWidgets); // still open
+      expect(key('form-saved-notice'), findsOneWidget); // inline, so it never covers the buttons
       expect(tester.widget<TextField>(key('title-field')).controller!.text, isEmpty);
       expect(tester.widget<TextField>(key('amount-field')).controller!.text, isEmpty);
       await typeAmount(tester, '60');
@@ -104,6 +105,21 @@ void main() {
       expect(list.map((e) => e.title).toSet(), {'Breakfast', 'Taxi'});
       expect(list.map((e) => e.id).toSet(), hasLength(2));
       expect(find.text('Add expense'), findsNothing); // plain Save closes
+    });
+
+    testApp('save and add another on an untouched form says to add an expense first, and saves nothing', (
+      tester,
+    ) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await openForm(tester, s);
+      await tap(tester, key('save-and-add'));
+      expect(errorText(tester), 'First add an expense.');
+      // The message sits in the pinned strip above the buttons, not at the end of the scrolling form.
+      expect(tester.getBottomLeft(key('form-error')).dy, lessThanOrEqualTo(tester.getTopLeft(key('save')).dy));
+      expect(await expensesOf(tester, s), isEmpty);
+      await typeAmount(tester, '5'); // typing clears it
+      expect(key('form-error'), findsNothing);
     });
 
     testApp('save and add another is hidden when the flag is off or when editing', (tester) async {

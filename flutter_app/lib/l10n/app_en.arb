@@ -674,6 +674,7 @@
   "formTitleEdit": "Edit expense",
   "formSave": "Save",
   "formSaveAndAdd": "Save and add another",
+  "formAddFirst": "First add an expense.",
   "formSavedAddNext": "Saved. Add the next one.",
   "formSaving": "Saving…",
   "formAmount": "Amount",

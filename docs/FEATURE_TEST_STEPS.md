@@ -3501,7 +3501,9 @@ Then add a row to the **Index** table.
 4. With the smart-defaults flags ON, pick a different payer and category before step 2. Pass: after **Save and add another** the next form starts from that payer and category (and the same split).
 5. Enter a repeat of the expense you just saved (same title, amount, date) and save. Pass: the duplicate warning appears.
 6. Open an existing expense to edit. Pass: no **Save and add another** button.
-7. Leave a required field empty (no amount) and tap **Save and add another**. Pass: the usual validation message appears, nothing is saved, the form stays as it was.
+7. Open a fresh new-expense form and tap **Save and add another** without typing anything. Pass: a red strip directly above the buttons says "First add an expense." and nothing is saved. Type a digit. Pass: the strip disappears.
+7b. Type a title but no amount and tap **Save and add another** (or plain **Save**), with the keyboard open. Pass: "Please enter a valid amount greater than 0." shows in the same strip above the buttons, in view without scrolling.
+7c. After a successful **Save and add another**, pass: a green "Saved. Add the next one." line appears above the buttons for about 3 seconds, and **Save and add another** stays fully visible and tappable (no snackbar over it).
 8. Go offline and repeat step 2. Pass: it saves on the phone and the form still resets; the items sync when back online.
 
 **Flag-OFF negative check:** turn `enableSaveAndAddAnother` OFF. Pass: the new-expense form shows only **Save**, and Save closes the form as before. Existing expenses, splits and sync are unchanged either way.
@@ -3517,7 +3519,7 @@ Then add a row to the **Index** table.
 4. Turn `enableBalanceBars` OFF. Pass: only the transfer rows remain; balances and Settle buttons behave as before.
 
 **Deck quick add**
-5. On the Trips screen in card view, look under the top card. Pass: an **Add expense** button sits between the card and the page dots.
+5. On the Trips screen in card view, look under the top card. Pass: an **Add expense** button sits right under the card, above the Join / New Trip dock and fully tappable (the dock does not cover it).
 6. Tap it. Pass: the new-expense form opens for the trip on top. Save, then go back. Pass: you land on the Trips deck.
 7. Swipe to an archived or closed trip. Pass: the button is gone; swipe back and it returns.
 8. Swiping, tap-to-open and long-press still work exactly as before.

@@ -8,6 +8,11 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.71.1', '2026-10-20', [
+    'The Add expense button under the top trip card is no longer hidden behind the Join / New Trip bar.',
+    'Mistakes on the new-expense form now show right above the Save buttons, so you always see why a save did not happen. Save and add another on an empty form says: First add an expense.',
+    'The Saved message after Save and add another no longer covers the button.',
+  ]),
   ChangelogEntry('3.71.0', '2026-10-20', [
     'The Who pays whom section now starts with bars showing who is up and who is down, scaled so you can compare people at a glance.',
     'The Trips deck has an Add expense button under the top card, and the empty receipts screen has one too.',
@@ -48,10 +53,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.68.1', '2026-10-19', [
     'Settling with a group in two or more parts now works. The second payment used to fail with a permissions error when it was recorded under your groupmate. Fixed on the web and in the Flutter app.',
-  ]),
-  ChangelogEntry('3.68.0', '2026-10-19', [
-    'Behind the scenes (Flutter app): a cleaner trip header (name, one line of dates, members and expenses), and Edit Trip Details is in the trip name menu and the top-bar menu.',
-    'Behind the scenes (Flutter app): select and delete several passes at once, a filters page that matches the web, a pinned mini settlement pass on Summary, and the settlement pass flips to show You paid, Your share and the difference.',
-    'Behind the scenes (Flutter app): a Voice button on Expenses that listens and fills in the expense for you to confirm.',
   ]),
 ];

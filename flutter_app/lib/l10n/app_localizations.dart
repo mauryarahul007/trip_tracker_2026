@@ -2251,6 +2251,12 @@ abstract class AppLocalizations {
   /// **'Save and add another'**
   String get formSaveAndAdd;
 
+  /// No description provided for @formAddFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'First add an expense.'**
+  String get formAddFirst;
+
   /// No description provided for @formSavedAddNext.
   ///
   /// In en, this message translates to:

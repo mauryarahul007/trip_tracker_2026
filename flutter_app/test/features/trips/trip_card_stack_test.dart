@@ -115,6 +115,8 @@ void main() {
         onOpen: (_) {},
         onAddExpense: (t) => added.add(t.id),
       );
+      // Inside the card area: the floating runway dock covers the bottom 80px of the deck.
+      expect(tester.getBottomLeft(find.byKey(const Key('stack-add-expense'))).dy, lessThanOrEqualTo(900 - 80));
       await tester.tap(find.byKey(const Key('stack-add-expense')));
       expect(added, ['a']);
       await tester.fling(top, const Offset(-400, 0), 1500);

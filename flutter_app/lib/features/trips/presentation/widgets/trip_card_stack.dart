@@ -151,86 +151,92 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
             Expanded(
               child: Align(
                 alignment: Alignment.topCenter,
-                child: SizedBox(
-                  width: cardW,
-                  height: cardH + 28,
-                  child: Stack(
-                    alignment: Alignment.topCenter,
-                    clipBehavior: Clip.none,
-                    children: [
-                      for (var k = behind; k >= 1; k--)
-                        Positioned(
-                          top: 14.0 * k - 14 * progress,
-                          child: Transform.scale(
-                            scale: 1 - 0.06 * k + 0.06 * progress,
-                            alignment: Alignment.topCenter,
-                            child: SizedBox(
-                              width: cardW,
-                              height: cardH,
-                              child: IgnorePointer(
-                                child: _StackCard(trip: trips[k], now: widget.now, dim: true),
-                              ),
-                            ),
-                          ),
-                        ),
-                      Positioned(
-                        top: 0,
-                        child: Semantics(
-                          customSemanticsActions: {
-                            CustomSemanticsAction(label: l10n.tripsStackOpen): () => widget.onOpen(trips.first),
-                            if (trips.length > 1)
-                              CustomSemanticsAction(label: l10n.tripsStackSkip): () =>
-                                  _commit(next: true, width: cardW),
-                          },
-                          child: GestureDetector(
-                            key: const Key('stack-top'),
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () => widget.onOpen(trips.first),
-                            onLongPress: () => widget.onLongPress(trips.first),
-                            onPanUpdate: (d) {
-                              if (!_flying) setState(() => _drag += d.delta);
-                            },
-                            onPanEnd: (d) {
-                              final vx = d.velocity.pixelsPerSecond.dx;
-                              final far = _drag.dx.abs() > cardW * 0.28;
-                              final flung = vx.abs() > 800 && vx.sign == _drag.dx.sign;
-                              if (far || flung) {
-                                _commit(next: _drag.dx < 0, width: cardW);
-                              } else {
-                                _snapBack();
-                              }
-                            },
-                            child: Transform.translate(
-                              offset: _drag,
-                              child: Transform.rotate(
-                                angle: _drag.dx / cardW * 0.25,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: cardW,
+                      height: cardH + 28,
+                      child: Stack(
+                        alignment: Alignment.topCenter,
+                        clipBehavior: Clip.none,
+                        children: [
+                          for (var k = behind; k >= 1; k--)
+                            Positioned(
+                              top: 14.0 * k - 14 * progress,
+                              child: Transform.scale(
+                                scale: 1 - 0.06 * k + 0.06 * progress,
+                                alignment: Alignment.topCenter,
                                 child: SizedBox(
                                   width: cardW,
                                   height: cardH,
-                                  child: _StackCard(
-                                    trip: trips.first,
-                                    now: widget.now,
-                                    swipe: _drag.dx / (cardW * 0.4),
+                                  child: IgnorePointer(
+                                    child: _StackCard(trip: trips[k], now: widget.now, dim: true),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          Positioned(
+                            top: 0,
+                            child: Semantics(
+                              customSemanticsActions: {
+                                CustomSemanticsAction(label: l10n.tripsStackOpen): () => widget.onOpen(trips.first),
+                                if (trips.length > 1)
+                                  CustomSemanticsAction(label: l10n.tripsStackSkip): () =>
+                                      _commit(next: true, width: cardW),
+                              },
+                              child: GestureDetector(
+                                key: const Key('stack-top'),
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => widget.onOpen(trips.first),
+                                onLongPress: () => widget.onLongPress(trips.first),
+                                onPanUpdate: (d) {
+                                  if (!_flying) setState(() => _drag += d.delta);
+                                },
+                                onPanEnd: (d) {
+                                  final vx = d.velocity.pixelsPerSecond.dx;
+                                  final far = _drag.dx.abs() > cardW * 0.28;
+                                  final flung = vx.abs() > 800 && vx.sign == _drag.dx.sign;
+                                  if (far || flung) {
+                                    _commit(next: _drag.dx < 0, width: cardW);
+                                  } else {
+                                    _snapBack();
+                                  }
+                                },
+                                child: Transform.translate(
+                                  offset: _drag,
+                                  child: Transform.rotate(
+                                    angle: _drag.dx / cardW * 0.25,
+                                    child: SizedBox(
+                                      width: cardW,
+                                      height: cardH,
+                                      child: _StackCard(
+                                        trip: trips.first,
+                                        now: widget.now,
+                                        swipe: _drag.dx / (cardW * 0.4),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    // Inside the card area, not below it: the floating runway dock covers everything under the deck.
+                    if (quickAdd)
+                      TextButton.icon(
+                        key: const Key('stack-add-expense'),
+                        onPressed: () => widget.onAddExpense!(top),
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: Text(l10n.expAdd),
+                        style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                      ),
+                  ],
                 ),
               ),
             ),
-            if (quickAdd)
-              TextButton.icon(
-                key: const Key('stack-add-expense'),
-                onPressed: () => widget.onAddExpense!(top),
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text(l10n.expAdd),
-                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-              ),
             _PageDots(
               key: const Key('stack-dots'),
               count: widget.trips.length,
