@@ -8,6 +8,11 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.71.0', '2026-10-20', [
+    'The Who pays whom section now starts with bars showing who is up and who is down, scaled so you can compare people at a glance.',
+    'The Trips deck has an Add expense button under the top card, and the empty receipts screen has one too.',
+    'The Insights back button and the UPI payment sheet close button now have screen-reader labels.',
+  ]),
   ChangelogEntry('3.70.0', '2026-10-20', [
     'New expense form has Save and add another: it saves, clears the form and leaves you ready to type the next expense.',
     'The sync conflict sheet now shows exactly which fields differ (amount, date, title, category, payer, split) and the two Keep buttons look the same.',
@@ -48,9 +53,5 @@ const List<ChangelogEntry> changelogEntries = [
     'Behind the scenes (Flutter app): a cleaner trip header (name, one line of dates, members and expenses), and Edit Trip Details is in the trip name menu and the top-bar menu.',
     'Behind the scenes (Flutter app): select and delete several passes at once, a filters page that matches the web, a pinned mini settlement pass on Summary, and the settlement pass flips to show You paid, Your share and the difference.',
     'Behind the scenes (Flutter app): a Voice button on Expenses that listens and fills in the expense for you to confirm.',
-  ]),
-  ChangelogEntry('3.67.0', '2026-10-19', [
-    'Behind the scenes (Flutter app): Settings is one page of cards like the web, with Appearance and Haptics (All, Important, Off), Storage and Data, Archived Trips and Backups.',
-    'Behind the scenes (Flutter app): long-press the trip name for Share, Mute, Edit Trip Details, Settings and Switch trip; the Summary gains attention chips, a close-out banner, Custom amount, Remind, How it works and an At a Glance grid.',
   ]),
 ];

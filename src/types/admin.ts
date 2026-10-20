@@ -105,6 +105,8 @@ export type FeatureFlagKey =
   | 'enableBalanceExplainer'
   | 'enableSavedOfflineToast'
   | 'enableSaveAndAddAnother'
+  | 'enableBalanceBars'
+  | 'enableTripCardQuickAdd'
   | 'enableTidyExpenses'
   | 'enableTidyNotes'
   | 'enableTidyMembers'

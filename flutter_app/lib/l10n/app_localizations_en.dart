@@ -1946,6 +1946,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterSavedTip => 'Hold a saved filter to remove it';
 
   @override
+  String get balanceBarsTitle => 'Who is up, who is down';
+
+  @override
+  String balanceBarOwed(String name, String amount) {
+    return '$name is owed $amount';
+  }
+
+  @override
+  String balanceBarOwes(String name, String amount) {
+    return '$name owes $amount';
+  }
+
+  @override
   String get ledYouPay => 'You pay';
 
   @override

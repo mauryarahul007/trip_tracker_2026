@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-20 | unreleased | UX-BATCH-4 | [Balance bars, deck quick add, receipt empty action, icon labels](#ux-batch-4--balance-bars-deck-quick-add-receipt-empty-action-icon-labels) |
 | 2026-10-20 | unreleased | SAVE-ADD-ANOTHER | [Save and add another on the new-expense form](#save-add-another--save-and-add-another-on-the-new-expense-form) |
 | 2026-10-20 | unreleased | CONFLICT-DIFF | [Sync conflict sheet shows what changed](#conflict-diff--sync-conflict-sheet-shows-what-changed) |
 | 2026-10-20 | 3.69.2 | STABILITY-POLISH | [Failure copy, sync status, Shares weights](#stability-polish--failure-copy-sync-status-and-shares-weights) |
@@ -3504,3 +3505,26 @@ Then add a row to the **Index** table.
 8. Go offline and repeat step 2. Pass: it saves on the phone and the form still resets; the items sync when back online.
 
 **Flag-OFF negative check:** turn `enableSaveAndAddAnother` OFF. Pass: the new-expense form shows only **Save**, and Save closes the form as before. Existing expenses, splits and sync are unchanged either way.
+
+## UX-BATCH-4 — Balance bars, deck quick add, receipt empty action, icon labels
+
+**Version:** unreleased · **Flags:** `enableBalanceBars`, `enableTripCardQuickAdd` (both Trip pack, default ON); the receipt button rides the existing `enableReceiptGallery`. `enableTripCardQuickAdd` needs `enableTripCardStack` ON.
+
+**Balance bars**
+1. Open a trip where one person paid and others owe (say Asha paid 90, three-way equal). Open Summary, then the **Who pays whom** section. Pass: above the transfer rows, **Who is up, who is down** lists everyone with a balance. Asha has a green bar going right of the centre line; Ben and Cara have equal red bars going left; amounts on the right; the longest bar belongs to the biggest balance.
+2. Settle everything. Pass: the bars disappear with the transfers ("All settled").
+3. Turn on TalkBack or VoiceOver. Pass: each row reads as one sentence, e.g. "Ben owes ₹30.00".
+4. Turn `enableBalanceBars` OFF. Pass: only the transfer rows remain; balances and Settle buttons behave as before.
+
+**Deck quick add**
+5. On the Trips screen in card view, look under the top card. Pass: an **Add expense** button sits between the card and the page dots.
+6. Tap it. Pass: the new-expense form opens for the trip on top. Save, then go back. Pass: you land on the Trips deck.
+7. Swipe to an archived or closed trip. Pass: the button is gone; swipe back and it returns.
+8. Swiping, tap-to-open and long-press still work exactly as before.
+9. Turn `enableTripCardQuickAdd` OFF. Pass: no button, the card is taller; list and grid views are unchanged either way.
+
+**Receipt gallery empty state**
+10. Open Receipts on a trip with no receipt photos. Pass: the empty message has an **Add expense** button that opens the new-expense form.
+
+**Icon labels**
+11. With TalkBack or VoiceOver, focus the back arrow on Insights and the close button on the UPI payment sheet. Pass: they announce "Back" and "Close".

@@ -733,6 +733,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                 onOpen: _open,
                                 onLongPress: (t) => _tripMenu(t, owner(t)),
                                 onTopChanged: (t) => setState(() => _stackTop = t),
+                                onAddExpense: _flagOn('enableTripCardQuickAdd')
+                                    ? (t) => context.push('/trip/${t.id}/expenses/new')
+                                    : null,
                               );
                             }
                             // The first trip happening today becomes the Night Sky hero.

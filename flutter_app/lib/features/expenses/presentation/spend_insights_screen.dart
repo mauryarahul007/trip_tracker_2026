@@ -59,7 +59,11 @@ class _Body extends StatelessWidget {
       backgroundColor: tokens.bgPage,
       appBar: AppBar(
         title: const Text('Insights'),
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20), onPressed: context.pop),
+        leading: IconButton(
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: context.pop,
+        ),
       ),
       body: DecoratedBox(
         decoration: BoxDecoration(color: tokens.bgPage),

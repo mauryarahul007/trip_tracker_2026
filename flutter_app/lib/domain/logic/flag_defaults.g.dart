@@ -12,6 +12,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableAmountKeypad': true,
   'enableAppShortcuts': true,
   'enableAutoCurrencyDetection': false,
+  'enableBalanceBars': true,
   'enableBalanceExplainer': true,
   'enableBiometricAuth': false,
   'enableBurnRateInsight': false,
@@ -152,6 +153,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableTravelerPassport': true,
   'enableTripAccent': true,
   'enableTripBudget': true,
+  'enableTripCardQuickAdd': true,
   'enableTripCardStack': true,
   'enableTripChat': true,
   'enableTripCloseout': true,
@@ -226,6 +228,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'pro',
     description:
         'Suggests the local currency on the expense form from device GPS location (reuses existing Geotag consent).',
+  ),
+  'enableBalanceBars': (
+    label: 'Balance Bars (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: the Who pays whom section starts with Who is up, who is down: one bar per person from a centre line, green to the right for what they are owed and red to the left for what they owe, all scaled to the biggest balance, with the amount and a screen-reader sentence. OFF: only the transfer rows are shown. Hidden once everyone is settled. Does not change any balance, transfer, settle or reminder.',
   ),
   'enableBalanceExplainer': (
     label: 'Balance Explainer (Flutter)',
@@ -939,6 +946,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'trip',
     description: 'Flutter app: ON: Trip numbers on the Summary tab shows a budget card where you set a budget for the trip, with a progress bar that warns at 80% and when over. The budget is stored on this device only: it is not shared with other members and not synced. OFF: no budget card. Does not block adding expenses.',
   ),
+  'enableTripCardQuickAdd': (
+    label: 'Trip Card Quick Add (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: under the top trip card in the Trips card view there is an Add expense button that opens the new-expense form for that trip. It is hidden for archived and closed trips. OFF: the deck shows only the card and page dots, and you open the trip first to add an expense. Needs Trip Card Stack to be ON; the list and grid views are unchanged. Does not change swiping, opening or the long-press menu.',
+  ),
   'enableTripCardStack': (
     label: 'Trips Home: Card Stack View',
     pack: 'trip',
@@ -1174,6 +1186,8 @@ const Map<String, List<String>> consumerPacks = {
     'enableBalanceExplainer',
     'enableSavedOfflineToast',
     'enableSaveAndAddAnother',
+    'enableBalanceBars',
+    'enableTripCardQuickAdd',
     'enableTidyExpenses',
     'enableTidyNotes',
     'enableTidyMembers',

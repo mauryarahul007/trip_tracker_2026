@@ -52,6 +52,7 @@ import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
 import '../application/money_providers.dart';
 import 'conflict_sheet.dart';
+import 'widgets/balance_bars.dart';
 import 'widgets/add_expense_fab.dart';
 import 'widgets/spend_donut.dart';
 import 'widgets/expense_detail_sheet.dart';
@@ -320,6 +321,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     // "Settled" is a fact about the whole trip (nobody owes anybody), never about one person's balance.
     final tripSettled = outstanding < 0.01;
     // Everyone square after there were payments: a small celebration, and a tap the moment it happens.
+    final balanceBarsOn = _flag(ref, 'enableBalanceBars', id);
     final celebrateOn = _flag(ref, 'enableSettledCelebration', id) && tripSettled && result.balances.isNotEmpty;
     final becameSettled = _wasSettled == false && tripSettled;
     _wasSettled = tripSettled;
@@ -1305,6 +1307,8 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         l10n.ledWhoPays,
         subtitle: allEven ? l10n.ledAllSettled : l10n.ledProgressLeft(transfers.length),
         [
+          if (balanceBarsOn && !allEven)
+            BalanceBars(balances: result.balances, format: (v) => formatMoney(context, v, cur)),
           if (canToggle)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),

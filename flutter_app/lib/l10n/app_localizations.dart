@@ -3451,6 +3451,24 @@ abstract class AppLocalizations {
   /// **'Hold a saved filter to remove it'**
   String get filterSavedTip;
 
+  /// No description provided for @balanceBarsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is up, who is down'**
+  String get balanceBarsTitle;
+
+  /// No description provided for @balanceBarOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is owed {amount}'**
+  String balanceBarOwed(String name, String amount);
+
+  /// No description provided for @balanceBarOwes.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes {amount}'**
+  String balanceBarOwes(String name, String amount);
+
   /// No description provided for @ledYouPay.
   ///
   /// In en, this message translates to:

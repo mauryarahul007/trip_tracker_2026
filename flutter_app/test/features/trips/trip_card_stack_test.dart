@@ -54,6 +54,7 @@ Future<void> pumpStack(
   ValueChanged<Trip>? onLongPress,
   Future<String?> Function(String destination)? resolver,
   ValueChanged<Trip>? onTop,
+  ValueChanged<Trip>? onAddExpense,
   WeatherService? weather,
   List<Override> extra = const [],
 }) async {
@@ -84,6 +85,7 @@ Future<void> pumpStack(
             onOpen: onOpen,
             onLongPress: onLongPress ?? (_) {},
             onTopChanged: onTop,
+            onAddExpense: onAddExpense,
           ),
         ),
       ),
@@ -103,6 +105,29 @@ Finder inTop(String text) => find.descendant(of: top, matching: find.text(text))
 
 void main() {
   group('TripCardStack', () {
+    testWidgets('quick add: the button adds to the top trip, follows the deck, and is hidden for archived trips', (
+      tester,
+    ) async {
+      final added = <String>[];
+      await pumpStack(
+        tester,
+        list: [trip('a', 'Goa'), trip('b', 'Old', archived: true)],
+        onOpen: (_) {},
+        onAddExpense: (t) => added.add(t.id),
+      );
+      await tester.tap(find.byKey(const Key('stack-add-expense')));
+      expect(added, ['a']);
+      await tester.fling(top, const Offset(-400, 0), 1500);
+      await tester.pumpAndSettle();
+      expect(inTop('Old'), findsOneWidget);
+      expect(find.byKey(const Key('stack-add-expense')), findsNothing); // archived: no quick add
+    });
+
+    testWidgets('no quick add button when the callback is not given (flag off)', (tester) async {
+      await pumpStack(tester, onOpen: (_) {});
+      expect(find.byKey(const Key('stack-add-expense')), findsNothing);
+    });
+
     testWidgets('shows the first trip on top with its position, and the next cards behind it', (tester) async {
       await pumpStack(tester, onOpen: (_) {});
       expect(inTop('Goa'), findsOneWidget);

@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.71.0',
+    date: '2026-10-20',
+    changes: [
+      'The Who pays whom section now starts with bars showing who is up and who is down, scaled so you can compare people at a glance.',
+      'The Trips deck has an Add expense button under the top card, and the empty receipts screen has one too.',
+      'The Insights back button and the UPI payment sheet close button now have screen-reader labels.',
+    ],
+  },
+  {
     version: '3.70.0',
     date: '2026-10-20',
     changes: [

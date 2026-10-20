@@ -197,6 +197,7 @@ void main() {
       await addExpense(tester, s, title: 'Taxi', amount: 30);
       await goTo(tester, '/trip/${s.tripId}/receipts');
       expect(key('receipts-empty'), findsOneWidget);
+      expect(key('receipts-add-expense'), findsOneWidget);
     });
 
     testApp('the Expenses menu lists Receipts, and not with the flag off', (tester) async {
@@ -429,7 +430,12 @@ void main() {
       );
       expect(key('plan-card'), findsNothing);
       expect(key('stat-total'), findsNothing);
-      await tester.ensureVisible(key('section-analytics'));
+      // Scroll the header clear of the sticky bottom bar before tapping it.
+      await tester.drag(
+        find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable)),
+        const Offset(0, -200),
+      );
+      await tester.pump();
       await tester.tap(key('section-analytics'));
       await settle(tester, rounds: 8);
       expect(key('plan-card'), findsOneWidget);

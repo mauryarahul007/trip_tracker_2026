@@ -30,6 +30,7 @@ class TripCardStack extends StatefulWidget {
     required this.onOpen,
     required this.onLongPress,
     this.onTopChanged,
+    this.onAddExpense,
     this.bottomInset = 80,
     super.key,
   });
@@ -41,6 +42,9 @@ class TripCardStack extends StatefulWidget {
 
   /// Called (after the frame) whenever a different trip becomes the top card, so the screen can tint its background.
   final ValueChanged<Trip>? onTopChanged;
+
+  /// When set, a button under an open (not archived or closed) top card adds an expense to that trip.
+  final ValueChanged<Trip>? onAddExpense;
 
   /// Space kept free under the card for the floating runway slider (about 90 high) and the page dots.
   final double bottomInset;
@@ -137,7 +141,9 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
     return LayoutBuilder(
       builder: (context, box) {
         final cardW = math.min(box.maxWidth - 24, 460.0);
-        final cardH = (box.maxHeight - 28 - widget.bottomInset).clamp(300.0, 900.0);
+        final top = trips.first;
+        final quickAdd = widget.onAddExpense != null && !top.archived && !top.closed;
+        final cardH = (box.maxHeight - 28 - widget.bottomInset - (quickAdd ? 48 : 0)).clamp(300.0, 900.0);
         final progress = (_drag.dx.abs() / (cardW * 0.4)).clamp(0.0, 1.0);
         final behind = math.min(2, trips.length - 1);
         return Column(
@@ -217,6 +223,14 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
                 ),
               ),
             ),
+            if (quickAdd)
+              TextButton.icon(
+                key: const Key('stack-add-expense'),
+                onPressed: () => widget.onAddExpense!(top),
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: Text(l10n.expAdd),
+                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+              ),
             _PageDots(
               key: const Key('stack-dots'),
               count: widget.trips.length,
