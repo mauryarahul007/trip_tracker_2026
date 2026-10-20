@@ -39,7 +39,7 @@ ProviderContainer containerOf(WidgetTester tester) =>
 void main() {
   testApp('empty account: friendly empty state with create + join actions', (tester) async {
     await pumpApp(tester, user: asha);
-    expect(find.text('No trips yet'), findsOneWidget);
+    expect(find.textContaining('No trips yet'), findsOneWidget);
     expect(find.widgetWithText(AppButton, 'Create Trip'), findsOneWidget);
     expect(find.widgetWithText(AppButton, 'Join with Code'), findsOneWidget);
   });

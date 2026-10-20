@@ -330,24 +330,36 @@ class _Dash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, box) {
-        final count = (box.maxWidth / 8).floor().clamp(1, 80);
-        return Row(
-          children: [
-            for (var i = 0; i < count; i++)
-              Expanded(
-                child: Container(
-                  height: 1.5,
-                  margin: const EdgeInsets.symmetric(horizontal: 1),
-                  color: i.isEven ? color : Colors.transparent,
-                ),
-              ),
-          ],
-        );
-      },
+    // A painter, not a LayoutBuilder: the row sits in IntrinsicHeight so a swipe can measure it.
+    return SizedBox(
+      height: 2,
+      width: double.infinity,
+      child: CustomPaint(painter: _DashPainter(color)),
     );
   }
+}
+
+class _DashPainter extends CustomPainter {
+  const _DashPainter(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.5;
+    const dash = 4.0;
+    const gap = 4.0;
+    var x = 0.0;
+    final y = size.height / 2;
+    while (x < size.width) {
+      canvas.drawLine(Offset(x, y), Offset((x + dash).clamp(0, size.width), y), paint);
+      x += dash + gap;
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashPainter old) => old.color != color;
 }
 
 class _StatusPill extends StatelessWidget {

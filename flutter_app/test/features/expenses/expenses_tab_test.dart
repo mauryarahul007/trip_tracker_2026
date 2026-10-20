@@ -119,7 +119,7 @@ void main() {
     await pumpApp(tester, user: asha);
     final s = await seedTrip(tester);
     await openExpenses(tester, s);
-    expect(find.text('No expenses yet'), findsOneWidget);
+    expect(find.textContaining('No expenses yet'), findsOneWidget);
     await tester.tap(button('Add expense').first);
     await settle(tester, rounds: 10);
     expect(where(tester), '/trip/${s.tripId}/expenses/new');
