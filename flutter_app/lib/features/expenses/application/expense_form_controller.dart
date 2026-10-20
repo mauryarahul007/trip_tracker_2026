@@ -59,6 +59,7 @@ class FormFlags {
   bool get cloneLast => _f('enableCloneLastExpense');
   bool get rememberSplit => _f('enableRememberDefaultSplit');
   bool get smartDefaults => _f('enableSmartExpenseDefaults');
+  bool get saveAndAddAnother => _f('enableSaveAndAddAnother');
   bool get amountKeypad => _f('enableAmountKeypad');
   bool get persistentDraft => _f('enablePersistentExpenseDraft');
   bool get exclusionDefaults => _f('enableSplitExclusionDefaults');
@@ -83,6 +84,7 @@ class FormFlags {
     'enableCloneLastExpense',
     'enableRememberDefaultSplit',
     'enableSmartExpenseDefaults',
+    'enableSaveAndAddAnother',
     'enableAmountKeypad',
     'enablePersistentExpenseDraft',
     'enableSplitExclusionDefaults',
@@ -907,6 +909,12 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
       state = state.copyWith(submitting: false, error: '$e');
       return SaveOutcome.failed('$e');
     }
+  }
+
+  /// After "Save and add another": a blank form for the next expense, seeded by the same remembered defaults.
+  void resetForNext() {
+    _saved = false;
+    state = _initial();
   }
 
   Future<void> _rememberPayerAndCategory() async {

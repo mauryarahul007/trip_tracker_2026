@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-20 | unreleased | SAVE-ADD-ANOTHER | [Save and add another on the new-expense form](#save-add-another--save-and-add-another-on-the-new-expense-form) |
 | 2026-10-20 | unreleased | CONFLICT-DIFF | [Sync conflict sheet shows what changed](#conflict-diff--sync-conflict-sheet-shows-what-changed) |
 | 2026-10-20 | 3.69.2 | STABILITY-POLISH | [Failure copy, sync status, Shares weights](#stability-polish--failure-copy-sync-status-and-shares-weights) |
 | 2026-10-20 | 3.69.1 | PTR-SCROLL | [Scrolling no longer triggers pull-to-refresh](#ptr-scroll--scrolling-no-longer-triggers-pull-to-refresh) |
@@ -3488,3 +3489,18 @@ Then add a row to the **Index** table.
 7. Pass: the sentence "<title> changed on another device…" no longer appears under each expense title; only the sheet intro does.
 
 **Negative checks:** an expense with no conflict never shows the sheet ("No conflicts to resolve." if opened directly). Nothing in Settings or the Ops Deck changes.
+
+## SAVE-ADD-ANOTHER — Save and add another on the new-expense form
+
+**Version:** unreleased · **Flags:** `enableSaveAndAddAnother` (Trip pack, default ON; Ops Deck → Flags). Related, already shipped: `enableSmartExpenseDefaults`, `enableRememberDefaultSplit`.
+
+1. Open a trip, tap add expense. Pass: a **Save** button and, under it, a lighter **Save and add another** button.
+2. Enter amount 100 and title "Breakfast", tap **Save and add another**. Pass: a brief "Saved. Add the next one." message, the form stays open with empty title and amount, and the amount field has the cursor.
+3. Enter 60 and "Taxi", tap **Save**. Pass: the form closes and both Breakfast and Taxi are in Expenses, each with its own amount.
+4. With the smart-defaults flags ON, pick a different payer and category before step 2. Pass: after **Save and add another** the next form starts from that payer and category (and the same split).
+5. Enter a repeat of the expense you just saved (same title, amount, date) and save. Pass: the duplicate warning appears.
+6. Open an existing expense to edit. Pass: no **Save and add another** button.
+7. Leave a required field empty (no amount) and tap **Save and add another**. Pass: the usual validation message appears, nothing is saved, the form stays as it was.
+8. Go offline and repeat step 2. Pass: it saves on the phone and the form still resets; the items sync when back online.
+
+**Flag-OFF negative check:** turn `enableSaveAndAddAnother` OFF. Pass: the new-expense form shows only **Save**, and Save closes the form as before. Existing expenses, splits and sync are unchanged either way.

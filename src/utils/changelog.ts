@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.70.0',
+    date: '2026-10-20',
+    changes: [
+      'New expense form has Save and add another: it saves, clears the form and leaves you ready to type the next expense.',
+      'The sync conflict sheet now shows exactly which fields differ (amount, date, title, category, payer, split) and the two Keep buttons look the same.',
+    ],
+  },
+  {
     version: '3.69.3',
     date: '2026-10-20',
     changes: [

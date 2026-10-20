@@ -8,6 +8,10 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.70.0', '2026-10-20', [
+    'New expense form has Save and add another: it saves, clears the form and leaves you ready to type the next expense.',
+    'The sync conflict sheet now shows exactly which fields differ (amount, date, title, category, payer, split) and the two Keep buttons look the same.',
+  ]),
   ChangelogEntry('3.69.3', '2026-10-20', [
     'The back arrow inside a trip now retraces the tabs you visited before leaving the trip.',
     'Long destinations and trip names on passport cards are cut off with an ellipsis instead of colliding with the stamp.',
@@ -48,8 +52,5 @@ const List<ChangelogEntry> changelogEntries = [
   ChangelogEntry('3.67.0', '2026-10-19', [
     'Behind the scenes (Flutter app): Settings is one page of cards like the web, with Appearance and Haptics (All, Important, Off), Storage and Data, Archived Trips and Backups.',
     'Behind the scenes (Flutter app): long-press the trip name for Share, Mute, Edit Trip Details, Settings and Switch trip; the Summary gains attention chips, a close-out banner, Custom amount, Remind, How it works and an At a Glance grid.',
-  ]),
-  ChangelogEntry('3.66.1', '2026-10-19', [
-    'Behind the scenes: the Flutter Notes and Checklist panes show one Add button (the floating one) instead of two, and each collapsed day on Expenses is a clear card with a large bold total and the number of expenses.',
   ]),
 ];

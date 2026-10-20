@@ -673,6 +673,8 @@
   "formTitleAdd": "Add expense",
   "formTitleEdit": "Edit expense",
   "formSave": "Save",
+  "formSaveAndAdd": "Save and add another",
+  "formSavedAddNext": "Saved. Add the next one.",
   "formSaving": "Saving…",
   "formAmount": "Amount",
   "formAmountHint": "0.00 or 12*3+4",

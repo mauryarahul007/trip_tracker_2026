@@ -114,6 +114,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableReduceMotion': true,
   'enableRememberDefaultSplit': true,
   'enableRouteStops': false,
+  'enableSaveAndAddAnother': true,
   'enableSavedFilters': true,
   'enableSavedOfflineToast': true,
   'enableSettingsDataHub': true,
@@ -746,6 +747,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'travel',
     description: 'Multi-city itinerary manager with arrival/departure dates and map pins.',
   ),
+  'enableSaveAndAddAnother': (
+    label: 'Save and Add Another (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: the new-expense form shows a second button, Save and add another, under Save. It saves the expense, clears the form (starting again from your remembered payer, category and split when Smart Expense Defaults and Remember Default Split are ON) and leaves you ready to type the next one, so you can log a run of expenses without reopening the form. OFF: only Save is shown and it closes the form. Does not appear when editing an expense, and does not change how an expense is saved, split or synced.',
+  ),
   'enableSavedFilters': (
     label: 'Saved Expense Filters (Flutter)',
     pack: 'trip',
@@ -1167,6 +1173,7 @@ const Map<String, List<String>> consumerPacks = {
     'enableYouPaidVsShare',
     'enableBalanceExplainer',
     'enableSavedOfflineToast',
+    'enableSaveAndAddAnother',
     'enableTidyExpenses',
     'enableTidyNotes',
     'enableTidyMembers',

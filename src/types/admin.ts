@@ -104,6 +104,7 @@ export type FeatureFlagKey =
   | 'enableYouPaidVsShare'
   | 'enableBalanceExplainer'
   | 'enableSavedOfflineToast'
+  | 'enableSaveAndAddAnother'
   | 'enableTidyExpenses'
   | 'enableTidyNotes'
   | 'enableTidyMembers'
