@@ -8847,5 +8847,83 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-20T14:22:07.305Z",
     "resolutionNote": "expense_form_screen.dart: the Saved snackbar is now an inline notice in the pinned strip, so it cannot cover Save and add another. Commit 3442fa1."
+  },
+  {
+    "id": "BUG-308",
+    "title": "Switching trips from the title left other tabs on the old trip",
+    "description": "The shell state is reused across trips; fixed with openTripFresh (leave, wait for shell close, open)",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-21T08:58:44.402Z",
+    "updatedAt": "2026-10-21T08:58:48.766Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-21T08:58:48.766Z",
+    "resolutionNote": "Fixed in commit ac91dcb (v3.73.0)"
+  },
+  {
+    "id": "BUG-309",
+    "title": "Spend Collapse all / Expand all days did nothing under Compass spend",
+    "description": "Days were forced open; now open by default but collapsible",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-21T08:58:44.515Z",
+    "updatedAt": "2026-10-21T08:58:48.863Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-21T08:58:48.862Z",
+    "resolutionNote": "Fixed in commit ac91dcb (v3.73.0)"
+  },
+  {
+    "id": "BUG-310",
+    "title": "Activity Money filter missed expenses and was hidden behind another flag",
+    "description": "Money now covers expense add/edit/delete/restore and settlements; chips always shown in trip Activity",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-21T08:58:44.631Z",
+    "updatedAt": "2026-10-21T08:58:48.967Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-21T08:58:48.966Z",
+    "resolutionNote": "Fixed in commit ac91dcb (v3.73.0)"
   }
 ]

@@ -2681,5 +2681,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-21T06:18:05.277Z",
     "shippedNote": "Shipped in commit e7373a7 (v3.72.0), all six flags default ON"
+  },
+  {
+    "id": "FEAT-169",
+    "title": "Compass Activity tab with filters, Trip-tab menu (v3.73.0)",
+    "description": "Trip bar Balances/Spend/+/Activity/Trip; Activity tab with All/Unread/Money/People/Chat chips and Delete all; trip menu moved into the Trip tab; Chat is a Trip tile. Under enableCompassNav.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-21T08:58:44.092Z",
+    "updatedAt": "2026-10-21T08:58:44.295Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-21T08:58:44.295Z",
+    "shippedNote": "Shipped in commit ac91dcb (v3.73.0)"
   }
 ]

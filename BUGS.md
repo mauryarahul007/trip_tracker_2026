@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **305** | All recorded bugs across sessions |
+| **Total Tracked** | **308** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **278** | Verified & closed |
+| **✅ Resolved** | **281** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -309,6 +309,9 @@
 | **BUG-305** | Flutter deck Add expense button hidden behind the runway dock | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | trip_card_stack.dart: quick-add button moved inside the card area so the floating runway dock no longer covers it. Commit 3442fa1. |
 | **BUG-306** | Flutter new-expense form errors shown at the end of the scrolling form, out of view | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | expense_form_screen.dart: error banner moved into a pinned strip above Save; expense_form_controller.dart showError() so Save and add another on an untouched form says First add an expense. Commit 3442fa1. |
 | **BUG-307** | Flutter Save and add another confirmation snackbar covers the button | `ui-ux` | `low` | `claude-cli` | `claude-cli` | expense_form_screen.dart: the Saved snackbar is now an inline notice in the pinned strip, so it cannot cover Save and add another. Commit 3442fa1. |
+| **BUG-308** | Switching trips from the title left other tabs on the old trip | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit ac91dcb (v3.73.0) |
+| **BUG-309** | Spend Collapse all / Expand all days did nothing under Compass spend | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit ac91dcb (v3.73.0) |
+| **BUG-310** | Activity Money filter missed expenses and was hidden behind another flag | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit ac91dcb (v3.73.0) |
 
 ---
 
