@@ -15,23 +15,20 @@ Widget host(Widget child, {ThemeData? theme}) => MaterialApp(
 
 void main() {
   group('Compass tab lists (flag enableCompassNav)', () {
-    test('dock is Spend, Balances, Chat, Trip, and drops Chat when chat is off', () {
-      expect(compassDockTabs(chatEnabled: true), [
-        TripNavTab.expenses,
-        TripNavTab.ledger,
-        TripNavTab.chat,
-        TripNavTab.hub,
-      ]);
-      expect(compassDockTabs(chatEnabled: false), [TripNavTab.expenses, TripNavTab.ledger, TripNavTab.hub]);
+    test('dock is Balances, Spend, Activity, Trip: Chat is not repeated there', () {
+      expect(compassDockTabs(), [TripNavTab.ledger, TripNavTab.expenses, TripNavTab.activity, TripNavTab.hub]);
+      expect(compassDockTabs(), isNot(contains(TripNavTab.chat)));
     });
 
     test('pager keeps People and Notes as pages so old links still open them', () {
       final pages = compassPagerTabs(chatEnabled: true, showNotesTab: true);
-      expect(pages, containsAll([TripNavTab.members, TripNavTab.notes, TripNavTab.hub]));
+      expect(pages, containsAll([TripNavTab.members, TripNavTab.notes, TripNavTab.hub, TripNavTab.chat]));
+      expect(compassPagerTabs(chatEnabled: false, showNotesTab: true), isNot(contains(TripNavTab.chat)));
       expect(compassPagerTabs(chatEnabled: true, showNotesTab: false), isNot(contains(TripNavTab.notes)));
     });
 
-    test('People and Notes light up the Trip dock item; others map to themselves', () {
+    test('Chat, People and Notes light up the Trip dock item; others map to themselves', () {
+      expect(compassDockTabFor(TripNavTab.chat), TripNavTab.hub);
       expect(compassDockTabFor(TripNavTab.members), TripNavTab.hub);
       expect(compassDockTabFor(TripNavTab.notes), TripNavTab.hub);
       expect(compassDockTabFor(TripNavTab.expenses), TripNavTab.expenses);
@@ -46,7 +43,7 @@ void main() {
     const items = [
       AppNavItem(icon: Icons.receipt_long_rounded, label: 'Spend'),
       AppNavItem(icon: Icons.swap_horiz_rounded, label: 'Balances'),
-      AppNavItem(icon: Icons.chat_bubble_outline_rounded, label: 'Chat'),
+      AppNavItem(icon: Icons.chat_bubble_outline_rounded, label: 'Activity'),
       AppNavItem(icon: Icons.explore_outlined, label: 'Trip'),
     ];
 
@@ -68,7 +65,7 @@ void main() {
           ),
         ),
       );
-      for (final l in ['Spend', 'Balances', 'Chat', 'Trip']) {
+      for (final l in ['Spend', 'Balances', 'Activity', 'Trip']) {
         expect(find.text(l), findsOneWidget);
       }
       await tester.tap(find.byKey(const Key('dock-center')));

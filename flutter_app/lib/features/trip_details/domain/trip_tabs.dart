@@ -1,6 +1,6 @@
 /// Navigation tabs available within a trip context.
 /// [hub] is the Compass "Trip" tab (People, Notes, Receipts, Insights, Settings); legacy nav never lists it.
-enum TripNavTab { chat, expenses, ledger, members, notes, hub }
+enum TripNavTab { chat, expenses, ledger, members, notes, hub, activity }
 
 /// Evaluates whether the Notes navigation tab should appear on the bottom bar.
 /// Mirrors `showNotesNavTab` in `src/utils/tripTabs.ts`.
@@ -29,19 +29,22 @@ List<TripNavTab> visibleTripTabs({required bool isChatFirstNav, required bool sh
   return List.unmodifiable(tabs);
 }
 
-/// Compass trip dock (flag `enableCompassNav`): Spend, Balances, Chat (when chat is on), Trip. The centre
-/// "+" button is added by the dock itself.
-List<TripNavTab> compassDockTabs({required bool chatEnabled}) =>
-    List.unmodifiable([TripNavTab.expenses, TripNavTab.ledger, if (chatEnabled) TripNavTab.chat, TripNavTab.hub]);
+/// Compass trip dock (flag `enableCompassNav`): Balances, Spend, Activity, Trip. The centre "+" button is added
+/// by the dock itself. Chat lives under Trip, so it is not repeated here.
+List<TripNavTab> compassDockTabs() =>
+    List.unmodifiable([TripNavTab.ledger, TripNavTab.expenses, TripNavTab.activity, TripNavTab.hub]);
 
 /// Every page the Compass trip pager can show, in swipe order: the dock tabs, then the two tabs that live
-/// under Trip (People, Notes) so their links and notifications keep working.
+/// under Trip (Chat, People, Notes) so their links and notifications keep working.
 List<TripNavTab> compassPagerTabs({required bool chatEnabled, required bool showNotesTab}) => List.unmodifiable([
-  ...compassDockTabs(chatEnabled: chatEnabled),
+  ...compassDockTabs(),
+  if (chatEnabled) TripNavTab.chat,
   TripNavTab.members,
   if (showNotesTab) TripNavTab.notes,
 ]);
 
-/// The dock item that lights up for [current]: People and Notes belong to the Trip hub.
+/// The dock item that lights up for [current]: Chat, People and Notes belong to the Trip hub.
 TripNavTab compassDockTabFor(TripNavTab current) =>
-    current == TripNavTab.members || current == TripNavTab.notes ? TripNavTab.hub : current;
+    current == TripNavTab.members || current == TripNavTab.notes || current == TripNavTab.chat
+    ? TripNavTab.hub
+    : current;

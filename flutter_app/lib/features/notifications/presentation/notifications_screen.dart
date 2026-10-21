@@ -25,6 +25,7 @@ import '../../../shared/widgets/section_label.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../../trips/application/trips_providers.dart';
 import '../../trips/presentation/widgets/home_dock.dart';
+import '../../trip_details/application/trip_nav.dart' show openTripFresh;
 import '../application/notification_providers.dart';
 import 'notification_style.dart';
 
@@ -57,20 +58,28 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     // A second trip shell on top of an open one breaks the trip page, so with a trip already open we switch to the
     // row's trip in place (back then leaves to the page before it). With none open (Activity tab, banner on Trips)
     // the trip is pushed, so back returns to this list.
-    if (_tripOpenBelow(context)) {
-      context.go(target);
-    } else {
+    final open = _openTripId(context);
+    if (open == null) {
       unawaited(context.push(target));
+    } else if (open == id) {
+      context.go(target); // same trip: just change tab, back walks the tab trail
+    } else {
+      openTripFresh(context, id, tab: notificationTabFor(type)); // another trip: leave this one completely
     }
   }
 
-  /// True when a trip screen is somewhere in the navigation stack.
-  static bool _tripOpenBelow(BuildContext context) {
-    bool hasTrip(RouteMatchBase m) =>
-        m.matchedLocation.startsWith('/trip/') ||
-        (m is ShellRouteMatch && m.matches.any(hasTrip)) ||
-        (m is ImperativeRouteMatch && m.matches.matches.any(hasTrip));
-    return GoRouter.of(context).routerDelegate.currentConfiguration.matches.any(hasTrip);
+  /// The id of the trip screen somewhere in the navigation stack, or null when none is open.
+  static String? _openTripId(BuildContext context) {
+    String? found;
+    void visit(RouteMatchBase m) {
+      final hit = RegExp(r'^/trip/([^/]+)').firstMatch(m.matchedLocation);
+      if (hit != null) found ??= hit.group(1);
+      if (m is ShellRouteMatch) m.matches.forEach(visit);
+      if (m is ImperativeRouteMatch) m.matches.matches.forEach(visit);
+    }
+
+    GoRouter.of(context).routerDelegate.currentConfiguration.matches.forEach(visit);
+    return found;
   }
 
   Future<void> _confirm(NotificationItem n, Expense e) async {

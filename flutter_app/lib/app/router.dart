@@ -13,6 +13,7 @@ import '../features/auth/presentation/splash_screen.dart';
 import '../features/legal/presentation/privacy_screen.dart';
 import '../features/notifications/presentation/notification_prefs_screen.dart';
 import '../features/notifications/presentation/notifications_screen.dart';
+import '../features/notifications/presentation/trip_activity_pane.dart';
 import '../features/feedback/presentation/bug_report_screen.dart';
 import '../features/feedback/presentation/diagnostics_screen.dart';
 import '../features/feedback/presentation/feature_request_screen.dart';
@@ -178,6 +179,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                         TripNavTab.members => MembersTab(tripId: state.pathParameters['id']!),
                         TripNavTab.notes => NotesTab(tripId: state.pathParameters['id']!),
                         TripNavTab.hub => TripHubScreen(tripId: state.pathParameters['id']!),
+                        TripNavTab.activity => TripActivityPane(tripId: state.pathParameters['id']!),
                       },
                       routes: [
                         if (tab == TripNavTab.expenses) ...[

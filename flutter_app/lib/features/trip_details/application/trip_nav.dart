@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/flags/compass_flags.dart';
 import '../../../data/providers.dart';
@@ -33,11 +37,45 @@ final visibleTabsProvider = Provider.family<List<TripNavTab>, String>((ref, trip
   );
 });
 
-/// Tabs in the trip's bottom bar. Legacy: every visible tab. Compass: Spend, Balances, Chat, Trip (People and
-/// Notes stay swipeable pages but sit under Trip).
+/// Tabs in the trip's bottom bar. Legacy: every visible tab. Compass: Balances, Spend, Activity, Trip (Chat,
+/// People and Notes stay swipeable pages but sit under Trip).
 final dockTabsProvider = Provider.family<List<TripNavTab>, String>((ref, tripId) {
   if (!ref.watch(compassFlagProvider((compassNavFlag, tripId)))) return ref.watch(visibleTabsProvider(tripId));
-  final chat =
-      ref.watch(flagProvider(('enableTripChat', tripId))).value ?? (defaultFeatureFlags['enableTripChat'] ?? false);
-  return compassDockTabs(chatEnabled: chat);
+  return compassDockTabs();
 });
+
+/// Fires each time a trip shell is torn down (the trip page was left).
+final tripShellClosed = StreamController<void>.broadcast();
+
+/// Opens [tripId] from inside another trip. go_router keeps one shell state per route (a GlobalKey), and a plain
+/// `go` to another trip's URL reuses it: only the page you are on changes while every other tab keeps the old
+/// trip's pages. So leave the trip first, wait until its shell is really gone, then open the new trip: every tab,
+/// filter and number belongs to the new trip. [tab] defaults to the trip's first page (Balances under Compass).
+void openTripFresh(BuildContext context, String tripId, {String? tab}) {
+  final router = GoRouter.of(context);
+  final target = tab == null ? '/trip/$tripId' : '/trip/$tripId/$tab';
+  StreamSubscription<void>? sub;
+  Timer? fallback;
+  void open() {
+    if (sub == null) return;
+    unawaited(sub!.cancel());
+    sub = null;
+    fallback?.cancel();
+    router.go(target);
+  }
+
+  sub = tripShellClosed.stream.listen((_) => open());
+  fallback = Timer(const Duration(milliseconds: 1500), open); // if no shell was open, nothing to wait for
+  router.go('/');
+}
+
+/// Whether the route map is open above the trip pages (toggled from the Trip hub or the trip menu).
+class TripMapOpen extends Notifier<bool> {
+  TripMapOpen(this.tripId);
+  final String tripId;
+  @override
+  bool build() => false;
+  void toggle() => state = !state;
+}
+
+final tripMapOpenProvider = NotifierProvider.family<TripMapOpen, bool, String>(TripMapOpen.new);

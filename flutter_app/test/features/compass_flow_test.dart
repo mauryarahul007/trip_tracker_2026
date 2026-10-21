@@ -17,16 +17,64 @@ const compassOn = {'enableCompassNav', 'enableCompassSpend', 'enableCompassMoney
 
 void main() {
   group('Compass trip navigation', () {
-    testApp('flag on: dock is Spend, Balances, Chat, Trip with the orange Add button', (tester) async {
+    testApp('flag on: dock is Balances, Spend, Activity, Trip with the orange Add button', (tester) async {
       await pumpApp(tester, user: asha, flagsOn: compassOn);
       final s = await seedTrip(tester);
       await goTo(tester, '/trip/${s.tripId}/expenses');
       expect(key('compass-dock'), findsOneWidget);
       expect(key('dock-center'), findsOneWidget);
-      for (final l in ['Spend', 'Balances', 'Chat', 'Trip']) {
+      for (final l in ['Balances', 'Spend', 'Activity', 'Trip']) {
         expect(find.descendant(of: key('compass-dock'), matching: find.text(l)), findsOneWidget);
       }
       expect(key('compass-spend-summary'), findsOneWidget);
+    });
+
+    testApp('flag on: Activity opens in the dock, Chat moves to a Trip hub tile', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {...compassOn, 'enableTripChat'});
+      final s = await seedTrip(tester);
+      await goTo(tester, '/trip/${s.tripId}/ledger');
+      await tester.tap(find.descendant(of: key('compass-dock'), matching: find.text('Activity')));
+      await settle(tester, rounds: 14);
+      expect(find.text('No activity yet'), findsOneWidget);
+      await tester.tap(find.descendant(of: key('compass-dock'), matching: find.text('Trip')));
+      await settle(tester, rounds: 14);
+      expect(key('hub-chat'), findsOneWidget);
+    });
+
+    testApp('money flag: Balances keeps the settlement pass and drops the yellow close-out card', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {...compassOn, 'enableCloseoutPrompt'});
+      final s = await seedTrip(tester);
+      await addExpense(tester, s);
+      await goTo(tester, '/trip/${s.tripId}/ledger');
+      expect(key('sticky-balance'), findsOneWidget);
+      expect(key('hero-amount'), findsOneWidget);
+      expect(key('closeout-prompt'), findsNothing);
+    });
+
+    testApp('compass money off: the close-out card is still there', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableCloseoutPrompt'});
+      final s = await seedTrip(tester);
+      await addExpense(tester, s);
+      await goTo(tester, '/trip/${s.tripId}/ledger');
+      expect(key('closeout-prompt'), findsOneWidget);
+    });
+
+    testApp('compass spend: days start open and Collapse all / Expand all still work', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: compassOn);
+      final s = await seedTrip(tester);
+      await addExpense(tester, s, title: 'Beach lunch');
+      await goTo(tester, '/trip/${s.tripId}/expenses');
+      expect(find.text('Beach lunch'), findsOneWidget);
+      await tester.tap(key('tab-menu'));
+      await settle(tester);
+      await tester.tap(find.text('Collapse all days'));
+      await settle(tester, rounds: 10);
+      expect(find.text('Beach lunch'), findsNothing);
+      await tester.tap(key('tab-menu'));
+      await settle(tester);
+      await tester.tap(find.text('Expand all days'));
+      await settle(tester, rounds: 10);
+      expect(find.text('Beach lunch'), findsOneWidget);
     });
 
     testApp('flag on: Trip opens the hub and People opens from it, keeping Trip lit', (tester) async {

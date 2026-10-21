@@ -53,6 +53,7 @@ import '../application/expenses_providers.dart';
 import '../application/money_providers.dart';
 import 'conflict_sheet.dart';
 import 'widgets/balance_bars.dart';
+import 'widgets/compass_balance_widgets.dart';
 import '../../../core/flags/compass_flags.dart';
 import '../../trip_details/presentation/widgets/trip_get_started.dart';
 import 'widgets/add_expense_fab.dart';
@@ -330,6 +331,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     // "Settled" is a fact about the whole trip (nobody owes anybody), never about one person's balance.
     final tripSettled = outstanding < 0.01;
     // Everyone square after there were payments: a small celebration, and a tap the moment it happens.
+    final compassMoney = ref.watch(compassFlagProvider((compassMoneyFlag, id)));
     final balanceBarsOn = _flag(ref, 'enableBalanceBars', id) || ref.watch(compassFlagProvider((compassMoneyFlag, id)));
     final celebrateOn = _flag(ref, 'enableSettledCelebration', id) && tripSettled && result.balances.isNotEmpty;
     final becameSettled = _wasSettled == false && tripSettled;
@@ -1001,7 +1003,8 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           ),
         ),
       // Gone once everything is settled: nothing is left to prompt (Close out trip stays in the chips above).
-      if (closeoutOn && !tripSettled)
+      // Compass Balances drops this yellow checklist card; Close out trip stays in the chips above.
+      if (closeoutOn && !tripSettled && !compassMoney)
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: BentoTile(
@@ -1138,7 +1141,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             ),
           ),
         ),
-      // 1. Hero boarding pass: what is owed, stamped SETTLED or NOT SETTLED.
+      // 1. Hero boarding pass: what is owed, stamped SETTLED or NOT SETTLED (flips to You paid / Your share).
       Padding(
         key: const Key('sticky-balance'),
         padding: const EdgeInsets.only(bottom: 20),
@@ -1383,19 +1386,29 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
               Padding(
                 key: Key('transfer-$i'),
                 padding: EdgeInsets.only(bottom: upgradesOn ? 0 : 14),
-                child: LuggageStubTile(
-                  tone: isMe(t.from) ? BentoTone.peach : (isMe(t.to) ? BentoTone.mint : toneFor(t.from)),
-                  badge: isMe(t.from) ? l10n.ledYouPay : (isMe(t.to) ? l10n.ledPaysYou : null),
-                  fromName: t.fromLabel,
-                  toName: t.toLabel,
-                  fromLabel: l10n.ledFrom,
-                  toLabel: l10n.ledTo,
-                  caption: l10n.ledTransfer(t.fromLabel, t.toLabel),
-                  amountText: formatMoney(context, t.amount, cur),
-                  settleLabel: l10n.ledSettle,
-                  settleKey: Key('settle-$i'),
-                  onSettle: () => _settle(context, t),
-                ),
+                child: compassMoney
+                    ? CompassTransferRow(
+                        from: t.fromLabel,
+                        to: t.toLabel,
+                        amount: formatMoney(context, t.amount, cur),
+                        actionLabel: l10n.ledSettle,
+                        actionKey: Key('settle-$i'),
+                        primary: isMe(t.from),
+                        onAction: () => _settle(context, t),
+                      )
+                    : LuggageStubTile(
+                        tone: isMe(t.from) ? BentoTone.peach : (isMe(t.to) ? BentoTone.mint : toneFor(t.from)),
+                        badge: isMe(t.from) ? l10n.ledYouPay : (isMe(t.to) ? l10n.ledPaysYou : null),
+                        fromName: t.fromLabel,
+                        toName: t.toLabel,
+                        fromLabel: l10n.ledFrom,
+                        toLabel: l10n.ledTo,
+                        caption: l10n.ledTransfer(t.fromLabel, t.toLabel),
+                        amountText: formatMoney(context, t.amount, cur),
+                        settleLabel: l10n.ledSettle,
+                        settleKey: Key('settle-$i'),
+                        onSettle: () => _settle(context, t),
+                      ),
               ),
               if (upgradesOn)
                 Padding(

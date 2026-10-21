@@ -91,7 +91,7 @@ void main() {
   });
 
   group('switch between trips', () {
-    testApp('the trip name opens a list; picking a trip opens it on the same tab', (tester) async {
+    testApp('the trip name opens a list; picking a trip opens it on its first page', (tester) async {
       await pumpApp(tester, user: asha);
       final later = await tripAt(tester, 'Later Trip', 20);
       final sooner = await tripAt(tester, 'Sooner Trip', 5);

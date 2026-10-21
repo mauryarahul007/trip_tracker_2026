@@ -57,6 +57,7 @@ String tripTabLabel(BuildContext context, TripNavTab tab) {
     TripNavTab.members => l10n.navMembers,
     TripNavTab.notes => l10n.navNotes,
     TripNavTab.hub => 'Trip',
+    TripNavTab.activity => 'Activity',
   };
 }
 
@@ -74,6 +75,7 @@ IconData tripTabIcon(TripNavTab tab) => switch (tab) {
   TripNavTab.members => AppIcons.members,
   TripNavTab.notes => AppIcons.notes,
   TripNavTab.hub => Icons.explore_outlined,
+  TripNavTab.activity => Icons.notifications_none_rounded,
 };
 
 /// Header + bottom nav + swipeable tab pager. Per-tab state is kept by the
@@ -92,7 +94,6 @@ class TripShellScreen extends ConsumerStatefulWidget {
 class _TripShellScreenState extends ConsumerState<TripShellScreen> {
   var _trail = <int>[];
   late int _current;
-  bool _mapExpanded = false;
 
   RealtimeManager? _realtime;
 
@@ -116,6 +117,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
   @override
   void dispose() {
     unawaited(_realtime?.closeTrip());
+    tripShellClosed.add(null);
     super.dispose();
   }
 
@@ -139,7 +141,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
           builder: (_) => ShareTripSheet(tripId: widget.tripId),
         );
       case 'map':
-        setState(() => _mapExpanded = !_mapExpanded);
+        ref.read(tripMapOpenProvider(widget.tripId).notifier).toggle();
       case 'edit-trip':
         AppSheet.show<bool>(
           context: context,
@@ -196,6 +198,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
     final cleanBar = ref.watch(flagProvider(('enableCleanTopBar', widget.tripId))).value ?? true;
     final wide = MediaQuery.sizeOf(context).width >= kSideNavBreakpoint && tabs.length >= 2;
     final compass = ref.watch(compassFlagProvider((compassNavFlag, widget.tripId)));
+    final mapExpanded = ref.watch(tripMapOpenProvider(widget.tripId));
     final dial = ref.watch(flagProvider(('enableQuickAddSpeedDial', widget.tripId))).value ?? true;
     final dock = ref.watch(dockTabsProvider(widget.tripId));
     final dockActive = dock.indexOf(compass ? compassDockTabFor(currentTab) : currentTab);
@@ -223,7 +226,10 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
           // Bento: the app bar sits on the ground colour with an ink title; the theme supplies both.
           leading: IconButton(tooltip: l10n.actionBack, icon: const Icon(AppIcons.back, size: 20), onPressed: _onBack),
           title: _TripTitle(tripId: widget.tripId, tab: currentTab.name),
-          actions: cleanBar
+          // Compass nav: Share, Edit trip, Route map, Live location and App settings moved to the Trip tab.
+          actions: compass
+              ? [_SyncAction(tripId: widget.tripId), NotificationBell(tripId: widget.tripId)]
+              : cleanBar
               ? [
                   _SyncAction(tripId: widget.tripId),
                   NotificationBell(tripId: widget.tripId),
@@ -243,7 +249,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                           key: const Key('action-trip-map'),
                           value: 'map',
                           child: ListTile(
-                            leading: Icon(_mapExpanded ? Icons.map : Icons.map_outlined),
+                            leading: Icon(mapExpanded ? Icons.map : Icons.map_outlined),
                             title: Text(l10n.tripRouteMap),
                           ),
                         ),
@@ -278,9 +284,9 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                   if (trip != null)
                     IconButton(
                       key: const Key('action-trip-map'),
-                      icon: Icon(_mapExpanded ? Icons.map : Icons.map_outlined),
+                      icon: Icon(mapExpanded ? Icons.map : Icons.map_outlined),
                       tooltip: 'Route Map',
-                      onPressed: () => setState(() => _mapExpanded = !_mapExpanded),
+                      onPressed: () => ref.read(tripMapOpenProvider(widget.tripId).notifier).toggle(),
                     ),
                   IconButton(
                     icon: const Icon(AppIcons.share),
@@ -353,7 +359,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                         duration: const Duration(milliseconds: 220),
                         curve: Curves.easeOutCubic,
                         alignment: Alignment.topCenter,
-                        child: _mapExpanded && trip != null
+                        child: mapExpanded && trip != null
                             ? TripRoutePanel(
                                 trip: trip,
                                 showStops:
@@ -737,7 +743,7 @@ class _TripTitle extends ConsumerWidget {
               onTap: () {
                 unawaited(AppHaptics.selection());
                 Navigator.of(sheetCtx).pop();
-                if (x.id != tripId) context.go('/trip/${x.id}/$tab');
+                if (x.id != tripId) openTripFresh(context, x.id);
               },
             ),
         ],

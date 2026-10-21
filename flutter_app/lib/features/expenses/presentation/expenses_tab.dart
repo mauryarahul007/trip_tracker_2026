@@ -69,6 +69,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
 
   /// Days the user toggled away from the default (collapsed, like the web).
   final _expandedDays = <String>{};
+  // Compass spend opens each day the first time it is seen; Collapse all / Expand all and taps work after that.
+  final _seenDays = <String>{};
   final _hidden = <String>{}; // rows removed from view the instant they are swiped
 
   /// Wide windows show the selected expense in a side panel (board 08) instead of a bottom sheet.
@@ -236,8 +238,15 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final binOn = _flag(ref, 'enableRecycleBin', id);
 
     final shown = filtered.take(_visible).toList();
+    final compassSpend = ref.watch(compassFlagProvider((compassSpendFlag, id)));
     final dayGroups = groupByDay(shown.where(isActualExpense).toList());
     final settlementGroups = groupByDay(shown.where((e) => !isActualExpense(e)).toList());
+    // Only once the flag has really loaded: while it loads it reads as its default (ON) and would open every day.
+    if (ref.watch(flagProvider((compassSpendFlag, id))).value == true) {
+      for (final g in dayGroups) {
+        if (_seenDays.add(g.date)) _expandedDays.add(g.date);
+      }
+    }
     final allExpanded = dayGroups.isNotEmpty && dayGroups.every((g) => _expandedDays.contains(g.date));
 
     final settlement = ref.watch(tripSettlementProvider(id));
@@ -276,7 +285,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     // Desktop (board 08): rows become table rows with column headers.
     final wide = MediaQuery.sizeOf(context).width >= _kDetailPanelBreakpoint;
 
-    final tidyOn = _flag(ref, 'enableTidyExpenses', id);
+    // Compass spend uses the flat tile rows and day cards of the redesign (what the tidy flag already draws).
+    final tidyOn = _flag(ref, 'enableTidyExpenses', id) || compassSpend;
     Widget rowFor(Expense e, {required bool lastInGroup}) {
       if (wide) {
         return _TableRow(

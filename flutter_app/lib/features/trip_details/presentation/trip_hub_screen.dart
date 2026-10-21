@@ -1,3 +1,6 @@
+import '../../chat/application/chat_providers.dart';
+import 'widgets/edit_trip_sheet.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -34,6 +37,9 @@ class TripHubScreen extends ConsumerWidget {
     final members = ref.watch(tripMembersProvider(tripId)).value?.length ?? 0;
     final hasNotes = ref.watch(visibleTabsProvider(tripId)).contains(TripNavTab.notes);
     final insights = ref.watch(compassFlagProvider(('enableSpendInsights', tripId)));
+    final mapOpen = ref.watch(tripMapOpenProvider(tripId));
+    final hasChat = ref.watch(visibleTabsProvider(tripId)).contains(TripNavTab.chat);
+    final unreadChat = hasChat && ref.watch(chatUnreadProvider(tripId));
 
     void live() {
       final user = ref.read(authStateProvider).user;
@@ -49,6 +55,10 @@ class TripHubScreen extends ConsumerWidget {
       _HubTile('hub-people', AppIcons.members, l10n.navMembers, '$members traveler${members == 1 ? '' : 's'}', () {
         context.go('/trip/$tripId/members');
       }),
+      if (hasChat)
+        _HubTile('hub-chat', AppIcons.chat, l10n.navChat, unreadChat ? 'New messages' : 'Talk to the group', () {
+          context.go('/trip/$tripId/chat');
+        }),
       if (hasNotes)
         _HubTile('hub-notes', AppIcons.notes, l10n.navNotes, 'Notes, lists, passes', () {
           context.go('/trip/$tripId/notes');
@@ -67,6 +77,22 @@ class TripHubScreen extends ConsumerWidget {
           builder: (_) => ShareTripSheet(tripId: tripId),
         );
       }),
+      _HubTile('hub-edit', Icons.edit_outlined, 'Edit trip', 'Name, dates, destination', () {
+        AppSheet.show<bool>(
+          context: context,
+          title: 'Edit Trip',
+          builder: (_) => EditTripSheet(tripId: tripId),
+        );
+      }),
+      _HubTile(
+        'hub-map',
+        mapOpen ? Icons.map : Icons.map_outlined,
+        l10n.tripRouteMap,
+        mapOpen ? 'Showing' : 'Hidden',
+        () {
+          ref.read(tripMapOpenProvider(tripId).notifier).toggle();
+        },
+      ),
       _HubTile('hub-live', AppIcons.location, 'Live location', 'Share where you are', live),
       _HubTile('hub-tools', Icons.build_circle_outlined, 'Tools', 'Export, import, wrapped', () {
         AppSheet.show<void>(
@@ -76,6 +102,9 @@ class TripHubScreen extends ConsumerWidget {
       }),
       _HubTile('hub-settings', AppIcons.settings, l10n.tripSettingsMenu, 'Currency, rules, members', () {
         context.push('/trip/$tripId/settings');
+      }),
+      _HubTile('hub-app-settings', Icons.tune_rounded, l10n.tripAppSettings, 'Theme, language, account', () {
+        context.push('/settings');
       }),
     ];
 

@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.73.0',
+    date: '2026-10-21',
+    changes: [
+      'Activity is a proper tab now: filter chips for All, Unread, Money, People and Chat, updates grouped by day, mark all read, and Delete all.',
+      'The trip menu moved into the Trip tab: Edit trip, Route map, Live location, Invite, Trip settings and App settings. Chat is a tile there too.',
+      'Switching trips from the trip name now opens the other trip completely: every tab and number is for the trip you picked, not a mix of both.',
+      'Balances keeps the settlement pass and its flip, the yellow Close out card is gone, and Spend can fold and open all days again.',
+    ],
+  },
+  {
     version: '3.72.0',
     date: '2026-10-21',
     changes: [

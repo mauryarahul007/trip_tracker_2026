@@ -8,6 +8,12 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.73.0', '2026-10-21', [
+    'Activity is a proper tab now: filter chips for All, Unread, Money, People and Chat, updates grouped by day, mark all read, and Delete all.',
+    'The trip menu moved into the Trip tab: Edit trip, Route map, Live location, Invite, Trip settings and App settings. Chat is a tile there too.',
+    'Switching trips from the trip name now opens the other trip completely: every tab and number is for the trip you picked, not a mix of both.',
+    'Balances keeps the settlement pass and its flip, the yellow Close out card is gone, and Spend can fold and open all days again.',
+  ]),
   ChangelogEntry('3.72.0', '2026-10-21', [
     'A trip with no expenses now opens on Get this trip rolling: share your invite link, copy it, or show the code and QR, then add your first expense. Balances and settlement appear once there is something to split.',
     'The trip bottom bar is now Spend, Balances, an orange + for Add expense, Chat and Trip. Trip opens People, Notes, Receipts, Insights, Invite, Live location, Tools and Trip settings.',
@@ -52,9 +58,5 @@ const List<ChangelogEntry> changelogEntries = [
   ChangelogEntry('3.68.3', '2026-10-19', [
     'After everyone has settled, the trip now shows as settled in both Fewest payments and Per person, and the amount outstanding is the same in both. This is fixed on the web and in the Flutter app.',
     'Behind the scenes (Flutter app): a clearer trip header line, the yellow close-out card disappears once the trip is settled, and a settlement paid to you has a Confirm received button in History.',
-  ]),
-  ChangelogEntry('3.68.2', '2026-10-19', [
-    'Behind the scenes (Flutter app): Voice add expense uses the Google recognizer, understands spoken amounts like "five hundred" or "paanch sau", shows a listening panel and explains errors with Try again.',
-    'Behind the scenes (Flutter app): Edit Trip takes one box per destination, with add and remove.',
   ]),
 ];
