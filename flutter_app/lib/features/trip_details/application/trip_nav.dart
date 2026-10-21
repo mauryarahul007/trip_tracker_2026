@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/flags/compass_flags.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/flag_defaults.g.dart';
 import '../../../domain/models/trip.dart';
@@ -15,6 +16,12 @@ final visibleTabsProvider = Provider.family<List<TripNavTab>, String>((ref, trip
   // While flags load, use the registry defaults so the tab bar never flickers.
   bool flag(String key) => ref.watch(flagProvider((key, tripId))).value ?? (defaultFeatureFlags[key] ?? false);
   final chatFirst = flag('enableChatFirstNav');
+  if (ref.watch(compassFlagProvider((compassNavFlag, tripId)))) {
+    return compassPagerTabs(
+      chatEnabled: flag('enableTripChat'),
+      showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses'),
+    );
+  }
   return visibleTripTabs(
     isChatFirstNav: chatFirst,
     showNotesTab: showNotesNavTab(
@@ -24,4 +31,13 @@ final visibleTabsProvider = Provider.family<List<TripNavTab>, String>((ref, trip
       isChatFirstNav: chatFirst,
     ),
   );
+});
+
+/// Tabs in the trip's bottom bar. Legacy: every visible tab. Compass: Spend, Balances, Chat, Trip (People and
+/// Notes stay swipeable pages but sit under Trip).
+final dockTabsProvider = Provider.family<List<TripNavTab>, String>((ref, tripId) {
+  if (!ref.watch(compassFlagProvider((compassNavFlag, tripId)))) return ref.watch(visibleTabsProvider(tripId));
+  final chat =
+      ref.watch(flagProvider(('enableTripChat', tripId))).value ?? (defaultFeatureFlags['enableTripChat'] ?? false);
+  return compassDockTabs(chatEnabled: chat);
 });

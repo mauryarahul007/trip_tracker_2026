@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_tokens.dart';
+import '../theme/compass.dart';
 
 class AppNavItem {
   const AppNavItem({required this.icon, required this.label, this.badge = false, this.badgeKey});
@@ -24,6 +25,7 @@ class AppBottomNav extends StatelessWidget {
     this.forceDock,
     this.centerAction,
     this.centerLabel,
+    this.compass = false,
     super.key,
   });
 
@@ -31,6 +33,10 @@ class AppBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
   final bool? forceDock;
+
+  /// Compass look (flag `enableCompassNav`): every item shows its label, the selected one is teal with a top bar,
+  /// and the centre action is the orange Add button.
+  final bool compass;
 
   /// Round button between the two halves of the dock.
   final VoidCallback? centerAction;
@@ -43,6 +49,15 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (compass && _useDock) {
+      return _CompassDock(
+        items: items,
+        currentIndex: currentIndex,
+        onTap: onTap,
+        centerAction: centerAction,
+        centerLabel: centerLabel,
+      );
+    }
     return _useDock
         ? _Dock(
             items: items,
@@ -70,6 +85,124 @@ class _M3Bar extends StatelessWidget {
       selectedIndex: nav.currentIndex,
       onDestinationSelected: nav.onTap,
       destinations: [for (final it in nav.items) NavigationDestination(icon: _icon(it), label: it.label)],
+    );
+  }
+}
+
+/// Compass dock: floating pill, labels always visible, orange raised centre button.
+class _CompassDock extends StatelessWidget {
+  const _CompassDock({
+    required this.items,
+    required this.currentIndex,
+    required this.onTap,
+    this.centerAction,
+    this.centerLabel,
+  });
+
+  final List<AppNavItem> items;
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+  final VoidCallback? centerAction;
+  final String? centerLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+        child: DecoratedBox(
+          key: const Key('compass-dock'),
+          decoration: BoxDecoration(
+            color: t.bgSurface,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: t.borderColor),
+            boxShadow: t.shadowLg,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            child: Row(
+              children: [
+                for (var i = 0; i < items.length; i++) ...[
+                  if (centerAction != null && i == items.length ~/ 2)
+                    Semantics(
+                      button: true,
+                      label: centerLabel,
+                      child: InkWell(
+                        key: const Key('dock-center'),
+                        onTap: centerAction,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          width: 52,
+                          height: 52,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(color: t.sun, borderRadius: BorderRadius.circular(20)),
+                          child: Icon(Icons.add_rounded, color: t.onSun, size: 28),
+                        ),
+                      ),
+                    ),
+                  Expanded(
+                    child: _CompassItem(item: items[i], selected: i == currentIndex, onTap: () => onTap(i)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CompassItem extends StatelessWidget {
+  const _CompassItem({required this.item, required this.selected, required this.onTap});
+
+  final AppNavItem item;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final color = selected ? t.primaryAccent : t.textMuted;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: item.label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 52),
+          child: ExcludeSemantics(
+            child: Column(
+              mainAxisSize:
+                  MainAxisSize.min, // the dock sits in a loose-height slot: a max column would fill the screen
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: t.durationNormal,
+                  width: selected ? 22 : 0,
+                  height: 3,
+                  margin: const EdgeInsets.only(bottom: 3),
+                  decoration: BoxDecoration(color: t.primaryAccent, borderRadius: BorderRadius.circular(3)),
+                ),
+                IconTheme(
+                  data: IconThemeData(color: color, size: 22),
+                  child: _icon(item, color: color),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

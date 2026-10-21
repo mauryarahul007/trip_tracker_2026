@@ -8,6 +8,12 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.72.0', '2026-10-21', [
+    'A trip with no expenses now opens on Get this trip rolling: share your invite link, copy it, or show the code and QR, then add your first expense. Balances and settlement appear once there is something to split.',
+    'The trip bottom bar is now Spend, Balances, an orange + for Add expense, Chat and Trip. Trip opens People, Notes, Receipts, Insights, Invite, Live location, Tools and Trip settings.',
+    'The Expenses tab starts with a Total spent card showing the total, per person and your biggest category, and each expense has a category colour ring.',
+    'Balances always show who is up and who is down. Data and storage shows your total with a data and cache bar. On wide web windows, Expenses has a Settle up pane on the right.',
+  ]),
   ChangelogEntry('3.71.1', '2026-10-20', [
     'The Add expense button under the top trip card is no longer hidden behind the Join / New Trip bar.',
     'Mistakes on the new-expense form now show right above the Save buttons, so you always see why a save did not happen. Save and add another on an empty form says: First add an expense.',
@@ -50,8 +56,5 @@ const List<ChangelogEntry> changelogEntries = [
   ChangelogEntry('3.68.2', '2026-10-19', [
     'Behind the scenes (Flutter app): Voice add expense uses the Google recognizer, understands spoken amounts like "five hundred" or "paanch sau", shows a listening panel and explains errors with Try again.',
     'Behind the scenes (Flutter app): Edit Trip takes one box per destination, with add and remove.',
-  ]),
-  ChangelogEntry('3.68.1', '2026-10-19', [
-    'Settling with a group in two or more parts now works. The second payment used to fail with a permissions error when it was recorded under your groupmate. Fixed on the web and in the Flutter app.',
   ]),
 ];

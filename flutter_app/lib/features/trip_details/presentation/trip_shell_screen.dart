@@ -11,7 +11,9 @@ import '../../../core/env/app_env.dart';
 import '../../../core/clock.dart';
 import '../../../core/network/connectivity_provider.dart';
 import '../../../core/platform/haptics.dart';
+import '../../../core/flags/compass_flags.dart';
 import '../../../data/providers.dart';
+import '../../expenses/presentation/widgets/add_expense_fab.dart' show startAddExpense;
 import '../../../data/realtime/realtime_manager.dart';
 import '../../../domain/logic/tab_trail.dart';
 import '../../../domain/logic/trip_status.dart';
@@ -42,6 +44,7 @@ import '../../expenses/application/money_providers.dart' show allTripsProvider;
 import '../../trips/application/trip_accent.dart';
 import '../../trips/application/trips_providers.dart';
 import '../application/trip_nav.dart';
+import 'widgets/compass_balances_rail.dart';
 import '../domain/trip_tabs.dart';
 
 /// Branch order == [TripNavTab] order (chat, expenses, ledger, members, notes).
@@ -53,8 +56,16 @@ String tripTabLabel(BuildContext context, TripNavTab tab) {
     TripNavTab.ledger => l10n.navSummary,
     TripNavTab.members => l10n.navMembers,
     TripNavTab.notes => l10n.navNotes,
+    TripNavTab.hub => 'Trip',
   };
 }
+
+/// Compass dock wording (flag `enableCompassNav`): the money tabs are named for what you do there.
+String compassTabLabel(BuildContext context, TripNavTab tab) => switch (tab) {
+  TripNavTab.expenses => 'Spend',
+  TripNavTab.ledger => 'Balances',
+  _ => tripTabLabel(context, tab),
+};
 
 IconData tripTabIcon(TripNavTab tab) => switch (tab) {
   TripNavTab.chat => AppIcons.chat,
@@ -62,6 +73,7 @@ IconData tripTabIcon(TripNavTab tab) => switch (tab) {
   TripNavTab.ledger => Icons.space_dashboard_rounded,
   TripNavTab.members => AppIcons.members,
   TripNavTab.notes => AppIcons.notes,
+  TripNavTab.hub => Icons.explore_outlined,
 };
 
 /// Header + bottom nav + swipeable tab pager. Per-tab state is kept by the
@@ -183,11 +195,18 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
 
     final cleanBar = ref.watch(flagProvider(('enableCleanTopBar', widget.tripId))).value ?? true;
     final wide = MediaQuery.sizeOf(context).width >= kSideNavBreakpoint && tabs.length >= 2;
+    final compass = ref.watch(compassFlagProvider((compassNavFlag, widget.tripId)));
+    final dial = ref.watch(flagProvider(('enableQuickAddSpeedDial', widget.tripId))).value ?? true;
+    final dock = ref.watch(dockTabsProvider(widget.tripId));
+    final dockActive = dock.indexOf(compass ? compassDockTabFor(currentTab) : currentTab);
+    // Compass web: a third pane with Settle up beside the expense table on very wide windows.
+    final compassWebRail =
+        ref.watch(compassFlagProvider((compassWebFlag, widget.tripId))) && MediaQuery.sizeOf(context).width >= 1280;
     final navItems = [
-      for (final t in tabs)
+      for (final t in dock)
         AppNavItem(
           icon: tripTabIcon(t),
-          label: tripTabLabel(context, t),
+          label: compass ? compassTabLabel(context, t) : tripTabLabel(context, t),
           badge: t == TripNavTab.chat && ref.watch(chatUnreadProvider(widget.tripId)),
           badgeKey: const Key('chat-tab-unread'),
         ),
@@ -317,8 +336,8 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
             if (wide)
               AppSideNav(
                 items: navItems,
-                currentIndex: activeIndex < 0 ? 0 : activeIndex,
-                onTap: (i) => _goTab(tabs[i].index),
+                currentIndex: dockActive < 0 ? 0 : dockActive,
+                onTap: (i) => _goTab(dock[i].index),
                 extended: MediaQuery.sizeOf(context).width >= kSideNavExtendedBreakpoint,
               ),
             Expanded(
@@ -355,14 +374,20 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 ),
               ),
             ),
+            if (compassWebRail && currentTab == TripNavTab.expenses) CompassBalancesRail(tripId: widget.tripId),
           ],
         ),
-        bottomNavigationBar: tabs.length < 2 || wide
+        bottomNavigationBar: dock.length < 2 || wide
             ? null
             : AppBottomNav(
-                currentIndex: activeIndex < 0 ? 0 : activeIndex,
-                onTap: (i) => _goTab(tabs[i].index),
+                compass: compass,
+                currentIndex: dockActive < 0 ? 0 : dockActive,
+                onTap: (i) => _goTab(dock[i].index),
                 items: navItems,
+                centerAction: compass
+                    ? () => unawaited(startAddExpense(context, ref, widget.tripId, dial: dial))
+                    : null,
+                centerLabel: l10n.expAdd,
               ),
       ),
     );
@@ -424,6 +449,14 @@ class _TripTabPagerState extends ConsumerState<TripTabPager> {
   @override
   Widget build(BuildContext context) {
     final tabs = ref.watch(visibleTabsProvider(widget.tripId));
+    // The tab list can change under us (flags finish loading, Compass nav is switched): keep the page on the
+    // tab the router is showing instead of the same page number of the new list.
+    ref.listen(visibleTabsProvider(widget.tripId), (_, _) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final c = _controller;
+        if (mounted && c != null && c.hasClients && (c.page ?? 0).round() != _page) c.jumpToPage(_page);
+      });
+    });
     return PageView(
       controller: _controller,
       onPageChanged: (page) {

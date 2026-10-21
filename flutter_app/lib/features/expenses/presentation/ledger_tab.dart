@@ -53,6 +53,8 @@ import '../application/expenses_providers.dart';
 import '../application/money_providers.dart';
 import 'conflict_sheet.dart';
 import 'widgets/balance_bars.dart';
+import '../../../core/flags/compass_flags.dart';
+import '../../trip_details/presentation/widgets/trip_get_started.dart';
 import 'widgets/add_expense_fab.dart';
 import 'widgets/spend_donut.dart';
 import 'widgets/expense_detail_sheet.dart';
@@ -224,6 +226,13 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final trip = ref.watch(tripProvider(id)).value;
     final result = ref.watch(tripSettlementProvider(id));
     if (trip == null || result == null) return const SkeletonPage();
+    // A trip with no expenses has nothing to settle: show the start card, not an empty pass and settlement.
+    final loaded = ref.watch(tripExpensesProvider(id)).value;
+    if (loaded != null &&
+        ref.watch(compassFlagProvider((tripGetStartedFlag, id))) &&
+        !loaded.any((e) => e.deletedAt == null && !e.isSettlement)) {
+      return TripGetStarted(tripId: id);
+    }
     final cur = trip.baseCurrency;
     // The server only accepts this change from the trip owner or a superadmin (RLS), so only they get the switch;
     // for anyone else it would flip back on the next sync.
@@ -321,7 +330,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     // "Settled" is a fact about the whole trip (nobody owes anybody), never about one person's balance.
     final tripSettled = outstanding < 0.01;
     // Everyone square after there were payments: a small celebration, and a tap the moment it happens.
-    final balanceBarsOn = _flag(ref, 'enableBalanceBars', id);
+    final balanceBarsOn = _flag(ref, 'enableBalanceBars', id) || ref.watch(compassFlagProvider((compassMoneyFlag, id)));
     final celebrateOn = _flag(ref, 'enableSettledCelebration', id) && tripSettled && result.balances.isNotEmpty;
     final becameSettled = _wasSettled == false && tripSettled;
     _wasSettled = tripSettled;

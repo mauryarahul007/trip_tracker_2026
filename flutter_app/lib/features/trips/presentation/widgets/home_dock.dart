@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/flags/compass_flags.dart';
 import '../../../../data/providers.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_icons.dart';
@@ -37,8 +38,17 @@ Future<void> createTripFlow(BuildContext context) async {
 /// True when the window is wide enough for the desktop shell (left rail, no bottom dock).
 bool isWideHome(BuildContext context) => MediaQuery.sizeOf(context).width >= kSideNavBreakpoint;
 
-List<AppNavItem> _homeItems(BuildContext context) {
+List<AppNavItem> _homeItems(BuildContext context, {bool compass = false}) {
   final l10n = context.l10n;
+  if (compass) {
+    // Compass keeps the same four places; Balances is called Wallet because it spans every trip.
+    return [
+      AppNavItem(icon: AppIcons.expenses, label: l10n.navTrips),
+      const AppNavItem(icon: Icons.account_balance_wallet_outlined, label: 'Wallet'),
+      const AppNavItem(icon: AppIcons.bell, label: 'Activity'),
+      const AppNavItem(icon: Icons.person_outline_rounded, label: 'Me'),
+    ];
+  }
   // ponytail: Activity / Me labels are English-only until the ARB files are regenerated.
   return [
     AppNavItem(icon: AppIcons.expenses, label: l10n.navTrips),
@@ -58,8 +68,10 @@ void _goTab(BuildContext context, HomeTab current, int i) {
 Widget? buildHomeDock(BuildContext context, WidgetRef ref, HomeTab current) {
   if (!ref.watch(horizonNavProvider) || isWideHome(context)) return null;
   final l10n = context.l10n;
+  final compass = ref.watch(compassNavProvider);
   return AppBottomNav(
-    items: _homeItems(context),
+    compass: compass,
+    items: _homeItems(context, compass: compass),
     currentIndex: current.index,
     onTap: (i) => _goTab(context, current, i),
     centerAction: () => unawaited(createTripFlow(context)),
@@ -92,7 +104,7 @@ Widget wrapHomeBody(BuildContext context, WidgetRef ref, HomeTab current, Widget
     child: Row(
       children: [
         AppSideNav(
-          items: _homeItems(context),
+          items: _homeItems(context, compass: ref.watch(compassNavProvider)),
           currentIndex: current.index,
           extended: extended,
           onTap: (i) => _goTab(context, current, i),

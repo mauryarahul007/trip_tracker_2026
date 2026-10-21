@@ -1,5 +1,6 @@
 /// Navigation tabs available within a trip context.
-enum TripNavTab { chat, expenses, ledger, members, notes }
+/// [hub] is the Compass "Trip" tab (People, Notes, Receipts, Insights, Settings); legacy nav never lists it.
+enum TripNavTab { chat, expenses, ledger, members, notes, hub }
 
 /// Evaluates whether the Notes navigation tab should appear on the bottom bar.
 /// Mirrors `showNotesNavTab` in `src/utils/tripTabs.ts`.
@@ -27,3 +28,20 @@ List<TripNavTab> visibleTripTabs({required bool isChatFirstNav, required bool sh
   }
   return List.unmodifiable(tabs);
 }
+
+/// Compass trip dock (flag `enableCompassNav`): Spend, Balances, Chat (when chat is on), Trip. The centre
+/// "+" button is added by the dock itself.
+List<TripNavTab> compassDockTabs({required bool chatEnabled}) =>
+    List.unmodifiable([TripNavTab.expenses, TripNavTab.ledger, if (chatEnabled) TripNavTab.chat, TripNavTab.hub]);
+
+/// Every page the Compass trip pager can show, in swipe order: the dock tabs, then the two tabs that live
+/// under Trip (People, Notes) so their links and notifications keep working.
+List<TripNavTab> compassPagerTabs({required bool chatEnabled, required bool showNotesTab}) => List.unmodifiable([
+  ...compassDockTabs(chatEnabled: chatEnabled),
+  TripNavTab.members,
+  if (showNotesTab) TripNavTab.notes,
+]);
+
+/// The dock item that lights up for [current]: People and Notes belong to the Trip hub.
+TripNavTab compassDockTabFor(TripNavTab current) =>
+    current == TripNavTab.members || current == TripNavTab.notes ? TripNavTab.hub : current;

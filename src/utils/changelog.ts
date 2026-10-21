@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.72.0',
+    date: '2026-10-21',
+    changes: [
+      'A trip with no expenses now opens on Get this trip rolling: share your invite link, copy it, or show the code and QR, then add your first expense. Balances and settlement appear once there is something to split.',
+      'The trip bottom bar is now Spend, Balances, an orange + for Add expense, Chat and Trip. Trip opens People, Notes, Receipts, Insights, Invite, Live location, Tools and Trip settings.',
+      'The Expenses tab starts with a Total spent card showing the total, per person and your biggest category, and each expense has a category colour ring.',
+      'Balances always show who is up and who is down. Data and storage shows your total with a data and cache bar. On wide web windows, Expenses has a Settle up pane on the right.',
+    ],
+  },
+  {
     version: '3.71.1',
     date: '2026-10-20',
     changes: [

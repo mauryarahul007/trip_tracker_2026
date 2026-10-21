@@ -37,7 +37,10 @@ import 'quick_add_sheet.dart';
 import 'trip_tools_sheet.dart';
 import 'widgets/expense_detail_sheet.dart';
 import 'widgets/expense_filter_sheet.dart';
+import '../../../core/flags/compass_flags.dart';
+import '../../trip_details/presentation/widgets/trip_get_started.dart';
 import 'widgets/add_expense_fab.dart';
+import 'widgets/compass_spend_summary.dart';
 import 'widgets/expense_row.dart';
 import 'widgets/expense_swipe.dart';
 
@@ -209,6 +212,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final trip = ref.watch(tripProvider(id)).value;
     final all = ref.watch(tripExpensesProvider(id));
     if (trip == null || all.isLoading) return const SkeletonPage();
+    if (ref.watch(compassFlagProvider((tripGetStartedFlag, id))) &&
+        !(all.value ?? const <Expense>[]).any((e) => e.deletedAt == null && !e.isSettlement)) {
+      return TripGetStarted(tripId: id);
+    }
 
     final members = {for (final m in ref.watch(tripMembersProvider(id)).value ?? const <Member>[]) m.id: m};
     final categories = ref.watch(tripCategoriesProvider(id));
@@ -288,7 +295,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         categories: categories,
         myMemberId: myMember,
         compact: compactActive,
-        colorRings: _flag(ref, 'enableCategoryColorRings', id),
+        colorRings:
+            _flag(ref, 'enableCategoryColorRings', id) || ref.watch(compassFlagProvider((compassSpendFlag, id))),
         tidy: tidyOn,
         isDirty: dirty.contains(e.id),
         isConflict: conflicts.contains(e.id),
@@ -365,6 +373,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (ref.watch(compassFlagProvider((compassSpendFlag, id)))) CompassSpendSummary(tripId: id),
           if ((sync != null && !sync.idle) || chips.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),

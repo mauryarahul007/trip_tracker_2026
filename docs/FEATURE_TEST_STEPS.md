@@ -21,6 +21,8 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-21 | unreleased | TRIP-GET-STARTED | [Get this trip rolling: start card on a blank trip](#trip-get-started--get-this-trip-rolling-start-card-on-a-blank-trip) |
+| 2026-10-21 | unreleased | COMPASS | [Compass: trip dock + Trip hub, Spend header, balance bars, storage card, web Settle-up pane](#compass--trip-dock--trip-hub-spend-header-balance-bars-storage-card-web-settle-up-pane) |
 | 2026-10-20 | unreleased | UX-BATCH-4 | [Balance bars, deck quick add, receipt empty action, icon labels](#ux-batch-4--balance-bars-deck-quick-add-receipt-empty-action-icon-labels) |
 | 2026-10-20 | unreleased | SAVE-ADD-ANOTHER | [Save and add another on the new-expense form](#save-add-another--save-and-add-another-on-the-new-expense-form) |
 | 2026-10-20 | unreleased | CONFLICT-DIFF | [Sync conflict sheet shows what changed](#conflict-diff--sync-conflict-sheet-shows-what-changed) |
@@ -3530,3 +3532,52 @@ Then add a row to the **Index** table.
 
 **Icon labels**
 11. With TalkBack or VoiceOver, focus the back arrow on Insights and the close button on the UPI payment sheet. Pass: they announce "Back" and "Close".
+
+## COMPASS — Trip dock + Trip hub, Spend header, balance bars, storage card, web Settle-up pane
+
+**Version:** unreleased · **Flags (all default ON):** `enableCompassNav` (Core), `enableCompassSpend` (Trip), `enableCompassMoney` (Trip), `enableCompassMe` (Core), `enableCompassWeb` (Core). Design: `docs/compass-redesign-plan.md`. Login and the Trips home layout are intentionally unchanged. Turn a flag OFF in Ops Deck → Flags (or Settings → Flag overrides on dev builds) for the negative checks.
+
+**Trip bottom bar and Trip hub (`enableCompassNav`)**
+1. Open any trip on a phone. Pass: the bottom bar reads **Spend, Balances, [orange +], Chat, Trip**, every label always visible, the current one teal with a small bar above its icon. The old floating **Add expense** button is gone.
+2. Tap the orange **+**. Pass: the Quick add / full form chooser opens (or the full form when Quick add speed dial is OFF), exactly as the old button did.
+3. Tap **Trip**. Pass: a cover with the trip name and a grid: **Members, Notes** (only if Notes is on), **Receipts, Insights** (only if Spend insights is on), **Invite, Live location, Tools, Trip settings**. Each tile opens what it says.
+4. Tap **Members**. Pass: the People page opens and **Trip** stays the lit item. Swipe sideways: pages move Spend, Balances, Chat, Trip, People, Notes in that order.
+5. Open an old link or notification for `/trip/<id>/notes` and `/trip/<id>/members`. Pass: they still open, with **Trip** lit.
+6. Open a trip from the Trips list. Pass: it opens on Balances (who owes what), as before.
+7. On the Trips home, look at the bottom bar. Pass: **Trips, Wallet, Activity, Me** with the orange + in the middle; Wallet opens the cross-trip balances. Layout of the Trips screen itself is unchanged.
+8. Switch to dark mode and to AMOLED. Pass: bar, orange button and hub are readable; the orange + has dark text-on-orange contrast.
+9. Turn OFF Trip Group Chat (`enableTripChat`). Pass: the trip bar shows **Spend, Balances, +, Trip** (no Chat).
+
+**Spend header (`enableCompassSpend`)**
+10. Open Spend (Expenses) on a trip with expenses. Pass: a **Total spent** card sits above the search row with the total, **Per person**, and an orange pill like "Stay 38%"; each expense row has a category-coloured ring. Pass: no budget bar anywhere.
+11. Add an expense. Pass: total and percentage update.
+
+**Balance bars (`enableCompassMoney`)**
+12. Open Balances (Summary) on a trip where people owe each other. Pass: the **who is up, who is down** bars show even when the separate Balance Bars flag is OFF.
+
+**Storage card (`enableCompassMe`)**
+13. Settings → Storage and Data. Pass: a card at the top shows the device total with a teal/orange split bar and "Data … · Cache …"; the two lists below are unchanged.
+
+**Web settle-up pane (`enableCompassWeb`)**
+14. Open the Flutter web app in a window at least 1280px wide, open a trip's Spend tab. Pass: a 300px **Settle up** pane on the right lists who pays whom with amounts; tapping a row opens Balances. Narrow the window below 1280px. Pass: the pane disappears; phones never show it.
+
+**Flag-OFF negative checks:** turn `enableCompassNav` OFF: the old tab bar (Summary/Expenses/Members/Notes per your other flags), floating Add button and old home bar return; no Trip hub. Turn `enableCompassSpend`, `enableCompassMoney`, `enableCompassMe`, `enableCompassWeb` OFF one at a time: the header card, forced bars, storage card and right pane each disappear and nothing else changes. No data, balance or setting changes in any case.
+
+**Pass criteria:** steps 1 to 14 pass in light, dark and AMOLED, at text size 130%, with TalkBack/VoiceOver reading each bar item as "<label>, button" and the orange + as "Add expense".
+
+## TRIP-GET-STARTED — Get this trip rolling: start card on a blank trip
+
+**Version:** unreleased · **Flag:** `enableTripGetStarted` (Trip pack, default ON).
+
+1. Create a new trip and open it. Pass: Summary shows **Get this trip rolling** with two cards, **Invite your group** and **Add your first expense**. No boarding pass, no who-pays-whom, no balance bars, no settled/celebration banners.
+2. Open the Expenses tab on the same trip. Pass: the same start card (not an empty list with search and filters).
+3. Tap **Share invite link**. Pass: the system share sheet opens with the text "Join my trip "<name>" on Trip Tracker: <link> (code XXXXXX)".
+4. Tap **Copy link**. Pass: "Invite link copied" appears; pasting elsewhere gives the join link.
+5. Tap **Code and QR**. Pass: the invite sheet opens with the code and QR.
+6. Tap **Add expense**. Pass: the Quick add / full form chooser (or the full form) opens. Save one expense and go back. Pass: Summary and Expenses now show the normal screens, and the start card never returns, even if the expense is later deleted and others remain.
+7. Delete the only expense (move it to the bin). Pass: the start card returns, since the trip is blank again. Recording a settlement alone does not count as an expense.
+8. Join the trip from a second account. Pass: the card says "2 travelers so far".
+9. Check light, dark and text size 130%. Pass: buttons wrap, nothing is clipped. With `enableCompassNav` ON the Add button is orange.
+
+**Flag-OFF negative check:** turn `enableTripGetStarted` OFF. Pass: a blank trip shows the previous Summary and Expenses screens. Trips with expenses look the same either way.
+
