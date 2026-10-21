@@ -2665,5 +2665,21 @@
     },
     "createdAt": "2026-10-19T17:43:38.590Z",
     "updatedAt": "2026-10-19T17:43:38.590Z"
+  },
+  {
+    "id": "FEAT-168",
+    "title": "Compass trip bar, Trip hub and blank-trip start card (v3.72.0)",
+    "description": "Flutter: trip bottom bar Spend/Balances/+/Chat/Trip with a Trip hub (enableCompassNav); Get this trip rolling start card for trips with no expenses (enableTripGetStarted); Total spent header (enableCompassSpend); always-on balance bars (enableCompassMoney); storage card (enableCompassMe); web Settle up pane (enableCompassWeb). All default ON.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-21T06:18:02.161Z",
+    "updatedAt": "2026-10-21T06:18:05.277Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-21T06:18:05.277Z",
+    "shippedNote": "Shipped in commit e7373a7 (v3.72.0), all six flags default ON"
   }
 ]
