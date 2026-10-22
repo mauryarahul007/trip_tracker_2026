@@ -6,14 +6,19 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/auth_state.dart';
 import '../../../core/clock.dart';
+import '../../../data/providers.dart';
+import '../../../domain/logic/notification_actions.dart';
 import '../../../domain/logic/notifications.dart';
 import '../../../domain/logic/summary_features.dart';
 import '../../../domain/logic/trip_utilities.dart' show formatRelativeTime;
+import '../../../domain/models/expense.dart';
+import '../../../domain/models/member.dart';
 import '../../../domain/models/notification_item.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../expenses/application/expenses_providers.dart';
 import '../application/notification_providers.dart';
 import 'notification_style.dart';
 
@@ -54,6 +59,19 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
     context.go('/trip/${widget.tripId}/${notificationTabFor(type)}');
   }
 
+  Future<void> _confirm(NotificationItem n, Expense e) async {
+    final userId = ref.read(authStateProvider).userId;
+    if (userId == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(expenseRepositoryProvider).confirmSettlement(e.id, userId: userId);
+      await ref.read(notificationRepositoryProvider).setRead(n.id, true);
+      messenger.showSnackBar(const SnackBar(content: Text('Payment confirmed')));
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Could not confirm. Try again.')));
+    }
+  }
+
   Future<void> _deleteAll(int count) async {
     final userId = ref.read(authStateProvider).userId;
     if (userId == null) return;
@@ -82,6 +100,8 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
     final shown = all.where((n) => matchesActivityFilter(n, _filter)).toList();
     final now = ref.read(nowProvider)();
     final empty = _emptyText[_filter]!;
+    final allExpenses = ref.watch(allActiveExpensesProvider).value ?? const <Expense>[];
+    final allMembers = ref.watch(allMembersProvider).value ?? const <Member>[];
 
     String dayLabel(NotificationItem n) {
       final b = dayBucket(n.createdAt, now);
@@ -174,6 +194,16 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
                           item: n,
                           onTap: () => unawaited(_open(n)),
                           onDelete: () => unawaited(repo.delete(n.id)),
+                          confirmable: n.data?['type'] == 'settlement_confirmation_requested'
+                              ? settlementToConfirm(
+                                  tripId: n.tripId,
+                                  expenseTitle: n.data?['expenseTitle'] as String?,
+                                  userId: userId,
+                                  expenses: allExpenses,
+                                  members: allMembers,
+                                )
+                              : null,
+                          onConfirm: _confirm,
                         ),
                       ],
                     );
@@ -191,9 +221,18 @@ String _fmtDay(DateTime d) {
 }
 
 class _ActivityRow extends StatelessWidget {
-  const _ActivityRow({required this.item, required this.onTap, required this.onDelete, super.key});
+  const _ActivityRow({
+    required this.item,
+    required this.onTap,
+    required this.onDelete,
+    required this.onConfirm,
+    this.confirmable,
+    super.key,
+  });
 
   final NotificationItem item;
+  final Expense? confirmable;
+  final Future<void> Function(NotificationItem, Expense) onConfirm;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
@@ -262,6 +301,26 @@ class _ActivityRow extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(formatRelativeTime(item.createdAt), style: TextStyle(fontSize: 12, color: t.textMuted)),
+                          if (confirmable != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: FilledButton.tonal(
+                                key: Key('activity-confirm-${item.id}'),
+                                style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+                                onPressed: () => unawaited(onConfirm(item, confirmable!)),
+                                child: const Text('Confirm received'),
+                              ),
+                            ),
+                          if (type == 'chat_message')
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: TextButton(
+                                key: Key('activity-reply-${item.id}'),
+                                style: TextButton.styleFrom(minimumSize: const Size(0, 44), padding: EdgeInsets.zero),
+                                onPressed: onTap,
+                                child: const Text('Reply'),
+                              ),
+                            ),
                         ],
                       ),
                     ),

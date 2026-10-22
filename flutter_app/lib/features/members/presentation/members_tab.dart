@@ -7,6 +7,7 @@ import '../../../core/env/app_env.dart';
 import '../../../core/format/money.dart';
 import '../../../data/providers.dart';
 import '../../../data/supabase/supabase_gateway.dart';
+import '../../../core/flags/compass_flags.dart';
 import '../../../domain/logic/member_roles.dart';
 import '../../../domain/logic/settlement.dart';
 import '../../../domain/models/group.dart';
@@ -45,7 +46,10 @@ class _MembersTabState extends ConsumerState<MembersTab> {
     final members = ref.watch(tripMembersProvider(tripId)).value ?? const <Member>[];
     final groups = ref.watch(tripGroupsProvider(tripId)).value ?? const <Group>[];
     final trip = ref.watch(tripProvider(tripId)).value;
-    final money = ref.watch(flagProvider(('enableMemberMoneyRow', tripId))).value ?? false;
+    // Compass money: each person shows who they owe or are owed, as in the design.
+    final money =
+        (ref.watch(flagProvider(('enableMemberMoneyRow', tripId))).value ?? false) ||
+        ref.watch(compassFlagProvider((compassMoneyFlag, tripId)));
     final settlement = ref.watch(tripSettlementProvider(tripId));
     final canManage =
         ref.watch(isTripAdminProvider(tripId)) ||

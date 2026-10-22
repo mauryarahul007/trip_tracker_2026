@@ -720,6 +720,7 @@ class _TripTitle extends ConsumerWidget {
       child: Material(type: MaterialType.transparency, child: name),
     );
     final actionsOn = ref.watch(flagProvider(('enableTripHeaderActions', tripId))).value ?? true;
+    final compassNav = ref.watch(compassFlagProvider((compassNavFlag, tripId)));
     void openSwitcher() => AppSheet.show<void>(
       context: context,
       title: l10n.tripSwitchTitle,
@@ -743,7 +744,7 @@ class _TripTitle extends ConsumerWidget {
               onTap: () {
                 unawaited(AppHaptics.selection());
                 Navigator.of(sheetCtx).pop();
-                if (x.id != tripId) openTripFresh(context, x.id);
+                if (x.id != tripId) openTripFresh(context, x.id, name: x.name);
               },
             ),
         ],
@@ -772,7 +773,10 @@ class _TripTitle extends ConsumerWidget {
           child: InkWell(
             key: const Key('trip-title-actions'),
             borderRadius: BorderRadius.circular(tokens.radiusMd),
-            onTap: () => TripActionsSheet.show(context, tripId: tripId, onSwitch: canSwitch ? openSwitcher : null),
+            // Compass nav: everything else this sheet offered lives in the Trip tab, so the title only switches trips.
+            onTap: compassNav
+                ? (canSwitch ? openSwitcher : null)
+                : () => TripActionsSheet.show(context, tripId: tripId, onSwitch: canSwitch ? openSwitcher : null),
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 48),
               child: Column(
@@ -804,7 +808,8 @@ class _TripTitle extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      Icon(Icons.expand_more_rounded, size: 20, color: tokens.textSecondary),
+                      if (!compassNav || canSwitch)
+                        Icon(Icons.expand_more_rounded, size: 20, color: tokens.textSecondary),
                     ],
                   ),
                   Row(

@@ -128,6 +128,15 @@ void main() {
       expect(rows(), 3);
     });
 
+    testApp('a chat update offers Reply right on the row', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: compassOn);
+      final s = await seedTrip(tester);
+      await clearNotes(tester);
+      await note(tester, 'c1', 'chat_message', s.tripId);
+      await openActivity(tester, s.tripId);
+      expect(key('activity-reply-c1'), findsOneWidget);
+    });
+
     testApp('an empty chip says what it is waiting for', (tester) async {
       await pumpApp(tester, user: asha, flagsOn: compassOn);
       final s = await seedTrip(tester);
@@ -181,7 +190,15 @@ void main() {
       expect(key('action-trip-more'), findsNothing);
       await tester.tap(find.descendant(of: key('compass-dock'), matching: find.text('Trip')));
       await settle(tester, rounds: 14);
-      for (final k in ['hub-edit', 'hub-map', 'hub-app-settings', 'hub-invite', 'hub-live', 'hub-settings']) {
+      for (final k in [
+        'hub-edit',
+        'hub-map',
+        'hub-mute',
+        'hub-app-settings',
+        'hub-invite',
+        'hub-live',
+        'hub-settings',
+      ]) {
         await tester.ensureVisible(key(k));
         expect(key(k), findsOneWidget, reason: k);
       }
@@ -241,8 +258,6 @@ void main() {
       await tester.tap(find.descendant(of: key('compass-dock'), matching: find.text('Balances')));
       await settle(tester, rounds: 12);
       await tester.tap(key('trip-title-actions'));
-      await settle(tester, rounds: 8);
-      await tester.tap(key('trip-action-switch'));
       await settle(tester, rounds: 8);
       await tester.tap(key('switch-to-$b'));
       await settle(tester, rounds: 16);

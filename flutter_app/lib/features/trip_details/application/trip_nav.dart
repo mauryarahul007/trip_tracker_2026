@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -23,7 +23,8 @@ final visibleTabsProvider = Provider.family<List<TripNavTab>, String>((ref, trip
   if (ref.watch(compassFlagProvider((compassNavFlag, tripId)))) {
     return compassPagerTabs(
       chatEnabled: flag('enableTripChat'),
-      showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses'),
+      // Chat lives inside Notes, so a trip with chat on keeps the Notes page even when notes and passes are off.
+      showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses') || flag('enableTripChat'),
     );
   }
   return visibleTripTabs(
@@ -51,9 +52,38 @@ final tripShellClosed = StreamController<void>.broadcast();
 /// `go` to another trip's URL reuses it: only the page you are on changes while every other tab keeps the old
 /// trip's pages. So leave the trip first, wait until its shell is really gone, then open the new trip: every tab,
 /// filter and number belongs to the new trip. [tab] defaults to the trip's first page (Balances under Compass).
-void openTripFresh(BuildContext context, String tripId, {String? tab}) {
+void openTripFresh(BuildContext context, String tripId, {String? tab, String? name}) {
   final router = GoRouter.of(context);
   final target = tab == null ? '/trip/$tripId' : '/trip/$tripId/$tab';
+  // A cover over the app hides the home screen that shows for a moment while the old trip closes.
+  final overlay = Overlay.maybeOf(context, rootOverlay: true);
+  final theme = Theme.of(context);
+  OverlayEntry? cover;
+  if (overlay != null) {
+    cover = OverlayEntry(
+      builder: (_) => Material(
+        key: const Key('trip-switch-cover'),
+        color: theme.scaffoldBackgroundColor,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 3)),
+              const SizedBox(height: 16),
+              Text(name == null ? 'Switching trip…' : 'Switching to $name…', style: theme.textTheme.titleMedium),
+            ],
+          ),
+        ),
+      ),
+    );
+    overlay.insert(cover);
+  }
+  void dropCover() {
+    final c = cover;
+    cover = null;
+    c?.remove();
+  }
+
   StreamSubscription<void>? sub;
   Timer? fallback;
   void open() {
@@ -62,6 +92,7 @@ void openTripFresh(BuildContext context, String tripId, {String? tab}) {
     sub = null;
     fallback?.cancel();
     router.go(target);
+    Timer(const Duration(milliseconds: 450), dropCover);
   }
 
   sub = tripShellClosed.stream.listen((_) => open());

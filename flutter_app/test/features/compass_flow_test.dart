@@ -38,7 +38,7 @@ void main() {
       expect(find.text('No activity yet'), findsOneWidget);
       await tester.tap(find.descendant(of: key('compass-dock'), matching: find.text('Trip')));
       await settle(tester, rounds: 14);
-      expect(key('hub-chat'), findsOneWidget);
+      expect(key('hub-chat'), findsNothing); // Chat lives inside Notes, not as its own entry
     });
 
     testApp('money flag: Balances keeps the settlement pass and drops the yellow close-out card', (tester) async {

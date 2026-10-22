@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/auth_state.dart';
 import '../../../core/env/app_env.dart';
+import '../../../core/flags/compass_flags.dart';
 import '../../../core/storage/prefs.dart';
 import '../../../data/providers.dart';
 import '../../../data/supabase/supabase_gateway.dart';
@@ -111,10 +112,15 @@ final expenseFiltersProvider = NotifierProvider.family<ExpenseFiltersNotifier, E
 
 final filteredExpensesProvider = Provider.family<List<Expense>, String>((ref, tripId) {
   final all = ref.watch(tripExpensesProvider(tripId)).value ?? const <Expense>[];
+  final wide = ref.watch(compassFlagProvider((compassSpendFlag, tripId)));
   return filterExpenses(
     all,
     ref.watch(expenseFiltersProvider(tripId)),
     myMemberId: ref.watch(myMemberIdProvider(tripId)),
+    categoryNames: wide ? {for (final c in ref.watch(tripCategoriesProvider(tripId))) c.id: c.name} : null,
+    memberNames: wide
+        ? {for (final m in ref.watch(tripMembersProvider(tripId)).value ?? const <Member>[]) m.id: m.name}
+        : null,
   );
 });
 

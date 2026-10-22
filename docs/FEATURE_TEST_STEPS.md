@@ -3568,9 +3568,18 @@ Then add a row to the **Index** table.
 **Web settle-up pane (`enableCompassWeb`)**
 14. Open the Flutter web app in a window at least 1280px wide, open a trip's Spend tab. Pass: a 300px **Settle up** pane on the right lists who pays whom with amounts; tapping a row opens Balances. Narrow the window below 1280px. Pass: the pane disappears; phones never show it.
 
+**Follow-ups: no duplicates, Balances, Spend search, Activity actions (Compass flags)**
+15. With Compass nav ON, tap the trip name at the top. Pass: with two or more trips the **switch list opens directly** (no Share / Mute / Edit / Settings rows) and the name has a small arrow; with one trip the name does nothing and has no arrow. With Compass nav OFF the old action sheet is unchanged.
+16. Open **Trip**. Pass: no Chat tile (Chat is inside **Notes**, and Notes stays available when only chat is on); tiles Edit trip, Route map, **Mute alerts / Unmute alerts**, Live location, Invite (shows the code), Receipts (shows "N receipts"), Notes (says "New chat messages" when unread), Trip settings, App settings.
+17. Switch to another trip from the name. Pass: a cover reads "Switching to <name>…" so the home screen never flashes, then the new trip opens on Balances.
+18. Balances (Compass money ON). Pass: under the pass a strip shows **Total spent, Per person, You paid, Your share**. When you owe, a bar at the bottom reads **You owe ₹X · Settle**; tapping Settle lists your payments, each with an orange Settle button. When you are owed or square there is no bar. People shows who owes or is owed beside each person.
+19. Spend (Compass spend ON). Search "food", a person's name, or an amount like "1200". Pass: expenses match on category, payer and amount, not only title. Apply a filter in the filter sheet. Pass: a removable chip per filter (category, person, dates, amount, place, personal) shows under the Total spent card; tapping its x removes just that filter.
+20. Activity. Pass: a "settlement to confirm" row has **Confirm received** (one tap confirms and marks it read); a chat row has **Reply** (opens the chat).
+21. Set the phone text size to 130% and open Balances, Spend, Activity and Trip. Pass: nothing is clipped, and every button is at least 44px tall.
+
 **Flag-OFF negative checks:** turn `enableCompassNav` OFF: the old tab bar (Summary/Expenses/Members/Notes per your other flags), floating Add button and old home bar return; no Trip hub. Turn `enableCompassSpend`, `enableCompassMoney`, `enableCompassMe`, `enableCompassWeb` OFF one at a time: the header card, forced bars, storage card and right pane each disappear and nothing else changes. No data, balance or setting changes in any case.
 
-**Pass criteria:** steps 1 to 14 (including 9b to 9f and 12b) pass in light, dark and AMOLED, at text size 130%, with TalkBack/VoiceOver reading each bar item as "<label>, button" and the orange + as "Add expense".
+**Pass criteria:** steps 1 to 21 (including 9b to 9f and 12b) pass in light, dark and AMOLED, at text size 130%, with TalkBack/VoiceOver reading each bar item as "<label>, button" and the orange + as "Add expense".
 
 ## TRIP-GET-STARTED — Get this trip rolling: start card on a blank trip
 

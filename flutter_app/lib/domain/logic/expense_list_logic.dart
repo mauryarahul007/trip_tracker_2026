@@ -117,13 +117,26 @@ class SavedFilter {
 /// Port of `filteredExpenses`. Search is a case-insensitive title match; the
 /// member filter matches payer OR anyone in the split; relation filters only
 /// apply once the viewer has a member id.
-List<Expense> filterExpenses(List<Expense> all, ExpenseFilters f, {String? myMemberId}) {
+///
+/// [categoryNames] and [memberNames] (id to name) switch on the wider search the Compass Spend tab uses: the
+/// query then also matches the category, who paid and the amount ("food", "ben", "1200").
+List<Expense> filterExpenses(
+  List<Expense> all,
+  ExpenseFilters f, {
+  String? myMemberId,
+  Map<String, String>? categoryNames,
+  Map<String, String>? memberNames,
+}) {
   final minV = f.amountMin.trim().isEmpty ? null : _jsNumber(f.amountMin);
   final maxV = f.amountMax.trim().isEmpty ? null : _jsNumber(f.amountMax);
   final q = f.query.trim().toLowerCase();
   return [
     for (final e in all)
-      if ((q.isEmpty || e.title.toLowerCase().contains(q)) &&
+      if ((q.isEmpty ||
+              e.title.toLowerCase().contains(q) ||
+              (categoryNames != null && (categoryNames[e.category] ?? '').toLowerCase().contains(q)) ||
+              (memberNames != null && (memberNames[e.paidBy] ?? '').toLowerCase().contains(q)) ||
+              (categoryNames != null && _amountText(e.amount).contains(q.replaceAll(',', '')))) &&
           (f.categoryId.isEmpty || e.category == f.categoryId) &&
           (f.memberId.isEmpty || e.paidBy == f.memberId || e.splitMemberIds.contains(f.memberId)) &&
           (f.dateFrom.isEmpty || e.date.compareTo(f.dateFrom) >= 0) &&
@@ -140,6 +153,8 @@ List<Expense> filterExpenses(List<Expense> all, ExpenseFilters f, {String? myMem
         e,
   ];
 }
+
+String _amountText(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
 
 bool isActualExpense(Expense e) => !e.isSettlement && !e.title.startsWith('Settlement:');
 

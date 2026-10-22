@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.74.0',
+    date: '2026-10-22',
+    changes: [
+      'Balances has a summary strip (Total spent, Per person, You paid, Your share) and a bar at the bottom, "You owe ₹X · Settle", that lists your payments to settle.',
+      'The trip name now only switches trips, and Chat is no longer a separate Trip tile because it lives in Notes. Mute alerts moved to the Trip tab.',
+      'Switching trips shows a "Switching to…" cover instead of flashing the home screen.',
+      'Spend search also finds category, who paid and amount, and active filters show as chips you can remove.',
+      'Activity rows offer Confirm received for payments and Reply for chat. People shows who owes or is owed, and Trip tiles show live facts.',
+    ],
+  },
+  {
     version: '3.73.0',
     date: '2026-10-21',
     changes: [

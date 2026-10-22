@@ -1247,6 +1247,18 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           ),
         ),
       ),
+      if (compassMoney && totals.totalSpent > 0)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: CompassSummaryStrip(
+            items: [
+              ('Total spent', formatMoney(context, totals.totalSpent, cur)),
+              ('Per person', formatMoney(context, totals.averageCost, cur)),
+              if (iAmIn) ('You paid', formatMoney(context, spend.paid[mine] ?? 0.0, cur)),
+              if (iAmIn) ('Your share', formatMoney(context, spend.share[mine] ?? 0.0, cur)),
+            ],
+          ),
+        ),
       // Your money: what I still receive and what I still pay (people on the trip only).
       if (iAmIn && !flipOn && _flag(ref, 'enableYouPaidVsShare', id))
         _paidVsShareStrip(
@@ -1812,6 +1824,41 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                       ),
                     )
                   : const SizedBox.shrink(),
+            ),
+          ),
+        if (compassMoney && myPays.isNotEmpty)
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 12,
+            child: CompassSettleBar(
+              label: 'You owe',
+              amount: formatMoney(context, myPays.fold<double>(0, (a, t) => a + t.amount), cur),
+              onSettle: () => AppSheet.show<void>(
+                context: context,
+                title: 'Your payments',
+                builder: (sheetCtx) => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final (i, t) in myPays.indexed)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: CompassTransferRow(
+                          key: Key('bar-pay-$i'),
+                          from: t.fromLabel,
+                          to: t.toLabel,
+                          amount: formatMoney(context, t.amount, cur),
+                          actionLabel: l10n.ledSettle,
+                          primary: true,
+                          onAction: () {
+                            Navigator.of(sheetCtx).pop();
+                            unawaited(_settle(context, t));
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
         AddExpenseFab(tripId: id),

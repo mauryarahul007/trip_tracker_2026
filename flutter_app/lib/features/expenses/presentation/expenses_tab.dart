@@ -40,6 +40,7 @@ import 'widgets/expense_filter_sheet.dart';
 import '../../../core/flags/compass_flags.dart';
 import '../../trip_details/presentation/widgets/trip_get_started.dart';
 import 'widgets/add_expense_fab.dart';
+import 'widgets/compass_active_filters.dart';
 import 'widgets/compass_spend_summary.dart';
 import 'widgets/expense_row.dart';
 import 'widgets/expense_swipe.dart';
@@ -384,6 +385,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (ref.watch(compassFlagProvider((compassSpendFlag, id)))) CompassSpendSummary(tripId: id),
+          if (ref.watch(compassFlagProvider((compassSpendFlag, id)))) CompassActiveFilters(tripId: id),
           if ((sync != null && !sync.idle) || chips.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),

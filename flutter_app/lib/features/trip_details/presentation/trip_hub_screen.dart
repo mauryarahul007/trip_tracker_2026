@@ -1,4 +1,6 @@
+import '../../notifications/application/notification_prefs_providers.dart';
 import '../../chat/application/chat_providers.dart';
+import '../../../domain/models/expense.dart';
 import 'widgets/edit_trip_sheet.dart';
 
 import 'package:flutter/material.dart';
@@ -38,8 +40,12 @@ class TripHubScreen extends ConsumerWidget {
     final hasNotes = ref.watch(visibleTabsProvider(tripId)).contains(TripNavTab.notes);
     final insights = ref.watch(compassFlagProvider(('enableSpendInsights', tripId)));
     final mapOpen = ref.watch(tripMapOpenProvider(tripId));
-    final hasChat = ref.watch(visibleTabsProvider(tripId)).contains(TripNavTab.chat);
-    final unreadChat = hasChat && ref.watch(chatUnreadProvider(tripId));
+    final receipts = (ref.watch(tripExpensesProvider(tripId)).value ?? const <Expense>[])
+        .where((e) => (e.receiptImage ?? e.receiptPath ?? '').isNotEmpty)
+        .length;
+    final receiptsFact = receipts == 0 ? 'Photos on expenses' : '$receipts receipt${receipts == 1 ? '' : 's'}';
+    final unreadChat = ref.watch(chatUnreadProvider(tripId));
+    final muted = ref.watch(tripMutedProvider(tripId)).value ?? false;
 
     void live() {
       final user = ref.read(authStateProvider).user;
@@ -55,28 +61,36 @@ class TripHubScreen extends ConsumerWidget {
       _HubTile('hub-people', AppIcons.members, l10n.navMembers, '$members traveler${members == 1 ? '' : 's'}', () {
         context.go('/trip/$tripId/members');
       }),
-      if (hasChat)
-        _HubTile('hub-chat', AppIcons.chat, l10n.navChat, unreadChat ? 'New messages' : 'Talk to the group', () {
-          context.go('/trip/$tripId/chat');
-        }),
       if (hasNotes)
-        _HubTile('hub-notes', AppIcons.notes, l10n.navNotes, 'Notes, lists, passes', () {
-          context.go('/trip/$tripId/notes');
-        }),
-      _HubTile('hub-receipts', Icons.receipt_long_outlined, l10n.receiptsTitle, 'Photos on expenses', () {
+        _HubTile(
+          'hub-notes',
+          AppIcons.notes,
+          l10n.navNotes,
+          unreadChat ? 'New chat messages' : 'Notes, chat, passes',
+          () {
+            context.go('/trip/$tripId/notes');
+          },
+        ),
+      _HubTile('hub-receipts', Icons.receipt_long_outlined, l10n.receiptsTitle, receiptsFact, () {
         context.push('/trip/$tripId/receipts');
       }),
       if (insights)
         _HubTile('hub-insights', Icons.insights_rounded, 'Insights', 'Where the money went', () {
           context.push('/trip/$tripId/insights');
         }),
-      _HubTile('hub-invite', AppIcons.share, 'Invite', 'Code, link, QR', () {
-        AppSheet.show<void>(
-          context: context,
-          title: l10n.inviteSheetTitle,
-          builder: (_) => ShareTripSheet(tripId: tripId),
-        );
-      }),
+      _HubTile(
+        'hub-invite',
+        AppIcons.share,
+        'Invite',
+        (trip?.joinCode ?? '').isEmpty ? 'Code, link, QR' : 'Code ${trip!.joinCode}',
+        () {
+          AppSheet.show<void>(
+            context: context,
+            title: l10n.inviteSheetTitle,
+            builder: (_) => ShareTripSheet(tripId: tripId),
+          );
+        },
+      ),
       _HubTile('hub-edit', Icons.edit_outlined, 'Edit trip', 'Name, dates, destination', () {
         AppSheet.show<bool>(
           context: context,
@@ -91,6 +105,16 @@ class TripHubScreen extends ConsumerWidget {
         mapOpen ? 'Showing' : 'Hidden',
         () {
           ref.read(tripMapOpenProvider(tripId).notifier).toggle();
+        },
+      ),
+      _HubTile(
+        'hub-mute',
+        muted ? Icons.notifications_off_outlined : Icons.notifications_none_rounded,
+        muted ? 'Unmute alerts' : 'Mute alerts',
+        muted ? 'Silenced on this phone' : 'Silence this trip',
+        () async {
+          await ref.read(notificationPrefsRepositoryProvider).setTripMuted(tripId, !muted);
+          ref.invalidate(tripMutedProvider(tripId));
         },
       ),
       _HubTile('hub-live', AppIcons.location, 'Live location', 'Share where you are', live),
