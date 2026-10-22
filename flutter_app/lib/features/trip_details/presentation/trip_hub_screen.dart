@@ -58,6 +58,7 @@ class TripHubScreen extends ConsumerWidget {
     }
 
     final tiles = <_HubTile>[
+      _HubTile('hub-home', Icons.home_outlined, 'All trips', 'Back to your trips', () => context.go('/')),
       _HubTile('hub-people', AppIcons.members, l10n.navMembers, '$members traveler${members == 1 ? '' : 's'}', () {
         context.go('/trip/$tripId/members');
       }),

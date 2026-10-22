@@ -3583,6 +3583,7 @@ Then add a row to the **Index** table.
 24. Checklist. Pass: open items first; finished ones are folded under "Done (N)" (tap to open or close). "Anyone" is not shown on rows (an assigned person is); with a category chip selected, rows do not repeat the category. Ticking an item moves it to Done.
 25. Settle: Balances, tap Settle on a payment. Pass: the sheet shows the payer and receiver with avatars, one large amount you can edit ("Edit to pay part of it"; part payments show what remains), the Mark settled button right under it, and date/note/UPI/share under "More options". Mark settled records the payment as before.
 26. Balances when everyone is square. Pass: the pass shows SETTLED once; there is no green "Everyone is square" card, no progress card and no "You're owed" chip; the strip shows only You paid and Your share.
+27b. Trip tab (Compass nav ON). Pass: the first tile is **All trips**; tapping it opens the trips home. With Compass nav OFF there is no such tile.
 27. Flag OFF (`enableCompassTripPages`): the previous cards and the longer settle sheet return. No message, note, item or payment changes.
 
 **Flag-OFF negative checks:** turn `enableCompassNav` OFF: the old tab bar (Summary/Expenses/Members/Notes per your other flags), floating Add button and old home bar return; no Trip hub. Turn `enableCompassSpend`, `enableCompassMoney`, `enableCompassMe`, `enableCompassWeb` OFF one at a time: the header card, forced bars, storage card and right pane each disappear and nothing else changes. No data, balance or setting changes in any case.

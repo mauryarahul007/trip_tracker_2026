@@ -5305,3 +5305,9 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** One new flag `enableCompassTripPages` (Trip pack, default ON; flag count 183). Chat: `tidyChatEvent` plus centered event lines, avatars and run grouping. Notes: read-only preview card, tap opens the edit sheet. Checklist: Done section, no Anyone/category repeats, no per-category bars. Settle sheet: header with avatars, large amount field, Mark settled directly under it, date/note/UPI/share under More options. Balances: when settled, no celebration card, progress card or attention chip; strip shows You paid and Your share only.
 * **Trade-offs Accepted:** No attach or voice buttons in Chat (no feature behind them). Event text is tidied from the stored body, so old messages keep their stored text. The Live Location banner was not changed.
 * **Release Cut:** version bumped to `3.75.0` via `npm run release:minor`.
+
+## v3.75.1: All trips tile on the Trip tab (BUG)
+* **Context:** Inside a trip, the only way back to the trips home was the trip-name dropdown, which now only switches trips.
+* **Decision:** `hub-home` tile ("All trips") first on the Trip hub, going to `/`. Under `enableCompassNav`; no new flag.
+* **Trade-offs Accepted:** No home icon in the header, which already holds sync and the bell.
+* **Release Cut:** version bumped to `3.75.1` via `npm run release:patch`.
