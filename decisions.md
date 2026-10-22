@@ -5341,3 +5341,9 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** `TripCardStack` reserves the Add expense row (48) plus a 16px lift whenever the quick-add callback is given, whether or not the top trip shows the button, so card height is constant and the button sits clear of the dock. Closed and archived trips still hide the button and leave an empty gap.
 * **Trade-offs Accepted:** Cards are 64px shorter than before when quick add is on. No flag; it is a layout fix inside `enableTripCardStack`.
 * **Release Cut:** version bumped to `3.77.2` via `npm run release:patch`.
+
+## v3.77.3: Greyed Add expense on closed and archived trip cards (UX)
+* **Context:** After v3.77.2 kept card heights constant, a closed or archived top trip still showed an empty gap where Add expense is on open trips, which looked like a missing button.
+* **Decision:** `TripCardStack` shows the same row as a disabled button reading "Add expense · trip closed" or "· trip archived" (new l10n keys). Open trips are unchanged. No flag; it stays inside `enableTripCardStack` and `enableTripCardQuickAdd`.
+* **Trade-offs Accepted:** The disabled button explains but offers no shortcut to reopen the trip.
+* **Release Cut:** version bumped to `3.77.3` via `npm run release:patch`.

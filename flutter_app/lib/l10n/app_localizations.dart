@@ -181,6 +181,18 @@ abstract class AppLocalizations {
   /// **'To pay'**
   String get ledToPay;
 
+  /// No description provided for @tripsStackAddClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Add expense · trip closed'**
+  String get tripsStackAddClosed;
+
+  /// No description provided for @tripsStackAddArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Add expense · trip archived'**
+  String get tripsStackAddArchived;
+
   /// No description provided for @ledStubSpent.
   ///
   /// In en, this message translates to:

@@ -20,6 +20,8 @@
   "ledYourMoney": "Your money",
   "ledToReceive": "To receive",
   "ledToPay": "To pay",
+  "tripsStackAddClosed": "Add expense · trip closed",
+  "tripsStackAddArchived": "Add expense · trip archived",
   "ledStubSpent": "Spent",
   "ledStubSettled": "Settled",
   "ledStubPending": "Pending",

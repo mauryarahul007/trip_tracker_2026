@@ -123,6 +123,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(inTop('Old'), findsOneWidget);
       expect(find.byKey(const Key('stack-add-expense')), findsNothing); // archived: no quick add
+      expect(find.byKey(const Key('stack-add-expense-disabled')), findsOneWidget); // greyed, with the reason
+      expect(find.text('Add expense · trip archived'), findsOneWidget);
+      expect(tester.widget<TextButton>(find.byKey(const Key('stack-add-expense-disabled'))).onPressed, isNull);
     });
 
     testWidgets('every card is the same height, with or without the quick add button', (tester) async {
@@ -136,7 +139,7 @@ void main() {
       expect(find.byKey(const Key('stack-add-expense')), findsOneWidget);
       await tester.fling(top, const Offset(-400, 0), 1500);
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('stack-add-expense')), findsNothing); // archived: no button
+      expect(find.byKey(const Key('stack-add-expense')), findsNothing); // archived: no live button
       expect(tester.getSize(find.byKey(const Key('stack-top'))).height, openH); // but the card does not grow
     });
 

@@ -3669,7 +3669,7 @@ Then add a row to the **Index** table.
 **Prep:** at least one open trip and one ended/closed or archived trip (for example Switzerland).
 
 1. Open the trips home in stack view with an open trip on top. Pass: the card, the **Add expense** button under it and the Join / New Trip slider all fit, with a visible gap (about 16px) between Add expense and the slider.
-2. Swipe to the closed or archived trip (Switzerland). Pass: the card is exactly the same size as before and ends at the same place; there is no Add expense button (a closed or archived trip cannot take expenses) and an empty gap is left where it was, so nothing sits on the slider.
+2. Swipe to the closed or archived trip (Switzerland). Pass: the card is exactly the same size as before and ends at the same place; the Add expense button is shown greyed and reads "Add expense · trip closed" (or "· trip archived"); tapping it does nothing, because a closed or archived trip cannot take expenses. Nothing sits on the slider.
 3. Swipe through all cards. Pass: card height never changes.
 
 **Flag OFF (`enableTripCardStack`):** the trips list is shown instead; unchanged.

@@ -59,6 +59,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledToPay => 'To pay';
 
   @override
+  String get tripsStackAddClosed => 'Add expense · trip closed';
+
+  @override
+  String get tripsStackAddArchived => 'Add expense · trip archived';
+
+  @override
   String get ledStubSpent => 'Spent';
 
   @override

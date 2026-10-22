@@ -230,8 +230,15 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
                       ),
                     ),
                     // Inside the card area, not below it: the floating runway dock covers everything under the deck.
+                    // A closed or archived trip cannot take expenses: the same row, greyed, says why.
                     if (widget.onAddExpense != null && !quickAdd)
-                      const SizedBox(height: 48)
+                      TextButton.icon(
+                        key: const Key('stack-add-expense-disabled'),
+                        onPressed: null,
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: Text(top.archived ? l10n.tripsStackAddArchived : l10n.tripsStackAddClosed),
+                        style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                      )
                     else if (quickAdd)
                       TextButton.icon(
                         key: const Key('stack-add-expense'),
