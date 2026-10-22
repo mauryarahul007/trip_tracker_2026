@@ -2745,5 +2745,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-22T07:22:38.772Z",
     "shippedNote": "Shipped in commit f3df4c0 (v3.76.0); polls and guest flags default ON, reactions flag unchanged (OFF)"
+  },
+  {
+    "id": "FEAT-173",
+    "title": "Record a refund on an expense (v3.77.0)",
+    "description": "Web + Flutter: record money returned to the payer on an expense; shared back across the original split pro-rata so balances and who pays whom drop by that amount; refund history on the expense. Flag enableExpenseRefunds (Trip pack, default ON). No migration.",
+    "category": "general",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-22T15:02:39.063Z",
+    "updatedAt": "2026-10-22T15:02:42.951Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-22T15:02:42.951Z",
+    "shippedNote": "Shipped in commit 57860d8 (v3.77.0), flag enableExpenseRefunds default ON"
   }
 ]
