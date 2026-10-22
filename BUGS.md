@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **313** | All recorded bugs across sessions |
+| **Total Tracked** | **314** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **286** | Verified & closed |
+| **✅ Resolved** | **287** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -317,6 +317,7 @@
 | **BUG-313** | No way back to the trips home from inside a trip | `navigation` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 4c47b78 (v3.75.1) |
 | **BUG-314** | Balances repeated You paid and Your share under the settlement pass | `general` | `low` | `claude-cli` | `claude-cli` | Fixed in commit 79ad0f2 (v3.76.1) |
 | **BUG-315** | Prod release build failed in R8 after adding ML Kit text recognition | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 79ad0f2 (v3.76.1) |
+| **BUG-316** | Per person view told you to pay while the pass said you are owed | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 9251b52 (v3.77.1) |
 
 ---
 

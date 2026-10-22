@@ -9055,5 +9055,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-22T07:54:45.275Z",
     "resolutionNote": "Fixed in commit 79ad0f2 (v3.76.1)"
+  },
+  {
+    "id": "BUG-316",
+    "title": "Per person view told you to pay while the pass said you are owed",
+    "description": "With Simplify debts OFF and two groups, per-person payments crossed between the groups, so the bottom bar and banner showed a gross pair debt (24,493.54) while the pass showed the group net (2,101). Now one net payment is listed.",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-22T16:30:16.955Z",
+    "updatedAt": "2026-10-22T16:30:20.534Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-22T16:30:20.534Z",
+    "resolutionNote": "Fixed in commit 9251b52 (v3.77.1)"
   }
 ]

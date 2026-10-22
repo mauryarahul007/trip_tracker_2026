@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **173** |
+| **Total Tracked** | **174** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **170** |
+| **✅ Shipped** | **171** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -232,6 +232,7 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-171** | Compass chat, notes, checklist, settle sheet, calm Balances (v3.75.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit a9da495 (v3.75.0), flag enableCompassTripPages default ON |
 | **FEAT-172** | Receipt scan, chat reactions, trip polls, guest join (v3.76.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit f3df4c0 (v3.76.0); polls and guest flags default ON, reactions flag unchanged (OFF) |
 | **FEAT-173** | Record a refund on an expense (v3.77.0) | `general` | `claude-cli` | `claude-cli` | Shipped in commit 57860d8 (v3.77.0), flag enableExpenseRefunds default ON |
+| **FEAT-174** | Clearer settlement pass: Spent / Settled / Pending, You owe / You're owed (v3.77.1) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 9251b52 (v3.77.1), flag enableCompassTripPages default ON |
 
 ---
 

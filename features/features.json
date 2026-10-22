@@ -2761,5 +2761,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-22T15:02:42.951Z",
     "shippedNote": "Shipped in commit 57860d8 (v3.77.0), flag enableExpenseRefunds default ON"
+  },
+  {
+    "id": "FEAT-174",
+    "title": "Clearer settlement pass: Spent / Settled / Pending, You owe / You're owed (v3.77.1)",
+    "description": "Flutter pass stub reads Spent / Settled / Pending; flip side reads You owe / You're owed / Square with recorded-payments and group notes; web pass footer shows Spent, Settled and payments left. Gated by enableCompassTripPages (default ON).",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-22T16:30:20.609Z",
+    "updatedAt": "2026-10-22T16:30:20.748Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-22T16:30:20.748Z",
+    "shippedNote": "Shipped in commit 9251b52 (v3.77.1), flag enableCompassTripPages default ON"
   }
 ]
