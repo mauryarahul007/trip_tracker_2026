@@ -2729,5 +2729,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-22T05:50:01.923Z",
     "shippedNote": "Shipped in commit a9da495 (v3.75.0), flag enableCompassTripPages default ON"
+  },
+  {
+    "id": "FEAT-172",
+    "title": "Receipt scan, chat reactions, trip polls, guest join (v3.76.0)",
+    "description": "Flutter: on-device receipt OCR; chat emoji reactions (enableChatReactionsAndReplies); trip polls (enableTripPolls); join an invite with just a name (enableGuestJoin). Migrations 0119, 0120.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-22T07:22:38.580Z",
+    "updatedAt": "2026-10-22T07:22:38.773Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-22T07:22:38.772Z",
+    "shippedNote": "Shipped in commit f3df4c0 (v3.76.0); polls and guest flags default ON, reactions flag unchanged (OFF)"
   }
 ]

@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **171** |
+| **Total Tracked** | **172** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **168** |
+| **✅ Shipped** | **169** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -230,6 +230,7 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-169** | Compass Activity tab with filters, Trip-tab menu (v3.73.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit ac91dcb (v3.73.0) |
 | **FEAT-170** | Compass follow-ups: Balances settle bar, Spend chips, Activity actions (v3.74.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4953f9b (v3.74.0), reuses Compass flags default ON |
 | **FEAT-171** | Compass chat, notes, checklist, settle sheet, calm Balances (v3.75.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit a9da495 (v3.75.0), flag enableCompassTripPages default ON |
+| **FEAT-172** | Receipt scan, chat reactions, trip polls, guest join (v3.76.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit f3df4c0 (v3.76.0); polls and guest flags default ON, reactions flag unchanged (OFF) |
 
 ---
 
