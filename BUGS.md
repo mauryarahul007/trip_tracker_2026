@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **310** | All recorded bugs across sessions |
+| **Total Tracked** | **311** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **283** | Verified & closed |
+| **✅ Resolved** | **284** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -314,6 +314,7 @@
 | **BUG-310** | Activity Money filter missed expenses and was hidden behind another flag | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit ac91dcb (v3.73.0) |
 | **BUG-311** | Trip-name menu and Trip hub Chat tile duplicated other screens | `general` | `low` | `claude-cli` | `claude-cli` | Fixed in commit 4953f9b (v3.74.0) |
 | **BUG-312** | Home screen flashed when switching trips | `general` | `low` | `claude-cli` | `claude-cli` | Fixed in commit 4953f9b (v3.74.0) |
+| **BUG-313** | No way back to the trips home from inside a trip | `navigation` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 4c47b78 (v3.75.1) |
 
 ---
 
