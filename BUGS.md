@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **308** | All recorded bugs across sessions |
+| **Total Tracked** | **310** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **281** | Verified & closed |
+| **✅ Resolved** | **283** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -312,6 +312,8 @@
 | **BUG-308** | Switching trips from the title left other tabs on the old trip | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit ac91dcb (v3.73.0) |
 | **BUG-309** | Spend Collapse all / Expand all days did nothing under Compass spend | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit ac91dcb (v3.73.0) |
 | **BUG-310** | Activity Money filter missed expenses and was hidden behind another flag | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit ac91dcb (v3.73.0) |
+| **BUG-311** | Trip-name menu and Trip hub Chat tile duplicated other screens | `general` | `low` | `claude-cli` | `claude-cli` | Fixed in commit 4953f9b (v3.74.0) |
+| **BUG-312** | Home screen flashed when switching trips | `general` | `low` | `claude-cli` | `claude-cli` | Fixed in commit 4953f9b (v3.74.0) |
 
 ---
 

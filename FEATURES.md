@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **169** |
+| **Total Tracked** | **170** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **166** |
+| **✅ Shipped** | **167** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -228,6 +228,7 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-166** | Flutter: Confirm received button on settlement history rows | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b18b0eb (v3.68.3): behind enableSettlementConfirmation. |
 | **FEAT-168** | Compass trip bar, Trip hub and blank-trip start card (v3.72.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e7373a7 (v3.72.0), all six flags default ON |
 | **FEAT-169** | Compass Activity tab with filters, Trip-tab menu (v3.73.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit ac91dcb (v3.73.0) |
+| **FEAT-170** | Compass follow-ups: Balances settle bar, Spend chips, Activity actions (v3.74.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4953f9b (v3.74.0), reuses Compass flags default ON |
 
 ---
 

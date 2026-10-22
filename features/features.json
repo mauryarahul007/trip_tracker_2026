@@ -2697,5 +2697,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-21T08:58:44.295Z",
     "shippedNote": "Shipped in commit ac91dcb (v3.73.0)"
+  },
+  {
+    "id": "FEAT-170",
+    "title": "Compass follow-ups: Balances settle bar, Spend chips, Activity actions (v3.74.0)",
+    "description": "Flutter: Balances summary strip and sticky You owe Settle bar; trip name only switches trips; Mute alerts on Trip tab; Spend search by category/payer/amount with removable filter chips; Activity Confirm received and Reply; Trip tiles show live facts. Reuses Compass flags, default ON.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-22T05:16:26.408Z",
+    "updatedAt": "2026-10-22T05:16:31.842Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-22T05:16:31.842Z",
+    "shippedNote": "Shipped in commit 4953f9b (v3.74.0), reuses Compass flags default ON"
   }
 ]

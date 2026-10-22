@@ -8925,5 +8925,57 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-21T08:58:48.966Z",
     "resolutionNote": "Fixed in commit ac91dcb (v3.73.0)"
+  },
+  {
+    "id": "BUG-311",
+    "title": "Trip-name menu and Trip hub Chat tile duplicated other screens",
+    "description": "Share/Mute/Edit/Settings in the trip-name sheet and a Chat tile duplicated the Trip tab and Notes; name now only switches trips, Mute moved to Trip tab",
+    "severity": "low",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-22T05:16:31.941Z",
+    "updatedAt": "2026-10-22T05:16:32.154Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-22T05:16:32.153Z",
+    "resolutionNote": "Fixed in commit 4953f9b (v3.74.0)"
+  },
+  {
+    "id": "BUG-312",
+    "title": "Home screen flashed when switching trips",
+    "description": "openTripFresh now covers the app with a Switching cover until the new trip opens",
+    "severity": "low",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-22T05:16:32.048Z",
+    "updatedAt": "2026-10-22T05:16:32.255Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-22T05:16:32.255Z",
+    "resolutionNote": "Fixed in commit 4953f9b (v3.74.0)"
   }
 ]
