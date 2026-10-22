@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-23 | unreleased | TRIP-ACTIVITY-LOG | [Trip Activity log](#trip-activity-log--full-per-trip-history-in-the-activity-tab) |
 | 2026-10-23 | unreleased | STACK-CARD-SIZE | [Trip card stack: same card size, Add expense lifted](#stack-card-size--trip-card-stack-same-card-size-add-expense-lifted) |
 | 2026-10-23 | unreleased | PASS-CLEARER | [Clearer settlement pass and no contradicting payments](#pass-clearer--clearer-settlement-pass-and-no-contradicting-payments) |
 | 2026-10-22 | unreleased | EXPENSE-REFUNDS | [Record a refund on an expense](#expense-refunds--record-a-refund-on-an-expense) |
@@ -3675,3 +3676,19 @@ Then add a row to the **Index** table.
 **Flag OFF (`enableTripCardStack`):** the trips list is shown instead; unchanged.
 
 **Pass criteria:** card height is constant for every trip, Add expense is clear of the slider.
+
+## TRIP-ACTIVITY-LOG — Full per-trip history in the Activity tab
+
+**Flag:** `enableTripActivityLog` (Trip pack, default ON). Flutter app.
+
+1. Open a trip, add an expense yourself (for example "Stay" 4202). Open the **Activity** tab. Pass: "Stay — INR 4,202.00" is listed under Today, even though you added it.
+2. Open that expense, record a refund of 800. Pass: a **Refund Recorded** row shows "Refund: Stay — INR 800.00".
+3. Delete another expense. Pass: an **Expense Deleted** row appears (deletions older than 24 hours are not shown).
+4. Edit an expense a minute or more after adding it. Pass: an **Expense Updated** row appears.
+5. Send a chat message. Pass: it appears as a **New Message** row from you. Chat event cards for expenses are not repeated.
+6. Money chip: lists expenses, refunds, settlements, edits and deletions. Chat chip: messages only.
+7. Something another traveler added shows once, not twice (notification and log merge). Swipe on a log row does nothing; swipe on a notification row still deletes it. **Delete all** clears notifications only; log rows remain.
+
+**Flag OFF (`enableTripActivityLog`):** Activity lists only notifications sent to you; your own expenses and refunds do not appear.
+
+**Pass criteria:** every expense, refund, settlement, deletion and message in the trip is visible once in Activity.

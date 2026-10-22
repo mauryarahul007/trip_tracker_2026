@@ -5,6 +5,7 @@ const Map<String, String> notificationTypeHeadlines = {
   'expense_added': 'Expense Added',
   'expense_updated': 'Expense Updated',
   'expense_deleted': 'Expense Deleted',
+  'expense_refunded': 'Refund Recorded',
   'expense_restored': 'Expense Restored',
   'trip_deleted': 'Trip Deleted',
   'member_added': 'Member Added',
@@ -60,6 +61,10 @@ String renderNotificationBody(NotificationItem n) {
       }
       if (_has(d['expenseTitle'])) return '${d['expenseTitle']}';
       return _cleanFallbackBody(body, 'added');
+    case 'expense_refunded':
+      return _has(d['expenseTitle']) && _has(d['currency']) && _has(d['amount'])
+          ? '${d['expenseTitle']} — ${_money(d['amount'], d['currency'])}'
+          : or('A refund was recorded');
     case 'expense_updated':
       return _has(d['expenseTitle']) ? '${d['expenseTitle']}' : _cleanFallbackBody(body, 'updated');
     case 'expense_deleted':
@@ -173,6 +178,7 @@ ActivityFilter? activityKindOf(String? type) => switch (type) {
   'expense_added' ||
   'expense_updated' ||
   'expense_deleted' ||
+  'expense_refunded' ||
   'expense_restored' ||
   'settlement' ||
   'settle' ||

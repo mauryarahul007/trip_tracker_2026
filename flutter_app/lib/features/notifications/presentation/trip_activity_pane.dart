@@ -9,7 +9,9 @@ import '../../../core/clock.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/notification_actions.dart';
 import '../../../domain/logic/notifications.dart';
+import '../../../domain/logic/flag_defaults.g.dart';
 import '../../../domain/logic/summary_features.dart';
+import '../../../domain/logic/trip_activity_log.dart';
 import '../../../domain/logic/trip_utilities.dart' show formatRelativeTime;
 import '../../../domain/models/expense.dart';
 import '../../../domain/models/member.dart';
@@ -18,6 +20,7 @@ import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../chat/application/chat_providers.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../application/notification_providers.dart';
 import 'notification_style.dart';
@@ -96,8 +99,22 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
       for (final n in ref.watch(notificationsProvider).value ?? const <NotificationItem>[])
         if (n.tripId == widget.tripId) n,
     ];
+    final logOn =
+        ref.watch(flagProvider(('enableTripActivityLog', widget.tripId))).value ??
+        (defaultFeatureFlags['enableTripActivityLog'] ?? false);
+    final log = logOn
+        ? buildTripActivityLog(
+            tripId: widget.tripId,
+            expenses: ref.watch(tripExpensesProvider(widget.tripId)).value ?? const <Expense>[],
+            recycled: ref.watch(recycledExpensesProvider(widget.tripId)).value ?? const <Expense>[],
+            messages: ref.watch(tripMessagesProvider(widget.tripId)).value ?? const [],
+            members: ref.watch(tripMembersProvider(widget.tripId)).value ?? const <Member>[],
+            notifications: all,
+          )
+        : const <NotificationItem>[];
     final unread = all.where((n) => !n.read).length;
-    final shown = all.where((n) => matchesActivityFilter(n, _filter)).toList();
+    final shown = [...all, ...log].where((n) => matchesActivityFilter(n, _filter)).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final now = ref.read(nowProvider)();
     final empty = _emptyText[_filter]!;
     final allExpenses = ref.watch(allActiveExpensesProvider).value ?? const <Expense>[];
@@ -155,7 +172,7 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
                     child: ChoiceChip(
                       key: Key('activity-filter-${f.name}'),
                       label: Text(() {
-                        final c = all.where((n) => matchesActivityFilter(n, f)).length;
+                        final c = [...all, ...log].where((n) => matchesActivityFilter(n, f)).length;
                         return f == ActivityFilter.all || c == 0 ? _labels[f]! : '${_labels[f]} $c';
                       }()),
                       selected: _filter == f,
@@ -246,7 +263,7 @@ class _ActivityRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Dismissible(
         key: ValueKey('dismiss-${item.id}'),
-        direction: DismissDirection.endToStart,
+        direction: item.id.startsWith('log-') ? DismissDirection.none : DismissDirection.endToStart,
         onDismissed: (_) => onDelete(),
         background: Container(
           decoration: BoxDecoration(color: t.dangerColor, borderRadius: BorderRadius.circular(20)),

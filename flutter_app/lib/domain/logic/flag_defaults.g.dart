@@ -160,6 +160,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableTravelerPassBack': true,
   'enableTravelerPassport': true,
   'enableTripAccent': true,
+  'enableTripActivityLog': true,
   'enableTripBudget': true,
   'enableTripCardQuickAdd': true,
   'enableTripCardStack': true,
@@ -991,6 +992,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'trip',
     description: 'Flutter app: ON: a trip with a cover photo tints its status pill and the day-by-day bars with a colour taken from the photo (kept dark enough to read). OFF: the standard app colour everywhere. Cosmetic only.',
   ),
+  'enableTripActivityLog': (
+    label: 'Trip Activity log (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: the trip Activity tab is a full log of the trip, built from its own records: every expense added (including your own), refunds, settlements, edits, deletions from the last 24 hours, and trip chat messages, newest first, with the same filters. Existing notifications stay (read state, Confirm received) and are not shown twice. OFF: Activity lists only notifications sent to you, so your own expenses and refunds never appear. Does not change expenses, balances, chat or notifications, and Delete all clears notifications only.',
+  ),
   'enableTripBudget': (
     label: 'Trip Budget (Flutter)',
     pack: 'trip',
@@ -1224,6 +1230,7 @@ const Map<String, List<String>> consumerPacks = {
     'enableCompassTripPages',
     'enableTripPolls',
     'enableExpenseRefunds',
+    'enableTripActivityLog',
     'enableTripCardStack',
     'enableNotificationGrouping',
     'enableVoiceInput',

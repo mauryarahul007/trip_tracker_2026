@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.77.4',
+    date: '2026-10-22',
+    changes: [
+      'Trip Activity is now a full log: your own expenses, refunds, settlements, edits, recent deletions and chat messages all show up, not only what others did.',
+    ],
+  },
+  {
     version: '3.77.3',
     date: '2026-10-23',
     changes: ['On the trips home, a closed or archived trip shows a greyed Add expense button that says why it is unavailable, instead of leaving a gap.'],

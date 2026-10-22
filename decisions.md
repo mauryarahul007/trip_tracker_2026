@@ -5347,3 +5347,9 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** `TripCardStack` shows the same row as a disabled button reading "Add expense · trip closed" or "· trip archived" (new l10n keys). Open trips are unchanged. No flag; it stays inside `enableTripCardStack` and `enableTripCardQuickAdd`.
 * **Trade-offs Accepted:** The disabled button explains but offers no shortcut to reopen the trip.
 * **Release Cut:** version bumped to `3.77.3` via `npm run release:patch`.
+
+## v3.77.4: Trip Activity shows the full trip history (BUG)
+* **Context:** Activity listed only notifications sent to the signed-in user, which exclude their own actions, and refunds and deletions create no notification, so the 4202 expense and 800 refund never appeared.
+* **Decision:** `buildTripActivityLog` derives read-only rows from the trip's expenses, recycle bin (24h), refunds and text chat, merged with notifications (deduped by type and title/preview) in `TripActivityPane`. Behind new flag `enableTripActivityLog` (Trip pack, default ON); new `expense_refunded` row type under the Money filter.
+* **Trade-offs Accepted:** Edits are inferred from updatedAt (more than 60s after creation) with no before/after; deletions older than 24h are purged and not shown; list capped at 200; log rows cannot be swiped away.
+* **Release Cut:** version bumped to `3.77.4` via `npm run release:patch`.

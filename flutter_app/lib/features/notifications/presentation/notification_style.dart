@@ -7,6 +7,7 @@ import '../../../shared/theme/app_icons.dart';
   'expense_added' => (icon: AppIcons.expenses, color: const Color(0xFF2DD4E0)),
   'expense_updated' => (icon: AppIcons.edit, color: const Color(0xFFF59E0B)),
   'expense_deleted' || 'trip_deleted' => (icon: AppIcons.delete, color: const Color(0xFFF43F5E)),
+  'expense_refunded' => (icon: Icons.undo_rounded, color: const Color(0xFF10B981)),
   'expense_restored' => (icon: Icons.auto_awesome_rounded, color: const Color(0xFF10B981)),
   'member_added' ||
   'member_added_notice' ||
