@@ -7,6 +7,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../app/auth_state.dart';
 import '../../../../core/platform/haptics.dart';
@@ -14,6 +15,7 @@ import '../../../../core/format/money.dart';
 import '../../../../data/providers.dart';
 import '../../../../domain/logic/category_color.dart';
 import '../../../../domain/logic/expense_list_logic.dart';
+import '../../../../domain/logic/refunds.dart';
 import '../../../../domain/models/expense.dart';
 import '../../../../domain/models/expense_io.dart';
 import '../../../../domain/logic/summary_features.dart';
@@ -82,6 +84,42 @@ class ExpenseDetailSheet extends ConsumerWidget {
     );
   }
 
+  /// Amount returned to the payer, at most what is still refundable; null when cancelled.
+  Future<double?> _askRefund(BuildContext context, double max, String payer) {
+    final c = TextEditingController();
+    return showDialog<double>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) {
+          final v = double.tryParse(c.text.trim());
+          final ok = v != null && v > 0 && v <= max + 0.001;
+          return AlertDialog(
+            title: const Text('Record refund'),
+            content: TextField(
+              key: const Key('refund-amount'),
+              controller: c,
+              autofocus: true,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                labelText: 'Amount refunded to $payer',
+                helperText: 'Up to ${max.toStringAsFixed(2)}. Shared back across the original split.',
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.actionCancel)),
+              TextButton(
+                key: const Key('refund-save'),
+                onPressed: ok ? () => Navigator.pop(ctx, v) : null,
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -99,6 +137,11 @@ class ExpenseDetailSheet extends ConsumerWidget {
     final isAdmin = ref.watch(isTripAdminProvider(tripId));
     final canManage = canManageExpense(e, isAdmin: isAdmin, userId: uid);
     final repo = ref.read(expenseRepositoryProvider);
+    final locked = e.isSettlement || isRefund(e);
+    final refundsOn = _flag(ref, 'enableExpenseRefunds', tripId);
+    final allExpenses = ref.watch(tripExpensesProvider(tripId)).value ?? const <Expense>[];
+    final refunds = refundsOn ? refundsFor(e.id, allExpenses) : const <Expense>[];
+    final refundable = refundableRemaining(e, allExpenses);
 
     final disputes = _flag(ref, 'enableExpenseDisputes', tripId);
     final chatCards = _flag(ref, 'enableInChatEventCards', tripId) && _flag(ref, 'enableTripChat', tripId);
@@ -197,6 +240,30 @@ class ExpenseDetailSheet extends ConsumerWidget {
             subtitle: '${e.date} · ${formatMoney(context, e.amount, e.currency)}',
           ),
           if (e.currency != base) Text(e.currency, style: TextStyle(color: tokens.textMuted, fontSize: 12)),
+          if (refunds.isNotEmpty)
+            Container(
+              key: const Key('detail-refunds'),
+              padding: const EdgeInsets.all(10),
+              margin: const EdgeInsets.only(top: 8),
+              decoration: BoxDecoration(
+                color: tokens.colorSuccess.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Refunded ${formatMoney(context, refunds.fold<double>(0, (s, r) => s + r.amount), e.currency)} to ${members[e.paidBy]?.name ?? l10n.rowRemovedMember}. Shares and balances already reflect it.',
+                    style: TextStyle(color: tokens.textPrimary, fontWeight: FontWeight.w600),
+                  ),
+                  for (final r in refunds)
+                    Text(
+                      '${r.date}: ${formatMoney(context, r.amount, r.currency)}',
+                      style: TextStyle(color: tokens.textMuted, fontSize: 13),
+                    ),
+                ],
+              ),
+            ),
           const SizedBox(height: 12),
           if (e.disputedAt != null)
             Container(
@@ -257,7 +324,7 @@ class ExpenseDetailSheet extends ConsumerWidget {
               ),
             ),
           ),
-          if (_flag(ref, 'enableExpenseExclusion', tripId) && canManage && !e.isSettlement)
+          if (_flag(ref, 'enableExpenseExclusion', tripId) && canManage && !locked)
             Material(
               type: MaterialType.transparency,
               child: SwitchListTile(
@@ -322,7 +389,41 @@ class ExpenseDetailSheet extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
           ],
-          if (disputes && uid != null)
+          if (refundsOn && canManage && !locked && refundable > 0.005) ...[
+            AppButton(
+              key: const Key('detail-refund'),
+              label: 'Record refund',
+              variant: AppButtonVariant.secondary,
+              isFullWidth: true,
+              onPressed: () async {
+                final amount = await _askRefund(context, refundable, members[e.paidBy]?.name ?? l10n.rowRemovedMember);
+                if (amount == null || !context.mounted) return;
+                unawaited(AppHaptics.selection());
+                await repo.add(
+                  Expense(
+                    id: const Uuid().v4(),
+                    tripId: tripId,
+                    title: 'Refund: ${e.title}',
+                    amount: amount,
+                    currency: e.currency,
+                    category: e.category,
+                    date: DateTime.now().toIso8601String().substring(0, 10),
+                    paidBy: e.paidBy,
+                    splitMode: 'exact',
+                    splitMemberIds: [e.paidBy],
+                    splitConfig: {e.paidBy: amount},
+                    resolvedShares: {e.paidBy: amount},
+                    refundOfExpenseId: e.id,
+                    createdByUserId: uid,
+                    createdAt: 0,
+                    updatedAt: 0,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (disputes && uid != null && !isRefund(e))
             e.disputedAt == null
                 ? AppButton(
                     label: l10n.detailFlag,
@@ -353,11 +454,11 @@ class ExpenseDetailSheet extends ConsumerWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                if (!e.isSettlement)
+                if (!locked)
                   Expanded(
                     child: AppButton(label: l10n.rowEdit, variant: AppButtonVariant.secondary, onPressed: onEdit),
                   ),
-                if (!e.isSettlement) const SizedBox(width: 8),
+                if (!locked) const SizedBox(width: 8),
                 Expanded(
                   child: AppButton(label: l10n.rowDelete, variant: AppButtonVariant.danger, onPressed: onDelete),
                 ),

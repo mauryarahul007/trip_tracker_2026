@@ -326,8 +326,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       if (!canManageExpense(e, isAdmin: isAdmin, userId: uid)) return body;
       return ExpenseSwipe(
         itemKey: ValueKey('swipe-${e.id}'),
-        onEdit: isActualExpense(e) ? () => _edit(e) : null,
-        onTogglePersonal: personalOn && isActualExpense(e) ? () => unawaited(_togglePersonal(e)) : null,
+        onEdit: isActualExpense(e) && e.refundOfExpenseId == null ? () => _edit(e) : null,
+        onTogglePersonal: personalOn && isActualExpense(e) && e.refundOfExpenseId == null
+            ? () => unawaited(_togglePersonal(e))
+            : null,
         isPersonal: e.excludeFromTotals,
         onDelete: () => unawaited(_delete(e)),
         child: body,

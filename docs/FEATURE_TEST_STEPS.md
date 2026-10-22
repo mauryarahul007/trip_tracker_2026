@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-22 | unreleased | EXPENSE-REFUNDS | [Record a refund on an expense](#expense-refunds--record-a-refund-on-an-expense) |
 | 2026-10-21 | unreleased | TRIP-GET-STARTED | [Get this trip rolling: start card on a blank trip](#trip-get-started--get-this-trip-rolling-start-card-on-a-blank-trip) |
 | 2026-10-21 | unreleased | COMPASS | [Compass: trip dock + Trip hub, Spend header, balance bars, storage card, web Settle-up pane](#compass--trip-dock--trip-hub-spend-header-balance-bars-storage-card-web-settle-up-pane) |
 | 2026-10-20 | unreleased | UX-BATCH-4 | [Balance bars, deck quick add, receipt empty action, icon labels](#ux-batch-4--balance-bars-deck-quick-add-receipt-empty-action-icon-labels) |
@@ -3618,3 +3619,26 @@ Then add a row to the **Index** table.
 
 **Flag-OFF negative check:** turn `enableTripGetStarted` OFF. Pass: a blank trip shows the previous Summary and Expenses screens. Trips with expenses look the same either way.
 
+## EXPENSE-REFUNDS — Record a refund on an expense
+
+**Flag:** `enableExpenseRefunds` (Trip pack, default ON). Web app and Flutter app.
+
+**Prep:** a trip with 4 members (A, B, C, D). Add "Hotel" 5000, paid by A, split equally (1250 each). Note the Balances: B, C, D each owe A 1250.
+
+1. Open Hotel, tap **Refund** (web) / **Record refund** (Flutter). Enter 1000, Save. Pass: a row "Refund: Hotel" 1000 appears in the list; Hotel shows "Refunded 1000 to A. Shares and balances already reflect it."
+2. Open Balances / Who pays whom. Pass: B, C, D each owe A 1000 (not 1250); A is owed 3000.
+3. Trip total and category totals. Pass: total reads 4000, not 5000 or 6000.
+4. Settle B's 1000 with the normal Settle flow, then record a second refund of 400 on Hotel. Pass: B's share drops to 900, so B overpaid by 100 and Balances shows A owes B 100; Settle clears it.
+5. Try a refund above what is left (Hotel has 3600 left after both refunds). Pass: Save is disabled / blocked for amounts above the remaining refundable.
+6. Delete a refund row (swipe delete). Pass: Hotel's shares and all balances go back as if the refund never happened.
+7. Open a refund row. Pass: no Edit, Duplicate, Flag or Record refund on it.
+8. Add a Hotel split between 2 groups, refund part of it. Pass: the refund spreads over every member in proportion; group balances update.
+9. Odd amounts: refund 100 on a 3-way split. Pass: shares sum to exactly 100 (33.34 / 33.33 / 33.33).
+10. Open the other platform (web vs Flutter) on the same trip. Pass: same balances on both.
+
+**Flag OFF (`enableExpenseRefunds`):**
+11. Turn the flag OFF in Ops Deck. Pass: no Refund / Record refund action, no Refunded badge; refunds already recorded still reduce balances (money does not silently change back).
+
+**Old app version:** a build without this feature shows the refund as a plain "Refund: Hotel" line and keeps the pre-refund balances; update the app to see the corrected numbers.
+
+**Pass criteria:** balances equal original minus refund, split in proportion, payer is never owed more than they actually spent, and the history is visible on the expense.

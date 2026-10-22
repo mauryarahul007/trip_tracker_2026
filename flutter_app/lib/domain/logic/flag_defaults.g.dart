@@ -63,6 +63,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableExpenseHistory': true,
   'enableExpensePhotoLinking': false,
   'enableExpenseQuickFilterChips': true,
+  'enableExpenseRefunds': true,
   'enableExplainThisNumber': true,
   'enableExtendedUndo': true,
   'enableFeatureSuggestions': false,
@@ -497,6 +498,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'Expenses Quick-Filter Chips',
     pack: 'trip',
     description: 'ON: a row of one-tap chips at the top of the Expenses tab (for example All, Mine, Today and the categories in use) filters the list instantly, without opening the filter sheet. OFF: use the Filters button. Does not change any expense, and the Filters sheet still works either way.',
+  ),
+  'enableExpenseRefunds': (
+    label: 'Record a Refund on an Expense',
+    pack: 'trip',
+    description: 'ON: an expense has a Record refund action; the traveler enters the amount returned to the payer (for example 1000 back on a 5000 hotel), it is shared back across the original split in proportion, balances and Who pays whom drop by exactly that, and the expense shows a Refunded badge with its refund history. If members had already settled, the payer then owes them the difference, which is settled with the normal Settle flow. OFF: no Record refund action or badge; refunds already recorded still reduce balances so money never silently changes. Does not move money by itself, does not refund to anyone except the original payer, and older app versions ignore a refund (they show it as a plain line and keep the pre-refund balances).',
   ),
   'enableExplainThisNumber': (
     label: 'Why This Amount? Settlement Audit',
@@ -1217,6 +1223,7 @@ const Map<String, List<String>> consumerPacks = {
     'enableCompassMoney',
     'enableCompassTripPages',
     'enableTripPolls',
+    'enableExpenseRefunds',
     'enableTripCardStack',
     'enableNotificationGrouping',
     'enableVoiceInput',

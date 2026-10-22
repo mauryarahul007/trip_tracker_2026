@@ -9,6 +9,11 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.77.0',
+    date: '2026-10-23',
+    changes: ['Record a refund on an expense: money returned to the payer is shared back across the original split, so balances and who pays whom drop by exactly that amount, and the expense shows its refund history.'],
+  },
+  {
     version: '3.76.1',
     date: '2026-10-23',
     changes: ['Balances no longer repeats You paid and Your share under the settlement pass; flip the pass to see them.'],

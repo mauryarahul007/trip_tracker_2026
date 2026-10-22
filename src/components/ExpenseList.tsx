@@ -374,7 +374,7 @@ export function ExpenseList({
         <ConditionalSwipe
           enabled={canManage}
           onDelete={() => onDelete(exp)}
-          onEdit={exp.title.startsWith('Settlement:') ? undefined : () => onEdit(exp)}
+          onEdit={exp.title.startsWith('Settlement:') || exp.refundOfExpenseId ? undefined : () => onEdit(exp)}
         >
           <div
             style={{

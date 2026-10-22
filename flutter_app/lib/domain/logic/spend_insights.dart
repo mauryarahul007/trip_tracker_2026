@@ -1,4 +1,5 @@
 import '../models/expense.dart';
+import 'refunds.dart';
 
 /// Total spent on one calendar day (`yyyy-MM-dd`).
 class DaySpend {
@@ -16,7 +17,7 @@ class CategorySpend {
 
 /// Settlements and deleted rows are not spending.
 Iterable<Expense> _spending(Iterable<Expense> all) =>
-    all.where((e) => !e.isSettlement && e.deletedAt == null && !e.excludeFromTotals);
+    applyRefunds(all.where((e) => !e.isSettlement && e.deletedAt == null && !e.excludeFromTotals).toList());
 
 /// Daily totals, oldest first. Days without spending are omitted.
 List<DaySpend> spendByDay(Iterable<Expense> all) {

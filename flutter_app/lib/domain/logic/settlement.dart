@@ -2,6 +2,7 @@ import '../models/expense.dart';
 import '../models/group.dart';
 import '../models/member.dart';
 import '../models/trip.dart';
+import 'refunds.dart';
 
 class Transfer {
   final String from;
@@ -312,15 +313,17 @@ List<Transfer> calculateDirectSettlements(
   List<Expense> expenses, [
   List<Group> groups = const [],
 ]) {
-  final activeTripExpenses = expenses
-      .where(
-        (e) =>
-            e.tripId == trip.id &&
-            e.deletedAt == null &&
-            e.approvalStatus != 'pending_approval' &&
-            !e.excludeFromTotals,
-      )
-      .toList();
+  final activeTripExpenses = applyRefunds(
+    expenses
+        .where(
+          (e) =>
+              e.tripId == trip.id &&
+              e.deletedAt == null &&
+              e.approvalStatus != 'pending_approval' &&
+              !e.excludeFromTotals,
+        )
+        .toList(),
+  );
 
   final groupOfMember = <String, String>{};
   for (final g in groups) {
@@ -451,15 +454,17 @@ SettlementResult calculateSettlements(
   List<Group> groups = const [],
   bool? simplifyDebts,
 ]) {
-  final activeTripExpenses = expenses
-      .where(
-        (e) =>
-            e.tripId == trip.id &&
-            e.deletedAt == null &&
-            e.approvalStatus != 'pending_approval' &&
-            !e.excludeFromTotals,
-      )
-      .toList();
+  final activeTripExpenses = applyRefunds(
+    expenses
+        .where(
+          (e) =>
+              e.tripId == trip.id &&
+              e.deletedAt == null &&
+              e.approvalStatus != 'pending_approval' &&
+              !e.excludeFromTotals,
+        )
+        .toList(),
+  );
 
   final netBalances = <String, double>{};
   for (final id in trip.memberIds) {

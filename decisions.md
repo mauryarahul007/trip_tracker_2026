@@ -5323,3 +5323,9 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** Removed `CompassSummaryStrip` and its use. Added `-dontwarn` rules for the four unused ML Kit language packages in `android/app/proguard-rules.pro` (Latin only is used).
 * **Trade-offs Accepted:** The prod APK is about 31 MB larger (78 to 109 MB) because of the text-recognition library.
 * **Release Cut:** version bumped to `3.76.1` via `npm run release:patch`.
+
+## v3.77.0: Record a refund on an expense (FEAT)
+* **Context:** A 5000 expense split four ways with 1000 later refunded to the payer had no way to be recorded, so balances overstated what members owed.
+* **Decision:** A refund is its own expense row pointing at the original (`refundOfExpenseId`, stored inside `itemized_config`, so no migration, column or sync-function change). Its stored shares are `{payer: amount}` so older clients net it to zero. `applyRefunds` (`src/utils/refunds.ts`, `refunds.dart`) folds each refund into its parent pro-rata to the smallest currency unit before every balance, settlement and headline-total calculation, then drops the refund rows. Money already settled is corrected by the normal Settle flow. New flag `enableExpenseRefunds` (Trip pack, ON). Web and Flutter. Flag count 186.
+* **Trade-offs Accepted:** The refund always goes to the primary payer. Older app versions show the refund as a plain expense and keep pre-refund balances. Web admin analytics, achievements and CSV export still count a refund row at face value. Refund rows cannot be edited, only deleted and re-added.
+* **Release Cut:** version bumped to `3.77.0` via `npm run release:minor`.

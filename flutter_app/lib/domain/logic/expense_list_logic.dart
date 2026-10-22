@@ -2,6 +2,7 @@ import '../models/category.dart';
 import '../models/expense.dart';
 import '../models/member.dart';
 import '../models/trip.dart';
+import 'refunds.dart';
 import 'settlement.dart' show MemberBalance;
 
 // Ports of the Expenses tab rules: `filteredExpenses` / `totalSpent` (App.tsx),
@@ -207,10 +208,10 @@ class TripTotals {
 /// Port of `nonSettlementExpenses`/`totalSpent`/`categoryData`/`averageCost`.
 /// Settlements and expenses still waiting for approval never count toward money totals.
 TripTotals computeTotals(List<Expense> active, {required int visibleMemberCount, required List<Category> categories}) {
-  final counted = [
+  final counted = applyRefunds([
     for (final e in active)
       if (!e.title.startsWith('Settlement:') && e.approvalStatus != 'pending_approval' && !e.excludeFromTotals) e,
-  ];
+  ]);
   final total = counted.fold<double>(0, (s, e) => s + e.amount);
   final byCat = <String, double>{for (final c in categories) c.id: 0};
   for (final e in counted) {

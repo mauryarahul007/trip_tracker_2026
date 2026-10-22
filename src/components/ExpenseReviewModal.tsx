@@ -1,9 +1,10 @@
 import { useRef, useState, useEffect } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { getReceiptSignedUrl } from '../services/tripApi';
-import { IconEdit, IconTrash, IconCopy, IconAlertCircle, IconClose } from './Icons';
+import { IconEdit, IconTrash, IconCopy, IconAlertCircle, IconClose, IconRefresh } from './Icons';
 import { getCurrencySymbol, formatMoneyNumber } from '../utils/currency';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { isRefund } from '../utils/refunds';
 
 
 type Props = {
@@ -24,10 +25,18 @@ type Props = {
   onConfirmSettlement?: () => void;
   settlementConfirmationEnabled?: boolean;
   onApproveExpense?: () => void;
+  /** enableExpenseRefunds: set to show Record refund; refunds are this expense's recorded refunds, refundable what is left. */
+  onRecordRefund?: (amount: number) => void;
+  refunds?: Expense[];
+  refundable?: number;
 };
 
-export function ExpenseReviewModal({ expense, members, categories, trip, canManage, currentUserId, isTripAdmin, onClose, onEdit, onDelete, onDuplicate, onFlagDispute, onResolveDispute, myMemberId, onConfirmSettlement, settlementConfirmationEnabled, onApproveExpense }: Props) {
-  const isSettlement = expense.title.startsWith('Settlement:');
+export function ExpenseReviewModal({ expense, members, categories, trip, canManage, currentUserId, isTripAdmin, onClose, onEdit, onDelete, onDuplicate, onFlagDispute, onResolveDispute, myMemberId, onConfirmSettlement, settlementConfirmationEnabled, onApproveExpense, onRecordRefund, refunds = [], refundable = 0 }: Props) {
+  const isSettlement = expense.title.startsWith('Settlement:') || isRefund(expense);
+  const [refundOpen, setRefundOpen] = useState(false);
+  const [refundText, setRefundText] = useState('');
+  const refundAmount = Number(refundText);
+  const refundValid = refundAmount > 0 && refundAmount <= refundable + 0.001;
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -108,6 +117,15 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
               onClick={onDuplicate}
             >
               <IconCopy size={13} className="icon-sm" /> Duplicate
+            </button>
+          )}
+          {canManage && !isSettlement && onRecordRefund && refundable > 0 && (
+            <button
+              className="secondary-btn"
+              style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={() => setRefundOpen((o) => !o)}
+            >
+              <IconRefresh size={13} className="icon-sm" /> Refund
             </button>
           )}
           {!isSettlement && !expense.disputedAt && onFlagDispute && (
@@ -219,6 +237,42 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
             marginBottom: '16px',
           }}>
             You didn't add this expense, so only the trip admin or whoever added it can edit or delete it.
+          </div>
+        )}
+
+        {refundOpen && onRecordRefund && (
+          <form
+            style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '16px' }}
+            onSubmit={(ev) => {
+              ev.preventDefault();
+              if (!refundValid) return;
+              onRecordRefund(refundAmount);
+              setRefundOpen(false);
+              setRefundText('');
+            }}
+          >
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="any"
+              autoFocus
+              aria-label="Refund amount received by the payer"
+              placeholder={`Refund received by ${members[expense.paidBy]?.name || 'payer'} (max ${formatMoneyNumber(refundable, currencySymbol)})`}
+              value={refundText}
+              onChange={(ev) => setRefundText(ev.target.value)}
+              style={{ flex: 1, minWidth: 0 }}
+            />
+            <button type="submit" className="primary-btn" disabled={!refundValid} style={{ padding: '8px 14px' }}>Save</button>
+          </form>
+        )}
+
+        {refunds.length > 0 && (
+          <div style={{ fontSize: '12.5px', background: 'rgba(15,23,42,0.03)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-md)', padding: '8px 12px', marginBottom: '16px' }}>
+            <strong>Refunded {currencySymbol} {formatMoneyNumber(refunds.reduce((sum, r) => sum + r.amount, 0), currencySymbol)}</strong> to {members[expense.paidBy]?.name || 'the payer'}; shares and balances already reflect it.
+            {refunds.map((r) => (
+              <div key={r.id} style={{ color: 'var(--text-muted)' }}>{r.date}: {currencySymbol} {formatMoneyNumber(r.amount, currencySymbol)}</div>
+            ))}
           </div>
         )}
 
