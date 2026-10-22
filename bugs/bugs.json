@@ -9081,5 +9081,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-22T16:30:20.534Z",
     "resolutionNote": "Fixed in commit 9251b52 (v3.77.1)"
+  },
+  {
+    "id": "BUG-317",
+    "title": "Trip card stack: closed trip's card grows over the slider and Add expense disappears",
+    "description": "Top card height depended on whether Add expense shows, so closed/archived trips got a 48px taller card; Add expense also sat tight against the Join / New Trip slider. Card height is now constant and the button lifted.",
+    "severity": "low",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-22T16:50:16.631Z",
+    "updatedAt": "2026-10-22T16:50:16.793Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-22T16:50:16.793Z",
+    "resolutionNote": "Fixed in commit b8966fa (v3.77.2)"
   }
 ]
