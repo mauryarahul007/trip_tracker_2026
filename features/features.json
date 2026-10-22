@@ -2809,5 +2809,21 @@
     "shippedBy": "agent",
     "shippedAt": "2026-10-22T17:37:31.485Z",
     "shippedNote": "Commit f55130d"
+  },
+  {
+    "id": "FEAT-177",
+    "title": "Activity rows open the exact chat message or expense; See in Activity",
+    "description": "Activity rows open the exact chat message or expense; See in Activity",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-22T17:58:45.544Z",
+    "updatedAt": "2026-10-22T17:58:45.791Z",
+    "shippedBy": "agent",
+    "shippedAt": "2026-10-22T17:58:45.791Z",
+    "shippedNote": "Commit 272b92e"
   }
 ]
