@@ -5335,3 +5335,9 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** `calculateSettlements` (settlement.ts and settlement.dart) rejects the per-person list when flows between two parties (a group is one party) go in both directions, and uses the group-netted list instead. The pass stub now reads Spent / Settled / Pending (whole rupees, "1 payment" or "All paid"), the flip side reads You owe / You're owed / Square with a recorded-payments note and a group-versus-you note, and the web footer reads Spent / Settled / N payments left. Gated by the existing `enableCompassTripPages` (OFF restores the old wording); the calculation fix has no flag.
 * **Trade-offs Accepted:** A trip with crossing group payments now shows group-level payments in per-person view instead of exact pairs. The status line and extra back-face figures are not built.
 * **Release Cut:** version bumped to `3.77.1` via `npm run release:patch`.
+
+## v3.77.2: Trip card stack keeps one card height (BUG)
+* **Context:** On the trips home stack, a closed or archived top trip (no Add expense button) made its card 48px taller and covered the area above the Join / New Trip slider, while open trips kept the button. Add expense also sat tight against the slider.
+* **Decision:** `TripCardStack` reserves the Add expense row (48) plus a 16px lift whenever the quick-add callback is given, whether or not the top trip shows the button, so card height is constant and the button sits clear of the dock. Closed and archived trips still hide the button and leave an empty gap.
+* **Trade-offs Accepted:** Cards are 64px shorter than before when quick add is on. No flag; it is a layout fix inside `enableTripCardStack`.
+* **Release Cut:** version bumped to `3.77.2` via `npm run release:patch`.

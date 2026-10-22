@@ -143,7 +143,12 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
         final cardW = math.min(box.maxWidth - 24, 460.0);
         final top = trips.first;
         final quickAdd = widget.onAddExpense != null && !top.archived && !top.closed;
-        final cardH = (box.maxHeight - 28 - widget.bottomInset - (quickAdd ? 48 : 0)).clamp(300.0, 900.0);
+        // The button row is reserved whether or not this top card shows it (archived and closed trips do not), so every
+        // card is the same height and nothing jumps when the deck moves. The extra 16 lifts the button off the dock.
+        final cardH = (box.maxHeight - 28 - widget.bottomInset - (widget.onAddExpense != null ? 48 + 16 : 0)).clamp(
+          300.0,
+          900.0,
+        );
         final progress = (_drag.dx.abs() / (cardW * 0.4)).clamp(0.0, 1.0);
         final behind = math.min(2, trips.length - 1);
         return Column(
@@ -225,7 +230,9 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
                       ),
                     ),
                     // Inside the card area, not below it: the floating runway dock covers everything under the deck.
-                    if (quickAdd)
+                    if (widget.onAddExpense != null && !quickAdd)
+                      const SizedBox(height: 48)
+                    else if (quickAdd)
                       TextButton.icon(
                         key: const Key('stack-add-expense'),
                         onPressed: () => widget.onAddExpense!(top),

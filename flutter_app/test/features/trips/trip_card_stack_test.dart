@@ -125,6 +125,21 @@ void main() {
       expect(find.byKey(const Key('stack-add-expense')), findsNothing); // archived: no quick add
     });
 
+    testWidgets('every card is the same height, with or without the quick add button', (tester) async {
+      await pumpStack(
+        tester,
+        list: [trip('a', 'Goa'), trip('b', 'Old', archived: true)],
+        onOpen: (_) {},
+        onAddExpense: (_) {},
+      );
+      final openH = tester.getSize(find.byKey(const Key('stack-top'))).height;
+      expect(find.byKey(const Key('stack-add-expense')), findsOneWidget);
+      await tester.fling(top, const Offset(-400, 0), 1500);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('stack-add-expense')), findsNothing); // archived: no button
+      expect(tester.getSize(find.byKey(const Key('stack-top'))).height, openH); // but the card does not grow
+    });
+
     testWidgets('no quick add button when the callback is not given (flag off)', (tester) async {
       await pumpStack(tester, onOpen: (_) {});
       expect(find.byKey(const Key('stack-add-expense')), findsNothing);

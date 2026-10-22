@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-23 | unreleased | STACK-CARD-SIZE | [Trip card stack: same card size, Add expense lifted](#stack-card-size--trip-card-stack-same-card-size-add-expense-lifted) |
 | 2026-10-23 | unreleased | PASS-CLEARER | [Clearer settlement pass and no contradicting payments](#pass-clearer--clearer-settlement-pass-and-no-contradicting-payments) |
 | 2026-10-22 | unreleased | EXPENSE-REFUNDS | [Record a refund on an expense](#expense-refunds--record-a-refund-on-an-expense) |
 | 2026-10-21 | unreleased | TRIP-GET-STARTED | [Get this trip rolling: start card on a blank trip](#trip-get-started--get-this-trip-rolling-start-card-on-a-blank-trip) |
@@ -3660,3 +3661,17 @@ Then add a row to the **Index** table.
 **Flag OFF (`enableCompassTripPages`):** the stub reads Total spent / Per person / Open payments (a count), the flip side third cell reads Difference, and the web footer reads members / transfers left. The payment-list fix still applies.
 
 **Pass criteria:** the pass, the bottom bar, the banner and Who pays whom always agree on who owes whom.
+
+## STACK-CARD-SIZE — Trip card stack: same card size, Add expense lifted
+
+**Flag:** `enableTripCardStack` (existing, default ON). Flutter app, trips home in stack view.
+
+**Prep:** at least one open trip and one ended/closed or archived trip (for example Switzerland).
+
+1. Open the trips home in stack view with an open trip on top. Pass: the card, the **Add expense** button under it and the Join / New Trip slider all fit, with a visible gap (about 16px) between Add expense and the slider.
+2. Swipe to the closed or archived trip (Switzerland). Pass: the card is exactly the same size as before and ends at the same place; there is no Add expense button (a closed or archived trip cannot take expenses) and an empty gap is left where it was, so nothing sits on the slider.
+3. Swipe through all cards. Pass: card height never changes.
+
+**Flag OFF (`enableTripCardStack`):** the trips list is shown instead; unchanged.
+
+**Pass criteria:** card height is constant for every trip, Add expense is clear of the slider.

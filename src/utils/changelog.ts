@@ -9,6 +9,11 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.77.2',
+    date: '2026-10-23',
+    changes: ['Trip cards on the home stack are all the same size, and Add expense sits clear of the Join / New Trip slider (a closed trip no longer stretches its card over it).'],
+  },
+  {
     version: '3.77.1',
     date: '2026-10-23',
     changes: [
