@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../domain/logic/chat_poll.dart';
 import '../../domain/logic/chat_event_row.dart';
 import '../../domain/logic/expense_form_logic.dart';
 import '../../domain/logic/split_resolver.dart';
@@ -863,6 +864,73 @@ class DriftMessageRepository extends _DriftRepo implements MessageRepository {
     final next = _decode(row).copyWith(body: body.trim(), editedAt: nowMs);
     await _put(next, row.senderName);
     await outbox.enqueue(OutboxType.editMessage, {'id': id, 'body': next.body}, tripId: row.tripId);
+  });
+
+  @override
+  Future<void> sendPoll({
+    required String tripId,
+    required String memberId,
+    required String senderName,
+    required String question,
+    required List<String> options,
+  }) => write(() async {
+    final payload = newPollPayload(question, options);
+    final m = TripMessage(
+      id: uuid.v4(),
+      tripId: tripId,
+      memberId: memberId,
+      body: '📊 Poll: ${question.trim()}', // what older app versions and the web show
+      eventKind: 'poll',
+      payload: payload,
+      createdAt: nowMs,
+    );
+    await _put(m, senderName);
+    await outbox.enqueue(OutboxType.addMessage, {
+      'id': m.id,
+      'trip_id': tripId,
+      'member_id': memberId,
+      'body': m.body,
+      'kind': 'poll',
+      'payload': payload,
+    }, tripId: tripId);
+  });
+
+  Future<void> _setPayload(String id, Map<String, dynamic> Function(Map<String, dynamic>) change) => write(() async {
+    final row = await (db.select(db.tripMessagesTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+    if (row == null) return;
+    final m = _decode(row);
+    final before = m.payload;
+    if (before == null) return;
+    final next = change(before);
+    if (identical(next, before)) return;
+    await _put(m.copyWith(payload: next), row.senderName);
+    await outbox.enqueue(OutboxType.updateMessagePayload, {'id': id, 'payload': next}, tripId: row.tripId);
+  });
+
+  @override
+  Future<void> vote(String id, String optionId, String memberId) =>
+      _setPayload(id, (p) => pollWithVote(p, optionId, memberId));
+
+  @override
+  Future<void> closePoll(String id) => _setPayload(id, pollClosed);
+
+  @override
+  Future<void> react(String id, String emoji, String memberId) => write(() async {
+    final row = await (db.select(db.tripMessagesTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+    if (row == null) return;
+    final m = _decode(row);
+    final next = {
+      for (final e in m.reactions.entries) e.key: [...e.value],
+    };
+    final who = next[emoji] ?? <String>[];
+    who.contains(memberId) ? who.remove(memberId) : who.add(memberId);
+    if (who.isEmpty) {
+      next.remove(emoji);
+    } else {
+      next[emoji] = who;
+    }
+    await _put(m.copyWith(reactions: next), row.senderName);
+    await outbox.enqueue(OutboxType.reactMessage, {'id': id, 'reactions': next}, tripId: row.tripId);
   });
 
   @override

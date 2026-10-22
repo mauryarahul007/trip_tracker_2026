@@ -101,11 +101,18 @@ class SupabaseOutboxRemote implements OutboxRemote {
           'member_id': p['member_id'],
           'body': p['body'],
           'kind': p['kind'] ?? 'text',
+          if (p['payload'] != null) 'payload': p['payload'],
         });
       case OutboxType.editMessage:
         await db.rpc<dynamic>('edit_trip_message', params: {'p_message_id': p['id'], 'p_body': p['body']});
       case OutboxType.deleteMessage:
         await db.from('trip_messages').update({'deleted_at': p['deleted_at']}).eq('id', p['id'] as String);
+      case OutboxType.updateMessagePayload:
+        // Poll votes and closing: the whole payload, last write wins (migration 0119 adds the poll kind).
+        await db.from('trip_messages').update({'payload': p['payload']}).eq('id', p['id'] as String);
+      case OutboxType.reactMessage:
+        // Whole map, as the web does: {emoji: [memberId, ...]}. Allowed for any trip participant (migration 0093).
+        await db.from('trip_messages').update({'reactions': p['reactions']}).eq('id', p['id'] as String);
       default:
         throw RemoteFailure(FailureKind.permanent, 'unknown outbox type ${item.type}');
     }

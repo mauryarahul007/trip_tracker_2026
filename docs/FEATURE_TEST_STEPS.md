@@ -3586,6 +3586,18 @@ Then add a row to the **Index** table.
 27b. Trip tab (Compass nav ON). Pass: the first tile is **All trips**; tapping it opens the trips home. With Compass nav OFF there is no such tile.
 27. Flag OFF (`enableCompassTripPages`): the previous cards and the longer settle sheet return. No message, note, item or payment changes.
 
+**Receipt scan, chat reactions, trip polls (`receiptOcr`/`enableReceiptUpload`, `enableChatReactionsAndReplies`, `enableTripPolls` Trip pack default ON)**
+28. Add expense, Scan & Itemize, **Scan receipt** (real phone only; web and desktop fall back to pasted text). Take a photo of a printed bill. Pass: the receipt text is read on the phone, the review card shows merchant, items and total, **Apply** fills title, amount, date and (from the title) the category. The button next to it picks a photo from the gallery. A blank or unreadable photo shows a message and you can paste text instead.
+29. Chat, with `enableChatReactionsAndReplies` ON (it is OFF by default: turn it ON in Ops Deck, or Settings, Flag overrides on a dev build). Long-press a message. Pass: a row of 👍 ❤️ 😂 😮 🙏 (and Edit on your own message); pick one and a chip "👍 1" shows under the message, highlighted for you; tap the chip to remove yours; a second person's tap makes it 2. OFF: long-press only offers Edit on your own message.
+30. Chat, `enableTripPolls` ON. Tap the poll icon left of the message box, enter a question and at least 2 options (up to 6), Post. Pass: a card appears for everyone; tap an option to vote (check mark, bar fills); tap another to move your vote; tap yours again to withdraw; counts match; only the asker sees **Close poll**; after closing, taps do nothing and the card says Closed. OFF: no poll icon.
+31. Needs migration `supabase/migrations/0119_trip_message_poll_kind.sql` applied before polls sync to other phones (until then a poll stays on your phone and the sync retries).
+
+**Join with just your name (`enableGuestJoin`, Core pack, default ON)**
+32. Setup (once): Supabase dashboard, Authentication, Providers, turn **Allow anonymous sign-ins** ON; apply `supabase/migrations/0120_guest_join.sql`. Without these the button shows an error and nothing is created.
+33. On a phone that is signed out (or a fresh install), open an invite link. Pass: below "Continue with Google" there is **Join with just your name**. Tap it, enter a name, Join. Pass: the trip opens; the person appears in People under that name; they can add an expense, chat, vote on a poll. If the trip already had an unclaimed traveler with the same name, that spot is taken instead of a duplicate being made.
+34. Open the same link again on the same phone. Pass: it goes straight into the trip (no second member). Enter a wrong code five times. Pass: a 15 minute wait message (same limit as signed-in users).
+35. Flag OFF: only Google (and Apple) buttons show. A local "guest" (no server) still sees the existing "guests can't join" message and no name button.
+
 **Flag-OFF negative checks:** turn `enableCompassNav` OFF: the old tab bar (Summary/Expenses/Members/Notes per your other flags), floating Add button and old home bar return; no Trip hub. Turn `enableCompassSpend`, `enableCompassMoney`, `enableCompassMe`, `enableCompassWeb` OFF one at a time: the header card, forced bars, storage card and right pane each disappear and nothing else changes. No data, balance or setting changes in any case.
 
 **Pass criteria:** steps 1 to 21 (including 9b to 9f and 12b) pass in light, dark and AMOLED, at text size 130%, with TalkBack/VoiceOver reading each bar item as "<label>, button" and the orange + as "Add expense".

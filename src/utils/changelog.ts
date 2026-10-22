@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.76.0',
+    date: '2026-10-23',
+    changes: [
+      'Scan a receipt with your camera or a photo: the bill is read on your phone and fills the amount, date and title for you to confirm.',
+      'Chat reactions: press and hold a message to react with 👍 ❤️ 😂 😮 🙏.',
+      'Trip polls: ask the group a question from the chat box; everyone votes once and sees live results.',
+      'Join an invite with just your name, no account needed.',
+    ],
+  },
+  {
     version: '3.75.1',
     date: '2026-10-22',
     changes: ['The Trip tab has an All trips tile that takes you back to your trips home.'],

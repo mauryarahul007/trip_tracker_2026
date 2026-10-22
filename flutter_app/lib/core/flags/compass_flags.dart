@@ -8,6 +8,8 @@ const compassNavFlag = 'enableCompassNav';
 const compassSpendFlag = 'enableCompassSpend';
 const compassMoneyFlag = 'enableCompassMoney';
 const compassTripPagesFlag = 'enableCompassTripPages';
+const tripPollsFlag = 'enableTripPolls';
+const guestJoinFlag = 'enableGuestJoin';
 const compassMeFlag = 'enableCompassMe';
 const compassWebFlag = 'enableCompassWeb';
 

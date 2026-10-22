@@ -135,6 +135,26 @@ class JoinController extends Notifier<JoinState> {
     }
   }
 
+  /// Joins as a brand-new traveler with just a name (invite guests, and signed-in people not on the list).
+  Future<void> joinWithName(String name) async {
+    final clean = name.trim();
+    if (clean.isEmpty || state.status == JoinStatus.claiming) return;
+    state = state.copyWith(status: JoinStatus.claiming);
+    try {
+      final tripId = await ref.read(joinRepositoryProvider).joinWithName(code, clean);
+      if (tripId == null) {
+        state = const JoinState(status: JoinStatus.invalid);
+        return;
+      }
+      await ref.read(afterJoinSyncProvider)(tripId);
+      state = state.copyWith(status: JoinStatus.alreadyIn, joinedTripId: tripId);
+    } on InviteException catch (e) {
+      _fail(e.message, e.lockoutSeconds);
+    } catch (_) {
+      _fail('', null);
+    }
+  }
+
   Future<void> claim(String memberId) async {
     final lookup = state.lookup;
     if (lookup == null || state.status == JoinStatus.claiming) return;

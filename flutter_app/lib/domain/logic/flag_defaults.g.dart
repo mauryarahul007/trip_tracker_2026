@@ -74,6 +74,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableGlobalSearch': true,
   'enableGroupSpend': true,
   'enableGrowthTelemetry': false,
+  'enableGuestJoin': true,
   'enableHapticsSetting': true,
   'enableHighContrast': true,
   'enableHorizonNav': true,
@@ -171,6 +172,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableTripListMoney': true,
   'enableTripListSections': true,
   'enableTripPins': true,
+  'enableTripPolls': true,
   'enableTripShareLink': true,
   'enableTripStackSort': false,
   'enableTripSuggestions': true,
@@ -551,6 +553,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'Growth Telemetry (Retention & Reliability)',
     pack: 'ops',
     description: 'ON: signed-in apps send one app-open event per day plus sync-health events (queue stuck, sync failed, queue flushed), and join-code previews are counted per trip. These feed the Retention, Reliability and Invite funnel cards on Ops Deck Analytics. OFF: nothing is sent or counted and those cards stay empty. Travelers see nothing either way, and no expense, member name or search text is ever sent. Data starts from the day this is armed.',
+  ),
+  'enableGuestJoin': (
+    label: 'Join an Invite With Just Your Name (Flutter)',
+    pack: 'core',
+    description: 'Flutter app: ON: an invite link shows "Join with just your name" next to Google sign-in; the person types a name, joins the trip as a traveler (or takes the spot already added under that name) and can add and view expenses, chat and vote, without creating an account. OFF: invite links need Google or Apple sign-in as before. Does not change existing accounts or trips. A guest who signs out or clears the app data loses access until they open the link again. Needs Anonymous sign-ins turned on in Supabase and migration 0120.',
   ),
   'enableHapticsSetting': (
     label: 'Haptics Setting (Flutter)',
@@ -1044,6 +1051,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'trip',
     description: 'Flutter app: ON: press and hold a trip and choose Pin to keep it at the top of the Trips list under a Pinned header. Pins are stored on this device only and are not shared with other members. OFF: no Pin option and no Pinned header.',
   ),
+  'enableTripPolls': (
+    label: 'Trip Polls in Chat (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: the chat box has a Poll button; a traveler asks a question with 2 to 6 options and everyone votes once from the chat card, sees live results, and the creator can close the poll. OFF: no Poll button, and polls already posted show as a plain "Poll: question" line. Does not change expenses, balances or other chat messages, and older app versions show a poll as a text line.',
+  ),
   'enableTripShareLink': (
     label: 'Read-Only Trip Share Link',
     pack: 'core',
@@ -1164,6 +1176,7 @@ const List<({String id, String code, String title, String tagline})> consumerPac
 /// Consumer pack -> flag keys (`CONSUMER_PACKS`).
 const Map<String, List<String>> consumerPacks = {
   'core': [
+    'enableGuestJoin',
     'enablePredictiveChips',
     'enableRecycleBin',
     'enableDuplicateDetector',
@@ -1203,6 +1216,7 @@ const Map<String, List<String>> consumerPacks = {
     'enableCompassSpend',
     'enableCompassMoney',
     'enableCompassTripPages',
+    'enableTripPolls',
     'enableTripCardStack',
     'enableNotificationGrouping',
     'enableVoiceInput',

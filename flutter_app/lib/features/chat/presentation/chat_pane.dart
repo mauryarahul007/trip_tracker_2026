@@ -9,6 +9,7 @@ import '../../../app/auth_state.dart';
 import '../../../core/flags/compass_flags.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/chat_event_text.dart';
+import '../../../domain/logic/chat_poll.dart';
 import '../../../domain/models/member.dart';
 import '../../../domain/models/trip_message.dart';
 import '../../../l10n/l10n_ext.dart';
@@ -74,6 +75,8 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     final outboxTicksOn = ref.watch(flagProvider(('enableChatOfflineOutbox', widget.tripId))).value ?? false;
     final readReceiptsOn = ref.watch(flagProvider(('enableChatReadReceipts', widget.tripId))).value ?? false;
     final pages = ref.watch(compassFlagProvider((compassTripPagesFlag, widget.tripId)));
+    final pollsOn = ref.watch(compassFlagProvider((tripPollsFlag, widget.tripId)));
+    final reactionsOn = ref.watch(flagProvider(('enableChatReactionsAndReplies', widget.tripId))).value ?? false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _markSeen(messages);
     });
@@ -140,6 +143,8 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                             padding: const EdgeInsets.symmetric(vertical: 4),
                             child: Text(l10n.chatDeleted, style: const TextStyle(fontStyle: FontStyle.italic)),
                           )
+                        else if (m.eventKind == 'poll' && pollsOn && pollFromPayload(m.payload) != null)
+                          _pollCard(context, m, members[m.memberId]?.name ?? '')
                         else if (_isEvent(m))
                           pages
                               ? _eventLine(context, m, dirty.contains(m.id))
@@ -156,6 +161,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                             // Compass: avatar on the first message of a run, name shown once per run.
                             firstOfRun: pages && !(!showDay && i > 0 && _sameRun(messages[i - 1], m)),
                             showAvatar: pages,
+                            reactionsOn: reactionsOn,
                           ),
                       ],
                     );
@@ -166,6 +172,13 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
           child: Row(
             children: [
+              if (pollsOn)
+                IconButton(
+                  key: const Key('chat-poll'),
+                  tooltip: 'Create a poll',
+                  onPressed: _newPoll,
+                  icon: Icon(Icons.poll_outlined, color: context.tokens.textSecondary),
+                ),
               Expanded(
                 child: TextField(
                   key: const Key('chat-input'),
@@ -219,6 +232,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     required bool readReceiptsOn,
     bool firstOfRun = true,
     bool showAvatar = false,
+    bool reactionsOn = false,
   }) {
     final l10n = context.l10n;
     final timeStr = _formatTime(m.createdAt);
@@ -253,7 +267,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: GestureDetector(
         key: Key('chat-bubble-${m.id}'),
-        onLongPress: mine ? () => _edit(m) : null,
+        onLongPress: reactionsOn ? () => _reactSheet(m, mine) : (mine ? () => _edit(m) : null),
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 3),
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
@@ -309,6 +323,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                   ],
                 ],
               ),
+              if (reactionsOn && m.reactions.isNotEmpty) _reactionChips(m),
             ],
           ),
         ),
@@ -323,6 +338,228 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
         Flexible(child: bubble),
       ],
     );
+  }
+
+  Future<void> _newPoll() async {
+    final draft = await AppSheet.show<_PollDraft>(
+      context: context,
+      title: 'Create a poll',
+      builder: (_) => const _PollSheet(),
+    );
+    if (draft == null) return;
+    final me = ref.read(myMemberIdProvider(widget.tripId));
+    final members = ref.read(tripMembersProvider(widget.tripId)).value ?? const <Member>[];
+    final memberId = me ?? (members.isEmpty ? null : members.first.id);
+    if (memberId == null) return;
+    final name = members.where((m) => m.id == memberId).map((m) => m.name).firstOrNull ?? '';
+    await ref
+        .read(messageRepositoryProvider)
+        .sendPoll(
+          tripId: widget.tripId,
+          memberId: memberId,
+          senderName: name,
+          question: draft.question,
+          options: draft.options,
+        );
+  }
+
+  /// A poll in the chat: question, one tappable bar per option with its count, and Close for the person who asked.
+  Widget _pollCard(BuildContext context, TripMessage m, String asker) {
+    final t = context.tokens;
+    final poll = pollFromPayload(m.payload)!;
+    final me = _me;
+    final mine = m.memberId == me;
+    final voted = me == null ? null : poll.votedBy(me);
+    final total = poll.totalVotes;
+    return Center(
+      child: Container(
+        key: Key('poll-${m.id}'),
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.all(14),
+        constraints: const BoxConstraints(maxWidth: 340),
+        decoration: BoxDecoration(
+          color: t.bgSurface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: t.borderColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              asker.isEmpty ? 'POLL' : 'POLL · ${asker.toUpperCase()}',
+              style: TextStyle(fontSize: 11, letterSpacing: 1, fontWeight: FontWeight.w700, color: t.textMuted),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              poll.question,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: t.textPrimary),
+            ),
+            const SizedBox(height: 10),
+            for (final o in poll.options)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: InkWell(
+                  key: Key('poll-${m.id}-${o.id}'),
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: poll.closed || me == null
+                      ? null
+                      : () => ref.read(messageRepositoryProvider).vote(m.id, o.id, me),
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: voted == o.id ? t.primaryAccent : t.borderColor,
+                        width: voted == o.id ? 2 : 1,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(11),
+                      child: Stack(
+                        alignment: Alignment.centerLeft,
+                        children: [
+                          Positioned.fill(
+                            child: FractionallySizedBox(
+                              alignment: Alignment.centerLeft,
+                              widthFactor: total == 0 ? 0 : o.count / total,
+                              child: ColoredBox(
+                                color: (poll.leaders.contains(o.id) ? t.primaryAccent : t.textMuted).withValues(
+                                  alpha: 0.16,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            child: Row(
+                              children: [
+                                if (voted == o.id)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 6),
+                                    child: Icon(Icons.check_circle_rounded, size: 18, color: t.primaryAccent),
+                                  ),
+                                Expanded(
+                                  child: Text(o.text, style: TextStyle(color: t.textPrimary)),
+                                ),
+                                Text(
+                                  '${o.count}',
+                                  style: TextStyle(fontWeight: FontWeight.w700, color: t.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    poll.closed
+                        ? 'Closed · $total vote${total == 1 ? '' : 's'}'
+                        : '$total vote${total == 1 ? '' : 's'}',
+                    style: TextStyle(fontSize: 12, color: t.textSecondary),
+                  ),
+                ),
+                if (mine && !poll.closed)
+                  TextButton(
+                    key: Key('poll-close-${m.id}'),
+                    style: TextButton.styleFrom(minimumSize: const Size(0, 44)),
+                    onPressed: () => ref.read(messageRepositoryProvider).closePoll(m.id),
+                    child: const Text('Close poll'),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static const _emojis = ['👍', '❤️', '😂', '😮', '🙏'];
+
+  String? get _me => ref.read(myMemberIdProvider(widget.tripId));
+
+  Future<void> _toggleReaction(TripMessage m, String emoji) async {
+    final me = _me;
+    if (me == null) return;
+    await ref.read(messageRepositoryProvider).react(m.id, emoji, me);
+  }
+
+  /// Emoji counts under a message; tap one to add or remove your own.
+  Widget _reactionChips(TripMessage m) {
+    final t = context.tokens;
+    final me = _me;
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 4,
+        children: [
+          for (final e in m.reactions.entries)
+            if (e.value.isNotEmpty)
+              InkWell(
+                key: Key('reaction-${m.id}-${e.key}'),
+                borderRadius: BorderRadius.circular(99),
+                onTap: () => _toggleReaction(m, e.key),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 28),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: e.value.contains(me) ? t.primaryAccent.withValues(alpha: 0.18) : t.bgSurface,
+                    borderRadius: BorderRadius.circular(99),
+                    border: Border.all(color: e.value.contains(me) ? t.primaryAccent : t.borderColor),
+                  ),
+                  child: Text('${e.key} ${e.value.length}', style: const TextStyle(fontSize: 12.5)),
+                ),
+              ),
+        ],
+      ),
+    );
+  }
+
+  /// Long-press a message: pick a reaction (and Edit, for your own).
+  Future<void> _reactSheet(TripMessage m, bool mine) async {
+    final pick = await AppSheet.show<String>(
+      context: context,
+      builder: (sheetCtx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              for (final e in _emojis)
+                IconButton(
+                  key: Key('react-pick-$e'),
+                  iconSize: 30,
+                  constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+                  onPressed: () => Navigator.of(sheetCtx).pop(e),
+                  icon: Text(e, style: const TextStyle(fontSize: 28)),
+                ),
+            ],
+          ),
+          if (mine)
+            ListTile(
+              key: const Key('react-edit'),
+              leading: const Icon(Icons.edit_outlined),
+              title: Text(context.l10n.chatEdit),
+              onTap: () => Navigator.of(sheetCtx).pop('edit'),
+            ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+    if (pick == null) return;
+    if (pick == 'edit') {
+      await _edit(m);
+    } else {
+      await _toggleReaction(m, pick);
+    }
   }
 
   bool _sameRun(TripMessage a, TripMessage b) =>
@@ -524,5 +761,87 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     final min = d.minute.toString().padLeft(2, '0');
     final period = d.hour >= 12 ? 'PM' : 'AM';
     return '$hour:$min $period';
+  }
+}
+
+class _PollDraft {
+  const _PollDraft(this.question, this.options);
+  final String question;
+  final List<String> options;
+}
+
+/// Question plus 2 to 6 options.
+class _PollSheet extends StatefulWidget {
+  const _PollSheet();
+
+  @override
+  State<_PollSheet> createState() => _PollSheetState();
+}
+
+class _PollSheetState extends State<_PollSheet> {
+  final _question = TextEditingController();
+  final _options = [TextEditingController(), TextEditingController()];
+
+  @override
+  void dispose() {
+    _question.dispose();
+    for (final c in _options) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  bool get _valid => _question.text.trim().isNotEmpty && _options.where((c) => c.text.trim().isNotEmpty).length >= 2;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            key: const Key('poll-question'),
+            controller: _question,
+            autofocus: true,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(labelText: 'Question', hintText: 'Where shall we eat tonight?'),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 8),
+          for (var i = 0; i < _options.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: TextField(
+                key: Key('poll-option-$i'),
+                controller: _options[i],
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(labelText: 'Option ${i + 1}'),
+                onChanged: (_) => setState(() {}),
+              ),
+            ),
+          if (_options.length < 6)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                key: const Key('poll-add-option'),
+                onPressed: () => setState(() => _options.add(TextEditingController())),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Add option'),
+              ),
+            ),
+          const SizedBox(height: 8),
+          FilledButton(
+            key: const Key('poll-post'),
+            style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
+            onPressed: _valid
+                ? () => Navigator.pop(context, _PollDraft(_question.text, [for (final c in _options) c.text]))
+                : null,
+            child: const Text('Post poll'),
+          ),
+        ],
+      ),
+    );
   }
 }

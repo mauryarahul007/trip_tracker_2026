@@ -75,6 +75,8 @@
     "enableCompassSpend": true,
     "enableCompassMoney": true,
     "enableCompassTripPages": true,
+    "enableTripPolls": true,
+    "enableGuestJoin": true,
     "enableCompassMe": true,
     "enableCompassWeb": true,
     "enableSpendInsights": true,
@@ -260,6 +262,8 @@
     "enableCompassSpend": true,
     "enableCompassMoney": true,
     "enableCompassTripPages": true,
+    "enableTripPolls": true,
+    "enableGuestJoin": true,
     "enableCompassMe": true,
     "enableCompassWeb": true,
     "enableSpendInsights": true,
@@ -373,6 +377,7 @@
     {
       "id": "core",
       "flagKeys": [
+        "enableGuestJoin",
         "enablePredictiveChips",
         "enableRecycleBin",
         "enableDuplicateDetector",
@@ -415,6 +420,7 @@
         "enableCompassSpend",
         "enableCompassMoney",
         "enableCompassTripPages",
+        "enableTripPolls",
         "enableTripCardStack",
         "enableNotificationGrouping",
         "enableVoiceInput",

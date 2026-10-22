@@ -90,6 +90,8 @@ export type FeatureFlagKey =
   | 'enableCompassSpend'
   | 'enableCompassMoney'
   | 'enableCompassTripPages'
+  | 'enableTripPolls'
+  | 'enableGuestJoin'
   | 'enableCompassMe'
   | 'enableCompassWeb'
   | 'enableSpendInsights'

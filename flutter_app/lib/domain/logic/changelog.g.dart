@@ -8,6 +8,15 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.75.1', '2026-10-22', [
+    'The Trip tab has an All trips tile that takes you back to your trips home.',
+  ]),
+  ChangelogEntry('3.75.0', '2026-10-22', [
+    'Chat shows expenses and payments as small centered lines ("Ben paid Asha · UPI · ₹500"), with avatars and grouped messages.',
+    'Notes are tidy preview cards: tap one to edit it. The Checklist folds finished items into a Done section.',
+    'The settle sheet is simpler: who pays whom, one big amount you can edit, Mark settled, and extras under More options.',
+    'Balances says "settled" once instead of repeating it in several cards.',
+  ]),
   ChangelogEntry('3.74.0', '2026-10-22', [
     'Balances has a summary strip (Total spent, Per person, You paid, Your share) and a bar at the bottom, "You owe ₹X · Settle", that lists your payments to settle.',
     'The trip name now only switches trips, and Chat is no longer a separate Trip tile because it lives in Notes. Mute alerts moved to the Trip tab.',
@@ -55,11 +64,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.69.0', '2026-10-19', [
     'Behind the scenes: the Flutter app now lives on the main branch next to the web app. A push to main still deploys the website, and a green build of the Flutter app is published as an installable Android APK.',
-  ]),
-  ChangelogEntry('3.68.5', '2026-10-19', [
-    'When a whole group has settled, the Members list no longer shows its members as owed or owing. This is fixed on the web and in the Flutter app.',
-  ]),
-  ChangelogEntry('3.68.4', '2026-10-19', [
-    'When a whole group has settled, Per person now shows the trip as settled too, with no payments left to make for the people inside the group. This is fixed on the web and in the Flutter app.',
   ]),
 ];

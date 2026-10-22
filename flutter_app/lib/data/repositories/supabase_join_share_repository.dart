@@ -80,6 +80,17 @@ class SupabaseJoinRepository implements JoinRepository {
       throw _invite(e);
     }
   }
+
+  @override
+  Future<String?> joinWithName(String code, String name) async {
+    try {
+      final row = _row(await _client.rpc<dynamic>('join_trip_with_name', params: {'p_code': code, 'p_name': name}));
+      return row?['trip_id'] as String?;
+    } on PostgrestException catch (e) {
+      if (e.message.contains('Invalid invite code')) return null;
+      throw _invite(e);
+    }
+  }
 }
 
 class SupabaseShareRepository implements ShareRepository {

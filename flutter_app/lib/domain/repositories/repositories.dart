@@ -75,6 +75,24 @@ abstract class MessageRepository {
   });
   Future<void> edit(String id, String body);
   Future<void> delete(String id);
+
+  /// Adds [memberId]'s [emoji] reaction to a message, or removes it if already there.
+  Future<void> react(String id, String emoji, String memberId);
+
+  /// Posts a poll (a chat message of kind `poll`).
+  Future<void> sendPoll({
+    required String tripId,
+    required String memberId,
+    required String senderName,
+    required String question,
+    required List<String> options,
+  });
+
+  /// Casts, moves or withdraws [memberId]'s vote on a poll message.
+  Future<void> vote(String id, String optionId, String memberId);
+
+  /// Closes a poll so nobody can vote any more.
+  Future<void> closePoll(String id);
 }
 
 abstract class ExpenseRepository {
@@ -163,7 +181,7 @@ class AuthUser {
   final String? email;
   final String? displayName;
 
-  /// 'google' | 'apple' | 'email' | 'guest' | 'demo'
+  /// 'google' | 'apple' | 'email' | 'guest' | 'demo' | 'anonymous' (invite guest with a server session)
   final String provider;
   const AuthUser({required this.id, this.email, this.displayName, required this.provider});
 
@@ -217,6 +235,10 @@ abstract class AuthRepository {
   Future<void> signInWithGoogleOAuth({required String redirectTo});
   Future<void> signInWithAppleIdToken(String idToken, {String? nonce, String? fullName});
   Future<void> signInAsGuest({String displayName = 'Traveler'});
+
+  /// A real (anonymous) server session for someone joining by invite link with only a name. Unlike
+  /// [signInAsGuest] it can see and edit the shared trip it joins. Needs "Allow anonymous sign-ins" in Supabase.
+  Future<void> signInAsInviteGuest(String displayName);
   Future<void> signInAsDemo();
 
   /// Profile name (auth metadata + profiles row; local-only identities just rename).
@@ -239,6 +261,10 @@ abstract class JoinRepository {
 
   /// True if claimed; false if someone else claimed that member first.
   Future<bool> claim(String memberId);
+
+  /// Join as a new traveler with just a name (the signed-in user is an invite guest or a regular account).
+  /// Returns the trip id, or null for an unknown code.
+  Future<String?> joinWithName(String code, String name);
 }
 
 abstract class ShareRepository {

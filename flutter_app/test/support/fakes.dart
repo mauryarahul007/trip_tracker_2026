@@ -95,6 +95,12 @@ class FakeAuthRepository implements AuthRepository {
   Future<void> signInAsGuest({String displayName = 'Traveler'}) =>
       _auth('guest', AuthUser(id: 'guest', displayName: displayName, provider: 'guest'));
   @override
+  Future<void> signInAsInviteGuest(String displayName) async {
+    calls.add('inviteGuest:$displayName');
+    await _auth('anonymous', AuthUser(id: 'anon', displayName: displayName, provider: 'anonymous'));
+  }
+
+  @override
   Future<void> signInAsDemo() => _auth('demo', const AuthUser(id: 'demo', provider: 'demo'));
   @override
   Future<void> updateDisplayName(String name) async {
@@ -209,6 +215,12 @@ class FakeJoinRepository implements JoinRepository {
       throw e;
     }
     return lookupResult;
+  }
+
+  @override
+  Future<String?> joinWithName(String code, String name) async {
+    calls.add('joinWithName:$code:$name');
+    return lookupResult?.tripId;
   }
 
   @override

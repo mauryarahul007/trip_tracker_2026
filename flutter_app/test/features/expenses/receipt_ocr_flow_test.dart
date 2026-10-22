@@ -2,8 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trip_tracker/core/platform/ocr_gateway.dart';
+import 'package:trip_tracker/data/platform/receipt_picker.dart';
 import 'package:trip_tracker/domain/logic/receipt_ocr_service.dart';
 import 'package:trip_tracker/features/expenses/presentation/receipt_ocr_modal.dart';
+
+class _Picker implements ReceiptPicker {
+  final calls = <ReceiptSource>[];
+  @override
+  Future<String?> pick(ReceiptSource source) async {
+    calls.add(source);
+    return '/tmp/receipt.jpg';
+  }
+}
 
 void main() {
   group('Receipt OCR Modal and Flow', () {
@@ -70,10 +80,11 @@ Total 493.50
     testWidgets('clicking scan camera/photo runs OCR gateway recognition', (tester) async {
       ParsedReceiptData? appliedData;
       final fakeOcr = FakeOcrGateway(cannedText: sampleReceiptText);
+      final picker = _Picker();
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [ocrGatewayProvider.overrideWithValue(fakeOcr)],
+          overrides: [ocrGatewayProvider.overrideWithValue(fakeOcr), receiptPickerProvider.overrideWithValue(picker)],
           child: MaterialApp(
             home: Scaffold(
               body: ReceiptOcrModal(
@@ -88,10 +99,11 @@ Total 493.50
 
       await tester.pumpAndSettle();
 
-      // Tap Scan Camera/Photo
+      // Tap Scan receipt (the picker is faked)
       await tester.tap(find.byKey(const Key('btn_scan_receipt_image')));
       await tester.pumpAndSettle();
 
+      expect(picker.calls, [ReceiptSource.camera]);
       expect(fakeOcr.recognizeCallCount, equals(1));
       expect(find.text('Blue Tokai'), findsOneWidget);
       expect(find.text('493.50'), findsWidgets);
