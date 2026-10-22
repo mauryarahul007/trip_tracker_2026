@@ -22,6 +22,7 @@ import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../chat/application/chat_providers.dart';
 import '../../expenses/application/expenses_providers.dart';
+import '../application/activity_focus.dart';
 import '../application/notification_providers.dart';
 import 'notification_style.dart';
 
@@ -56,10 +57,21 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
   };
 
   Future<void> _open(NotificationItem n) async {
-    if (!n.read) await ref.read(notificationRepositoryProvider).setRead(n.id, true);
+    if (!n.read && !n.id.startsWith('log-')) await ref.read(notificationRepositoryProvider).setRead(n.id, true);
     final type = n.data?['type'] as String?;
     if (type == 'trip_deleted' || !mounted) return;
-    context.go('/trip/${widget.tripId}/${notificationTabFor(type)}');
+    final t = activityTargetOf(
+      n,
+      ref.read(tripExpensesProvider(widget.tripId)).value ?? const <Expense>[],
+      ref.read(tripMessagesProvider(widget.tripId)).value ?? const [],
+    );
+    final base = '/trip/${widget.tripId}';
+    if (t?.kind == 'bin') {
+      unawaited(context.push('$base/recycle-bin'));
+      return;
+    }
+    if (t != null) ref.read(activityFocusProvider.notifier).set(t);
+    context.go('$base/${t == null ? notificationTabFor(type) : (t.kind == 'message' ? 'chat' : 'expenses')}');
   }
 
   Future<void> _confirm(NotificationItem n, Expense e) async {
@@ -113,8 +125,14 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
           )
         : const <NotificationItem>[];
     final unread = all.where((n) => !n.read).length;
-    final shown = [...all, ...log].where((n) => matchesActivityFilter(n, _filter)).toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final only = ref.watch(activityOnlyProvider);
+    final tripExpenses = ref.watch(tripExpensesProvider(widget.tripId)).value ?? const <Expense>[];
+    final shown =
+        [...all, ...log]
+            .where((n) => matchesActivityFilter(n, _filter))
+            .where((n) => only == null || activityTargetOf(n, tripExpenses, const [])?.id == only)
+            .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final now = ref.read(nowProvider)();
     final empty = _emptyText[_filter]!;
     final allExpenses = ref.watch(allActiveExpensesProvider).value ?? const <Expense>[];
@@ -159,6 +177,18 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
             ],
           ),
         ),
+        if (only != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: InputChip(
+                key: const Key('activity-only-chip'),
+                label: const Text('Showing this item only'),
+                onDeleted: () => ref.read(activityOnlyProvider.notifier).set(null),
+              ),
+            ),
+          ),
         SizedBox(
           height: 52,
           child: SingleChildScrollView(

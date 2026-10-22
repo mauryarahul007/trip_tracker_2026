@@ -5353,3 +5353,9 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** `buildTripActivityLog` derives read-only rows from the trip's expenses, recycle bin (24h), refunds and text chat, merged with notifications (deduped by type and title/preview) in `TripActivityPane`. Behind new flag `enableTripActivityLog` (Trip pack, default ON); new `expense_refunded` row type under the Money filter.
 * **Trade-offs Accepted:** Edits are inferred from updatedAt (more than 60s after creation) with no before/after; deletions older than 24h are purged and not shown; list capped at 200; log rows cannot be swiped away.
 * **Release Cut:** version bumped to `3.77.4` via `npm run release:patch`.
+
+## v3.77.5: Activity rows open the exact message or expense (UX)
+* **Context:** Tapping an Activity row only switched to a tab, so users had to hunt for the item.
+* **Decision:** `activityTargetOf` resolves a row to a chat message, expense or recycle-bin entry (log rows carry `targetId`; notifications match by title or text). `activityFocusProvider` hands it to `ChatPane` (scroll and highlight) and `ExpensesTab` (opens the detail sheet). Expense detail gained "See in Activity" (`activityOnlyProvider` filter). Inside `enableTripActivityLog`, no new flag.
+* **Trade-offs Accepted:** Chat scroll uses an estimate then exact reveal, so long chats may hop once; member-join rows still open the Members tab without highlighting; notifications that no longer match open the tab.
+* **Release Cut:** version bumped to `3.77.5` via `npm run release:patch`.

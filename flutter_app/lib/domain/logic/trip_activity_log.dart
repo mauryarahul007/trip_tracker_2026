@@ -41,7 +41,13 @@ List<NotificationItem> buildTripActivityLog({
     );
   }
 
-  Map<String, dynamic> money(Expense e) => {'expenseTitle': e.title, 'amount': '${e.amount}', 'currency': e.currency};
+  Map<String, dynamic> money(Expense e, [String kind = 'expense']) => {
+    'expenseTitle': e.title,
+    'amount': '${e.amount}',
+    'currency': e.currency,
+    'targetKind': kind,
+    'targetId': e.id,
+  };
 
   for (final e in expenses) {
     if (e.tripId != tripId) continue;
@@ -52,12 +58,38 @@ List<NotificationItem> buildTripActivityLog({
     }
   }
   for (final e in recycled) {
-    if (e.tripId == tripId && e.deletedAt != null) add('del-${e.id}', 'expense_deleted', e.deletedAt!, money(e));
+    if (e.tripId == tripId && e.deletedAt != null) add('del-${e.id}', 'expense_deleted', e.deletedAt!, money(e, 'bin'));
   }
   for (final m in messages) {
     if (m.tripId != tripId || m.deletedAt != null || (m.eventKind != null && m.eventKind != 'text')) continue;
-    add('msg-${m.id}', 'chat_message', m.createdAt, {'senderName': names[m.memberId] ?? 'Someone', 'preview': m.body});
+    add('msg-${m.id}', 'chat_message', m.createdAt, {
+      'senderName': names[m.memberId] ?? 'Someone',
+      'preview': m.body,
+      'targetKind': 'message',
+      'targetId': m.id,
+    });
   }
   out.sort((a, b) => b.createdAt.compareTo(a.createdAt));
   return out.take(_maxLogItems).toList();
+}
+
+/// What tapping [n] should open: the log rows carry it; notifications are matched by expense title or message
+/// text. Null when nothing matches (the caller then opens the tab).
+({String kind, String id})? activityTargetOf(
+  NotificationItem n,
+  Iterable<Expense> expenses,
+  Iterable<TripMessage> messages,
+) {
+  final d = n.data;
+  if (d?['targetId'] != null) return (kind: d!['targetKind'] as String, id: d['targetId'] as String);
+  final type = d?['type'];
+  if (type == 'chat_message') {
+    final m = messages.where((m) => m.deletedAt == null && m.body == d?['preview']).lastOrNull;
+    return m == null ? null : (kind: 'message', id: m.id);
+  }
+  if (type is String && type.startsWith('expense_') && type != 'expense_deleted') {
+    final e = expenses.where((e) => e.tripId == n.tripId && e.title == d?['expenseTitle']).lastOrNull;
+    return e == null ? null : (kind: 'expense', id: e.id);
+  }
+  return null;
 }

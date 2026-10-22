@@ -25,6 +25,7 @@ Expense ex(String id, String title, double amt, int at, {String? refundOf, int? 
 );
 
 void main() {
+  targetTests();
   const members = [Member(id: 'm1', name: 'Rahul', tripId: 't')];
   List<NotificationItem> run({List<NotificationItem> notes = const []}) => buildTripActivityLog(
     tripId: 't',
@@ -63,5 +64,36 @@ void main() {
       run(notes: [note]).where((n) => n.data!['expenseTitle'] == 'Stay' && n.data!['type'] == 'expense_added'),
       isEmpty,
     );
+  });
+}
+
+void targetTests() {
+  group('activityTargetOf', () {
+    test('log rows carry their target; notifications match by title or text', () {
+      final log = buildTripActivityLog(
+        tripId: 't',
+        expenses: [ex('e1', 'Stay', 10, 1000)],
+        recycled: [ex('e2', 'Taxi', 9, 500, deleted: 3000)],
+        messages: const [TripMessage(id: 'c1', tripId: 't', memberId: 'm1', body: 'hi', createdAt: 4000)],
+        members: const [Member(id: 'm1', name: 'Rahul', tripId: 't')],
+        notifications: const [],
+      );
+      Map<String, String?> byType() => {
+        for (final n in log) n.data!['type'] as String: activityTargetOf(n, const [], const [])?.kind,
+      };
+      expect(byType(), {'expense_added': 'expense', 'expense_deleted': 'bin', 'chat_message': 'message'});
+
+      const note = NotificationItem(
+        id: 'n',
+        tripId: 't',
+        title: '',
+        body: '',
+        createdAt: 'x',
+        data: {'type': 'chat_message', 'preview': 'hi'},
+      );
+      const msg = TripMessage(id: 'c1', tripId: 't', memberId: 'm1', body: 'hi', createdAt: 1);
+      expect(activityTargetOf(note, const [], const [msg])?.id, 'c1');
+      expect(activityTargetOf(note, const [], const []), isNull);
+    });
   });
 }

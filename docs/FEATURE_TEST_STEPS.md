@@ -3689,6 +3689,13 @@ Then add a row to the **Index** table.
 6. Money chip: lists expenses, refunds, settlements, edits and deletions. Chat chip: messages only.
 7. Something another traveler added shows once, not twice (notification and log merge). Swipe on a log row does nothing; swipe on a notification row still deletes it. **Delete all** clears notifications only; log rows remain.
 
-**Flag OFF (`enableTripActivityLog`):** Activity lists only notifications sent to you; your own expenses and refunds do not appear.
+**Tap to open (same flag):**
+
+8. Tap a chat-message row. Pass: Chat opens scrolled to that message, which is highlighted for about 2 seconds, even in a long chat.
+9. Tap an expense, refund, edit or settlement row. Pass: the Expenses tab opens with that expense's detail sheet already open.
+10. Tap a deleted-expense row. Pass: the Recycle Bin opens. Tap a notification row from another traveler (for example their message): it goes to the matching message or expense; if it no longer matches (renamed or purged), it just opens the tab.
+11. Open any expense, tap **See in Activity**. Pass: Activity opens showing only that expense's rows with a "Showing this item only" chip; the chip's x restores the full log.
+
+**Flag OFF (`enableTripActivityLog`):** no See in Activity button; Activity lists only notifications sent to you; your own expenses and refunds do not appear.
 
 **Pass criteria:** every expense, refund, settlement, deletion and message in the trip is visible once in Activity.

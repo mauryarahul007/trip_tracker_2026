@@ -30,6 +30,7 @@ import '../../../shared/widgets/undo_snackbar.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../../trips/application/trips_providers.dart';
 import '../application/expenses_providers.dart';
+import '../../notifications/application/activity_focus.dart';
 import '../application/money_providers.dart';
 import 'closeout_sheet.dart';
 import 'conflict_sheet.dart';
@@ -106,6 +107,17 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     super.initState();
     _scroll.addListener(_onScroll);
     _compact = ref.read(sharedPreferencesProvider).getBool(_compactPrefKey) ?? false;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _consumeFocus());
+  }
+
+  /// An Activity row asked for this expense: open its detail once it is loaded.
+  void _consumeFocus() {
+    final f = ref.read(activityFocusProvider);
+    if (!mounted || f == null || f.kind != 'expense') return;
+    final e = (ref.read(tripExpensesProvider(id)).value ?? const <Expense>[]).where((x) => x.id == f.id).firstOrNull;
+    if (e == null) return;
+    ref.read(activityFocusProvider.notifier).set(null);
+    _openDetail(e);
   }
 
   @override
@@ -210,6 +222,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(activityFocusProvider, (_, _) => _consumeFocus());
+    ref.listen(tripExpensesProvider(id), (_, _) => _consumeFocus());
     final l10n = context.l10n;
     final tokens = context.tokens;
     final trip = ref.watch(tripProvider(id)).value;

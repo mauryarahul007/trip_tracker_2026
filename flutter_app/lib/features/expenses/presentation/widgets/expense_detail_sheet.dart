@@ -7,6 +7,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../app/auth_state.dart';
@@ -27,6 +28,7 @@ import '../../../../shared/theme/app_typography.dart';
 import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../trip_details/application/trip_nav.dart';
+import '../../../notifications/application/activity_focus.dart';
 import '../../application/expenses_providers.dart';
 import '../../application/money_providers.dart';
 
@@ -386,6 +388,20 @@ class ExpenseDetailSheet extends ConsumerWidget {
               label: l10n.detailApprove,
               isFullWidth: true,
               onPressed: () => _run(context, () => repo.approve(e.id, userId: uid)),
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (_flag(ref, 'enableTripActivityLog', tripId)) ...[
+            AppButton(
+              key: const Key('detail-see-activity'),
+              label: 'See in Activity',
+              variant: AppButtonVariant.secondary,
+              isFullWidth: true,
+              onPressed: () {
+                ref.read(activityOnlyProvider.notifier).set(e.id);
+                Navigator.pop(context);
+                context.go('/trip/$tripId/activity');
+              },
             ),
             const SizedBox(height: 8),
           ],

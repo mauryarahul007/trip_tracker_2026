@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.77.5',
+    date: '2026-10-22',
+    changes: [
+      'Tap an Activity row to jump straight to that chat message or expense, and use See in Activity on an expense to see its history.',
+    ],
+  },
+  {
     version: '3.77.4',
     date: '2026-10-22',
     changes: [

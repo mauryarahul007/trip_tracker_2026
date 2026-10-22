@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../notifications/application/activity_focus.dart';
+
 import 'package:intl/intl.dart';
 
 import '../../../app/auth_state.dart';
@@ -36,6 +39,8 @@ class ChatPane extends ConsumerStatefulWidget {
 class _ChatPaneState extends ConsumerState<ChatPane> {
   final _input = TextEditingController();
   final _scroll = ScrollController();
+  final _focusKey = GlobalKey();
+  String? _highlightId;
 
   @override
   void initState() {
@@ -54,6 +59,27 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     _input.dispose();
     _scroll.dispose();
     super.dispose();
+  }
+
+  /// Scroll to a message opened from Activity and flash it. Rows differ in height, so jump to an estimate
+  /// until the row is built, then centre it exactly.
+  Future<void> _reveal(List<TripMessage> ms, String id) async {
+    final i = ms.indexWhere((m) => m.id == id);
+    if (i < 0) return;
+    setState(() => _highlightId = id);
+    for (var t = 0; t < 8 && mounted; t++) {
+      await WidgetsBinding.instance.endOfFrame;
+      final ctx = _focusKey.currentContext;
+      if (ctx != null && ctx.mounted) {
+        await Scrollable.ensureVisible(ctx, alignment: 0.4, duration: const Duration(milliseconds: 250));
+        break;
+      }
+      if (_scroll.hasClients) {
+        _scroll.jumpTo((_scroll.position.maxScrollExtent * i / ms.length).clamp(0.0, _scroll.position.maxScrollExtent));
+      }
+    }
+    await Future<void>.delayed(const Duration(seconds: 2));
+    if (mounted) setState(() => _highlightId = null);
   }
 
   void _markSeen(List<TripMessage> messages) {
@@ -77,8 +103,15 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     final pages = ref.watch(compassFlagProvider((compassTripPagesFlag, widget.tripId)));
     final pollsOn = ref.watch(compassFlagProvider((tripPollsFlag, widget.tripId)));
     final reactionsOn = ref.watch(flagProvider(('enableChatReactionsAndReplies', widget.tripId))).value ?? false;
+    final focus = ref.watch(activityFocusProvider);
+    final focusId = focus?.kind == 'message' && messages.any((m) => m.id == focus!.id) ? focus!.id : null;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _markSeen(messages);
+      if (!mounted) return;
+      _markSeen(messages);
+      if (focusId != null && ref.read(activityFocusProvider)?.id == focusId) {
+        ref.read(activityFocusProvider.notifier).set(null);
+        unawaited(_reveal(messages, focusId));
+      }
     });
 
     return Column(
@@ -104,66 +137,73 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                   itemBuilder: (context, i) {
                     final m = messages[i];
                     final showDay = i == 0 || _day(messages[i - 1].createdAt) != _day(m.createdAt);
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (showDay)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: context.tokens.bgSurface,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: context.tokens.borderColor.withValues(alpha: 0.6)),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.04),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 1),
+                    return Container(
+                      key: m.id == _highlightId ? _focusKey : null,
+                      decoration: BoxDecoration(
+                        color: m.id == _highlightId ? context.tokens.primaryAccent.withValues(alpha: 0.15) : null,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (showDay)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: context.tokens.bgSurface,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: context.tokens.borderColor.withValues(alpha: 0.6)),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.04),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 1),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Text(
+                                    _formatDayLabel(m.createdAt),
+                                    style: TextStyle(
+                                      fontFamily: AppTypography.fontMono,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.5,
+                                      color: context.tokens.textSecondary,
                                     ),
-                                  ],
-                                ),
-                                child: Text(
-                                  _formatDayLabel(m.createdAt),
-                                  style: TextStyle(
-                                    fontFamily: AppTypography.fontMono,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.5,
-                                    color: context.tokens.textSecondary,
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        if (m.deletedAt != null)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Text(l10n.chatDeleted, style: const TextStyle(fontStyle: FontStyle.italic)),
-                          )
-                        else if (m.eventKind == 'poll' && pollsOn && pollFromPayload(m.payload) != null)
-                          _pollCard(context, m, members[m.memberId]?.name ?? '')
-                        else if (_isEvent(m))
-                          pages
-                              ? _eventLine(context, m, dirty.contains(m.id))
-                              : _event(context, m, dirty.contains(m.id))
-                        else
-                          _bubble(
-                            context,
-                            m,
-                            members[m.memberId]?.name ?? '',
-                            m.memberId == me,
-                            dirty.contains(m.id),
-                            outboxTicksOn: outboxTicksOn,
-                            readReceiptsOn: readReceiptsOn,
-                            // Compass: avatar on the first message of a run, name shown once per run.
-                            firstOfRun: pages && !(!showDay && i > 0 && _sameRun(messages[i - 1], m)),
-                            showAvatar: pages,
-                            reactionsOn: reactionsOn,
-                          ),
-                      ],
+                          if (m.deletedAt != null)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Text(l10n.chatDeleted, style: const TextStyle(fontStyle: FontStyle.italic)),
+                            )
+                          else if (m.eventKind == 'poll' && pollsOn && pollFromPayload(m.payload) != null)
+                            _pollCard(context, m, members[m.memberId]?.name ?? '')
+                          else if (_isEvent(m))
+                            pages
+                                ? _eventLine(context, m, dirty.contains(m.id))
+                                : _event(context, m, dirty.contains(m.id))
+                          else
+                            _bubble(
+                              context,
+                              m,
+                              members[m.memberId]?.name ?? '',
+                              m.memberId == me,
+                              dirty.contains(m.id),
+                              outboxTicksOn: outboxTicksOn,
+                              readReceiptsOn: readReceiptsOn,
+                              // Compass: avatar on the first message of a run, name shown once per run.
+                              firstOfRun: pages && !(!showDay && i > 0 && _sameRun(messages[i - 1], m)),
+                              showAvatar: pages,
+                              reactionsOn: reactionsOn,
+                            ),
+                        ],
+                      ),
                     );
                   },
                 ),
