@@ -1,3 +1,4 @@
+import { netAmount } from '../utils/refunds';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import type { Expense, Group, Member, Trip } from '../types';
@@ -966,6 +967,11 @@ export function BalancesSettlements({
     ? memberCashAndShare(activeTripExpenses, myMemberId)
     : { paid: 0, share: 0 };
 
+  const totalSpent = activeTripExpenses
+    .filter((e) => !e.isSettlement && !e.title.startsWith('Settlement:') && e.approvalStatus !== 'pending_approval')
+    .reduce((sum, e) => sum + netAmount(e), 0);
+  const settledSoFar = activeTripExpenses.filter((e) => e.isSettlement).reduce((sum, e) => sum + e.amount, 0);
+
   const settledMemberCount = balances.filter((b) => Math.abs(b.balance) < 0.01).length;
   const settledPct = balances.length > 0 ? Math.round((settledMemberCount / balances.length) * 100) : 100;
 
@@ -1011,6 +1017,8 @@ export function BalancesSettlements({
           settledMemberCount={settledMemberCount}
           travelerNames={travelerNames}
           lastUpdatedAt={lastUpdatedAt}
+          totalSpent={totalSpent}
+          settledSoFar={settledSoFar}
         />
       </div>
 

@@ -374,7 +374,14 @@ export function calculateSettlements(
       if (f) implied[f] = (implied[f] || 0) - t.amount;
       if (to) implied[to] = (implied[to] || 0) + t.amount;
     });
-    if (nodes.some((n) => Math.abs((implied[n.id] || 0) - n.balance) > 0.02)) {
+    // Money going both ways between the same two parties (a group is one party) is not a payable list: the pass
+    // says one side owes the net while the per-person rows tell the other side to pay. Settle the net instead.
+    const flows = new Set(directTransfers.map((t) => `${nodeOf[t.fromMemberId]}>${nodeOf[t.toMemberId]}`));
+    const crossing = [...flows].some((k) => {
+      const [a, b] = k.split('>');
+      return flows.has(`${b}>${a}`);
+    });
+    if (crossing || nodes.some((n) => Math.abs((implied[n.id] || 0) - n.balance) > 0.02)) {
       return { balances, transfers: matchDebtorsToCreditors(nodes, balances), isSimplified: false };
     }
     return { balances, transfers: directTransfers, isSimplified: false };

@@ -300,6 +300,25 @@ describe('Settlement Utilities', () => {
     expect(bobToAlice?.amount).toBe(5);
   });
 
+  it('per person view with groups lists the one net payment, not opposing pair debts between the groups', () => {
+    const ids = ['a', 'b', 'c', 'd'];
+    const four: Trip = { ...trip, memberIds: ids };
+    const mem = Object.fromEntries(ids.map((id) => [id, { id, name: id }])) as Record<string, Member>;
+    const groups: Group[] = [
+      { id: 'g2', name: '2B', memberIds: ['a', 'b'] },
+      { id: 'g1', name: '1B', memberIds: ['c', 'd'] },
+    ];
+    const exp = (id: string, amount: number, paidBy: string): Expense => ({
+      id, tripId: 't1', title: `Item ${id}`, amount, currency: 'EUR', category: 'c', date: '2026-08-02', paidBy,
+      splitMode: 'equal', splitMemberIds: ids, resolvedShares: Object.fromEntries(ids.map((m) => [m, amount / 4])),
+      createdAt: 1, updatedAt: 1, isSettlement: false, createdByUserId: 'u1',
+    });
+    // 2B is owed 300 net, but pair by pair c owes a 350 while a and b each owe d 100.
+    const res = calculateSettlements(four, mem, [exp('e1', 1000, 'a'), exp('e2', 400, 'd')], groups, { simplifyDebts: false });
+    expect(res.transfers).toHaveLength(1);
+    expect(res.transfers[0].amount).toBe(300);
+  });
+
   it('summarizes the same outstanding total Summary shows', () => {
     const summary = summarizeSettlement(
       [{ balance: 40 }, { balance: -40 }, { balance: 0 }],

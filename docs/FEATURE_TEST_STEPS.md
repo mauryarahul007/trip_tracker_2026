@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-23 | unreleased | PASS-CLEARER | [Clearer settlement pass and no contradicting payments](#pass-clearer--clearer-settlement-pass-and-no-contradicting-payments) |
 | 2026-10-22 | unreleased | EXPENSE-REFUNDS | [Record a refund on an expense](#expense-refunds--record-a-refund-on-an-expense) |
 | 2026-10-21 | unreleased | TRIP-GET-STARTED | [Get this trip rolling: start card on a blank trip](#trip-get-started--get-this-trip-rolling-start-card-on-a-blank-trip) |
 | 2026-10-21 | unreleased | COMPASS | [Compass: trip dock + Trip hub, Spend header, balance bars, storage card, web Settle-up pane](#compass--trip-dock--trip-hub-spend-header-balance-bars-storage-card-web-settle-up-pane) |
@@ -3642,3 +3643,20 @@ Then add a row to the **Index** table.
 **Old app version:** a build without this feature shows the refund as a plain "Refund: Hotel" line and keeps the pre-refund balances; update the app to see the corrected numbers.
 
 **Pass criteria:** balances equal original minus refund, split in proportion, payer is never owed more than they actually spent, and the history is visible on the expense.
+
+## PASS-CLEARER — Clearer settlement pass and no contradicting payments
+
+**Flag:** `enableCompassTripPages` (Trip pack, default ON) for the pass wording. The payment-list fix has no flag (it is a calculation fix). Web and Flutter.
+
+**Prep:** a trip with two groups, 2B (A, B) and 1B (C, D), Simplify debts OFF. A pays 1000 and D pays 400, both split equally among all four. Pair by pair, C owes A 350 while A and B each owe D 100, but 2B is owed 300 net.
+
+1. Open Balances as A. Pass: one payment only, 1B pays 2B 300. The red "You owe" bar and "Pay ..." banner never show an amount that contradicts the pass (A is owed, so no "You owe" bar).
+2. Front of the pass, bottom stub (Flutter): labels read **Spent / Settled / Pending**; Pending reads "1 payment" (or "All paid" when square); amounts over 1000 show without paise. Nothing wraps over two lines at 130% text size.
+3. Web pass footer: reads "Spent X · Settled Y" and "1 payment left" (or "All paid"), not "4 members / 1 transfer left".
+4. Tap the pass to flip (Flutter). Pass: You paid / Your share / **You owe** or **You're owed** or **Square** (not "Difference"), a line "Payments already recorded move this by ±X" when settlements exist, and for a group member "Your group 2B is owed X in total. This page shows only you." The button reads "How is this worked out?".
+5. Record the 300 settlement. Pass: stamp SETTLED, stub Pending "All paid", no bar.
+6. Per person trip without groups, A pays 100 split with B. Pass: B sees one payment, A is owed; behaviour as before.
+
+**Flag OFF (`enableCompassTripPages`):** the stub reads Total spent / Per person / Open payments (a count), the flip side third cell reads Difference, and the web footer reads members / transfers left. The payment-list fix still applies.
+
+**Pass criteria:** the pass, the bottom bar, the banner and Who pays whom always agree on who owes whom.

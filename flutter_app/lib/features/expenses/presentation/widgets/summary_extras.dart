@@ -162,9 +162,14 @@ class PassBack extends StatelessWidget {
     required this.chipLabel,
     this.onExplain,
     this.explainLabel = '',
+    this.settlementsNote,
+    this.groupNote,
     super.key,
   });
 
+  /// Payments already recorded and the group-versus-you line; null hides each.
+  final String? settlementsNote;
+  final String? groupNote;
   final String title;
   final String eyebrow;
   final String paid;
@@ -285,6 +290,24 @@ class PassBack extends StatelessWidget {
                             textAlign: TextAlign.center,
                             style: TextStyle(fontSize: 13, color: t.textSecondary),
                           ),
+                          if (settlementsNote != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              settlementsNote!,
+                              key: const Key('pass-back-settlements'),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 12.5, color: t.textSecondary),
+                            ),
+                          ],
+                          if (groupNote != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              groupNote!,
+                              key: const Key('pass-back-group'),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: t.textPrimary),
+                            ),
+                          ],
                           if (onExplain != null) ...[
                             const SizedBox(height: 12),
                             OutlinedButton(

@@ -938,7 +938,7 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
   enableCompassTripPages: {
     key: 'enableCompassTripPages',
     label: 'Compass Chat, Notes, Checklist and Settle sheet (Flutter)',
-    description: 'Flutter app: ON: Chat shows expenses and settlements as small centered lines ("Ben paid Asha ₹500 · UPI") with avatars and grouped messages, Notes are tappable cards with a preview, the Checklist moves finished items into a collapsed Done section, the settle sheet is one clear who-pays-whom screen, and Balances shows one calm All settled state instead of repeating it. OFF: the previous screens. Does not change messages, notes, checklist items, balances or payments.',
+    description: 'Flutter app: ON: Chat shows expenses and settlements as small centered lines ("Ben paid Asha ₹500 · UPI") with avatars and grouped messages, Notes are tappable cards with a preview, the Checklist moves finished items into a collapsed Done section, the settle sheet is one clear who-pays-whom screen, and Balances shows one calm All settled state instead of repeating it. The pass stub reads Spent / Settled / Pending (1 payment or All paid, whole rupees) instead of Total spent / Per person / Open payments, and the flip side says You owe / You are owed with a one-line note when the group total differs from yours (the web pass footer shows Spent and Settled with payments left). OFF: the previous screens. Does not change messages, notes, checklist items, balances or payments.',
     category: 'core',
     pack: 'trip',
     defaultEnabledForUsers: true,

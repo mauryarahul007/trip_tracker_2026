@@ -181,6 +181,72 @@ abstract class AppLocalizations {
   /// **'To pay'**
   String get ledToPay;
 
+  /// No description provided for @ledStubSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent'**
+  String get ledStubSpent;
+
+  /// No description provided for @ledStubSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled'**
+  String get ledStubSettled;
+
+  /// No description provided for @ledStubPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get ledStubPending;
+
+  /// No description provided for @ledStubPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =0{All paid} =1{1 payment} other{{n} payments}}'**
+  String ledStubPayments(int n);
+
+  /// No description provided for @ledNetOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re owed'**
+  String get ledNetOwed;
+
+  /// No description provided for @ledNetOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe'**
+  String get ledNetOwe;
+
+  /// No description provided for @ledNetSquare.
+  ///
+  /// In en, this message translates to:
+  /// **'Square'**
+  String get ledNetSquare;
+
+  /// No description provided for @ledSettlementsSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments already recorded move this by {amount}.'**
+  String ledSettlementsSoFar(String amount);
+
+  /// No description provided for @ledGroupNoteOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your group {group} is owed {amount} in total. This page shows only you.'**
+  String ledGroupNoteOwed(String group, String amount);
+
+  /// No description provided for @ledGroupNoteOwes.
+  ///
+  /// In en, this message translates to:
+  /// **'Your group {group} owes {amount} in total. This page shows only you.'**
+  String ledGroupNoteOwes(String group, String amount);
+
+  /// No description provided for @ledHowWorked.
+  ///
+  /// In en, this message translates to:
+  /// **'How is this worked out?'**
+  String get ledHowWorked;
+
   /// No description provided for @ledYouPaid.
   ///
   /// In en, this message translates to:

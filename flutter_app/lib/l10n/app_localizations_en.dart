@@ -59,6 +59,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledToPay => 'To pay';
 
   @override
+  String get ledStubSpent => 'Spent';
+
+  @override
+  String get ledStubSettled => 'Settled';
+
+  @override
+  String get ledStubPending => 'Pending';
+
+  @override
+  String ledStubPayments(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n payments',
+      one: '1 payment',
+      zero: 'All paid',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ledNetOwed => 'You\'re owed';
+
+  @override
+  String get ledNetOwe => 'You owe';
+
+  @override
+  String get ledNetSquare => 'Square';
+
+  @override
+  String ledSettlementsSoFar(String amount) {
+    return 'Payments already recorded move this by $amount.';
+  }
+
+  @override
+  String ledGroupNoteOwed(String group, String amount) {
+    return 'Your group $group is owed $amount in total. This page shows only you.';
+  }
+
+  @override
+  String ledGroupNoteOwes(String group, String amount) {
+    return 'Your group $group owes $amount in total. This page shows only you.';
+  }
+
+  @override
+  String get ledHowWorked => 'How is this worked out?';
+
+  @override
   String get ledYouPaid => 'You paid';
 
   @override

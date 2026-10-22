@@ -479,6 +479,11 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     }
 
     // One boarding-pass field: small tinted label over a bold value.
+    String stubMoney(double v) {
+      final f = formatMoney(context, v, cur);
+      return v.abs() >= 1000 ? f.replaceFirst(RegExp(r'[.,]\d{2}$'), '') : f;
+    }
+
     Widget field(String label, String value, {CrossAxisAlignment align = CrossAxisAlignment.start}) => Expanded(
       child: Column(
         crossAxisAlignment: align,
@@ -1152,19 +1157,37 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           on: flipOn,
           back: () {
             final paid = spend.paid[mine] ?? 0.0, share = spend.share[mine] ?? 0.0;
-            final diff = double.parse((paid - share).toStringAsFixed(2));
-            final even = diff.abs() < 0.01;
+            final before = double.parse((paid - share).toStringAsFixed(2));
+            // Calm pages: the third cell is what is really still due (recorded payments included), in plain words.
+            final net = calm ? double.parse(myNet.toStringAsFixed(2)) : before;
+            final shown = calm ? net : before;
+            final even = shown.abs() < 0.01;
+            final moved = double.parse((net - before).toStringAsFixed(2));
+            final groupDiff = myGroup?.balance ?? 0.0;
             return PassBack(
               title: trip.name,
               eyebrow: l10n.ledYourShare,
               chipLabel: l10n.ledPassTitle,
               paid: formatMoney(context, paid, cur),
               share: formatMoney(context, share, cur),
-              diff: '${diff > 0.005 ? '+' : (diff < -0.005 ? '-' : '')}${formatMoney(context, diff.abs(), cur)}',
-              diffColor: even ? tokens.textPrimary : (diff > 0 ? tokens.colorSuccess : tokens.colorDanger),
-              why: even ? l10n.ledPaidEven : (diff > 0 ? l10n.ledPaidMore : l10n.ledPaidLess),
-              labels: (l10n.ledYouPaid, l10n.ledYourShare, l10n.ledDifference),
-              explainLabel: l10n.ledExplainTitle,
+              diff: '${shown > 0.005 ? '+' : (shown < -0.005 ? '-' : '')}${formatMoney(context, shown.abs(), cur)}',
+              diffColor: even ? tokens.textPrimary : (shown > 0 ? tokens.colorSuccess : tokens.colorDanger),
+              why: even ? l10n.ledPaidEven : (before > 0 ? l10n.ledPaidMore : l10n.ledPaidLess),
+              labels: (
+                l10n.ledYouPaid,
+                l10n.ledYourShare,
+                calm ? (even ? l10n.ledNetSquare : (shown > 0 ? l10n.ledNetOwed : l10n.ledNetOwe)) : l10n.ledDifference,
+              ),
+              explainLabel: calm ? l10n.ledHowWorked : l10n.ledExplainTitle,
+              settlementsNote: calm && moved.abs() >= 0.01
+                  ? l10n.ledSettlementsSoFar('${moved > 0 ? '+' : '-'}${formatMoney(context, moved.abs(), cur)}')
+                  : null,
+              groupNote: calm && myGroup != null && groupDiff.abs() >= 0.01
+                  ? (groupDiff > 0 ? l10n.ledGroupNoteOwed : l10n.ledGroupNoteOwes)(
+                      myGroup.name,
+                      formatMoney(context, groupDiff.abs(), cur),
+                    )
+                  : null,
               onExplain: _flag(ref, 'enableBalanceExplainer', id)
                   ? () => _showBalanceExplainer(
                       context,
@@ -1235,11 +1258,20 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                   flex: 5,
                   child: Row(
                     children: [
-                      field(l10n.expTotalSpent, formatMoney(context, totals.totalSpent, cur)),
-                      const SizedBox(width: 12),
-                      field(l10n.expPerPerson, formatMoney(context, totals.averageCost, cur)),
-                      const SizedBox(width: 12),
-                      field(l10n.ledHeroOpen, '${result.transfers.length}'),
+                      if (calm) ...[
+                        // Three questions: how big, how far along, what is left. Whole rupees; paise stay on the hero.
+                        field(l10n.ledStubSpent, stubMoney(totals.totalSpent)),
+                        const SizedBox(width: 12),
+                        field(l10n.ledStubSettled, stubMoney(settledSoFar)),
+                        const SizedBox(width: 12),
+                        field(l10n.ledStubPending, l10n.ledStubPayments(result.transfers.length)),
+                      ] else ...[
+                        field(l10n.expTotalSpent, formatMoney(context, totals.totalSpent, cur)),
+                        const SizedBox(width: 12),
+                        field(l10n.expPerPerson, formatMoney(context, totals.averageCost, cur)),
+                        const SizedBox(width: 12),
+                        field(l10n.ledHeroOpen, '${result.transfers.length}'),
+                      ],
                     ],
                   ),
                 ),
