@@ -2777,5 +2777,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-22T16:30:20.748Z",
     "shippedNote": "Shipped in commit 9251b52 (v3.77.1), flag enableCompassTripPages default ON"
+  },
+  {
+    "id": "FEAT-175",
+    "title": "Greyed Add expense on closed and archived trip cards (v3.77.3)",
+    "description": "Flutter trips home stack: a closed or archived trip shows a disabled Add expense button that says why (trip closed / trip archived) instead of an empty gap. Inside enableTripCardStack / enableTripCardQuickAdd.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-22T17:10:55.424Z",
+    "updatedAt": "2026-10-22T17:10:55.614Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-22T17:10:55.614Z",
+    "shippedNote": "Shipped in commit f86e249 (v3.77.3), inside existing flags enableTripCardStack and enableTripCardQuickAdd"
   }
 ]

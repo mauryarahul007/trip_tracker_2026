@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **174** |
+| **Total Tracked** | **175** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **171** |
+| **✅ Shipped** | **172** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -233,6 +233,7 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-172** | Receipt scan, chat reactions, trip polls, guest join (v3.76.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit f3df4c0 (v3.76.0); polls and guest flags default ON, reactions flag unchanged (OFF) |
 | **FEAT-173** | Record a refund on an expense (v3.77.0) | `general` | `claude-cli` | `claude-cli` | Shipped in commit 57860d8 (v3.77.0), flag enableExpenseRefunds default ON |
 | **FEAT-174** | Clearer settlement pass: Spent / Settled / Pending, You owe / You're owed (v3.77.1) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 9251b52 (v3.77.1), flag enableCompassTripPages default ON |
+| **FEAT-175** | Greyed Add expense on closed and archived trip cards (v3.77.3) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit f86e249 (v3.77.3), inside existing flags enableTripCardStack and enableTripCardQuickAdd |
 
 ---
 
