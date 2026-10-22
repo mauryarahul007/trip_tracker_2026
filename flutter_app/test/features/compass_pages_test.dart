@@ -96,14 +96,12 @@ void main() {
   });
 
   group('Balances when settled', () {
-    testApp('no repeated settled blocks: no celebration card, no progress card', (tester) async {
+    testApp('no repeated blocks: no summary strip under the pass', (tester) async {
       await pumpApp(tester, user: asha, flagsOn: on);
       final s = await seedTrip(tester);
       await addExpense(tester, s, title: 'Dinner', amount: 900); // Asha paid
       await goTo(tester, '/trip/${s.tripId}/ledger');
-      expect(key('compass-summary-strip'), findsOneWidget);
-      expect(find.descendant(of: key('compass-summary-strip'), matching: find.text('TOTAL SPENT')), findsNothing);
-      expect(find.descendant(of: key('compass-summary-strip'), matching: find.text('YOU PAID')), findsOneWidget);
+      expect(key('compass-summary-strip'), findsNothing); // the pass flip already shows You paid / Your share
     });
   });
 }

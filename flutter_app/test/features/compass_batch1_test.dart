@@ -65,13 +65,12 @@ void main() {
     });
   });
 
-  group('Balances: summary strip and sticky settle bar', () {
-    testApp('when you owe, the strip and "You owe · Settle" bar show and open your payments', (tester) async {
+  group('Balances: sticky settle bar', () {
+    testApp('when you owe, the "You owe · Settle" bar show and open your payments', (tester) async {
       await pumpApp(tester, user: asha, flagsOn: compassOn);
       final s = await seedTrip(tester);
       await addExpense(tester, s, title: 'Hotel', amount: 900, paidBy: s.ben);
       await goTo(tester, '/trip/${s.tripId}/ledger');
-      expect(key('compass-summary-strip'), findsOneWidget);
       expect(key('compass-settle-bar'), findsOneWidget);
       await tester.tap(key('compass-settle-bar-action'));
       await settle(tester, rounds: 10);
@@ -83,7 +82,6 @@ void main() {
       final s = await seedTrip(tester);
       await addExpense(tester, s, title: 'Dinner', amount: 900); // Asha paid
       await goTo(tester, '/trip/${s.tripId}/ledger');
-      expect(key('compass-summary-strip'), findsOneWidget);
       expect(key('compass-settle-bar'), findsNothing);
     });
 
