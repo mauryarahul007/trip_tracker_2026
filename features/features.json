@@ -2793,5 +2793,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-22T17:10:55.614Z",
     "shippedNote": "Shipped in commit f86e249 (v3.77.3), inside existing flags enableTripCardStack and enableTripCardQuickAdd"
+  },
+  {
+    "id": "FEAT-176",
+    "title": "Full per-trip Activity log (enableTripActivityLog)",
+    "description": "Full per-trip Activity log (enableTripActivityLog)",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-22T17:37:24.482Z",
+    "updatedAt": "2026-10-22T17:37:31.485Z",
+    "shippedBy": "agent",
+    "shippedAt": "2026-10-22T17:37:31.485Z",
+    "shippedNote": "Commit f55130d"
   }
 ]
