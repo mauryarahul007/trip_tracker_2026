@@ -7,6 +7,7 @@ import '../../domain/logic/flag_defaults.g.dart';
 const compassNavFlag = 'enableCompassNav';
 const compassSpendFlag = 'enableCompassSpend';
 const compassMoneyFlag = 'enableCompassMoney';
+const compassTripPagesFlag = 'enableCompassTripPages';
 const compassMeFlag = 'enableCompassMe';
 const compassWebFlag = 'enableCompassWeb';
 

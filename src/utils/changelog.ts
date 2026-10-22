@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.75.0',
+    date: '2026-10-22',
+    changes: [
+      'Chat shows expenses and payments as small centered lines ("Ben paid Asha · UPI · ₹500"), with avatars and grouped messages.',
+      'Notes are tidy preview cards: tap one to edit it. The Checklist folds finished items into a Done section.',
+      'The settle sheet is simpler: who pays whom, one big amount you can edit, Mark settled, and extras under More options.',
+      'Balances says "settled" once instead of repeating it in several cards.',
+    ],
+  },
+  {
     version: '3.74.0',
     date: '2026-10-22',
     changes: [

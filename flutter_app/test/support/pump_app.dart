@@ -97,6 +97,7 @@ const _compassFlags = [
   'enableCompassNav',
   'enableCompassSpend',
   'enableCompassMoney',
+  'enableCompassTripPages',
   'enableCompassMe',
   'enableCompassWeb',
   'enableTripGetStarted', // new-trip start card; tests of blank trips expect the older empty screens

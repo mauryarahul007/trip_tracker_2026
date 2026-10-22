@@ -3577,6 +3577,14 @@ Then add a row to the **Index** table.
 20. Activity. Pass: a "settlement to confirm" row has **Confirm received** (one tap confirms and marks it read); a chat row has **Reply** (opens the chat).
 21. Set the phone text size to 130% and open Balances, Spend, Activity and Trip. Pass: nothing is clipped, and every button is at least 44px tall.
 
+**Chat, Notes, Checklist, Settle sheet, calm Balances (`enableCompassTripPages`, Trip pack, default ON)**
+22. Trip, Notes, Chat. Pass: expense and payment events are small centered lines such as "Ben paid Asha · UPI · ₹50,983" (never "Settlement Settlement", never "INR"); tapping an expense line opens its details. Other people's messages show an avatar on the first message of a run and their name once; the Send button is grey until you type.
+23. Notes. Pass: each note is a card with the title, up to 3 lines of text and "Edited ... ago"; there is no editable box on the card. Tap a card: an Edit note sheet opens; change the text, Save, and the card shows the new text. The pin / delete menu still works.
+24. Checklist. Pass: open items first; finished ones are folded under "Done (N)" (tap to open or close). "Anyone" is not shown on rows (an assigned person is); with a category chip selected, rows do not repeat the category. Ticking an item moves it to Done.
+25. Settle: Balances, tap Settle on a payment. Pass: the sheet shows the payer and receiver with avatars, one large amount you can edit ("Edit to pay part of it"; part payments show what remains), the Mark settled button right under it, and date/note/UPI/share under "More options". Mark settled records the payment as before.
+26. Balances when everyone is square. Pass: the pass shows SETTLED once; there is no green "Everyone is square" card, no progress card and no "You're owed" chip; the strip shows only You paid and Your share.
+27. Flag OFF (`enableCompassTripPages`): the previous cards and the longer settle sheet return. No message, note, item or payment changes.
+
 **Flag-OFF negative checks:** turn `enableCompassNav` OFF: the old tab bar (Summary/Expenses/Members/Notes per your other flags), floating Add button and old home bar return; no Trip hub. Turn `enableCompassSpend`, `enableCompassMoney`, `enableCompassMe`, `enableCompassWeb` OFF one at a time: the header card, forced bars, storage card and right pane each disappear and nothing else changes. No data, balance or setting changes in any case.
 
 **Pass criteria:** steps 1 to 21 (including 9b to 9f and 12b) pass in light, dark and AMOLED, at text size 130%, with TalkBack/VoiceOver reading each bar item as "<label>, button" and the orange + as "Add expense".

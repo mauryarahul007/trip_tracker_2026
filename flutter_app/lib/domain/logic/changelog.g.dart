@@ -8,6 +8,13 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.74.0', '2026-10-22', [
+    'Balances has a summary strip (Total spent, Per person, You paid, Your share) and a bar at the bottom, "You owe ₹X · Settle", that lists your payments to settle.',
+    'The trip name now only switches trips, and Chat is no longer a separate Trip tile because it lives in Notes. Mute alerts moved to the Trip tab.',
+    'Switching trips shows a "Switching to…" cover instead of flashing the home screen.',
+    'Spend search also finds category, who paid and amount, and active filters show as chips you can remove.',
+    'Activity rows offer Confirm received for payments and Reply for chat. People shows who owes or is owed, and Trip tiles show live facts.',
+  ]),
   ChangelogEntry('3.73.0', '2026-10-21', [
     'Activity is a proper tab now: filter chips for All, Unread, Money, People and Chat, updates grouped by day, mark all read, and Delete all.',
     'The trip menu moved into the Trip tab: Edit trip, Route map, Live location, Invite, Trip settings and App settings. Chat is a tile there too.',
@@ -54,9 +61,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.68.4', '2026-10-19', [
     'When a whole group has settled, Per person now shows the trip as settled too, with no payments left to make for the people inside the group. This is fixed on the web and in the Flutter app.',
-  ]),
-  ChangelogEntry('3.68.3', '2026-10-19', [
-    'After everyone has settled, the trip now shows as settled in both Fewest payments and Per person, and the amount outstanding is the same in both. This is fixed on the web and in the Flutter app.',
-    'Behind the scenes (Flutter app): a clearer trip header line, the yellow close-out card disappears once the trip is settled, and a settlement paid to you has a Confirm received button in History.',
   ]),
 ];

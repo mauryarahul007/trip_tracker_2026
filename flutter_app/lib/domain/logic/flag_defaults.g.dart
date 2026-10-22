@@ -42,6 +42,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableCompassMoney': true,
   'enableCompassNav': true,
   'enableCompassSpend': true,
+  'enableCompassTripPages': true,
   'enableCompassWeb': true,
   'enableContactInvite': true,
   'enableContextFab': true,
@@ -388,6 +389,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'Compass Spend Header (Flutter)',
     pack: 'trip',
     description: 'Flutter app: ON: the Expenses tab opens with a Total spent card (total, per person and the biggest category as a percentage) and every expense row shows its category colour ring. OFF: the previous Expenses layout. Does not change amounts, splits or receipts, and shows no budget bar.',
+  ),
+  'enableCompassTripPages': (
+    label: 'Compass Chat, Notes, Checklist and Settle sheet (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: Chat shows expenses and settlements as small centered lines ("Ben paid Asha ₹500 · UPI") with avatars and grouped messages, Notes are tappable cards with a preview, the Checklist moves finished items into a collapsed Done section, the settle sheet is one clear who-pays-whom screen, and Balances shows one calm All settled state instead of repeating it. OFF: the previous screens. Does not change messages, notes, checklist items, balances or payments.',
   ),
   'enableCompassWeb': (
     label: 'Compass Settle-up Pane (Flutter web)',
@@ -1196,6 +1202,7 @@ const Map<String, List<String>> consumerPacks = {
     'enableTripGetStarted',
     'enableCompassSpend',
     'enableCompassMoney',
+    'enableCompassTripPages',
     'enableTripCardStack',
     'enableNotificationGrouping',
     'enableVoiceInput',

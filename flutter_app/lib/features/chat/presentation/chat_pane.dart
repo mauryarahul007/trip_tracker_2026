@@ -6,12 +6,15 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/auth_state.dart';
+import '../../../core/flags/compass_flags.dart';
 import '../../../data/providers.dart';
+import '../../../domain/logic/chat_event_text.dart';
 import '../../../domain/models/member.dart';
 import '../../../domain/models/trip_message.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
+import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/ask_text.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -70,6 +73,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     final showLiveBanner = ref.watch(flagProvider(('enableLiveLocationShare', widget.tripId))).value ?? false;
     final outboxTicksOn = ref.watch(flagProvider(('enableChatOfflineOutbox', widget.tripId))).value ?? false;
     final readReceiptsOn = ref.watch(flagProvider(('enableChatReadReceipts', widget.tripId))).value ?? false;
+    final pages = ref.watch(compassFlagProvider((compassTripPagesFlag, widget.tripId)));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _markSeen(messages);
     });
@@ -137,7 +141,9 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                             child: Text(l10n.chatDeleted, style: const TextStyle(fontStyle: FontStyle.italic)),
                           )
                         else if (_isEvent(m))
-                          _event(context, m, dirty.contains(m.id))
+                          pages
+                              ? _eventLine(context, m, dirty.contains(m.id))
+                              : _event(context, m, dirty.contains(m.id))
                         else
                           _bubble(
                             context,
@@ -147,6 +153,9 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                             dirty.contains(m.id),
                             outboxTicksOn: outboxTicksOn,
                             readReceiptsOn: readReceiptsOn,
+                            // Compass: avatar on the first message of a run, name shown once per run.
+                            firstOfRun: pages && !(!showDay && i > 0 && _sameRun(messages[i - 1], m)),
+                            showAvatar: pages,
                           ),
                       ],
                     );
@@ -176,12 +185,20 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton.filled(
-                tooltip: 'Send message',
-                key: const Key('chat-send'),
-                onPressed: _send,
-                style: IconButton.styleFrom(backgroundColor: context.tokens.primaryAccent),
-                icon: const Icon(Icons.send_rounded, size: 20),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _input,
+                builder: (context, v, _) => IconButton.filled(
+                  tooltip: 'Send message',
+                  key: const Key('chat-send'),
+                  onPressed: _send,
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    backgroundColor: pages && v.text.trim().isEmpty
+                        ? context.tokens.borderColor
+                        : context.tokens.primaryAccent,
+                  ),
+                  icon: const Icon(Icons.send_rounded, size: 20),
+                ),
               ),
             ],
           ),
@@ -200,6 +217,8 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     bool pending, {
     required bool outboxTicksOn,
     required bool readReceiptsOn,
+    bool firstOfRun = true,
+    bool showAvatar = false,
   }) {
     final l10n = context.l10n;
     final timeStr = _formatTime(m.createdAt);
@@ -230,7 +249,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
       }
     }
 
-    return Align(
+    final bubble = Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: GestureDetector(
         key: Key('chat-bubble-${m.id}'),
@@ -252,7 +271,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!mine && name.isNotEmpty)
+              if (!mine && name.isNotEmpty && firstOfRun)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 2),
                   child: Text(
@@ -290,6 +309,59 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                   ],
                 ],
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (!showAvatar || mine) return bubble;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        SizedBox(width: 30, child: firstOfRun ? AppAvatar(name: name, size: 26) : null),
+        const SizedBox(width: 6),
+        Flexible(child: bubble),
+      ],
+    );
+  }
+
+  bool _sameRun(TripMessage a, TripMessage b) =>
+      !_isEvent(a) && !_isEvent(b) && a.deletedAt == null && a.memberId == b.memberId;
+
+  /// Compass: an expense or payment as one small centered line, not a card.
+  Widget _eventLine(BuildContext context, TripMessage m, bool pending) {
+    final t = context.tokens;
+    final expenseId = m.payload?['expenseId'] as String?;
+    final isSettlement = m.eventKind?.contains('settle') ?? false;
+    return Center(
+      child: InkWell(
+        key: Key('chat-event-${m.id}'),
+        onTap: expenseId == null ? null : () => _openExpense(expenseId),
+        borderRadius: BorderRadius.circular(99),
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          constraints: const BoxConstraints(maxWidth: 330, minHeight: 32),
+          decoration: BoxDecoration(color: t.bgSurface.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(99)),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isSettlement ? Icons.handshake_outlined : Icons.receipt_long_outlined,
+                size: 15,
+                color: isSettlement ? t.colorSuccess : t.textSecondary,
+              ),
+              const SizedBox(width: 7),
+              Flexible(
+                child: Text(
+                  tidyChatEvent(m.body),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12.5, color: t.textSecondary, fontWeight: FontWeight.w500),
+                ),
+              ),
+              if (pending) Text('  ${context.l10n.chatPending}', style: TextStyle(fontSize: 10.5, color: t.textMuted)),
+              if (expenseId != null) Icon(Icons.chevron_right_rounded, size: 16, color: t.textMuted),
             ],
           ),
         ),

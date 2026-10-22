@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/flags/compass_flags.dart';
 import '../../../core/platform/motion.dart';
 
 import '../../../core/platform/external_launcher.dart';
@@ -61,6 +62,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   /// responsive (and later taps correct) even if a sync round-trip is slow or briefly sends an older copy back.
   final _pendingDone = <String, bool>{};
   var _category = 'all';
+  var _doneOpen = false; // Compass: the Done section of the checklist starts folded
   final _quick = TextEditingController();
 
   @override
@@ -354,6 +356,19 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     ];
     final done = items.where((i) => (_pendingDone[i.id] ?? i.completed)).length;
     final dest = trip?.destination?.isNotEmpty == true ? trip!.destination : trip?.name;
+    final pages = _flag(compassTripPagesFlag);
+    final todo = pages
+        ? [
+            for (final i in shown)
+              if (!(_pendingDone[i.id] ?? i.completed)) i,
+          ]
+        : shown;
+    final finished = pages
+        ? [
+            for (final i in shown)
+              if (_pendingDone[i.id] ?? i.completed) i,
+          ]
+        : const <ChecklistItem>[];
     return ListView(
       key: const Key('checklist'),
       padding: EdgeInsets.fromLTRB(16, 4, 16, _flag('enableContextFab') ? 88 : 32), // clear of the floating Add
@@ -424,7 +439,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
             isFullWidth: true,
             onPressed: () => _editItem(context, items),
           ),
-        if (_flag('enableChecklistCategoryProgress') && items.isNotEmpty) ...[
+        if (_flag('enableChecklistCategoryProgress') && items.isNotEmpty && !pages) ...[
           const SizedBox(height: 12),
           Column(
             key: const Key('checklist-category-progress'),
@@ -512,7 +527,33 @@ class _NotesTabState extends ConsumerState<NotesTab> {
               style: TextStyle(color: t.textSecondary, fontSize: 15),
             ),
           ),
-        for (final item in shown) _checkRow(context, items, item, members),
+        for (final item in todo) _checkRow(context, items, item, members),
+        if (finished.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          InkWell(
+            key: const Key('check-done-toggle'),
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => setState(() => _doneOpen = !_doneOpen),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle_rounded, size: 20, color: t.colorSuccess),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Done (${finished.length})',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: t.textSecondary),
+                    ),
+                  ),
+                  Icon(_doneOpen ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: t.textSecondary),
+                ],
+              ),
+            ),
+          ),
+          if (_doneOpen)
+            for (final item in finished) _checkRow(context, items, item, members),
+        ],
         if (packing)
           Padding(
             padding: const EdgeInsets.only(top: 14),
@@ -642,8 +683,11 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                         spacing: 6,
                         runSpacing: 4,
                         children: [
-                          if (item.category != null) pill(null, item.category!),
-                          pill(Icons.person_outline_rounded, assignee ?? l10n.notesItemAnyone),
+                          // Compass: the category is already the filter and "Anyone" is the default, so say neither.
+                          if (item.category != null && !(_flag(compassTripPagesFlag) && _category != 'all'))
+                            pill(null, item.category!),
+                          if (assignee != null || !_flag(compassTripPagesFlag))
+                            pill(Icons.person_outline_rounded, assignee ?? l10n.notesItemAnyone),
                         ],
                       ),
                     ],
@@ -756,6 +800,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
             onDelete: () => _deleteNote(context, notes, n),
             onContent: (text) =>
                 _saveNotes([for (final x in notes) x.id == n.id ? x.copyWith(content: text, updatedAt: _now()) : x]),
+            onOpen: _flag(compassTripPagesFlag) ? () => _editNote(context, notes, n) : null,
           ),
         if (!fab)
           AppButton(key: const Key('note-add'), label: l10n.notesAddNote, onPressed: () => _addNote(context, notes)),
@@ -863,6 +908,19 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     }
     if (extra.isEmpty) return;
     await _saveChecks([...items, ...extra]);
+  }
+
+  Future<void> _editNote(BuildContext context, List<TripNote> notes, TripNote n) async {
+    final draft = await AppSheet.show<_NoteDraft>(
+      context: context,
+      title: 'Edit note',
+      builder: (_) => _NoteDialog(initialTitle: n.title, initialBody: n.content),
+    );
+    if (draft == null) return;
+    final title = draft.title.isNotEmpty ? draft.title : n.title;
+    await _saveNotes([
+      for (final x in notes) x.id == n.id ? x.copyWith(title: title, content: draft.body, updatedAt: _now()) : x,
+    ]);
   }
 
   Future<void> _addNote(BuildContext context, List<TripNote> notes) async {
@@ -1024,9 +1082,13 @@ class _NoteCard extends ConsumerStatefulWidget {
     this.tidy = false,
     this.onPin,
     this.onDelete,
+    this.onOpen,
     super.key,
   });
   final TripNote note;
+
+  /// Compass: the card is a read-only preview and tapping it opens the editor.
+  final VoidCallback? onOpen;
   final ValueChanged<String> onContent;
 
   /// Card with pin, menu and edited-time (enableTidyNotes).
@@ -1072,6 +1134,79 @@ class _NoteCardState extends ConsumerState<_NoteCard> {
     _c.dispose();
     _focus.dispose();
     super.dispose();
+  }
+
+  Widget _previewCard(BuildContext context) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final n = widget.note;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: t.bgSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: n.isPinned ? t.primaryAccent.withValues(alpha: 0.6) : t.borderColor),
+        ),
+        child: InkWell(
+          key: Key('note-open-${n.id}'),
+          borderRadius: BorderRadius.circular(18),
+          onTap: widget.onOpen,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 4, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    if (n.isPinned) ...[
+                      Icon(Icons.push_pin_rounded, size: 16, color: t.primaryAccent),
+                      const SizedBox(width: 6),
+                    ],
+                    Expanded(
+                      child: Text(
+                        n.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: t.textPrimary),
+                      ),
+                    ),
+                    PopupMenuButton<String>(
+                      key: Key('note-menu-${n.id}'),
+                      tooltip: l10n.notesNoteMenu,
+                      icon: Icon(Icons.more_horiz_rounded, color: t.textSecondary),
+                      onSelected: (v) => v == 'pin' ? widget.onPin?.call() : widget.onDelete?.call(),
+                      itemBuilder: (_) => [
+                        PopupMenuItem(value: 'pin', child: Text(n.isPinned ? l10n.notesNoteUnpin : l10n.notesNotePin)),
+                        PopupMenuItem(value: 'delete', child: Text(l10n.notesItemDelete)),
+                      ],
+                    ),
+                  ],
+                ),
+                if (n.content.trim().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12, top: 2),
+                    child: Text(
+                      n.content.trim(),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 14.5, height: 1.35, color: t.textSecondary),
+                    ),
+                  ),
+                if (n.updatedAt > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      l10n.notesNoteEdited(formatRelativeTime(n.updatedAt)),
+                      style: TextStyle(fontSize: 12, color: t.textMuted),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _tidyCard(BuildContext context) {
@@ -1153,6 +1288,7 @@ class _NoteCardState extends ConsumerState<_NoteCard> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.tidy && widget.onOpen != null) return _previewCard(context);
     if (widget.tidy) return _tidyCard(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1209,15 +1345,18 @@ class _NoteDraft {
 }
 
 class _NoteDialog extends StatefulWidget {
-  const _NoteDialog();
+  const _NoteDialog({this.initialTitle = '', this.initialBody = ''});
+
+  final String initialTitle;
+  final String initialBody;
 
   @override
   State<_NoteDialog> createState() => _NoteDialogState();
 }
 
 class _NoteDialogState extends State<_NoteDialog> {
-  final _title = TextEditingController();
-  final _body = TextEditingController();
+  late final _title = TextEditingController(text: widget.initialTitle);
+  late final _body = TextEditingController(text: widget.initialBody);
 
   @override
   void dispose() {
