@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **170** |
+| **Total Tracked** | **171** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **167** |
+| **✅ Shipped** | **168** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -229,6 +229,7 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-168** | Compass trip bar, Trip hub and blank-trip start card (v3.72.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e7373a7 (v3.72.0), all six flags default ON |
 | **FEAT-169** | Compass Activity tab with filters, Trip-tab menu (v3.73.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit ac91dcb (v3.73.0) |
 | **FEAT-170** | Compass follow-ups: Balances settle bar, Spend chips, Activity actions (v3.74.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4953f9b (v3.74.0), reuses Compass flags default ON |
+| **FEAT-171** | Compass chat, notes, checklist, settle sheet, calm Balances (v3.75.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit a9da495 (v3.75.0), flag enableCompassTripPages default ON |
 
 ---
 

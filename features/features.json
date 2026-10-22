@@ -2713,5 +2713,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-22T05:16:31.842Z",
     "shippedNote": "Shipped in commit 4953f9b (v3.74.0), reuses Compass flags default ON"
+  },
+  {
+    "id": "FEAT-171",
+    "title": "Compass chat, notes, checklist, settle sheet, calm Balances (v3.75.0)",
+    "description": "Flutter: Chat event lines with avatars; Notes preview cards; Checklist Done section; simpler settle sheet; Balances says settled once. Flag enableCompassTripPages, Trip pack, default ON.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-22T05:50:01.795Z",
+    "updatedAt": "2026-10-22T05:50:01.923Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-22T05:50:01.923Z",
+    "shippedNote": "Shipped in commit a9da495 (v3.75.0), flag enableCompassTripPages default ON"
   }
 ]
