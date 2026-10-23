@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,8 +9,8 @@ import '../../../data/providers.dart';
 import '../../../domain/models/trip.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/widgets/app_scaffold.dart';
-import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/undo_snackbar.dart';
 import '../../notifications/application/notification_prefs_providers.dart';
 import '../../settings/presentation/settings_widgets.dart';
 import '../application/trip_nav.dart';
@@ -48,19 +50,18 @@ class TripSettingsScreen extends ConsumerWidget {
     await ref.read(tripRepositoryProvider).setApprovalThreshold(tripId, double.tryParse(v));
   }
 
-  Future<void> _state(
-    BuildContext context,
-    WidgetRef ref,
-    String title,
-    String message, {
-    bool? frozen,
-    bool? closed,
-    bool? archived,
-  }) async {
-    final ok = await ConfirmDialog.show(context: context, title: title, message: message, confirmLabel: 'Yes');
-    if (ok) {
-      await ref.read(tripRepositoryProvider).setTripState(tripId, frozen: frozen, closed: closed, archived: archived);
-    }
+  /// Applies the change at once and offers UNDO, instead of asking first: every one of these can be flipped back.
+  Future<void> _state(BuildContext context, WidgetRef ref, String message, {bool? frozen, bool? closed}) async {
+    final repo = ref.read(tripRepositoryProvider); // captured: the screen may be gone when UNDO is tapped
+    await repo.setTripState(tripId, frozen: frozen, closed: closed);
+    if (!context.mounted) return;
+    UndoSnackbar.show(
+      context: context,
+      message: message,
+      onUndo: () => unawaited(
+        repo.setTripState(tripId, frozen: frozen == null ? null : !frozen, closed: closed == null ? null : !closed),
+      ),
+    );
   }
 
   @override
@@ -149,15 +150,7 @@ class TripSettingsScreen extends ConsumerWidget {
                         title: 'Freeze trip',
                         subtitle: 'Read-only: nobody can add or edit expenses',
                         value: trip.frozen,
-                        onChanged: (v) => _state(
-                          context,
-                          ref,
-                          v ? 'Freeze trip?' : 'Unfreeze trip?',
-                          v
-                              ? 'Members will not be able to add or edit expenses.'
-                              : 'Members can add and edit expenses again.',
-                          frozen: v,
-                        ),
+                        onChanged: (v) => _state(context, ref, v ? 'Trip frozen' : 'Trip unfrozen', frozen: v),
                       ),
                       SettingsSwitchTile(
                         key: const Key('trip-close'),
@@ -165,13 +158,7 @@ class TripSettingsScreen extends ConsumerWidget {
                         title: 'Trip closed',
                         subtitle: 'Marks the trip as settled and finished',
                         value: trip.closed,
-                        onChanged: (v) => _state(
-                          context,
-                          ref,
-                          v ? 'Close trip?' : 'Reopen trip?',
-                          v ? 'The trip is marked finished and locked.' : 'The trip opens for edits again.',
-                          closed: v,
-                        ),
+                        onChanged: (v) => _state(context, ref, v ? 'Trip closed' : 'Trip reopened', closed: v),
                       ),
                       SettingsSwitchTile(
                         key: const Key('trip-archive'),

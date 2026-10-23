@@ -55,6 +55,7 @@ import 'widgets/sync_chip.dart';
 import 'widgets/trip_backdrop.dart';
 import 'widgets/trip_row.dart';
 import 'widgets/trip_card_stack.dart';
+import '../../../core/platform/motion.dart';
 
 class TripsScreen extends ConsumerStatefulWidget {
   const TripsScreen({this.now, super.key});
@@ -465,6 +466,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
               : AppBar(
                   title: Text(l10n.tripsTitle),
                   actions: [
+                    const SyncButton(),
                     if (!cards && gridOn)
                       IconButton(
                         key: const Key('trips-layout-toggle'),
@@ -1154,7 +1156,7 @@ class _FilterPills extends StatelessWidget {
                             key: Key('trip-filter-$id'),
                             onTap: () => onSelect(id),
                             child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 180),
+                              duration: AppMotion.of(context, const Duration(milliseconds: 180)),
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(

@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/models/trip.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../application/trips_providers.dart';
+import '../../../../core/platform/motion.dart';
 
 /// The top trip's photo, blurred, behind the card stack. Cross-fades when the top card changes; with no photo it
 /// is just the page colour.
@@ -25,7 +26,7 @@ class TripBackdrop extends ConsumerWidget {
       children: [
         ColoredBox(color: t.bgPage),
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 450),
+          duration: AppMotion.of(context, const Duration(milliseconds: 450)),
           child: url == null || url.isEmpty
               ? const SizedBox.expand(key: ValueKey('no-photo'))
               : ImageFiltered(

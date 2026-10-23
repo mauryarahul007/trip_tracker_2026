@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/platform/motion.dart';
 import 'app_tokens.dart';
 import 'app_typography.dart';
 
@@ -27,6 +29,29 @@ OutlineInputBorder _inputBorder(AppTokens t, Color color, [double width = 1]) =>
   borderSide: BorderSide(color: color, width: width),
 );
 
+/// The platform's own page transition, except that with Reduce motion on (the app setting or the phone's "remove
+/// animations") a page fades in instead of zooming or sliding. iOS keeps the Cupertino slide: it carries the
+/// swipe-back gesture, and iOS itself already softens it under Reduce Motion.
+class ReduceMotionPageTransitionsBuilder extends PageTransitionsBuilder {
+  const ReduceMotionPageTransitionsBuilder([this.inner = const ZoomPageTransitionsBuilder()]);
+
+  final PageTransitionsBuilder inner;
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (AppMotion.reduce || MediaQuery.disableAnimationsOf(context)) {
+      return FadeTransition(opacity: animation, child: child);
+    }
+    return inner.buildTransitions<T>(route, context, animation, secondaryAnimation, child);
+  }
+}
+
 /// Single builder for light / dark / AMOLED so the web-app look (index.css) stays in one place.
 ThemeData _build(AppTokens t, Brightness brightness) {
   final textTheme = AppTypography.createTextTheme(t.textPrimary, t.textSecondary, t.textMuted);
@@ -48,6 +73,16 @@ ThemeData _build(AppTokens t, Brightness brightness) {
       error: t.colorDanger,
     ),
     textTheme: textTheme,
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: ReduceMotionPageTransitionsBuilder(),
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.linux: ReduceMotionPageTransitionsBuilder(),
+        TargetPlatform.windows: ReduceMotionPageTransitionsBuilder(),
+        TargetPlatform.fuchsia: ReduceMotionPageTransitionsBuilder(),
+      },
+    ),
     extensions: [t],
     // Web header is a teal gradient with light text; AppBar stays transparent over [AppGradientHeader].
     appBarTheme: AppBarTheme(

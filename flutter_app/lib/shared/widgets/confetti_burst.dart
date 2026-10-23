@@ -78,8 +78,10 @@ class ConfettiBurstState extends State<ConfettiBurst> with SingleTickerProviderS
                 if (_controller.value == 0.0 || _controller.value == 1.0) {
                   return const SizedBox.shrink();
                 }
-                return CustomPaint(
-                  painter: _ConfettiPainter(progress: _controller.value, particles: _particles),
+                return RepaintBoundary(
+                  child: CustomPaint(
+                    painter: _ConfettiPainter(progress: _controller.value, particles: _particles),
+                  ),
                 );
               },
             ),

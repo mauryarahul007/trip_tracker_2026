@@ -129,6 +129,22 @@ final dirtyIdsProvider = StreamProvider<Set<String>>(
   (ref) => ref.watch(outboxStoreProvider).watchAll().map((items) => collectDirtyIds(items.map((i) => i.toQueuedOp()))),
 );
 
+/// Entities with a quarantined change (rows show "Sync failed" with a Retry; flag `enableRowSyncRetry`).
+final failedIdsProvider = StreamProvider<Set<String>>(
+  (ref) => ref
+      .watch(outboxStoreProvider)
+      .watchIssues()
+      .map((items) => {for (final i in items) ...payloadEntityIds(i.type, i.payload)}),
+);
+
+/// Retries one row's stuck changes and asks the coordinator to send them now.
+final retryRowSyncProvider = Provider<Future<void> Function(String)>(
+  (ref) => (entityId) async {
+    await ref.read(outboxStoreProvider).retryForEntity(entityId);
+    ref.read(requestSyncProvider)();
+  },
+);
+
 final conflictIdsProvider = Provider.family<Set<String>, String>(
   (ref, tripId) => {for (final c in ref.watch(conflictStoreProvider)[tripId] ?? const <ExpenseConflict>[]) c.expenseId},
 );

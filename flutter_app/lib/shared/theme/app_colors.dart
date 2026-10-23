@@ -20,6 +20,13 @@ class AppColors {
   static const Color accentCyan = Color(0xFF2DD4E0);
   static const Color accentViolet = Color(0xFF8B3CF7);
 
+  // Hero surfaces that are dark in every theme (trip headers, cover washes, wrapped).
+  static const Color heroNavy = Color(0xFF123A57);
+  static const Color heroNavyDeep = Color(0xFF0B1F33);
+  static const Color heroTeal = Color(0xFF1F6F78);
+  // Budget "getting close" amber: the same in every theme, between success and danger.
+  static const Color budgetWarn = Color(0xFFE8890C);
+
   static const Color lightSuccess = Color(0xFF16A34A);
   static const Color lightDanger = Color(0xFFDC2626);
   static const Color lightWarning = Color(0xFFD97706);

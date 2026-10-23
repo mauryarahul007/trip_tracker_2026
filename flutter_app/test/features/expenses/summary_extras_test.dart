@@ -30,7 +30,7 @@ Future<void> reveal(WidgetTester tester, String k) async {
 }
 
 void main() {
-  testApp('settle all records every payment I owe after one confirmation', (tester) async {
+  testApp('settle all records every payment I owe at once and offers Undo', (tester) async {
     await pumpApp(tester, user: asha);
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 60, paidBy: s.ben, split: [s.me, s.ben]); // Asha owes Ben 30
@@ -38,13 +38,30 @@ void main() {
     await openLedger(tester, s);
     await reveal(tester, 'settle-all');
     await tester.tap(key('settle-all'));
-    await settle(tester, rounds: 6);
-    await tester.tap(find.text('Mark as paid'));
     await settle(tester, rounds: 16);
+    expect(find.byType(AlertDialog), findsNothing); // Undo is on: no dialog first
     final list = (await expensesOf(tester, s)).cast<Expense>().where((e) => e.isSettlement).toList();
     expect(list.map((e) => e.amount), unorderedEquals([30, 30]));
     expect(key('settle-all'), findsNothing);
     expect(key('all-settled'), findsOneWidget);
+    await tester.tap(find.text('UNDO'));
+    await settle(tester, rounds: 16);
+    expect((await expensesOf(tester, s)).cast<Expense>().where((e) => e.isSettlement && e.deletedAt == null), isEmpty);
+  });
+
+  testApp('settle all still asks first when Undo is off', (tester) async {
+    await pumpApp(tester, user: asha, flagsOff: {'enableUndoSettlement'});
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 60, paidBy: s.ben, split: [s.me, s.ben]);
+    await addExpense(tester, s, amount: 60, paidBy: s.cara, split: [s.me, s.cara]);
+    await openLedger(tester, s);
+    await reveal(tester, 'settle-all');
+    await tester.tap(key('settle-all'));
+    await settle(tester, rounds: 6);
+    expect(find.text('Mark as paid'), findsOneWidget);
+    await tester.tap(find.text('Mark as paid'));
+    await settle(tester, rounds: 16);
+    expect((await expensesOf(tester, s)).cast<Expense>().where((e) => e.isSettlement), hasLength(2));
   });
 
   testApp('settle all is hidden with one payment, and when the flag is off', (tester) async {

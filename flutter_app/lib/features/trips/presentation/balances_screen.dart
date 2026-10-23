@@ -12,6 +12,7 @@ import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_scaffold.dart';
+import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_surface.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -58,6 +59,11 @@ class BalancesScreen extends ConsumerWidget {
                 icon: Icons.account_balance_wallet_outlined,
                 title: l10n.emptyTripsTitle,
                 subtitle: l10n.emptyTripsSubtitle,
+                action: AppButton(
+                  key: const Key('balances-create-trip'),
+                  label: l10n.actionCreateTrip,
+                  onPressed: () => createTripFlow(context),
+                ),
               )
             : ListView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
@@ -104,15 +110,17 @@ class BalancesScreen extends ConsumerWidget {
                                 style: TextStyle(fontWeight: FontWeight.w700, color: tokens.textPrimary),
                               ),
                             ),
-                            Builder(
-                              builder: (_) {
-                                final nets = netsFor([t]);
-                                if (nets.isEmpty) return Text('Settled', style: TextStyle(color: tokens.textMuted));
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [for (final n in nets) _NetRow(n)],
-                                );
-                              },
+                            Flexible(
+                              child: Builder(
+                                builder: (_) {
+                                  final nets = netsFor([t]);
+                                  if (nets.isEmpty) return Text('Settled', style: TextStyle(color: tokens.textMuted));
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [for (final n in nets) _NetRow(n)],
+                                  );
+                                },
+                              ),
                             ),
                           ],
                         ),

@@ -24,6 +24,7 @@ import 'offline_snapshot_modal.dart';
 import '../../../shared/widgets/app_surface.dart' show AppCard;
 import '../../settings/presentation/settings_widgets.dart' show SettingsSection, SettingsTile;
 import 'widgets/import_preview_sheet.dart';
+import '../../../shared/theme/app_colors.dart';
 
 typedef TextFilePicker = Future<String?> Function({required List<String> extensions});
 
@@ -318,7 +319,7 @@ class _TripToolsSheetState extends ConsumerState<TripToolsSheet> {
               SettingsTile(
                 key: const Key('import-json'),
                 icon: Icons.upload_rounded,
-                iconColor: const Color(0xFFE8890C),
+                iconColor: AppColors.budgetWarn,
                 title: l10n.toolsImportJson,
                 subtitle: 'Merges into this trip',
                 onTap: _busy ? null : _importJson,
@@ -327,7 +328,7 @@ class _TripToolsSheetState extends ConsumerState<TripToolsSheet> {
                 SettingsTile(
                   key: const Key('import-splitwise'),
                   icon: Icons.swap_horiz_rounded,
-                  iconColor: const Color(0xFF8B3CF7),
+                  iconColor: AppColors.accentViolet,
                   title: l10n.toolsSplitwise,
                   subtitle: 'Bring an existing group across',
                   onTap: _busy ? null : _importSplitwise,

@@ -1,11 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/app_typography.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_sheet.dart';
+import '../../../../core/platform/haptics.dart';
 
 /// Big number keys for the amount: digits, a decimal point, the calculator signs and delete, so a total can be typed
 /// with one thumb. [onChanged] runs on every key so the form behind it updates live; Done closes the sheet.
@@ -35,7 +37,7 @@ class _AmountKeypadState extends State<AmountKeypad> {
   void _set(String v) {
     setState(() => _text = v);
     widget.onChanged(v);
-    HapticFeedback.selectionClick();
+    unawaited(AppHaptics.selection());
   }
 
   /// What a key types: the calculator reads * and /, the key faces show × and ÷.

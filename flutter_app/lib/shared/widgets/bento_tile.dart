@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_tokens.dart';
 import 'app_surface.dart';
+import '../../core/platform/motion.dart';
 
 /// A stable tone for any string key (category id, trip id…), so the same thing keeps its colour.
 BentoTone toneFor(String key) =>
@@ -67,7 +68,7 @@ class BentoEntrance extends StatelessWidget {
     final begin = (index * 0.12).clamp(0.0, 0.6);
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 650),
+      duration: AppMotion.of(context, const Duration(milliseconds: 650)),
       curve: Interval(begin, 1, curve: Curves.easeOutCubic),
       builder: (context, v, child) => Opacity(
         opacity: v.clamp(0.0, 1.0),

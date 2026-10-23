@@ -1435,6 +1435,24 @@ abstract class AppLocalizations {
   /// **'Discard'**
   String get syncDiscard;
 
+  /// No description provided for @discardChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes?'**
+  String get discardChangesTitle;
+
+  /// No description provided for @discardChangesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What you typed here has not been saved.'**
+  String get discardChangesBody;
+
+  /// No description provided for @discardKeepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get discardKeepEditing;
+
   /// No description provided for @createTripTitle.
   ///
   /// In en, this message translates to:
@@ -2070,6 +2088,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pending sync'**
   String get rowSyncPending;
+
+  /// No description provided for @rowSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed. Tap to retry.'**
+  String get rowSyncFailed;
 
   /// No description provided for @rowConflict.
   ///
@@ -2905,6 +2929,24 @@ abstract class AppLocalizations {
   /// **'Tip: tap a group to see its members or edit it.'**
   String get hintTapGroup;
 
+  /// No description provided for @settleNudgeText.
+  ///
+  /// In en, this message translates to:
+  /// **'You still owe {name} {amount} on {trip}'**
+  String settleNudgeText(String name, String amount, String trip);
+
+  /// No description provided for @settleNudgeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle up'**
+  String get settleNudgeAction;
+
+  /// No description provided for @settleNudgeDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide for 3 days'**
+  String get settleNudgeDismiss;
+
   /// No description provided for @ledNextPay.
   ///
   /// In en, this message translates to:
@@ -3712,8 +3754,14 @@ abstract class AppLocalizations {
   /// No description provided for @conflictBody.
   ///
   /// In en, this message translates to:
-  /// **'This expense changed on another device while you still had a local edit.'**
+  /// **'This expense was changed on another device while you also edited it here. Keep mine sends your edit and replaces theirs. Keep theirs drops your edit.'**
   String get conflictBody;
+
+  /// No description provided for @conflictSplitValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{mode}, {count, plural, =1{1 person} other{{count} people}}'**
+  String conflictSplitValue(String mode, int count);
 
   /// No description provided for @conflictKeepMine.
   ///

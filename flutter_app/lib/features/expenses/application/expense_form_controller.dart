@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../app/auth_state.dart';
@@ -110,17 +109,6 @@ final formFlagsProvider = Provider.family<AsyncValue<FormFlags>, String>((ref, t
   }
   return AsyncData(FormFlags(values));
 });
-
-class _PrefsStore implements KeyValueStore {
-  _PrefsStore(this._p);
-  final SharedPreferences _p;
-  @override
-  String? getString(String key) => _p.getString(key);
-  @override
-  Future<void> setString(String key, String value) => _p.setString(key, value);
-  @override
-  Future<void> remove(String key) => _p.remove(key);
-}
 
 class MemoryKeyValueStore implements KeyValueStore {
   final _m = <String, String>{};
@@ -264,7 +252,7 @@ class ExpenseFormState {
   bool get isEmpty => title.trim().isEmpty && amount.isEmpty && receiptPath == null && splitConfig.isEmpty;
 }
 
-String _draftKey(String tripId) => 'tt_draft_expense_$tripId';
+String _draftKey(String tripId) => '${draftKeyPrefix}expense_$tripId';
 String _defaultSplitKey(String tripId) => 'tt-default-split:v1:$tripId';
 String _lastPayerCategoryKey(String tripId) => 'tt-last-payer-category:v1:$tripId';
 
@@ -286,8 +274,9 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
   List<Expense> get _expenses => ref.read(tripExpensesProvider(tripId)).value ?? const [];
   String? get _myMemberId => ref.read(myMemberIdProvider(tripId));
   DateTime get _now => ref.read(nowProvider)();
-  KeyValueStore get _draftStore =>
-      flags.persistentDraft ? _PrefsStore(ref.read(sharedPreferencesProvider)) : ref.read(sessionDraftStoreProvider);
+  KeyValueStore get _draftStore => flags.persistentDraft
+      ? PrefsDraftStore(ref.read(sharedPreferencesProvider))
+      : ref.read(sessionDraftStoreProvider);
 
   @override
   ExpenseFormState build() {

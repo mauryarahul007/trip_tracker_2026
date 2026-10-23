@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../domain/logic/settlement.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_tokens.dart';
+import '../../../../shared/theme/app_typography.dart';
+import '../../../../shared/widgets/animated_money_text.dart';
 
 /// Members whose balance is not zero, biggest creditor first. Under half a paisa counts as settled.
 List<MemberBalance> balanceBarRows(List<MemberBalance> balances) => [
@@ -71,10 +73,14 @@ class BalanceBars extends StatelessWidget {
                       ),
                       SizedBox(
                         width: 84,
-                        child: Text(
-                          format(r.balance.abs()),
+                        child: AnimatedMoneyText(
+                          value: r.balance.abs(),
+                          format: format,
                           textAlign: TextAlign.end,
-                          style: const TextStyle(fontWeight: FontWeight.w800),
+                          style: const TextStyle(
+                            fontFeatures: AppTypography.tabularFigures,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                     ],

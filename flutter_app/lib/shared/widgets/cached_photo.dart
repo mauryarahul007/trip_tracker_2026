@@ -4,7 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/painting.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -69,6 +69,12 @@ class PhotoCache {
     }
   }
 }
+
+/// A cached photo shown about [logicalWidth] px wide: decoded no larger than that (times the screen density)
+/// instead of at the file's full size. Keeps aspect ratio. Use for thumbnails, avatars and cover bands, not for
+/// full-screen viewers.
+ImageProvider cachedPhotoSized(BuildContext context, String url, {required double logicalWidth}) =>
+    ResizeImage(CachedPhotoProvider(url), width: (logicalWidth * MediaQuery.devicePixelRatioOf(context)).round());
 
 /// An [ImageProvider] for a photo URL that goes through [PhotoCache]. Use it where `Image.network` was used.
 @immutable

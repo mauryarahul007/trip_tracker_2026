@@ -45,6 +45,7 @@ import 'widgets/compass_active_filters.dart';
 import 'widgets/compass_spend_summary.dart';
 import 'widgets/expense_row.dart';
 import 'widgets/expense_swipe.dart';
+import '../../../core/platform/motion.dart';
 
 const _pageSize = 50;
 const _compactPrefKey = 'tt-compact-ledger';
@@ -244,6 +245,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final isAdmin = ref.watch(isTripAdminProvider(id));
     final dirty = ref.watch(dirtyIdsProvider).value ?? const <String>{};
     final conflicts = ref.watch(conflictIdsProvider(id));
+    final failed = (ref.watch(flagProvider(('enableRowSyncRetry', id))).value ?? true)
+        ? (ref.watch(failedIdsProvider).value ?? const <String>{})
+        : const <String>{};
     final compactActive = _flag(ref, 'enableCompactLedgerView', id) && _compact;
     final quickChips = _flag(ref, 'enableExpenseQuickFilterChips', id);
     final personalOn = _flag(ref, 'enableExpenseExclusion', id);
@@ -325,6 +329,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         tidy: tidyOn,
         isDirty: dirty.contains(e.id),
         isConflict: conflicts.contains(e.id),
+        onRetrySync: failed.contains(e.id) ? () => ref.read(retryRowSyncProvider)(e.id) : null,
         onTap: () => _openDetail(e),
       );
       // Bento: each expense is a rounded tile tinted by its category.
@@ -355,6 +360,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       SliverPersistentHeader headerFor(DayGroup g, {required bool expanded}) => SliverPersistentHeader(
         pinned: sticky && expanded,
         delegate: _DayHeader(
+          textScale: MediaQuery.textScalerOf(context).scale(1),
           date: g.date,
           label: _dayLabel(g.date, trip.startDate, l10n.expDayN),
           total: formatMoney(context, g.total, trip.baseCurrency),
@@ -804,6 +810,7 @@ String _dayLabel(String date, String tripStart, String Function(int) dayN) {
 
 class _DayHeader extends SliverPersistentHeaderDelegate {
   _DayHeader({
+    required this.textScale,
     required this.date,
     required this.label,
     required this.total,
@@ -822,6 +829,7 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
   });
 
   final bool tidy;
+  final double textScale; // the header has a fixed height, so it grows with the user's text size
   final Color surface;
   final Color border;
   final String countText; // "3 expenses", tidy header only
@@ -837,7 +845,7 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
   final Color textColor;
   final Color mutedColor;
 
-  double get _h => tidy ? 64.0 : 48.0;
+  double get _h => (tidy ? 64.0 : 48.0) + (textScale - 1).clamp(0.0, 1.0) * 40;
 
   @override
   double get minExtent => _h;
@@ -882,7 +890,12 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(countText, style: TextStyle(fontSize: 12, color: mutedColor)),
+                        Text(
+                          countText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 12, color: mutedColor),
+                        ),
                       ],
                     ),
                   ),
@@ -955,6 +968,7 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
       old.count != count ||
       old.expanded != expanded ||
       old.tidy != tidy ||
+      old.textScale != textScale ||
       old.background != background;
 }
 
@@ -1056,7 +1070,11 @@ class _TableRow extends StatelessWidget {
                 child: Text(
                   formatMoney(context, expense.amount, baseCurrency),
                   textAlign: TextAlign.right,
-                  style: TextStyle(fontWeight: FontWeight.w800, color: t.textPrimary),
+                  style: TextStyle(
+                    fontFeatures: AppTypography.tabularFigures,
+                    fontWeight: FontWeight.w800,
+                    color: t.textPrimary,
+                  ),
                 ),
               ),
             ],
@@ -1088,7 +1106,7 @@ class _RunwayChip extends StatelessWidget {
           behavior: HitTestBehavior.opaque, // the touch area is the full 48 px row, the pill itself stays 36
           child: Center(
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
+              duration: AppMotion.of(context, const Duration(milliseconds: 180)),
               height: 36,
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 14),

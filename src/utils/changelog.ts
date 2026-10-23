@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.78.0',
+    date: '2026-10-23',
+    changes: [
+      'A failed sync now shows a red mark on the expense or message with a Retry button, and a Sync button sits in the home and trip headers.',
+      'Half-typed expenses, notes and chat messages are kept if you close by accident, and are cleared when you sign out.',
+      'Freeze, close and Settle all now apply at once with an Undo, and a quiet trip where you still owe shows a Settle up reminder.',
+      'Smoother and clearer: aligned money columns, balances that count to their new value, fits large text, and respects Reduce motion.',
+    ],
+  },
+  {
     version: '3.77.5',
     date: '2026-10-22',
     changes: [

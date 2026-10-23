@@ -130,6 +130,7 @@ export type FeatureFlagKey =
   | 'enableTripGridTiles'
   | 'enableTripCoverHeader'
   | 'enableSyncLine'
+  | 'enableRowSyncRetry'
   | 'enableOfflineFeedback'
   | 'enableSettledCelebration'
   | 'enableSettleRounding'
@@ -167,6 +168,7 @@ export type FeatureFlagKey =
   | 'enableNotificationDayGroups'
   | 'enableReduceMotion'
   | 'enableTodayCard'
+  | 'enableSettleNudge'
   | 'enableCloseoutPrompt'
   // Phase 6: WhatsApp Social & Chat Hub
   | 'enableChatFirstNav'

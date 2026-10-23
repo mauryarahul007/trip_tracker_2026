@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../logging/app_logger.dart';
+import '../../shared/theme/app_colors.dart';
 
 /// Global error boundary catching uncaught exceptions across zones,
 /// framework callbacks, and rendering trees.
@@ -118,7 +119,7 @@ class _DefaultErrorViewState extends State<_DefaultErrorView> {
               ElevatedButton(
                 onPressed: widget.onRetry,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF7A00),
+                  backgroundColor: AppColors.accentOrange,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(44),
                 ),

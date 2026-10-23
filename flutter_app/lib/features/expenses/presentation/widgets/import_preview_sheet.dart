@@ -5,6 +5,7 @@ import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_sheet.dart';
 import '../../../../shared/widgets/app_surface.dart' show AppCard, Eyebrow;
+import '../../../../shared/theme/app_typography.dart';
 
 /// One expense row shown in the import preview.
 class ImportPreviewRow {
@@ -105,7 +106,10 @@ class _ImportPreviewBody extends StatelessWidget {
                         Expanded(child: Text(r.title, maxLines: 1, overflow: TextOverflow.ellipsis)),
                         Text(
                           formatMoney(context, r.amount, currency),
-                          style: const TextStyle(fontWeight: FontWeight.w700),
+                          style: const TextStyle(
+                            fontFeatures: AppTypography.tabularFigures,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ],
                     ),

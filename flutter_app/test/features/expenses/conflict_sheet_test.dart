@@ -35,4 +35,19 @@ void main() {
   test('an invisible-only change (updatedAt) shows no differing field', () {
     expect(diff(local.copyWith(updatedAt: 9)).any((f) => f.differs), isFalse);
   });
+
+  test('category and split use readable text when the caller supplies it', () {
+    final fields = conflictFields(
+      local,
+      local.copyWith(category: 'cat-stay', splitMemberIds: ['m1']),
+      money: (v, c) => '$c $v',
+      nameOf: (id) => id,
+      categoryOf: (id) => id == 'food' ? 'Food & Dining' : 'Stay & Hotel',
+      splitOf: (mode, n) => '$mode for $n',
+    );
+    final cat = fields.firstWhere((f) => f.key == ConflictFieldKey.category);
+    expect((cat.local, cat.server), ('Food & Dining', 'Stay & Hotel'));
+    final split = fields.firstWhere((f) => f.key == ConflictFieldKey.split);
+    expect((split.local, split.server), ('equal for 3', 'equal for 1'));
+  });
 }

@@ -22,6 +22,7 @@ import 'features/auth/presentation/app_lock_gate.dart';
 import 'app/sync_lifecycle.dart';
 import 'core/env/app_env.dart';
 import 'core/errors/error_boundary.dart';
+import 'core/errors/tab_error_boundary.dart';
 import 'core/logging/app_logger.dart';
 import 'core/logging/crash_reporter.dart';
 import 'core/telemetry/auto_bug_reporter.dart';
@@ -40,6 +41,8 @@ void main() {
       PaintingBinding.instance.imageCache
         ..maximumSizeBytes = 64 << 20
         ..maximumSize = 150;
+
+      installInPlaceErrorWidget(); // a tab that fails to build shows Retry in place, not a red screen
 
       // Forward Flutter framework UI errors to logger & crash reporter
       FlutterError.onError = (FlutterErrorDetails details) {

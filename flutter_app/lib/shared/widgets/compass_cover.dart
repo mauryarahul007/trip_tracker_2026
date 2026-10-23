@@ -36,7 +36,7 @@ class CompassCover extends StatelessWidget {
             ),
             if (url != null && url.isNotEmpty)
               Image(
-                image: CachedPhotoProvider(url),
+                image: cachedPhotoSized(context, url, logicalWidth: MediaQuery.sizeOf(context).width),
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => const SizedBox.shrink(),
               ),

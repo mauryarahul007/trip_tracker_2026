@@ -78,6 +78,7 @@ import 'closeout_sheet.dart';
 import 'widgets/summary_extras.dart';
 import 'widgets/settlement_card.dart';
 import 'widgets/upi_payment_sheet.dart';
+import '../../../shared/theme/app_colors.dart';
 
 /// "₹1,200.00" -> ("₹1,200", ".00") so the decimals can be dimmed (MoneyText).
 (String, String?) _splitMoney(String formatted) {
@@ -141,17 +142,21 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
   Future<void> _settleAll(BuildContext context, List<Transfer> mine, String cur) async {
     final l10n = context.l10n;
     final total = mine.fold<double>(0, (a, t) => a + t.amount);
-    final ok = await ConfirmDialog.show(
-      context: context,
-      title: l10n.ledSettleAllTitle(mine.length),
-      message: l10n.ledSettleAllBody(formatMoney(context, total, cur)),
-      confirmLabel: l10n.ledSettleAllConfirm,
-    );
-    if (!ok || !context.mounted) return;
+    final undoOn = ref.read(flagProvider(('enableUndoSettlement', widget.tripId))).value ?? false;
+    // With Undo on, the snackbar below is the safety net; without it the dialog is the only one.
+    if (!undoOn) {
+      final ok = await ConfirmDialog.show(
+        context: context,
+        title: l10n.ledSettleAllTitle(mine.length),
+        message: l10n.ledSettleAllBody(formatMoney(context, total, cur)),
+        confirmLabel: l10n.ledSettleAllConfirm,
+      );
+      if (!ok) return;
+    }
+    if (!context.mounted) return;
     final repo = ref.read(expenseRepositoryProvider);
     final userId = ref.read(authStateProvider).userId ?? '';
     final date = todayDateString(ref.read(nowProvider)());
-    final undoOn = _flag(ref, 'enableUndoSettlement', widget.tripId);
     final me = ref.read(myMemberIdProvider(widget.tripId));
     final groups = ref.read(tripGroupsProvider(widget.tripId)).value ?? const <Group>[];
     final made = <String>[];
@@ -400,6 +405,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
       for (final t in transfers)
         if (isMe(t.to)) t,
     ];
+    ref.watch(flagProvider(('enableUndoSettlement', id))); // loaded before Settle all reads it
     final settleAllOn = _flag(ref, 'enableSettleAll', id) && iAmIn && myPays.length >= 2;
     final timelineOn = _flag(ref, 'enableDailyTimeline', id);
     final allDays = spendByDay(ref.watch(tripExpensesProvider(id)).value ?? const <Expense>[]);
@@ -411,7 +417,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final budgetState = budgetStatus(totals.totalSpent, budget);
     final budgetColor = switch (budgetState.level) {
       BudgetLevel.over => tokens.colorDanger,
-      BudgetLevel.warn => const Color(0xFFE8890C),
+      BudgetLevel.warn => AppColors.budgetWarn,
       BudgetLevel.ok => tokens.colorSuccess,
     };
     final tripAccent = _flag(ref, 'enableTripAccent', id) ? ref.watch(tripAccentProvider(id)).value : null;
@@ -575,7 +581,10 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                         children: [
                           Text(
                             formatMoney(context, c.amount, cur),
-                            style: const TextStyle(fontWeight: FontWeight.w800),
+                            style: const TextStyle(
+                              fontFeatures: AppTypography.tabularFigures,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                           Text(
                             l10n.ledShareOfTotal(c.percentage.round()),
@@ -727,7 +736,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                     child: Text(
                       formatMoney(context, r.paid, cur),
                       textAlign: TextAlign.end,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                      style: const TextStyle(fontFeatures: AppTypography.tabularFigures, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ],
@@ -779,7 +788,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                     child: Text(
                       formatMoney(context, e.value, cur),
                       textAlign: TextAlign.end,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                      style: const TextStyle(fontFeatures: AppTypography.tabularFigures, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ],
@@ -837,7 +846,10 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                         children: [
                           Text(
                             formatMoney(context, c.amount, cur),
-                            style: const TextStyle(fontWeight: FontWeight.w800),
+                            style: const TextStyle(
+                              fontFeatures: AppTypography.tabularFigures,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                           Text(
                             l10n.ledShareOfTotal(c.percentage.round()),
@@ -904,7 +916,10 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                         child: Text(
                           formatMoney(context, d.total, cur),
                           textAlign: TextAlign.end,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
+                          style: const TextStyle(
+                            fontFeatures: AppTypography.tabularFigures,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
@@ -1585,7 +1600,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                         decoration: BoxDecoration(
                           color: tokens.tones[BentoTone.butter].bg,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFFFF7A00).withValues(alpha: 0.3)),
+                          border: Border.all(color: AppColors.accentOrange.withValues(alpha: 0.3)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1596,7 +1611,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.8,
-                                color: Color(0xFFFF7A00),
+                                color: AppColors.accentOrange,
                               ),
                             ),
                             const SizedBox(height: 3),
@@ -2045,7 +2060,7 @@ class _PassBanner extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF0B1F33), Color(0xFF123A57), Color(0xFF1F6F78)],
+                  colors: [AppColors.heroNavyDeep, AppColors.heroNavy, AppColors.heroTeal],
                 ),
               ),
             ),
@@ -2053,7 +2068,7 @@ class _PassBanner extends StatelessWidget {
           if (coverUrl != null && coverUrl!.isNotEmpty)
             Positioned.fill(
               child: Image(
-                image: CachedPhotoProvider(coverUrl!),
+                image: cachedPhotoSized(context, coverUrl!, logicalWidth: MediaQuery.sizeOf(context).width),
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => const SizedBox.shrink(),
               ),

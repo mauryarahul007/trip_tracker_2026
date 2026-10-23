@@ -141,6 +141,13 @@ class OutboxStore {
     const OutboxTableCompanion(status: Value(OutboxStatus.pending), attempts: Value(0), lastError: Value(null)),
   );
 
+  /// Retry the quarantined items that touch one entity (a row's "Sync failed" mark).
+  Future<void> retryForEntity(String entityId) async {
+    for (final i in await all()) {
+      if (i.status == OutboxStatus.poison && payloadEntityIds(i.type, i.payload).contains(entityId)) await retry(i.id);
+    }
+  }
+
   /// User chose "discard" on a quarantined item.
   Future<void> discard(String id) => markDone(id);
 

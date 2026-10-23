@@ -7,6 +7,7 @@ import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../application/onboarding_state.dart';
+import '../../../core/platform/motion.dart';
 
 /// Three-step intro shown once per user per install (web: OnboardingSwipe).
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -104,7 +105,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: [
                   for (var i = 0; i < steps.length; i++)
                     AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
+                      duration: AppMotion.of(context, const Duration(milliseconds: 200)),
                       margin: const EdgeInsets.all(4),
                       width: i == _index ? 22 : 8,
                       height: 8,

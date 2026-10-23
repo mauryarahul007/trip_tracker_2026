@@ -27,6 +27,8 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../domain/models/trip.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/discard_guard.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/undo_snackbar.dart';
 import '../../../shared/widgets/app_sheet.dart';
@@ -84,6 +86,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final trip = ref.watch(tripProvider(widget.tripId)).value;
+    if (trip == null) return const SkeletonPage(); // not loaded yet: a skeleton, not an empty checklist
     final chatOn = _flag('enableTripChat');
     final chatFirst = _flag('enableChatFirstNav');
     final showChat = chatOn && !chatFirst;
@@ -115,9 +118,9 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                   label: p.$1 == 'chat' && unread
                       ? Text(p.$2, key: const Key('notes-chat-unread'), maxLines: 1)
                       : switch (p.$1) {
-                          'passes' => _countLabel(p.$2, trip?.passes.length ?? 0),
-                          'checklist' => _countLabel(p.$2, trip?.checklist.length ?? 0),
-                          'notes' when tidyOn => _countLabel(p.$2, trip?.notes.length ?? 0),
+                          'passes' => _countLabel(p.$2, trip.passes.length),
+                          'checklist' => _countLabel(p.$2, trip.checklist.length),
+                          'notes' when tidyOn => _countLabel(p.$2, trip.notes.length),
                           _ => Text(p.$2, maxLines: 1, overflow: TextOverflow.ellipsis),
                         },
                 ),
@@ -138,9 +141,9 @@ class _NotesTabState extends ConsumerState<NotesTab> {
         Expanded(
           child: switch (_pane) {
             'passes' => _passesPane(context, trip),
-            'notes' => _notes(context, trip?.notes ?? const []),
+            'notes' => _notes(context, trip.notes),
             'chat' => ChatPane(tripId: widget.tripId),
-            _ => _checklist(context, trip?.checklist ?? const [], packing),
+            _ => _checklist(context, trip.checklist, packing),
           },
         ),
       ],
@@ -158,9 +161,8 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                 child: FloatingActionButton.extended(
                   key: const Key('notes-fab'),
                   heroTag: null,
-                  onPressed: () => _pane == 'notes'
-                      ? _addNote(context, trip?.notes ?? const [])
-                      : _editItem(context, trip?.checklist ?? const []),
+                  onPressed: () =>
+                      _pane == 'notes' ? _addNote(context, trip.notes) : _editItem(context, trip.checklist),
                   icon: const Icon(Icons.add_rounded),
                   label: Text(_pane == 'notes' ? l10n.notesAddNote : l10n.notesAddItem),
                 ),
@@ -183,6 +185,8 @@ class _NotesTabState extends ConsumerState<NotesTab> {
       ],
     );
   }
+
+  bool get _guardOn => ref.read(flagProvider(('enablePersistentExpenseDraft', widget.tripId))).value ?? true;
 
   bool _flag(String key) => ref.watch(flagProvider((key, widget.tripId))).value ?? (defaultFeatureFlags[key] ?? false);
 
@@ -814,6 +818,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     final l10n = context.l10n;
     final draft = await AppSheet.show<_ItemDraft>(
       context: context,
+      enableDrag: !_guardOn, // a swipe would bypass the Discard prompt
       title: existing == null ? l10n.notesAddItem : l10n.notesItemEdit,
       builder: (_) => _ItemSheet(
         members: ref.read(visibleMembersProvider(widget.tripId)),
@@ -913,6 +918,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   Future<void> _editNote(BuildContext context, List<TripNote> notes, TripNote n) async {
     final draft = await AppSheet.show<_NoteDraft>(
       context: context,
+      enableDrag: !_guardOn, // a swipe would bypass the Discard prompt
       title: 'Edit note',
       builder: (_) => _NoteDialog(initialTitle: n.title, initialBody: n.content),
     );
@@ -926,6 +932,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   Future<void> _addNote(BuildContext context, List<TripNote> notes) async {
     final draft = await AppSheet.show<_NoteDraft>(
       context: context,
+      enableDrag: !_guardOn, // a swipe would bypass the Discard prompt
       title: context.l10n.notesAddNote,
       builder: (_) => const _NoteDialog(),
     );
@@ -943,6 +950,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   Future<void> _addPass(BuildContext context, List<TravelPass> passes) async {
     final draft = await AppSheet.show<_PassDraft>(
       context: context,
+      enableDrag: !_guardOn, // a swipe would bypass the Discard prompt
       title: context.l10n.notesAddPass,
       builder: (_) => const _PassDialog(),
     );
@@ -971,6 +979,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   Future<void> _editPass(BuildContext context, List<TravelPass> passes, TravelPass pass) async {
     final draft = await AppSheet.show<_PassDraft>(
       context: context,
+      enableDrag: !_guardOn, // a swipe would bypass the Discard prompt
       title: context.l10n.notesEditPass,
       builder: (_) => _PassDialog(initial: pass),
     );
@@ -1368,36 +1377,40 @@ class _NoteDialogState extends State<_NoteDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextField(
-            key: const Key('note-new-title'),
-            controller: _title,
-            autofocus: true,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(labelText: l10n.notesNoteTitle),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('note-new-body'),
-            controller: _body,
-            minLines: 5,
-            maxLines: 10,
-            keyboardType: TextInputType.multiline,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(labelText: l10n.notesNoteBody, alignLabelWithHint: true),
-          ),
-          const SizedBox(height: 16),
-          AppButton(
-            key: const Key('note-save'),
-            label: l10n.notesItemSave,
-            onPressed: () => Navigator.pop(context, _NoteDraft(_title.text.trim(), _body.text.trim())),
-          ),
-        ],
+    return DiscardGuard(
+      controllers: [_title, _body],
+      initial: [widget.initialTitle, widget.initialBody],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              key: const Key('note-new-title'),
+              controller: _title,
+              autofocus: true,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(labelText: l10n.notesNoteTitle),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const Key('note-new-body'),
+              controller: _body,
+              minLines: 5,
+              maxLines: 10,
+              keyboardType: TextInputType.multiline,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(labelText: l10n.notesNoteBody, alignLabelWithHint: true),
+            ),
+            const SizedBox(height: 16),
+            AppButton(
+              key: const Key('note-save'),
+              label: l10n.notesItemSave,
+              onPressed: () => Navigator.pop(context, _NoteDraft(_title.text.trim(), _body.text.trim())),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1479,112 +1492,123 @@ class _PassDialogState extends State<_PassDialog> {
       ('stay', l10n.notesPassHotel, Icons.bed_rounded),
     ];
     final tokens = context.tokens;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            key: const Key('pass-type'),
-            children: [
-              for (final t in types)
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: InkWell(
-                      key: Key('pass-type-${t.$1}'),
-                      borderRadius: BorderRadius.circular(18),
-                      onTap: () => setState(() => _type = t.$1),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          color: _type == t.$1 ? tokens.primaryAccent.withValues(alpha: 0.1) : tokens.bgSurfaceHover,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color: _type == t.$1 ? tokens.primaryAccent : Colors.transparent,
-                            width: 2,
+    return DiscardGuard(
+      controllers: [_title, _from, _to, _seat, _ref, _passenger],
+      initial: [
+        widget.initial?.title ?? '',
+        widget.initial?.origin ?? '',
+        widget.initial?.destination ?? '',
+        widget.initial?.seatOrRoom ?? '',
+        widget.initial?.referenceCode ?? '',
+        widget.initial?.passengerName ?? '',
+      ],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              key: const Key('pass-type'),
+              children: [
+                for (final t in types)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: InkWell(
+                        key: Key('pass-type-${t.$1}'),
+                        borderRadius: BorderRadius.circular(18),
+                        onTap: () => setState(() => _type = t.$1),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: _type == t.$1 ? tokens.primaryAccent.withValues(alpha: 0.1) : tokens.bgSurfaceHover,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: _type == t.$1 ? tokens.primaryAccent : Colors.transparent,
+                              width: 2,
+                            ),
                           ),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(t.$3, color: _type == t.$1 ? tokens.primaryAccent : tokens.textSecondary),
-                            const SizedBox(height: 6),
-                            Text(t.$2, style: const TextStyle(fontWeight: FontWeight.w600)),
-                          ],
+                          child: Column(
+                            children: [
+                              Icon(t.$3, color: _type == t.$1 ? tokens.primaryAccent : tokens.textSecondary),
+                              const SizedBox(height: 6),
+                              Text(t.$2, style: const TextStyle(fontWeight: FontWeight.w600)),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            key: const Key('pass-title'),
-            controller: _title,
-            decoration: InputDecoration(labelText: l10n.notesPassTitle),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('pass-from'),
-            controller: _from,
-            decoration: InputDecoration(labelText: l10n.notesPassFrom),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('pass-to'),
-            controller: _to,
-            decoration: InputDecoration(labelText: l10n.notesPassTo),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            key: const Key('pass-when'),
-            icon: const Icon(Icons.event_rounded),
-            label: Text(
-              DateTime.tryParse(_start ?? '') == null
-                  ? l10n.notesPassPickWhen
-                  : '${l10n.notesPassWhen}: ${DateFormat('d MMM · HH:mm').format(DateTime.parse(_start!))}',
+              ],
             ),
-            onPressed: _pickWhen,
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('pass-passenger'),
-            controller: _passenger,
-            decoration: InputDecoration(labelText: l10n.notesPassPassenger),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('pass-seat'),
-            controller: _seat,
-            decoration: InputDecoration(labelText: l10n.notesPassSeat),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('pass-ref'),
-            controller: _ref,
-            decoration: InputDecoration(labelText: l10n.notesPassRef),
-          ),
-          const SizedBox(height: 16),
-          AppButton(
-            key: const Key('pass-save'),
-            label: widget.initial == null ? l10n.notesAddPass : l10n.notesSavePass,
-            onPressed: () => Navigator.pop(
-              context,
-              _PassDraft(
-                type: _type,
-                title: _title.text.trim(),
-                origin: _from.text.trim(),
-                destination: _to.text.trim(),
-                start: _start,
-                seat: _seat.text.trim(),
-                reference: _ref.text.trim(),
-                passenger: _passenger.text.trim(),
+            const SizedBox(height: 12),
+            TextField(
+              key: const Key('pass-title'),
+              controller: _title,
+              decoration: InputDecoration(labelText: l10n.notesPassTitle),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const Key('pass-from'),
+              controller: _from,
+              decoration: InputDecoration(labelText: l10n.notesPassFrom),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const Key('pass-to'),
+              controller: _to,
+              decoration: InputDecoration(labelText: l10n.notesPassTo),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              key: const Key('pass-when'),
+              icon: const Icon(Icons.event_rounded),
+              label: Text(
+                DateTime.tryParse(_start ?? '') == null
+                    ? l10n.notesPassPickWhen
+                    : '${l10n.notesPassWhen}: ${DateFormat('d MMM · HH:mm').format(DateTime.parse(_start!))}',
+              ),
+              onPressed: _pickWhen,
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const Key('pass-passenger'),
+              controller: _passenger,
+              decoration: InputDecoration(labelText: l10n.notesPassPassenger),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const Key('pass-seat'),
+              controller: _seat,
+              decoration: InputDecoration(labelText: l10n.notesPassSeat),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const Key('pass-ref'),
+              controller: _ref,
+              decoration: InputDecoration(labelText: l10n.notesPassRef),
+            ),
+            const SizedBox(height: 16),
+            AppButton(
+              key: const Key('pass-save'),
+              label: widget.initial == null ? l10n.notesAddPass : l10n.notesSavePass,
+              onPressed: () => Navigator.pop(
+                context,
+                _PassDraft(
+                  type: _type,
+                  title: _title.text.trim(),
+                  origin: _from.text.trim(),
+                  destination: _to.text.trim(),
+                  start: _start,
+                  seat: _seat.text.trim(),
+                  reference: _ref.text.trim(),
+                  passenger: _passenger.text.trim(),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1647,61 +1671,65 @@ class _ItemSheetState extends State<_ItemSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AppTextField(
-            key: const Key('ask-field'),
-            controller: _text,
-            autofocus: true,
-            hint: l10n.notesItemHint,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _submit(),
-          ),
-          _label(context, l10n.notesItemCategory),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final c in _categories)
+    return DiscardGuard(
+      controllers: [_text],
+      initial: [widget.initialText],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppTextField(
+              key: const Key('ask-field'),
+              controller: _text,
+              autofocus: true,
+              hint: l10n.notesItemHint,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
+            ),
+            _label(context, l10n.notesItemCategory),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final c in _categories)
+                  ChoiceChip(
+                    key: Key('item-cat-$c'),
+                    showCheckmark: false,
+                    label: Text(c),
+                    selected: _category == c,
+                    onSelected: (_) => setState(() => _category = c),
+                  ),
+              ],
+            ),
+            _label(context, l10n.notesItemAssign),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
                 ChoiceChip(
-                  key: Key('item-cat-$c'),
+                  key: const Key('item-assignee-none'),
                   showCheckmark: false,
-                  label: Text(c),
-                  selected: _category == c,
-                  onSelected: (_) => setState(() => _category = c),
+                  label: Text(l10n.notesItemAnyone),
+                  selected: _memberId == null,
+                  onSelected: (_) => setState(() => _memberId = null),
                 ),
-            ],
-          ),
-          _label(context, l10n.notesItemAssign),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ChoiceChip(
-                key: const Key('item-assignee-none'),
-                showCheckmark: false,
-                label: Text(l10n.notesItemAnyone),
-                selected: _memberId == null,
-                onSelected: (_) => setState(() => _memberId = null),
-              ),
-              for (final m in widget.members)
-                ChoiceChip(
-                  key: Key('item-assignee-${m.id}'),
-                  showCheckmark: false,
-                  avatar: const Icon(Icons.person_outline_rounded, size: 16),
-                  label: Text(m.name),
-                  selected: _memberId == m.id,
-                  onSelected: (_) => setState(() => _memberId = m.id),
-                ),
-            ],
-          ),
-          const SizedBox(height: 22),
-          AppButton(key: const Key('ask-ok'), label: l10n.notesItemSave, isFullWidth: true, onPressed: _submit),
-        ],
+                for (final m in widget.members)
+                  ChoiceChip(
+                    key: Key('item-assignee-${m.id}'),
+                    showCheckmark: false,
+                    avatar: const Icon(Icons.person_outline_rounded, size: 16),
+                    label: Text(m.name),
+                    selected: _memberId == m.id,
+                    onSelected: (_) => setState(() => _memberId = m.id),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 22),
+            AppButton(key: const Key('ask-ok'), label: l10n.notesItemSave, isFullWidth: true, onPressed: _submit),
+          ],
+        ),
       ),
     );
   }

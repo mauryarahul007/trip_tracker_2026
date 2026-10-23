@@ -223,6 +223,7 @@ class ExpenseDetailSheet extends ConsumerWidget {
                       formatMoney(context, e.amount, base),
                       key: const Key('detail-amount'),
                       style: TextStyle(
+                        fontFeatures: AppTypography.tabularFigures,
                         fontFamily: AppTypography.fontTitle,
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
@@ -369,7 +370,11 @@ class ExpenseDetailSheet extends ConsumerWidget {
                   Text(
                     formatMoney(context, e.resolvedShares[id] ?? 0, base),
                     key: Key('share-$id'),
-                    style: TextStyle(color: tokens.textPrimary, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontFeatures: AppTypography.tabularFigures,
+                      color: tokens.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -512,7 +517,7 @@ class _ReceiptPreview extends ConsumerWidget {
             children: [
               net
                   ? Image(
-                      image: CachedPhotoProvider(preview),
+                      image: cachedPhotoSized(context, preview, logicalWidth: MediaQuery.sizeOf(context).width),
                       key: const Key('detail-receipt'),
                       height: 160,
                       width: double.infinity,

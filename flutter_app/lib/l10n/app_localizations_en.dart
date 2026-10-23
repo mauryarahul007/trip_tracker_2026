@@ -766,6 +766,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncDiscard => 'Discard';
 
   @override
+  String get discardChangesTitle => 'Discard changes?';
+
+  @override
+  String get discardChangesBody => 'What you typed here has not been saved.';
+
+  @override
+  String get discardKeepEditing => 'Keep editing';
+
+  @override
   String get createTripTitle => 'Create Trip';
 
   @override
@@ -1131,6 +1140,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rowSyncPending => 'Pending sync';
+
+  @override
+  String get rowSyncFailed => 'Sync failed. Tap to retry.';
 
   @override
   String get rowConflict => 'Sync conflict';
@@ -1621,6 +1633,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hintTapGroup => 'Tip: tap a group to see its members or edit it.';
 
   @override
+  String settleNudgeText(String name, String amount, String trip) {
+    return 'You still owe $name $amount on $trip';
+  }
+
+  @override
+  String get settleNudgeAction => 'Settle up';
+
+  @override
+  String get settleNudgeDismiss => 'Hide for 3 days';
+
+  @override
   String ledNextPay(String name, String amount) {
     return 'Pay $name $amount';
   }
@@ -2100,7 +2123,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get conflictTitle => 'Sync conflict';
 
   @override
-  String get conflictBody => 'This expense changed on another device while you still had a local edit.';
+  String get conflictBody =>
+      'This expense was changed on another device while you also edited it here. Keep mine sends your edit and replaces theirs. Keep theirs drops your edit.';
+
+  @override
+  String conflictSplitValue(String mode, int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count people', one: '1 person');
+    return '$mode, $_temp0';
+  }
 
   @override
   String get conflictKeepMine => 'Keep mine';

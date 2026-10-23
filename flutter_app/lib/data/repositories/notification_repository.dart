@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
@@ -74,7 +75,7 @@ class NotificationRepository {
     await (db.update(
       db.notificationsTable,
     )..where((t) => t.id.equals(id))).write(NotificationsTableCompanion(read: Value(read)));
-    await _remote((c) => c.from('notifications').update({'read': read}).eq('id', id));
+    _remote((c) => c.from('notifications').update({'read': read}).eq('id', id));
   }
 
   Future<void> markAllRead(String userId, {String? tripId}) async {
@@ -86,7 +87,7 @@ class NotificationRepository {
             (tripId == null ? const Constant(true) : t.tripId.equals(tripId)),
       );
     await local.write(const NotificationsTableCompanion(read: Value(true)));
-    await _remote((c) {
+    _remote((c) {
       var q = c.from('notifications').update({'read': true}).eq('user_id', userId).eq('read', false);
       if (tripId != null) q = q.eq('trip_id', tripId);
       return q;
@@ -95,27 +96,29 @@ class NotificationRepository {
 
   Future<void> delete(String id) async {
     await (db.delete(db.notificationsTable)..where((t) => t.id.equals(id))).go();
-    await _remote((c) => c.from('notifications').delete().eq('id', id));
+    _remote((c) => c.from('notifications').delete().eq('id', id));
   }
 
   Future<void> deleteAll(String userId, {String? tripId}) async {
     await (db.delete(
       db.notificationsTable,
     )..where((t) => t.userId.equals(userId) & (tripId == null ? const Constant(true) : t.tripId.equals(tripId)))).go();
-    await _remote((c) {
+    _remote((c) {
       var q = c.from('notifications').delete().eq('user_id', userId);
       if (tripId != null) q = q.eq('trip_id', tripId);
       return q;
     });
   }
 
-  Future<void> _remote(Future<void> Function(SupabaseClient c) op) async {
+  /// Fire and forget: the local write above is what the UI shows, so a slow or offline network must not hold up
+  /// the tap that caused it.
+  void _remote(Future<void> Function(SupabaseClient c) op) {
     final c = client;
     if (c == null) return;
-    try {
-      await op(c);
-    } catch (e) {
-      AppLogger.warn('Notification write failed (will reconcile on refresh): $e');
-    }
+    unawaited(
+      Future(() => op(c)).catchError((Object e) {
+        AppLogger.warn('Notification write failed (will reconcile on refresh): $e');
+      }),
+    );
   }
 }

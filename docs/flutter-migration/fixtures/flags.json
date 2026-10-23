@@ -115,6 +115,7 @@
     "enableTripGridTiles": true,
     "enableTripCoverHeader": false,
     "enableSyncLine": true,
+    "enableRowSyncRetry": true,
     "enableOfflineFeedback": true,
     "enableSettledCelebration": true,
     "enableSettleRounding": true,
@@ -152,6 +153,7 @@
     "enableNotificationDayGroups": true,
     "enableReduceMotion": true,
     "enableTodayCard": true,
+    "enableSettleNudge": true,
     "enableCloseoutPrompt": true,
     "enableCompactLedgerView": false,
     "enableStickyDayHeaders": false,
@@ -304,6 +306,7 @@
     "enableTripGridTiles": true,
     "enableTripCoverHeader": false,
     "enableSyncLine": true,
+    "enableRowSyncRetry": true,
     "enableOfflineFeedback": true,
     "enableSettledCelebration": true,
     "enableSettleRounding": true,
@@ -341,6 +344,7 @@
     "enableNotificationDayGroups": true,
     "enableReduceMotion": true,
     "enableTodayCard": true,
+    "enableSettleNudge": true,
     "enableCloseoutPrompt": true,
     "enableCompactLedgerView": false,
     "enableStickyDayHeaders": false,
@@ -413,7 +417,8 @@
         "enableCompassNav",
         "enableCompassMe",
         "enableCompassWeb",
-        "enableSpendInsights"
+        "enableSpendInsights",
+        "enableRowSyncRetry"
       ]
     },
     {
@@ -473,6 +478,7 @@
         "enableTripGridTiles",
         "enableSyncLine",
         "enableTodayCard",
+        "enableSettleNudge",
         "enableCloseoutPrompt",
         "enableGlobalSearch",
         "enableSmartExpenseDefaults",

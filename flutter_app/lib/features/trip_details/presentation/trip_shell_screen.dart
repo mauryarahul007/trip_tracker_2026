@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/auth_state.dart';
 import '../../../core/env/app_env.dart';
 import '../../../core/clock.dart';
+import '../../../core/errors/tab_error_boundary.dart';
 import '../../../core/network/connectivity_provider.dart';
 import '../../../core/platform/haptics.dart';
 import '../../../core/flags/compass_flags.dart';
@@ -31,13 +32,14 @@ import '../../chat/application/chat_providers.dart';
 import '../../../domain/logic/expense_list_logic.dart' show isActualExpense;
 import '../../../domain/models/expense.dart';
 import '../../expenses/application/expenses_providers.dart';
-import '../../notifications/presentation/notification_bell.dart';
+import '../../expenses/presentation/widgets/settle_nudge_banner.dart';
 import '../../travel/maps/trip_route_panel.dart';
 import '../../travel/maps/trip_route_modal.dart';
 import '../../travel/presentation/live_location_share_modal.dart';
 import '../../trips/presentation/widgets/share_trip_sheet.dart';
 import '../../trips/presentation/widgets/sync_chip.dart';
 import 'widgets/edit_trip_sheet.dart';
+import 'widgets/trip_header_actions.dart';
 import 'widgets/trip_actions_sheet.dart';
 import '../../trips/presentation/widgets/trip_card.dart' show TripStatusPill, tripHeadline;
 import '../../expenses/application/money_providers.dart' show allTripsProvider;
@@ -46,6 +48,8 @@ import '../../trips/application/trips_providers.dart';
 import '../application/trip_nav.dart';
 import 'widgets/compass_balances_rail.dart';
 import '../domain/trip_tabs.dart';
+import '../../../core/platform/motion.dart';
+import '../../../shared/theme/app_colors.dart';
 
 /// Branch order == [TripNavTab] order (chat, expenses, ledger, members, notes).
 String tripTabLabel(BuildContext context, TripNavTab tab) {
@@ -227,114 +231,17 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
           leading: IconButton(tooltip: l10n.actionBack, icon: const Icon(AppIcons.back, size: 20), onPressed: _onBack),
           title: _TripTitle(tripId: widget.tripId, tab: currentTab.name),
           // Compass nav: Share, Edit trip, Route map, Live location and App settings moved to the Trip tab.
-          actions: compass
-              ? [_SyncAction(tripId: widget.tripId), NotificationBell(tripId: widget.tripId)]
-              : cleanBar
-              ? [
-                  _SyncAction(tripId: widget.tripId),
-                  NotificationBell(tripId: widget.tripId),
-                  PopupMenuButton<String>(
-                    key: const Key('action-trip-more'),
-                    icon: const Icon(Icons.more_vert_rounded),
-                    tooltip: l10n.tripMoreMenu,
-                    onSelected: _onMenu,
-                    itemBuilder: (_) => [
-                      PopupMenuItem(
-                        key: const Key('action-share'),
-                        value: 'share',
-                        child: ListTile(leading: const Icon(AppIcons.share), title: Text(l10n.shareTripTitle)),
-                      ),
-                      if (trip != null)
-                        PopupMenuItem(
-                          key: const Key('action-trip-map'),
-                          value: 'map',
-                          child: ListTile(
-                            leading: Icon(mapExpanded ? Icons.map : Icons.map_outlined),
-                            title: Text(l10n.tripRouteMap),
-                          ),
-                        ),
-                      if (trip != null &&
-                          (ref.watch(flagProvider(('enableTripHeaderActions', widget.tripId))).value ?? true))
-                        PopupMenuItem(
-                          key: const Key('action-edit-trip'),
-                          value: 'edit-trip',
-                          enabled: ref.watch(canEditTripRulesProvider(widget.tripId)),
-                          child: const ListTile(leading: Icon(Icons.edit_outlined), title: Text('Edit trip details')),
-                        ),
-                      PopupMenuItem(
-                        key: const Key('action-trip-settings'),
-                        value: 'trip-settings',
-                        child: ListTile(leading: const Icon(AppIcons.settings), title: Text(l10n.tripSettingsMenu)),
-                      ),
-                      const PopupMenuDivider(),
-                      PopupMenuItem(
-                        key: const Key('action-app-settings'),
-                        value: 'app-settings',
-                        child: ListTile(leading: const Icon(Icons.tune_rounded), title: Text(l10n.tripAppSettings)),
-                      ),
-                      const PopupMenuItem(
-                        key: Key('action-live-location'),
-                        value: 'location',
-                        child: ListTile(leading: Icon(AppIcons.location), title: Text('Live Location Share')),
-                      ),
-                    ],
-                  ),
-                ]
-              : [
-                  if (trip != null)
-                    IconButton(
-                      key: const Key('action-trip-map'),
-                      icon: Icon(mapExpanded ? Icons.map : Icons.map_outlined),
-                      tooltip: 'Route Map',
-                      onPressed: () => ref.read(tripMapOpenProvider(widget.tripId).notifier).toggle(),
-                    ),
-                  IconButton(
-                    icon: const Icon(AppIcons.share),
-                    tooltip: l10n.shareTripTitle,
-                    onPressed: () => AppSheet.show<void>(
-                      context: context,
-                      title: l10n.inviteSheetTitle,
-                      builder: (_) => ShareTripSheet(tripId: widget.tripId),
-                    ),
-                  ),
-                  // Live location and app-level settings live in a menu so the bell and the trip gear always fit.
-                  PopupMenuButton<String>(
-                    key: const Key('action-trip-more'),
-                    icon: const Icon(Icons.more_vert_rounded),
-                    onSelected: (v) {
-                      if (v == 'app-settings') {
-                        context.push('/settings');
-                      } else {
-                        final user = ref.read(authStateProvider).user;
-                        final myMember = ref.read(myMemberIdProvider(widget.tripId));
-                        LiveLocationShareModal.show(
-                          context,
-                          tripId: widget.tripId,
-                          memberId: myMember ?? '',
-                          userId: user?.id ?? '',
-                        );
-                      }
-                    },
-                    itemBuilder: (_) => [
-                      const PopupMenuItem(
-                        key: Key('action-app-settings'),
-                        value: 'app-settings',
-                        child: ListTile(leading: Icon(AppIcons.settings), title: Text('App settings')),
-                      ),
-                      const PopupMenuItem(
-                        key: Key('action-live-location'),
-                        value: 'location',
-                        child: ListTile(leading: Icon(AppIcons.location), title: Text('Live Location Share')),
-                      ),
-                    ],
-                  ),
-                  NotificationBell(tripId: widget.tripId),
-                  IconButton(
-                    icon: const Icon(AppIcons.settings),
-                    tooltip: l10n.navSettings,
-                    onPressed: () => context.push('/trip/${widget.tripId}/settings'),
-                  ),
-                ],
+          actions: tripHeaderActions(
+            context,
+            ref,
+            tripId: widget.tripId,
+            variant: compass
+                ? TripHeaderVariant.compass
+                : cleanBar
+                ? TripHeaderVariant.clean
+                : TripHeaderVariant.legacy,
+            onMenu: _onMenu,
+          ),
         ),
         body: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -354,9 +261,10 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                   child: Column(
                     children: [
                       const OfflineBanner(),
+                      SettleNudgeBanner(tripId: widget.tripId),
                       if (trip != null) _TripStrip(tripId: widget.tripId, tab: currentTab.name),
                       AnimatedSize(
-                        duration: const Duration(milliseconds: 220),
+                        duration: AppMotion.of(context, const Duration(milliseconds: 220)),
                         curve: Curves.easeOutCubic,
                         alignment: Alignment.topCenter,
                         child: mapExpanded && trip != null
@@ -473,7 +381,7 @@ class _TripTabPagerState extends ConsumerState<TripTabPager> {
           widget.navigationShell.goBranch(branch);
         }
       },
-      children: [for (final t in tabs) _KeepAlive(child: widget.branches[t.index])],
+      children: [for (final t in tabs) _KeepAlive(child: TabErrorBoundary(child: widget.branches[t.index]))],
     );
   }
 }
@@ -604,12 +512,12 @@ class _TripStrip extends ConsumerWidget {
             fit: StackFit.expand,
             children: [
               const DecoratedBox(
-                decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF123A57), Color(0xFF1F6F78)])),
+                decoration: BoxDecoration(gradient: LinearGradient(colors: [AppColors.heroNavy, AppColors.heroTeal])),
               ),
               Hero(
                 tag: 'trip-photo-$tripId',
                 child: Image(
-                  image: CachedPhotoProvider(cover),
+                  image: cachedPhotoSized(context, cover, logicalWidth: MediaQuery.sizeOf(context).width),
                   key: const Key('trip-cover'),
                   fit: BoxFit.cover,
                   errorBuilder: (_, _, _) => const SizedBox.shrink(),
@@ -873,40 +781,6 @@ class _TripTitle extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// The sync state as one icon in the top bar, shown only when something needs attention (offline, syncing,
-/// stuck). When everything is saved it takes no room. A stuck sync retries on tap (flag `enableSyncLine`).
-class _SyncAction extends ConsumerWidget {
-  const _SyncAction({required this.tripId});
-  final String tripId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (!(ref.watch(flagProvider(('enableSyncLine', tripId))).value ?? true)) return const SizedBox.shrink();
-    final l10n = context.l10n;
-    final t = context.tokens;
-    final online = ref.watch(isOnlineProvider).value ?? true;
-    final status = ref.watch(syncStatusProvider).value ?? const SyncStatus();
-    final (String text, IconData icon, Color color)? state = status.issues > 0
-        ? ('${l10n.syncLineIssue} ${status.issues}', Icons.sync_problem_rounded, t.colorDanger)
-        : !online
-        ? (
-            status.pending > 0 ? l10n.syncLineSyncing(status.pending) : l10n.syncLineOffline,
-            Icons.cloud_off_rounded,
-            t.textSecondary,
-          )
-        : status.pending > 0
-        ? (l10n.syncLineSyncing(status.pending), Icons.sync_rounded, t.textSecondary)
-        : null;
-    if (state == null) return const SizedBox.shrink();
-    return IconButton(
-      key: const Key('sync-action'),
-      tooltip: state.$1,
-      icon: Icon(state.$2, color: state.$3),
-      onPressed: status.issues == 0 ? null : () => showSyncReviewSheet(context),
     );
   }
 }

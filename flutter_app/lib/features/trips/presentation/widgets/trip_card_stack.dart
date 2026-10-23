@@ -17,6 +17,7 @@ import '../../../../shared/widgets/app_avatar.dart';
 import '../../../expenses/application/expenses_providers.dart' show tripMembersProvider;
 import '../../application/trips_providers.dart';
 import 'trip_card.dart' show tripHeadline;
+import '../../../../core/platform/motion.dart';
 
 /// Trips as a deck of full-bleed photo cards, every trip in any state.
 ///
@@ -289,7 +290,7 @@ class _PageDots extends StatelessWidget {
           children: [
             for (var i = 0; i < shown; i++)
               AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: AppMotion.of(context, const Duration(milliseconds: 200)),
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 width: start + i == index ? 18 : 6,
                 height: 6,
@@ -370,7 +371,7 @@ class _StackCard extends ConsumerWidget {
                 fit: BoxFit.cover,
                 frameBuilder: (_, child, frame, sync) => AnimatedOpacity(
                   opacity: frame == null && !sync ? 0 : 1,
-                  duration: const Duration(milliseconds: 350),
+                  duration: AppMotion.of(context, const Duration(milliseconds: 350)),
                   child: child,
                 ),
                 errorBuilder: (_, _, _) => const SizedBox.shrink(),

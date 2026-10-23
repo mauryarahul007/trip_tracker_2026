@@ -9,6 +9,8 @@ import '../../../domain/logic/flag_defaults.g.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../trips/application/trips_providers.dart';
+import '../../../core/platform/motion.dart';
+import '../../../shared/theme/app_colors.dart';
 
 /// Whether the login shows the boarding-gate design. It follows the staged `boardingPassLogin` flag; development
 /// and staging builds always show it so it can be reviewed before a superadmin arms the flag for everyone.
@@ -49,12 +51,12 @@ class BoardingBackdrop extends ConsumerWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFF1C5A73), Color(0xFF123A57), Color(0xFF0A1827)],
+              colors: [Color(0xFF1C5A73), AppColors.heroNavy, Color(0xFF0A1827)],
             ),
           ),
         ),
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 700),
+          duration: AppMotion.of(context, const Duration(milliseconds: 700)),
           child: url == null
               ? const SizedBox.expand(key: ValueKey('no-photo'))
               : Image(

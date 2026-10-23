@@ -19,6 +19,7 @@ import '../../trip_details/application/trip_nav.dart';
 import 'passport_stamp.dart';
 import '../../../domain/logic/spend_insights.dart';
 import '../../../shared/theme/app_typography.dart';
+import '../../../core/platform/motion.dart';
 
 class TripWrappedModal extends ConsumerStatefulWidget {
   const TripWrappedModal({required this.tripId, super.key});
@@ -277,7 +278,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                       onPressed: () {
                         unawaited(AppHaptics.light());
                         _pageController.previousPage(
-                          duration: const Duration(milliseconds: 240),
+                          duration: AppMotion.of(context, const Duration(milliseconds: 240)),
                           curve: Curves.easeInOut,
                         );
                       },
@@ -634,7 +635,12 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                       ),
                       Text(
                         formatMoney(context, leaderboard[i].amount, trip.baseCurrency),
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: textPrimary),
+                        style: TextStyle(
+                          fontFeatures: AppTypography.tabularFigures,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: textPrimary,
+                        ),
                       ),
                     ],
                   ),

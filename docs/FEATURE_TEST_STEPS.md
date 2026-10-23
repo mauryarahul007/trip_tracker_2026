@@ -21,6 +21,13 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-23 | unreleased | SETTLE-NUDGE | [Settle-up nudge banner on quiet trips](#settle-nudge--settle-up-nudge-banner-on-quiet-trips) |
+| 2026-10-23 | unreleased | UNDO-NOT-ASK | [Freeze, close and Settle all apply at once with Undo](#undo-not-ask--freeze-close-and-settle-all-apply-at-once-with-undo) |
+| 2026-10-23 | unreleased | BALANCES-EMPTY-ACTION | [Create trip button on empty Balances](#balances-empty-action--create-trip-button-on-empty-balances) |
+| 2026-10-23 | unreleased | DRAFT-SAFETY | [Drafts: chat, discard prompt, sign-out wipe](#draft-safety--chat-draft-discard-prompt-and-sign-out-wipe) |
+| 2026-10-23 | unreleased | CONFLICT-SHEET-COPY | [Clearer sync conflict sheet](#conflict-sheet-copy--clearer-sync-conflict-sheet) |
+| 2026-10-23 | unreleased | ROW-SYNC-RETRY | [Failed sync mark and Retry on rows](#row-sync-retry--failed-sync-mark-and-retry-on-expense-and-chat-rows) |
+| 2026-10-23 | unreleased | HEADER-SYNC-BUTTON | [Header Sync now button](#header-sync-button--manual-sync-in-the-home-and-trip-headers) |
 | 2026-10-23 | unreleased | TRIP-ACTIVITY-LOG | [Trip Activity log](#trip-activity-log--full-per-trip-history-in-the-activity-tab) |
 | 2026-10-23 | unreleased | STACK-CARD-SIZE | [Trip card stack: same card size, Add expense lifted](#stack-card-size--trip-card-stack-same-card-size-add-expense-lifted) |
 | 2026-10-23 | unreleased | PASS-CLEARER | [Clearer settlement pass and no contradicting payments](#pass-clearer--clearer-settlement-pass-and-no-contradicting-payments) |
@@ -3699,3 +3706,100 @@ Then add a row to the **Index** table.
 **Flag OFF (`enableTripActivityLog`):** no See in Activity button; Activity lists only notifications sent to you; your own expenses and refunds do not appear.
 
 **Pass criteria:** every expense, refund, settlement, deletion and message in the trip is visible once in Activity.
+
+---
+
+## HEADER-SYNC-BUTTON — manual sync in the home and trip headers
+
+**Flag:** `enableSyncLine` (existing, default ON). Flutter app.
+
+1. Open the Trips list (list view, not card stack). Pass: a sync icon sits first in the top-right actions.
+2. Tap it while online. Pass: the icon becomes a small spinner, then returns to the icon once the sync finishes. Changes made on another device appear.
+3. Open a trip. Pass: the same icon sits next to the bell. Tap it: same behaviour.
+4. Go offline (airplane mode). Pass: icon becomes a cloud-off with tooltip "Offline". Make an edit: tooltip shows the pending count; reconnect and tap, the edit syncs.
+5. With a failed (stuck) item: the icon is red; tapping opens the sync review sheet (Retry), not a sync.
+
+**Flag OFF (`enableSyncLine`):** no sync button in either header.
+
+**Pass criteria:** a manual sync can be started from both headers and always shows progress.
+
+---
+
+## ROW-SYNC-RETRY — failed sync mark and Retry on expense and chat rows
+
+**Flag:** `enableRowSyncRetry` (Core pack, default ON). Flutter app. Needs a change the server keeps refusing; easiest to force from a debug build or a test account that has lost permission on a trip.
+
+1. Make a change that gets stuck (for example, edit an expense after being removed from the trip by its owner). Open the Expenses tab. Pass: that row shows a red "sync problem" mark instead of the grey clock; its tooltip reads "Sync failed. Tap to retry."
+2. Tap the red mark. Pass: the mark goes back to the grey "Pending sync" clock while it retries; other stuck rows are untouched.
+3. Send a chat message in the same state. Pass: your bubble shows the same red mark where the clock or ticks usually are; tapping it retries.
+4. Open the sync review sheet (header Sync button turns red when something is stuck). Pass: Retry and Discard there still work, and retrying a row from the sheet clears its red mark.
+5. A conflicted expense still shows the red "Sync conflict" mark, not "Sync failed".
+
+**Flag OFF (`enableRowSyncRetry`):** stuck rows look like any pending row (grey clock); no tap-to-retry on rows; the sync review sheet still works.
+
+**Pass criteria:** a stuck item is visibly different from a waiting one, and can be retried from the row without touching anything else.
+
+---
+
+## CONFLICT-SHEET-COPY — clearer sync conflict sheet
+
+**Flag:** none (changes an existing screen; the sheet only appears when a conflict exists). Flutter app.
+
+1. On two devices signed in to the same trip, put one offline and edit an expense's category and split there. On the other device edit the same expense's category differently. Bring the first device online. Pass: the Expenses tab shows the Sync conflict chip and a red mark on that row.
+2. Tap the chip. Pass: the sheet shows category as names (for example "Food & Dining", never "cat-food") and split as "Equal, 3 people".
+3. Read the intro text. Pass: it says Keep mine sends your edit and replaces theirs, and Keep theirs drops your edit.
+4. Tap **Keep mine**. Pass: the conflict clears, your edit syncs and the other device shows it. Repeat with **Keep theirs**: your edit is dropped and the other device's value stays.
+
+**Pass criteria:** a person can tell what each button will do and what differs, without seeing internal ids.
+
+---
+
+## DRAFT-SAFETY — chat draft, discard prompt and sign-out wipe
+
+**Flag:** `enablePersistentExpenseDraft` (Core pack, default ON). Flutter app.
+
+1. Open a trip, Notes tab, Chat pane. Type "meet at the pier" without sending. Leave the trip (back to Trips), then reopen it. Pass: the text is back in the message box. Send it. Pass: the box is empty and reopening the chat shows no draft.
+2. Type a chat message, force-close the app, reopen, open the same chat. Pass: the text is back (within 24 hours).
+3. Notes tab, add a new note, type a title. Press back, or tap outside the sheet. Pass: "Discard changes?" appears. **Keep editing** returns to the text; **Discard** closes. Pass: Save closes without asking. An untouched sheet closes without asking.
+4. Repeat step 3 for a checklist item and for a travel pass (change any one field).
+5. Try to swipe a note sheet down. Pass: it does not move (swipe is off while the flag is ON; back and tap outside are the ways out).
+6. Leave a half-written expense and a half-typed chat message, then sign out and sign in as another account that is a member of the same trip. Pass: neither draft appears.
+
+**Flag OFF (`enablePersistentExpenseDraft`):** no chat draft; the note, item and pass sheets close freely and can be swiped away; no prompt.
+
+**Pass criteria:** typed text is never lost by an accidental close or a restart, and never shows up for the next person.
+
+## BALANCES-EMPTY-ACTION — Create trip button on empty Balances
+
+**Flags:** none (UX fix; no new behaviour behind a flag).
+
+1. Sign in with an account that has no trips. Open the Balances tab. Pass: the empty message shows with a **Create trip** button under it.
+2. Tap **Create trip**. Pass: the same create-trip sheet opens as on the Trips tab; creating a trip returns you to a working app.
+3. With at least one trip, open Balances. Pass: no empty message and no button.
+
+**Pass criteria:** an empty Balances tab always offers the next step. Other empty screens (Activity, Archived trips, Recycle bin, All settled) are informational on purpose and unchanged.
+
+## UNDO-NOT-ASK — Freeze, close and Settle all apply at once with Undo
+
+**Flags:** `enableUndoSettlement` (existing, default ON) for Settle all. Freeze and close have no flag: they only lose their confirmation.
+
+1. As trip owner open Trip settings and flip **Freeze trip**. Pass: no dialog; the switch turns on and a "Trip frozen" snackbar with UNDO shows. Tap UNDO within 5 s. Pass: the switch turns off and members can add expenses again.
+2. Flip **Trip closed** the same way ("Trip closed", then UNDO). Pass: the trip reopens. Flip it off: "Trip reopened" with UNDO puts it back to closed.
+3. On a trip where you owe two or more payments, tap **Settle all** on the Balances tab. Pass: no dialog; every payment is recorded and the snackbar shows UNDO. Tap UNDO. Pass: the settlements leave the list and balances return.
+4. **Flag OFF** (`enableUndoSettlement`): tap Settle all. Pass: the "Mark as paid" confirmation appears first and nothing is recorded until you confirm.
+5. Unchanged on purpose: delete account, restore backup, sign out, delete trip, recycle-bin delete forever, clear activity and notifications, clear cache all still ask first.
+
+**Pass criteria:** reversible actions never ask; every one of them can be taken back for 5 seconds.
+
+## SETTLE-NUDGE — Settle-up nudge banner on quiet trips
+
+**Flags:** `enableSettleNudge` (Trip pack, default ON).
+
+1. Use a trip where you owe someone (for example Ben paid 60 split between you and Ben) and nothing has been added or edited for 3 days (to test sooner, set the device date forward 4 days). Open the trip. Pass: a slim green banner under the top bar says "You still owe Ben ₹30 on <trip name>" on every tab, with **Settle up** and an x.
+2. Tap **Settle up**. Pass: the Balances tab opens.
+3. Tap the x. Pass: the banner disappears and stays hidden after leaving and reopening the trip. Move the date forward another 3 days. Pass: it returns.
+4. Add or edit an expense. Pass: the banner is gone (the trip is active again) until 3 quiet days pass.
+5. Negative checks. Pass for each: no banner when you are owed money but owe nobody; on a settled trip; on a closed, frozen or archived trip; for someone who owes nothing.
+6. **Flag OFF:** with the flag off for the trip, repeat step 1. Pass: no banner; the Balances cards look as before.
+
+**Pass criteria:** only the person who owes sees it, only after 3 quiet days, never on a finished trip, and it sends no push or message.

@@ -4,6 +4,20 @@ import 'package:flutter/services.dart';
 enum HapticsLevel { all, important, off }
 
 /// Semantic haptics facade mirroring `src/utils/haptics.ts`.
+///
+/// Policy: always call these, never `HapticFeedback` directly (that ignores the traveller's Haptics setting; a test
+/// enforces it).
+///
+/// | Moment | Call | Fires at |
+/// |--------|------|----------|
+/// | Tab switch, menu or chip pick, keypad key, toggle, arming a slider | [selection] (or [light]) | All taps |
+/// | Something finished: expense saved, payment settled, scan read, share started | [success] (via `AppFeedback.success` / `saved` where there is a click) | Key actions |
+/// | Undo, a light confirmation | `AppFeedback.tap` | All taps |
+/// | A refused or risky action: swipe-to-delete, a failed scan, a bad quick-add | [warning] | Key actions |
+/// | Committing a deliberate gesture (slide to confirm, pay) | [medium] | Key actions |
+/// | A hard fail (wrong app-lock PIN) | [heavy] | Key actions |
+///
+/// Not on scroll, on every keystroke in a text field, or on passive updates (sync, incoming messages).
 class AppHaptics {
   static HapticsLevel level = HapticsLevel.all;
 

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/platform/motion.dart';
+
 import '../../../core/platform/external_launcher.dart';
 import '../../../core/platform/haptics.dart';
 import '../../../core/platform/map_gateway.dart';
@@ -38,9 +40,22 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
+    _pulseController = AnimationController(vsync: this, duration: const Duration(seconds: 2), value: 1);
     _fetch();
     _pollTimer = Timer.periodic(_pollInterval, (_) => _fetch());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reduce motion: the dot stays solid instead of pulsing forever.
+    final still = AppMotion.reduce || MediaQuery.disableAnimationsOf(context);
+    if (still) {
+      _pulseController.stop();
+      _pulseController.value = 1;
+    } else if (!_pulseController.isAnimating) {
+      _pulseController.repeat(reverse: true);
+    }
   }
 
   @override
@@ -244,26 +259,28 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
               children: [
                 AppAvatar(name: loc.memberName, size: 40),
                 const SizedBox(width: 12),
-                AnimatedBuilder(
-                  animation: _pulseController,
-                  builder: (context, child) {
-                    final scale = 0.8 + (_pulseController.value * 0.4);
-                    return Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: tokens.colorSuccess,
-                        boxShadow: [
-                          BoxShadow(
-                            color: tokens.colorSuccess.withValues(alpha: 0.6 * _pulseController.value),
-                            blurRadius: 8 * scale,
-                            spreadRadius: 2 * scale,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                RepaintBoundary(
+                  child: AnimatedBuilder(
+                    animation: _pulseController,
+                    builder: (context, child) {
+                      final scale = 0.8 + (_pulseController.value * 0.4);
+                      return Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: tokens.colorSuccess,
+                          boxShadow: [
+                            BoxShadow(
+                              color: tokens.colorSuccess.withValues(alpha: 0.6 * _pulseController.value),
+                              blurRadius: 8 * scale,
+                              spreadRadius: 2 * scale,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(

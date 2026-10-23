@@ -16,7 +16,9 @@ import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/widgets/app_avatar.dart';
+import '../../../shared/widgets/async_body.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/coach_hint.dart';
 import '../../../shared/widgets/section_label.dart';
@@ -27,6 +29,7 @@ import '../../expenses/application/expenses_providers.dart';
 import '../../settings/presentation/settings_widgets.dart' show SettingsIcon;
 import '../../trip_details/application/trip_nav.dart';
 import '../../trips/presentation/widgets/share_trip_sheet.dart';
+import '../../../shared/widgets/animated_money_text.dart';
 
 class MembersTab extends ConsumerStatefulWidget {
   const MembersTab({required this.tripId, super.key});
@@ -43,7 +46,16 @@ class _MembersTabState extends ConsumerState<MembersTab> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final members = ref.watch(tripMembersProvider(tripId)).value ?? const <Member>[];
+    final membersAsync = ref.watch(tripMembersProvider(tripId));
+    if (membersAsync.hasError && !membersAsync.hasValue) {
+      return AsyncBody<List<Member>>(
+        value: membersAsync,
+        onRetry: () => ref.invalidate(tripMembersProvider(tripId)),
+        builder: (_, _) => const SizedBox.shrink(),
+      );
+    }
+    if (membersAsync.isLoading && !membersAsync.hasValue) return const SkeletonPage(); // not an empty member list
+    final members = membersAsync.value ?? const <Member>[];
     final groups = ref.watch(tripGroupsProvider(tripId)).value ?? const <Group>[];
     final trip = ref.watch(tripProvider(tripId)).value;
     // Compass money: each person shows who they owe or are owed, as in the design.
@@ -254,9 +266,11 @@ class _MembersTabState extends ConsumerState<MembersTab> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (money && balance != null && balance.abs() >= 0.005)
-                Text(
-                  '${balance > 0 ? '+' : '-'}${formatMoney(context, balance.abs(), currency)}',
+                AnimatedMoneyText(
+                  value: balance.abs(),
+                  format: (v) => '${balance > 0 ? '+' : '-'}${formatMoney(context, v, currency)}',
                   style: TextStyle(
+                    fontFeatures: AppTypography.tabularFigures,
                     fontWeight: FontWeight.w800,
                     color: context.tokens.textPrimary, // sign and wording carry the meaning; ink reads on every tile
                   ),

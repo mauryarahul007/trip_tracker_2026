@@ -12,6 +12,7 @@ import '../../../../shared/theme/app_typography.dart';
 import '../../../../shared/widgets/app_avatar.dart';
 import '../../application/trips_providers.dart';
 import 'trip_card.dart' show tripHeadline, tripTone;
+import '../../../../shared/theme/app_colors.dart';
 
 String _subtitle(Trip trip) {
   final dest = (trip.destination ?? '').trim();
@@ -115,7 +116,7 @@ class TripRow extends ConsumerWidget {
         height: 64,
         child: cover != null && cover.isNotEmpty
             ? Image(
-                image: CachedPhotoProvider(cover),
+                image: cachedPhotoSized(context, cover, logicalWidth: 64),
                 key: Key('trip-thumb-${trip.id}'),
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => _initial(tone.bg, t.textPrimary),
@@ -432,7 +433,7 @@ class TripHeroCard extends ConsumerWidget {
       button: true,
       label: '${trip.name}. $headline${moneyText == null ? '' : '. $moneyText'}',
       child: Material(
-        color: const Color(0xFF0B1F33),
+        color: AppColors.heroNavyDeep,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(t.radiusLg)),
         child: InkWell(
@@ -447,7 +448,7 @@ class TripHeroCard extends ConsumerWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [Color(0xFF0B1F33), Color(0xFF123A57), Color(0xFF1F6F78)],
+                      colors: [AppColors.heroNavyDeep, AppColors.heroNavy, AppColors.heroTeal],
                     ),
                   ),
                 ),
@@ -541,7 +542,7 @@ class TripHeroCard extends ConsumerWidget {
                       const SizedBox(height: 12),
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: _Avatars(avatarNames, size: 26, ring: const Color(0xFF123A57)),
+                        child: _Avatars(avatarNames, size: 26, ring: AppColors.heroNavy),
                       ),
                     ],
                   ],
@@ -595,7 +596,7 @@ class TripTile extends ConsumerWidget {
       button: true,
       label: '${trip.name}. $headline${moneyText == null ? '' : '. $moneyText'}',
       child: Material(
-        color: const Color(0xFF0B1F33),
+        color: AppColors.heroNavyDeep,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(t.radiusLg)),
         child: InkWell(
@@ -613,7 +614,7 @@ class TripTile extends ConsumerWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [Color(0xFF123A57), Color(0xFF1F6F78)],
+                      colors: [AppColors.heroNavy, AppColors.heroTeal],
                     ),
                   ),
                 ),
@@ -713,7 +714,7 @@ class TripTile extends ConsumerWidget {
                       if (avatarNames.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
-                          child: _Avatars(avatarNames, size: 20, ring: const Color(0xFF123A57)),
+                          child: _Avatars(avatarNames, size: 20, ring: AppColors.heroNavy),
                         ),
                     ],
                   ),
@@ -774,10 +775,10 @@ class _PendingDot extends StatelessWidget {
         key: const Key('trip-pending-dot'),
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: onDark ? Colors.black.withValues(alpha: 0.55) : const Color(0xFFE8890C).withValues(alpha: 0.18),
+          color: onDark ? Colors.black.withValues(alpha: 0.55) : AppColors.budgetWarn.withValues(alpha: 0.18),
           shape: BoxShape.circle,
         ),
-        child: const Icon(Icons.cloud_upload_outlined, size: 12, color: Color(0xFFE8890C)),
+        child: const Icon(Icons.cloud_upload_outlined, size: 12, color: AppColors.budgetWarn),
       ),
     ),
   );

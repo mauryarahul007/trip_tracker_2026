@@ -7,6 +7,7 @@ import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/compass.dart';
 import '../../../expenses/application/expenses_providers.dart';
 import '../../application/trip_nav.dart';
+import '../../../../shared/theme/app_typography.dart';
 
 /// Right-hand pane of the Compass web workspace (flag `enableCompassWeb`, 1280px and wider): who pays whom, so a
 /// debt can be settled without leaving the expense table.
@@ -61,7 +62,11 @@ class CompassBalancesRail extends ConsumerWidget {
                             const SizedBox(width: 8),
                             Text(
                               trip == null ? '' : formatMoney(context, tr.amount, trip.baseCurrency),
-                              style: TextStyle(fontWeight: FontWeight.w800, color: t.sun),
+                              style: TextStyle(
+                                fontFeatures: AppTypography.tabularFigures,
+                                fontWeight: FontWeight.w800,
+                                color: t.sun,
+                              ),
                             ),
                           ],
                         ),

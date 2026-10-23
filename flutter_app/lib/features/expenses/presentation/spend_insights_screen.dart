@@ -141,7 +141,11 @@ class _Body extends StatelessWidget {
                                     child: Text(
                                       formatMoney(context, total, currency),
                                       textAlign: TextAlign.center,
-                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                                      style: const TextStyle(
+                                        fontFeatures: AppTypography.tabularFigures,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -173,7 +177,10 @@ class _Body extends StatelessWidget {
                                             ),
                                             Text(
                                               formatMoney(context, c.total, currency),
-                                              style: const TextStyle(fontWeight: FontWeight.w700),
+                                              style: const TextStyle(
+                                                fontFeatures: AppTypography.tabularFigures,
+                                                fontWeight: FontWeight.w700,
+                                              ),
                                             ),
                                           ],
                                         ),

@@ -24,6 +24,7 @@ class ConflictSheet extends ConsumerWidget {
     final tokens = context.tokens;
     final conflicts = ref.watch(conflictStoreProvider)[tripId] ?? const <ExpenseConflict>[];
     final members = {for (final m in ref.watch(tripMembersProvider(tripId)).value ?? const <Member>[]) m.id: m};
+    final categories = {for (final c in ref.watch(tripCategoriesProvider(tripId))) c.id: c.name};
     if (conflicts.isEmpty) {
       return Padding(padding: const EdgeInsets.all(24), child: Text(l10n.conflictEmpty));
     }
@@ -43,7 +44,7 @@ class ConflictSheet extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(l10n.conflictBody, style: TextStyle(color: tokens.textSecondary)),
           const SizedBox(height: 12),
-          for (final c in conflicts) _row(context, ref, c, members),
+          for (final c in conflicts) _row(context, ref, c, members, categories),
         ],
       ),
     );
@@ -84,13 +85,22 @@ class ConflictSheet extends ConsumerWidget {
     ConflictFieldKey.split => l10n.conflictFieldSplit,
   };
 
-  Widget _row(BuildContext context, WidgetRef ref, ExpenseConflict c, Map<String, Member> members) {
+  Widget _row(
+    BuildContext context,
+    WidgetRef ref,
+    ExpenseConflict c,
+    Map<String, Member> members,
+    Map<String, String> categories,
+  ) {
     final l10n = context.l10n;
     final fields = conflictFields(
       c.local,
       c.server,
       money: (v, cur) => formatMoney(context, v, cur),
       nameOf: (id) => members[id]?.name ?? id,
+      categoryOf: (id) => categories[id] ?? id,
+      splitOf: (mode, people) =>
+          l10n.conflictSplitValue(mode.isEmpty ? mode : mode[0].toUpperCase() + mode.substring(1), people),
     );
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -166,14 +176,17 @@ List<ConflictField> conflictFields(
   Expense server, {
   required String Function(double amount, String currency) money,
   required String Function(String memberId) nameOf,
+  String Function(String categoryId)? categoryOf,
+  String Function(String mode, int people)? splitOf,
 }) {
-  String split(Expense e) => '${e.splitMode} · ${e.splitMemberIds.length}';
+  String split(Expense e) =>
+      splitOf != null ? splitOf(e.splitMode, e.splitMemberIds.length) : '${e.splitMode} · ${e.splitMemberIds.length}';
   ConflictField f(ConflictFieldKey k, String Function(Expense) get) => ConflictField(k, get(local), get(server));
   return [
     f(ConflictFieldKey.amount, (e) => money(e.amount, e.currency)),
     f(ConflictFieldKey.date, (e) => e.date),
     f(ConflictFieldKey.title, (e) => e.title),
-    f(ConflictFieldKey.category, (e) => e.category),
+    f(ConflictFieldKey.category, (e) => categoryOf?.call(e.category) ?? e.category),
     f(ConflictFieldKey.paidBy, (e) => nameOf(e.paidBy)),
     f(ConflictFieldKey.split, split),
   ];

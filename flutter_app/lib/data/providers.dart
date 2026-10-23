@@ -107,6 +107,9 @@ void Function() _requestSync(Ref ref) => () {
   ref.read(syncCoordinatorProvider).requestFlush();
 };
 
+/// The same guarded "flush now" the repositories call after a local write.
+final requestSyncProvider = Provider<void Function()>(_requestSync);
+
 final tripRepositoryProvider = Provider<TripRepository>(
   (ref) => DriftTripRepository(ref.watch(appDatabaseProvider), ref.watch(outboxStoreProvider), _requestSync(ref)),
 );
@@ -160,6 +163,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
     ref.watch(appDatabaseProvider),
     unregisterPush: (userId) => ref.read(pushServiceProvider).unregister(userId),
     beforeWipe: () async {
+      await clearDrafts(ref.read(sharedPreferencesProvider));
       await ref.read(syncEngineProvider).flush(); // best effort; offline = no-op
     },
   );

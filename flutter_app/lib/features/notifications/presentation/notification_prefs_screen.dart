@@ -11,6 +11,7 @@ import '../../trips/application/trips_providers.dart';
 import '../../../core/platform/push_gateway.dart' show PushPermission;
 import '../application/notification_prefs_providers.dart';
 import '../application/push_providers.dart';
+import '../../../shared/theme/app_colors.dart';
 
 /// Quiet hours, digest and muted trips. Rows appear only with their flag, like the web.
 class NotificationPrefsScreen extends ConsumerWidget {
@@ -61,7 +62,7 @@ class NotificationPrefsScreen extends ConsumerWidget {
                 SettingsSwitchTile(
                   key: const Key('quiet-enabled'),
                   icon: Icons.bedtime_outlined,
-                  iconColor: const Color(0xFF8B3CF7),
+                  iconColor: AppColors.accentViolet,
                   title: 'Pause push alerts overnight',
                   subtitle: 'Alerts in this window arrive in your notification list instead',
                   value: quiet.enabled,
@@ -92,7 +93,7 @@ class NotificationPrefsScreen extends ConsumerWidget {
                 SettingsSwitchTile(
                   key: const Key('digest-enabled'),
                   icon: Icons.mark_email_unread_outlined,
-                  iconColor: const Color(0xFFE8890C),
+                  iconColor: AppColors.budgetWarn,
                   title: 'Bundle alerts into one daily summary',
                   value: digest,
                   onChanged: (v) async {

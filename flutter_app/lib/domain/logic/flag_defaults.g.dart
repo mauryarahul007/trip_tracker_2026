@@ -123,12 +123,14 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableReduceMotion': true,
   'enableRememberDefaultSplit': true,
   'enableRouteStops': false,
+  'enableRowSyncRetry': true,
   'enableSaveAndAddAnother': true,
   'enableSavedFilters': true,
   'enableSavedOfflineToast': true,
   'enableSettingsDataHub': true,
   'enableSettingsSearch': true,
   'enableSettleAll': true,
+  'enableSettleNudge': true,
   'enableSettleRounding': true,
   'enableSettledCelebration': true,
   'enableSettlementConfirmation': false,
@@ -737,7 +739,7 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
   'enablePersistentExpenseDraft': (
     label: 'Persistent Expense Draft',
     pack: 'core',
-    description: 'Keep an unsaved new-expense draft for 24h, even after the app is closed, including payers, currency, location and itemized receipt.',
+    description: 'ON: an unsaved new-expense draft is kept for 24h, even after the app is closed, including payers, currency, location and itemized receipt. Flutter app also: a half-typed chat message is kept per trip for 24h, and the new-note, checklist-item and travel-pass sheets ask "Discard changes?" before closing with unsaved text (those sheets cannot be swiped away while ON). OFF: no drafts are kept and sheets close freely. Drafts are removed on sign-out. It never sends or saves anything for you.',
   ),
   'enablePredictiveChips': (
     label: 'Predictive Quick-Expense Chips',
@@ -805,6 +807,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'travel',
     description: 'Multi-city itinerary manager with arrival/departure dates and map pins.',
   ),
+  'enableRowSyncRetry': (
+    label: 'Failed Sync Mark + Retry on Rows (Flutter)',
+    pack: 'core',
+    description: 'Flutter app: ON: an expense or chat message whose change is stuck (the server keeps refusing it) shows a red "Sync failed" mark instead of the grey "Pending sync" clock, and tapping the mark retries just that item. OFF: stuck items look like any pending item and are retried only from the sync review sheet. It never edits or discards anything, and does not change which changes sync or when.',
+  ),
   'enableSaveAndAddAnother': (
     label: 'Save and Add Another (Flutter)',
     pack: 'trip',
@@ -834,6 +841,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'Settle All I Owe (Flutter)',
     pack: 'trip',
     description: 'Flutter app: ON: on the Summary tab, when you owe two or more payments, a "Settle all" button above Who pays whom records every payment you owe as paid after one confirmation. OFF: you settle each payment one at a time from its own tile. Does not move real money, and never records payments owed by or to other people.',
+  ),
+  'enableSettleNudge': (
+    label: 'Settle-Up Nudge Banner (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: when someone still owes money on a trip that has been quiet for 3 days (no expense or payment added or changed), that person sees a slim banner at the top of the trip: "You still owe Ben 1,700 on Goa weekend" with a Settle up button that opens Balances, and an x that hides it for 3 days on that device. OFF: no banner; the Balances cards are unchanged. It only reminds the person who owes: it sends no push or message, never tells anyone they are owed money, and is hidden for settled, closed, frozen and archived trips.',
   ),
   'enableSettleRounding': (
     label: 'Round Down When Settling (Flutter)',
@@ -1221,6 +1233,7 @@ const Map<String, List<String>> consumerPacks = {
     'enableCompassMe',
     'enableCompassWeb',
     'enableSpendInsights',
+    'enableRowSyncRetry',
   ],
   'trip': [
     'enableMemberMoneyRow',
@@ -1277,6 +1290,7 @@ const Map<String, List<String>> consumerPacks = {
     'enableTripGridTiles',
     'enableSyncLine',
     'enableTodayCard',
+    'enableSettleNudge',
     'enableCloseoutPrompt',
     'enableGlobalSearch',
     'enableSmartExpenseDefaults',

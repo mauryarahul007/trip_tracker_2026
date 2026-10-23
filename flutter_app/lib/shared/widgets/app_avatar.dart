@@ -49,7 +49,7 @@ class AppAvatar extends StatelessWidget {
     if (avatarUrl != null && avatarUrl!.isNotEmpty) {
       return ClipOval(
         child: Image(
-          image: CachedPhotoProvider(avatarUrl!),
+          image: cachedPhotoSized(context, avatarUrl!, logicalWidth: size),
           width: size,
           height: size,
           fit: BoxFit.cover,

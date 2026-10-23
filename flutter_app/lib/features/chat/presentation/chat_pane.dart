@@ -9,10 +9,12 @@ import '../../notifications/application/activity_focus.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/auth_state.dart';
+import '../../../core/storage/prefs.dart';
 import '../../../core/flags/compass_flags.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/chat_event_text.dart';
 import '../../../domain/logic/chat_poll.dart';
+import '../../../domain/logic/expense_draft.dart';
 import '../../../domain/models/member.dart';
 import '../../../domain/models/trip_message.dart';
 import '../../../l10n/l10n_ext.dart';
@@ -27,6 +29,7 @@ import '../../expenses/presentation/widgets/expense_detail_sheet.dart';
 import '../../travel/presentation/live_location_chat_banner.dart';
 import '../../travel/presentation/live_location_share_modal.dart';
 import '../application/chat_providers.dart';
+import '../../../core/platform/motion.dart';
 
 class ChatPane extends ConsumerStatefulWidget {
   const ChatPane({required this.tripId, super.key});
@@ -42,9 +45,38 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
   final _focusKey = GlobalKey();
   String? _highlightId;
 
+  // Unsent text survives leaving the trip or an app kill (flag `enablePersistentExpenseDraft`).
+  late final _prefs = ref.read(sharedPreferencesProvider);
+  Timer? _draftTimer;
+  var _persistDraft = true;
+  String get _draftKey => '${draftKeyPrefix}chat_${widget.tripId}';
+
+  Future<void> _restoreDraft() async {
+    final d = await loadDraft(PrefsDraftStore(_prefs), _draftKey, DateTime.now());
+    final text = d?['text'];
+    if (mounted && text is String && _input.text.isEmpty) _input.text = text;
+  }
+
+  void _writeDraft() {
+    final store = PrefsDraftStore(_prefs);
+    final text = _input.text;
+    if (!_persistDraft || text.trim().isEmpty) {
+      unawaited(store.remove(_draftKey));
+    } else {
+      unawaited(saveDraft(store, _draftKey, {'text': text}, DateTime.now()));
+    }
+  }
+
+  void _onInput() {
+    _draftTimer?.cancel();
+    _draftTimer = Timer(const Duration(milliseconds: 400), _writeDraft);
+  }
+
   @override
   void initState() {
     super.initState();
+    unawaited(_restoreDraft());
+    _input.addListener(_onInput);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         try {
@@ -56,6 +88,11 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
 
   @override
   void dispose() {
+    if (_draftTimer?.isActive ?? false) {
+      _draftTimer!.cancel();
+      _writeDraft(); // keep what was typed in the last moments
+    }
+    _input.removeListener(_onInput);
     _input.dispose();
     _scroll.dispose();
     super.dispose();
@@ -97,6 +134,10 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     final members = {for (final m in ref.watch(tripMembersProvider(widget.tripId)).value ?? const <Member>[]) m.id: m};
     final me = ref.watch(myMemberIdProvider(widget.tripId));
     final dirty = ref.watch(dirtyIdsProvider).value ?? const <String>{};
+    _persistDraft = ref.watch(flagProvider(('enablePersistentExpenseDraft', widget.tripId))).value ?? true;
+    final failed = (ref.watch(flagProvider(('enableRowSyncRetry', widget.tripId))).value ?? true)
+        ? (ref.watch(failedIdsProvider).value ?? const <String>{})
+        : const <String>{};
     final showLiveBanner = ref.watch(flagProvider(('enableLiveLocationShare', widget.tripId))).value ?? false;
     final outboxTicksOn = ref.watch(flagProvider(('enableChatOfflineOutbox', widget.tripId))).value ?? false;
     final readReceiptsOn = ref.watch(flagProvider(('enableChatReadReceipts', widget.tripId))).value ?? false;
@@ -195,6 +236,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                               members[m.memberId]?.name ?? '',
                               m.memberId == me,
                               dirty.contains(m.id),
+                              failed: failed.contains(m.id),
                               outboxTicksOn: outboxTicksOn,
                               readReceiptsOn: readReceiptsOn,
                               // Compass: avatar on the first message of a run, name shown once per run.
@@ -268,6 +310,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     String name,
     bool mine,
     bool pending, {
+    bool failed = false,
     required bool outboxTicksOn,
     required bool readReceiptsOn,
     bool firstOfRun = true,
@@ -279,7 +322,17 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
 
     Widget? statusIcon;
     if (mine) {
-      if (pending) {
+      if (failed) {
+        statusIcon = InkResponse(
+          key: Key('chat-status-failed-${m.id}'),
+          onTap: () => ref.read(retryRowSyncProvider)(m.id),
+          radius: 14,
+          child: Tooltip(
+            message: l10n.rowSyncFailed,
+            child: Icon(Icons.sync_problem_rounded, size: 14, color: context.tokens.colorDanger),
+          ),
+        );
+      } else if (pending) {
         statusIcon = Icon(
           Icons.access_time_rounded,
           size: 11,
@@ -732,6 +785,8 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     if (memberId == null) return;
     final name = members.where((m) => m.id == memberId).map((m) => m.name).firstOrNull ?? '';
     _input.clear();
+    _draftTimer?.cancel();
+    unawaited(PrefsDraftStore(_prefs).remove(_draftKey));
     await ref
         .read(messageRepositoryProvider)
         .send(tripId: widget.tripId, memberId: memberId, senderName: name, body: body);
@@ -739,7 +794,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
       if (mounted && _scroll.hasClients) {
         _scroll.animateTo(
           _scroll.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
+          duration: AppMotion.of(context, const Duration(milliseconds: 200)),
           curve: Curves.easeOut,
         );
       }
