@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **316** | All recorded bugs across sessions |
+| **Total Tracked** | **317** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **289** | Verified & closed |
+| **✅ Resolved** | **290** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -320,6 +320,7 @@
 | **BUG-316** | Per person view told you to pay while the pass said you are owed | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 9251b52 (v3.77.1) |
 | **BUG-317** | Trip card stack: closed trip's card grows over the slider and Add expense disappears | `general` | `low` | `claude-cli` | `claude-cli` | Fixed in commit b8966fa (v3.77.2) |
 | **BUG-318** | Trip Activity omitted the user's own expenses, refunds, deletions and chat | `general` | `medium` | `agent` | `agent` | Activity now derives rows from trip expenses, refunds, recycle bin and chat (buildTripActivityLog) behind enableTripActivityLog. Commit f55130d |
+| **BUG-319** | Tapping an unread Activity row froze on a slow or offline connection | `offline-sync` | `medium` | `claude-cli` | `claude-cli` | Notification read/delete/clear now run the remote call in the background; local write is what the UI shows. Test: notification_remote_test (network never answers). Commit 9e9bc42 (v3.78.0) |
 
 ---
 

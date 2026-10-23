@@ -9133,5 +9133,31 @@
     "resolvedBy": "agent",
     "resolvedAt": "2026-10-22T17:37:31.418Z",
     "resolutionNote": "Activity now derives rows from trip expenses, refunds, recycle bin and chat (buildTripActivityLog) behind enableTripActivityLog. Commit f55130d"
+  },
+  {
+    "id": "BUG-319",
+    "title": "Tapping an unread Activity row froze on a slow or offline connection",
+    "description": "Tapping an unread Activity row froze on a slow or offline connection",
+    "severity": "medium",
+    "category": "offline-sync",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-23T18:07:51.786Z",
+    "updatedAt": "2026-10-23T18:08:00.695Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-23T18:08:00.695Z",
+    "resolutionNote": "Notification read/delete/clear now run the remote call in the background; local write is what the UI shows. Test: notification_remote_test (network never answers). Commit 9e9bc42 (v3.78.0)"
   }
 ]

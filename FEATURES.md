@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **177** |
+| **Total Tracked** | **184** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **174** |
+| **✅ Shipped** | **181** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -236,6 +236,13 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-175** | Greyed Add expense on closed and archived trip cards (v3.77.3) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit f86e249 (v3.77.3), inside existing flags enableTripCardStack and enableTripCardQuickAdd |
 | **FEAT-176** | Full per-trip Activity log (enableTripActivityLog) | `ui-ux` | `agent` | `agent` | Commit f55130d |
 | **FEAT-177** | Activity rows open the exact chat message or expense; See in Activity | `ui-ux` | `agent` | `agent` | Commit 272b92e |
+| **FEAT-178** | Failed sync mark with per-row Retry, clearer conflict sheet (enableRowSyncRetry) | `sync` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
+| **FEAT-179** | Manual Sync button on home and trip headers | `sync` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
+| **FEAT-180** | Drafts: discard prompt, chat draft, wiped on sign-out (enablePersistentExpenseDraft) | `general` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
+| **FEAT-181** | Settle-up nudge banner on quiet trips (enableSettleNudge) | `ui-ux` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
+| **FEAT-182** | Freeze, Close and Settle all apply at once with Undo | `ui-ux` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
+| **FEAT-183** | Polish: reduce motion, tabular money, counting balances, a11y at 200% text, haptics policy | `ui-ux` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
+| **FEAT-184** | Speed and structure: photo decode at display size, RepaintBoundary, trip header in one place, Create trip on empty Balances | `performance` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
 
 ---
 
