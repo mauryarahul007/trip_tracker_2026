@@ -5376,3 +5376,8 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** Trip bar is Balances, Spend, Activity, Plans, Hub (trip opens on Balances); Chat opens from a Hub tile, People from the header crew avatars. Trips home gets a night-green live hero and date-tile rows; Spend gets a hero pair (Group spend, signed You get / You owe with Settle up); settle bar amount carries a minus sign. All behind `enableCalmPassportUi`.
 * **Trade-offs Accepted:** Signed owe/lent text on each expense row is not built yet (needs a per-row share calculation).
 * **Release Cut:** version bumped to `3.80.0` via `npm run release:minor`.
+
+## 2026-10-24 — Calm Passport fixes (v3.80.1)
+* **Decision:** Bottom bar height is only the bar; the primary action is a Scaffold floating button (`CalmAddButton`) so lists run to the bar. Plans shows one floating Add per pane (item, note, pass) and no in-page duplicates. Crew avatars removed from the trip header. Bar follows the theme (light bar in light theme).
+* **Trade-offs Accepted:** Plans passes pane hides its in-page Add pass only under Calm Passport; other looks keep it.
+* **Release Cut:** version bumped to `3.80.1` via `npm run release:patch`.

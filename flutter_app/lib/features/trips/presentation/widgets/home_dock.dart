@@ -85,7 +85,6 @@ Widget? buildHomeDock(BuildContext context, WidgetRef ref, HomeTab current) {
     onTap: (i) => _goTab(context, current, i),
     centerAction: () => unawaited(createTripFlow(context)),
     centerLabel: l10n.tripsNewTrip,
-    centerExtended: true,
   );
 }
 

@@ -946,7 +946,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
           // Card view carries its own floating "New Trip | Join" pill, so the dock and the button step aside.
           bottomNavigationBar: cards ? null : buildHomeDock(context, ref, HomeTab.trips),
           // The dock's centre button replaces the FAB on iOS / web; Material 3 keeps it.
-          floatingActionButton: cards || (horizon && AppBottomNav.dockByDefault)
+          floatingActionButton: tokens.calm && !cards
+              ? CalmAddButton(extended: true, label: l10n.tripsNewTrip, onTap: _create)
+              : cards || (horizon && AppBottomNav.dockByDefault)
               ? null
               : FloatingActionButton.extended(
                   onPressed: _create,

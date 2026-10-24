@@ -151,7 +151,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
       ],
     );
     // One quick action for the pane you are on (Add item / Add note); the in-page buttons stay.
-    final fabOn = _flag('enableContextFab') && (_pane == 'checklist' || _pane == 'notes');
+    final fabOn = _contextFab && (_pane == 'checklist' || _pane == 'notes' || (_calm && _pane == 'passes'));
     final withFab = !fabOn
         ? content
         : Stack(
@@ -163,10 +163,17 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                 child: FloatingActionButton.extended(
                   key: const Key('notes-fab'),
                   heroTag: null,
-                  onPressed: () =>
-                      _pane == 'notes' ? _addNote(context, trip.notes) : _editItem(context, trip.checklist),
+                  onPressed: () => switch (_pane) {
+                    'notes' => _addNote(context, trip.notes),
+                    'passes' => _addPass(context, trip.passes),
+                    _ => _editItem(context, trip.checklist),
+                  },
                   icon: const Icon(Icons.add_rounded),
-                  label: Text(_pane == 'notes' ? l10n.notesAddNote : l10n.notesAddItem),
+                  label: Text(switch (_pane) {
+                    'notes' => l10n.notesAddNote,
+                    'passes' => l10n.notesAddPass,
+                    _ => l10n.notesAddItem,
+                  }),
                 ),
               ),
             ],
@@ -189,6 +196,11 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   }
 
   bool get _guardOn => ref.read(flagProvider(('enablePersistentExpenseDraft', widget.tripId))).value ?? true;
+
+  /// One floating Add per pane: Ops Deck `enableContextFab`, and always under Calm Passport.
+  bool get _calm => ref.watch(compassFlagProvider((calmPassportFlag, widget.tripId)));
+
+  bool get _contextFab => _flag('enableContextFab') || _calm;
 
   bool _flag(String key) => ref.watch(flagProvider((key, widget.tripId))).value ?? (defaultFeatureFlags[key] ?? false);
 
@@ -264,12 +276,13 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                     onPressed: () => setState(() => _selecting = true),
                     child: const Text('Select'),
                   ),
-                AppButton(
-                  key: const Key('pass-add'),
-                  label: l10n.notesAddPass,
-                  icon: Icons.add_rounded,
-                  onPressed: () => _addPass(context, passes),
-                ),
+                if (!_calm)
+                  AppButton(
+                    key: const Key('pass-add'),
+                    label: l10n.notesAddPass,
+                    icon: Icons.add_rounded,
+                    onPressed: () => _addPass(context, passes),
+                  ),
               ],
             ],
           ),
@@ -437,7 +450,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
         const SizedBox(height: 12),
         // Add sits right under the progress, not at the end of a long list. With the floating Add item button on
         // screen there is no second one here.
-        if (!_flag('enableContextFab'))
+        if (!_contextFab)
           AppButton(
             key: const Key('check-add'),
             label: l10n.notesAddItem,
@@ -761,7 +774,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     final l10n = context.l10n;
     final quick = _flag('enableNotesQuickCapture');
     final tidy = _flag('enableTidyNotes');
-    final fab = _flag('enableContextFab'); // the floating Add note button is on screen: no second one in the page
+    final fab = _contextFab; // the floating Add note button is on screen: no second one in the page
     if (notes.isEmpty) {
       return ListView(
         padding: quick ? const EdgeInsets.fromLTRB(16, 8, 16, 0) : null,

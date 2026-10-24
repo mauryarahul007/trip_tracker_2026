@@ -27,7 +27,6 @@ class AppBottomNav extends StatelessWidget {
     this.centerAction,
     this.centerLabel,
     this.compass = false,
-    this.centerExtended = false,
     super.key,
   });
 
@@ -44,9 +43,6 @@ class AppBottomNav extends StatelessWidget {
   final VoidCallback? centerAction;
   final String? centerLabel;
 
-  /// Calm Passport only: the floating action shows [centerLabel] beside the "+" (Trips home "New trip").
-  final bool centerExtended;
-
   /// The Bento pill is used on every platform.
   static bool get dockByDefault => true;
 
@@ -56,14 +52,8 @@ class AppBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     // Calm Passport theme (flag `enableCalmPassportUi`) wins over the Compass and Bento docks.
     if (context.tokens.calm && _useDock) {
-      return _CalmDock(
-        items: items,
-        currentIndex: currentIndex,
-        onTap: onTap,
-        action: centerAction,
-        actionLabel: centerLabel,
-        actionExtended: centerExtended,
-      );
+      // The primary action is a floating button on the screen (see [CalmAddButton]), not a band in the bar.
+      return _CalmDock(items: items, currentIndex: currentIndex, onTap: onTap);
     }
     if (compass && _useDock) {
       return _CompassDock(
@@ -223,71 +213,51 @@ class _CompassItem extends StatelessWidget {
   }
 }
 
-/// Calm Passport dock: a dark floating bar where every item keeps its label and the selected one sits on a teal
-/// pill. The screen's one primary action floats above the bar's right end (ink "+" in light, teal in dark).
+/// Calm Passport dock: a floating bar (light in light theme, dark in dark) where every item keeps its label and the selected one sits on a teal
+/// pill. Its height is just the bar: the screen's primary action floats over the content ([CalmAddButton]).
 class _CalmDock extends StatelessWidget {
-  const _CalmDock({
-    required this.items,
-    required this.currentIndex,
-    required this.onTap,
-    this.action,
-    this.actionLabel,
-    this.actionExtended = false,
-  });
+  const _CalmDock({required this.items, required this.currentIndex, required this.onTap});
 
   final List<AppNavItem> items;
   final int currentIndex;
   final ValueChanged<int> onTap;
-  final VoidCallback? action;
-  final String? actionLabel;
-  final bool actionExtended;
 
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final barBg = dark ? t.bgSurface : AppColors.calmInk;
+    final barBg = t.bgSurface;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (action != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: _CalmAction(label: actionLabel, extended: actionExtended, onTap: action!),
-              ),
-            DecoratedBox(
-              key: const Key('calm-dock'),
-              decoration: BoxDecoration(
-                color: barBg,
-                borderRadius: BorderRadius.circular(26),
-                border: dark ? Border.all(color: t.borderColor) : null,
-                boxShadow: t.shadowLg,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Row(
-                  children: [
-                    for (var i = 0; i < items.length; i++)
-                      Expanded(
-                        child: _CalmItem(item: items[i], selected: i == currentIndex, onTap: () => onTap(i)),
-                      ),
-                  ],
-                ),
-              ),
+        child: DecoratedBox(
+          key: const Key('calm-dock'),
+          decoration: BoxDecoration(
+            color: barBg,
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: t.borderColor),
+            boxShadow: t.shadowLg,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                for (var i = 0; i < items.length; i++)
+                  Expanded(
+                    child: _CalmItem(item: items[i], selected: i == currentIndex, onTap: () => onTap(i)),
+                  ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _CalmAction extends StatelessWidget {
-  const _CalmAction({required this.onTap, required this.extended, this.label});
+/// Calm Passport floating primary action (ink in light, teal in dark). Hand it to a Scaffold's
+/// `floatingActionButton` so it hovers over the content and reserves no space.
+class CalmAddButton extends StatelessWidget {
+  const CalmAddButton({required this.onTap, this.extended = false, this.label, super.key});
 
   final VoidCallback onTap;
   final bool extended;
@@ -346,10 +316,10 @@ class _CalmItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    const teal = AppColors.calmDarkTeal;
-    const ink = AppColors.calmInk;
-    const color0 = AppColors.calmDarkMute;
-    final color = selected ? ink : color0;
+    // Selected: the teal pill (bright teal with ink in dark, deep teal with white in light).
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final teal = t.primaryAccent;
+    final color = selected ? (dark ? AppColors.calmInk : Colors.white) : t.textMuted;
     return Semantics(
       button: true,
       selected: selected,

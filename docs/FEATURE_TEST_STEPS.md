@@ -3810,10 +3810,10 @@ Then add a row to the **Index** table.
 **Flags:** `enableCalmPassportUi` (Core pack, default ON). Flutter app only.
 
 1. Open the app signed in. Pass: paper-coloured ground, white cards, ink chips with a teal accent.
-2. Open the Trips home. Pass: a dark floating bar shows Trips, Balances, Alerts, You with every label, and a "+ New trip" button floats above its right end.
-3. Open a trip. Pass: the bottom bar shows Balances, Spend, Activity, Plans, Hub with every label (the trip opens on Balances); the selected item sits on a teal pill; a "+" button above the bar opens Add expense.
-4. Tap the crew avatars in the trip header. Pass: People opens and Hub stays lit. Open Hub and tap the Chat tile. Pass: Chat opens and Hub stays lit.
-5. Open Plans. Pass: Passes, Checklist, Notes only (Chat lives in Hub). Open Spend. Pass: a night-green Group spend card beside a You get (+) or You owe (−) card with Settle up. Open the Trips home with a live trip. Pass: night-green hero card with LIVE NOW · DAY x OF y, and other trips show a date tile.
+2. Open the Trips home. Pass: a dark floating bar shows Trips, Balances, Alerts, You with every label, and a "+ New trip" button hovers over the list (the list runs down to the bar, no blank band).
+3. Open a trip. Pass: the bottom bar shows Balances, Spend, Activity, Plans, Hub with every label (the trip opens on Balances); the selected item sits on a teal pill; a "+" button hovering over the content opens Add expense; no blank band above the bar.
+4. Look at the trip header. Pass: there are no round name/initial avatars in the trip header; People opens from the Hub tile. Open Hub and tap the Chat tile. Pass: Chat opens and Hub stays lit.
+5. Open Plans. Pass: Passes, Checklist, Notes only (Chat lives in Hub), and each pane shows exactly one Add button (floating: Add item, Add pass, Add note), never a second one in the page. Open Spend. Pass: a night-green Group spend card beside a You get (+) or You owe (−) card with Settle up. Open the Trips home with a live trip. Pass: night-green hero card with LIVE NOW · DAY x OF y, and other trips show a date tile.
 6. Switch the phone to dark theme. Pass: near-black green ground, bright teal pill, text stays readable.
 7. **Flag OFF** (`enableCalmPassportUi`, Settings > Flag overrides): reopen the app. Pass: previous colours and trip bar return; no crew avatars in the header.
 

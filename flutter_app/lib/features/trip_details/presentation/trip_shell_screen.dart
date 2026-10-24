@@ -23,7 +23,6 @@ import '../../../domain/models/trip.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
-import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/app_scaffold.dart';
@@ -264,8 +263,6 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
           title: _TripTitle(tripId: widget.tripId, tab: currentTab.name),
           // Compass nav: Share, Edit trip, Route map, Live location and App settings moved to the Trip tab.
           actions: [
-            // Calm Passport: the crew sits in the header (People left the bottom bar).
-            if (calm) CrewAvatars(tripId: widget.tripId, onTap: () => _goTab(TripNavTab.members.index)),
             ...tripHeaderActions(
               context,
               ref,
@@ -327,6 +324,13 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
             if (compassWebRail && currentTab == TripNavTab.expenses) CompassBalancesRail(tripId: widget.tripId),
           ],
         ),
+        // Calm Passport: one floating Add expense button over the content (Plans has its own add per pane).
+        floatingActionButton: calm && currentTab != TripNavTab.notes
+            ? CalmAddButton(
+                label: l10n.expAdd,
+                onTap: () => unawaited(startAddExpense(context, ref, widget.tripId, dial: dial)),
+              )
+            : null,
         bottomNavigationBar: dock.length < 2 || wide
             ? null
             : AppBottomNav(
@@ -334,7 +338,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 currentIndex: dockActive < 0 ? 0 : dockActive,
                 onTap: (i) => _goTab(dock[i].index),
                 items: navItems,
-                centerAction: compass || calm
+                centerAction: compass
                     ? () => unawaited(startAddExpense(context, ref, widget.tripId, dial: dial))
                     : null,
                 centerLabel: l10n.expAdd,
@@ -812,54 +816,6 @@ class _TripTitle extends ConsumerWidget {
               children: [
                 Flexible(child: title),
                 Icon(Icons.expand_more_rounded, color: tokens.textSecondary),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Up to three overlapping crew initials in the trip header (Calm Passport). Tapping opens People.
-class CrewAvatars extends ConsumerWidget {
-  const CrewAvatars({required this.tripId, required this.onTap, super.key});
-
-  final String tripId;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final members = ref.watch(visibleMembersProvider(tripId));
-    if (members.isEmpty) return const SizedBox.shrink();
-    final t = context.tokens;
-    final shown = members.take(3).toList();
-    const size = 28.0;
-    return Semantics(
-      button: true,
-      label: '${members.length} people',
-      child: InkWell(
-        key: const Key('calm-crew'),
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-          child: SizedBox(
-            width: size + (shown.length - 1) * 18,
-            height: size,
-            child: Stack(
-              children: [
-                for (var i = 0; i < shown.length; i++)
-                  Positioned(
-                    left: i * 18,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: t.bgPage, width: 2),
-                      ),
-                      child: AppAvatar(name: shown[i].name, avatarUrl: shown[i].avatarUrl, size: size - 4),
-                    ),
-                  ),
               ],
             ),
           ),
