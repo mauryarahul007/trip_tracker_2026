@@ -23,6 +23,8 @@ class AddExpenseFab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dial = ref.watch(flagProvider(('enableQuickAddSpeedDial', tripId))).value ?? true;
     // Compass nav has its own orange Add button in the trip dock.
+    // Calm Passport has the same Add button above its dock.
+    if (ref.watch(compassFlagProvider((calmPassportFlag, tripId)))) return const SizedBox.shrink();
     if (ref.watch(compassFlagProvider((compassNavFlag, tripId)))) return const SizedBox.shrink();
     return Positioned(
       right: 16,

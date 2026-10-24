@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
 import '../theme/compass.dart';
 
@@ -245,7 +246,7 @@ class _CalmDock extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final barBg = dark ? t.bgSurface : const Color(0xFF14201C);
+    final barBg = dark ? t.bgSurface : AppColors.calmInk;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
@@ -345,9 +346,10 @@ class _CalmItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    const teal = Color(0xFF4FD1C1);
-    const ink = Color(0xFF14201C);
-    final color = selected ? ink : const Color(0xFFA9BAB3);
+    const teal = AppColors.calmDarkTeal;
+    const ink = AppColors.calmInk;
+    const color0 = AppColors.calmDarkMute;
+    final color = selected ? ink : color0;
     return Semantics(
       button: true,
       selected: selected,

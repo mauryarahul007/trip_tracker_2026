@@ -109,6 +109,20 @@ class TripRow extends ConsumerWidget {
     final sub = _subtitle(trip);
     final progress = status.totalDays <= 0 ? 0.0 : (status.dayNumber / status.totalDays).clamp(0.0, 1.0);
 
+    if (t.calm) {
+      return _CalmTripRow(
+        trip: trip,
+        sub: sub,
+        headline: headline,
+        over: over,
+        moneyText: moneyText,
+        moneyColor: moneyColor,
+        pending: pending,
+        onTap: onTap,
+        onLongPress: onLongPress,
+      );
+    }
+
     final thumb = ClipRRect(
       borderRadius: BorderRadius.circular(14),
       child: SizedBox(
@@ -428,6 +442,18 @@ class TripHeroCard extends ConsumerWidget {
     final cover = ref.watch(tripCoverProvider(tripCoverKey(trip))).value;
     final sub = _subtitle(trip);
     final progress = status.totalDays <= 0 ? 0.0 : (status.dayNumber / status.totalDays).clamp(0.0, 1.0);
+
+    if (t.calm) {
+      return _CalmHero(
+        trip: trip,
+        status: status,
+        headline: headline,
+        avatarNames: avatarNames,
+        moneyText: moneyText,
+        onTap: onTap,
+        onLongPress: onLongPress,
+      );
+    }
 
     return Semantics(
       button: true,
@@ -782,4 +808,278 @@ class _PendingDot extends StatelessWidget {
       ),
     ),
   );
+}
+
+const _months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+/// Calm Passport trip row: a tinted date tile, name, one line of facts, and your signed position on the right.
+class _CalmTripRow extends StatelessWidget {
+  const _CalmTripRow({
+    required this.trip,
+    required this.sub,
+    required this.headline,
+    required this.over,
+    required this.onTap,
+    this.onLongPress,
+    this.moneyText,
+    this.moneyColor,
+    this.pending = false,
+  });
+
+  final Trip trip;
+  final String sub;
+  final String headline;
+  final bool over;
+  final String? moneyText;
+  final Color? moneyColor;
+  final bool pending;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final tone = t.tones[tripTone(trip.id)];
+    final start = DateTime.tryParse(trip.startDate);
+    final facts = [if (headline.isNotEmpty) headline, if (sub.isNotEmpty) sub].join(' · ');
+    return Semantics(
+      button: true,
+      label: '${trip.name}. $facts${moneyText == null ? '' : '. $moneyText'}',
+      child: Opacity(
+        opacity: over ? 0.85 : 1,
+        child: Material(
+          color: t.bgSurface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: t.borderColor),
+          ),
+          child: InkWell(
+            key: Key('trip-row-${trip.id}'),
+            borderRadius: BorderRadius.circular(20),
+            onTap: onTap,
+            onLongPress: onLongPress,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  ExcludeSemantics(
+                    child: Container(
+                      key: Key('trip-thumb-${trip.id}'),
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(color: tone.bg, borderRadius: BorderRadius.circular(16)),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            start == null ? '' : _months[start.month - 1],
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontMono,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.8,
+                              color: tone.accent,
+                            ),
+                          ),
+                          Text(
+                            start == null ? trip.name.characters.firstOrNull?.toUpperCase() ?? '?' : '${start.day}',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontTitle,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              height: 1.05,
+                              color: tone.accent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Hero(
+                          tag: 'trip-title-${trip.id}',
+                          child: Material(
+                            type: MaterialType.transparency,
+                            child: Text(
+                              trip.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontTitle,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.2,
+                                color: t.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          facts,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 13, color: t.textMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (pending) const Padding(padding: EdgeInsets.only(left: 6), child: _PendingDot()),
+                  if (moneyText != null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 112),
+                        child: Text(
+                          moneyText!,
+                          key: const Key('trip-money'),
+                          textAlign: TextAlign.end,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: moneyColor ?? t.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Calm Passport hero for the trip happening now: night-green card, mono "LIVE NOW" eyebrow, crew and your position.
+class _CalmHero extends StatelessWidget {
+  const _CalmHero({
+    required this.trip,
+    required this.status,
+    required this.headline,
+    required this.avatarNames,
+    required this.onTap,
+    this.onLongPress,
+    this.moneyText,
+  });
+
+  final Trip trip;
+  final TripStatus status;
+  final String headline;
+  final List<String> avatarNames;
+  final String? moneyText;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    const teal = AppColors.calmDarkTeal;
+    final dest = (trip.destination ?? '').trim();
+    final eyebrow = status.totalDays > 0 ? 'LIVE NOW · DAY ${status.dayNumber} OF ${status.totalDays}' : 'LIVE NOW';
+    return Semantics(
+      button: true,
+      label: '${trip.name}. $headline${moneyText == null ? '' : '. $moneyText'}',
+      child: Material(
+        color: AppColors.calmNight,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: Key('trip-row-${trip.id}'),
+          onTap: onTap,
+          onLongPress: onLongPress,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: const BoxDecoration(color: teal, shape: BoxShape.circle),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        eyebrow,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: AppTypography.fontMono,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.9,
+                          color: teal,
+                        ),
+                      ),
+                    ),
+                    if (dest.isNotEmpty)
+                      Flexible(
+                        child: Text(
+                          dest.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: AppTypography.fontMono,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.9,
+                            color: AppColors.calmDarkMute,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Hero(
+                  tag: 'trip-title-${trip.id}',
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: Text(
+                      trip.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: AppTypography.fontTitle,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.8,
+                        height: 1.05,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                if (avatarNames.isNotEmpty) _Avatars(avatarNames, size: 28, ring: AppColors.calmNight),
+                if (moneyText != null) ...[
+                  const SizedBox(height: 14),
+                  _Dash(color: Colors.white.withValues(alpha: 0.18)),
+                  const SizedBox(height: 12),
+                  Text(
+                    moneyText!,
+                    key: const Key('trip-money'),
+                    style: const TextStyle(
+                      fontFamily: AppTypography.fontTitle,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

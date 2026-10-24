@@ -1871,7 +1871,8 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             bottom: 12,
             child: CompassSettleBar(
               label: 'You owe',
-              amount: formatMoney(context, myPays.fold<double>(0, (a, t) => a + t.amount), cur),
+              amount:
+                  '${tokens.calm ? '− ' : ''}${formatMoney(context, myPays.fold<double>(0, (a, t) => a + t.amount), cur)}',
               onSettle: () => AppSheet.show<void>(
                 context: context,
                 title: 'Your payments',

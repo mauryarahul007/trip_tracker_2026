@@ -54,7 +54,12 @@ void main() {
   });
 
   testApp('flag off: nothing about the chat composer is saved', (tester) async {
-    final app = await pumpApp(tester, user: asha, flagsOn: {'enableTripChat'}, flagsOff: {'enablePersistentExpenseDraft'});
+    final app = await pumpApp(
+      tester,
+      user: asha,
+      flagsOn: {'enableTripChat'},
+      flagsOff: {'enablePersistentExpenseDraft'},
+    );
     final s = await seedTrip(tester);
     await openChat(tester, s.tripId);
     await tester.enterText(find.byKey(const Key('chat-input')), 'private thought');

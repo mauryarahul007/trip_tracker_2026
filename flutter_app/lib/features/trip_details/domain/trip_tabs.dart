@@ -43,26 +43,26 @@ List<TripNavTab> compassPagerTabs({required bool chatEnabled, required bool show
   if (showNotesTab) TripNavTab.notes,
 ]);
 
-/// Calm Passport trip dock (flag `enableCalmPassportUi`): Spend, Balances, Chat, Plans, Hub. Chat and Plans drop
-/// out when their flags are off; People moves to the header and Activity to the bell.
-List<TripNavTab> calmDockTabs({required bool chatEnabled, required bool showNotesTab}) => List.unmodifiable([
-  TripNavTab.expenses,
+/// Calm Passport trip dock (flag `enableCalmPassportUi`): Balances, Spend, Activity, Plans, Hub. Chat opens from
+/// the Hub and People from the header; Plans drops out when notes and passes are off.
+List<TripNavTab> calmDockTabs({required bool showNotesTab}) => List.unmodifiable([
   TripNavTab.ledger,
-  if (chatEnabled) TripNavTab.chat,
+  TripNavTab.expenses,
+  TripNavTab.activity,
   if (showNotesTab) TripNavTab.notes,
   TripNavTab.hub,
 ]);
 
-/// Every Calm Passport pager page: the dock, then People and Activity so their links keep working.
+/// Every Calm Passport pager page: the dock, then Chat and People so their links keep working.
 List<TripNavTab> calmPagerTabs({required bool chatEnabled, required bool showNotesTab}) => List.unmodifiable([
-  ...calmDockTabs(chatEnabled: chatEnabled, showNotesTab: showNotesTab),
+  ...calmDockTabs(showNotesTab: showNotesTab),
+  if (chatEnabled) TripNavTab.chat,
   TripNavTab.members,
-  TripNavTab.activity,
 ]);
 
-/// Calm Passport dock item for [current]: People and Activity light up Hub.
+/// Calm Passport dock item for [current]: Chat and People light up Hub.
 TripNavTab calmDockTabFor(TripNavTab current) =>
-    current == TripNavTab.members || current == TripNavTab.activity ? TripNavTab.hub : current;
+    current == TripNavTab.members || current == TripNavTab.chat ? TripNavTab.hub : current;
 
 /// The dock item that lights up for [current]: Chat, People and Notes belong to the Trip hub.
 TripNavTab compassDockTabFor(TripNavTab current) =>

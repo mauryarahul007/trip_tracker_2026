@@ -406,7 +406,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (ref.watch(compassFlagProvider((compassSpendFlag, id)))) CompassSpendSummary(tripId: id),
+          if (ref.watch(compassFlagProvider((compassSpendFlag, id))) || context.tokens.calm)
+            CompassSpendSummary(tripId: id),
           if (ref.watch(compassFlagProvider((compassSpendFlag, id)))) CompassActiveFilters(tripId: id),
           if ((sync != null && !sync.idle) || chips.isNotEmpty)
             Padding(

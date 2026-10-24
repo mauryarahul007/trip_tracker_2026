@@ -62,12 +62,23 @@ class TripHubScreen extends ConsumerWidget {
       _HubTile('hub-people', AppIcons.members, l10n.navMembers, '$members traveler${members == 1 ? '' : 's'}', () {
         context.go('/trip/$tripId/members');
       }),
+      // Calm Passport has no Chat tab in the bar; it opens from here.
+      if (t.calm && ref.watch(visibleTabsProvider(tripId)).contains(TripNavTab.chat))
+        _HubTile(
+          'hub-chat',
+          Icons.chat_bubble_outline_rounded,
+          'Chat',
+          unreadChat ? 'New messages' : 'Talk to the crew',
+          () => context.go('/trip/$tripId/chat'),
+        ),
       if (hasNotes)
         _HubTile(
           'hub-notes',
           AppIcons.notes,
           l10n.navNotes,
-          unreadChat ? 'New chat messages' : 'Notes, chat, passes',
+          unreadChat && !ref.watch(visibleTabsProvider(tripId)).contains(TripNavTab.chat)
+              ? 'New chat messages'
+              : 'Notes, chat, passes',
           () {
             context.go('/trip/$tripId/notes');
           },

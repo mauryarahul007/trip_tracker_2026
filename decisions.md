@@ -5371,3 +5371,8 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** Apply the approved Calm Passport design behind new Core-pack flag `enableCalmPassportUi` (default ON): paper/ink/teal tokens (light, dark, AMOLED), ink chips, dark floating bottom bar with labels, floating primary action, 5-tab trip bar (Spend, Balances, Chat, Plans, Hub) with crew avatars in the header and Activity under the bell.
 * **Trade-offs Accepted:** Per-screen layouts from the mockups (Spend hero cards, trips hero) are not rebuilt yet; this pass restyles through shared tokens and navigation. Flag OFF restores the previous look exactly.
 * **Release Cut:** version bumped to `3.79.0` via `npm run release:minor`.
+
+## 2026-10-24 — Calm Passport round 2 (v3.80.0)
+* **Decision:** Trip bar is Balances, Spend, Activity, Plans, Hub (trip opens on Balances); Chat opens from a Hub tile, People from the header crew avatars. Trips home gets a night-green live hero and date-tile rows; Spend gets a hero pair (Group spend, signed You get / You owe with Settle up); settle bar amount carries a minus sign. All behind `enableCalmPassportUi`.
+* **Trade-offs Accepted:** Signed owe/lent text on each expense row is not built yet (needs a per-row share calculation).
+* **Release Cut:** version bumped to `3.80.0` via `npm run release:minor`.

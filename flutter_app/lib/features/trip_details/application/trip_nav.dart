@@ -49,10 +49,7 @@ final visibleTabsProvider = Provider.family<List<TripNavTab>, String>((ref, trip
 final dockTabsProvider = Provider.family<List<TripNavTab>, String>((ref, tripId) {
   if (ref.watch(compassFlagProvider((calmPassportFlag, tripId)))) {
     bool flag(String key) => ref.watch(flagProvider((key, tripId))).value ?? (defaultFeatureFlags[key] ?? false);
-    return calmDockTabs(
-      chatEnabled: flag('enableTripChat'),
-      showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses'),
-    );
+    return calmDockTabs(showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses'));
   }
   if (!ref.watch(compassFlagProvider((compassNavFlag, tripId)))) return ref.watch(visibleTabsProvider(tripId));
   return compassDockTabs();

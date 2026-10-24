@@ -51,7 +51,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
       fling.stop();
       // ignore: avoid_print
-      print('PERF $tab: open=${sw.elapsedMilliseconds} ms widgets=$built texts=$texts fling=${fling.elapsedMilliseconds} ms');
+      print(
+        'PERF $tab: open=${sw.elapsedMilliseconds} ms widgets=$built texts=$texts fling=${fling.elapsedMilliseconds} ms',
+      );
       expect(sw.elapsedMilliseconds, lessThan(_budgetMs));
     }
   });
