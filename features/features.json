@@ -2937,5 +2937,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-23T18:08:01.704Z",
     "shippedNote": "Commit 9e9bc42 (v3.78.0)"
+  },
+  {
+    "id": "FEAT-185",
+    "title": "Calm Passport look and 5-tab trip bar for the Flutter app (v3.79.0)",
+    "description": "Calm Passport look and 5-tab trip bar for the Flutter app (v3.79.0)",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-24T17:52:35.411Z",
+    "updatedAt": "2026-10-24T17:52:39.877Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-24T17:52:39.876Z",
+    "shippedNote": "Shipped in commit 05c0f68 (v3.79.0), flag enableCalmPassportUi default ON"
   }
 ]
