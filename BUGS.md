@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **317** | All recorded bugs across sessions |
+| **Total Tracked** | **321** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **290** | Verified & closed |
+| **✅ Resolved** | **294** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -321,6 +321,10 @@
 | **BUG-317** | Trip card stack: closed trip's card grows over the slider and Add expense disappears | `general` | `low` | `claude-cli` | `claude-cli` | Fixed in commit b8966fa (v3.77.2) |
 | **BUG-318** | Trip Activity omitted the user's own expenses, refunds, deletions and chat | `general` | `medium` | `agent` | `agent` | Activity now derives rows from trip expenses, refunds, recycle bin and chat (buildTripActivityLog) behind enableTripActivityLog. Commit f55130d |
 | **BUG-319** | Tapping an unread Activity row froze on a slow or offline connection | `offline-sync` | `medium` | `claude-cli` | `claude-cli` | Notification read/delete/clear now run the remote call in the background; local write is what the UI shows. Test: notification_remote_test (network never answers). Commit 9e9bc42 (v3.78.0) |
+| **BUG-320** | Plans tab showed duplicate Add item, Add note and Add pass buttons | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1) |
+| **BUG-321** | Blank band above the bottom bar shrank every list because the plus button reserved space | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1) |
+| **BUG-322** | Header showed round crew-initial avatars that were not wanted | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1) |
+| **BUG-323** | Bottom bar stayed dark in light theme | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1) |
 
 ---
 

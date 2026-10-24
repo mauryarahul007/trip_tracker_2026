@@ -9159,5 +9159,109 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-23T18:08:00.695Z",
     "resolutionNote": "Notification read/delete/clear now run the remote call in the background; local write is what the UI shows. Test: notification_remote_test (network never answers). Commit 9e9bc42 (v3.78.0)"
+  },
+  {
+    "id": "BUG-320",
+    "title": "Plans tab showed duplicate Add item, Add note and Add pass buttons",
+    "description": "Plans tab showed duplicate Add item, Add note and Add pass buttons",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-24T19:17:11.893Z",
+    "updatedAt": "2026-10-24T19:17:12.020Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-24T19:17:12.020Z",
+    "resolutionNote": "Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1)"
+  },
+  {
+    "id": "BUG-321",
+    "title": "Blank band above the bottom bar shrank every list because the plus button reserved space",
+    "description": "Blank band above the bottom bar shrank every list because the plus button reserved space",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-24T19:17:12.073Z",
+    "updatedAt": "2026-10-24T19:17:12.175Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-24T19:17:12.174Z",
+    "resolutionNote": "Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1)"
+  },
+  {
+    "id": "BUG-322",
+    "title": "Header showed round crew-initial avatars that were not wanted",
+    "description": "Header showed round crew-initial avatars that were not wanted",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-24T19:17:12.231Z",
+    "updatedAt": "2026-10-24T19:17:12.320Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-24T19:17:12.320Z",
+    "resolutionNote": "Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1)"
+  },
+  {
+    "id": "BUG-323",
+    "title": "Bottom bar stayed dark in light theme",
+    "description": "Bottom bar stayed dark in light theme",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-24T19:17:12.373Z",
+    "updatedAt": "2026-10-24T19:17:12.478Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-24T19:17:12.478Z",
+    "resolutionNote": "Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1)"
   }
 ]
