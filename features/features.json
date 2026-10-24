@@ -2953,5 +2953,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-24T17:52:39.876Z",
     "shippedNote": "Shipped in commit 05c0f68 (v3.79.0), flag enableCalmPassportUi default ON"
+  },
+  {
+    "id": "FEAT-186",
+    "title": "Calm Passport round 2: Balances-first trip bar, live hero, Spend hero cards (v3.80.0)",
+    "description": "Calm Passport round 2: Balances-first trip bar, live hero, Spend hero cards (v3.80.0)",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-24T18:50:42.734Z",
+    "updatedAt": "2026-10-24T18:50:42.842Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-24T18:50:42.842Z",
+    "shippedNote": "Shipped in commit 05ccff0 (v3.80.0), flag enableCalmPassportUi default ON"
   }
 ]

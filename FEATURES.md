@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **185** |
+| **Total Tracked** | **186** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **182** |
+| **✅ Shipped** | **183** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -244,6 +244,7 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-183** | Polish: reduce motion, tabular money, counting balances, a11y at 200% text, haptics policy | `ui-ux` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
 | **FEAT-184** | Speed and structure: photo decode at display size, RepaintBoundary, trip header in one place, Create trip on empty Balances | `performance` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
 | **FEAT-185** | Calm Passport look and 5-tab trip bar for the Flutter app (v3.79.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 05c0f68 (v3.79.0), flag enableCalmPassportUi default ON |
+| **FEAT-186** | Calm Passport round 2: Balances-first trip bar, live hero, Spend hero cards (v3.80.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 05ccff0 (v3.80.0), flag enableCalmPassportUi default ON |
 
 ---
 
