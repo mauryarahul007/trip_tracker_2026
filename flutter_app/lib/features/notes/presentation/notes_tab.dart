@@ -89,7 +89,9 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     if (trip == null) return const SkeletonPage(); // not loaded yet: a skeleton, not an empty checklist
     final chatOn = _flag('enableTripChat');
     final chatFirst = _flag('enableChatFirstNav');
-    final showChat = chatOn && !chatFirst;
+    // Calm Passport gives Chat its own trip tab, so Plans does not repeat it.
+    final calm = ref.watch(compassFlagProvider((calmPassportFlag, widget.tripId)));
+    final showChat = chatOn && !chatFirst && !calm;
     final passesOn = _flag('enableTravelPasses');
     final tidyOn = _flag('enableTidyNotes');
     final packing = _flag('enablePackingAssistant');

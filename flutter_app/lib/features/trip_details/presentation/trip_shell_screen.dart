@@ -23,6 +23,7 @@ import '../../../domain/models/trip.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/app_scaffold.dart';
@@ -70,6 +71,24 @@ String compassTabLabel(BuildContext context, TripNavTab tab) => switch (tab) {
   TripNavTab.expenses => 'Spend',
   TripNavTab.ledger => 'Balances',
   _ => tripTabLabel(context, tab),
+};
+
+/// Calm Passport dock wording (flag `enableCalmPassportUi`).
+String calmTabLabel(BuildContext context, TripNavTab tab) => switch (tab) {
+  TripNavTab.expenses => 'Spend',
+  TripNavTab.ledger => 'Balances',
+  TripNavTab.notes => 'Plans',
+  TripNavTab.hub => 'Hub',
+  _ => tripTabLabel(context, tab),
+};
+
+IconData calmTabIcon(TripNavTab tab) => switch (tab) {
+  TripNavTab.expenses => Icons.receipt_long_outlined,
+  TripNavTab.ledger => Icons.swap_horiz_rounded,
+  TripNavTab.chat => Icons.chat_bubble_outline_rounded,
+  TripNavTab.notes => Icons.confirmation_number_outlined,
+  TripNavTab.hub => Icons.grid_view_rounded,
+  _ => tripTabIcon(tab),
 };
 
 IconData tripTabIcon(TripNavTab tab) => switch (tab) {
@@ -201,19 +220,30 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
 
     final cleanBar = ref.watch(flagProvider(('enableCleanTopBar', widget.tripId))).value ?? true;
     final wide = MediaQuery.sizeOf(context).width >= kSideNavBreakpoint && tabs.length >= 2;
-    final compass = ref.watch(compassFlagProvider((compassNavFlag, widget.tripId)));
+    final calm = ref.watch(compassFlagProvider((calmPassportFlag, widget.tripId)));
+    final compass = !calm && ref.watch(compassFlagProvider((compassNavFlag, widget.tripId)));
     final mapExpanded = ref.watch(tripMapOpenProvider(widget.tripId));
     final dial = ref.watch(flagProvider(('enableQuickAddSpeedDial', widget.tripId))).value ?? true;
     final dock = ref.watch(dockTabsProvider(widget.tripId));
-    final dockActive = dock.indexOf(compass ? compassDockTabFor(currentTab) : currentTab);
+    final dockActive = dock.indexOf(
+      calm
+          ? calmDockTabFor(currentTab)
+          : compass
+          ? compassDockTabFor(currentTab)
+          : currentTab,
+    );
     // Compass web: a third pane with Settle up beside the expense table on very wide windows.
     final compassWebRail =
         ref.watch(compassFlagProvider((compassWebFlag, widget.tripId))) && MediaQuery.sizeOf(context).width >= 1280;
     final navItems = [
       for (final t in dock)
         AppNavItem(
-          icon: tripTabIcon(t),
-          label: compass ? compassTabLabel(context, t) : tripTabLabel(context, t),
+          icon: calm ? calmTabIcon(t) : tripTabIcon(t),
+          label: calm
+              ? calmTabLabel(context, t)
+              : compass
+              ? compassTabLabel(context, t)
+              : tripTabLabel(context, t),
           badge: t == TripNavTab.chat && ref.watch(chatUnreadProvider(widget.tripId)),
           badgeKey: const Key('chat-tab-unread'),
         ),
@@ -231,17 +261,21 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
           leading: IconButton(tooltip: l10n.actionBack, icon: const Icon(AppIcons.back, size: 20), onPressed: _onBack),
           title: _TripTitle(tripId: widget.tripId, tab: currentTab.name),
           // Compass nav: Share, Edit trip, Route map, Live location and App settings moved to the Trip tab.
-          actions: tripHeaderActions(
-            context,
-            ref,
-            tripId: widget.tripId,
-            variant: compass
-                ? TripHeaderVariant.compass
-                : cleanBar
-                ? TripHeaderVariant.clean
-                : TripHeaderVariant.legacy,
-            onMenu: _onMenu,
-          ),
+          actions: [
+            // Calm Passport: the crew sits in the header (People left the bottom bar).
+            if (calm) CrewAvatars(tripId: widget.tripId, onTap: () => _goTab(TripNavTab.members.index)),
+            ...tripHeaderActions(
+              context,
+              ref,
+              tripId: widget.tripId,
+              variant: compass || calm
+                  ? TripHeaderVariant.compass
+                  : cleanBar
+                  ? TripHeaderVariant.clean
+                  : TripHeaderVariant.legacy,
+              onMenu: _onMenu,
+            ),
+          ],
         ),
         body: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -298,7 +332,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 currentIndex: dockActive < 0 ? 0 : dockActive,
                 onTap: (i) => _goTab(dock[i].index),
                 items: navItems,
-                centerAction: compass
+                centerAction: compass || calm
                     ? () => unawaited(startAddExpense(context, ref, widget.tripId, dial: dial))
                     : null,
                 centerLabel: l10n.expAdd,
@@ -776,6 +810,54 @@ class _TripTitle extends ConsumerWidget {
               children: [
                 Flexible(child: title),
                 Icon(Icons.expand_more_rounded, color: tokens.textSecondary),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Up to three overlapping crew initials in the trip header (Calm Passport). Tapping opens People.
+class CrewAvatars extends ConsumerWidget {
+  const CrewAvatars({required this.tripId, required this.onTap, super.key});
+
+  final String tripId;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final members = ref.watch(visibleMembersProvider(tripId));
+    if (members.isEmpty) return const SizedBox.shrink();
+    final t = context.tokens;
+    final shown = members.take(3).toList();
+    const size = 28.0;
+    return Semantics(
+      button: true,
+      label: '${members.length} people',
+      child: InkWell(
+        key: const Key('calm-crew'),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: SizedBox(
+            width: size + (shown.length - 1) * 18,
+            height: size,
+            child: Stack(
+              children: [
+                for (var i = 0; i < shown.length; i++)
+                  Positioned(
+                    left: i * 18,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: t.bgPage, width: 2),
+                      ),
+                      child: AppAvatar(name: shown[i].name, avatarUrl: shown[i].avatarUrl, size: size - 4),
+                    ),
+                  ),
               ],
             ),
           ),

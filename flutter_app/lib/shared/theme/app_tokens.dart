@@ -59,6 +59,20 @@ class BentoTones {
     sky: BentoTint.of(AppColors.darkTileSky),
     lilac: BentoTint.of(AppColors.darkTileLilac),
   );
+  static final BentoTones calmLight = BentoTones(
+    mint: BentoTint.of(AppColors.calmTileMint),
+    butter: BentoTint.of(AppColors.calmTileButter),
+    peach: BentoTint.of(AppColors.calmTilePeach),
+    sky: BentoTint.of(AppColors.calmTileSky),
+    lilac: BentoTint.of(AppColors.calmTileLilac),
+  );
+  static final BentoTones calmDark = BentoTones(
+    mint: BentoTint.of(AppColors.calmDarkTileMint),
+    butter: BentoTint.of(AppColors.calmDarkTileButter),
+    peach: BentoTint.of(AppColors.calmDarkTilePeach),
+    sky: BentoTint.of(AppColors.calmDarkTileSky),
+    lilac: BentoTint.of(AppColors.calmDarkTileLilac),
+  );
   static final BentoTones amoled = BentoTones(
     mint: BentoTint.of(AppColors.amoledTileMint),
     butter: BentoTint.of(AppColors.amoledTileButter),
@@ -111,6 +125,10 @@ class AppTokens extends ThemeExtension<AppTokens> {
   final Duration dur2;
   final Duration dur3;
 
+  /// Calm Passport look (flag `enableCalmPassportUi`): shared widgets read this to pick the dark floating dock,
+  /// ink chips and signed money colours. False keeps every widget exactly as before.
+  final bool calm;
+
   // Curves
   final Curve easeSpring;
   final Curve easeDecel;
@@ -149,6 +167,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     this.easeSpring = const Cubic(0.32, 0.72, 0.0, 1.0),
     this.easeDecel = const Cubic(0.16, 1.0, 0.3, 1.0),
     this.easeBounce = const Cubic(0.34, 1.4, 0.64, 1.0),
+    this.calm = false,
   });
 
   LinearGradient get headerGradient =>
@@ -320,6 +339,70 @@ class AppTokens extends ThemeExtension<AppTokens> {
     headerEnd: const Color(0xFF000000),
   );
 
+  /// Calm Passport light: paper ground, white cards, ink text, one teal action, night-green hero.
+  static final AppTokens calmLight = AppTokens(
+    bgPage: AppColors.calmPaper,
+    bgApp: AppColors.calmPaper,
+    bgSurface: const Color(0xFFFFFFFF),
+    bgSurfaceHover: AppColors.calmPaperHover,
+    borderColor: AppColors.calmLine,
+    borderFocus: const Color(0x590E6B5E),
+    primaryAccent: AppColors.calmTeal,
+    primaryAccentLight: AppColors.calmTealLight,
+    secondaryAccent: AppColors.calmInk,
+    accentOrange: AppColors.calmRunway,
+    colorSuccess: AppColors.calmOwed,
+    colorDanger: AppColors.calmOwe,
+    colorWarning: AppColors.calmWarn,
+    textPrimary: AppColors.calmInk,
+    textSecondary: AppColors.calmInk2,
+    textMuted: AppColors.calmMute,
+    tones: BentoTones.calmLight,
+    ctaBg: AppColors.calmInk,
+    ctaFg: const Color(0xFFFFFFFF),
+    headerStart: AppColors.calmNight,
+    headerEnd: AppColors.calmNightDeep,
+    calm: true,
+  );
+
+  /// Calm Passport dark: near-black green ground, teal action turns bright, owe / owed stay signed.
+  static final AppTokens calmDark = AppTokens(
+    bgPage: AppColors.calmDarkGround,
+    bgApp: AppColors.calmDarkGround,
+    bgSurface: AppColors.calmDarkSurface,
+    bgSurfaceHover: AppColors.calmDarkHover,
+    borderColor: AppColors.calmDarkLine,
+    borderFocus: const Color(0x664FD1C1),
+    primaryAccent: AppColors.calmDarkTeal,
+    primaryAccentLight: AppColors.calmDarkTealLight,
+    secondaryAccent: AppColors.calmDarkInk,
+    accentOrange: AppColors.calmRunway,
+    colorSuccess: AppColors.calmDarkOwed,
+    colorDanger: AppColors.calmDarkOwe,
+    colorWarning: AppColors.darkWarning,
+    textPrimary: AppColors.calmDarkInk,
+    textSecondary: const Color(0xFFC6D3CE),
+    textMuted: AppColors.calmDarkMute,
+    tones: BentoTones.calmDark,
+    ctaBg: AppColors.calmDarkTeal,
+    ctaFg: AppColors.calmInk,
+    shadowBase: const Color(0xFF000000),
+    headerStart: AppColors.calmNight,
+    headerEnd: AppColors.calmDarkGround,
+    calm: true,
+  );
+
+  /// Calm Passport on pure black: the dark set with black ground and deeper tiles.
+  static final AppTokens calmAmoled = calmDark.copyWith(
+    bgPage: AppColors.amoledBgPage,
+    bgApp: AppColors.amoledBgApp,
+    bgSurface: AppColors.amoledBgSurface,
+    bgSurfaceHover: AppColors.amoledBgSurfaceHover,
+    borderColor: AppColors.amoledBorder,
+    tones: BentoTones.amoled,
+    headerEnd: const Color(0xFF000000),
+  );
+
   @override
   AppTokens copyWith({
     Color? bgPage,
@@ -354,6 +437,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     Curve? easeSpring,
     Curve? easeDecel,
     Curve? easeBounce,
+    bool? calm,
   }) {
     return AppTokens(
       bgPage: bgPage ?? this.bgPage,
@@ -388,6 +472,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
       easeSpring: easeSpring ?? this.easeSpring,
       easeDecel: easeDecel ?? this.easeDecel,
       easeBounce: easeBounce ?? this.easeBounce,
+      calm: calm ?? this.calm,
     );
   }
 
@@ -427,6 +512,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
       easeSpring: easeSpring,
       easeDecel: easeDecel,
       easeBounce: easeBounce,
+      calm: t < 0.5 ? calm : other.calm,
     );
   }
 }

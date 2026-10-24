@@ -20,6 +20,12 @@ final visibleTabsProvider = Provider.family<List<TripNavTab>, String>((ref, trip
   // While flags load, use the registry defaults so the tab bar never flickers.
   bool flag(String key) => ref.watch(flagProvider((key, tripId))).value ?? (defaultFeatureFlags[key] ?? false);
   final chatFirst = flag('enableChatFirstNav');
+  if (ref.watch(compassFlagProvider((calmPassportFlag, tripId)))) {
+    return calmPagerTabs(
+      chatEnabled: flag('enableTripChat'),
+      showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses'),
+    );
+  }
   if (ref.watch(compassFlagProvider((compassNavFlag, tripId)))) {
     return compassPagerTabs(
       chatEnabled: flag('enableTripChat'),
@@ -41,6 +47,13 @@ final visibleTabsProvider = Provider.family<List<TripNavTab>, String>((ref, trip
 /// Tabs in the trip's bottom bar. Legacy: every visible tab. Compass: Balances, Spend, Activity, Trip (Chat,
 /// People and Notes stay swipeable pages but sit under Trip).
 final dockTabsProvider = Provider.family<List<TripNavTab>, String>((ref, tripId) {
+  if (ref.watch(compassFlagProvider((calmPassportFlag, tripId)))) {
+    bool flag(String key) => ref.watch(flagProvider((key, tripId))).value ?? (defaultFeatureFlags[key] ?? false);
+    return calmDockTabs(
+      chatEnabled: flag('enableTripChat'),
+      showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses'),
+    );
+  }
   if (!ref.watch(compassFlagProvider((compassNavFlag, tripId)))) return ref.watch(visibleTabsProvider(tripId));
   return compassDockTabs();
 });

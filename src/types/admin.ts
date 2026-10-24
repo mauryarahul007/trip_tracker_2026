@@ -87,6 +87,7 @@ export type FeatureFlagKey =
   | 'enableHorizonNav'
   | 'enableTripGetStarted'
   | 'enableCompassNav'
+  | 'enableCalmPassportUi'
   | 'enableCompassSpend'
   | 'enableCompassMoney'
   | 'enableCompassTripPages'

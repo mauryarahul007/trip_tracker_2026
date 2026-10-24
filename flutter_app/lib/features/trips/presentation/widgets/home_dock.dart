@@ -40,6 +40,15 @@ bool isWideHome(BuildContext context) => MediaQuery.sizeOf(context).width >= kSi
 
 List<AppNavItem> _homeItems(BuildContext context, {bool compass = false}) {
   final l10n = context.l10n;
+  if (context.tokens.calm) {
+    // Calm Passport: Trips, Balances, Alerts, You (same four places, travel words).
+    return [
+      AppNavItem(icon: Icons.flight_rounded, label: l10n.navTrips),
+      const AppNavItem(icon: Icons.swap_horiz_rounded, label: 'Balances'),
+      const AppNavItem(icon: AppIcons.bell, label: 'Alerts'),
+      const AppNavItem(icon: Icons.person_outline_rounded, label: 'You'),
+    ];
+  }
   if (compass) {
     // Compass keeps the same four places; Balances is called Wallet because it spans every trip.
     return [
@@ -76,6 +85,7 @@ Widget? buildHomeDock(BuildContext context, WidgetRef ref, HomeTab current) {
     onTap: (i) => _goTab(context, current, i),
     centerAction: () => unawaited(createTripFlow(context)),
     centerLabel: l10n.tripsNewTrip,
+    centerExtended: true,
   );
 }
 

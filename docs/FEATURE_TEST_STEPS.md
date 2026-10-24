@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-24 | unreleased | CALM-PASSPORT | [Calm Passport look and 5-tab trip bar](#calm-passport--calm-passport-look-and-5-tab-trip-bar) |
 | 2026-10-23 | unreleased | SETTLE-NUDGE | [Settle-up nudge banner on quiet trips](#settle-nudge--settle-up-nudge-banner-on-quiet-trips) |
 | 2026-10-23 | unreleased | UNDO-NOT-ASK | [Freeze, close and Settle all apply at once with Undo](#undo-not-ask--freeze-close-and-settle-all-apply-at-once-with-undo) |
 | 2026-10-23 | unreleased | BALANCES-EMPTY-ACTION | [Create trip button on empty Balances](#balances-empty-action--create-trip-button-on-empty-balances) |
@@ -3803,3 +3804,17 @@ Then add a row to the **Index** table.
 6. **Flag OFF:** with the flag off for the trip, repeat step 1. Pass: no banner; the Balances cards look as before.
 
 **Pass criteria:** only the person who owes sees it, only after 3 quiet days, never on a finished trip, and it sends no push or message.
+
+## CALM-PASSPORT — Calm Passport look and 5-tab trip bar
+
+**Flags:** `enableCalmPassportUi` (Core pack, default ON). Flutter app only.
+
+1. Open the app signed in. Pass: paper-coloured ground, white cards, ink chips with a teal accent.
+2. Open the Trips home. Pass: a dark floating bar shows Trips, Balances, Alerts, You with every label, and a "+ New trip" button floats above its right end.
+3. Open a trip. Pass: the bottom bar shows Spend, Balances, Chat, Plans, Hub with every label; the selected item sits on a teal pill; a "+" button above the bar opens Add expense.
+4. Tap the crew avatars in the trip header. Pass: People opens and Hub stays lit. Tap the bell. Pass: Activity opens.
+5. Open Plans. Pass: Passes, Checklist, Notes only (Chat is its own tab).
+6. Switch the phone to dark theme. Pass: near-black green ground, bright teal pill, text stays readable.
+7. **Flag OFF** (`enableCalmPassportUi`, Settings > Flag overrides): reopen the app. Pass: previous colours and trip bar return; no crew avatars in the header.
+
+**Pass criteria:** no balance, split or sync value changes; only look and navigation differ.

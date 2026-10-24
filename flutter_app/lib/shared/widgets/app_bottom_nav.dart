@@ -26,6 +26,7 @@ class AppBottomNav extends StatelessWidget {
     this.centerAction,
     this.centerLabel,
     this.compass = false,
+    this.centerExtended = false,
     super.key,
   });
 
@@ -42,6 +43,9 @@ class AppBottomNav extends StatelessWidget {
   final VoidCallback? centerAction;
   final String? centerLabel;
 
+  /// Calm Passport only: the floating action shows [centerLabel] beside the "+" (Trips home "New trip").
+  final bool centerExtended;
+
   /// The Bento pill is used on every platform.
   static bool get dockByDefault => true;
 
@@ -49,6 +53,17 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Calm Passport theme (flag `enableCalmPassportUi`) wins over the Compass and Bento docks.
+    if (context.tokens.calm && _useDock) {
+      return _CalmDock(
+        items: items,
+        currentIndex: currentIndex,
+        onTap: onTap,
+        action: centerAction,
+        actionLabel: centerLabel,
+        actionExtended: centerExtended,
+      );
+    }
     if (compass && _useDock) {
       return _CompassDock(
         items: items,
@@ -197,6 +212,177 @@ class _CompassItem extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Calm Passport dock: a dark floating bar where every item keeps its label and the selected one sits on a teal
+/// pill. The screen's one primary action floats above the bar's right end (ink "+" in light, teal in dark).
+class _CalmDock extends StatelessWidget {
+  const _CalmDock({
+    required this.items,
+    required this.currentIndex,
+    required this.onTap,
+    this.action,
+    this.actionLabel,
+    this.actionExtended = false,
+  });
+
+  final List<AppNavItem> items;
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+  final VoidCallback? action;
+  final String? actionLabel;
+  final bool actionExtended;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final barBg = dark ? t.bgSurface : const Color(0xFF14201C);
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (action != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: _CalmAction(label: actionLabel, extended: actionExtended, onTap: action!),
+              ),
+            DecoratedBox(
+              key: const Key('calm-dock'),
+              decoration: BoxDecoration(
+                color: barBg,
+                borderRadius: BorderRadius.circular(26),
+                border: dark ? Border.all(color: t.borderColor) : null,
+                boxShadow: t.shadowLg,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  children: [
+                    for (var i = 0; i < items.length; i++)
+                      Expanded(
+                        child: _CalmItem(item: items[i], selected: i == currentIndex, onTap: () => onTap(i)),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CalmAction extends StatelessWidget {
+  const _CalmAction({required this.onTap, required this.extended, this.label});
+
+  final VoidCallback onTap;
+  final bool extended;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final showLabel = extended && label != null;
+    return Semantics(
+      button: true,
+      label: label,
+      child: Material(
+        color: t.ctaBg,
+        elevation: 6,
+        shadowColor: t.shadowBase.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          key: const Key('dock-center'),
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: SizedBox(
+            height: 60,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: showLabel ? 22 : 18),
+              child: ExcludeSemantics(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add_rounded, color: t.ctaFg, size: 28),
+                    if (showLabel) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        label!,
+                        style: TextStyle(color: t.ctaFg, fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CalmItem extends StatelessWidget {
+  const _CalmItem({required this.item, required this.selected, required this.onTap});
+
+  final AppNavItem item;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    const teal = Color(0xFF4FD1C1);
+    const ink = Color(0xFF14201C);
+    final color = selected ? ink : const Color(0xFFA9BAB3);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: item.label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: AnimatedContainer(
+          duration: t.durationNormal,
+          curve: t.easeSpring,
+          constraints: const BoxConstraints(minHeight: 52),
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: selected ? teal : Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: ExcludeSemantics(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconTheme(
+                  data: IconThemeData(color: color, size: 22),
+                  child: _icon(item, color: color),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: color,
+                  ),
                 ),
               ],
             ),

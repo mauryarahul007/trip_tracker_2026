@@ -100,6 +100,7 @@ const _compassFlags = [
   'enableCompassTripPages',
   'enableCompassMe',
   'enableCompassWeb',
+  'enableCalmPassportUi', // Calm Passport look; its own tests opt in
   'enableTripGetStarted', // new-trip start card; tests of blank trips expect the older empty screens
 ];
 

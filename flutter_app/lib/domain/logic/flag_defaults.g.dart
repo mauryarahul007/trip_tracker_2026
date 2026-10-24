@@ -17,6 +17,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableBiometricAuth': false,
   'enableBurnRateInsight': false,
   'enableCalmHaptics': true,
+  'enableCalmPassportUi': true,
   'enableCategoryColorRings': false,
   'enableCategoryReorder': false,
   'enableChatAttachments': false,
@@ -267,6 +268,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'Calmer Haptics + iPhone Haptics',
     pack: 'core',
     description: 'ON: by default only meaningful actions vibrate (save, settle, delete, warnings); plain taps like switching tabs or opening menus stay silent. Settings → Appearance gains a Haptics choice (All / Important only / Off) remembered per device. Native iOS and Android builds use the system haptic engine, so iPhones get feedback at all (they had none before). OFF: every tap vibrates on Android web/app, iPhones get no haptics, and there is no Settings choice. Does not affect sounds or notifications.',
+  ),
+  'enableCalmPassportUi': (
+    label: 'Calm Passport Look (Flutter)',
+    pack: 'core',
+    description: 'Flutter app: ON: the app takes the Calm Passport look. Paper ground (#F4F3EE), one teal action colour, ink chips, a dark floating bottom bar with every label, owe amounts in red with a minus sign and owed amounts in green with a plus sign, and the trip bar becomes Spend, Balances, Chat, Plans and Hub (People and Activity stay reachable from the trip header and the Hub). OFF: the previous colours and trip bar. Does not change any expense, balance, split, sync or login logic, and does not touch the web app.',
   ),
   'enableCategoryColorRings': (
     label: 'Category Icon Color Rings & Tabular Alignment',
@@ -1230,6 +1236,7 @@ const Map<String, List<String>> consumerPacks = {
     'enableTravelerPassBack',
     'enableHorizonNav',
     'enableCompassNav',
+    'enableCalmPassportUi',
     'enableCompassMe',
     'enableCompassWeb',
     'enableSpendInsights',

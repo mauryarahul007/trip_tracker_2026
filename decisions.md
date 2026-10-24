@@ -5366,3 +5366,8 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** Freeze and close show UNDO for 5 s and sync to others in the meantime. The nudge reminds only the person who owes, only for their own member (not group payments), after 3 quiet days. B4 (startup) and B2 (prefetch) are left until a device profile exists; B8, B11, B13 were dropped by audit; B17 is not built.
 * **Release Cut:** version bumped to `3.78.0` via `npm run release:minor`.
 
+
+## 2026-10-24 — Calm Passport look for the Flutter app (v3.79.0)
+* **Decision:** Apply the approved Calm Passport design behind new Core-pack flag `enableCalmPassportUi` (default ON): paper/ink/teal tokens (light, dark, AMOLED), ink chips, dark floating bottom bar with labels, floating primary action, 5-tab trip bar (Spend, Balances, Chat, Plans, Hub) with crew avatars in the header and Activity under the bell.
+* **Trade-offs Accepted:** Per-screen layouts from the mockups (Spend hero cards, trips hero) are not rebuilt yet; this pass restyles through shared tokens and navigation. Flag OFF restores the previous look exactly.
+* **Release Cut:** version bumped to `3.79.0` via `npm run release:minor`.

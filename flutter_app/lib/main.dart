@@ -12,6 +12,7 @@ import 'core/platform/haptics.dart';
 import 'core/platform/motion.dart';
 import 'core/settings/app_settings.dart';
 import 'core/version/version_gate.dart';
+import 'core/flags/compass_flags.dart' show calmPassportProvider;
 import 'data/providers.dart';
 import 'app/router.dart';
 import 'core/storage/prefs.dart';
@@ -103,14 +104,20 @@ class TripTrackerApp extends ConsumerWidget {
         ref.watch(highContrastPrefProvider) && (ref.watch(flagProvider(('enableHighContrast', null))).value ?? true);
     AppFeedback.sound = ref.watch(soundFeedbackPrefProvider);
     AppFeedback.packOn = ref.watch(flagProvider(('enableFeedbackPack', null))).value ?? true;
+    // Calm Passport look (Ops Deck flag); OFF keeps the Bento colours.
+    final calm = ref.watch(calmPassportProvider);
     AppMotion.reduce =
         ref.watch(reduceMotionPrefProvider) && (ref.watch(flagProvider(('enableReduceMotion', null))).value ?? true);
 
     return MaterialApp.router(
       title: 'Trip Tracker',
       debugShowCheckedModeBanner: false,
-      theme: contrast ? AppTheme.highContrastLight() : AppTheme.light(),
-      darkTheme: contrast ? AppTheme.highContrastDark() : (amoled ? AppTheme.amoled() : AppTheme.dark()),
+      theme: contrast ? AppTheme.highContrastLight(calm: calm) : (calm ? AppTheme.calmLight() : AppTheme.light()),
+      darkTheme: contrast
+          ? AppTheme.highContrastDark(calm: calm)
+          : calm
+          ? (amoled ? AppTheme.calmAmoled() : AppTheme.calmDark())
+          : (amoled ? AppTheme.amoled() : AppTheme.dark()),
       themeMode: themeMode,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

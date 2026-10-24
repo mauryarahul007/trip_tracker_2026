@@ -12,6 +12,7 @@ const tripPollsFlag = 'enableTripPolls';
 const guestJoinFlag = 'enableGuestJoin';
 const compassMeFlag = 'enableCompassMe';
 const compassWebFlag = 'enableCompassWeb';
+const calmPassportFlag = 'enableCalmPassportUi';
 
 /// `(flag key, trip id)`: pass the trip id inside a trip so per-trip overrides apply, null elsewhere.
 /// Falls back to the registry default while flags load so a screen never flickers between layouts.
@@ -21,3 +22,7 @@ final compassFlagProvider = Provider.family<bool, (String, String?)>(
 
 /// Global (no trip) navigation flag: the Trips home dock.
 final compassNavProvider = Provider<bool>((ref) => ref.watch(compassFlagProvider((compassNavFlag, null))));
+
+/// Calm Passport look (flag `enableCalmPassportUi`): theme colours app-wide. Per-trip overrides use
+/// [compassFlagProvider] with the trip id (the trip bar reads it that way).
+final calmPassportProvider = Provider<bool>((ref) => ref.watch(compassFlagProvider((calmPassportFlag, null))));
