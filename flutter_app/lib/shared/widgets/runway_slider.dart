@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart' show CustomSemanticsAction;
-import 'package:flutter/services.dart';
+
+import '../../core/platform/haptics.dart';
 
 /// An airport-style two-way slider: a plane on a runway.
 ///
@@ -58,7 +60,7 @@ class _RunwaySliderState extends State<RunwaySlider> with SingleTickerProviderSt
 
   void _release({required bool trigger, required bool right}) {
     if (trigger) {
-      HapticFeedback.mediumImpact();
+      unawaited(AppHaptics.medium());
       (right ? widget.onRight : widget.onLeft)();
     }
     _from = _dx;
@@ -124,7 +126,7 @@ class _RunwaySliderState extends State<RunwaySlider> with SingleTickerProviderSt
                   if (_roll.isAnimating) _roll.stop();
                   setState(() => _dx = (_dx + d.delta.dx / range).clamp(-1.0, 1.0));
                   final armed = _dx.abs() > 0.92;
-                  if (armed && !_armed) HapticFeedback.selectionClick();
+                  if (armed && !_armed) unawaited(AppHaptics.selection());
                   _armed = armed;
                 },
                 onHorizontalDragEnd: (_) => _release(trigger: _dx.abs() > 0.92, right: _dx > 0),

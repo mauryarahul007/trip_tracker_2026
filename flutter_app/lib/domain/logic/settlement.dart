@@ -2,6 +2,7 @@ import '../models/expense.dart';
 import '../models/group.dart';
 import '../models/member.dart';
 import '../models/trip.dart';
+import 'refunds.dart';
 
 class Transfer {
   final String from;
@@ -312,15 +313,17 @@ List<Transfer> calculateDirectSettlements(
   List<Expense> expenses, [
   List<Group> groups = const [],
 ]) {
-  final activeTripExpenses = expenses
-      .where(
-        (e) =>
-            e.tripId == trip.id &&
-            e.deletedAt == null &&
-            e.approvalStatus != 'pending_approval' &&
-            !e.excludeFromTotals,
-      )
-      .toList();
+  final activeTripExpenses = applyRefunds(
+    expenses
+        .where(
+          (e) =>
+              e.tripId == trip.id &&
+              e.deletedAt == null &&
+              e.approvalStatus != 'pending_approval' &&
+              !e.excludeFromTotals,
+        )
+        .toList(),
+  );
 
   final groupOfMember = <String, String>{};
   for (final g in groups) {
@@ -451,15 +454,17 @@ SettlementResult calculateSettlements(
   List<Group> groups = const [],
   bool? simplifyDebts,
 ]) {
-  final activeTripExpenses = expenses
-      .where(
-        (e) =>
-            e.tripId == trip.id &&
-            e.deletedAt == null &&
-            e.approvalStatus != 'pending_approval' &&
-            !e.excludeFromTotals,
-      )
-      .toList();
+  final activeTripExpenses = applyRefunds(
+    expenses
+        .where(
+          (e) =>
+              e.tripId == trip.id &&
+              e.deletedAt == null &&
+              e.approvalStatus != 'pending_approval' &&
+              !e.excludeFromTotals,
+        )
+        .toList(),
+  );
 
   final netBalances = <String, double>{};
   for (final id in trip.memberIds) {
@@ -510,12 +515,20 @@ SettlementResult calculateSettlements(
         for (final m in n.memberIds) m: n.id,
     };
     final implied = <String, double>{};
+    final flows = <String>{};
     for (final t in directTransfers) {
       final f = nodeOf[t.fromMemberId], to = nodeOf[t.toMemberId];
       if (f != null) implied[f] = (implied[f] ?? 0) - t.amount;
       if (to != null) implied[to] = (implied[to] ?? 0) + t.amount;
+      flows.add('$f>$to');
     }
-    if (nodes.any((n) => ((implied[n.id] ?? 0) - n.balance).abs() > 0.02)) {
+    // Money going both ways between the same two parties (a group is one party) is not a payable list: the pass
+    // says one side owes the net while the per-person rows tell the other side to pay. Settle the net instead.
+    final crossing = flows.any((k) {
+      final i = k.indexOf('>');
+      return flows.contains('${k.substring(i + 1)}>${k.substring(0, i)}');
+    });
+    if (crossing || nodes.any((n) => ((implied[n.id] ?? 0) - n.balance).abs() > 0.02)) {
       return SettlementResult(
         balances: balances,
         transfers: _matchDebtorsToCreditors(nodes, balances),

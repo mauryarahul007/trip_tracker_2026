@@ -54,6 +54,7 @@ Future<void> pumpStack(
   ValueChanged<Trip>? onLongPress,
   Future<String?> Function(String destination)? resolver,
   ValueChanged<Trip>? onTop,
+  ValueChanged<Trip>? onAddExpense,
   WeatherService? weather,
   List<Override> extra = const [],
 }) async {
@@ -84,6 +85,7 @@ Future<void> pumpStack(
             onOpen: onOpen,
             onLongPress: onLongPress ?? (_) {},
             onTopChanged: onTop,
+            onAddExpense: onAddExpense,
           ),
         ),
       ),
@@ -103,6 +105,49 @@ Finder inTop(String text) => find.descendant(of: top, matching: find.text(text))
 
 void main() {
   group('TripCardStack', () {
+    testWidgets('quick add: the button adds to the top trip, follows the deck, and is hidden for archived trips', (
+      tester,
+    ) async {
+      final added = <String>[];
+      await pumpStack(
+        tester,
+        list: [trip('a', 'Goa'), trip('b', 'Old', archived: true)],
+        onOpen: (_) {},
+        onAddExpense: (t) => added.add(t.id),
+      );
+      // Inside the card area: the floating runway dock covers the bottom 80px of the deck.
+      expect(tester.getBottomLeft(find.byKey(const Key('stack-add-expense'))).dy, lessThanOrEqualTo(900 - 80));
+      await tester.tap(find.byKey(const Key('stack-add-expense')));
+      expect(added, ['a']);
+      await tester.fling(top, const Offset(-400, 0), 1500);
+      await tester.pumpAndSettle();
+      expect(inTop('Old'), findsOneWidget);
+      expect(find.byKey(const Key('stack-add-expense')), findsNothing); // archived: no quick add
+      expect(find.byKey(const Key('stack-add-expense-disabled')), findsOneWidget); // greyed, with the reason
+      expect(find.text('Add expense · trip archived'), findsOneWidget);
+      expect(tester.widget<TextButton>(find.byKey(const Key('stack-add-expense-disabled'))).onPressed, isNull);
+    });
+
+    testWidgets('every card is the same height, with or without the quick add button', (tester) async {
+      await pumpStack(
+        tester,
+        list: [trip('a', 'Goa'), trip('b', 'Old', archived: true)],
+        onOpen: (_) {},
+        onAddExpense: (_) {},
+      );
+      final openH = tester.getSize(find.byKey(const Key('stack-top'))).height;
+      expect(find.byKey(const Key('stack-add-expense')), findsOneWidget);
+      await tester.fling(top, const Offset(-400, 0), 1500);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('stack-add-expense')), findsNothing); // archived: no live button
+      expect(tester.getSize(find.byKey(const Key('stack-top'))).height, openH); // but the card does not grow
+    });
+
+    testWidgets('no quick add button when the callback is not given (flag off)', (tester) async {
+      await pumpStack(tester, onOpen: (_) {});
+      expect(find.byKey(const Key('stack-add-expense')), findsNothing);
+    });
+
     testWidgets('shows the first trip on top with its position, and the next cards behind it', (tester) async {
       await pumpStack(tester, onOpen: (_) {});
       expect(inTop('Goa'), findsOneWidget);

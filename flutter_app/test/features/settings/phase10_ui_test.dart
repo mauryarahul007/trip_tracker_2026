@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trip_tracker/domain/models/trip.dart';
 import 'package:trip_tracker/domain/repositories/feedback_repository.dart' show FeedbackUnavailable;
 import 'package:trip_tracker/features/feedback/application/feedback_providers.dart' show feedbackQueueProvider;
 import 'package:go_router/go_router.dart';
@@ -406,12 +407,16 @@ void main() {
       final s = await seedTrip(tester);
       await go(tester, '/trip/${s.tripId}/settings');
       expect(find.byKey(const Key('trip-simplify')), findsOneWidget);
+      Future<Trip?> trip() =>
+          real(tester, () => containerOf(tester).read(tripRepositoryProvider).watchTrip(s.tripId).first);
       await tester.tap(find.byKey(const Key('trip-freeze')));
-      await settle(tester);
-      await tester.tap(find.text('Yes'));
       await settle(tester, rounds: 12);
-      final trip = await real(tester, () => containerOf(tester).read(tripRepositoryProvider).watchTrip(s.tripId).first);
-      expect(trip!.frozen, isTrue);
+      expect(find.text('Are you sure?'), findsNothing); // no dialog: it applies at once
+      expect((await trip())!.frozen, isTrue);
+      expect(find.text('Trip frozen'), findsOneWidget);
+      await tester.tap(find.text('UNDO'));
+      await settle(tester, rounds: 12);
+      expect((await trip())!.frozen, isFalse);
     });
 
     testApp('a non-owner cannot change money rules or trip state', (tester) async {

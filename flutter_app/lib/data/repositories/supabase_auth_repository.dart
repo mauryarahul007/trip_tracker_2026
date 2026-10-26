@@ -296,6 +296,13 @@ class SupabaseAuthRepository implements AuthRepository {
   });
 
   @override
+  Future<void> signInAsInviteGuest(String displayName) => _guarded(() async {
+    await _requireOpen();
+    final clean = displayName.trim();
+    await _api.auth.signInAnonymously(data: {'full_name': clean});
+  });
+
+  @override
   Future<void> signInAsGuest({String displayName = 'Traveler'}) =>
       _setLocal(AuthUser(id: 'guest-traveler-user-id', displayName: displayName, provider: 'guest'));
 

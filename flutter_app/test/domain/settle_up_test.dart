@@ -200,4 +200,44 @@ void main() {
       expect(calculateSettlements(trip, members, [e1, e2], const [], false).transfers, hasLength(2));
     });
   });
+
+  group('per person view when payments cross between two groups', () {
+    final trip = Trip.fromJson({
+      'id': 't',
+      'name': 'T',
+      'memberIds': ['a', 'b', 'c', 'd'],
+      'baseCurrency': 'INR',
+    });
+    final members = {
+      for (final id in ['a', 'b', 'c', 'd']) id: Member(id: id, name: id, tripId: 't'),
+    };
+    const g2 = Group(id: 'g2', name: '2B', memberIds: ['a', 'b']);
+    const g1 = Group(id: 'g1', name: '1B', memberIds: ['c', 'd']);
+    Expense exp(String id, double amount, String paidBy) => Expense(
+      id: id,
+      tripId: 't',
+      title: 'Item $id',
+      amount: amount,
+      currency: 'INR',
+      category: 'c',
+      date: '2026-10-02',
+      paidBy: paidBy,
+      splitMode: 'equal',
+      splitMemberIds: const ['a', 'b', 'c', 'd'],
+      resolvedShares: {
+        for (final m in ['a', 'b', 'c', 'd']) m: amount / 4,
+      },
+      createdAt: 0,
+      updatedAt: 0,
+    );
+
+    test('lists the one net payment between the groups, not opposing pair debts', () {
+      // 2B is owed 300 net, but pair by pair c owes a 350 while a and b each owe d 100.
+      final r = calculateSettlements(trip, members, [exp('e1', 1000, 'a'), exp('e2', 400, 'd')], const [g2, g1], false);
+      expect(r.transfers, hasLength(1));
+      expect(r.transfers.single.amount, 300);
+      final byMember = {for (final b in r.balances) b.memberId: b.balance};
+      expect(byMember['c']! + byMember['d']!, -300);
+    });
+  });
 }

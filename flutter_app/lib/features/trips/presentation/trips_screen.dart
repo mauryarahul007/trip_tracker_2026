@@ -55,6 +55,7 @@ import 'widgets/sync_chip.dart';
 import 'widgets/trip_backdrop.dart';
 import 'widgets/trip_row.dart';
 import 'widgets/trip_card_stack.dart';
+import '../../../core/platform/motion.dart';
 
 class TripsScreen extends ConsumerStatefulWidget {
   const TripsScreen({this.now, super.key});
@@ -465,6 +466,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
               : AppBar(
                   title: Text(l10n.tripsTitle),
                   actions: [
+                    const SyncButton(),
                     if (!cards && gridOn)
                       IconButton(
                         key: const Key('trips-layout-toggle'),
@@ -733,6 +735,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                 onOpen: _open,
                                 onLongPress: (t) => _tripMenu(t, owner(t)),
                                 onTopChanged: (t) => setState(() => _stackTop = t),
+                                onAddExpense: _flagOn('enableTripCardQuickAdd')
+                                    ? (t) => context.push('/trip/${t.id}/expenses/new')
+                                    : null,
                               );
                             }
                             // The first trip happening today becomes the Night Sky hero.
@@ -941,7 +946,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
           // Card view carries its own floating "New Trip | Join" pill, so the dock and the button step aside.
           bottomNavigationBar: cards ? null : buildHomeDock(context, ref, HomeTab.trips),
           // The dock's centre button replaces the FAB on iOS / web; Material 3 keeps it.
-          floatingActionButton: cards || (horizon && AppBottomNav.dockByDefault)
+          floatingActionButton: tokens.calm && !cards
+              ? CalmAddButton(extended: true, label: l10n.tripsNewTrip, onTap: _create)
+              : cards || (horizon && AppBottomNav.dockByDefault)
               ? null
               : FloatingActionButton.extended(
                   onPressed: _create,
@@ -1151,7 +1158,7 @@ class _FilterPills extends StatelessWidget {
                             key: Key('trip-filter-$id'),
                             onTap: () => onSelect(id),
                             child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 180),
+                              duration: AppMotion.of(context, const Duration(milliseconds: 180)),
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/platform/haptics.dart';
 import '../../../core/platform/ocr_gateway.dart';
+import '../../../data/platform/receipt_picker.dart';
 import '../../../domain/logic/receipt_ocr_service.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_theme.dart';
@@ -102,6 +103,19 @@ class _ReceiptOcrModalState extends ConsumerState<ReceiptOcrModal> {
         _isProcessing = false;
       });
     }
+  }
+
+  /// Take or choose a receipt photo, then read it on the phone.
+  Future<void> _scanPhoto(ReceiptSource source) async {
+    String? path;
+    try {
+      path = await ref.read(receiptPickerProvider).pick(source);
+    } catch (_) {
+      setState(() => _errorMessage = 'Could not open the camera or photos. Paste the receipt text instead.');
+      return;
+    }
+    if (path == null || !mounted) return;
+    await _handleImageScan(path);
   }
 
   Future<void> _handleImageScan(String fakeOrRealImagePath) async {
@@ -231,14 +245,19 @@ class _ReceiptOcrModalState extends ConsumerState<ReceiptOcrModal> {
               Expanded(
                 child: AppButton(
                   key: const Key('btn_scan_receipt_image'),
-                  label: 'Scan Camera/Photo',
+                  label: 'Scan receipt',
                   variant: AppButtonVariant.secondary,
                   icon: AppIcons.camera,
                   isLoading: _isProcessing,
-                  onPressed: _isProcessing ? null : () => _handleImageScan('demo_receipt_image'),
+                  onPressed: _isProcessing ? null : () => _scanPhoto(ReceiptSource.camera),
                 ),
               ),
-              const SizedBox(width: 8),
+              IconButton(
+                key: const Key('btn_scan_receipt_gallery'),
+                tooltip: 'Choose a photo instead',
+                onPressed: _isProcessing ? null : () => _scanPhoto(ReceiptSource.gallery),
+                icon: const Icon(Icons.photo_library_outlined),
+              ),
               Expanded(
                 child: AppButton(
                   key: const Key('btn_parse_receipt'),

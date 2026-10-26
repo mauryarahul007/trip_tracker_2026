@@ -20,6 +20,13 @@ class AppColors {
   static const Color accentCyan = Color(0xFF2DD4E0);
   static const Color accentViolet = Color(0xFF8B3CF7);
 
+  // Hero surfaces that are dark in every theme (trip headers, cover washes, wrapped).
+  static const Color heroNavy = Color(0xFF123A57);
+  static const Color heroNavyDeep = Color(0xFF0B1F33);
+  static const Color heroTeal = Color(0xFF1F6F78);
+  // Budget "getting close" amber: the same in every theme, between success and danger.
+  static const Color budgetWarn = Color(0xFFE8890C);
+
   static const Color lightSuccess = Color(0xFF16A34A);
   static const Color lightDanger = Color(0xFFDC2626);
   static const Color lightWarning = Color(0xFFD97706);
@@ -80,4 +87,43 @@ class AppColors {
   static const List<Color> amoledTilePeach = [Color(0xFF281810), Color(0xFFFFA877)];
   static const List<Color> amoledTileSky = [Color(0xFF0F1E29), Color(0xFF8EC4F0)];
   static const List<Color> amoledTileLilac = [Color(0xFF1B1629), Color(0xFFB9A2F5)];
+
+  // Calm Passport (flag `enableCalmPassportUi`): paper ground, one teal action, night hero, runway accent.
+  // Owe / owed always travel with a sign and an arrow, never colour alone.
+  static const Color calmPaper = Color(0xFFF4F3EE);
+  static const Color calmPaperHover = Color(0xFFEDEDE5);
+  static const Color calmLine = Color(0xFFE3E3DA);
+  static const Color calmInk = Color(0xFF14201C);
+  static const Color calmInk2 = Color(0xFF3F4D48);
+  static const Color calmMute = Color(0xFF5E6B66);
+  static const Color calmTeal = Color(0xFF0E6B5E);
+  static const Color calmTealLight = Color(0xFF3FA396);
+  static const Color calmNight = Color(0xFF0F1F1B);
+  static const Color calmNightDeep = Color(0xFF0A1512);
+  static const Color calmRunway = Color(0xFFF26B2A);
+  static const Color calmOwe = Color(0xFFB23A24);
+  static const Color calmOwed = Color(0xFF11733F);
+  static const Color calmWarn = Color(0xFFAC5F05);
+
+  static const Color calmDarkGround = Color(0xFF0D1311);
+  static const Color calmDarkSurface = Color(0xFF17201D);
+  static const Color calmDarkHover = Color(0xFF1F2A26);
+  static const Color calmDarkLine = Color(0xFF26322E);
+  static const Color calmDarkInk = Color(0xFFECF3EF);
+  static const Color calmDarkMute = Color(0xFFA9BAB3);
+  static const Color calmDarkTeal = Color(0xFF4FD1C1);
+  static const Color calmDarkTealLight = Color(0xFF7DDDD1);
+  static const Color calmDarkOwe = Color(0xFFFF8A75);
+  static const Color calmDarkOwed = Color(0xFF4ADE9A);
+
+  static const List<Color> calmTileMint = [Color(0xFFD6F0E6), Color(0xFF1F5E4E)];
+  static const List<Color> calmTileButter = [Color(0xFFFFEDB3), Color(0xFF6E5200)];
+  static const List<Color> calmTilePeach = [Color(0xFFFFDCC8), Color(0xFF8A3F1C)];
+  static const List<Color> calmTileSky = [Color(0xFFD6E8F6), Color(0xFF285A80)];
+  static const List<Color> calmTileLilac = [Color(0xFFE7DEF8), Color(0xFF553A9E)];
+  static const List<Color> calmDarkTileMint = [Color(0xFF17332C), Color(0xFF7FD6BC)];
+  static const List<Color> calmDarkTileButter = [Color(0xFF3A3214), Color(0xFFF2D27A)];
+  static const List<Color> calmDarkTilePeach = [Color(0xFF3D2418), Color(0xFFF5A882)];
+  static const List<Color> calmDarkTileSky = [Color(0xFF1A2C3D), Color(0xFF9CC8EC)];
+  static const List<Color> calmDarkTileLilac = [Color(0xFF2A2340), Color(0xFFC3AEF5)];
 }

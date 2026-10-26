@@ -17,6 +17,7 @@ import '../../../../shared/widgets/app_avatar.dart';
 import '../../../expenses/application/expenses_providers.dart' show tripMembersProvider;
 import '../../application/trips_providers.dart';
 import 'trip_card.dart' show tripHeadline;
+import '../../../../core/platform/motion.dart';
 
 /// Trips as a deck of full-bleed photo cards, every trip in any state.
 ///
@@ -30,6 +31,7 @@ class TripCardStack extends StatefulWidget {
     required this.onOpen,
     required this.onLongPress,
     this.onTopChanged,
+    this.onAddExpense,
     this.bottomInset = 80,
     super.key,
   });
@@ -41,6 +43,9 @@ class TripCardStack extends StatefulWidget {
 
   /// Called (after the frame) whenever a different trip becomes the top card, so the screen can tint its background.
   final ValueChanged<Trip>? onTopChanged;
+
+  /// When set, a button under an open (not archived or closed) top card adds an expense to that trip.
+  final ValueChanged<Trip>? onAddExpense;
 
   /// Space kept free under the card for the floating runway slider (about 90 high) and the page dots.
   final double bottomInset;
@@ -137,7 +142,14 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
     return LayoutBuilder(
       builder: (context, box) {
         final cardW = math.min(box.maxWidth - 24, 460.0);
-        final cardH = (box.maxHeight - 28 - widget.bottomInset).clamp(300.0, 900.0);
+        final top = trips.first;
+        final quickAdd = widget.onAddExpense != null && !top.archived && !top.closed;
+        // The button row is reserved whether or not this top card shows it (archived and closed trips do not), so every
+        // card is the same height and nothing jumps when the deck moves. The extra 16 lifts the button off the dock.
+        final cardH = (box.maxHeight - 28 - widget.bottomInset - (widget.onAddExpense != null ? 48 + 16 : 0)).clamp(
+          300.0,
+          900.0,
+        );
         final progress = (_drag.dx.abs() / (cardW * 0.4)).clamp(0.0, 1.0);
         final behind = math.min(2, trips.length - 1);
         return Column(
@@ -145,75 +157,98 @@ class _TripCardStackState extends State<TripCardStack> with SingleTickerProvider
             Expanded(
               child: Align(
                 alignment: Alignment.topCenter,
-                child: SizedBox(
-                  width: cardW,
-                  height: cardH + 28,
-                  child: Stack(
-                    alignment: Alignment.topCenter,
-                    clipBehavior: Clip.none,
-                    children: [
-                      for (var k = behind; k >= 1; k--)
-                        Positioned(
-                          top: 14.0 * k - 14 * progress,
-                          child: Transform.scale(
-                            scale: 1 - 0.06 * k + 0.06 * progress,
-                            alignment: Alignment.topCenter,
-                            child: SizedBox(
-                              width: cardW,
-                              height: cardH,
-                              child: IgnorePointer(
-                                child: _StackCard(trip: trips[k], now: widget.now, dim: true),
-                              ),
-                            ),
-                          ),
-                        ),
-                      Positioned(
-                        top: 0,
-                        child: Semantics(
-                          customSemanticsActions: {
-                            CustomSemanticsAction(label: l10n.tripsStackOpen): () => widget.onOpen(trips.first),
-                            if (trips.length > 1)
-                              CustomSemanticsAction(label: l10n.tripsStackSkip): () =>
-                                  _commit(next: true, width: cardW),
-                          },
-                          child: GestureDetector(
-                            key: const Key('stack-top'),
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () => widget.onOpen(trips.first),
-                            onLongPress: () => widget.onLongPress(trips.first),
-                            onPanUpdate: (d) {
-                              if (!_flying) setState(() => _drag += d.delta);
-                            },
-                            onPanEnd: (d) {
-                              final vx = d.velocity.pixelsPerSecond.dx;
-                              final far = _drag.dx.abs() > cardW * 0.28;
-                              final flung = vx.abs() > 800 && vx.sign == _drag.dx.sign;
-                              if (far || flung) {
-                                _commit(next: _drag.dx < 0, width: cardW);
-                              } else {
-                                _snapBack();
-                              }
-                            },
-                            child: Transform.translate(
-                              offset: _drag,
-                              child: Transform.rotate(
-                                angle: _drag.dx / cardW * 0.25,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: cardW,
+                      height: cardH + 28,
+                      child: Stack(
+                        alignment: Alignment.topCenter,
+                        clipBehavior: Clip.none,
+                        children: [
+                          for (var k = behind; k >= 1; k--)
+                            Positioned(
+                              top: 14.0 * k - 14 * progress,
+                              child: Transform.scale(
+                                scale: 1 - 0.06 * k + 0.06 * progress,
+                                alignment: Alignment.topCenter,
                                 child: SizedBox(
                                   width: cardW,
                                   height: cardH,
-                                  child: _StackCard(
-                                    trip: trips.first,
-                                    now: widget.now,
-                                    swipe: _drag.dx / (cardW * 0.4),
+                                  child: IgnorePointer(
+                                    child: _StackCard(trip: trips[k], now: widget.now, dim: true),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          Positioned(
+                            top: 0,
+                            child: Semantics(
+                              customSemanticsActions: {
+                                CustomSemanticsAction(label: l10n.tripsStackOpen): () => widget.onOpen(trips.first),
+                                if (trips.length > 1)
+                                  CustomSemanticsAction(label: l10n.tripsStackSkip): () =>
+                                      _commit(next: true, width: cardW),
+                              },
+                              child: GestureDetector(
+                                key: const Key('stack-top'),
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => widget.onOpen(trips.first),
+                                onLongPress: () => widget.onLongPress(trips.first),
+                                onPanUpdate: (d) {
+                                  if (!_flying) setState(() => _drag += d.delta);
+                                },
+                                onPanEnd: (d) {
+                                  final vx = d.velocity.pixelsPerSecond.dx;
+                                  final far = _drag.dx.abs() > cardW * 0.28;
+                                  final flung = vx.abs() > 800 && vx.sign == _drag.dx.sign;
+                                  if (far || flung) {
+                                    _commit(next: _drag.dx < 0, width: cardW);
+                                  } else {
+                                    _snapBack();
+                                  }
+                                },
+                                child: Transform.translate(
+                                  offset: _drag,
+                                  child: Transform.rotate(
+                                    angle: _drag.dx / cardW * 0.25,
+                                    child: SizedBox(
+                                      width: cardW,
+                                      height: cardH,
+                                      child: _StackCard(
+                                        trip: trips.first,
+                                        now: widget.now,
+                                        swipe: _drag.dx / (cardW * 0.4),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    // Inside the card area, not below it: the floating runway dock covers everything under the deck.
+                    // A closed or archived trip cannot take expenses: the same row, greyed, says why.
+                    if (widget.onAddExpense != null && !quickAdd)
+                      TextButton.icon(
+                        key: const Key('stack-add-expense-disabled'),
+                        onPressed: null,
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: Text(top.archived ? l10n.tripsStackAddArchived : l10n.tripsStackAddClosed),
+                        style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                      )
+                    else if (quickAdd)
+                      TextButton.icon(
+                        key: const Key('stack-add-expense'),
+                        onPressed: () => widget.onAddExpense!(top),
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: Text(l10n.expAdd),
+                        style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -255,7 +290,7 @@ class _PageDots extends StatelessWidget {
           children: [
             for (var i = 0; i < shown; i++)
               AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: AppMotion.of(context, const Duration(milliseconds: 200)),
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 width: start + i == index ? 18 : 6,
                 height: 6,
@@ -336,7 +371,7 @@ class _StackCard extends ConsumerWidget {
                 fit: BoxFit.cover,
                 frameBuilder: (_, child, frame, sync) => AnimatedOpacity(
                   opacity: frame == null && !sync ? 0 : 1,
-                  duration: const Duration(milliseconds: 350),
+                  duration: AppMotion.of(context, const Duration(milliseconds: 350)),
                   child: child,
                 ),
                 errorBuilder: (_, _, _) => const SizedBox.shrink(),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/network/connectivity_provider.dart';
+import '../../../../core/platform/haptics.dart';
 import '../../../../data/providers.dart';
 import '../../../../data/sync/outbox_store.dart';
 import '../../../../data/sync/outbox_types.dart';
@@ -41,6 +43,49 @@ class SyncChip extends ConsumerWidget {
           onPressed: issue || inspector ? () => showSyncReviewSheet(context) : null,
         ),
       ),
+    );
+  }
+}
+
+/// Header sync button (flag `enableSyncLine`): tap pulls and pushes now, spins while it runs,
+/// and turns red with the review sheet when items are stuck. Offline / pending only change the icon.
+class SyncButton extends ConsumerWidget {
+  const SyncButton({this.tripId, super.key});
+  final String? tripId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!(ref.watch(flagProvider(('enableSyncLine', tripId))).value ?? true)) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final online = ref.watch(isOnlineProvider).value ?? true;
+    final status = ref.watch(syncStatusProvider).value ?? const SyncStatus();
+    final syncing = ref.watch(tripsSyncingProvider).value ?? false;
+    final (String, IconData, Color) state = status.issues > 0
+        ? ('${l10n.syncLineIssue} ${status.issues}', Icons.sync_problem_rounded, t.colorDanger)
+        : !online
+        ? (
+            status.pending > 0 ? l10n.syncLineSyncing(status.pending) : l10n.syncLineOffline,
+            Icons.cloud_off_rounded,
+            t.textSecondary,
+          )
+        : status.pending > 0
+        ? (l10n.syncLineSyncing(status.pending), Icons.sync_rounded, t.textSecondary)
+        : ('Sync now', Icons.sync_rounded, t.textSecondary);
+    return IconButton(
+      key: const Key('sync-action'),
+      tooltip: state.$1,
+      icon: syncing
+          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+          : Icon(state.$2, color: state.$3),
+      onPressed: syncing
+          ? null
+          : status.issues > 0
+          ? () => showSyncReviewSheet(context)
+          : () async {
+              await AppHaptics.light();
+              await ref.read(syncCoordinatorProvider).syncNow();
+            },
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/platform/map_gateway.dart';
 import '../../../domain/models/trip.dart';
 import 'road_route_service.dart';
+import '../../../shared/theme/app_colors.dart';
 
 class TripMapHero extends ConsumerStatefulWidget {
   final Trip trip;
@@ -85,7 +86,7 @@ class _TripMapHeroState extends ConsumerState<TripMapHero> {
           glow: true,
         ),
       );
-      routes.add(MapRouteLine(id: 'route_main', coordinates: points, color: const Color(0xFF2DD4E0), strokeWidth: 3.5));
+      routes.add(MapRouteLine(id: 'route_main', coordinates: points, color: AppColors.accentCyan, strokeWidth: 3.5));
     }
 
     final mapGateway = ref.watch(mapGatewayProvider);

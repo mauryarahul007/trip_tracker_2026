@@ -5,6 +5,7 @@ const Map<String, String> notificationTypeHeadlines = {
   'expense_added': 'Expense Added',
   'expense_updated': 'Expense Updated',
   'expense_deleted': 'Expense Deleted',
+  'expense_refunded': 'Refund Recorded',
   'expense_restored': 'Expense Restored',
   'trip_deleted': 'Trip Deleted',
   'member_added': 'Member Added',
@@ -60,6 +61,10 @@ String renderNotificationBody(NotificationItem n) {
       }
       if (_has(d['expenseTitle'])) return '${d['expenseTitle']}';
       return _cleanFallbackBody(body, 'added');
+    case 'expense_refunded':
+      return _has(d['expenseTitle']) && _has(d['currency']) && _has(d['amount'])
+          ? '${d['expenseTitle']} — ${_money(d['amount'], d['currency'])}'
+          : or('A refund was recorded');
     case 'expense_updated':
       return _has(d['expenseTitle']) ? '${d['expenseTitle']}' : _cleanFallbackBody(body, 'updated');
     case 'expense_deleted':
@@ -163,3 +168,29 @@ List<List<Map<String, dynamic>>> groupNotificationBursts(List<Map<String, dynami
 
   return groups;
 }
+
+/// Filter chips of the trip Activity tab. [all] shows everything, [unread] only what has not been opened.
+enum ActivityFilter { all, unread, money, people, chat }
+
+/// Which chip a notification belongs to (besides All and Unread): anything that moves money (expenses and
+/// settlements), people joining, and chat. Tips and alerts only ever show under All.
+ActivityFilter? activityKindOf(String? type) => switch (type) {
+  'expense_added' ||
+  'expense_updated' ||
+  'expense_deleted' ||
+  'expense_refunded' ||
+  'expense_restored' ||
+  'settlement' ||
+  'settle' ||
+  'settlement_reminder' ||
+  'settlement_confirmation_requested' => ActivityFilter.money,
+  'member_added' || 'member_added_notice' || 'member_joined' => ActivityFilter.people,
+  'chat_message' => ActivityFilter.chat,
+  _ => null,
+};
+
+bool matchesActivityFilter(NotificationItem n, ActivityFilter f) => switch (f) {
+  ActivityFilter.all => true,
+  ActivityFilter.unread => !n.read,
+  _ => activityKindOf(n.data?['type'] as String?) == f,
+};

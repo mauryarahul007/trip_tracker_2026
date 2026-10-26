@@ -89,20 +89,22 @@ void main() {
   });
 
   group('settlement pass flip', () {
-    testApp('tap anywhere flips to You paid / Your share / Difference and back; the strip is gone', (tester) async {
-      await pumpApp(tester, user: asha);
+    testApp('tap anywhere flips to You paid / Your share / You owe and back; the strip is gone', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableCompassTripPages'});
       final s = await seedTrip(tester);
       await addExpense(tester, s, amount: 60, paidBy: s.ben, split: [s.me, s.ben], userId: 'u2');
       await openTab(tester, s, 'ledger');
       expect(key('paid-vs-share'), findsNothing);
       expect(key('pass-flip-chip'), findsOneWidget);
       expect(key('pass-back'), findsNothing);
+      expect(find.text('PENDING'), findsOneWidget); // front stub: Spent / Settled / Pending
+      expect(find.text('1 payment'), findsOneWidget);
       await tester.tap(key('hero-amount'));
       await settle(tester, rounds: 8);
       expect(key('pass-back'), findsOneWidget);
       expect(find.text('YOU PAID'), findsOneWidget);
       expect(find.text('YOUR SHARE'), findsWidgets);
-      expect(find.text('DIFFERENCE'), findsOneWidget);
+      expect(find.text('YOU OWE'), findsWidgets);
       await tester.tap(key('pass-back-explain'));
       await settle(tester, rounds: 6);
       expect(key('balance-explainer'), findsOneWidget);
@@ -112,6 +114,19 @@ void main() {
       await settle(tester, rounds: 8);
       expect(key('pass-back'), findsNothing);
       expect(key('hero-amount'), findsOneWidget);
+    });
+
+    testApp('calm pages off (default in tests): the old Difference label and Open payments stub return', (
+      tester,
+    ) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await addExpense(tester, s, amount: 60, paidBy: s.ben, split: [s.me, s.ben], userId: 'u2');
+      await openTab(tester, s, 'ledger');
+      expect(find.text('OPEN PAYMENTS'), findsWidgets);
+      await tester.tap(key('hero-amount'));
+      await settle(tester, rounds: 8);
+      expect(find.text('DIFFERENCE'), findsOneWidget);
     });
 
     testApp('flag off: the strip stays and the pass does not flip', (tester) async {

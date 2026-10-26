@@ -5263,3 +5263,121 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** Deliberately did not touch: web's local (non-router) tab-switch state — fixing it to ride the browser history stack is a larger architectural change, not a safe small diff; the Flutter expense form's single top-level error banner vs. `create_trip_sheet`'s per-field inline errors — a real inconsistency, but restructuring the form controller's error state is bigger than a polish pass; generic `SkeletonPage`/`SheetSkeleton` sizing — cosmetic, a call-site concern rather than a component bug; `SlideToUnlock` reduced-motion — it is drag-driven, not autoplaying, so vestibular-motion guidance does not clearly apply.
 * **Release Cut:** version bumped to `3.69.3` via `npm run release:patch`.
 
+## v3.70.0: Save and add another, and a conflict sheet that shows what changed (BUG-304, FEAT)
+* **Context:** Logging several expenses meant reopening the Flutter form after every Save. The sync conflict sheet compared only amount and date, so conflicts caused by a title, category, payer or split edit looked identical, and its two Keep buttons had unequal weight. Most of the rest of the expense-entry wish list (amount-first focus, remembered payer/category, remembered split) already existed behind `enableSmartExpenseDefaults` and `enableRememberDefaultSplit`.
+* **Decision:** New Trip-pack flag `enableSaveAndAddAnother` (default ON) adds a secondary Save and add another button on new expenses only; `resetForNext()` in `expense_form_controller.dart` rebuilds the initial state, the amount field regains focus, the push prompt stays on plain Save, and the duplicate check includes the expense just saved. `conflict_sheet.dart` now lists only differing fields via `conflictFields()` and collapses the rest; Keep mine / Keep theirs share one style. Conflict fix logged as BUG-304 (commit 0804547); the feature is logged in the Superadmin features table by migration `0117_log_feature_save_and_add_another.sql`. Flag count bumped to 174 in the web and Flutter parity tests.
+* **Trade-offs Accepted:** The conflict sheet compares a fixed set of six fields, not split shares or receipts. The conflict sheet shipped without a flag (UX fix on an existing surface); Save and add another is flagged because it is a new button. Migration 0117 is committed but applying it to Supabase is a separate step.
+* **Release Cut:** version bumped to `3.70.0` via `npm run release:minor`.
+
+## v3.71.0: Balance bars, deck quick add, receipt empty action, icon labels
+* **Context:** A UI/UX review of the Flutter app proposed nine enhancements. A code read showed most were already built: directional who-pays-whom rows with one-tap Settle (item 4), the card deck with a peek, swipe and a rows view (item 1), an accessibility test suite (item 7), `EmptyState` with an action slot (item 5), a reduced-motion-aware `ConfettiBurst` with no callers and a three-level haptics setting (item 6), and `SkeletonLoader` on the three main lists (item 9).
+* **Decision:** Build only the genuine gaps. New Trip-pack flags `enableBalanceBars` and `enableTripCardQuickAdd` (both default ON; flag count 176 in the web and Flutter parity tests). `widgets/balance_bars.dart` draws each member's net balance as a diverging bar above the transfer rows; `TripCardStack` gets an optional `onAddExpense` button placed under the card, not a swipe, so it cannot clash with flipping the deck. The empty receipt gallery gets an Add expense action under the existing `enableReceiptGallery` flag. The Insights back button and UPI sheet close button get tooltips, and Insights joins the a11y tests. Features logged by migration `0118_log_features_balance_bars_deck_quick_add.sql`.
+* **Trade-offs Accepted:** Balance bars default ON although a ledger test notes the per-person balance list was removed earlier; the bars sit in the transfers section with different keys and wording, and can be turned off in the Ops Deck. Items 6 and 9 needed no change (confetti has no callers; remaining spinners are small in-sheet loaders). Two Summary tests now scroll the folded header clear of the sticky bottom bar before tapping, because the bars lengthen the page.
+* **Release Cut:** version bumped to `3.71.0` via `npm run release:minor`.
+
+## v3.71.1: Phone-test fixes for the deck button and the new-expense form (BUG-305..307)
+* **Context:** Testing 3.71.0 on a phone found three defects the widget tests missed: the deck's Add expense button was drawn behind the floating runway dock; form errors rendered at the end of the scrolling form, out of view with the keyboard open; and the post-save snackbar covered Save and add another.
+* **Decision:** The deck button moves inside the card area (`trip_card_stack.dart`). The form's error banner and a new inline "Saved" notice live in a pinned strip above the Save buttons (`expense_form_screen.dart`), replacing the snackbar. Save and add another on an untouched form shows "First add an expense." through the new `showError()` on the form controller. Logged as BUG-305, BUG-306, BUG-307.
+* **Trade-offs Accepted:** The pinned strip takes about 60px of the small space left with the keyboard open, only while a message is showing. Widget tests now assert the deck button is above the dock zone and the error sits above Save, but the real overlap was only visible on a device with the dock.
+* **Release Cut:** version bumped to `3.71.1` via `npm run release:patch`.
+
+## v3.72.0: Compass trip bar, Trip hub, blank-trip start card (FEAT)
+* **Context:** A UI/UX review produced the "Compass" redesign (mockups: 28 mobile screens and 3 desktop layouts in light and dark; plan in `docs/compass-redesign-plan.md`). A code read showed most screens already matched the intent, so only the gaps were built. Login and the Trips home layout were kept as they are on request. A blank trip opened on a Summary full of empty settlement and pass blocks.
+* **Decision:** Six default-ON flags. `enableCompassNav` (Core): trip bar Spend / Balances / orange + / Chat / Trip, new `TripNavTab.hub` and `TripHubScreen`; People and Notes stay pages and routes, with Trip lit; the legacy floating Add button hides; Trips home bar keeps its four places with the Compass look and "Wallet" label; a trip still opens on Balances. `enableCompassSpend` (Trip): Total spent card and category rings. `enableCompassMoney` (Trip): balance bars always on. `enableCompassMe` (Core): storage total card. `enableCompassWeb` (Core): Settle up pane at 1280px+. `enableTripGetStarted` (Trip): blank trips show Get this trip rolling (invite link, copy, code and QR, add first expense) on Summary and Expenses. Compass tokens are an `AppTokens` extension (`shared/theme/compass.dart`), so no existing colour changed; light-mode orange is `#C2410C` (the mockup's `#D9480F` failed 4.5:1 with white).
+* **Trade-offs Accepted:** Not restyled: settle sheet, People, Notes, Chat, Settings family, passport, wrapped, Ops Deck, because they already carry the design intent and a flag that changes nothing would be noise. No budget bar (a local `trip_budget.dart` exists; deferred by decision). While flags load, the registry default (ON) applies, so the trip pager now re-syncs its page when the tab list changes. The test harness starts older tests with the Compass and get-started flags OFF, as it does for `enableSummaryFocus`.
+* **Release Cut:** version bumped to `3.72.0` via `npm run release:minor`.
+
+## v3.73.0: Compass follow-ups: Activity tab, Trip-tab menu, trip switching, Balances pass (FEAT, BUG)
+* **Context:** Phone testing of 3.72.0 found the trip's top-right menu duplicated the Trip tab, the Activity tab (a reused notifications list) was confusing and its Money filter hid behind another flag, switching trips from the title changed only the current page (the other tabs kept the old trip), the flat Balances card and yellow Close out card looked wrong, and Spend Collapse/Expand all stopped working.
+* **Decision:** Under `enableCompassNav`: dock is Balances, Spend, +, Activity, Trip; Chat moved to a Trip hub tile; the ⋮ menu and share icon are gone (Edit trip, Route map, App settings added as hub tiles; route-map state is a provider). New `TripActivityPane` with chips All/Unread/Money/People/Chat (rules in `activityKindOf`: Money = expenses and settlements), per-trip Delete all. `openTripFresh` leaves the trip, waits for the shell to close (`tripShellClosed`), then opens the next one, because go_router reuses one shell state per route. Under `enableCompassMoney`: original settlement pass and flip kept, yellow Close out card hidden, flat payment rows with orange Settle. Spend days open by default but stay collapsible (seeded only once the flag has loaded).
+* **Trade-offs Accepted:** Switching trips shows the home screen for about a frame. The Activity tab does not offer the in-row settlement Confirm button (tapping opens Balances where it lives). People, Notes, Chat, the settle sheet, the add-expense form and the Ops Deck are still not restyled.
+* **Release Cut:** version bumped to `3.73.0` via `npm run release:minor`.
+
+
+## v3.74.0: Compass follow-ups: de-duplicated menus, Balances strip and settle bar, Spend chips, Activity actions (FEAT, BUG)
+* **Context:** Phone testing of 3.73.0 showed the trip-name menu and a Chat tile duplicated what the Trip tab and Notes already offer, the Balances page lacked a summary and a clear next action, and switching trips flashed the home screen.
+* **Decision:** Reuses existing flags, no new ones. Under `enableCompassNav`: the trip name opens only the trip switcher (no arrow with one trip); the hub drops Chat and gains Mute alerts; Notes stays visible when only chat is on. Under `enableCompassMoney`: `CompassSummaryStrip`, a sticky `CompassSettleBar` ("You owe") opening a list of the viewer's payments, and People shows owes/owed. Under `enableCompassSpend`: `filterExpenses` takes optional category and member name maps so search also matches category, payer and amount, plus removable `CompassActiveFilters` chips. Activity rows gain Confirm received (via `settlementToConfirm`) and Reply. `openTripFresh` covers the app with an overlay until the new trip opens. Hub tiles show receipt count, invite code and unread chat.
+* **Trade-offs Accepted:** Settle sheet, Notes and Chat were not restyled; that needs the screens in hand, not a blind change. The add-expense split preview and single sync indicator already existed, so nothing was added. The home-screen widget and onboarding beyond the blank-trip card are not built.
+* **Release Cut:** version bumped to `3.74.0` via `npm run release:minor`.
+
+## v3.75.0: Compass chat, notes, checklist, settle sheet and calm Balances (FEAT)
+* **Context:** Phone screenshots of 3.74.0 showed raw event text in Chat ("Settlement Settlement: 1B → 2B — Upi · INR 50983.07"), boxed event cards, notes shown as editable fields, a finished checklist as 28 struck-through rows, a long settle sheet, and "settled" repeated in four Balances blocks.
+* **Decision:** One new flag `enableCompassTripPages` (Trip pack, default ON; flag count 183). Chat: `tidyChatEvent` plus centered event lines, avatars and run grouping. Notes: read-only preview card, tap opens the edit sheet. Checklist: Done section, no Anyone/category repeats, no per-category bars. Settle sheet: header with avatars, large amount field, Mark settled directly under it, date/note/UPI/share under More options. Balances: when settled, no celebration card, progress card or attention chip; strip shows You paid and Your share only.
+* **Trade-offs Accepted:** No attach or voice buttons in Chat (no feature behind them). Event text is tidied from the stored body, so old messages keep their stored text. The Live Location banner was not changed.
+* **Release Cut:** version bumped to `3.75.0` via `npm run release:minor`.
+
+## v3.75.1: All trips tile on the Trip tab (BUG)
+* **Context:** Inside a trip, the only way back to the trips home was the trip-name dropdown, which now only switches trips.
+* **Decision:** `hub-home` tile ("All trips") first on the Trip hub, going to `/`. Under `enableCompassNav`; no new flag.
+* **Trade-offs Accepted:** No home icon in the header, which already holds sync and the bell.
+* **Release Cut:** version bumped to `3.75.1` via `npm run release:patch`.
+
+## v3.76.0: Receipt scan, chat reactions, trip polls, guest join (FEAT)
+* **Context:** Research on trip, expense and chat apps (Splitwise, Splid, Wanderlog, WhatsApp, Telegram) pointed to no-account joining, receipt pre-fill, reactions and polls as the biggest gaps. "Scan Camera/Photo" in the receipt modal was a stub that returned no text.
+* **Decision:** Receipt scan: `DefaultOcrGateway` uses Google ML Kit on-device (Android/iOS; web and desktop report unsupported), photo from `receiptPickerProvider`. Reactions: reuse existing `enableChatReactionsAndReplies` (default OFF, shared with web); `MessageRepository.react` toggles a member in `{emoji: [memberId]}` and syncs via the `reactMessage` outbox op. Polls: a `trip_messages` row of kind `poll` whose payload holds question, options, votes, closed (`chat_poll.dart`); votes and closing sync via `updateMessagePayload`; new flag `enableTripPolls` (Trip pack, ON). Guest join: `signInAsInviteGuest` (Supabase anonymous auth) then RPC `join_trip_with_name`; new flag `enableGuestJoin` (Core pack, ON). Migrations 0119 (poll kind) and 0120 (guest-safe `handle_new_user`, `join_trip_with_name`) applied to the live project. Flag counts: 185 total, Core pack 33.
+* **Trade-offs Accepted:** Votes and reactions are last-write-wins on the whole map, as on the web. A guest who signs out or clears app data must open the link again (account linking is a later step). Anonymous sign-ins must be switched on in the Supabase dashboard. OCR accuracy is unmeasured on real receipts. The day-by-day itinerary is not built.
+* **Release Cut:** version bumped to `3.76.0` via `npm run release:minor`.
+
+## v3.76.1: Balances without the repeated strip; prod build fix (BUG)
+* **Context:** The strip under the settlement pass (You paid, Your share) showed what the pass flip already shows. Separately, the prod release build failed in R8 after ML Kit text recognition was added (missing optional Chinese, Devanagari, Japanese, Korean recognizer classes).
+* **Decision:** Removed `CompassSummaryStrip` and its use. Added `-dontwarn` rules for the four unused ML Kit language packages in `android/app/proguard-rules.pro` (Latin only is used).
+* **Trade-offs Accepted:** The prod APK is about 31 MB larger (78 to 109 MB) because of the text-recognition library.
+* **Release Cut:** version bumped to `3.76.1` via `npm run release:patch`.
+
+## v3.77.0: Record a refund on an expense (FEAT)
+* **Context:** A 5000 expense split four ways with 1000 later refunded to the payer had no way to be recorded, so balances overstated what members owed.
+* **Decision:** A refund is its own expense row pointing at the original (`refundOfExpenseId`, stored inside `itemized_config`, so no migration, column or sync-function change). Its stored shares are `{payer: amount}` so older clients net it to zero. `applyRefunds` (`src/utils/refunds.ts`, `refunds.dart`) folds each refund into its parent pro-rata to the smallest currency unit before every balance, settlement and headline-total calculation, then drops the refund rows. Money already settled is corrected by the normal Settle flow. New flag `enableExpenseRefunds` (Trip pack, ON). Web and Flutter. Flag count 186.
+* **Trade-offs Accepted:** The refund always goes to the primary payer. Older app versions show the refund as a plain expense and keep pre-refund balances. Web admin analytics, achievements and CSV export still count a refund row at face value. Refund rows cannot be edited, only deleted and re-added.
+* **Release Cut:** version bumped to `3.77.0` via `npm run release:minor`.
+
+## v3.77.1: One net payment when per-person payments cross groups; clearer pass (BUG + UX)
+* **Context:** With Simplify debts OFF and two groups, the pass said 2B is owed 2,101 while the bottom bar and banner said "You owe 24,493.54". The per-person list had money going both ways between the same two groups (it netted to 2,101 so the old guard accepted it), and the bar sums the payments where you are the payer.
+* **Decision:** `calculateSettlements` (settlement.ts and settlement.dart) rejects the per-person list when flows between two parties (a group is one party) go in both directions, and uses the group-netted list instead. The pass stub now reads Spent / Settled / Pending (whole rupees, "1 payment" or "All paid"), the flip side reads You owe / You're owed / Square with a recorded-payments note and a group-versus-you note, and the web footer reads Spent / Settled / N payments left. Gated by the existing `enableCompassTripPages` (OFF restores the old wording); the calculation fix has no flag.
+* **Trade-offs Accepted:** A trip with crossing group payments now shows group-level payments in per-person view instead of exact pairs. The status line and extra back-face figures are not built.
+* **Release Cut:** version bumped to `3.77.1` via `npm run release:patch`.
+
+## v3.77.2: Trip card stack keeps one card height (BUG)
+* **Context:** On the trips home stack, a closed or archived top trip (no Add expense button) made its card 48px taller and covered the area above the Join / New Trip slider, while open trips kept the button. Add expense also sat tight against the slider.
+* **Decision:** `TripCardStack` reserves the Add expense row (48) plus a 16px lift whenever the quick-add callback is given, whether or not the top trip shows the button, so card height is constant and the button sits clear of the dock. Closed and archived trips still hide the button and leave an empty gap.
+* **Trade-offs Accepted:** Cards are 64px shorter than before when quick add is on. No flag; it is a layout fix inside `enableTripCardStack`.
+* **Release Cut:** version bumped to `3.77.2` via `npm run release:patch`.
+
+## v3.77.3: Greyed Add expense on closed and archived trip cards (UX)
+* **Context:** After v3.77.2 kept card heights constant, a closed or archived top trip still showed an empty gap where Add expense is on open trips, which looked like a missing button.
+* **Decision:** `TripCardStack` shows the same row as a disabled button reading "Add expense · trip closed" or "· trip archived" (new l10n keys). Open trips are unchanged. No flag; it stays inside `enableTripCardStack` and `enableTripCardQuickAdd`.
+* **Trade-offs Accepted:** The disabled button explains but offers no shortcut to reopen the trip.
+* **Release Cut:** version bumped to `3.77.3` via `npm run release:patch`.
+
+## v3.77.4: Trip Activity shows the full trip history (BUG)
+* **Context:** Activity listed only notifications sent to the signed-in user, which exclude their own actions, and refunds and deletions create no notification, so the 4202 expense and 800 refund never appeared.
+* **Decision:** `buildTripActivityLog` derives read-only rows from the trip's expenses, recycle bin (24h), refunds and text chat, merged with notifications (deduped by type and title/preview) in `TripActivityPane`. Behind new flag `enableTripActivityLog` (Trip pack, default ON); new `expense_refunded` row type under the Money filter.
+* **Trade-offs Accepted:** Edits are inferred from updatedAt (more than 60s after creation) with no before/after; deletions older than 24h are purged and not shown; list capped at 200; log rows cannot be swiped away.
+* **Release Cut:** version bumped to `3.77.4` via `npm run release:patch`.
+
+## v3.77.5: Activity rows open the exact message or expense (UX)
+* **Context:** Tapping an Activity row only switched to a tab, so users had to hunt for the item.
+* **Decision:** `activityTargetOf` resolves a row to a chat message, expense or recycle-bin entry (log rows carry `targetId`; notifications match by title or text). `activityFocusProvider` hands it to `ChatPane` (scroll and highlight) and `ExpensesTab` (opens the detail sheet). Expense detail gained "See in Activity" (`activityOnlyProvider` filter). Inside `enableTripActivityLog`, no new flag.
+* **Trade-offs Accepted:** Chat scroll uses an estimate then exact reveal, so long chats may hop once; member-join rows still open the Members tab without highlighting; notifications that no longer match open the tab.
+* **Release Cut:** version bumped to `3.77.5` via `npm run release:patch`.
+
+## v3.78.0: Flutter stability, speed and polish pass (UX)
+* **Context:** A UX/stability evaluation (docs/UX_ROADMAP.md) found stuck syncs hidden behind grey marks, drafts lost on close or shared across accounts after sign-out, one failing tab taking the whole trip down, taps blocked on a slow network, and several large-text and reduce-motion gaps. Measured first (docs/perf-baseline.md): the Ledger maths is about 2 ms at 500 expenses, so the planned lazy-list and isolate work was dropped.
+* **Decision:** Stability: shared `AsyncBody`, per-tab `TabErrorBoundary`, a red "Sync failed" mark with per-row Retry (`enableRowSyncRetry`, Core), clearer conflict sheet, `DiscardGuard` and chat draft under `enablePersistentExpenseDraft`, drafts wiped on sign-out, a manual Sync button on the home and trip headers. Speed: photos decode at display size (`cachedPhotoSized`), `RepaintBoundary` on the live pulse and confetti, notification read/delete no longer awaits the network. Flows: Create trip on empty Balances, Freeze/Close/Settle all apply with UNDO instead of a dialog, settle-up nudge banner (`enableSettleNudge`, Trip pack), trip header actions in one function. Polish: reduce-motion for 12 more animations, page fade under reduce-motion, tabular money columns, 30 a11y checks at 200% text and in dark, a sticky-header and Balances-row overflow fix, named `AppColors` hues plus a raw-colour ratchet test, haptics policy with a guard test, counting balance figures.
+* **Trade-offs Accepted:** Freeze and close show UNDO for 5 s and sync to others in the meantime. The nudge reminds only the person who owes, only for their own member (not group payments), after 3 quiet days. B4 (startup) and B2 (prefetch) are left until a device profile exists; B8, B11, B13 were dropped by audit; B17 is not built.
+* **Release Cut:** version bumped to `3.78.0` via `npm run release:minor`.
+
+
+## 2026-10-24 — Calm Passport look for the Flutter app (v3.79.0)
+* **Decision:** Apply the approved Calm Passport design behind new Core-pack flag `enableCalmPassportUi` (default ON): paper/ink/teal tokens (light, dark, AMOLED), ink chips, dark floating bottom bar with labels, floating primary action, 5-tab trip bar (Spend, Balances, Chat, Plans, Hub) with crew avatars in the header and Activity under the bell.
+* **Trade-offs Accepted:** Per-screen layouts from the mockups (Spend hero cards, trips hero) are not rebuilt yet; this pass restyles through shared tokens and navigation. Flag OFF restores the previous look exactly.
+* **Release Cut:** version bumped to `3.79.0` via `npm run release:minor`.
+
+## 2026-10-24 — Calm Passport round 2 (v3.80.0)
+* **Decision:** Trip bar is Balances, Spend, Activity, Plans, Hub (trip opens on Balances); Chat opens from a Hub tile, People from the header crew avatars. Trips home gets a night-green live hero and date-tile rows; Spend gets a hero pair (Group spend, signed You get / You owe with Settle up); settle bar amount carries a minus sign. All behind `enableCalmPassportUi`.
+* **Trade-offs Accepted:** Signed owe/lent text on each expense row is not built yet (needs a per-row share calculation).
+* **Release Cut:** version bumped to `3.80.0` via `npm run release:minor`.
+
+## 2026-10-24 — Calm Passport fixes (v3.80.1)
+* **Decision:** Bottom bar height is only the bar; the primary action is a Scaffold floating button (`CalmAddButton`) so lists run to the bar. Plans shows one floating Add per pane (item, note, pass) and no in-page duplicates. Crew avatars removed from the trip header. Bar follows the theme (light bar in light theme).
+* **Trade-offs Accepted:** Plans passes pane hides its in-page Add pass only under Calm Passport; other looks keep it.
+* **Release Cut:** version bumped to `3.80.1` via `npm run release:patch`.

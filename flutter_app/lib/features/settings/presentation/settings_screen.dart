@@ -35,6 +35,7 @@ import '../../trips/presentation/widgets/share_trip_sheet.dart';
 import '../application/settings_data.dart';
 import '../../trips/presentation/widgets/home_dock.dart';
 import 'settings_widgets.dart';
+import '../../../shared/theme/app_colors.dart';
 
 final backupServiceProvider = Provider<BackupService>(
   (ref) => BackupService(
@@ -227,7 +228,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsSegmentedTile<HapticsLevel>(
           key: const Key('settings-haptics'),
           icon: Icons.vibration_rounded,
-          iconColor: const Color(0xFF8B3CF7),
+          iconColor: AppColors.accentViolet,
           title: 'Haptics',
           subtitle: switch (r.watch(hapticsLevelPrefProvider)) {
             HapticsLevel.all => 'Every tap',
@@ -335,7 +336,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     SettingsSwitchTile(
       key: const Key('settings-pass-reminders'),
       icon: Icons.flight_takeoff_rounded,
-      iconColor: const Color(0xFF8B3CF7),
+      iconColor: AppColors.accentViolet,
       title: 'Travel pass reminders',
       subtitle: 'A reminder 24 hours and 3 hours before flights and trains',
       value: r.watch(passRemindersEnabledProvider),
@@ -367,7 +368,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     SettingsTile(
       key: const Key('settings-import'),
       icon: Icons.upload_rounded,
-      iconColor: const Color(0xFFE8890C),
+      iconColor: AppColors.budgetWarn,
       title: 'Restore backup',
       subtitle: 'Adds the trips in a backup file as new trips',
       onTap: _import,
@@ -386,7 +387,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       SettingsTile(
         key: const Key('settings-feature-request'),
         icon: Icons.lightbulb_outline_rounded,
-        iconColor: const Color(0xFFE8890C),
+        iconColor: AppColors.budgetWarn,
         title: 'Suggest a feature',
         onTap: () => context.push('/settings/feature-request'),
       ),
@@ -394,7 +395,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       SettingsTile(
         key: const Key('settings-seed-demo'),
         icon: Icons.auto_awesome_rounded,
-        iconColor: const Color(0xFF8B3CF7),
+        iconColor: AppColors.accentViolet,
         title: 'Seed Demo Trip',
         subtitle: 'Try the app with a sample trip, expenses and splits',
         onTap: _seedDemo,
@@ -423,7 +424,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsTile(
           key: const Key('settings-whats-new'),
           icon: Icons.auto_awesome_rounded,
-          iconColor: const Color(0xFF8B3CF7),
+          iconColor: AppColors.accentViolet,
           title: "What's new",
           onTap: () => _showChangelog(context),
         ),
@@ -511,7 +512,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsSwitchTile(
           key: const Key('settings-geotag'),
           icon: Icons.place_outlined,
-          iconColor: const Color(0xFFE8890C),
+          iconColor: AppColors.budgetWarn,
           title: 'Geotag expenses',
           subtitle: 'Save a place with each expense',
           value: r.watch(geotagExpensesPrefProvider),
@@ -569,7 +570,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsTile(
           key: const Key('settings-archived'),
           icon: Icons.archive_outlined,
-          iconColor: const Color(0xFF8B3CF7),
+          iconColor: AppColors.accentViolet,
           title: 'Archived Trips',
           subtitle: archived == 0 ? 'No archived trips' : '$archived archived',
           onTap: () => context.push('/settings/archived'),
@@ -732,7 +733,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       SettingsTile(
                         key: const Key('settings-open-display'),
                         icon: Icons.palette_outlined,
-                        iconColor: const Color(0xFF8B3CF7),
+                        iconColor: AppColors.accentViolet,
                         title: 'More display options',
                         subtitle: 'Contrast, motion, sound, default currency',
                         onTap: () => _open('Display and sound', _displayRows),

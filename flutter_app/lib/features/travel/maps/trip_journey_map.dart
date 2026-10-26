@@ -5,6 +5,7 @@ import '../../../core/platform/map_gateway.dart';
 import '../../../domain/logic/currency.dart';
 import '../../../domain/models/category.dart';
 import '../../../domain/models/expense.dart';
+import '../../../shared/theme/app_colors.dart';
 
 class TripJourneyMap extends ConsumerStatefulWidget {
   final List<Expense> expenses;
@@ -93,7 +94,7 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
 
     final routes = <MapRouteLine>[
       if (waypoints.length >= 2)
-        MapRouteLine(id: 'journey_path', coordinates: waypoints, color: const Color(0xFF2DD4E0), strokeWidth: 3.0),
+        MapRouteLine(id: 'journey_path', coordinates: waypoints, color: AppColors.accentCyan, strokeWidth: 3.0),
     ];
 
     final firstLoc = geotagged.first.location!;

@@ -1,12 +1,33 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/platform/motion.dart';
 import 'app_tokens.dart';
 import 'app_typography.dart';
 
 /// Bento chips: white pills; the selected chip flips to ink with a contrasting label (found by the Phase 12
 /// accessibility test that Material's default painted dark text on a dark fill).
 ChipThemeData _chipTheme(AppTokens t) {
+  if (t.calm) {
+    // Calm Passport: outlined surface pills; the selected chip fills with ink and its label flips to the ground.
+    final calmLabel = TextStyle(
+      color: WidgetStateColor.resolveWith((s) => s.contains(WidgetState.selected) ? t.bgPage : t.textPrimary),
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+    );
+    return ChipThemeData(
+      backgroundColor: t.bgSurface,
+      selectedColor: t.textPrimary,
+      side: WidgetStateBorderSide.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? BorderSide(color: t.textPrimary) : BorderSide(color: t.borderColor),
+      ),
+      shape: const StadiumBorder(),
+      labelStyle: calmLabel,
+      secondaryLabelStyle: calmLabel,
+      checkmarkColor: t.bgPage,
+    );
+  }
   // Bento chips: white pills; a selected chip takes the lilac tone (same as the nav's selected pill) and the label
   // stays ink in every state, so contrast never depends on which style Material picks (ChoiceChip reads
   // secondaryLabelStyle, the others labelStyle).
@@ -26,6 +47,29 @@ OutlineInputBorder _inputBorder(AppTokens t, Color color, [double width = 1]) =>
   borderRadius: BorderRadius.circular(t.radiusSm + 4), // 18, Horizon field radius
   borderSide: BorderSide(color: color, width: width),
 );
+
+/// The platform's own page transition, except that with Reduce motion on (the app setting or the phone's "remove
+/// animations") a page fades in instead of zooming or sliding. iOS keeps the Cupertino slide: it carries the
+/// swipe-back gesture, and iOS itself already softens it under Reduce Motion.
+class ReduceMotionPageTransitionsBuilder extends PageTransitionsBuilder {
+  const ReduceMotionPageTransitionsBuilder([this.inner = const ZoomPageTransitionsBuilder()]);
+
+  final PageTransitionsBuilder inner;
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (AppMotion.reduce || MediaQuery.disableAnimationsOf(context)) {
+      return FadeTransition(opacity: animation, child: child);
+    }
+    return inner.buildTransitions<T>(route, context, animation, secondaryAnimation, child);
+  }
+}
 
 /// Single builder for light / dark / AMOLED so the web-app look (index.css) stays in one place.
 ThemeData _build(AppTokens t, Brightness brightness) {
@@ -48,6 +92,16 @@ ThemeData _build(AppTokens t, Brightness brightness) {
       error: t.colorDanger,
     ),
     textTheme: textTheme,
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: ReduceMotionPageTransitionsBuilder(),
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.linux: ReduceMotionPageTransitionsBuilder(),
+        TargetPlatform.windows: ReduceMotionPageTransitionsBuilder(),
+        TargetPlatform.fuchsia: ReduceMotionPageTransitionsBuilder(),
+      },
+    ),
     extensions: [t],
     // Web header is a teal gradient with light text; AppBar stays transparent over [AppGradientHeader].
     appBarTheme: AppBarTheme(
@@ -110,7 +164,8 @@ ThemeData _build(AppTokens t, Brightness brightness) {
       foregroundColor: t.ctaFg,
       elevation: 4,
       // A pill, not a circle: the extended "Add expense" button carries a label and must grow with it.
-      shape: const StadiumBorder(),
+      // Calm Passport: a soft square (20px) like the mockup's ink "+" key.
+      shape: t.calm ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)) : const StadiumBorder(),
       extendedPadding: const EdgeInsets.symmetric(horizontal: 20),
     ),
     navigationBarTheme: NavigationBarThemeData(
@@ -160,8 +215,8 @@ class AppTheme {
   static ThemeData amoled() => amoledTheme;
 
   /// Darker text and stronger borders on the same surfaces (Settings > Appearance > High contrast).
-  static ThemeData highContrastLight() => _build(
-    AppTokens.light.copyWith(
+  static ThemeData highContrastLight({bool calm = false}) => _build(
+    (calm ? AppTokens.calmLight : AppTokens.light).copyWith(
       textPrimary: const Color(0xFF000000),
       textSecondary: const Color(0xFF1F2933),
       textMuted: const Color(0xFF3A4450),
@@ -169,8 +224,8 @@ class AppTheme {
     ),
     Brightness.light,
   );
-  static ThemeData highContrastDark() => _build(
-    AppTokens.dark.copyWith(
+  static ThemeData highContrastDark({bool calm = false}) => _build(
+    (calm ? AppTokens.calmDark : AppTokens.dark).copyWith(
       textPrimary: const Color(0xFFFFFFFF),
       textSecondary: const Color(0xFFE5E7EB),
       textMuted: const Color(0xFFC9CED6),
@@ -178,6 +233,11 @@ class AppTheme {
     ),
     Brightness.dark,
   );
+
+  /// Calm Passport (flag `enableCalmPassportUi`).
+  static ThemeData calmLight() => _build(AppTokens.calmLight, Brightness.light);
+  static ThemeData calmDark() => _build(AppTokens.calmDark, Brightness.dark);
+  static ThemeData calmAmoled() => _build(AppTokens.calmAmoled, Brightness.dark);
 
   static ThemeData get lightTheme => _build(AppTokens.light, Brightness.light);
   static ThemeData get darkTheme => _build(AppTokens.dark, Brightness.dark);

@@ -96,6 +96,9 @@ class Expense {
   final String? disputeNote;
   final bool isSettlement;
 
+  /// Set on a refund row: money returned to the payer for this expense (rides in itemized_config, no column).
+  final String? refundOfExpenseId;
+
   /// Kept in the list but out of every trip calculation (totals, charts, settlement): a personal expense.
   final bool excludeFromTotals;
   final int? settlementConfirmedAt;
@@ -131,6 +134,7 @@ class Expense {
     this.disputedByUserId,
     this.disputeNote,
     this.isSettlement = false,
+    this.refundOfExpenseId,
     this.excludeFromTotals = false,
     this.settlementConfirmedAt,
     this.settlementConfirmedByUserId,
@@ -166,6 +170,7 @@ class Expense {
     String? disputedByUserId,
     String? disputeNote,
     bool? isSettlement,
+    String? refundOfExpenseId,
     bool? excludeFromTotals,
     int? settlementConfirmedAt,
     String? settlementConfirmedByUserId,
@@ -202,6 +207,7 @@ class Expense {
       disputedByUserId: clearDispute ? null : (disputedByUserId ?? this.disputedByUserId),
       disputeNote: clearDispute ? null : (disputeNote ?? this.disputeNote),
       isSettlement: isSettlement ?? this.isSettlement,
+      refundOfExpenseId: refundOfExpenseId ?? this.refundOfExpenseId,
       excludeFromTotals: excludeFromTotals ?? this.excludeFromTotals,
       settlementConfirmedAt: settlementConfirmedAt ?? this.settlementConfirmedAt,
       settlementConfirmedByUserId: settlementConfirmedByUserId ?? this.settlementConfirmedByUserId,
@@ -239,6 +245,7 @@ class Expense {
       if (disputedByUserId != null) 'disputedByUserId': disputedByUserId,
       if (disputeNote != null) 'disputeNote': disputeNote,
       'isSettlement': isSettlement,
+      if (refundOfExpenseId != null) 'refundOfExpenseId': refundOfExpenseId,
       if (excludeFromTotals) 'excludeFromTotals': true,
       if (settlementConfirmedAt != null) 'settlementConfirmedAt': settlementConfirmedAt,
       if (settlementConfirmedByUserId != null) 'settlementConfirmedByUserId': settlementConfirmedByUserId,
@@ -283,6 +290,7 @@ class Expense {
       disputedByUserId: json['disputedByUserId'] as String?,
       disputeNote: json['disputeNote'] as String?,
       isSettlement: (json['isSettlement'] ?? json['isReimbursement'] ?? json['is_settlement']) as bool? ?? false,
+      refundOfExpenseId: json['refundOfExpenseId'] as String?,
       excludeFromTotals: json['excludeFromTotals'] as bool? ?? false,
       settlementConfirmedAt: (json['settlementConfirmedAt'] is String)
           ? DateTime.tryParse(json['settlementConfirmedAt'] as String)?.millisecondsSinceEpoch

@@ -52,6 +52,10 @@ import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
 import '../application/money_providers.dart';
 import 'conflict_sheet.dart';
+import 'widgets/balance_bars.dart';
+import 'widgets/compass_balance_widgets.dart';
+import '../../../core/flags/compass_flags.dart';
+import '../../trip_details/presentation/widgets/trip_get_started.dart';
 import 'widgets/add_expense_fab.dart';
 import 'widgets/spend_donut.dart';
 import 'widgets/expense_detail_sheet.dart';
@@ -74,6 +78,7 @@ import 'closeout_sheet.dart';
 import 'widgets/summary_extras.dart';
 import 'widgets/settlement_card.dart';
 import 'widgets/upi_payment_sheet.dart';
+import '../../../shared/theme/app_colors.dart';
 
 /// "₹1,200.00" -> ("₹1,200", ".00") so the decimals can be dimmed (MoneyText).
 (String, String?) _splitMoney(String formatted) {
@@ -137,17 +142,21 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
   Future<void> _settleAll(BuildContext context, List<Transfer> mine, String cur) async {
     final l10n = context.l10n;
     final total = mine.fold<double>(0, (a, t) => a + t.amount);
-    final ok = await ConfirmDialog.show(
-      context: context,
-      title: l10n.ledSettleAllTitle(mine.length),
-      message: l10n.ledSettleAllBody(formatMoney(context, total, cur)),
-      confirmLabel: l10n.ledSettleAllConfirm,
-    );
-    if (!ok || !context.mounted) return;
+    final undoOn = ref.read(flagProvider(('enableUndoSettlement', widget.tripId))).value ?? false;
+    // With Undo on, the snackbar below is the safety net; without it the dialog is the only one.
+    if (!undoOn) {
+      final ok = await ConfirmDialog.show(
+        context: context,
+        title: l10n.ledSettleAllTitle(mine.length),
+        message: l10n.ledSettleAllBody(formatMoney(context, total, cur)),
+        confirmLabel: l10n.ledSettleAllConfirm,
+      );
+      if (!ok) return;
+    }
+    if (!context.mounted) return;
     final repo = ref.read(expenseRepositoryProvider);
     final userId = ref.read(authStateProvider).userId ?? '';
     final date = todayDateString(ref.read(nowProvider)());
-    final undoOn = _flag(ref, 'enableUndoSettlement', widget.tripId);
     final me = ref.read(myMemberIdProvider(widget.tripId));
     final groups = ref.read(tripGroupsProvider(widget.tripId)).value ?? const <Group>[];
     final made = <String>[];
@@ -223,6 +232,13 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final trip = ref.watch(tripProvider(id)).value;
     final result = ref.watch(tripSettlementProvider(id));
     if (trip == null || result == null) return const SkeletonPage();
+    // A trip with no expenses has nothing to settle: show the start card, not an empty pass and settlement.
+    final loaded = ref.watch(tripExpensesProvider(id)).value;
+    if (loaded != null &&
+        ref.watch(compassFlagProvider((tripGetStartedFlag, id))) &&
+        !loaded.any((e) => e.deletedAt == null && !e.isSettlement)) {
+      return TripGetStarted(tripId: id);
+    }
     final cur = trip.baseCurrency;
     // The server only accepts this change from the trip owner or a superadmin (RLS), so only they get the switch;
     // for anyone else it would flip back on the next sync.
@@ -320,6 +336,10 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     // "Settled" is a fact about the whole trip (nobody owes anybody), never about one person's balance.
     final tripSettled = outstanding < 0.01;
     // Everyone square after there were payments: a small celebration, and a tap the moment it happens.
+    final compassMoney = ref.watch(compassFlagProvider((compassMoneyFlag, id)));
+    // Compass pages: say "settled" once (the pass stamp) and drop blocks that only repeat it.
+    final calm = ref.watch(compassFlagProvider((compassTripPagesFlag, id)));
+    final balanceBarsOn = _flag(ref, 'enableBalanceBars', id) || ref.watch(compassFlagProvider((compassMoneyFlag, id)));
     final celebrateOn = _flag(ref, 'enableSettledCelebration', id) && tripSettled && result.balances.isNotEmpty;
     final becameSettled = _wasSettled == false && tripSettled;
     _wasSettled = tripSettled;
@@ -385,6 +405,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
       for (final t in transfers)
         if (isMe(t.to)) t,
     ];
+    ref.watch(flagProvider(('enableUndoSettlement', id))); // loaded before Settle all reads it
     final settleAllOn = _flag(ref, 'enableSettleAll', id) && iAmIn && myPays.length >= 2;
     final timelineOn = _flag(ref, 'enableDailyTimeline', id);
     final allDays = spendByDay(ref.watch(tripExpensesProvider(id)).value ?? const <Expense>[]);
@@ -396,7 +417,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final budgetState = budgetStatus(totals.totalSpent, budget);
     final budgetColor = switch (budgetState.level) {
       BudgetLevel.over => tokens.colorDanger,
-      BudgetLevel.warn => const Color(0xFFE8890C),
+      BudgetLevel.warn => AppColors.budgetWarn,
       BudgetLevel.ok => tokens.colorSuccess,
     };
     final tripAccent = _flag(ref, 'enableTripAccent', id) ? ref.watch(tripAccentProvider(id)).value : null;
@@ -464,6 +485,11 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     }
 
     // One boarding-pass field: small tinted label over a bold value.
+    String stubMoney(double v) {
+      final f = formatMoney(context, v, cur);
+      return v.abs() >= 1000 ? f.replaceFirst(RegExp(r'[.,]\d{2}$'), '') : f;
+    }
+
     Widget field(String label, String value, {CrossAxisAlignment align = CrossAxisAlignment.start}) => Expanded(
       child: Column(
         crossAxisAlignment: align,
@@ -555,7 +581,10 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                         children: [
                           Text(
                             formatMoney(context, c.amount, cur),
-                            style: const TextStyle(fontWeight: FontWeight.w800),
+                            style: const TextStyle(
+                              fontFeatures: AppTypography.tabularFigures,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                           Text(
                             l10n.ledShareOfTotal(c.percentage.round()),
@@ -707,7 +736,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                     child: Text(
                       formatMoney(context, r.paid, cur),
                       textAlign: TextAlign.end,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                      style: const TextStyle(fontFeatures: AppTypography.tabularFigures, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ],
@@ -759,7 +788,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                     child: Text(
                       formatMoney(context, e.value, cur),
                       textAlign: TextAlign.end,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                      style: const TextStyle(fontFeatures: AppTypography.tabularFigures, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ],
@@ -817,7 +846,10 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                         children: [
                           Text(
                             formatMoney(context, c.amount, cur),
-                            style: const TextStyle(fontWeight: FontWeight.w800),
+                            style: const TextStyle(
+                              fontFeatures: AppTypography.tabularFigures,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                           Text(
                             l10n.ledShareOfTotal(c.percentage.round()),
@@ -884,7 +916,10 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                         child: Text(
                           formatMoney(context, d.total, cur),
                           textAlign: TextAlign.end,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
+                          style: const TextStyle(
+                            fontFeatures: AppTypography.tabularFigures,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
@@ -920,7 +955,8 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     // The Summary in two lists so a wide screen can show them side by side (flag `enableSummaryTwoPane`).
     final topChildren = <Widget>[
       const LastSyncedCaption(),
-      if (upgradesOn) SummaryAttentionBar(tripId: id, onTransfers: () => setState(() => _open.add('transfers'))),
+      if (upgradesOn && !(calm && tripSettled))
+        SummaryAttentionBar(tripId: id, onTransfers: () => setState(() => _open.add('transfers'))),
       if (todayOn)
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
@@ -990,7 +1026,8 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           ),
         ),
       // Gone once everything is settled: nothing is left to prompt (Close out trip stays in the chips above).
-      if (closeoutOn && !tripSettled)
+      // Compass Balances drops this yellow checklist card; Close out trip stays in the chips above.
+      if (closeoutOn && !tripSettled && !compassMoney)
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: BentoTile(
@@ -1050,7 +1087,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             ),
           ),
         ),
-      if (celebrateOn && totals.totalSpent > 0)
+      if (celebrateOn && totals.totalSpent > 0 && !calm)
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: BentoTile(
@@ -1127,7 +1164,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             ),
           ),
         ),
-      // 1. Hero boarding pass: what is owed, stamped SETTLED or NOT SETTLED.
+      // 1. Hero boarding pass: what is owed, stamped SETTLED or NOT SETTLED (flips to You paid / Your share).
       Padding(
         key: const Key('sticky-balance'),
         padding: const EdgeInsets.only(bottom: 20),
@@ -1135,19 +1172,37 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           on: flipOn,
           back: () {
             final paid = spend.paid[mine] ?? 0.0, share = spend.share[mine] ?? 0.0;
-            final diff = double.parse((paid - share).toStringAsFixed(2));
-            final even = diff.abs() < 0.01;
+            final before = double.parse((paid - share).toStringAsFixed(2));
+            // Calm pages: the third cell is what is really still due (recorded payments included), in plain words.
+            final net = calm ? double.parse(myNet.toStringAsFixed(2)) : before;
+            final shown = calm ? net : before;
+            final even = shown.abs() < 0.01;
+            final moved = double.parse((net - before).toStringAsFixed(2));
+            final groupDiff = myGroup?.balance ?? 0.0;
             return PassBack(
               title: trip.name,
               eyebrow: l10n.ledYourShare,
               chipLabel: l10n.ledPassTitle,
               paid: formatMoney(context, paid, cur),
               share: formatMoney(context, share, cur),
-              diff: '${diff > 0.005 ? '+' : (diff < -0.005 ? '-' : '')}${formatMoney(context, diff.abs(), cur)}',
-              diffColor: even ? tokens.textPrimary : (diff > 0 ? tokens.colorSuccess : tokens.colorDanger),
-              why: even ? l10n.ledPaidEven : (diff > 0 ? l10n.ledPaidMore : l10n.ledPaidLess),
-              labels: (l10n.ledYouPaid, l10n.ledYourShare, l10n.ledDifference),
-              explainLabel: l10n.ledExplainTitle,
+              diff: '${shown > 0.005 ? '+' : (shown < -0.005 ? '-' : '')}${formatMoney(context, shown.abs(), cur)}',
+              diffColor: even ? tokens.textPrimary : (shown > 0 ? tokens.colorSuccess : tokens.colorDanger),
+              why: even ? l10n.ledPaidEven : (before > 0 ? l10n.ledPaidMore : l10n.ledPaidLess),
+              labels: (
+                l10n.ledYouPaid,
+                l10n.ledYourShare,
+                calm ? (even ? l10n.ledNetSquare : (shown > 0 ? l10n.ledNetOwed : l10n.ledNetOwe)) : l10n.ledDifference,
+              ),
+              explainLabel: calm ? l10n.ledHowWorked : l10n.ledExplainTitle,
+              settlementsNote: calm && moved.abs() >= 0.01
+                  ? l10n.ledSettlementsSoFar('${moved > 0 ? '+' : '-'}${formatMoney(context, moved.abs(), cur)}')
+                  : null,
+              groupNote: calm && myGroup != null && groupDiff.abs() >= 0.01
+                  ? (groupDiff > 0 ? l10n.ledGroupNoteOwed : l10n.ledGroupNoteOwes)(
+                      myGroup.name,
+                      formatMoney(context, groupDiff.abs(), cur),
+                    )
+                  : null,
               onExplain: _flag(ref, 'enableBalanceExplainer', id)
                   ? () => _showBalanceExplainer(
                       context,
@@ -1218,11 +1273,20 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                   flex: 5,
                   child: Row(
                     children: [
-                      field(l10n.expTotalSpent, formatMoney(context, totals.totalSpent, cur)),
-                      const SizedBox(width: 12),
-                      field(l10n.expPerPerson, formatMoney(context, totals.averageCost, cur)),
-                      const SizedBox(width: 12),
-                      field(l10n.ledHeroOpen, '${result.transfers.length}'),
+                      if (calm) ...[
+                        // Three questions: how big, how far along, what is left. Whole rupees; paise stay on the hero.
+                        field(l10n.ledStubSpent, stubMoney(totals.totalSpent)),
+                        const SizedBox(width: 12),
+                        field(l10n.ledStubSettled, stubMoney(settledSoFar)),
+                        const SizedBox(width: 12),
+                        field(l10n.ledStubPending, l10n.ledStubPayments(result.transfers.length)),
+                      ] else ...[
+                        field(l10n.expTotalSpent, formatMoney(context, totals.totalSpent, cur)),
+                        const SizedBox(width: 12),
+                        field(l10n.expPerPerson, formatMoney(context, totals.averageCost, cur)),
+                        const SizedBox(width: 12),
+                        field(l10n.ledHeroOpen, '${result.transfers.length}'),
+                      ],
                     ],
                   ),
                 ),
@@ -1269,7 +1333,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           ),
         ),
       // Settlement progress, like a goal: how much of what was owed is already paid.
-      if (progressTotal > 0.005)
+      if (progressTotal > 0.005 && !(calm && tripSettled))
         Padding(
           key: const Key('settle-progress'),
           padding: const EdgeInsets.only(bottom: 20),
@@ -1305,6 +1369,8 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         l10n.ledWhoPays,
         subtitle: allEven ? l10n.ledAllSettled : l10n.ledProgressLeft(transfers.length),
         [
+          if (balanceBarsOn && !allEven)
+            BalanceBars(balances: result.balances, format: (v) => formatMoney(context, v, cur)),
           if (canToggle)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -1370,19 +1436,29 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
               Padding(
                 key: Key('transfer-$i'),
                 padding: EdgeInsets.only(bottom: upgradesOn ? 0 : 14),
-                child: LuggageStubTile(
-                  tone: isMe(t.from) ? BentoTone.peach : (isMe(t.to) ? BentoTone.mint : toneFor(t.from)),
-                  badge: isMe(t.from) ? l10n.ledYouPay : (isMe(t.to) ? l10n.ledPaysYou : null),
-                  fromName: t.fromLabel,
-                  toName: t.toLabel,
-                  fromLabel: l10n.ledFrom,
-                  toLabel: l10n.ledTo,
-                  caption: l10n.ledTransfer(t.fromLabel, t.toLabel),
-                  amountText: formatMoney(context, t.amount, cur),
-                  settleLabel: l10n.ledSettle,
-                  settleKey: Key('settle-$i'),
-                  onSettle: () => _settle(context, t),
-                ),
+                child: compassMoney
+                    ? CompassTransferRow(
+                        from: t.fromLabel,
+                        to: t.toLabel,
+                        amount: formatMoney(context, t.amount, cur),
+                        actionLabel: l10n.ledSettle,
+                        actionKey: Key('settle-$i'),
+                        primary: isMe(t.from),
+                        onAction: () => _settle(context, t),
+                      )
+                    : LuggageStubTile(
+                        tone: isMe(t.from) ? BentoTone.peach : (isMe(t.to) ? BentoTone.mint : toneFor(t.from)),
+                        badge: isMe(t.from) ? l10n.ledYouPay : (isMe(t.to) ? l10n.ledPaysYou : null),
+                        fromName: t.fromLabel,
+                        toName: t.toLabel,
+                        fromLabel: l10n.ledFrom,
+                        toLabel: l10n.ledTo,
+                        caption: l10n.ledTransfer(t.fromLabel, t.toLabel),
+                        amountText: formatMoney(context, t.amount, cur),
+                        settleLabel: l10n.ledSettle,
+                        settleKey: Key('settle-$i'),
+                        onSettle: () => _settle(context, t),
+                      ),
               ),
               if (upgradesOn)
                 Padding(
@@ -1524,7 +1600,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                         decoration: BoxDecoration(
                           color: tokens.tones[BentoTone.butter].bg,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFFFF7A00).withValues(alpha: 0.3)),
+                          border: Border.all(color: AppColors.accentOrange.withValues(alpha: 0.3)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1535,7 +1611,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.8,
-                                color: Color(0xFFFF7A00),
+                                color: AppColors.accentOrange,
                               ),
                             ),
                             const SizedBox(height: 3),
@@ -1788,6 +1864,42 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                   : const SizedBox.shrink(),
             ),
           ),
+        if (compassMoney && myPays.isNotEmpty)
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 12,
+            child: CompassSettleBar(
+              label: 'You owe',
+              amount:
+                  '${tokens.calm ? '− ' : ''}${formatMoney(context, myPays.fold<double>(0, (a, t) => a + t.amount), cur)}',
+              onSettle: () => AppSheet.show<void>(
+                context: context,
+                title: 'Your payments',
+                builder: (sheetCtx) => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final (i, t) in myPays.indexed)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: CompassTransferRow(
+                          key: Key('bar-pay-$i'),
+                          from: t.fromLabel,
+                          to: t.toLabel,
+                          amount: formatMoney(context, t.amount, cur),
+                          actionLabel: l10n.ledSettle,
+                          primary: true,
+                          onAction: () {
+                            Navigator.of(sheetCtx).pop();
+                            unawaited(_settle(context, t));
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         AddExpenseFab(tripId: id),
       ],
     );
@@ -1949,7 +2061,7 @@ class _PassBanner extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF0B1F33), Color(0xFF123A57), Color(0xFF1F6F78)],
+                  colors: [AppColors.heroNavyDeep, AppColors.heroNavy, AppColors.heroTeal],
                 ),
               ),
             ),
@@ -1957,7 +2069,7 @@ class _PassBanner extends StatelessWidget {
           if (coverUrl != null && coverUrl!.isNotEmpty)
             Positioned.fill(
               child: Image(
-                image: CachedPhotoProvider(coverUrl!),
+                image: cachedPhotoSized(context, coverUrl!, logicalWidth: MediaQuery.sizeOf(context).width),
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => const SizedBox.shrink(),
               ),
@@ -2235,40 +2347,78 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
     final shareOn = ref.watch(flagProvider(('enableWhatsAppSettlementShare', widget.tripId))).value ?? false;
     final roundingOn = ref.watch(flagProvider(('enableSettleRounding', widget.tripId))).value ?? true;
     final round = roundDownToClean(t.amount);
+    final calm = ref.watch(compassFlagProvider((compassTripPagesFlag, widget.tripId)));
+    final tk = context.tokens;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AppAvatar(name: t.fromLabel, size: 44),
-              const SizedBox(width: 12),
-              Icon(Icons.arrow_forward_rounded, color: context.tokens.textMuted),
-              const SizedBox(width: 12),
-              AppAvatar(name: t.toLabel, size: 44),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            partial ? l10n.ledSettlePartialTitle : l10n.ledSettleTitle,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 4),
-          Text(l10n.ledTransfer(t.fromLabel, t.toLabel), textAlign: TextAlign.center),
-          Text(partial ? l10n.ledSettlePartialBody : l10n.ledSettleBody, key: const Key('settle-body')),
-          const SizedBox(height: 12),
-          AppTextField(
-            key: const Key('settle-amount'),
-            controller: _amount,
-            autofocus: widget.focusAmount,
-            label: l10n.ledAmount,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (_) => setState(() => _error = null),
-          ),
+          if (calm) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SettlePerson(name: t.fromLabel, caption: 'Pays'),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Icon(Icons.arrow_forward_rounded, color: tk.textMuted),
+                ),
+                _SettlePerson(name: t.toLabel, caption: 'Receives'),
+              ],
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              key: const Key('settle-amount'),
+              controller: _amount,
+              autofocus: widget.focusAmount,
+              textAlign: TextAlign.center,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              style: AppTypography.moneyDisplay(
+                fontSize: 40,
+                color: tk.textPrimary,
+              ).copyWith(fontWeight: FontWeight.w800),
+              decoration: InputDecoration(
+                prefixText: '${getCurrencySymbol(widget.currency)} ',
+                border: InputBorder.none,
+                helperText: partial
+                    ? l10n.ledRemaining(formatMoney(context, t.amount - v, widget.currency))
+                    : 'Edit to pay part of it',
+                helperStyle: TextStyle(color: tk.textSecondary),
+              ),
+              onChanged: (_) => setState(() => _error = null),
+            ),
+          ] else ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AppAvatar(name: t.fromLabel, size: 44),
+                const SizedBox(width: 12),
+                Icon(Icons.arrow_forward_rounded, color: context.tokens.textMuted),
+                const SizedBox(width: 12),
+                AppAvatar(name: t.toLabel, size: 44),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              partial ? l10n.ledSettlePartialTitle : l10n.ledSettleTitle,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 4),
+            Text(l10n.ledTransfer(t.fromLabel, t.toLabel), textAlign: TextAlign.center),
+            Text(partial ? l10n.ledSettlePartialBody : l10n.ledSettleBody, key: const Key('settle-body')),
+            const SizedBox(height: 12),
+            AppTextField(
+              key: const Key('settle-amount'),
+              controller: _amount,
+              autofocus: widget.focusAmount,
+              label: l10n.ledAmount,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              onChanged: (_) => setState(() => _error = null),
+            ),
+          ],
           if (roundingOn && round != null && !(v != null && (v - round).abs() < 0.005))
             Align(
               alignment: Alignment.centerLeft,
@@ -2281,7 +2431,7 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
                 child: Text(l10n.settleRound(formatMoney(context, round, widget.currency))),
               ),
             ),
-          if (partial)
+          if (partial && !calm)
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
@@ -2289,69 +2439,154 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
                 key: const Key('settle-remaining'),
               ),
             ),
-          if (dateNote) ...[
-            const SizedBox(height: 8),
-            OutlinedButton(key: const Key('settle-date'), onPressed: _pickDate, child: Text('${l10n.ledDate}: $_date')),
-            const SizedBox(height: 8),
-            AppTextField(key: const Key('settle-note'), controller: _note, label: l10n.ledNote),
-          ],
-          if (upiOn) ...[
-            const SizedBox(height: 8),
-            AppTextField(
-              key: const Key('settle-upi'),
-              controller: _upi,
-              label: l10n.upiHint,
-              onChanged: (_) => setState(() => _error = null),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: AppButton(
-                    key: const Key('settle-upi-pay'),
-                    label: l10n.upiPay,
-                    variant: AppButtonVariant.secondary,
-                    onPressed: _payUpi,
-                  ),
+          if (calm) ...[
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  _error!,
+                  key: const Key('settle-error'),
+                  style: TextStyle(color: context.tokens.colorDanger),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: AppButton(
-                    key: const Key('settle-upi-apps'),
-                    label: 'Apps & QR',
-                    icon: Icons.qr_code_2_rounded,
-                    variant: AppButtonVariant.secondary,
-                    onPressed: _openUpiSheet,
-                  ),
-                ),
-              ],
-            ),
-          ],
-          if (shareOn) ...[
-            const SizedBox(height: 8),
-            AppButton(
-              key: const Key('settle-share'),
-              label: l10n.shareCard,
-              variant: AppButtonVariant.secondary,
-              onPressed: _share,
-            ),
-          ],
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                _error!,
-                key: const Key('settle-error'),
-                style: TextStyle(color: context.tokens.colorDanger),
               ),
+            const SizedBox(height: 12),
+            AppButton(
+              key: const Key('settle-confirm'),
+              label: partial ? l10n.ledMarkPartial : l10n.ledMarkSettled,
+              isLoading: _busy,
+              onPressed: _busy ? null : _submit,
             ),
-          const SizedBox(height: 12),
-          AppButton(
-            key: const Key('settle-confirm'),
-            label: partial ? l10n.ledMarkPartial : l10n.ledMarkSettled,
-            isLoading: _busy,
-            onPressed: _busy ? null : _submit,
-          ),
+            if (dateNote || upiOn || shareOn)
+              Theme(
+                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  key: const Key('settle-more'),
+                  tilePadding: EdgeInsets.zero,
+                  title: const Text('More options'),
+                  children: [
+                    if (dateNote) ...[
+                      const SizedBox(height: 8),
+                      OutlinedButton(
+                        key: const Key('settle-date'),
+                        onPressed: _pickDate,
+                        child: Text('${l10n.ledDate}: $_date'),
+                      ),
+                      const SizedBox(height: 8),
+                      AppTextField(key: const Key('settle-note'), controller: _note, label: l10n.ledNote),
+                    ],
+                    if (upiOn) ...[
+                      const SizedBox(height: 8),
+                      AppTextField(
+                        key: const Key('settle-upi'),
+                        controller: _upi,
+                        label: l10n.upiHint,
+                        onChanged: (_) => setState(() => _error = null),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: AppButton(
+                              key: const Key('settle-upi-pay'),
+                              label: l10n.upiPay,
+                              variant: AppButtonVariant.secondary,
+                              onPressed: _payUpi,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: AppButton(
+                              key: const Key('settle-upi-apps'),
+                              label: 'Apps & QR',
+                              icon: Icons.qr_code_2_rounded,
+                              variant: AppButtonVariant.secondary,
+                              onPressed: _openUpiSheet,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    if (shareOn) ...[
+                      const SizedBox(height: 8),
+                      AppButton(
+                        key: const Key('settle-share'),
+                        label: l10n.shareCard,
+                        variant: AppButtonVariant.secondary,
+                        onPressed: _share,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+          ] else ...[
+            if (dateNote) ...[
+              const SizedBox(height: 8),
+              OutlinedButton(
+                key: const Key('settle-date'),
+                onPressed: _pickDate,
+                child: Text('${l10n.ledDate}: $_date'),
+              ),
+              const SizedBox(height: 8),
+              AppTextField(key: const Key('settle-note'), controller: _note, label: l10n.ledNote),
+            ],
+            if (upiOn) ...[
+              const SizedBox(height: 8),
+              AppTextField(
+                key: const Key('settle-upi'),
+                controller: _upi,
+                label: l10n.upiHint,
+                onChanged: (_) => setState(() => _error = null),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      key: const Key('settle-upi-pay'),
+                      label: l10n.upiPay,
+                      variant: AppButtonVariant.secondary,
+                      onPressed: _payUpi,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: AppButton(
+                      key: const Key('settle-upi-apps'),
+                      label: 'Apps & QR',
+                      icon: Icons.qr_code_2_rounded,
+                      variant: AppButtonVariant.secondary,
+                      onPressed: _openUpiSheet,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (shareOn) ...[
+              const SizedBox(height: 8),
+              AppButton(
+                key: const Key('settle-share'),
+                label: l10n.shareCard,
+                variant: AppButtonVariant.secondary,
+                onPressed: _share,
+              ),
+            ],
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  _error!,
+                  key: const Key('settle-error'),
+                  style: TextStyle(color: context.tokens.colorDanger),
+                ),
+              ),
+            const SizedBox(height: 12),
+            AppButton(
+              key: const Key('settle-confirm'),
+              label: partial ? l10n.ledMarkPartial : l10n.ledMarkSettled,
+              isLoading: _busy,
+              onPressed: _busy ? null : _submit,
+            ),
+          ],
         ],
       ),
     );
@@ -2472,4 +2707,33 @@ void showSettleSnack(ScaffoldMessengerState messenger, String message, VoidCallb
             ),
     ),
   );
+}
+
+/// A person in the Compass settle sheet header: avatar, first name and whether they pay or receive.
+class _SettlePerson extends StatelessWidget {
+  const _SettlePerson({required this.name, required this.caption});
+
+  final String name;
+  final String caption;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return SizedBox(
+      width: 110,
+      child: Column(
+        children: [
+          AppAvatar(name: name, size: 52),
+          const SizedBox(height: 6),
+          Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontWeight: FontWeight.w700, color: t.textPrimary),
+          ),
+          Text(caption, style: TextStyle(fontSize: 12, color: t.textSecondary)),
+        ],
+      ),
+    );
+  }
 }

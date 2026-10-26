@@ -108,7 +108,12 @@ void main() {
       final list = find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable));
       await tester.scrollUntilVisible(key('section-analytics'), 300, scrollable: list);
       expect(key('plan-card'), findsNothing);
-      await tester.ensureVisible(key('section-analytics'));
+      // Scroll the header clear of the sticky bottom bar before tapping it.
+      await tester.drag(
+        find.descendant(of: key('ledger-list'), matching: find.byType(Scrollable)),
+        const Offset(0, -200),
+      );
+      await tester.pump();
       await tester.tap(key('section-analytics'));
       await settle(tester, rounds: 8);
       expect(key('plan-card'), findsOneWidget);

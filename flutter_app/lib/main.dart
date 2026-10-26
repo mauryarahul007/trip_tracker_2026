@@ -12,6 +12,7 @@ import 'core/platform/haptics.dart';
 import 'core/platform/motion.dart';
 import 'core/settings/app_settings.dart';
 import 'core/version/version_gate.dart';
+import 'core/flags/compass_flags.dart' show calmPassportProvider;
 import 'data/providers.dart';
 import 'app/router.dart';
 import 'core/storage/prefs.dart';
@@ -22,6 +23,7 @@ import 'features/auth/presentation/app_lock_gate.dart';
 import 'app/sync_lifecycle.dart';
 import 'core/env/app_env.dart';
 import 'core/errors/error_boundary.dart';
+import 'core/errors/tab_error_boundary.dart';
 import 'core/logging/app_logger.dart';
 import 'core/logging/crash_reporter.dart';
 import 'core/telemetry/auto_bug_reporter.dart';
@@ -40,6 +42,8 @@ void main() {
       PaintingBinding.instance.imageCache
         ..maximumSizeBytes = 64 << 20
         ..maximumSize = 150;
+
+      installInPlaceErrorWidget(); // a tab that fails to build shows Retry in place, not a red screen
 
       // Forward Flutter framework UI errors to logger & crash reporter
       FlutterError.onError = (FlutterErrorDetails details) {
@@ -100,14 +104,20 @@ class TripTrackerApp extends ConsumerWidget {
         ref.watch(highContrastPrefProvider) && (ref.watch(flagProvider(('enableHighContrast', null))).value ?? true);
     AppFeedback.sound = ref.watch(soundFeedbackPrefProvider);
     AppFeedback.packOn = ref.watch(flagProvider(('enableFeedbackPack', null))).value ?? true;
+    // Calm Passport look (Ops Deck flag); OFF keeps the Bento colours.
+    final calm = ref.watch(calmPassportProvider);
     AppMotion.reduce =
         ref.watch(reduceMotionPrefProvider) && (ref.watch(flagProvider(('enableReduceMotion', null))).value ?? true);
 
     return MaterialApp.router(
       title: 'Trip Tracker',
       debugShowCheckedModeBanner: false,
-      theme: contrast ? AppTheme.highContrastLight() : AppTheme.light(),
-      darkTheme: contrast ? AppTheme.highContrastDark() : (amoled ? AppTheme.amoled() : AppTheme.dark()),
+      theme: contrast ? AppTheme.highContrastLight(calm: calm) : (calm ? AppTheme.calmLight() : AppTheme.light()),
+      darkTheme: contrast
+          ? AppTheme.highContrastDark(calm: calm)
+          : calm
+          ? (amoled ? AppTheme.calmAmoled() : AppTheme.calmDark())
+          : (amoled ? AppTheme.amoled() : AppTheme.dark()),
       themeMode: themeMode,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

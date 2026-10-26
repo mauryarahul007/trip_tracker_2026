@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../places/place_image_service.dart';
+import '../../../core/platform/motion.dart';
 
 class TripPhotoHero extends StatefulWidget {
   final String? destination;
@@ -55,7 +56,7 @@ class _TripPhotoHeroState extends State<TripPhotoHero> {
   @override
   Widget build(BuildContext context) {
     return AnimatedOpacity(
-      duration: const Duration(milliseconds: 350),
+      duration: AppMotion.of(context, const Duration(milliseconds: 350)),
       opacity: widget.isHidden ? 0.0 : 1.0,
       child: Container(
         height: widget.height,

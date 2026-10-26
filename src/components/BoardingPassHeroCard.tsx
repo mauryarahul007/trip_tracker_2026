@@ -30,6 +30,12 @@ export interface TravelerWallet {
   share: number;
 }
 
+// Whole units on the small stub (paise stay on the hero amount).
+const wholeMoney = (amount: number, symbol: string): string => {
+  const f = formatAmount(amount, symbol);
+  return Math.abs(amount) >= 1000 ? f.replace(/\.\d{2}$/, '') : f;
+};
+
 interface BoardingPassHeroCardProps {
   trip: Trip;
   currencySymbol: string;
@@ -51,6 +57,9 @@ interface BoardingPassHeroCardProps {
   travelerNames: string[];
   /** Most recent write across this trip's expenses/settlements, epoch ms. */
   lastUpdatedAt: number;
+  /** Trip money so far, shown in the front stub (enableCompassTripPages). Omitted = the older members / transfers stub. */
+  totalSpent?: number;
+  settledSoFar?: number;
 }
 
 // Style objects that don't depend on props/state -- hoisted to module scope
@@ -393,8 +402,11 @@ export function BoardingPassHeroCard({
   settledMemberCount,
   travelerNames,
   lastUpdatedAt,
+  totalSpent,
+  settledSoFar,
 }: BoardingPassHeroCardProps) {
   const isNewBack = useTripStore((s) => s.isFeatureEnabled('enableTravelerPassBack'));
+  const calmStub = useTripStore((s) => s.isFeatureEnabled('enableCompassTripPages', { tripId: trip.id }));
   const [isFlipped, setIsFlipped] = useState(false);
   // One-time cue on the front: the pass flips, and the back has your own balance.
   const [showFlipCue, dismissFlipCue] = useFeatureNudge('pass-flip-cue');
@@ -595,10 +607,19 @@ export function BoardingPassHeroCard({
 
           {/* Bottom Footer Stub */}
           <div className="bp-foot" style={S_FRONT_FOOT}>
-            <span>{balancesCount} members</span>
-            <span>
-              {transfers.length} transfer{transfers.length === 1 ? '' : 's'} left
-            </span>
+            {calmStub && totalSpent !== undefined && settledSoFar !== undefined ? (
+              <>
+                <span>Spent {wholeMoney(totalSpent, currencySymbol)} · Settled {wholeMoney(settledSoFar, currencySymbol)}</span>
+                <span>{transfers.length === 0 ? 'All paid' : `${transfers.length} payment${transfers.length === 1 ? '' : 's'} left`}</span>
+              </>
+            ) : (
+              <>
+                <span>{balancesCount} members</span>
+                <span>
+                  {transfers.length} transfer{transfers.length === 1 ? '' : 's'} left
+                </span>
+              </>
+            )}
             <span style={S_LINK_HINT}>
               ↻ Balance details
             </span>

@@ -1,3 +1,4 @@
+import { netAmount, refundsFor, refundableRemaining } from './utils/refunds';
 import React, { useEffect, useLayoutEffect, useRef, useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import { useTripStore, getTripNotificationRecipients, collectDirtyExpenseIds } from './store/tripStore';
@@ -1384,7 +1385,7 @@ export default function App() {
   }, [activeTripExpenses]);
 
   const totalSpent = useMemo(() => {
-    return nonSettlementExpenses.reduce((sum, e) => sum + e.amount, 0);
+    return nonSettlementExpenses.reduce((sum, e) => sum + netAmount(e), 0);
   }, [nonSettlementExpenses]);
 
   // Category breakdown calculations
@@ -1394,7 +1395,7 @@ export default function App() {
       totals[cat.id] = 0;
     });
     nonSettlementExpenses.forEach((exp) => {
-      totals[exp.category] = (totals[exp.category] || 0) + exp.amount;
+      totals[exp.category] = (totals[exp.category] || 0) + netAmount(exp);
     });
     return totals;
   }, [categories, nonSettlementExpenses]);
@@ -3318,6 +3319,27 @@ export default function App() {
                 ? () => void flagExpenseDispute(selectedReviewExpense.id)
                 : undefined
             }
+            onRecordRefund={
+              isFeatureEnabled('enableExpenseRefunds', { tripId: activeTrip?.id, userId: userId || undefined })
+                ? (amount) => {
+                    triggerHaptic('success');
+                    addExpense({
+                      title: `Refund: ${liveExpense.title}`,
+                      amount,
+                      currency: liveExpense.currency,
+                      category: liveExpense.category,
+                      date: new Date().toISOString().split('T')[0],
+                      paidBy: liveExpense.paidBy,
+                      splitMode: 'exact',
+                      splitMemberIds: [liveExpense.paidBy],
+                      splitConfig: { [liveExpense.paidBy]: amount },
+                      refundOfExpenseId: liveExpense.id,
+                    });
+                  }
+                : undefined
+            }
+            refunds={isFeatureEnabled('enableExpenseRefunds', { tripId: activeTrip?.id, userId: userId || undefined }) ? refundsFor(liveExpense.id, activeTripExpenses) : undefined}
+            refundable={refundableRemaining(liveExpense, activeTripExpenses)}
             onResolveDispute={
               isFeatureEnabled('enableExpenseDisputes', { tripId: activeTrip?.id, userId: userId || undefined })
                 ? () => void resolveExpenseDispute(selectedReviewExpense.id)

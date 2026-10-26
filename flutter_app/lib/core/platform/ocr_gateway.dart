@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 /// Abstract contract for OCR text recognition, allowing platform-native
 /// on-device MLKit / Tesseract integration while ensuring headless testability.
@@ -28,18 +30,28 @@ class FakeOcrGateway implements OcrGateway {
   Future<bool> isOcrSupported() async => supported;
 }
 
-/// Default implementation providing best-effort local OCR.
+/// On-device text recognition (Google ML Kit, Latin script) on Android and iOS. The photo never leaves the phone.
+/// Other platforms (web, desktop) report "not supported" and the modal falls back to pasted text.
 class DefaultOcrGateway implements OcrGateway {
   const DefaultOcrGateway();
 
+  static bool get _native =>
+      !kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
+
   @override
   Future<String> recognizeTextFromImage(String imagePath) async {
-    // Extensible hook for platform on-device OCR models
-    return '';
+    if (!_native) return '';
+    final recognizer = TextRecognizer();
+    try {
+      final result = await recognizer.processImage(InputImage.fromFilePath(imagePath));
+      return result.text;
+    } finally {
+      await recognizer.close();
+    }
   }
 
   @override
-  Future<bool> isOcrSupported() async => true;
+  Future<bool> isOcrSupported() async => _native;
 }
 
 /// Riverpod provider for [OcrGateway].

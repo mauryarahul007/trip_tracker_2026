@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **167** |
+| **Total Tracked** | **186** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **164** |
+| **✅ Shipped** | **183** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -226,6 +226,25 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-164** | Flutter: clearer trip header line | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b18b0eb (v3.68.3): behind enableTripHeaderActions. |
 | **FEAT-165** | Flutter: close-out card hidden once the trip is settled | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b18b0eb (v3.68.3): behind enableCloseoutPrompt. |
 | **FEAT-166** | Flutter: Confirm received button on settlement history rows | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b18b0eb (v3.68.3): behind enableSettlementConfirmation. |
+| **FEAT-168** | Compass trip bar, Trip hub and blank-trip start card (v3.72.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit e7373a7 (v3.72.0), all six flags default ON |
+| **FEAT-169** | Compass Activity tab with filters, Trip-tab menu (v3.73.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit ac91dcb (v3.73.0) |
+| **FEAT-170** | Compass follow-ups: Balances settle bar, Spend chips, Activity actions (v3.74.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4953f9b (v3.74.0), reuses Compass flags default ON |
+| **FEAT-171** | Compass chat, notes, checklist, settle sheet, calm Balances (v3.75.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit a9da495 (v3.75.0), flag enableCompassTripPages default ON |
+| **FEAT-172** | Receipt scan, chat reactions, trip polls, guest join (v3.76.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit f3df4c0 (v3.76.0); polls and guest flags default ON, reactions flag unchanged (OFF) |
+| **FEAT-173** | Record a refund on an expense (v3.77.0) | `general` | `claude-cli` | `claude-cli` | Shipped in commit 57860d8 (v3.77.0), flag enableExpenseRefunds default ON |
+| **FEAT-174** | Clearer settlement pass: Spent / Settled / Pending, You owe / You're owed (v3.77.1) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 9251b52 (v3.77.1), flag enableCompassTripPages default ON |
+| **FEAT-175** | Greyed Add expense on closed and archived trip cards (v3.77.3) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit f86e249 (v3.77.3), inside existing flags enableTripCardStack and enableTripCardQuickAdd |
+| **FEAT-176** | Full per-trip Activity log (enableTripActivityLog) | `ui-ux` | `agent` | `agent` | Commit f55130d |
+| **FEAT-177** | Activity rows open the exact chat message or expense; See in Activity | `ui-ux` | `agent` | `agent` | Commit 272b92e |
+| **FEAT-178** | Failed sync mark with per-row Retry, clearer conflict sheet (enableRowSyncRetry) | `sync` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
+| **FEAT-179** | Manual Sync button on home and trip headers | `sync` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
+| **FEAT-180** | Drafts: discard prompt, chat draft, wiped on sign-out (enablePersistentExpenseDraft) | `general` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
+| **FEAT-181** | Settle-up nudge banner on quiet trips (enableSettleNudge) | `ui-ux` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
+| **FEAT-182** | Freeze, Close and Settle all apply at once with Undo | `ui-ux` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
+| **FEAT-183** | Polish: reduce motion, tabular money, counting balances, a11y at 200% text, haptics policy | `ui-ux` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
+| **FEAT-184** | Speed and structure: photo decode at display size, RepaintBoundary, trip header in one place, Create trip on empty Balances | `performance` | `claude-cli` | `claude-cli` | Commit 9e9bc42 (v3.78.0) |
+| **FEAT-185** | Calm Passport look and 5-tab trip bar for the Flutter app (v3.79.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 05c0f68 (v3.79.0), flag enableCalmPassportUi default ON |
+| **FEAT-186** | Calm Passport round 2: Balances-first trip bar, live hero, Spend hero cards (v3.80.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 05ccff0 (v3.80.0), flag enableCalmPassportUi default ON |
 
 ---
 

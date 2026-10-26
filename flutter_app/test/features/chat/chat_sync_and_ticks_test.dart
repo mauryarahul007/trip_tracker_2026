@@ -127,6 +127,7 @@ void main() {
             myMemberIdProvider('trip-1').overrideWithValue('m1'),
             flagsRepositoryProvider.overrideWithValue(flags),
             dirtyIdsProvider.overrideWith((ref) => Stream.value(const <String>{})),
+            failedIdsProvider.overrideWith((ref) => Stream.value(const <String>{})),
           ],
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,

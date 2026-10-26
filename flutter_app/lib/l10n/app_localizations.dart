@@ -181,6 +181,84 @@ abstract class AppLocalizations {
   /// **'To pay'**
   String get ledToPay;
 
+  /// No description provided for @tripsStackAddClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Add expense · trip closed'**
+  String get tripsStackAddClosed;
+
+  /// No description provided for @tripsStackAddArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Add expense · trip archived'**
+  String get tripsStackAddArchived;
+
+  /// No description provided for @ledStubSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent'**
+  String get ledStubSpent;
+
+  /// No description provided for @ledStubSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled'**
+  String get ledStubSettled;
+
+  /// No description provided for @ledStubPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get ledStubPending;
+
+  /// No description provided for @ledStubPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =0{All paid} =1{1 payment} other{{n} payments}}'**
+  String ledStubPayments(int n);
+
+  /// No description provided for @ledNetOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re owed'**
+  String get ledNetOwed;
+
+  /// No description provided for @ledNetOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe'**
+  String get ledNetOwe;
+
+  /// No description provided for @ledNetSquare.
+  ///
+  /// In en, this message translates to:
+  /// **'Square'**
+  String get ledNetSquare;
+
+  /// No description provided for @ledSettlementsSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments already recorded move this by {amount}.'**
+  String ledSettlementsSoFar(String amount);
+
+  /// No description provided for @ledGroupNoteOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your group {group} is owed {amount} in total. This page shows only you.'**
+  String ledGroupNoteOwed(String group, String amount);
+
+  /// No description provided for @ledGroupNoteOwes.
+  ///
+  /// In en, this message translates to:
+  /// **'Your group {group} owes {amount} in total. This page shows only you.'**
+  String ledGroupNoteOwes(String group, String amount);
+
+  /// No description provided for @ledHowWorked.
+  ///
+  /// In en, this message translates to:
+  /// **'How is this worked out?'**
+  String get ledHowWorked;
+
   /// No description provided for @ledYouPaid.
   ///
   /// In en, this message translates to:
@@ -1357,6 +1435,24 @@ abstract class AppLocalizations {
   /// **'Discard'**
   String get syncDiscard;
 
+  /// No description provided for @discardChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes?'**
+  String get discardChangesTitle;
+
+  /// No description provided for @discardChangesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What you typed here has not been saved.'**
+  String get discardChangesBody;
+
+  /// No description provided for @discardKeepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get discardKeepEditing;
+
   /// No description provided for @createTripTitle.
   ///
   /// In en, this message translates to:
@@ -1993,6 +2089,12 @@ abstract class AppLocalizations {
   /// **'Pending sync'**
   String get rowSyncPending;
 
+  /// No description provided for @rowSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed. Tap to retry.'**
+  String get rowSyncFailed;
+
   /// No description provided for @rowConflict.
   ///
   /// In en, this message translates to:
@@ -2244,6 +2346,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save'**
   String get formSave;
+
+  /// No description provided for @formSaveAndAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and add another'**
+  String get formSaveAndAdd;
+
+  /// No description provided for @formAddFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'First add an expense.'**
+  String get formAddFirst;
+
+  /// No description provided for @formSavedAddNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. Add the next one.'**
+  String get formSavedAddNext;
 
   /// No description provided for @formSaving.
   ///
@@ -2808,6 +2928,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tip: tap a group to see its members or edit it.'**
   String get hintTapGroup;
+
+  /// No description provided for @settleNudgeText.
+  ///
+  /// In en, this message translates to:
+  /// **'You still owe {name} {amount} on {trip}'**
+  String settleNudgeText(String name, String amount, String trip);
+
+  /// No description provided for @settleNudgeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle up'**
+  String get settleNudgeAction;
+
+  /// No description provided for @settleNudgeDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide for 3 days'**
+  String get settleNudgeDismiss;
 
   /// No description provided for @ledNextPay.
   ///
@@ -3439,6 +3577,24 @@ abstract class AppLocalizations {
   /// **'Hold a saved filter to remove it'**
   String get filterSavedTip;
 
+  /// No description provided for @balanceBarsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is up, who is down'**
+  String get balanceBarsTitle;
+
+  /// No description provided for @balanceBarOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is owed {amount}'**
+  String balanceBarOwed(String name, String amount);
+
+  /// No description provided for @balanceBarOwes.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes {amount}'**
+  String balanceBarOwes(String name, String amount);
+
   /// No description provided for @ledYouPay.
   ///
   /// In en, this message translates to:
@@ -3598,8 +3754,14 @@ abstract class AppLocalizations {
   /// No description provided for @conflictBody.
   ///
   /// In en, this message translates to:
-  /// **'This expense changed on another device while you still had a local edit.'**
+  /// **'This expense was changed on another device while you also edited it here. Keep mine sends your edit and replaces theirs. Keep theirs drops your edit.'**
   String get conflictBody;
+
+  /// No description provided for @conflictSplitValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{mode}, {count, plural, =1{1 person} other{{count} people}}'**
+  String conflictSplitValue(String mode, int count);
 
   /// No description provided for @conflictKeepMine.
   ///
@@ -3630,6 +3792,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No conflicts to resolve.'**
   String get conflictEmpty;
+
+  /// No description provided for @conflictFieldAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get conflictFieldAmount;
+
+  /// No description provided for @conflictFieldDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get conflictFieldDate;
+
+  /// No description provided for @conflictFieldTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get conflictFieldTitle;
+
+  /// No description provided for @conflictFieldCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get conflictFieldCategory;
+
+  /// No description provided for @conflictFieldPaidBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid by'**
+  String get conflictFieldPaidBy;
+
+  /// No description provided for @conflictFieldSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Split'**
+  String get conflictFieldSplit;
+
+  /// No description provided for @conflictSameFields.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 other field is the same} other{{count} other fields are the same}}'**
+  String conflictSameFields(int count);
 
   /// No description provided for @upiPay.
   ///

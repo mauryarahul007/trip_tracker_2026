@@ -30,6 +30,7 @@ import '../../../shared/widgets/undo_snackbar.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../../trips/application/trips_providers.dart';
 import '../application/expenses_providers.dart';
+import '../../notifications/application/activity_focus.dart';
 import '../application/money_providers.dart';
 import 'closeout_sheet.dart';
 import 'conflict_sheet.dart';
@@ -37,9 +38,14 @@ import 'quick_add_sheet.dart';
 import 'trip_tools_sheet.dart';
 import 'widgets/expense_detail_sheet.dart';
 import 'widgets/expense_filter_sheet.dart';
+import '../../../core/flags/compass_flags.dart';
+import '../../trip_details/presentation/widgets/trip_get_started.dart';
 import 'widgets/add_expense_fab.dart';
+import 'widgets/compass_active_filters.dart';
+import 'widgets/compass_spend_summary.dart';
 import 'widgets/expense_row.dart';
 import 'widgets/expense_swipe.dart';
+import '../../../core/platform/motion.dart';
 
 const _pageSize = 50;
 const _compactPrefKey = 'tt-compact-ledger';
@@ -66,6 +72,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
 
   /// Days the user toggled away from the default (collapsed, like the web).
   final _expandedDays = <String>{};
+  // Compass spend opens each day the first time it is seen; Collapse all / Expand all and taps work after that.
+  final _seenDays = <String>{};
   final _hidden = <String>{}; // rows removed from view the instant they are swiped
 
   /// Wide windows show the selected expense in a side panel (board 08) instead of a bottom sheet.
@@ -100,6 +108,17 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     super.initState();
     _scroll.addListener(_onScroll);
     _compact = ref.read(sharedPreferencesProvider).getBool(_compactPrefKey) ?? false;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _consumeFocus());
+  }
+
+  /// An Activity row asked for this expense: open its detail once it is loaded.
+  void _consumeFocus() {
+    final f = ref.read(activityFocusProvider);
+    if (!mounted || f == null || f.kind != 'expense') return;
+    final e = (ref.read(tripExpensesProvider(id)).value ?? const <Expense>[]).where((x) => x.id == f.id).firstOrNull;
+    if (e == null) return;
+    ref.read(activityFocusProvider.notifier).set(null);
+    _openDetail(e);
   }
 
   @override
@@ -204,11 +223,17 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(activityFocusProvider, (_, _) => _consumeFocus());
+    ref.listen(tripExpensesProvider(id), (_, _) => _consumeFocus());
     final l10n = context.l10n;
     final tokens = context.tokens;
     final trip = ref.watch(tripProvider(id)).value;
     final all = ref.watch(tripExpensesProvider(id));
     if (trip == null || all.isLoading) return const SkeletonPage();
+    if (ref.watch(compassFlagProvider((tripGetStartedFlag, id))) &&
+        !(all.value ?? const <Expense>[]).any((e) => e.deletedAt == null && !e.isSettlement)) {
+      return TripGetStarted(tripId: id);
+    }
 
     final members = {for (final m in ref.watch(tripMembersProvider(id)).value ?? const <Member>[]) m.id: m};
     final categories = ref.watch(tripCategoriesProvider(id));
@@ -220,6 +245,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final isAdmin = ref.watch(isTripAdminProvider(id));
     final dirty = ref.watch(dirtyIdsProvider).value ?? const <String>{};
     final conflicts = ref.watch(conflictIdsProvider(id));
+    final failed = (ref.watch(flagProvider(('enableRowSyncRetry', id))).value ?? true)
+        ? (ref.watch(failedIdsProvider).value ?? const <String>{})
+        : const <String>{};
     final compactActive = _flag(ref, 'enableCompactLedgerView', id) && _compact;
     final quickChips = _flag(ref, 'enableExpenseQuickFilterChips', id);
     final personalOn = _flag(ref, 'enableExpenseExclusion', id);
@@ -229,8 +257,15 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final binOn = _flag(ref, 'enableRecycleBin', id);
 
     final shown = filtered.take(_visible).toList();
+    final compassSpend = ref.watch(compassFlagProvider((compassSpendFlag, id)));
     final dayGroups = groupByDay(shown.where(isActualExpense).toList());
     final settlementGroups = groupByDay(shown.where((e) => !isActualExpense(e)).toList());
+    // Only once the flag has really loaded: while it loads it reads as its default (ON) and would open every day.
+    if (ref.watch(flagProvider((compassSpendFlag, id))).value == true) {
+      for (final g in dayGroups) {
+        if (_seenDays.add(g.date)) _expandedDays.add(g.date);
+      }
+    }
     final allExpanded = dayGroups.isNotEmpty && dayGroups.every((g) => _expandedDays.contains(g.date));
 
     final settlement = ref.watch(tripSettlementProvider(id));
@@ -269,7 +304,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     // Desktop (board 08): rows become table rows with column headers.
     final wide = MediaQuery.sizeOf(context).width >= _kDetailPanelBreakpoint;
 
-    final tidyOn = _flag(ref, 'enableTidyExpenses', id);
+    // Compass spend uses the flat tile rows and day cards of the redesign (what the tidy flag already draws).
+    final tidyOn = _flag(ref, 'enableTidyExpenses', id) || compassSpend;
     Widget rowFor(Expense e, {required bool lastInGroup}) {
       if (wide) {
         return _TableRow(
@@ -288,10 +324,12 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         categories: categories,
         myMemberId: myMember,
         compact: compactActive,
-        colorRings: _flag(ref, 'enableCategoryColorRings', id),
+        colorRings:
+            _flag(ref, 'enableCategoryColorRings', id) || ref.watch(compassFlagProvider((compassSpendFlag, id))),
         tidy: tidyOn,
         isDirty: dirty.contains(e.id),
         isConflict: conflicts.contains(e.id),
+        onRetrySync: failed.contains(e.id) ? () => ref.read(retryRowSyncProvider)(e.id) : null,
         onTap: () => _openDetail(e),
       );
       // Bento: each expense is a rounded tile tinted by its category.
@@ -307,8 +345,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       if (!canManageExpense(e, isAdmin: isAdmin, userId: uid)) return body;
       return ExpenseSwipe(
         itemKey: ValueKey('swipe-${e.id}'),
-        onEdit: isActualExpense(e) ? () => _edit(e) : null,
-        onTogglePersonal: personalOn && isActualExpense(e) ? () => unawaited(_togglePersonal(e)) : null,
+        onEdit: isActualExpense(e) && e.refundOfExpenseId == null ? () => _edit(e) : null,
+        onTogglePersonal: personalOn && isActualExpense(e) && e.refundOfExpenseId == null
+            ? () => unawaited(_togglePersonal(e))
+            : null,
         isPersonal: e.excludeFromTotals,
         onDelete: () => unawaited(_delete(e)),
         child: body,
@@ -320,6 +360,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       SliverPersistentHeader headerFor(DayGroup g, {required bool expanded}) => SliverPersistentHeader(
         pinned: sticky && expanded,
         delegate: _DayHeader(
+          textScale: MediaQuery.textScalerOf(context).scale(1),
           date: g.date,
           label: _dayLabel(g.date, trip.startDate, l10n.expDayN),
           total: formatMoney(context, g.total, trip.baseCurrency),
@@ -365,6 +406,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (ref.watch(compassFlagProvider((compassSpendFlag, id))) || context.tokens.calm)
+            CompassSpendSummary(tripId: id),
+          if (ref.watch(compassFlagProvider((compassSpendFlag, id)))) CompassActiveFilters(tripId: id),
           if ((sync != null && !sync.idle) || chips.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -767,6 +811,7 @@ String _dayLabel(String date, String tripStart, String Function(int) dayN) {
 
 class _DayHeader extends SliverPersistentHeaderDelegate {
   _DayHeader({
+    required this.textScale,
     required this.date,
     required this.label,
     required this.total,
@@ -785,6 +830,7 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
   });
 
   final bool tidy;
+  final double textScale; // the header has a fixed height, so it grows with the user's text size
   final Color surface;
   final Color border;
   final String countText; // "3 expenses", tidy header only
@@ -800,7 +846,7 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
   final Color textColor;
   final Color mutedColor;
 
-  double get _h => tidy ? 64.0 : 48.0;
+  double get _h => (tidy ? 64.0 : 48.0) + (textScale - 1).clamp(0.0, 1.0) * 40;
 
   @override
   double get minExtent => _h;
@@ -845,7 +891,12 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(countText, style: TextStyle(fontSize: 12, color: mutedColor)),
+                        Text(
+                          countText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 12, color: mutedColor),
+                        ),
                       ],
                     ),
                   ),
@@ -918,6 +969,7 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
       old.count != count ||
       old.expanded != expanded ||
       old.tidy != tidy ||
+      old.textScale != textScale ||
       old.background != background;
 }
 
@@ -1019,7 +1071,11 @@ class _TableRow extends StatelessWidget {
                 child: Text(
                   formatMoney(context, expense.amount, baseCurrency),
                   textAlign: TextAlign.right,
-                  style: TextStyle(fontWeight: FontWeight.w800, color: t.textPrimary),
+                  style: TextStyle(
+                    fontFeatures: AppTypography.tabularFigures,
+                    fontWeight: FontWeight.w800,
+                    color: t.textPrimary,
+                  ),
                 ),
               ),
             ],
@@ -1051,7 +1107,7 @@ class _RunwayChip extends StatelessWidget {
           behavior: HitTestBehavior.opaque, // the touch area is the full 48 px row, the pill itself stays 36
           child: Center(
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
+              duration: AppMotion.of(context, const Duration(milliseconds: 180)),
               height: 36,
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 14),

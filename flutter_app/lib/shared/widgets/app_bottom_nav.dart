@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
+import '../theme/compass.dart';
 
 class AppNavItem {
   const AppNavItem({required this.icon, required this.label, this.badge = false, this.badgeKey});
@@ -24,6 +26,7 @@ class AppBottomNav extends StatelessWidget {
     this.forceDock,
     this.centerAction,
     this.centerLabel,
+    this.compass = false,
     super.key,
   });
 
@@ -31,6 +34,10 @@ class AppBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
   final bool? forceDock;
+
+  /// Compass look (flag `enableCompassNav`): every item shows its label, the selected one is teal with a top bar,
+  /// and the centre action is the orange Add button.
+  final bool compass;
 
   /// Round button between the two halves of the dock.
   final VoidCallback? centerAction;
@@ -43,6 +50,20 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Calm Passport theme (flag `enableCalmPassportUi`) wins over the Compass and Bento docks.
+    if (context.tokens.calm && _useDock) {
+      // The primary action is a floating button on the screen (see [CalmAddButton]), not a band in the bar.
+      return _CalmDock(items: items, currentIndex: currentIndex, onTap: onTap);
+    }
+    if (compass && _useDock) {
+      return _CompassDock(
+        items: items,
+        currentIndex: currentIndex,
+        onTap: onTap,
+        centerAction: centerAction,
+        centerLabel: centerLabel,
+      );
+    }
     return _useDock
         ? _Dock(
             items: items,
@@ -70,6 +91,276 @@ class _M3Bar extends StatelessWidget {
       selectedIndex: nav.currentIndex,
       onDestinationSelected: nav.onTap,
       destinations: [for (final it in nav.items) NavigationDestination(icon: _icon(it), label: it.label)],
+    );
+  }
+}
+
+/// Compass dock: floating pill, labels always visible, orange raised centre button.
+class _CompassDock extends StatelessWidget {
+  const _CompassDock({
+    required this.items,
+    required this.currentIndex,
+    required this.onTap,
+    this.centerAction,
+    this.centerLabel,
+  });
+
+  final List<AppNavItem> items;
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+  final VoidCallback? centerAction;
+  final String? centerLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+        child: DecoratedBox(
+          key: const Key('compass-dock'),
+          decoration: BoxDecoration(
+            color: t.bgSurface,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: t.borderColor),
+            boxShadow: t.shadowLg,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            child: Row(
+              children: [
+                for (var i = 0; i < items.length; i++) ...[
+                  if (centerAction != null && i == items.length ~/ 2)
+                    Semantics(
+                      button: true,
+                      label: centerLabel,
+                      child: InkWell(
+                        key: const Key('dock-center'),
+                        onTap: centerAction,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          width: 52,
+                          height: 52,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(color: t.sun, borderRadius: BorderRadius.circular(20)),
+                          child: Icon(Icons.add_rounded, color: t.onSun, size: 28),
+                        ),
+                      ),
+                    ),
+                  Expanded(
+                    child: _CompassItem(item: items[i], selected: i == currentIndex, onTap: () => onTap(i)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CompassItem extends StatelessWidget {
+  const _CompassItem({required this.item, required this.selected, required this.onTap});
+
+  final AppNavItem item;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final color = selected ? t.primaryAccent : t.textMuted;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: item.label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 52),
+          child: ExcludeSemantics(
+            child: Column(
+              mainAxisSize:
+                  MainAxisSize.min, // the dock sits in a loose-height slot: a max column would fill the screen
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: t.durationNormal,
+                  width: selected ? 22 : 0,
+                  height: 3,
+                  margin: const EdgeInsets.only(bottom: 3),
+                  decoration: BoxDecoration(color: t.primaryAccent, borderRadius: BorderRadius.circular(3)),
+                ),
+                IconTheme(
+                  data: IconThemeData(color: color, size: 22),
+                  child: _icon(item, color: color),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Calm Passport dock: a floating bar (light in light theme, dark in dark) where every item keeps its label and the selected one sits on a teal
+/// pill. Its height is just the bar: the screen's primary action floats over the content ([CalmAddButton]).
+class _CalmDock extends StatelessWidget {
+  const _CalmDock({required this.items, required this.currentIndex, required this.onTap});
+
+  final List<AppNavItem> items;
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final barBg = t.bgSurface;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+        child: DecoratedBox(
+          key: const Key('calm-dock'),
+          decoration: BoxDecoration(
+            color: barBg,
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: t.borderColor),
+            boxShadow: t.shadowLg,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                for (var i = 0; i < items.length; i++)
+                  Expanded(
+                    child: _CalmItem(item: items[i], selected: i == currentIndex, onTap: () => onTap(i)),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Calm Passport floating primary action (ink in light, teal in dark). Hand it to a Scaffold's
+/// `floatingActionButton` so it hovers over the content and reserves no space.
+class CalmAddButton extends StatelessWidget {
+  const CalmAddButton({required this.onTap, this.extended = false, this.label, super.key});
+
+  final VoidCallback onTap;
+  final bool extended;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final showLabel = extended && label != null;
+    return Semantics(
+      button: true,
+      label: label,
+      child: Material(
+        color: t.ctaBg,
+        elevation: 6,
+        shadowColor: t.shadowBase.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          key: const Key('dock-center'),
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: SizedBox(
+            height: 60,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: showLabel ? 22 : 18),
+              child: ExcludeSemantics(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add_rounded, color: t.ctaFg, size: 28),
+                    if (showLabel) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        label!,
+                        style: TextStyle(color: t.ctaFg, fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CalmItem extends StatelessWidget {
+  const _CalmItem({required this.item, required this.selected, required this.onTap});
+
+  final AppNavItem item;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    // Selected: the teal pill (bright teal with ink in dark, deep teal with white in light).
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final teal = t.primaryAccent;
+    final color = selected ? (dark ? AppColors.calmInk : Colors.white) : t.textMuted;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: item.label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: AnimatedContainer(
+          duration: t.durationNormal,
+          curve: t.easeSpring,
+          constraints: const BoxConstraints(minHeight: 52),
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: selected ? teal : Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: ExcludeSemantics(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconTheme(
+                  data: IconThemeData(color: color, size: 22),
+                  child: _icon(item, color: color),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

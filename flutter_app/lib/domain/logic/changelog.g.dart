@@ -8,45 +8,54 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
-  ChangelogEntry('3.69.0', '2026-10-19', [
-    'Behind the scenes: the Flutter app now lives on the main branch next to the web app. A push to main still deploys the website, and a green build of the Flutter app is published as an installable Android APK.',
+  ChangelogEntry('3.78.0', '2026-10-23', [
+    'A failed sync now shows a red mark on the expense or message with a Retry button, and a Sync button sits in the home and trip headers.',
+    'Half-typed expenses, notes and chat messages are kept if you close by accident, and are cleared when you sign out.',
+    'Freeze, close and Settle all now apply at once with an Undo, and a quiet trip where you still owe shows a Settle up reminder.',
+    'Smoother and clearer: aligned money columns, balances that count to their new value, fits large text, and respects Reduce motion.',
   ]),
-  ChangelogEntry('3.68.5', '2026-10-19', [
-    'When a whole group has settled, the Members list no longer shows its members as owed or owing. This is fixed on the web and in the Flutter app.',
+  ChangelogEntry('3.77.5', '2026-10-22', [
+    'Tap an Activity row to jump straight to that chat message or expense, and use See in Activity on an expense to see its history.',
   ]),
-  ChangelogEntry('3.68.4', '2026-10-19', [
-    'When a whole group has settled, Per person now shows the trip as settled too, with no payments left to make for the people inside the group. This is fixed on the web and in the Flutter app.',
+  ChangelogEntry('3.77.4', '2026-10-22', [
+    'Trip Activity is now a full log: your own expenses, refunds, settlements, edits, recent deletions and chat messages all show up, not only what others did.',
   ]),
-  ChangelogEntry('3.68.3', '2026-10-19', [
-    'After everyone has settled, the trip now shows as settled in both Fewest payments and Per person, and the amount outstanding is the same in both. This is fixed on the web and in the Flutter app.',
-    'Behind the scenes (Flutter app): a clearer trip header line, the yellow close-out card disappears once the trip is settled, and a settlement paid to you has a Confirm received button in History.',
+  ChangelogEntry('3.77.3', '2026-10-23', [
+    'On the trips home, a closed or archived trip shows a greyed Add expense button that says why it is unavailable, instead of leaving a gap.',
   ]),
-  ChangelogEntry('3.68.2', '2026-10-19', [
-    'Behind the scenes (Flutter app): Voice add expense uses the Google recognizer, understands spoken amounts like "five hundred" or "paanch sau", shows a listening panel and explains errors with Try again.',
-    'Behind the scenes (Flutter app): Edit Trip takes one box per destination, with add and remove.',
+  ChangelogEntry('3.77.2', '2026-10-23', [
+    'Trip cards on the home stack are all the same size, and Add expense sits clear of the Join / New Trip slider (a closed trip no longer stretches its card over it).',
   ]),
-  ChangelogEntry('3.68.1', '2026-10-19', [
-    'Settling with a group in two or more parts now works. The second payment used to fail with a permissions error when it was recorded under your groupmate. Fixed on the web and in the Flutter app.',
+  ChangelogEntry('3.77.1', '2026-10-23', [
+    'Per person view no longer tells you to pay someone while the pass says you are owed: when payments cross between two groups, Balances lists the one net payment.',
+    'Clearer settlement pass: Spent / Settled / Pending on the front, and You owe / You are owed on the flip side with a note on how your group differs from you.',
   ]),
-  ChangelogEntry('3.68.0', '2026-10-19', [
-    'Behind the scenes (Flutter app): a cleaner trip header (name, one line of dates, members and expenses), and Edit Trip Details is in the trip name menu and the top-bar menu.',
-    'Behind the scenes (Flutter app): select and delete several passes at once, a filters page that matches the web, a pinned mini settlement pass on Summary, and the settlement pass flips to show You paid, Your share and the difference.',
-    'Behind the scenes (Flutter app): a Voice button on Expenses that listens and fills in the expense for you to confirm.',
+  ChangelogEntry('3.77.0', '2026-10-23', [
+    'Record a refund on an expense: money returned to the payer is shared back across the original split, so balances and who pays whom drop by exactly that amount, and the expense shows its refund history.',
   ]),
-  ChangelogEntry('3.67.0', '2026-10-19', [
-    'Behind the scenes (Flutter app): Settings is one page of cards like the web, with Appearance and Haptics (All, Important, Off), Storage and Data, Archived Trips and Backups.',
-    'Behind the scenes (Flutter app): long-press the trip name for Share, Mute, Edit Trip Details, Settings and Switch trip; the Summary gains attention chips, a close-out banner, Custom amount, Remind, How it works and an At a Glance grid.',
+  ChangelogEntry('3.76.1', '2026-10-23', [
+    'Balances no longer repeats You paid and Your share under the settlement pass; flip the pass to see them.',
   ]),
-  ChangelogEntry('3.66.1', '2026-10-19', [
-    'Behind the scenes: the Flutter Notes and Checklist panes show one Add button (the floating one) instead of two, and each collapsed day on Expenses is a clear card with a large bold total and the number of expenses.',
+  ChangelogEntry('3.76.0', '2026-10-23', [
+    'Scan a receipt with your camera or a photo: the bill is read on your phone and fills the amount, date and title for you to confirm.',
+    'Chat reactions: press and hold a message to react with 👍 ❤️ 😂 😮 🙏.',
+    'Trip polls: ask the group a question from the chat box; everyone votes once and sees live results.',
+    'Join an invite with just your name, no account needed.',
   ]),
-  ChangelogEntry('3.66.0', '2026-10-19', [
-    'Behind the scenes: the Flutter app has cleaner Expenses rows and day headers, Notes cards you can pin or delete (with Undo) and a count on the tab, Members tiles with role and balance chips and a search box on bigger trips, and a menu to edit or delete travel passes. The Groups / People switch under Who paid now only changes that card, not Who pays whom.',
+  ChangelogEntry('3.75.1', '2026-10-22', [
+    'The Trip tab has an All trips tile that takes you back to your trips home.',
   ]),
-  ChangelogEntry('3.65.0', '2026-10-19', [
-    'Behind the scenes: the Flutter Balances tab replaces the To receive / To pay tiles with one You paid / Your share / Difference strip (tap it to see which expenses move your balance), and saving an expense offline now says it is saved on your phone and will sync later.',
+  ChangelogEntry('3.75.0', '2026-10-22', [
+    'Chat shows expenses and payments as small centered lines ("Ben paid Asha · UPI · ₹500"), with avatars and grouped messages.',
+    'Notes are tidy preview cards: tap one to edit it. The Checklist folds finished items into a Done section.',
+    'The settle sheet is simpler: who pays whom, one big amount you can edit, Mark settled, and extras under More options.',
+    'Balances says "settled" once instead of repeating it in several cards.',
   ]),
-  ChangelogEntry('3.63.0', '2026-10-18', [
-    'Behind the scenes: the Flutter app drops the banner and status row under the trip name and gathers Share, Route map and settings into one More menu (sync shows as a small icon only when needed), adds quick Add item / Add note / Add member buttons, folds Trip numbers away on the Summary until opened, shows a Jump to today chip, recent-amount chips on the expense form, friendlier empty Notes and checklist, skeleton loaders, a High contrast option, a Haptics setting and consistent bottom sheets. The Who paid list now says Their part instead of Share. No change to the web app.',
+  ChangelogEntry('3.74.0', '2026-10-22', [
+    'Balances has a summary strip (Total spent, Per person, You paid, Your share) and a bar at the bottom, "You owe ₹X · Settle", that lists your payments to settle.',
+    'The trip name now only switches trips, and Chat is no longer a separate Trip tile because it lives in Notes. Mute alerts moved to the Trip tab.',
+    'Switching trips shows a "Switching to…" cover instead of flashing the home screen.',
+    'Spend search also finds category, who paid and amount, and active filters show as chips you can remove.',
+    'Activity rows offer Confirm received for payments and Reply for chat. People shows who owes or is owed, and Trip tiles show live facts.',
   ]),
 ];

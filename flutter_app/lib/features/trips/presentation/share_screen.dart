@@ -9,8 +9,8 @@ import '../../../domain/models/join_share.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
-import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
+import '../../../shared/widgets/async_body.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/app_surface.dart';
 
@@ -33,15 +33,11 @@ class ShareScreen extends ConsumerWidget {
     final tokens = context.tokens;
     final async = ref.watch(tripShareSummaryProvider(token));
 
-    final Widget body = async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, _) => EmptyState(
-        icon: AppIcons.alert,
-        title: l10n.shareLoadError,
-        subtitle: l10n.errorGenericMessage,
-        action: AppButton(label: l10n.actionRetry, onPressed: () => ref.invalidate(tripShareSummaryProvider(token))),
-      ),
-      data: (s) {
+    final Widget body = AsyncBody<TripShareSummary?>(
+      value: async,
+      errorTitle: l10n.shareLoadError,
+      onRetry: () => ref.invalidate(tripShareSummaryProvider(token)),
+      builder: (context, s) {
         if (s == null) {
           return EmptyState(icon: AppIcons.share, title: l10n.shareEndedTitle, subtitle: l10n.shareEndedBody);
         }

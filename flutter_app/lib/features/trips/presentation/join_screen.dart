@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/auth_state.dart';
+import '../../../core/flags/compass_flags.dart';
+import '../../../data/providers.dart';
 import '../../../data/auth/social_auth.dart';
 import '../../../domain/logic/trip_utilities.dart' show buildAutoGroupName, formatDateRange;
 import '../../../l10n/l10n_ext.dart';
@@ -49,11 +51,32 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
     }
   }
 
+  /// "Join with just your name": ask for a name, start an anonymous server session, then join as that person.
+  Future<void> _guest() async {
+    final name = await showDialog<String>(context: context, builder: (_) => const _GuestNameDialog());
+    if (name == null || name.trim().isEmpty || !mounted) return;
+    setState(() {
+      _busy = true;
+      _signInError = null;
+    });
+    try {
+      await ref.read(authRepositoryProvider).signInAsInviteGuest(name);
+      await ref.read(joinControllerProvider(_code).notifier).joinWithName(name);
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _signInError = authErrorMessage(e.failure, context.l10n));
+    } catch (_) {
+      if (mounted) setState(() => _signInError = context.l10n.authErrorGeneric);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final tokens = context.tokens;
     final auth = ref.watch(authStateProvider);
+    final guestJoinOn = ref.watch(compassFlagProvider((guestJoinFlag, null)));
     final state = ref.watch(joinControllerProvider(_code));
     final controller = ref.read(joinControllerProvider(_code).notifier);
 
@@ -157,6 +180,17 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
             isLoading: _busy,
             onPressed: _busy ? null : () => _social(signInWithGoogle),
           ),
+          if (guestJoinOn && !auth.isLocalOnly) ...[
+            gap,
+            AppButton(
+              key: const Key('join-guest'),
+              label: 'Join with just your name',
+              icon: AppIcons.members,
+              variant: AppButtonVariant.secondary,
+              isFullWidth: true,
+              onPressed: _busy ? null : _guest,
+            ),
+          ],
           if (apple) ...[
             gap,
             AppButton(
@@ -239,6 +273,58 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
         ),
       ),
       body: SafeArea(child: content),
+    );
+  }
+}
+
+class _GuestNameDialog extends StatefulWidget {
+  const _GuestNameDialog();
+
+  @override
+  State<_GuestNameDialog> createState() => _GuestNameDialogState();
+}
+
+class _GuestNameDialogState extends State<_GuestNameDialog> {
+  final _name = TextEditingController();
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('What should we call you?'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            key: const Key('guest-name'),
+            controller: _name,
+            autofocus: true,
+            maxLength: 40,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(hintText: 'Your name'),
+            onChanged: (_) => setState(() {}),
+            onSubmitted: (v) => v.trim().isEmpty ? null : Navigator.pop(context, v.trim()),
+          ),
+          const Text(
+            'No account needed. Sign in later to keep this trip on any phone.',
+            style: TextStyle(fontSize: 12.5),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        FilledButton(
+          key: const Key('guest-name-join'),
+          onPressed: _name.text.trim().isEmpty ? null : () => Navigator.pop(context, _name.text.trim()),
+          child: const Text('Join'),
+        ),
+      ],
     );
   }
 }

@@ -32,6 +32,7 @@ class ExpenseRow extends StatefulWidget {
     this.tidy = false,
     this.isDirty = false,
     this.isConflict = false,
+    this.onRetrySync,
     super.key,
   });
 
@@ -49,6 +50,9 @@ class ExpenseRow extends StatefulWidget {
   final bool isDirty;
   final bool isConflict;
 
+  /// Set when this row's change is stuck (flag `enableRowSyncRetry`): shows a red mark that calls it.
+  final VoidCallback? onRetrySync;
+
   @override
   State<ExpenseRow> createState() => _ExpenseRowState();
 }
@@ -63,6 +67,22 @@ class _ExpenseRowState extends State<ExpenseRow> {
       child: Icon(icon, size: 14, color: color),
     ),
   );
+
+  /// Conflict, stuck (tap to retry), or pending-sync mark; nothing when the row is in sync.
+  Widget _syncBadge(AppTokens tokens, AppLocalizations l10n) {
+    if (widget.isConflict) return _badge(Icons.error_outline_rounded, tokens.colorDanger, l10n.rowConflict);
+    if (widget.onRetrySync != null) {
+      return InkResponse(
+        key: const Key('row-sync-retry'),
+        onTap: widget.onRetrySync,
+        radius: 16,
+        child: _badge(Icons.sync_problem_rounded, tokens.colorDanger, l10n.rowSyncFailed),
+      );
+    }
+    return _badge(Icons.sync_rounded, tokens.textMuted, l10n.rowSyncPending);
+  }
+
+  bool get _hasSyncMark => widget.isConflict || widget.onRetrySync != null || widget.isDirty;
 
   /// Boarding-receipt layout (non-compact): glow category icon, "Paid by X · Split with N", amount,
   /// then a perforated footer with the personal-share pill and a micro barcode.
@@ -356,10 +376,7 @@ class _ExpenseRowState extends State<ExpenseRow> {
     if (e.excludeFromTotals) _badge(Icons.person_outline_rounded, tokens.textMuted, l10n.rowPersonal),
     if (e.approvalStatus == 'pending_approval')
       _badge(Icons.schedule_rounded, tokens.colorWarning, l10n.rowPendingApprovalTip),
-    if (widget.isConflict)
-      _badge(Icons.error_outline_rounded, tokens.colorDanger, l10n.rowConflict)
-    else if (widget.isDirty)
-      _badge(Icons.sync_rounded, tokens.textMuted, l10n.rowSyncPending),
+    if (_hasSyncMark) _syncBadge(tokens, l10n),
   ];
 
   Widget _currencyToggle(AppTokens tokens, AppLocalizations l10n, Expense e, String base, bool showingForeign) =>
@@ -496,10 +513,7 @@ class _ExpenseRowState extends State<ExpenseRow> {
                             ),
                           if (e.approvalStatus == 'pending_approval')
                             _badge(Icons.schedule_rounded, tokens.colorWarning, l10n.rowPendingApprovalTip),
-                          if (widget.isConflict)
-                            _badge(Icons.error_outline_rounded, tokens.colorDanger, l10n.rowConflict)
-                          else if (widget.isDirty)
-                            _badge(Icons.sync_rounded, tokens.textMuted, l10n.rowSyncPending),
+                          if (_hasSyncMark) _syncBadge(tokens, l10n),
                         ],
                       ),
                     ),

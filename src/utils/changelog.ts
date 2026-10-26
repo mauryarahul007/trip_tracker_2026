@@ -9,6 +9,149 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.78.0',
+    date: '2026-10-23',
+    changes: [
+      'A failed sync now shows a red mark on the expense or message with a Retry button, and a Sync button sits in the home and trip headers.',
+      'Half-typed expenses, notes and chat messages are kept if you close by accident, and are cleared when you sign out.',
+      'Freeze, close and Settle all now apply at once with an Undo, and a quiet trip where you still owe shows a Settle up reminder.',
+      'Smoother and clearer: aligned money columns, balances that count to their new value, fits large text, and respects Reduce motion.',
+    ],
+  },
+  {
+    version: '3.77.5',
+    date: '2026-10-22',
+    changes: [
+      'Tap an Activity row to jump straight to that chat message or expense, and use See in Activity on an expense to see its history.',
+    ],
+  },
+  {
+    version: '3.77.4',
+    date: '2026-10-22',
+    changes: [
+      'Trip Activity is now a full log: your own expenses, refunds, settlements, edits, recent deletions and chat messages all show up, not only what others did.',
+    ],
+  },
+  {
+    version: '3.77.3',
+    date: '2026-10-23',
+    changes: ['On the trips home, a closed or archived trip shows a greyed Add expense button that says why it is unavailable, instead of leaving a gap.'],
+  },
+  {
+    version: '3.77.2',
+    date: '2026-10-23',
+    changes: ['Trip cards on the home stack are all the same size, and Add expense sits clear of the Join / New Trip slider (a closed trip no longer stretches its card over it).'],
+  },
+  {
+    version: '3.77.1',
+    date: '2026-10-23',
+    changes: [
+      'Per person view no longer tells you to pay someone while the pass says you are owed: when payments cross between two groups, Balances lists the one net payment.',
+      'Clearer settlement pass: Spent / Settled / Pending on the front, and You owe / You are owed on the flip side with a note on how your group differs from you.',
+    ],
+  },
+  {
+    version: '3.77.0',
+    date: '2026-10-23',
+    changes: ['Record a refund on an expense: money returned to the payer is shared back across the original split, so balances and who pays whom drop by exactly that amount, and the expense shows its refund history.'],
+  },
+  {
+    version: '3.76.1',
+    date: '2026-10-23',
+    changes: ['Balances no longer repeats You paid and Your share under the settlement pass; flip the pass to see them.'],
+  },
+  {
+    version: '3.76.0',
+    date: '2026-10-23',
+    changes: [
+      'Scan a receipt with your camera or a photo: the bill is read on your phone and fills the amount, date and title for you to confirm.',
+      'Chat reactions: press and hold a message to react with 👍 ❤️ 😂 😮 🙏.',
+      'Trip polls: ask the group a question from the chat box; everyone votes once and sees live results.',
+      'Join an invite with just your name, no account needed.',
+    ],
+  },
+  {
+    version: '3.75.1',
+    date: '2026-10-22',
+    changes: ['The Trip tab has an All trips tile that takes you back to your trips home.'],
+  },
+  {
+    version: '3.75.0',
+    date: '2026-10-22',
+    changes: [
+      'Chat shows expenses and payments as small centered lines ("Ben paid Asha · UPI · ₹500"), with avatars and grouped messages.',
+      'Notes are tidy preview cards: tap one to edit it. The Checklist folds finished items into a Done section.',
+      'The settle sheet is simpler: who pays whom, one big amount you can edit, Mark settled, and extras under More options.',
+      'Balances says "settled" once instead of repeating it in several cards.',
+    ],
+  },
+  {
+    version: '3.74.0',
+    date: '2026-10-22',
+    changes: [
+      'Balances has a summary strip (Total spent, Per person, You paid, Your share) and a bar at the bottom, "You owe ₹X · Settle", that lists your payments to settle.',
+      'The trip name now only switches trips, and Chat is no longer a separate Trip tile because it lives in Notes. Mute alerts moved to the Trip tab.',
+      'Switching trips shows a "Switching to…" cover instead of flashing the home screen.',
+      'Spend search also finds category, who paid and amount, and active filters show as chips you can remove.',
+      'Activity rows offer Confirm received for payments and Reply for chat. People shows who owes or is owed, and Trip tiles show live facts.',
+    ],
+  },
+  {
+    version: '3.73.0',
+    date: '2026-10-21',
+    changes: [
+      'Activity is a proper tab now: filter chips for All, Unread, Money, People and Chat, updates grouped by day, mark all read, and Delete all.',
+      'The trip menu moved into the Trip tab: Edit trip, Route map, Live location, Invite, Trip settings and App settings. Chat is a tile there too.',
+      'Switching trips from the trip name now opens the other trip completely: every tab and number is for the trip you picked, not a mix of both.',
+      'Balances keeps the settlement pass and its flip, the yellow Close out card is gone, and Spend can fold and open all days again.',
+    ],
+  },
+  {
+    version: '3.72.0',
+    date: '2026-10-21',
+    changes: [
+      'A trip with no expenses now opens on Get this trip rolling: share your invite link, copy it, or show the code and QR, then add your first expense. Balances and settlement appear once there is something to split.',
+      'The trip bottom bar is now Spend, Balances, an orange + for Add expense, Chat and Trip. Trip opens People, Notes, Receipts, Insights, Invite, Live location, Tools and Trip settings.',
+      'The Expenses tab starts with a Total spent card showing the total, per person and your biggest category, and each expense has a category colour ring.',
+      'Balances always show who is up and who is down. Data and storage shows your total with a data and cache bar. On wide web windows, Expenses has a Settle up pane on the right.',
+    ],
+  },
+  {
+    version: '3.71.1',
+    date: '2026-10-20',
+    changes: [
+      'The Add expense button under the top trip card is no longer hidden behind the Join / New Trip bar.',
+      'Mistakes on the new-expense form now show right above the Save buttons, so you always see why a save did not happen. Save and add another on an empty form says: First add an expense.',
+      'The Saved message after Save and add another no longer covers the button.',
+    ],
+  },
+  {
+    version: '3.71.0',
+    date: '2026-10-20',
+    changes: [
+      'The Who pays whom section now starts with bars showing who is up and who is down, scaled so you can compare people at a glance.',
+      'The Trips deck has an Add expense button under the top card, and the empty receipts screen has one too.',
+      'The Insights back button and the UPI payment sheet close button now have screen-reader labels.',
+    ],
+  },
+  {
+    version: '3.70.0',
+    date: '2026-10-20',
+    changes: [
+      'New expense form has Save and add another: it saves, clears the form and leaves you ready to type the next expense.',
+      'The sync conflict sheet now shows exactly which fields differ (amount, date, title, category, payer, split) and the two Keep buttons look the same.',
+    ],
+  },
+  {
+    version: '3.69.3',
+    date: '2026-10-20',
+    changes: [
+      'The back arrow inside a trip now retraces the tabs you visited before leaving the trip.',
+      'Long destinations and trip names on passport cards are cut off with an ellipsis instead of colliding with the stamp.',
+      'The Chat tab’s empty state matches the other tabs. Counters and confetti respect Reduce Motion.',
+    ],
+  },
+  {
     version: '3.69.2',
     date: '2026-10-20',
     changes: [

@@ -2,12 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/format/money.dart';
 import '../../../data/providers.dart';
 import '../../../domain/models/expense.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/cached_photo.dart';
@@ -40,6 +42,11 @@ class ReceiptGalleryScreen extends ConsumerWidget {
               icon: Icons.receipt_long_outlined,
               title: l10n.receiptsEmptyTitle,
               subtitle: l10n.receiptsEmptyHint,
+              action: AppButton(
+                key: const Key('receipts-add-expense'),
+                label: l10n.expAdd,
+                onPressed: () => context.push('/trip/$tripId/expenses/new'),
+              ),
             )
           : GridView.builder(
               key: const Key('receipts-grid'),

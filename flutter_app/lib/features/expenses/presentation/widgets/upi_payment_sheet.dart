@@ -239,6 +239,7 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
               ),
               IconButton(
                 key: const Key('upi-sheet-close'),
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 icon: const Icon(Icons.close_rounded, size: 20),
                 onPressed: () => Navigator.of(context).pop(),
               ),

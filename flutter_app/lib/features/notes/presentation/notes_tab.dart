@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/flags/compass_flags.dart';
 import '../../../core/platform/motion.dart';
 
 import '../../../core/platform/external_launcher.dart';
@@ -26,6 +27,8 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../domain/models/trip.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/discard_guard.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/undo_snackbar.dart';
 import '../../../shared/widgets/app_sheet.dart';
@@ -61,6 +64,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   /// responsive (and later taps correct) even if a sync round-trip is slow or briefly sends an older copy back.
   final _pendingDone = <String, bool>{};
   var _category = 'all';
+  var _doneOpen = false; // Compass: the Done section of the checklist starts folded
   final _quick = TextEditingController();
 
   @override
@@ -82,9 +86,12 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final trip = ref.watch(tripProvider(widget.tripId)).value;
+    if (trip == null) return const SkeletonPage(); // not loaded yet: a skeleton, not an empty checklist
     final chatOn = _flag('enableTripChat');
     final chatFirst = _flag('enableChatFirstNav');
-    final showChat = chatOn && !chatFirst;
+    // Calm Passport gives Chat its own trip tab, so Plans does not repeat it.
+    final calm = ref.watch(compassFlagProvider((calmPassportFlag, widget.tripId)));
+    final showChat = chatOn && !chatFirst && !calm;
     final passesOn = _flag('enableTravelPasses');
     final tidyOn = _flag('enableTidyNotes');
     final packing = _flag('enablePackingAssistant');
@@ -113,9 +120,9 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                   label: p.$1 == 'chat' && unread
                       ? Text(p.$2, key: const Key('notes-chat-unread'), maxLines: 1)
                       : switch (p.$1) {
-                          'passes' => _countLabel(p.$2, trip?.passes.length ?? 0),
-                          'checklist' => _countLabel(p.$2, trip?.checklist.length ?? 0),
-                          'notes' when tidyOn => _countLabel(p.$2, trip?.notes.length ?? 0),
+                          'passes' => _countLabel(p.$2, trip.passes.length),
+                          'checklist' => _countLabel(p.$2, trip.checklist.length),
+                          'notes' when tidyOn => _countLabel(p.$2, trip.notes.length),
                           _ => Text(p.$2, maxLines: 1, overflow: TextOverflow.ellipsis),
                         },
                 ),
@@ -136,15 +143,15 @@ class _NotesTabState extends ConsumerState<NotesTab> {
         Expanded(
           child: switch (_pane) {
             'passes' => _passesPane(context, trip),
-            'notes' => _notes(context, trip?.notes ?? const []),
+            'notes' => _notes(context, trip.notes),
             'chat' => ChatPane(tripId: widget.tripId),
-            _ => _checklist(context, trip?.checklist ?? const [], packing),
+            _ => _checklist(context, trip.checklist, packing),
           },
         ),
       ],
     );
     // One quick action for the pane you are on (Add item / Add note); the in-page buttons stay.
-    final fabOn = _flag('enableContextFab') && (_pane == 'checklist' || _pane == 'notes');
+    final fabOn = _contextFab && (_pane == 'checklist' || _pane == 'notes' || (_calm && _pane == 'passes'));
     final withFab = !fabOn
         ? content
         : Stack(
@@ -156,11 +163,17 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                 child: FloatingActionButton.extended(
                   key: const Key('notes-fab'),
                   heroTag: null,
-                  onPressed: () => _pane == 'notes'
-                      ? _addNote(context, trip?.notes ?? const [])
-                      : _editItem(context, trip?.checklist ?? const []),
+                  onPressed: () => switch (_pane) {
+                    'notes' => _addNote(context, trip.notes),
+                    'passes' => _addPass(context, trip.passes),
+                    _ => _editItem(context, trip.checklist),
+                  },
                   icon: const Icon(Icons.add_rounded),
-                  label: Text(_pane == 'notes' ? l10n.notesAddNote : l10n.notesAddItem),
+                  label: Text(switch (_pane) {
+                    'notes' => l10n.notesAddNote,
+                    'passes' => l10n.notesAddPass,
+                    _ => l10n.notesAddItem,
+                  }),
                 ),
               ),
             ],
@@ -181,6 +194,13 @@ class _NotesTabState extends ConsumerState<NotesTab> {
       ],
     );
   }
+
+  bool get _guardOn => ref.read(flagProvider(('enablePersistentExpenseDraft', widget.tripId))).value ?? true;
+
+  /// One floating Add per pane: Ops Deck `enableContextFab`, and always under Calm Passport.
+  bool get _calm => ref.watch(compassFlagProvider((calmPassportFlag, widget.tripId)));
+
+  bool get _contextFab => _flag('enableContextFab') || _calm;
 
   bool _flag(String key) => ref.watch(flagProvider((key, widget.tripId))).value ?? (defaultFeatureFlags[key] ?? false);
 
@@ -256,12 +276,13 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                     onPressed: () => setState(() => _selecting = true),
                     child: const Text('Select'),
                   ),
-                AppButton(
-                  key: const Key('pass-add'),
-                  label: l10n.notesAddPass,
-                  icon: Icons.add_rounded,
-                  onPressed: () => _addPass(context, passes),
-                ),
+                if (!_calm)
+                  AppButton(
+                    key: const Key('pass-add'),
+                    label: l10n.notesAddPass,
+                    icon: Icons.add_rounded,
+                    onPressed: () => _addPass(context, passes),
+                  ),
               ],
             ],
           ),
@@ -354,6 +375,19 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     ];
     final done = items.where((i) => (_pendingDone[i.id] ?? i.completed)).length;
     final dest = trip?.destination?.isNotEmpty == true ? trip!.destination : trip?.name;
+    final pages = _flag(compassTripPagesFlag);
+    final todo = pages
+        ? [
+            for (final i in shown)
+              if (!(_pendingDone[i.id] ?? i.completed)) i,
+          ]
+        : shown;
+    final finished = pages
+        ? [
+            for (final i in shown)
+              if (_pendingDone[i.id] ?? i.completed) i,
+          ]
+        : const <ChecklistItem>[];
     return ListView(
       key: const Key('checklist'),
       padding: EdgeInsets.fromLTRB(16, 4, 16, _flag('enableContextFab') ? 88 : 32), // clear of the floating Add
@@ -416,7 +450,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
         const SizedBox(height: 12),
         // Add sits right under the progress, not at the end of a long list. With the floating Add item button on
         // screen there is no second one here.
-        if (!_flag('enableContextFab'))
+        if (!_contextFab)
           AppButton(
             key: const Key('check-add'),
             label: l10n.notesAddItem,
@@ -424,7 +458,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
             isFullWidth: true,
             onPressed: () => _editItem(context, items),
           ),
-        if (_flag('enableChecklistCategoryProgress') && items.isNotEmpty) ...[
+        if (_flag('enableChecklistCategoryProgress') && items.isNotEmpty && !pages) ...[
           const SizedBox(height: 12),
           Column(
             key: const Key('checklist-category-progress'),
@@ -512,7 +546,33 @@ class _NotesTabState extends ConsumerState<NotesTab> {
               style: TextStyle(color: t.textSecondary, fontSize: 15),
             ),
           ),
-        for (final item in shown) _checkRow(context, items, item, members),
+        for (final item in todo) _checkRow(context, items, item, members),
+        if (finished.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          InkWell(
+            key: const Key('check-done-toggle'),
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => setState(() => _doneOpen = !_doneOpen),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle_rounded, size: 20, color: t.colorSuccess),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Done (${finished.length})',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: t.textSecondary),
+                    ),
+                  ),
+                  Icon(_doneOpen ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: t.textSecondary),
+                ],
+              ),
+            ),
+          ),
+          if (_doneOpen)
+            for (final item in finished) _checkRow(context, items, item, members),
+        ],
         if (packing)
           Padding(
             padding: const EdgeInsets.only(top: 14),
@@ -642,8 +702,11 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                         spacing: 6,
                         runSpacing: 4,
                         children: [
-                          if (item.category != null) pill(null, item.category!),
-                          pill(Icons.person_outline_rounded, assignee ?? l10n.notesItemAnyone),
+                          // Compass: the category is already the filter and "Anyone" is the default, so say neither.
+                          if (item.category != null && !(_flag(compassTripPagesFlag) && _category != 'all'))
+                            pill(null, item.category!),
+                          if (assignee != null || !_flag(compassTripPagesFlag))
+                            pill(Icons.person_outline_rounded, assignee ?? l10n.notesItemAnyone),
                         ],
                       ),
                     ],
@@ -711,7 +774,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     final l10n = context.l10n;
     final quick = _flag('enableNotesQuickCapture');
     final tidy = _flag('enableTidyNotes');
-    final fab = _flag('enableContextFab'); // the floating Add note button is on screen: no second one in the page
+    final fab = _contextFab; // the floating Add note button is on screen: no second one in the page
     if (notes.isEmpty) {
       return ListView(
         padding: quick ? const EdgeInsets.fromLTRB(16, 8, 16, 0) : null,
@@ -756,6 +819,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
             onDelete: () => _deleteNote(context, notes, n),
             onContent: (text) =>
                 _saveNotes([for (final x in notes) x.id == n.id ? x.copyWith(content: text, updatedAt: _now()) : x]),
+            onOpen: _flag(compassTripPagesFlag) ? () => _editNote(context, notes, n) : null,
           ),
         if (!fab)
           AppButton(key: const Key('note-add'), label: l10n.notesAddNote, onPressed: () => _addNote(context, notes)),
@@ -769,6 +833,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     final l10n = context.l10n;
     final draft = await AppSheet.show<_ItemDraft>(
       context: context,
+      enableDrag: !_guardOn, // a swipe would bypass the Discard prompt
       title: existing == null ? l10n.notesAddItem : l10n.notesItemEdit,
       builder: (_) => _ItemSheet(
         members: ref.read(visibleMembersProvider(widget.tripId)),
@@ -865,9 +930,24 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     await _saveChecks([...items, ...extra]);
   }
 
+  Future<void> _editNote(BuildContext context, List<TripNote> notes, TripNote n) async {
+    final draft = await AppSheet.show<_NoteDraft>(
+      context: context,
+      enableDrag: !_guardOn, // a swipe would bypass the Discard prompt
+      title: 'Edit note',
+      builder: (_) => _NoteDialog(initialTitle: n.title, initialBody: n.content),
+    );
+    if (draft == null) return;
+    final title = draft.title.isNotEmpty ? draft.title : n.title;
+    await _saveNotes([
+      for (final x in notes) x.id == n.id ? x.copyWith(title: title, content: draft.body, updatedAt: _now()) : x,
+    ]);
+  }
+
   Future<void> _addNote(BuildContext context, List<TripNote> notes) async {
     final draft = await AppSheet.show<_NoteDraft>(
       context: context,
+      enableDrag: !_guardOn, // a swipe would bypass the Discard prompt
       title: context.l10n.notesAddNote,
       builder: (_) => const _NoteDialog(),
     );
@@ -885,6 +965,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   Future<void> _addPass(BuildContext context, List<TravelPass> passes) async {
     final draft = await AppSheet.show<_PassDraft>(
       context: context,
+      enableDrag: !_guardOn, // a swipe would bypass the Discard prompt
       title: context.l10n.notesAddPass,
       builder: (_) => const _PassDialog(),
     );
@@ -913,6 +994,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   Future<void> _editPass(BuildContext context, List<TravelPass> passes, TravelPass pass) async {
     final draft = await AppSheet.show<_PassDraft>(
       context: context,
+      enableDrag: !_guardOn, // a swipe would bypass the Discard prompt
       title: context.l10n.notesEditPass,
       builder: (_) => _PassDialog(initial: pass),
     );
@@ -1024,9 +1106,13 @@ class _NoteCard extends ConsumerStatefulWidget {
     this.tidy = false,
     this.onPin,
     this.onDelete,
+    this.onOpen,
     super.key,
   });
   final TripNote note;
+
+  /// Compass: the card is a read-only preview and tapping it opens the editor.
+  final VoidCallback? onOpen;
   final ValueChanged<String> onContent;
 
   /// Card with pin, menu and edited-time (enableTidyNotes).
@@ -1072,6 +1158,79 @@ class _NoteCardState extends ConsumerState<_NoteCard> {
     _c.dispose();
     _focus.dispose();
     super.dispose();
+  }
+
+  Widget _previewCard(BuildContext context) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final n = widget.note;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: t.bgSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: n.isPinned ? t.primaryAccent.withValues(alpha: 0.6) : t.borderColor),
+        ),
+        child: InkWell(
+          key: Key('note-open-${n.id}'),
+          borderRadius: BorderRadius.circular(18),
+          onTap: widget.onOpen,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 4, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    if (n.isPinned) ...[
+                      Icon(Icons.push_pin_rounded, size: 16, color: t.primaryAccent),
+                      const SizedBox(width: 6),
+                    ],
+                    Expanded(
+                      child: Text(
+                        n.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: t.textPrimary),
+                      ),
+                    ),
+                    PopupMenuButton<String>(
+                      key: Key('note-menu-${n.id}'),
+                      tooltip: l10n.notesNoteMenu,
+                      icon: Icon(Icons.more_horiz_rounded, color: t.textSecondary),
+                      onSelected: (v) => v == 'pin' ? widget.onPin?.call() : widget.onDelete?.call(),
+                      itemBuilder: (_) => [
+                        PopupMenuItem(value: 'pin', child: Text(n.isPinned ? l10n.notesNoteUnpin : l10n.notesNotePin)),
+                        PopupMenuItem(value: 'delete', child: Text(l10n.notesItemDelete)),
+                      ],
+                    ),
+                  ],
+                ),
+                if (n.content.trim().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12, top: 2),
+                    child: Text(
+                      n.content.trim(),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 14.5, height: 1.35, color: t.textSecondary),
+                    ),
+                  ),
+                if (n.updatedAt > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      l10n.notesNoteEdited(formatRelativeTime(n.updatedAt)),
+                      style: TextStyle(fontSize: 12, color: t.textMuted),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _tidyCard(BuildContext context) {
@@ -1153,6 +1312,7 @@ class _NoteCardState extends ConsumerState<_NoteCard> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.tidy && widget.onOpen != null) return _previewCard(context);
     if (widget.tidy) return _tidyCard(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1209,15 +1369,18 @@ class _NoteDraft {
 }
 
 class _NoteDialog extends StatefulWidget {
-  const _NoteDialog();
+  const _NoteDialog({this.initialTitle = '', this.initialBody = ''});
+
+  final String initialTitle;
+  final String initialBody;
 
   @override
   State<_NoteDialog> createState() => _NoteDialogState();
 }
 
 class _NoteDialogState extends State<_NoteDialog> {
-  final _title = TextEditingController();
-  final _body = TextEditingController();
+  late final _title = TextEditingController(text: widget.initialTitle);
+  late final _body = TextEditingController(text: widget.initialBody);
 
   @override
   void dispose() {
@@ -1229,36 +1392,40 @@ class _NoteDialogState extends State<_NoteDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextField(
-            key: const Key('note-new-title'),
-            controller: _title,
-            autofocus: true,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(labelText: l10n.notesNoteTitle),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('note-new-body'),
-            controller: _body,
-            minLines: 5,
-            maxLines: 10,
-            keyboardType: TextInputType.multiline,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(labelText: l10n.notesNoteBody, alignLabelWithHint: true),
-          ),
-          const SizedBox(height: 16),
-          AppButton(
-            key: const Key('note-save'),
-            label: l10n.notesItemSave,
-            onPressed: () => Navigator.pop(context, _NoteDraft(_title.text.trim(), _body.text.trim())),
-          ),
-        ],
+    return DiscardGuard(
+      controllers: [_title, _body],
+      initial: [widget.initialTitle, widget.initialBody],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              key: const Key('note-new-title'),
+              controller: _title,
+              autofocus: true,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(labelText: l10n.notesNoteTitle),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const Key('note-new-body'),
+              controller: _body,
+              minLines: 5,
+              maxLines: 10,
+              keyboardType: TextInputType.multiline,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(labelText: l10n.notesNoteBody, alignLabelWithHint: true),
+            ),
+            const SizedBox(height: 16),
+            AppButton(
+              key: const Key('note-save'),
+              label: l10n.notesItemSave,
+              onPressed: () => Navigator.pop(context, _NoteDraft(_title.text.trim(), _body.text.trim())),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1340,112 +1507,123 @@ class _PassDialogState extends State<_PassDialog> {
       ('stay', l10n.notesPassHotel, Icons.bed_rounded),
     ];
     final tokens = context.tokens;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            key: const Key('pass-type'),
-            children: [
-              for (final t in types)
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: InkWell(
-                      key: Key('pass-type-${t.$1}'),
-                      borderRadius: BorderRadius.circular(18),
-                      onTap: () => setState(() => _type = t.$1),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          color: _type == t.$1 ? tokens.primaryAccent.withValues(alpha: 0.1) : tokens.bgSurfaceHover,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color: _type == t.$1 ? tokens.primaryAccent : Colors.transparent,
-                            width: 2,
+    return DiscardGuard(
+      controllers: [_title, _from, _to, _seat, _ref, _passenger],
+      initial: [
+        widget.initial?.title ?? '',
+        widget.initial?.origin ?? '',
+        widget.initial?.destination ?? '',
+        widget.initial?.seatOrRoom ?? '',
+        widget.initial?.referenceCode ?? '',
+        widget.initial?.passengerName ?? '',
+      ],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              key: const Key('pass-type'),
+              children: [
+                for (final t in types)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: InkWell(
+                        key: Key('pass-type-${t.$1}'),
+                        borderRadius: BorderRadius.circular(18),
+                        onTap: () => setState(() => _type = t.$1),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: _type == t.$1 ? tokens.primaryAccent.withValues(alpha: 0.1) : tokens.bgSurfaceHover,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: _type == t.$1 ? tokens.primaryAccent : Colors.transparent,
+                              width: 2,
+                            ),
                           ),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(t.$3, color: _type == t.$1 ? tokens.primaryAccent : tokens.textSecondary),
-                            const SizedBox(height: 6),
-                            Text(t.$2, style: const TextStyle(fontWeight: FontWeight.w600)),
-                          ],
+                          child: Column(
+                            children: [
+                              Icon(t.$3, color: _type == t.$1 ? tokens.primaryAccent : tokens.textSecondary),
+                              const SizedBox(height: 6),
+                              Text(t.$2, style: const TextStyle(fontWeight: FontWeight.w600)),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            key: const Key('pass-title'),
-            controller: _title,
-            decoration: InputDecoration(labelText: l10n.notesPassTitle),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('pass-from'),
-            controller: _from,
-            decoration: InputDecoration(labelText: l10n.notesPassFrom),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('pass-to'),
-            controller: _to,
-            decoration: InputDecoration(labelText: l10n.notesPassTo),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            key: const Key('pass-when'),
-            icon: const Icon(Icons.event_rounded),
-            label: Text(
-              DateTime.tryParse(_start ?? '') == null
-                  ? l10n.notesPassPickWhen
-                  : '${l10n.notesPassWhen}: ${DateFormat('d MMM · HH:mm').format(DateTime.parse(_start!))}',
+              ],
             ),
-            onPressed: _pickWhen,
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('pass-passenger'),
-            controller: _passenger,
-            decoration: InputDecoration(labelText: l10n.notesPassPassenger),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('pass-seat'),
-            controller: _seat,
-            decoration: InputDecoration(labelText: l10n.notesPassSeat),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('pass-ref'),
-            controller: _ref,
-            decoration: InputDecoration(labelText: l10n.notesPassRef),
-          ),
-          const SizedBox(height: 16),
-          AppButton(
-            key: const Key('pass-save'),
-            label: widget.initial == null ? l10n.notesAddPass : l10n.notesSavePass,
-            onPressed: () => Navigator.pop(
-              context,
-              _PassDraft(
-                type: _type,
-                title: _title.text.trim(),
-                origin: _from.text.trim(),
-                destination: _to.text.trim(),
-                start: _start,
-                seat: _seat.text.trim(),
-                reference: _ref.text.trim(),
-                passenger: _passenger.text.trim(),
+            const SizedBox(height: 12),
+            TextField(
+              key: const Key('pass-title'),
+              controller: _title,
+              decoration: InputDecoration(labelText: l10n.notesPassTitle),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const Key('pass-from'),
+              controller: _from,
+              decoration: InputDecoration(labelText: l10n.notesPassFrom),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const Key('pass-to'),
+              controller: _to,
+              decoration: InputDecoration(labelText: l10n.notesPassTo),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              key: const Key('pass-when'),
+              icon: const Icon(Icons.event_rounded),
+              label: Text(
+                DateTime.tryParse(_start ?? '') == null
+                    ? l10n.notesPassPickWhen
+                    : '${l10n.notesPassWhen}: ${DateFormat('d MMM · HH:mm').format(DateTime.parse(_start!))}',
+              ),
+              onPressed: _pickWhen,
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const Key('pass-passenger'),
+              controller: _passenger,
+              decoration: InputDecoration(labelText: l10n.notesPassPassenger),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const Key('pass-seat'),
+              controller: _seat,
+              decoration: InputDecoration(labelText: l10n.notesPassSeat),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const Key('pass-ref'),
+              controller: _ref,
+              decoration: InputDecoration(labelText: l10n.notesPassRef),
+            ),
+            const SizedBox(height: 16),
+            AppButton(
+              key: const Key('pass-save'),
+              label: widget.initial == null ? l10n.notesAddPass : l10n.notesSavePass,
+              onPressed: () => Navigator.pop(
+                context,
+                _PassDraft(
+                  type: _type,
+                  title: _title.text.trim(),
+                  origin: _from.text.trim(),
+                  destination: _to.text.trim(),
+                  start: _start,
+                  seat: _seat.text.trim(),
+                  reference: _ref.text.trim(),
+                  passenger: _passenger.text.trim(),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1508,61 +1686,65 @@ class _ItemSheetState extends State<_ItemSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AppTextField(
-            key: const Key('ask-field'),
-            controller: _text,
-            autofocus: true,
-            hint: l10n.notesItemHint,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _submit(),
-          ),
-          _label(context, l10n.notesItemCategory),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final c in _categories)
+    return DiscardGuard(
+      controllers: [_text],
+      initial: [widget.initialText],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppTextField(
+              key: const Key('ask-field'),
+              controller: _text,
+              autofocus: true,
+              hint: l10n.notesItemHint,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
+            ),
+            _label(context, l10n.notesItemCategory),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final c in _categories)
+                  ChoiceChip(
+                    key: Key('item-cat-$c'),
+                    showCheckmark: false,
+                    label: Text(c),
+                    selected: _category == c,
+                    onSelected: (_) => setState(() => _category = c),
+                  ),
+              ],
+            ),
+            _label(context, l10n.notesItemAssign),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
                 ChoiceChip(
-                  key: Key('item-cat-$c'),
+                  key: const Key('item-assignee-none'),
                   showCheckmark: false,
-                  label: Text(c),
-                  selected: _category == c,
-                  onSelected: (_) => setState(() => _category = c),
+                  label: Text(l10n.notesItemAnyone),
+                  selected: _memberId == null,
+                  onSelected: (_) => setState(() => _memberId = null),
                 ),
-            ],
-          ),
-          _label(context, l10n.notesItemAssign),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ChoiceChip(
-                key: const Key('item-assignee-none'),
-                showCheckmark: false,
-                label: Text(l10n.notesItemAnyone),
-                selected: _memberId == null,
-                onSelected: (_) => setState(() => _memberId = null),
-              ),
-              for (final m in widget.members)
-                ChoiceChip(
-                  key: Key('item-assignee-${m.id}'),
-                  showCheckmark: false,
-                  avatar: const Icon(Icons.person_outline_rounded, size: 16),
-                  label: Text(m.name),
-                  selected: _memberId == m.id,
-                  onSelected: (_) => setState(() => _memberId = m.id),
-                ),
-            ],
-          ),
-          const SizedBox(height: 22),
-          AppButton(key: const Key('ask-ok'), label: l10n.notesItemSave, isFullWidth: true, onPressed: _submit),
-        ],
+                for (final m in widget.members)
+                  ChoiceChip(
+                    key: Key('item-assignee-${m.id}'),
+                    showCheckmark: false,
+                    avatar: const Icon(Icons.person_outline_rounded, size: 16),
+                    label: Text(m.name),
+                    selected: _memberId == m.id,
+                    onSelected: (_) => setState(() => _memberId = m.id),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 22),
+            AppButton(key: const Key('ask-ok'), label: l10n.notesItemSave, isFullWidth: true, onPressed: _submit),
+          ],
+        ),
       ),
     );
   }

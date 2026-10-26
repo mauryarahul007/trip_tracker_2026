@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../../shared/theme/app_tokens.dart';
+import '../../../../shared/theme/app_colors.dart';
 
 /// File name for an invite picture: `invite_Goa_weekend.png` (letters, digits and underscores only).
 String inviteCardFileName(String tripName) {
@@ -76,8 +77,8 @@ Future<List<int>> renderInviteCardPng({
     data: link,
     version: QrVersions.auto,
     gapless: true,
-    eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF0B1F33)),
-    dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFF0B1F33)),
+    eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: AppColors.heroNavyDeep),
+    dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: AppColors.heroNavyDeep),
   );
   final qrImage = await qr.toImage(360);
   canvas.drawImage(qrImage, Offset(card.left + 30, card.top + 30), Paint());

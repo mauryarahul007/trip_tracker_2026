@@ -93,6 +93,7 @@ Expense expenseFromRow(Map<String, dynamic> r) {
     // The "leave out of totals" mark rides in itemized_config (no server column); only a real breakdown has items.
     'itemizedConfig': _map(r['itemized_config'])?.containsKey('items') == true ? _map(r['itemized_config']) : null,
     'excludeFromTotals': _map(r['itemized_config'])?['excludeFromTotals'] == true,
+    'refundOfExpenseId': _map(r['itemized_config'])?['refundOfExpenseId'],
     'resolvedShares': shares(r['resolved_shares']) ?? const {},
     'receiptPath': r['receipt_path'],
     'photoPaths': r['photo_paths'],
@@ -129,7 +130,9 @@ Map<String, dynamic> expenseToUpsertArgs(Expense e) => {
   'p_resolved_shares': e.resolvedShares,
   'p_receipt_path': e.receiptPath,
   'p_paid_by_shares': e.paidByShares,
-  'p_itemized_config': e.excludeFromTotals
+  'p_itemized_config': e.refundOfExpenseId != null
+      ? {'refundOfExpenseId': e.refundOfExpenseId}
+      : e.excludeFromTotals
       ? {...?e.itemizedConfig?.toJson(), 'excludeFromTotals': true}
       : e.itemizedConfig?.toJson(),
   'p_location': e.location == null ? null : {'lat': e.location!.lat, 'lng': e.location!.lng},

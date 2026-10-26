@@ -59,6 +59,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledToPay => 'To pay';
 
   @override
+  String get tripsStackAddClosed => 'Add expense · trip closed';
+
+  @override
+  String get tripsStackAddArchived => 'Add expense · trip archived';
+
+  @override
+  String get ledStubSpent => 'Spent';
+
+  @override
+  String get ledStubSettled => 'Settled';
+
+  @override
+  String get ledStubPending => 'Pending';
+
+  @override
+  String ledStubPayments(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n payments',
+      one: '1 payment',
+      zero: 'All paid',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ledNetOwed => 'You\'re owed';
+
+  @override
+  String get ledNetOwe => 'You owe';
+
+  @override
+  String get ledNetSquare => 'Square';
+
+  @override
+  String ledSettlementsSoFar(String amount) {
+    return 'Payments already recorded move this by $amount.';
+  }
+
+  @override
+  String ledGroupNoteOwed(String group, String amount) {
+    return 'Your group $group is owed $amount in total. This page shows only you.';
+  }
+
+  @override
+  String ledGroupNoteOwes(String group, String amount) {
+    return 'Your group $group owes $amount in total. This page shows only you.';
+  }
+
+  @override
+  String get ledHowWorked => 'How is this worked out?';
+
+  @override
   String get ledYouPaid => 'You paid';
 
   @override
@@ -712,6 +766,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncDiscard => 'Discard';
 
   @override
+  String get discardChangesTitle => 'Discard changes?';
+
+  @override
+  String get discardChangesBody => 'What you typed here has not been saved.';
+
+  @override
+  String get discardKeepEditing => 'Keep editing';
+
+  @override
   String get createTripTitle => 'Create Trip';
 
   @override
@@ -1079,6 +1142,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rowSyncPending => 'Pending sync';
 
   @override
+  String get rowSyncFailed => 'Sync failed. Tap to retry.';
+
+  @override
   String get rowConflict => 'Sync conflict';
 
   @override
@@ -1233,6 +1299,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get formSave => 'Save';
+
+  @override
+  String get formSaveAndAdd => 'Save and add another';
+
+  @override
+  String get formAddFirst => 'First add an expense.';
+
+  @override
+  String get formSavedAddNext => 'Saved. Add the next one.';
 
   @override
   String get formSaving => 'Saving…';
@@ -1558,6 +1633,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hintTapGroup => 'Tip: tap a group to see its members or edit it.';
 
   @override
+  String settleNudgeText(String name, String amount, String trip) {
+    return 'You still owe $name $amount on $trip';
+  }
+
+  @override
+  String get settleNudgeAction => 'Settle up';
+
+  @override
+  String get settleNudgeDismiss => 'Hide for 3 days';
+
+  @override
   String ledNextPay(String name, String amount) {
     return 'Pay $name $amount';
   }
@@ -1673,7 +1759,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String syncLineSyncing(int count) {
-    return count < 0 ? 'Waiting' : 'Waiting';
+    return 'Waiting';
   }
 
   @override
@@ -1940,6 +2026,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterSavedTip => 'Hold a saved filter to remove it';
 
   @override
+  String get balanceBarsTitle => 'Who is up, who is down';
+
+  @override
+  String balanceBarOwed(String name, String amount) {
+    return '$name is owed $amount';
+  }
+
+  @override
+  String balanceBarOwes(String name, String amount) {
+    return '$name owes $amount';
+  }
+
+  @override
   String get ledYouPay => 'You pay';
 
   @override
@@ -2024,7 +2123,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get conflictTitle => 'Sync conflict';
 
   @override
-  String get conflictBody => 'This expense changed on another device while you still had a local edit.';
+  String get conflictBody =>
+      'This expense was changed on another device while you also edited it here. Keep mine sends your edit and replaces theirs. Keep theirs drops your edit.';
+
+  @override
+  String conflictSplitValue(String mode, int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count people', one: '1 person');
+    return '$mode, $_temp0';
+  }
 
   @override
   String get conflictKeepMine => 'Keep mine';
@@ -2040,6 +2146,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get conflictEmpty => 'No conflicts to resolve.';
+
+  @override
+  String get conflictFieldAmount => 'Amount';
+
+  @override
+  String get conflictFieldDate => 'Date';
+
+  @override
+  String get conflictFieldTitle => 'Title';
+
+  @override
+  String get conflictFieldCategory => 'Category';
+
+  @override
+  String get conflictFieldPaidBy => 'Paid by';
+
+  @override
+  String get conflictFieldSplit => 'Split';
+
+  @override
+  String conflictSameFields(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count other fields are the same',
+      one: '1 other field is the same',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get upiPay => 'Pay with UPI';

@@ -63,11 +63,11 @@ void main() {
     expect(key('trip-cover'), findsNothing);
   });
 
-  testApp('sync icon: nothing in the top bar when everything is saved', (tester) async {
+  testApp('sync icon: manual Sync now button when everything is saved', (tester) async {
     await pumpApp(tester, user: asha);
     final id = await goaTrip(tester);
     await openTrip(tester, id);
-    expect(key('sync-action'), findsNothing);
+    expect(tester.widget<IconButton>(key('sync-action')).tooltip, 'Sync now');
   });
 
   testApp('sync icon says Offline without a connection', (tester) async {

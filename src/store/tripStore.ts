@@ -897,6 +897,7 @@ export const useTripStore = create<TripStore>()(
     splitMemberIds: e.splitMemberIds,
     splitConfig: e.splitConfig,
     itemizedConfig: e.itemizedConfig,
+    refundOfExpenseId: e.refundOfExpenseId ?? null,
     resolvedShares,
     receiptPath: extra?.receiptPath,
     location: e.location ?? null,
@@ -2879,6 +2880,7 @@ export const useTripStore = create<TripStore>()(
         splitMemberIds: expenseData.splitMemberIds,
         splitConfig: expenseData.splitConfig,
         itemizedConfig: expenseData.itemizedConfig,
+        refundOfExpenseId: expenseData.refundOfExpenseId ?? null,
         resolvedShares,
         location: expenseData.location ?? undefined,
       };

@@ -8743,5 +8743,525 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-20T10:44:39.004Z",
     "resolutionNote": "animated_number.dart and confetti_burst.dart now route their animation duration through AppMotion.of(context, ...), collapsing to instant/no-op under reduced motion. Commit 3f27382."
+  },
+  {
+    "id": "BUG-304",
+    "title": "Flutter sync conflict sheet only compared amount and date",
+    "description": "Flutter sync conflict sheet only compared amount and date",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-20T12:40:38.596Z",
+    "updatedAt": "2026-10-20T12:40:43.648Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-20T12:40:43.647Z",
+    "resolutionNote": "conflict_sheet.dart: replaced the amount/date cards with a field table (Amount, Date, Title, Category, Paid by, Split) that lists only differing fields and collapses the rest; Keep mine/Keep theirs use one button style; removed hardcoded English sentence. Commit 0804547."
+  },
+  {
+    "id": "BUG-305",
+    "title": "Flutter deck Add expense button hidden behind the runway dock",
+    "description": "Flutter deck Add expense button hidden behind the runway dock",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-20T14:21:59.887Z",
+    "updatedAt": "2026-10-20T14:22:06.866Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-20T14:22:06.865Z",
+    "resolutionNote": "trip_card_stack.dart: quick-add button moved inside the card area so the floating runway dock no longer covers it. Commit 3442fa1."
+  },
+  {
+    "id": "BUG-306",
+    "title": "Flutter new-expense form errors shown at the end of the scrolling form, out of view",
+    "description": "Flutter new-expense form errors shown at the end of the scrolling form, out of view",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-20T14:22:00.134Z",
+    "updatedAt": "2026-10-20T14:22:07.089Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-20T14:22:07.088Z",
+    "resolutionNote": "expense_form_screen.dart: error banner moved into a pinned strip above Save; expense_form_controller.dart showError() so Save and add another on an untouched form says First add an expense. Commit 3442fa1."
+  },
+  {
+    "id": "BUG-307",
+    "title": "Flutter Save and add another confirmation snackbar covers the button",
+    "description": "Flutter Save and add another confirmation snackbar covers the button",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-20T14:22:00.356Z",
+    "updatedAt": "2026-10-20T14:22:07.305Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-20T14:22:07.305Z",
+    "resolutionNote": "expense_form_screen.dart: the Saved snackbar is now an inline notice in the pinned strip, so it cannot cover Save and add another. Commit 3442fa1."
+  },
+  {
+    "id": "BUG-308",
+    "title": "Switching trips from the title left other tabs on the old trip",
+    "description": "The shell state is reused across trips; fixed with openTripFresh (leave, wait for shell close, open)",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-21T08:58:44.402Z",
+    "updatedAt": "2026-10-21T08:58:48.766Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-21T08:58:48.766Z",
+    "resolutionNote": "Fixed in commit ac91dcb (v3.73.0)"
+  },
+  {
+    "id": "BUG-309",
+    "title": "Spend Collapse all / Expand all days did nothing under Compass spend",
+    "description": "Days were forced open; now open by default but collapsible",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-21T08:58:44.515Z",
+    "updatedAt": "2026-10-21T08:58:48.863Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-21T08:58:48.862Z",
+    "resolutionNote": "Fixed in commit ac91dcb (v3.73.0)"
+  },
+  {
+    "id": "BUG-310",
+    "title": "Activity Money filter missed expenses and was hidden behind another flag",
+    "description": "Money now covers expense add/edit/delete/restore and settlements; chips always shown in trip Activity",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-21T08:58:44.631Z",
+    "updatedAt": "2026-10-21T08:58:48.967Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-21T08:58:48.966Z",
+    "resolutionNote": "Fixed in commit ac91dcb (v3.73.0)"
+  },
+  {
+    "id": "BUG-311",
+    "title": "Trip-name menu and Trip hub Chat tile duplicated other screens",
+    "description": "Share/Mute/Edit/Settings in the trip-name sheet and a Chat tile duplicated the Trip tab and Notes; name now only switches trips, Mute moved to Trip tab",
+    "severity": "low",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-22T05:16:31.941Z",
+    "updatedAt": "2026-10-22T05:16:32.154Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-22T05:16:32.153Z",
+    "resolutionNote": "Fixed in commit 4953f9b (v3.74.0)"
+  },
+  {
+    "id": "BUG-312",
+    "title": "Home screen flashed when switching trips",
+    "description": "openTripFresh now covers the app with a Switching cover until the new trip opens",
+    "severity": "low",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-22T05:16:32.048Z",
+    "updatedAt": "2026-10-22T05:16:32.255Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-22T05:16:32.255Z",
+    "resolutionNote": "Fixed in commit 4953f9b (v3.74.0)"
+  },
+  {
+    "id": "BUG-313",
+    "title": "No way back to the trips home from inside a trip",
+    "description": "Trip-name dropdown now only switches trips; added an All trips tile on the Trip tab",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-22T06:17:42.783Z",
+    "updatedAt": "2026-10-22T06:17:42.901Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-22T06:17:42.900Z",
+    "resolutionNote": "Fixed in commit 4c47b78 (v3.75.1)"
+  },
+  {
+    "id": "BUG-314",
+    "title": "Balances repeated You paid and Your share under the settlement pass",
+    "description": "Strip duplicated the pass flip; removed",
+    "severity": "low",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-22T07:54:44.918Z",
+    "updatedAt": "2026-10-22T07:54:45.172Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-22T07:54:45.172Z",
+    "resolutionNote": "Fixed in commit 79ad0f2 (v3.76.1)"
+  },
+  {
+    "id": "BUG-315",
+    "title": "Prod release build failed in R8 after adding ML Kit text recognition",
+    "description": "Missing optional language classes; added dontwarn rules",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-22T07:54:45.065Z",
+    "updatedAt": "2026-10-22T07:54:45.276Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-22T07:54:45.275Z",
+    "resolutionNote": "Fixed in commit 79ad0f2 (v3.76.1)"
+  },
+  {
+    "id": "BUG-316",
+    "title": "Per person view told you to pay while the pass said you are owed",
+    "description": "With Simplify debts OFF and two groups, per-person payments crossed between the groups, so the bottom bar and banner showed a gross pair debt (24,493.54) while the pass showed the group net (2,101). Now one net payment is listed.",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-22T16:30:16.955Z",
+    "updatedAt": "2026-10-22T16:30:20.534Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-22T16:30:20.534Z",
+    "resolutionNote": "Fixed in commit 9251b52 (v3.77.1)"
+  },
+  {
+    "id": "BUG-317",
+    "title": "Trip card stack: closed trip's card grows over the slider and Add expense disappears",
+    "description": "Top card height depended on whether Add expense shows, so closed/archived trips got a 48px taller card; Add expense also sat tight against the Join / New Trip slider. Card height is now constant and the button lifted.",
+    "severity": "low",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-22T16:50:16.631Z",
+    "updatedAt": "2026-10-22T16:50:16.793Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-22T16:50:16.793Z",
+    "resolutionNote": "Fixed in commit b8966fa (v3.77.2)"
+  },
+  {
+    "id": "BUG-318",
+    "title": "Trip Activity omitted the user's own expenses, refunds, deletions and chat",
+    "description": "Trip Activity omitted the user's own expenses, refunds, deletions and chat",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-22T17:37:24.378Z",
+    "updatedAt": "2026-10-22T17:37:31.418Z",
+    "resolvedBy": "agent",
+    "resolvedAt": "2026-10-22T17:37:31.418Z",
+    "resolutionNote": "Activity now derives rows from trip expenses, refunds, recycle bin and chat (buildTripActivityLog) behind enableTripActivityLog. Commit f55130d"
+  },
+  {
+    "id": "BUG-319",
+    "title": "Tapping an unread Activity row froze on a slow or offline connection",
+    "description": "Tapping an unread Activity row froze on a slow or offline connection",
+    "severity": "medium",
+    "category": "offline-sync",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-23T18:07:51.786Z",
+    "updatedAt": "2026-10-23T18:08:00.695Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-23T18:08:00.695Z",
+    "resolutionNote": "Notification read/delete/clear now run the remote call in the background; local write is what the UI shows. Test: notification_remote_test (network never answers). Commit 9e9bc42 (v3.78.0)"
+  },
+  {
+    "id": "BUG-320",
+    "title": "Plans tab showed duplicate Add item, Add note and Add pass buttons",
+    "description": "Plans tab showed duplicate Add item, Add note and Add pass buttons",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-24T19:17:11.893Z",
+    "updatedAt": "2026-10-24T19:17:12.020Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-24T19:17:12.020Z",
+    "resolutionNote": "Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1)"
+  },
+  {
+    "id": "BUG-321",
+    "title": "Blank band above the bottom bar shrank every list because the plus button reserved space",
+    "description": "Blank band above the bottom bar shrank every list because the plus button reserved space",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-24T19:17:12.073Z",
+    "updatedAt": "2026-10-24T19:17:12.175Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-24T19:17:12.174Z",
+    "resolutionNote": "Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1)"
+  },
+  {
+    "id": "BUG-322",
+    "title": "Header showed round crew-initial avatars that were not wanted",
+    "description": "Header showed round crew-initial avatars that were not wanted",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-24T19:17:12.231Z",
+    "updatedAt": "2026-10-24T19:17:12.320Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-24T19:17:12.320Z",
+    "resolutionNote": "Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1)"
+  },
+  {
+    "id": "BUG-323",
+    "title": "Bottom bar stayed dark in light theme",
+    "description": "Bottom bar stayed dark in light theme",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-24T19:17:12.373Z",
+    "updatedAt": "2026-10-24T19:17:12.478Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-24T19:17:12.478Z",
+    "resolutionNote": "Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1)"
   }
 ]

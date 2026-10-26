@@ -21,6 +21,23 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-24 | unreleased | CALM-PASSPORT | [Calm Passport look and 5-tab trip bar](#calm-passport--calm-passport-look-and-5-tab-trip-bar) |
+| 2026-10-23 | unreleased | SETTLE-NUDGE | [Settle-up nudge banner on quiet trips](#settle-nudge--settle-up-nudge-banner-on-quiet-trips) |
+| 2026-10-23 | unreleased | UNDO-NOT-ASK | [Freeze, close and Settle all apply at once with Undo](#undo-not-ask--freeze-close-and-settle-all-apply-at-once-with-undo) |
+| 2026-10-23 | unreleased | BALANCES-EMPTY-ACTION | [Create trip button on empty Balances](#balances-empty-action--create-trip-button-on-empty-balances) |
+| 2026-10-23 | unreleased | DRAFT-SAFETY | [Drafts: chat, discard prompt, sign-out wipe](#draft-safety--chat-draft-discard-prompt-and-sign-out-wipe) |
+| 2026-10-23 | unreleased | CONFLICT-SHEET-COPY | [Clearer sync conflict sheet](#conflict-sheet-copy--clearer-sync-conflict-sheet) |
+| 2026-10-23 | unreleased | ROW-SYNC-RETRY | [Failed sync mark and Retry on rows](#row-sync-retry--failed-sync-mark-and-retry-on-expense-and-chat-rows) |
+| 2026-10-23 | unreleased | HEADER-SYNC-BUTTON | [Header Sync now button](#header-sync-button--manual-sync-in-the-home-and-trip-headers) |
+| 2026-10-23 | unreleased | TRIP-ACTIVITY-LOG | [Trip Activity log](#trip-activity-log--full-per-trip-history-in-the-activity-tab) |
+| 2026-10-23 | unreleased | STACK-CARD-SIZE | [Trip card stack: same card size, Add expense lifted](#stack-card-size--trip-card-stack-same-card-size-add-expense-lifted) |
+| 2026-10-23 | unreleased | PASS-CLEARER | [Clearer settlement pass and no contradicting payments](#pass-clearer--clearer-settlement-pass-and-no-contradicting-payments) |
+| 2026-10-22 | unreleased | EXPENSE-REFUNDS | [Record a refund on an expense](#expense-refunds--record-a-refund-on-an-expense) |
+| 2026-10-21 | unreleased | TRIP-GET-STARTED | [Get this trip rolling: start card on a blank trip](#trip-get-started--get-this-trip-rolling-start-card-on-a-blank-trip) |
+| 2026-10-21 | unreleased | COMPASS | [Compass: trip dock + Trip hub, Spend header, balance bars, storage card, web Settle-up pane](#compass--trip-dock--trip-hub-spend-header-balance-bars-storage-card-web-settle-up-pane) |
+| 2026-10-20 | unreleased | UX-BATCH-4 | [Balance bars, deck quick add, receipt empty action, icon labels](#ux-batch-4--balance-bars-deck-quick-add-receipt-empty-action-icon-labels) |
+| 2026-10-20 | unreleased | SAVE-ADD-ANOTHER | [Save and add another on the new-expense form](#save-add-another--save-and-add-another-on-the-new-expense-form) |
+| 2026-10-20 | unreleased | CONFLICT-DIFF | [Sync conflict sheet shows what changed](#conflict-diff--sync-conflict-sheet-shows-what-changed) |
 | 2026-10-20 | 3.69.2 | STABILITY-POLISH | [Failure copy, sync status, Shares weights](#stability-polish--failure-copy-sync-status-and-shares-weights) |
 | 2026-10-20 | 3.69.1 | PTR-SCROLL | [Scrolling no longer triggers pull-to-refresh](#ptr-scroll--scrolling-no-longer-triggers-pull-to-refresh) |
 | 2026-10-19 | 3.68.1 | SETTLE-GROUP-RLS | [Second partial group settlement no longer fails](#settle-group-rls--second-partial-group-settlement-no-longer-fails) |
@@ -3473,3 +3490,331 @@ Then add a row to the **Index** table.
 5. Pull down only about 40px and release. Pass: indicator springs back, no refresh.
 6. Pull diagonally. Pass: no refresh.
 7. Repeat steps 4 and 5 on the Trips list. Pass: same behavior.
+
+## CONFLICT-DIFF — Sync conflict sheet shows what changed
+
+**Version:** unreleased · **Flags:** none (UX fix on an existing surface) · **Device:** two devices, or one phone plus the web app, on the same trip.
+
+1. On device A, go offline and change an expense's amount (say 90 to 60) and its category.
+2. On device B, change the same expense's amount (90 to 40) and who paid, then let it sync.
+3. Bring device A online, open the trip, then open the sync conflict sheet (Ledger or Expenses banner).
+4. Pass: only the changed fields are listed (Amount, Category, Paid by), bold on a yellow tint, with "On this phone" and "On the server" columns. A line reads "3 other fields are the same" for Date, Title and Split.
+5. Pass: **Keep mine** and **Keep theirs** look identical in weight; neither is pre-emphasised.
+6. Tap **Keep theirs**. Pass: the expense shows the server values and the conflict disappears. Repeat with **Keep mine** on a second conflict. Pass: local values stay and the conflict disappears.
+7. Pass: the sentence "<title> changed on another device…" no longer appears under each expense title; only the sheet intro does.
+
+**Negative checks:** an expense with no conflict never shows the sheet ("No conflicts to resolve." if opened directly). Nothing in Settings or the Ops Deck changes.
+
+## SAVE-ADD-ANOTHER — Save and add another on the new-expense form
+
+**Version:** unreleased · **Flags:** `enableSaveAndAddAnother` (Trip pack, default ON; Ops Deck → Flags). Related, already shipped: `enableSmartExpenseDefaults`, `enableRememberDefaultSplit`.
+
+1. Open a trip, tap add expense. Pass: a **Save** button and, under it, a lighter **Save and add another** button.
+2. Enter amount 100 and title "Breakfast", tap **Save and add another**. Pass: a brief "Saved. Add the next one." message, the form stays open with empty title and amount, and the amount field has the cursor.
+3. Enter 60 and "Taxi", tap **Save**. Pass: the form closes and both Breakfast and Taxi are in Expenses, each with its own amount.
+4. With the smart-defaults flags ON, pick a different payer and category before step 2. Pass: after **Save and add another** the next form starts from that payer and category (and the same split).
+5. Enter a repeat of the expense you just saved (same title, amount, date) and save. Pass: the duplicate warning appears.
+6. Open an existing expense to edit. Pass: no **Save and add another** button.
+7. Open a fresh new-expense form and tap **Save and add another** without typing anything. Pass: a red strip directly above the buttons says "First add an expense." and nothing is saved. Type a digit. Pass: the strip disappears.
+7b. Type a title but no amount and tap **Save and add another** (or plain **Save**), with the keyboard open. Pass: "Please enter a valid amount greater than 0." shows in the same strip above the buttons, in view without scrolling.
+7c. After a successful **Save and add another**, pass: a green "Saved. Add the next one." line appears above the buttons for about 3 seconds, and **Save and add another** stays fully visible and tappable (no snackbar over it).
+8. Go offline and repeat step 2. Pass: it saves on the phone and the form still resets; the items sync when back online.
+
+**Flag-OFF negative check:** turn `enableSaveAndAddAnother` OFF. Pass: the new-expense form shows only **Save**, and Save closes the form as before. Existing expenses, splits and sync are unchanged either way.
+
+## UX-BATCH-4 — Balance bars, deck quick add, receipt empty action, icon labels
+
+**Version:** unreleased · **Flags:** `enableBalanceBars`, `enableTripCardQuickAdd` (both Trip pack, default ON); the receipt button rides the existing `enableReceiptGallery`. `enableTripCardQuickAdd` needs `enableTripCardStack` ON.
+
+**Balance bars**
+1. Open a trip where one person paid and others owe (say Asha paid 90, three-way equal). Open Summary, then the **Who pays whom** section. Pass: above the transfer rows, **Who is up, who is down** lists everyone with a balance. Asha has a green bar going right of the centre line; Ben and Cara have equal red bars going left; amounts on the right; the longest bar belongs to the biggest balance.
+2. Settle everything. Pass: the bars disappear with the transfers ("All settled").
+3. Turn on TalkBack or VoiceOver. Pass: each row reads as one sentence, e.g. "Ben owes ₹30.00".
+4. Turn `enableBalanceBars` OFF. Pass: only the transfer rows remain; balances and Settle buttons behave as before.
+
+**Deck quick add**
+5. On the Trips screen in card view, look under the top card. Pass: an **Add expense** button sits right under the card, above the Join / New Trip dock and fully tappable (the dock does not cover it).
+6. Tap it. Pass: the new-expense form opens for the trip on top. Save, then go back. Pass: you land on the Trips deck.
+7. Swipe to an archived or closed trip. Pass: the button is gone; swipe back and it returns.
+8. Swiping, tap-to-open and long-press still work exactly as before.
+9. Turn `enableTripCardQuickAdd` OFF. Pass: no button, the card is taller; list and grid views are unchanged either way.
+
+**Receipt gallery empty state**
+10. Open Receipts on a trip with no receipt photos. Pass: the empty message has an **Add expense** button that opens the new-expense form.
+
+**Icon labels**
+11. With TalkBack or VoiceOver, focus the back arrow on Insights and the close button on the UPI payment sheet. Pass: they announce "Back" and "Close".
+
+## COMPASS — Trip dock + Trip hub, Spend header, balance bars, storage card, web Settle-up pane
+
+**Version:** unreleased · **Flags (all default ON):** `enableCompassNav` (Core), `enableCompassSpend` (Trip), `enableCompassMoney` (Trip), `enableCompassMe` (Core), `enableCompassWeb` (Core). Design: `docs/compass-redesign-plan.md`. Login and the Trips home layout are intentionally unchanged. Turn a flag OFF in Ops Deck → Flags (or Settings → Flag overrides on dev builds) for the negative checks.
+
+**Trip bottom bar and Trip hub (`enableCompassNav`)**
+1. Open any trip on a phone. Pass: the bottom bar reads **Balances, Spend, [orange +], Activity, Trip** (Balances is the first tab, Spend the second), every label always visible, the current one teal with a small bar above its icon. The old floating **Add expense** button is gone.
+2. Tap the orange **+**. Pass: the Quick add / full form chooser opens (or the full form when Quick add speed dial is OFF), exactly as the old button did.
+3. Tap **Trip**. Pass: a cover with the trip name and a grid: **Chat** (only if Trip Group Chat is on; shows "New messages" when unread), **Members, Notes** (only if Notes is on), **Receipts, Insights** (only if Spend insights is on), **Invite, Live location, Tools, Trip settings**. Each tile opens what it says.
+4. Tap **Members**. Pass: the People page opens and **Trip** stays the lit item. Swipe sideways: pages move Balances, Spend, Activity, Trip, Chat, People, Notes in that order. Tap **Chat** on the hub: the chat opens with **Trip** lit.
+5. Open an old link or notification for `/trip/<id>/notes` and `/trip/<id>/members`. Pass: they still open, with **Trip** lit.
+6. Open a trip from the Trips list. Pass: it opens on Balances (who owes what), as before.
+7. On the Trips home, look at the bottom bar. Pass: **Trips, Wallet, Activity, Me** with the orange + in the middle; Wallet opens the cross-trip balances. Layout of the Trips screen itself is unchanged.
+8. Switch to dark mode and to AMOLED. Pass: bar, orange button and hub are readable; the orange + has dark text-on-orange contrast.
+9. Turn OFF Trip Group Chat (`enableTripChat`). Pass: the trip bar is unchanged (**Balances, Spend, +, Activity, Trip**) and the hub has no Chat tile.
+9b. Tap **Activity**. Pass: a title ("Activity · N new"), mark-all-read and **Delete all** buttons, filter chips **All, Unread, Money, People, Chat** (each with its count), then this trip's updates grouped under Today / Yesterday / date, each a tile with an icon, title, detail, time and a dot while unread. Only this trip's updates show.
+9c. Tap **Money**. Pass: added, edited, deleted and restored expenses plus settlement updates and reminders. **People**: members joining. **Chat**: new messages. **Unread**: only unread ones. A chip with nothing says why ("No money updates yet"). Swipe a row left to delete it; tap a row to open the page it is about (it is marked read).
+9d. Tap **Delete all**. Pass: a confirm says how many will be deleted; confirming empties Activity for this trip only (other trips' updates remain).
+9e. Look at the top right of any trip page. Pass: no three-dots menu and no share icon (only sync and the bell). Open **Trip**: tiles **Edit trip**, **Route map** (toggles the map above the page), **Live location**, **Invite**, **Trip settings**, **App settings** do what the old menu did. With Compass nav OFF the old top-right menu is back.
+9f. Open Trip A, visit Spend and Balances, then tap the trip name at the top and pick Trip B. Pass: you land on Trip B's Balances (not the tab you were on); Spend, Activity, Trip and every number are Trip B's, never A's. Switching from a notification of another trip behaves the same.
+
+**Spend header and rows (`enableCompassSpend`)**
+10. Open Spend (Expenses) on a trip with expenses. Pass: a **Total spent** card sits above the search row with the total, **Per person**, and an orange pill like "Stay 38%"; each expense row has a category-coloured ring. Pass: no budget bar anywhere.
+11. Add an expense. Pass: total and percentage update.
+
+**Balance bars (`enableCompassMoney`)**
+12. Open Balances (Summary) on a trip where people owe each other. Pass: the **who is up, who is down** bars show even when the separate Balance Bars flag is OFF.
+
+12b. On the same screen, with Compass Money ON. Pass: the settlement pass is at the top exactly as before (trip banner, amount, SETTLED / NOT SETTLED stamp) and still **flips** to You paid / Your share / Difference; the yellow **Close out trip** checklist card is not shown (Close out trip is still in the chips above). Under **Who pays whom**, each payment is a flat row with two avatars, the amount and a button: orange **Settle** on payments you make, outlined on others. With the flag OFF the yellow card and the ticket tiles return.
+
+**Storage card (`enableCompassMe`)**
+13. Settings → Storage and Data. Pass: a card at the top shows the device total with a teal/orange split bar and "Data … · Cache …"; the two lists below are unchanged.
+
+**Web settle-up pane (`enableCompassWeb`)**
+14. Open the Flutter web app in a window at least 1280px wide, open a trip's Spend tab. Pass: a 300px **Settle up** pane on the right lists who pays whom with amounts; tapping a row opens Balances. Narrow the window below 1280px. Pass: the pane disappears; phones never show it.
+
+**Follow-ups: no duplicates, Balances, Spend search, Activity actions (Compass flags)**
+15. With Compass nav ON, tap the trip name at the top. Pass: with two or more trips the **switch list opens directly** (no Share / Mute / Edit / Settings rows) and the name has a small arrow; with one trip the name does nothing and has no arrow. With Compass nav OFF the old action sheet is unchanged.
+16. Open **Trip**. Pass: no Chat tile (Chat is inside **Notes**, and Notes stays available when only chat is on); tiles Edit trip, Route map, **Mute alerts / Unmute alerts**, Live location, Invite (shows the code), Receipts (shows "N receipts"), Notes (says "New chat messages" when unread), Trip settings, App settings.
+17. Switch to another trip from the name. Pass: a cover reads "Switching to <name>…" so the home screen never flashes, then the new trip opens on Balances.
+18. Balances (Compass money ON). Pass: there is no strip under the pass (You paid and Your share are on the pass flip). When you owe, a bar at the bottom reads **You owe ₹X · Settle**; tapping Settle lists your payments, each with an orange Settle button. When you are owed or square there is no bar. People shows who owes or is owed beside each person.
+19. Spend (Compass spend ON). Search "food", a person's name, or an amount like "1200". Pass: expenses match on category, payer and amount, not only title. Apply a filter in the filter sheet. Pass: a removable chip per filter (category, person, dates, amount, place, personal) shows under the Total spent card; tapping its x removes just that filter.
+20. Activity. Pass: a "settlement to confirm" row has **Confirm received** (one tap confirms and marks it read); a chat row has **Reply** (opens the chat).
+21. Set the phone text size to 130% and open Balances, Spend, Activity and Trip. Pass: nothing is clipped, and every button is at least 44px tall.
+
+**Chat, Notes, Checklist, Settle sheet, calm Balances (`enableCompassTripPages`, Trip pack, default ON)**
+22. Trip, Notes, Chat. Pass: expense and payment events are small centered lines such as "Ben paid Asha · UPI · ₹50,983" (never "Settlement Settlement", never "INR"); tapping an expense line opens its details. Other people's messages show an avatar on the first message of a run and their name once; the Send button is grey until you type.
+23. Notes. Pass: each note is a card with the title, up to 3 lines of text and "Edited ... ago"; there is no editable box on the card. Tap a card: an Edit note sheet opens; change the text, Save, and the card shows the new text. The pin / delete menu still works.
+24. Checklist. Pass: open items first; finished ones are folded under "Done (N)" (tap to open or close). "Anyone" is not shown on rows (an assigned person is); with a category chip selected, rows do not repeat the category. Ticking an item moves it to Done.
+25. Settle: Balances, tap Settle on a payment. Pass: the sheet shows the payer and receiver with avatars, one large amount you can edit ("Edit to pay part of it"; part payments show what remains), the Mark settled button right under it, and date/note/UPI/share under "More options". Mark settled records the payment as before.
+26. Balances when everyone is square. Pass: the pass shows SETTLED once; there is no green "Everyone is square" card, no progress card and no "You're owed" chip; nothing sits under the pass except the payments.
+27b. Trip tab (Compass nav ON). Pass: the first tile is **All trips**; tapping it opens the trips home. With Compass nav OFF there is no such tile.
+27. Flag OFF (`enableCompassTripPages`): the previous cards and the longer settle sheet return. No message, note, item or payment changes.
+
+**Receipt scan, chat reactions, trip polls (`receiptOcr`/`enableReceiptUpload`, `enableChatReactionsAndReplies`, `enableTripPolls` Trip pack default ON)**
+28. Add expense, Scan & Itemize, **Scan receipt** (real phone only; web and desktop fall back to pasted text). Take a photo of a printed bill. Pass: the receipt text is read on the phone, the review card shows merchant, items and total, **Apply** fills title, amount, date and (from the title) the category. The button next to it picks a photo from the gallery. A blank or unreadable photo shows a message and you can paste text instead.
+29. Chat, with `enableChatReactionsAndReplies` ON (it is OFF by default: turn it ON in Ops Deck, or Settings, Flag overrides on a dev build). Long-press a message. Pass: a row of 👍 ❤️ 😂 😮 🙏 (and Edit on your own message); pick one and a chip "👍 1" shows under the message, highlighted for you; tap the chip to remove yours; a second person's tap makes it 2. OFF: long-press only offers Edit on your own message.
+30. Chat, `enableTripPolls` ON. Tap the poll icon left of the message box, enter a question and at least 2 options (up to 6), Post. Pass: a card appears for everyone; tap an option to vote (check mark, bar fills); tap another to move your vote; tap yours again to withdraw; counts match; only the asker sees **Close poll**; after closing, taps do nothing and the card says Closed. OFF: no poll icon.
+31. Needs migration `supabase/migrations/0119_trip_message_poll_kind.sql` applied before polls sync to other phones (until then a poll stays on your phone and the sync retries).
+
+**Join with just your name (`enableGuestJoin`, Core pack, default ON)**
+32. Setup (once): Supabase dashboard, Authentication, Providers, turn **Allow anonymous sign-ins** ON; apply `supabase/migrations/0120_guest_join.sql`. Without these the button shows an error and nothing is created.
+33. On a phone that is signed out (or a fresh install), open an invite link. Pass: below "Continue with Google" there is **Join with just your name**. Tap it, enter a name, Join. Pass: the trip opens; the person appears in People under that name; they can add an expense, chat, vote on a poll. If the trip already had an unclaimed traveler with the same name, that spot is taken instead of a duplicate being made.
+34. Open the same link again on the same phone. Pass: it goes straight into the trip (no second member). Enter a wrong code five times. Pass: a 15 minute wait message (same limit as signed-in users).
+35. Flag OFF: only Google (and Apple) buttons show. A local "guest" (no server) still sees the existing "guests can't join" message and no name button.
+
+**Flag-OFF negative checks:** turn `enableCompassNav` OFF: the old tab bar (Summary/Expenses/Members/Notes per your other flags), floating Add button and old home bar return; no Trip hub. Turn `enableCompassSpend`, `enableCompassMoney`, `enableCompassMe`, `enableCompassWeb` OFF one at a time: the header card, forced bars, storage card and right pane each disappear and nothing else changes. No data, balance or setting changes in any case.
+
+**Pass criteria:** steps 1 to 21 (including 9b to 9f and 12b) pass in light, dark and AMOLED, at text size 130%, with TalkBack/VoiceOver reading each bar item as "<label>, button" and the orange + as "Add expense".
+
+## TRIP-GET-STARTED — Get this trip rolling: start card on a blank trip
+
+**Version:** unreleased · **Flag:** `enableTripGetStarted` (Trip pack, default ON).
+
+1. Create a new trip and open it. Pass: Summary shows **Get this trip rolling** with two cards, **Invite your group** and **Add your first expense**. No boarding pass, no who-pays-whom, no balance bars, no settled/celebration banners.
+2. Open the Expenses tab on the same trip. Pass: the same start card (not an empty list with search and filters).
+3. Tap **Share invite link**. Pass: the system share sheet opens with the text "Join my trip "<name>" on Trip Tracker: <link> (code XXXXXX)".
+4. Tap **Copy link**. Pass: "Invite link copied" appears; pasting elsewhere gives the join link.
+5. Tap **Code and QR**. Pass: the invite sheet opens with the code and QR.
+6. Tap **Add expense**. Pass: the Quick add / full form chooser (or the full form) opens. Save one expense and go back. Pass: Summary and Expenses now show the normal screens, and the start card never returns, even if the expense is later deleted and others remain.
+7. Delete the only expense (move it to the bin). Pass: the start card returns, since the trip is blank again. Recording a settlement alone does not count as an expense.
+8. Join the trip from a second account. Pass: the card says "2 travelers so far".
+9. Check light, dark and text size 130%. Pass: buttons wrap, nothing is clipped. With `enableCompassNav` ON the Add button is orange.
+
+**Flag-OFF negative check:** turn `enableTripGetStarted` OFF. Pass: a blank trip shows the previous Summary and Expenses screens. Trips with expenses look the same either way.
+
+## EXPENSE-REFUNDS — Record a refund on an expense
+
+**Flag:** `enableExpenseRefunds` (Trip pack, default ON). Web app and Flutter app.
+
+**Prep:** a trip with 4 members (A, B, C, D). Add "Hotel" 5000, paid by A, split equally (1250 each). Note the Balances: B, C, D each owe A 1250.
+
+1. Open Hotel, tap **Refund** (web) / **Record refund** (Flutter). Enter 1000, Save. Pass: a row "Refund: Hotel" 1000 appears in the list; Hotel shows "Refunded 1000 to A. Shares and balances already reflect it."
+2. Open Balances / Who pays whom. Pass: B, C, D each owe A 1000 (not 1250); A is owed 3000.
+3. Trip total and category totals. Pass: total reads 4000, not 5000 or 6000.
+4. Settle B's 1000 with the normal Settle flow, then record a second refund of 400 on Hotel. Pass: B's share drops to 900, so B overpaid by 100 and Balances shows A owes B 100; Settle clears it.
+5. Try a refund above what is left (Hotel has 3600 left after both refunds). Pass: Save is disabled / blocked for amounts above the remaining refundable.
+6. Delete a refund row (swipe delete). Pass: Hotel's shares and all balances go back as if the refund never happened.
+7. Open a refund row. Pass: no Edit, Duplicate, Flag or Record refund on it.
+8. Add a Hotel split between 2 groups, refund part of it. Pass: the refund spreads over every member in proportion; group balances update.
+9. Odd amounts: refund 100 on a 3-way split. Pass: shares sum to exactly 100 (33.34 / 33.33 / 33.33).
+10. Open the other platform (web vs Flutter) on the same trip. Pass: same balances on both.
+
+**Flag OFF (`enableExpenseRefunds`):**
+11. Turn the flag OFF in Ops Deck. Pass: no Refund / Record refund action, no Refunded badge; refunds already recorded still reduce balances (money does not silently change back).
+
+**Old app version:** a build without this feature shows the refund as a plain "Refund: Hotel" line and keeps the pre-refund balances; update the app to see the corrected numbers.
+
+**Pass criteria:** balances equal original minus refund, split in proportion, payer is never owed more than they actually spent, and the history is visible on the expense.
+
+## PASS-CLEARER — Clearer settlement pass and no contradicting payments
+
+**Flag:** `enableCompassTripPages` (Trip pack, default ON) for the pass wording. The payment-list fix has no flag (it is a calculation fix). Web and Flutter.
+
+**Prep:** a trip with two groups, 2B (A, B) and 1B (C, D), Simplify debts OFF. A pays 1000 and D pays 400, both split equally among all four. Pair by pair, C owes A 350 while A and B each owe D 100, but 2B is owed 300 net.
+
+1. Open Balances as A. Pass: one payment only, 1B pays 2B 300. The red "You owe" bar and "Pay ..." banner never show an amount that contradicts the pass (A is owed, so no "You owe" bar).
+2. Front of the pass, bottom stub (Flutter): labels read **Spent / Settled / Pending**; Pending reads "1 payment" (or "All paid" when square); amounts over 1000 show without paise. Nothing wraps over two lines at 130% text size.
+3. Web pass footer: reads "Spent X · Settled Y" and "1 payment left" (or "All paid"), not "4 members / 1 transfer left".
+4. Tap the pass to flip (Flutter). Pass: You paid / Your share / **You owe** or **You're owed** or **Square** (not "Difference"), a line "Payments already recorded move this by ±X" when settlements exist, and for a group member "Your group 2B is owed X in total. This page shows only you." The button reads "How is this worked out?".
+5. Record the 300 settlement. Pass: stamp SETTLED, stub Pending "All paid", no bar.
+6. Per person trip without groups, A pays 100 split with B. Pass: B sees one payment, A is owed; behaviour as before.
+
+**Flag OFF (`enableCompassTripPages`):** the stub reads Total spent / Per person / Open payments (a count), the flip side third cell reads Difference, and the web footer reads members / transfers left. The payment-list fix still applies.
+
+**Pass criteria:** the pass, the bottom bar, the banner and Who pays whom always agree on who owes whom.
+
+## STACK-CARD-SIZE — Trip card stack: same card size, Add expense lifted
+
+**Flag:** `enableTripCardStack` (existing, default ON). Flutter app, trips home in stack view.
+
+**Prep:** at least one open trip and one ended/closed or archived trip (for example Switzerland).
+
+1. Open the trips home in stack view with an open trip on top. Pass: the card, the **Add expense** button under it and the Join / New Trip slider all fit, with a visible gap (about 16px) between Add expense and the slider.
+2. Swipe to the closed or archived trip (Switzerland). Pass: the card is exactly the same size as before and ends at the same place; the Add expense button is shown greyed and reads "Add expense · trip closed" (or "· trip archived"); tapping it does nothing, because a closed or archived trip cannot take expenses. Nothing sits on the slider.
+3. Swipe through all cards. Pass: card height never changes.
+
+**Flag OFF (`enableTripCardStack`):** the trips list is shown instead; unchanged.
+
+**Pass criteria:** card height is constant for every trip, Add expense is clear of the slider.
+
+## TRIP-ACTIVITY-LOG — Full per-trip history in the Activity tab
+
+**Flag:** `enableTripActivityLog` (Trip pack, default ON). Flutter app.
+
+1. Open a trip, add an expense yourself (for example "Stay" 4202). Open the **Activity** tab. Pass: "Stay — INR 4,202.00" is listed under Today, even though you added it.
+2. Open that expense, record a refund of 800. Pass: a **Refund Recorded** row shows "Refund: Stay — INR 800.00".
+3. Delete another expense. Pass: an **Expense Deleted** row appears (deletions older than 24 hours are not shown).
+4. Edit an expense a minute or more after adding it. Pass: an **Expense Updated** row appears.
+5. Send a chat message. Pass: it appears as a **New Message** row from you. Chat event cards for expenses are not repeated.
+6. Money chip: lists expenses, refunds, settlements, edits and deletions. Chat chip: messages only.
+7. Something another traveler added shows once, not twice (notification and log merge). Swipe on a log row does nothing; swipe on a notification row still deletes it. **Delete all** clears notifications only; log rows remain.
+
+**Tap to open (same flag):**
+
+8. Tap a chat-message row. Pass: Chat opens scrolled to that message, which is highlighted for about 2 seconds, even in a long chat.
+9. Tap an expense, refund, edit or settlement row. Pass: the Expenses tab opens with that expense's detail sheet already open.
+10. Tap a deleted-expense row. Pass: the Recycle Bin opens. Tap a notification row from another traveler (for example their message): it goes to the matching message or expense; if it no longer matches (renamed or purged), it just opens the tab.
+11. Open any expense, tap **See in Activity**. Pass: Activity opens showing only that expense's rows with a "Showing this item only" chip; the chip's x restores the full log.
+
+**Flag OFF (`enableTripActivityLog`):** no See in Activity button; Activity lists only notifications sent to you; your own expenses and refunds do not appear.
+
+**Pass criteria:** every expense, refund, settlement, deletion and message in the trip is visible once in Activity.
+
+---
+
+## HEADER-SYNC-BUTTON — manual sync in the home and trip headers
+
+**Flag:** `enableSyncLine` (existing, default ON). Flutter app.
+
+1. Open the Trips list (list view, not card stack). Pass: a sync icon sits first in the top-right actions.
+2. Tap it while online. Pass: the icon becomes a small spinner, then returns to the icon once the sync finishes. Changes made on another device appear.
+3. Open a trip. Pass: the same icon sits next to the bell. Tap it: same behaviour.
+4. Go offline (airplane mode). Pass: icon becomes a cloud-off with tooltip "Offline". Make an edit: tooltip shows the pending count; reconnect and tap, the edit syncs.
+5. With a failed (stuck) item: the icon is red; tapping opens the sync review sheet (Retry), not a sync.
+
+**Flag OFF (`enableSyncLine`):** no sync button in either header.
+
+**Pass criteria:** a manual sync can be started from both headers and always shows progress.
+
+---
+
+## ROW-SYNC-RETRY — failed sync mark and Retry on expense and chat rows
+
+**Flag:** `enableRowSyncRetry` (Core pack, default ON). Flutter app. Needs a change the server keeps refusing; easiest to force from a debug build or a test account that has lost permission on a trip.
+
+1. Make a change that gets stuck (for example, edit an expense after being removed from the trip by its owner). Open the Expenses tab. Pass: that row shows a red "sync problem" mark instead of the grey clock; its tooltip reads "Sync failed. Tap to retry."
+2. Tap the red mark. Pass: the mark goes back to the grey "Pending sync" clock while it retries; other stuck rows are untouched.
+3. Send a chat message in the same state. Pass: your bubble shows the same red mark where the clock or ticks usually are; tapping it retries.
+4. Open the sync review sheet (header Sync button turns red when something is stuck). Pass: Retry and Discard there still work, and retrying a row from the sheet clears its red mark.
+5. A conflicted expense still shows the red "Sync conflict" mark, not "Sync failed".
+
+**Flag OFF (`enableRowSyncRetry`):** stuck rows look like any pending row (grey clock); no tap-to-retry on rows; the sync review sheet still works.
+
+**Pass criteria:** a stuck item is visibly different from a waiting one, and can be retried from the row without touching anything else.
+
+---
+
+## CONFLICT-SHEET-COPY — clearer sync conflict sheet
+
+**Flag:** none (changes an existing screen; the sheet only appears when a conflict exists). Flutter app.
+
+1. On two devices signed in to the same trip, put one offline and edit an expense's category and split there. On the other device edit the same expense's category differently. Bring the first device online. Pass: the Expenses tab shows the Sync conflict chip and a red mark on that row.
+2. Tap the chip. Pass: the sheet shows category as names (for example "Food & Dining", never "cat-food") and split as "Equal, 3 people".
+3. Read the intro text. Pass: it says Keep mine sends your edit and replaces theirs, and Keep theirs drops your edit.
+4. Tap **Keep mine**. Pass: the conflict clears, your edit syncs and the other device shows it. Repeat with **Keep theirs**: your edit is dropped and the other device's value stays.
+
+**Pass criteria:** a person can tell what each button will do and what differs, without seeing internal ids.
+
+---
+
+## DRAFT-SAFETY — chat draft, discard prompt and sign-out wipe
+
+**Flag:** `enablePersistentExpenseDraft` (Core pack, default ON). Flutter app.
+
+1. Open a trip, Notes tab, Chat pane. Type "meet at the pier" without sending. Leave the trip (back to Trips), then reopen it. Pass: the text is back in the message box. Send it. Pass: the box is empty and reopening the chat shows no draft.
+2. Type a chat message, force-close the app, reopen, open the same chat. Pass: the text is back (within 24 hours).
+3. Notes tab, add a new note, type a title. Press back, or tap outside the sheet. Pass: "Discard changes?" appears. **Keep editing** returns to the text; **Discard** closes. Pass: Save closes without asking. An untouched sheet closes without asking.
+4. Repeat step 3 for a checklist item and for a travel pass (change any one field).
+5. Try to swipe a note sheet down. Pass: it does not move (swipe is off while the flag is ON; back and tap outside are the ways out).
+6. Leave a half-written expense and a half-typed chat message, then sign out and sign in as another account that is a member of the same trip. Pass: neither draft appears.
+
+**Flag OFF (`enablePersistentExpenseDraft`):** no chat draft; the note, item and pass sheets close freely and can be swiped away; no prompt.
+
+**Pass criteria:** typed text is never lost by an accidental close or a restart, and never shows up for the next person.
+
+## BALANCES-EMPTY-ACTION — Create trip button on empty Balances
+
+**Flags:** none (UX fix; no new behaviour behind a flag).
+
+1. Sign in with an account that has no trips. Open the Balances tab. Pass: the empty message shows with a **Create trip** button under it.
+2. Tap **Create trip**. Pass: the same create-trip sheet opens as on the Trips tab; creating a trip returns you to a working app.
+3. With at least one trip, open Balances. Pass: no empty message and no button.
+
+**Pass criteria:** an empty Balances tab always offers the next step. Other empty screens (Activity, Archived trips, Recycle bin, All settled) are informational on purpose and unchanged.
+
+## UNDO-NOT-ASK — Freeze, close and Settle all apply at once with Undo
+
+**Flags:** `enableUndoSettlement` (existing, default ON) for Settle all. Freeze and close have no flag: they only lose their confirmation.
+
+1. As trip owner open Trip settings and flip **Freeze trip**. Pass: no dialog; the switch turns on and a "Trip frozen" snackbar with UNDO shows. Tap UNDO within 5 s. Pass: the switch turns off and members can add expenses again.
+2. Flip **Trip closed** the same way ("Trip closed", then UNDO). Pass: the trip reopens. Flip it off: "Trip reopened" with UNDO puts it back to closed.
+3. On a trip where you owe two or more payments, tap **Settle all** on the Balances tab. Pass: no dialog; every payment is recorded and the snackbar shows UNDO. Tap UNDO. Pass: the settlements leave the list and balances return.
+4. **Flag OFF** (`enableUndoSettlement`): tap Settle all. Pass: the "Mark as paid" confirmation appears first and nothing is recorded until you confirm.
+5. Unchanged on purpose: delete account, restore backup, sign out, delete trip, recycle-bin delete forever, clear activity and notifications, clear cache all still ask first.
+
+**Pass criteria:** reversible actions never ask; every one of them can be taken back for 5 seconds.
+
+## SETTLE-NUDGE — Settle-up nudge banner on quiet trips
+
+**Flags:** `enableSettleNudge` (Trip pack, default ON).
+
+1. Use a trip where you owe someone (for example Ben paid 60 split between you and Ben) and nothing has been added or edited for 3 days (to test sooner, set the device date forward 4 days). Open the trip. Pass: a slim green banner under the top bar says "You still owe Ben ₹30 on <trip name>" on every tab, with **Settle up** and an x.
+2. Tap **Settle up**. Pass: the Balances tab opens.
+3. Tap the x. Pass: the banner disappears and stays hidden after leaving and reopening the trip. Move the date forward another 3 days. Pass: it returns.
+4. Add or edit an expense. Pass: the banner is gone (the trip is active again) until 3 quiet days pass.
+5. Negative checks. Pass for each: no banner when you are owed money but owe nobody; on a settled trip; on a closed, frozen or archived trip; for someone who owes nothing.
+6. **Flag OFF:** with the flag off for the trip, repeat step 1. Pass: no banner; the Balances cards look as before.
+
+**Pass criteria:** only the person who owes sees it, only after 3 quiet days, never on a finished trip, and it sends no push or message.
+
+## CALM-PASSPORT — Calm Passport look and 5-tab trip bar
+
+**Flags:** `enableCalmPassportUi` (Core pack, default ON). Flutter app only.
+
+1. Open the app signed in. Pass: paper-coloured ground, white cards, ink chips with a teal accent.
+2. Open the Trips home. Pass: a dark floating bar shows Trips, Balances, Alerts, You with every label, and a "+ New trip" button hovers over the list (the list runs down to the bar, no blank band).
+3. Open a trip. Pass: the bottom bar shows Balances, Spend, Activity, Plans, Hub with every label (the trip opens on Balances); the selected item sits on a teal pill; a "+" button hovering over the content opens Add expense; no blank band above the bar.
+4. Look at the trip header. Pass: there are no round name/initial avatars in the trip header; People opens from the Hub tile. Open Hub and tap the Chat tile. Pass: Chat opens and Hub stays lit.
+5. Open Plans. Pass: Passes, Checklist, Notes only (Chat lives in Hub), and each pane shows exactly one Add button (floating: Add item, Add pass, Add note), never a second one in the page. Open Spend. Pass: a night-green Group spend card beside a You get (+) or You owe (−) card with Settle up. Open the Trips home with a live trip. Pass: night-green hero card with LIVE NOW · DAY x OF y, and other trips show a date tile.
+6. Switch the phone to dark theme. Pass: near-black green ground, bright teal pill, text stays readable.
+7. **Flag OFF** (`enableCalmPassportUi`, Settings > Flag overrides): reopen the app. Pass: previous colours and trip bar return; no crew avatars in the header.
+
+**Pass criteria:** no balance, split or sync value changes; only look and navigation differ.

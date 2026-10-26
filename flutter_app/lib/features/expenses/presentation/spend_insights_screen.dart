@@ -59,7 +59,11 @@ class _Body extends StatelessWidget {
       backgroundColor: tokens.bgPage,
       appBar: AppBar(
         title: const Text('Insights'),
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20), onPressed: context.pop),
+        leading: IconButton(
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: context.pop,
+        ),
       ),
       body: DecoratedBox(
         decoration: BoxDecoration(color: tokens.bgPage),
@@ -137,7 +141,11 @@ class _Body extends StatelessWidget {
                                     child: Text(
                                       formatMoney(context, total, currency),
                                       textAlign: TextAlign.center,
-                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                                      style: const TextStyle(
+                                        fontFeatures: AppTypography.tabularFigures,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -169,7 +177,10 @@ class _Body extends StatelessWidget {
                                             ),
                                             Text(
                                               formatMoney(context, c.total, currency),
-                                              style: const TextStyle(fontWeight: FontWeight.w700),
+                                              style: const TextStyle(
+                                                fontFeatures: AppTypography.tabularFigures,
+                                                fontWeight: FontWeight.w700,
+                                              ),
                                             ),
                                           ],
                                         ),

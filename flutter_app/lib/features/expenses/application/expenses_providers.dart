@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/auth_state.dart';
 import '../../../core/env/app_env.dart';
+import '../../../core/flags/compass_flags.dart';
 import '../../../core/storage/prefs.dart';
 import '../../../data/providers.dart';
 import '../../../data/supabase/supabase_gateway.dart';
@@ -111,16 +112,37 @@ final expenseFiltersProvider = NotifierProvider.family<ExpenseFiltersNotifier, E
 
 final filteredExpensesProvider = Provider.family<List<Expense>, String>((ref, tripId) {
   final all = ref.watch(tripExpensesProvider(tripId)).value ?? const <Expense>[];
+  final wide = ref.watch(compassFlagProvider((compassSpendFlag, tripId)));
   return filterExpenses(
     all,
     ref.watch(expenseFiltersProvider(tripId)),
     myMemberId: ref.watch(myMemberIdProvider(tripId)),
+    categoryNames: wide ? {for (final c in ref.watch(tripCategoriesProvider(tripId))) c.id: c.name} : null,
+    memberNames: wide
+        ? {for (final m in ref.watch(tripMembersProvider(tripId)).value ?? const <Member>[]) m.id: m.name}
+        : null,
   );
 });
 
 /// Entities with unsynced local changes (rows show a "pending sync" badge).
 final dirtyIdsProvider = StreamProvider<Set<String>>(
   (ref) => ref.watch(outboxStoreProvider).watchAll().map((items) => collectDirtyIds(items.map((i) => i.toQueuedOp()))),
+);
+
+/// Entities with a quarantined change (rows show "Sync failed" with a Retry; flag `enableRowSyncRetry`).
+final failedIdsProvider = StreamProvider<Set<String>>(
+  (ref) => ref
+      .watch(outboxStoreProvider)
+      .watchIssues()
+      .map((items) => {for (final i in items) ...payloadEntityIds(i.type, i.payload)}),
+);
+
+/// Retries one row's stuck changes and asks the coordinator to send them now.
+final retryRowSyncProvider = Provider<Future<void> Function(String)>(
+  (ref) => (entityId) async {
+    await ref.read(outboxStoreProvider).retryForEntity(entityId);
+    ref.read(requestSyncProvider)();
+  },
 );
 
 final conflictIdsProvider = Provider.family<Set<String>, String>(

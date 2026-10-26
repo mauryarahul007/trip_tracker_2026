@@ -55,6 +55,25 @@ void main() {
     expect(find.text("Everyone's balance"), findsNothing);
   });
 
+  testApp('balance bars show who is owed and who owes, and go away when the flag is off', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 90);
+    await openLedger(tester, s);
+    expect(key('balance-bars'), findsOneWidget);
+    expect(key('balance-bar-${s.me}'), findsOneWidget);
+    expect(key('balance-bar-${s.ben}'), findsOneWidget);
+  });
+
+  testApp('balance bars are hidden with the flag off', (tester) async {
+    await pumpApp(tester, user: asha, flagsOff: {'enableBalanceBars'});
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 90);
+    await openLedger(tester, s);
+    expect(key('balance-bars'), findsNothing);
+    expect(find.text('Ben pays Asha'), findsOneWidget); // the transfer rows are unchanged
+  });
+
   testApp("someone who is square but others still owe: stamped NOT SETTLED, not 'all square'", (tester) async {
     await pumpApp(tester, user: asha);
     final s = await seedTrip(tester);

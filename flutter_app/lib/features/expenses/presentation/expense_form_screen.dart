@@ -104,6 +104,9 @@ class _FormBodyState extends ConsumerState<_FormBody> {
   bool _quickOpen = false;
   String? _quickError;
   late final Set<String> _initialExpenseIds;
+  final _amountFocus = FocusNode();
+  String? _notice; // inline "Saved" line above the buttons; a snackbar there would cover them
+  Timer? _noticeTimer;
 
   ExpenseFormArgs get args => widget.args;
   ExpenseFormController get _c => ref.read(expenseFormProvider(args).notifier);
@@ -122,17 +125,36 @@ class _FormBodyState extends ConsumerState<_FormBody> {
   void dispose() {
     _title.dispose();
     _amount.dispose();
+    _amountFocus.dispose();
+    _noticeTimer?.cancel();
     _quick.dispose();
     super.dispose();
   }
 
-  Future<void> _save() async {
+  Future<void> _save({bool addAnother = false}) async {
+    if (addAnother && _amount.text.trim().isEmpty && _title.text.trim().isEmpty) {
+      _c.showError(context.l10n.formAddFirst);
+      return;
+    }
+    final savedId = ref.read(expenseFormProvider(args)).newExpenseId;
     final outcome = await _c.submit();
     if (!outcome.isOk || !mounted) return;
     AppFeedback.saved();
     final offline = !(ref.read(isOnlineProvider).value ?? true);
     if (offline && ref.read(flagProvider(('enableSavedOfflineToast', args.tripId))).value == true) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.expSavedOffline)));
+    }
+    if (addAnother) {
+      // The next entry's duplicate check should see the expense just saved.
+      _initialExpenseIds.add(savedId);
+      _c.resetForNext();
+      setState(() => _notice = context.l10n.formSavedAddNext);
+      _noticeTimer?.cancel();
+      _noticeTimer = Timer(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _notice = null);
+      });
+      _amountFocus.requestFocus();
+      return;
     }
     await maybeAskForPush(context, ref); // first meaningful action: the one moment we ask
     if (mounted) context.pop();
@@ -387,6 +409,7 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                                 child: TextField(
                                   key: const Key('amount-field'),
                                   controller: _amount,
+                                  focusNode: _amountFocus,
                                   autofocus: !c.editing,
                                   // Operators are typeable (12*3+4), so a plain text keyboard with a character whitelist.
                                   keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
@@ -851,18 +874,6 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                     ),
 
                   moreDetails,
-
-                  if (s.error != null)
-                    Container(
-                      key: const Key('form-error'),
-                      margin: const EdgeInsets.only(top: 16),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: tokens.colorDanger.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(s.error!, style: TextStyle(color: tokens.colorDanger)),
-                    ),
                 ],
               ),
             ),
@@ -871,12 +882,57 @@ class _FormBodyState extends ConsumerState<_FormBody> {
             top: false,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: AppButton(
-                key: const Key('save'),
-                label: s.submitting ? l10n.formSaving : l10n.formSave,
-                isLoading: s.submitting,
-                isFullWidth: true,
-                onPressed: s.submitting ? null : _save,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (s.error != null)
+                    Container(
+                      key: const Key('form-error'),
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: tokens.colorDanger.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(s.error!, style: TextStyle(color: tokens.colorDanger)),
+                    )
+                  else if (_notice != null)
+                    Semantics(
+                      liveRegion: true,
+                      child: Container(
+                        key: const Key('form-saved-notice'),
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: tokens.colorSuccess.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _notice!,
+                          style: TextStyle(color: tokens.colorSuccess, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ),
+                  AppButton(
+                    key: const Key('save'),
+                    label: s.submitting ? l10n.formSaving : l10n.formSave,
+                    isLoading: s.submitting,
+                    isFullWidth: true,
+                    onPressed: s.submitting ? null : () => _save(),
+                  ),
+                  if (flags.saveAndAddAnother && !c.editing) ...[
+                    const SizedBox(height: 8),
+                    AppButton(
+                      key: const Key('save-and-add'),
+                      label: l10n.formSaveAndAdd,
+                      variant: AppButtonVariant.secondary,
+                      isFullWidth: true,
+                      onPressed: s.submitting ? null : () => _save(addAnother: true),
+                    ),
+                  ],
+                ],
               ),
             ),
           ),

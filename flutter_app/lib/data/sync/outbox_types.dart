@@ -25,6 +25,8 @@ class OutboxType {
   static const addMessage = 'addMessage';
   static const editMessage = 'editMessage';
   static const deleteMessage = 'deleteMessage';
+  static const reactMessage = 'reactMessage';
+  static const updateMessagePayload = 'updateMessagePayload';
 
   static const all = [
     addExpense,
@@ -49,6 +51,8 @@ class OutboxType {
     addMessage,
     editMessage,
     deleteMessage,
+    reactMessage,
+    updateMessagePayload,
   ];
 }
 

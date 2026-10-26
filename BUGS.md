@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **301** | All recorded bugs across sessions |
+| **Total Tracked** | **321** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **274** | Verified & closed |
+| **✅ Resolved** | **294** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -305,6 +305,26 @@
 | **BUG-301** | Web passport-card destination/name text overflow on long trip names | `ui-ux` | `low` | `claude-cli` | `claude-cli` | index.css: added overflow:hidden; text-overflow:ellipsis; white-space:nowrap to .pp-dest and .pp-name. Commit 3f27382. |
 | **BUG-302** | Flutter chat tab empty state inconsistent with other tabs | `ui-ux` | `low` | `claude-cli` | `claude-cli` | chat_pane.dart: empty state now uses shared EmptyState widget (plain mode) instead of a bare Text. Commit 3f27382. |
 | **BUG-303** | Flutter AnimatedNumber and ConfettiBurst ignore reduced-motion setting | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | animated_number.dart and confetti_burst.dart now route their animation duration through AppMotion.of(context, ...), collapsing to instant/no-op under reduced motion. Commit 3f27382. |
+| **BUG-304** | Flutter sync conflict sheet only compared amount and date | `ui-ux` | `low` | `claude-cli` | `claude-cli` | conflict_sheet.dart: replaced the amount/date cards with a field table (Amount, Date, Title, Category, Paid by, Split) that lists only differing fields and collapses the rest; Keep mine/Keep theirs use one button style; removed hardcoded English sentence. Commit 0804547. |
+| **BUG-305** | Flutter deck Add expense button hidden behind the runway dock | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | trip_card_stack.dart: quick-add button moved inside the card area so the floating runway dock no longer covers it. Commit 3442fa1. |
+| **BUG-306** | Flutter new-expense form errors shown at the end of the scrolling form, out of view | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | expense_form_screen.dart: error banner moved into a pinned strip above Save; expense_form_controller.dart showError() so Save and add another on an untouched form says First add an expense. Commit 3442fa1. |
+| **BUG-307** | Flutter Save and add another confirmation snackbar covers the button | `ui-ux` | `low` | `claude-cli` | `claude-cli` | expense_form_screen.dart: the Saved snackbar is now an inline notice in the pinned strip, so it cannot cover Save and add another. Commit 3442fa1. |
+| **BUG-308** | Switching trips from the title left other tabs on the old trip | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit ac91dcb (v3.73.0) |
+| **BUG-309** | Spend Collapse all / Expand all days did nothing under Compass spend | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit ac91dcb (v3.73.0) |
+| **BUG-310** | Activity Money filter missed expenses and was hidden behind another flag | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit ac91dcb (v3.73.0) |
+| **BUG-311** | Trip-name menu and Trip hub Chat tile duplicated other screens | `general` | `low` | `claude-cli` | `claude-cli` | Fixed in commit 4953f9b (v3.74.0) |
+| **BUG-312** | Home screen flashed when switching trips | `general` | `low` | `claude-cli` | `claude-cli` | Fixed in commit 4953f9b (v3.74.0) |
+| **BUG-313** | No way back to the trips home from inside a trip | `navigation` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 4c47b78 (v3.75.1) |
+| **BUG-314** | Balances repeated You paid and Your share under the settlement pass | `general` | `low` | `claude-cli` | `claude-cli` | Fixed in commit 79ad0f2 (v3.76.1) |
+| **BUG-315** | Prod release build failed in R8 after adding ML Kit text recognition | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 79ad0f2 (v3.76.1) |
+| **BUG-316** | Per person view told you to pay while the pass said you are owed | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 9251b52 (v3.77.1) |
+| **BUG-317** | Trip card stack: closed trip's card grows over the slider and Add expense disappears | `general` | `low` | `claude-cli` | `claude-cli` | Fixed in commit b8966fa (v3.77.2) |
+| **BUG-318** | Trip Activity omitted the user's own expenses, refunds, deletions and chat | `general` | `medium` | `agent` | `agent` | Activity now derives rows from trip expenses, refunds, recycle bin and chat (buildTripActivityLog) behind enableTripActivityLog. Commit f55130d |
+| **BUG-319** | Tapping an unread Activity row froze on a slow or offline connection | `offline-sync` | `medium` | `claude-cli` | `claude-cli` | Notification read/delete/clear now run the remote call in the background; local write is what the UI shows. Test: notification_remote_test (network never answers). Commit 9e9bc42 (v3.78.0) |
+| **BUG-320** | Plans tab showed duplicate Add item, Add note and Add pass buttons | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1) |
+| **BUG-321** | Blank band above the bottom bar shrank every list because the plus button reserved space | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1) |
+| **BUG-322** | Header showed round crew-initial avatars that were not wanted | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1) |
+| **BUG-323** | Bottom bar stayed dark in light theme | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1) |
 
 ---
 

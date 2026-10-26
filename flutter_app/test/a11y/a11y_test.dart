@@ -103,6 +103,16 @@ void main() {
       await guidelines(tester);
       handle.dispose();
     });
+
+    testApp('spend insights', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await addExpense(tester, s, amount: 300);
+      await go(tester, '/trip/${s.tripId}/insights');
+      await guidelines(tester);
+      handle.dispose();
+    });
   });
 
   group('200% text on real screens (no overflow)', () {
@@ -116,6 +126,7 @@ void main() {
       'settings': (_) => '/settings',
       'notification preferences': (_) => '/settings/notifications',
       'notifications': (_) => '/notifications',
+      'spend insights': (id) => '/trip/$id/insights',
       'report a problem': (_) => '/settings/report-bug',
     };
     for (final e in screens.entries) {

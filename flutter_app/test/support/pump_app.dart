@@ -93,6 +93,17 @@ class TestApp {
   bool launchResult = false;
 }
 
+const _compassFlags = [
+  'enableCompassNav',
+  'enableCompassSpend',
+  'enableCompassMoney',
+  'enableCompassTripPages',
+  'enableCompassMe',
+  'enableCompassWeb',
+  'enableCalmPassportUi', // Calm Passport look; its own tests opt in
+  'enableTripGetStarted', // new-trip start card; tests of blank trips expect the older empty screens
+];
+
 /// Boots the real app with every platform/backend seam faked.
 Future<TestApp> pumpApp(
   WidgetTester tester, {
@@ -127,7 +138,14 @@ Future<TestApp> pumpApp(
     social: FakeSocialAuth(hasApple: appleAvailable),
     biometric: FakeBiometric()..passes = biometricPasses,
     // Summary focus folds Trip numbers away; the older tests read those numbers, so they start with it off.
-    flags: FakeFlags(flagsOn, {...flagsOff, if (!flagsOn.contains('enableSummaryFocus')) 'enableSummaryFocus'}),
+    // The Compass redesign flags default ON in the registry; the older tests assert the previous layouts, so they
+    // start with Compass off. Compass tests opt in with flagsOn.
+    flags: FakeFlags(flagsOn, {
+      ...flagsOff,
+      if (!flagsOn.contains('enableSummaryFocus')) 'enableSummaryFocus',
+      for (final k in _compassFlags)
+        if (!flagsOn.contains(k)) k,
+    }),
     prefs: prefs,
     db: AppDatabase.memory(),
     join: FakeJoinRepository(),

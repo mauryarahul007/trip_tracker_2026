@@ -84,7 +84,9 @@ function mapExpense(row: ExpenseRow & { location?: any }): Expense {
     splitMode: row.split_mode as SplitMode,
     splitMemberIds: row.split_member_ids,
     splitConfig: row.split_config ?? undefined,
-    itemizedConfig: row.itemized_config ? (row.itemized_config as unknown as import('../types').ItemizedReceiptConfig) : undefined,
+    // itemized_config also carries { refundOfExpenseId } on a refund row; only a real breakdown has items.
+    itemizedConfig: (row.itemized_config as any)?.items ? (row.itemized_config as unknown as import('../types').ItemizedReceiptConfig) : undefined,
+    refundOfExpenseId: (row.itemized_config as any)?.refundOfExpenseId ?? null,
     resolvedShares: row.resolved_shares,
     receiptPath: row.receipt_path ?? undefined,
     photoPaths: row.photo_paths ?? undefined,
@@ -603,6 +605,7 @@ export interface ExpenseInput {
   splitMemberIds: string[];
   splitConfig?: Record<string, number>;
   itemizedConfig?: import('../types').ItemizedReceiptConfig;
+  refundOfExpenseId?: string | null; // refund row: stored inside itemized_config, no column
   resolvedShares: Record<string, number>;
   receiptPath?: string; // set only when a new receipt was just uploaded — omit to leave existing untouched
   location?: import('../types').ExpenseLocation | null;
@@ -623,7 +626,7 @@ export async function insertExpense(tripId: string, createdByUserId: string, inp
     split_mode: input.splitMode,
     split_member_ids: input.splitMemberIds,
     split_config: input.splitConfig ?? null,
-    itemized_config: input.itemizedConfig ?? null,
+    itemized_config: input.refundOfExpenseId ? { refundOfExpenseId: input.refundOfExpenseId } : (input.itemizedConfig ?? null),
     resolved_shares: input.resolvedShares,
     receipt_path: input.receiptPath ?? null,
     is_settlement: input.title.startsWith('Settlement:'),
