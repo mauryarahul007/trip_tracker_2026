@@ -279,7 +279,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                       onPressed: () {
                         unawaited(AppHaptics.light());
                         _pageController.previousPage(
-                          duration: AppMotion.of(context, const Duration(milliseconds: 240)),
+                          duration: AppMotion.of(context, AppMotion.base),
                           curve: Curves.easeInOut,
                         );
                       },
@@ -297,7 +297,7 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
                     onPressed: () {
                       unawaited(AppHaptics.light());
                       if (_currentSlide < _totalSlides - 1) {
-                        _pageController.nextPage(duration: const Duration(milliseconds: 240), curve: Curves.easeInOut);
+                        _pageController.nextPage(duration: AppMotion.base, curve: Curves.easeInOut);
                       } else {
                         _shareStory(trip);
                       }

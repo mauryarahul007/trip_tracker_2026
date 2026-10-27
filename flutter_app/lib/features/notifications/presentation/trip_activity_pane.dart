@@ -25,6 +25,8 @@ import '../../expenses/application/expenses_providers.dart';
 import '../application/activity_focus.dart';
 import '../application/notification_providers.dart';
 import 'notification_style.dart';
+import '../../../l10n/l10n_ext.dart';
+import '../../../shared/widgets/app_button.dart';
 
 /// The Activity tab of a trip (Compass nav): this trip's updates only, with filter chips, mark all read and
 /// Delete all. Money covers expenses and settlements, People joins, Chat messages.
@@ -78,12 +80,13 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
     final userId = ref.read(authStateProvider).userId;
     if (userId == null) return;
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
     try {
       await ref.read(expenseRepositoryProvider).confirmSettlement(e.id, userId: userId);
       await ref.read(notificationRepositoryProvider).setRead(n.id, true);
-      messenger.showSnackBar(const SnackBar(content: Text('Payment confirmed')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.notifPaymentConfirmed)));
     } catch (_) {
-      messenger.showSnackBar(const SnackBar(content: Text('Could not confirm. Try again.')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.notifConfirmFailed)));
     }
   }
 
@@ -92,10 +95,9 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
     if (userId == null) return;
     final ok = await ConfirmDialog.show(
       context: context,
-      title: 'Delete all activity?',
-      message:
-          'This removes all $count update${count == 1 ? '' : 's'} for this trip from your list. Expenses and balances are not touched.',
-      confirmLabel: 'Delete all',
+      title: context.l10n.activityDeleteAllTitle,
+      message: context.l10n.activityDeleteAllBody(count),
+      confirmLabel: context.l10n.activityDeleteAllConfirm,
       isDestructive: true,
     );
     if (!ok) return;
@@ -135,6 +137,7 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
           ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final now = ref.read(nowProvider)();
     final empty = _emptyText[_filter]!;
+    final coach = ref.watch(flagProvider(('enableCoachEmptyStates', widget.tripId))).value ?? true;
     final allExpenses = ref.watch(allActiveExpensesProvider).value ?? const <Expense>[];
     final allMembers = ref.watch(allMembersProvider).value ?? const <Member>[];
 
@@ -215,7 +218,19 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
         ),
         Expanded(
           child: shown.isEmpty
-              ? EmptyState(icon: AppIcons.bell, title: empty.$1, subtitle: empty.$2)
+              ? EmptyState(
+                  icon: AppIcons.bell,
+                  title: empty.$1,
+                  subtitle: empty.$2,
+                  // One clear next step: activity starts with the first expense.
+                  action: _filter == ActivityFilter.all && coach
+                      ? AppButton(
+                          key: const Key('activity-empty-add'),
+                          label: context.l10n.expAdd,
+                          onPressed: () => context.push('/trip/${widget.tripId}/expenses/new'),
+                        )
+                      : null,
+                )
               : ListView.builder(
                   key: const Key('activity-list'),
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),

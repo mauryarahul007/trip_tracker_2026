@@ -16,6 +16,7 @@ import '../application/feedback_providers.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import 'pending_feedback_note.dart';
+import '../../../shared/widgets/discard_guard.dart';
 
 /// "Report a problem": a form plus the user's earlier reports. Recent logs are attached
 /// (scrubbed of emails, tokens and phone numbers) unless switched off.
@@ -113,110 +114,114 @@ class _BugReportScreenState extends ConsumerState<BugReportScreen> {
   Widget build(BuildContext context) {
     final mine = ref.watch(myBugReportsProvider).value ?? const <MyBugReport>[];
     final signedIn = ref.watch(authStateProvider.select((a) => a.user != null && !a.isLocalOnly));
-    return AppScaffold(
-      appBar: AppBar(
-        title: const Text('Report a problem'),
-        leading: IconButton(
-          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          icon: const Icon(AppIcons.back, size: 20),
-          onPressed: () => context.pop(),
+    return DiscardGuard(
+      controllers: [_title, _desc, _steps],
+      initial: const ['', '', ''],
+      child: AppScaffold(
+        appBar: AppBar(
+          title: const Text('Report a problem'),
+          leading: IconButton(
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            icon: const Icon(AppIcons.back, size: 20),
+            onPressed: () => context.pop(),
+          ),
         ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const PendingFeedbackNote(),
-          if (!signedIn)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 12),
-              child: Text('Sign in with an account to send reports.', key: Key('bug-signin-note')),
-            ),
-          AppTextField(
-            key: const Key('bug-title'),
-            controller: _title,
-            label: 'What went wrong?',
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 12),
-          AppTextField(key: const Key('bug-desc'), controller: _desc, label: 'Details', maxLines: 4),
-          const SizedBox(height: 12),
-          AppTextField(
-            key: const Key('bug-steps'),
-            controller: _steps,
-            label: 'Steps to reproduce (one per line)',
-            maxLines: 3,
-          ),
-          const SizedBox(height: 12),
-          _chipLabel(context, 'How bad is it?'),
-          Wrap(
-            key: const Key('bug-severity'),
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              for (final s in bugSeverities)
-                ChoiceChip(
-                  key: Key('bug-severity-$s'),
-                  showCheckmark: false,
-                  shape: const StadiumBorder(),
-                  label: Text(s[0].toUpperCase() + s.substring(1)),
-                  selected: _severity == s,
-                  onSelected: (_) => setState(() => _severity = s),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _chipLabel(context, 'Area'),
-          Wrap(
-            key: const Key('bug-category'),
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              for (final c in bugCategories)
-                ChoiceChip(
-                  key: Key('bug-category-$c'),
-                  showCheckmark: false,
-                  shape: const StadiumBorder(),
-                  label: Text(c),
-                  selected: _category == c,
-                  onSelected: (_) => setState(() => _category = c),
-                ),
-            ],
-          ),
-          SwitchListTile.adaptive(
-            key: const Key('bug-logs'),
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Attach recent app logs'),
-            subtitle: const Text('Emails, tokens and phone numbers are removed first'),
-            value: _logs,
-            onChanged: (v) => setState(() => _logs = v),
-          ),
-          if (_error != null)
-            Text(
-              _error!,
-              key: const Key('bug-error'),
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          if (_sent != null) Text(_sent!, key: const Key('bug-sent')),
-          const SizedBox(height: 12),
-          AppButton(
-            key: const Key('bug-submit'),
-            label: 'Send report',
-            isLoading: _busy,
-            isFullWidth: true,
-            onPressed: _busy ? null : _submit,
-          ),
-          if (mine.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            const Text('Your reports', style: TextStyle(fontWeight: FontWeight.w800)),
-            for (final r in mine)
-              ListTile(
-                key: Key('my-bug-${r.id}'),
-                contentPadding: EdgeInsets.zero,
-                title: Text(r.title),
-                subtitle: Text('${r.id} · ${r.status} · ${r.severity}'),
+        body: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const PendingFeedbackNote(),
+            if (!signedIn)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: Text('Sign in with an account to send reports.', key: Key('bug-signin-note')),
               ),
+            AppTextField(
+              key: const Key('bug-title'),
+              controller: _title,
+              label: 'What went wrong?',
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 12),
+            AppTextField(key: const Key('bug-desc'), controller: _desc, label: 'Details', maxLines: 4),
+            const SizedBox(height: 12),
+            AppTextField(
+              key: const Key('bug-steps'),
+              controller: _steps,
+              label: 'Steps to reproduce (one per line)',
+              maxLines: 3,
+            ),
+            const SizedBox(height: 12),
+            _chipLabel(context, 'How bad is it?'),
+            Wrap(
+              key: const Key('bug-severity'),
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final s in bugSeverities)
+                  ChoiceChip(
+                    key: Key('bug-severity-$s'),
+                    showCheckmark: false,
+                    shape: const StadiumBorder(),
+                    label: Text(s[0].toUpperCase() + s.substring(1)),
+                    selected: _severity == s,
+                    onSelected: (_) => setState(() => _severity = s),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _chipLabel(context, 'Area'),
+            Wrap(
+              key: const Key('bug-category'),
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final c in bugCategories)
+                  ChoiceChip(
+                    key: Key('bug-category-$c'),
+                    showCheckmark: false,
+                    shape: const StadiumBorder(),
+                    label: Text(c),
+                    selected: _category == c,
+                    onSelected: (_) => setState(() => _category = c),
+                  ),
+              ],
+            ),
+            SwitchListTile.adaptive(
+              key: const Key('bug-logs'),
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Attach recent app logs'),
+              subtitle: const Text('Emails, tokens and phone numbers are removed first'),
+              value: _logs,
+              onChanged: (v) => setState(() => _logs = v),
+            ),
+            if (_error != null)
+              Text(
+                _error!,
+                key: const Key('bug-error'),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            if (_sent != null) Text(_sent!, key: const Key('bug-sent')),
+            const SizedBox(height: 12),
+            AppButton(
+              key: const Key('bug-submit'),
+              label: 'Send report',
+              isLoading: _busy,
+              isFullWidth: true,
+              onPressed: _busy ? null : _submit,
+            ),
+            if (mine.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              const Text('Your reports', style: TextStyle(fontWeight: FontWeight.w800)),
+              for (final r in mine)
+                ListTile(
+                  key: Key('my-bug-${r.id}'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(r.title),
+                  subtitle: Text('${r.id} · ${r.status} · ${r.severity}'),
+                ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

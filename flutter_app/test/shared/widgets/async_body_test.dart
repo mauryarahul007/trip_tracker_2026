@@ -2,21 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:trip_tracker/core/network/connectivity_provider.dart';
+import 'package:trip_tracker/data/providers.dart';
 import 'package:trip_tracker/l10n/app_localizations.dart';
 import 'package:trip_tracker/shared/theme/app_theme.dart';
 import 'package:trip_tracker/shared/widgets/async_body.dart';
 import 'package:trip_tracker/shared/widgets/skeleton_loader.dart';
 
-Widget host(AsyncValue<int> v, {VoidCallback? onRetry}) => MaterialApp(
-  theme: AppTheme.light(),
-  localizationsDelegates: const [
-    AppLocalizations.delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
+Widget host(AsyncValue<int> v, {VoidCallback? onRetry, bool online = true}) => ProviderScope(
+  overrides: [
+    isOnlineProvider.overrideWith((ref) => Stream.value(online)),
+    flagProvider.overrideWith((ref, k) => Stream.value(true)),
   ],
-  supportedLocales: AppLocalizations.supportedLocales,
-  home: Scaffold(
-    body: AsyncBody<int>(value: v, onRetry: onRetry ?? () {}, builder: (_, n) => Text('n=$n')),
+  child: MaterialApp(
+    theme: AppTheme.light(),
+    localizationsDelegates: const [
+      AppLocalizations.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+    ],
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(
+      body: AsyncBody<int>(value: v, onRetry: onRetry ?? () {}, builder: (_, n) => Text('n=$n')),
+    ),
   ),
 );
 
@@ -34,6 +42,13 @@ void main() {
     expect(find.text('boom'), findsNothing); // raw errors never reach the user
     await tester.tap(find.text('Retry'));
     expect(retried, 1);
+  });
+
+  testWidgets('offline error says so instead of the generic message', (tester) async {
+    await tester.pumpWidget(host(const AsyncError<int>('boom', StackTrace.empty), online: false));
+    await tester.pump();
+    expect(find.text("You're offline"), findsOneWidget);
+    expect(find.text('Something went wrong'), findsNothing);
   });
 
   testWidgets('data renders the builder', (tester) async {

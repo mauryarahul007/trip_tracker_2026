@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trip_tracker/app/deep_link_listener.dart';
+import 'package:trip_tracker/core/flags/compass_flags.dart' show legacyNavAllowedProvider;
 import 'package:trip_tracker/core/network/connectivity_provider.dart';
 import 'package:trip_tracker/core/platform/external_launcher.dart';
 import 'package:trip_tracker/core/platform/share_service.dart';
@@ -102,6 +103,7 @@ const _compassFlags = [
   'enableCompassWeb',
   'enableCalmPassportUi', // Calm Passport look; its own tests opt in
   'enableTripGetStarted', // new-trip start card; tests of blank trips expect the older empty screens
+  'enableDockedKeypad', // older form tests type into the amount field; the docked keypad has its own tests
 ];
 
 /// Boots the real app with every platform/backend seam faked.
@@ -122,6 +124,7 @@ Future<TestApp> pumpApp(
   bool superadmin = false,
   bool boardingLogin = false,
   void Function(TestApp app)? setup,
+  bool legacyNav = true,
 }) async {
   tester.view.physicalSize = const Size(430, 1400);
   tester.view.devicePixelRatio = 1;
@@ -196,6 +199,8 @@ Future<TestApp> pumpApp(
         notificationPrefsRepositoryProvider.overrideWithValue(t.notifPrefs),
         appVersionProvider.overrideWith((ref) async => const AppVersionInfo('3.45.0', '1')),
         gatePlatformProvider.overrideWithValue('android'),
+        // Most widget tests still drive the legacy and Compass docks; the shipped app ignores those flags.
+        legacyNavAllowedProvider.overrideWithValue(legacyNav),
         ...overrides,
       ],
       child: const TripTrackerApp(),

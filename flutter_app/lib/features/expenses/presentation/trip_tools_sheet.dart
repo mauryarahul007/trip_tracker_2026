@@ -24,6 +24,7 @@ import 'offline_snapshot_modal.dart';
 import '../../../shared/widgets/app_surface.dart' show AppCard;
 import '../../settings/presentation/settings_widgets.dart' show SettingsSection, SettingsTile;
 import 'widgets/import_preview_sheet.dart';
+import '../../../core/platform/heavy_parse.dart';
 
 typedef TextFilePicker = Future<String?> Function({required List<String> extensions});
 
@@ -80,7 +81,8 @@ class _TripToolsSheetState extends ConsumerState<TripToolsSheet> {
     final l10n = context.l10n;
     final text = await ref.read(textFilePickerProvider)(extensions: ['json']);
     if (text == null || !mounted) return;
-    final summary = summarizeBackup(text);
+    final summary = await parseText(summarizeBackup, text);
+    if (!mounted) return;
     if (!summary.valid) {
       setState(() => _message = summary.error);
       return;
@@ -139,7 +141,8 @@ class _TripToolsSheetState extends ConsumerState<TripToolsSheet> {
     final l10n = context.l10n;
     final text = await ref.read(textFilePickerProvider)(extensions: ['csv', 'txt']);
     if (text == null || !mounted) return;
-    final parsed = parseSplitwiseCsv(text);
+    final parsed = await parseText(parseSplitwiseCsv, text);
+    if (!mounted) return;
     if (parsed.rows.isEmpty) {
       setState(() => _message = parsed.errors.isEmpty ? l10n.importNone : parsed.errors.first);
       return;

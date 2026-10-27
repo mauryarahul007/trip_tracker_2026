@@ -34,7 +34,7 @@ class FlipCard extends StatelessWidget {
         onTap: onTap,
         child: TweenAnimationBuilder<double>(
           tween: Tween(end: flipped ? 1.0 : 0.0),
-          duration: AppMotion.of(context, const Duration(milliseconds: 450)),
+          duration: AppMotion.of(context, AppMotion.slow),
           curve: Curves.easeInOutCubic,
           builder: (_, v, _) {
             final showFront = v < 0.5;

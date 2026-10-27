@@ -118,8 +118,8 @@ void main() {
         user: asha,
         overrides: [syncStatusProvider.overrideWith((ref) => Stream.value(const SyncStatus(pending: 3)))],
       );
-      expect(find.text('3 changes waiting to sync'), findsOneWidget);
-      await tester.tap(find.text('3 changes waiting to sync'));
+      expect(find.text('Syncing 3 changes'), findsOneWidget);
+      await tester.tap(find.text('Syncing 3 changes'));
       await settle(tester);
       expect(find.text('Sync queue'), findsNothing);
     });
@@ -146,8 +146,8 @@ void main() {
           ),
         ],
       );
-      expect(find.text('Failed 1'), findsOneWidget);
-      await tester.tap(find.text('Failed 1'));
+      expect(find.text('1 needs attention'), findsOneWidget);
+      await tester.tap(find.text('1 needs attention'));
       await settle(tester);
       expect(find.text('Sync queue'), findsOneWidget);
       expect(find.text('42501 rls'), findsOneWidget);

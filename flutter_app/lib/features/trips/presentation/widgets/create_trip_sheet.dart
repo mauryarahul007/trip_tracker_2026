@@ -16,6 +16,7 @@ import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../application/trips_providers.dart' show tripsProvider;
 import 'destination_field.dart';
+import '../../../../shared/widgets/discard_guard.dart';
 
 /// Seam so tests can pick dates without driving the Material picker.
 final dateRangePickerProvider = Provider<Future<DateTimeRange?> Function(BuildContext, DateTime, DateTimeRange?)>(
@@ -154,90 +155,94 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final templatesOn = ref.watch(flagProvider(('enableTripTemplates', null))).value ?? true;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (templatesOn) ...[
-              Text(l10n.templateTitle, style: const TextStyle(fontWeight: FontWeight.w700)),
-              const SizedBox(height: 6),
-              Wrap(
-                spacing: 8,
-                runSpacing: 4,
-                children: [
-                  for (final t in tripTemplates)
-                    ChoiceChip(
-                      key: Key('template-${t.id}'),
-                      showCheckmark: false,
-                      shape: const StadiumBorder(),
-                      label: Text(_templateLabel(t.id)),
-                      selected: _template == t.id,
-                      // Tap the chosen one again to start empty.
-                      onSelected: (on) => setState(() => _template = on ? t.id : null),
-                    ),
+    return DiscardGuard(
+      controllers: [_name, _destination],
+      initial: const ['', ''],
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (templatesOn) ...[
+                Text(l10n.templateTitle, style: const TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    for (final t in tripTemplates)
+                      ChoiceChip(
+                        key: Key('template-${t.id}'),
+                        showCheckmark: false,
+                        shape: const StadiumBorder(),
+                        label: Text(_templateLabel(t.id)),
+                        selected: _template == t.id,
+                        // Tap the chosen one again to start empty.
+                        onSelected: (on) => setState(() => _template = on ? t.id : null),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
+              DestinationField(
+                controller: _destination,
+                label: l10n.fieldDestination,
+                enabled: ref.watch(flagProvider(('enableDestinationAutocomplete', null))).value ?? true,
+                pastDestinations: [
+                  for (final t in ref.watch(tripsProvider).value ?? const <Trip>[])
+                    if ((t.destination ?? '').trim().isNotEmpty) t.destination!.trim(),
                 ],
+                onChanged: _onDestinationChanged,
+                onPicked: _onPlacePicked,
               ),
               const SizedBox(height: 12),
+              AppTextField(
+                controller: _name,
+                label: l10n.fieldTripName,
+                hint: l10n.fieldTripNameHint,
+                errorText: _nameError,
+                // Typing a name stops the suggestion; clearing it brings the suggestion back.
+                onChanged: (v) => _nameTouched = v.trim().isNotEmpty,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _pickDates,
+                icon: const Icon(Icons.date_range_rounded),
+                label: Text(_range == null ? l10n.fieldDates : formatDateRange(_iso(_range!.start), _iso(_range!.end))),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                  alignment: Alignment.centerLeft,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                ),
+              ),
+              if (_dateError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, left: 4),
+                  child: Text(_dateError!, style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12)),
+                ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                isExpanded: true,
+                initialValue: _currency,
+                decoration: InputDecoration(labelText: l10n.fieldCurrency),
+                items: [for (final c in defaultExchangeRates.keys) DropdownMenuItem(value: c, child: Text(c))],
+                onChanged: (v) => setState(() {
+                  _currency = v ?? _currency;
+                  _currencyTouched = true;
+                }),
+              ),
+              const SizedBox(height: 20),
+              AppButton(
+                label: l10n.actionCreateTrip,
+                isLoading: _busy,
+                isFullWidth: true,
+                onPressed: _busy ? null : _submit,
+              ),
             ],
-            DestinationField(
-              controller: _destination,
-              label: l10n.fieldDestination,
-              enabled: ref.watch(flagProvider(('enableDestinationAutocomplete', null))).value ?? true,
-              pastDestinations: [
-                for (final t in ref.watch(tripsProvider).value ?? const <Trip>[])
-                  if ((t.destination ?? '').trim().isNotEmpty) t.destination!.trim(),
-              ],
-              onChanged: _onDestinationChanged,
-              onPicked: _onPlacePicked,
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _name,
-              label: l10n.fieldTripName,
-              hint: l10n.fieldTripNameHint,
-              errorText: _nameError,
-              // Typing a name stops the suggestion; clearing it brings the suggestion back.
-              onChanged: (v) => _nameTouched = v.trim().isNotEmpty,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: _pickDates,
-              icon: const Icon(Icons.date_range_rounded),
-              label: Text(_range == null ? l10n.fieldDates : formatDateRange(_iso(_range!.start), _iso(_range!.end))),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(56),
-                alignment: Alignment.centerLeft,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-              ),
-            ),
-            if (_dateError != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6, left: 4),
-                child: Text(_dateError!, style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12)),
-              ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              isExpanded: true,
-              initialValue: _currency,
-              decoration: InputDecoration(labelText: l10n.fieldCurrency),
-              items: [for (final c in defaultExchangeRates.keys) DropdownMenuItem(value: c, child: Text(c))],
-              onChanged: (v) => setState(() {
-                _currency = v ?? _currency;
-                _currencyTouched = true;
-              }),
-            ),
-            const SizedBox(height: 20),
-            AppButton(
-              label: l10n.actionCreateTrip,
-              isLoading: _busy,
-              isFullWidth: true,
-              onPressed: _busy ? null : _submit,
-            ),
-          ],
+          ),
         ),
       ),
     );

@@ -747,8 +747,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count changes waiting to sync',
-      one: '1 change waiting to sync',
+      other: 'Syncing $count changes',
+      one: 'Syncing 1 change',
     );
     return '$_temp0';
   }
@@ -1755,23 +1755,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripsLayoutList => 'Compact list';
 
   @override
-  String get syncLineSaved => 'Saved';
+  String get syncLineSaved => 'All synced';
 
   @override
   String syncLineSyncing(int count) {
-    return 'Waiting';
+    return 'Syncing $count';
   }
 
   @override
-  String get syncLineOffline => 'Offline';
+  String get syncLineOffline => 'Offline · all saved';
 
   @override
   String syncLineOfflineWaiting(int count) {
-    return 'Offline · $count waiting';
+    return 'Saved on this phone · $count to sync';
   }
 
   @override
-  String get syncLineIssue => 'Failed';
+  String syncLineIssue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count need attention',
+      one: '1 needs attention',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncNow => 'Sync now';
 
   @override
   String get todayTitle => 'Today';
@@ -2546,4 +2557,127 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatEdit => 'Edit message';
+
+  @override
+  String get errorOfflineTitle => 'You\'re offline';
+
+  @override
+  String get errorOfflineMessage =>
+      'This needs the internet the first time. It loads by itself when you\'re back online.';
+
+  @override
+  String get errorSignedOutTitle => 'You\'ve been signed out';
+
+  @override
+  String get errorSignedOutMessage => 'Sign in again to load this. Nothing saved on this phone is lost.';
+
+  @override
+  String get errorServerTitle => 'Couldn\'t load this';
+
+  @override
+  String get errorServerMessage =>
+      'Our server didn\'t answer. Try again in a moment, or report it from Settings if it keeps happening.';
+
+  @override
+  String get notesCheckSaveFailed => 'Couldn\'t save that tick. Try again.';
+
+  @override
+  String get expAdded => 'Expense added';
+
+  @override
+  String expAddedNamed(String title) {
+    return 'Added $title';
+  }
+
+  @override
+  String memGroupDeleted(String name) {
+    return 'Group $name deleted';
+  }
+
+  @override
+  String get a11yAllSettled => 'All settled. Open settle up';
+
+  @override
+  String a11yYouGetBack(String amount) {
+    return 'You get back $amount. Open settle up';
+  }
+
+  @override
+  String a11yYouOwe(String amount) {
+    return 'You owe $amount. Open settle up';
+  }
+
+  @override
+  String get pushPromptTitle => 'Get trip alerts?';
+
+  @override
+  String get pushPromptBody =>
+      'We can notify you when friends add expenses, ask you to settle up, or message the trip. You can change this any time in Settings.';
+
+  @override
+  String get pushPromptLater => 'Not now';
+
+  @override
+  String get pushPromptYes => 'Turn on';
+
+  @override
+  String get activityDeleteAllTitle => 'Delete all activity?';
+
+  @override
+  String activityDeleteAllBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'This removes all $count updates for this trip from your list. Expenses and balances are not touched.',
+      one: 'This removes 1 update for this trip from your list. Expenses and balances are not touched.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activityDeleteAllConfirm => 'Delete all';
+
+  @override
+  String get notifClearTitle => 'Clear notifications';
+
+  @override
+  String get notifClearAllBody => 'Clear all notifications?';
+
+  @override
+  String get notifClearTripBody => 'Clear all notifications for this trip?';
+
+  @override
+  String get notifClearConfirm => 'Clear';
+
+  @override
+  String get notifPaymentConfirmed => 'Payment confirmed';
+
+  @override
+  String get summaryYou => 'You';
+
+  @override
+  String get summaryAllSettled => 'All settled';
+
+  @override
+  String get summaryYouGet => 'You get';
+
+  @override
+  String get summaryYouOwe => 'You owe';
+
+  @override
+  String get summaryGroupSpend => 'Group spend';
+
+  @override
+  String summaryPerPerson(String amount) {
+    return '$amount per person';
+  }
+
+  @override
+  String get summarySettleUp => 'Settle up';
+
+  @override
+  String get ledYourPayments => 'Your payments';
+
+  @override
+  String get chatEmptyHint => 'Say hi to the crew. Messages stay inside this trip.';
 }

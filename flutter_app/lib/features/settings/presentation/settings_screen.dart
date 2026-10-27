@@ -35,6 +35,7 @@ import '../../trips/presentation/widgets/share_trip_sheet.dart';
 import '../application/settings_data.dart';
 import '../../trips/presentation/widgets/home_dock.dart';
 import 'settings_widgets.dart';
+import '../../../core/platform/heavy_parse.dart';
 
 final backupServiceProvider = Provider<BackupService>(
   (ref) => BackupService(
@@ -155,7 +156,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _import() async {
     final text = await ref.read(textFilePickerProvider)(extensions: const ['json', 'triptracker']);
     if (text == null) return;
-    final s = summarizeBackup(text);
+    final s = await parseText(summarizeBackup, text);
+    if (!mounted) return;
     if (!s.valid) {
       _say(s.error ?? 'That file is not a valid backup.');
       return;

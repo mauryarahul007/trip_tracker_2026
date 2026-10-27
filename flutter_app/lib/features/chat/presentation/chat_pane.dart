@@ -109,7 +109,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
       await WidgetsBinding.instance.endOfFrame;
       final ctx = _focusKey.currentContext;
       if (ctx != null && ctx.mounted) {
-        await Scrollable.ensureVisible(ctx, alignment: 0.4, duration: const Duration(milliseconds: 250));
+        await Scrollable.ensureVisible(ctx, alignment: 0.4, duration: AppMotion.base);
         break;
       }
       if (_scroll.hasClients) {
@@ -170,7 +170,13 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
           ),
         Expanded(
           child: messages.isEmpty
-              ? EmptyState(title: l10n.chatEmpty, subtitle: '', plain: true)
+              ? EmptyState(
+                  title: l10n.chatEmpty,
+                  subtitle: (ref.watch(flagProvider(('enableCoachEmptyStates', widget.tripId))).value ?? true)
+                      ? l10n.chatEmptyHint
+                      : '',
+                  plain: true,
+                )
               : ListView.builder(
                   key: const Key('chat-list'),
                   controller: _scroll,
@@ -795,7 +801,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
       if (mounted && _scroll.hasClients) {
         _scroll.animateTo(
           _scroll.position.maxScrollExtent,
-          duration: AppMotion.of(context, const Duration(milliseconds: 200)),
+          duration: AppMotion.of(context, AppMotion.fast),
           curve: Curves.easeOut,
         );
       }

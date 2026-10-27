@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/auth_state.dart';
 import '../../../../core/format/money.dart';
+import '../../../../core/format/spoken_money.dart';
+import '../../../../l10n/l10n_ext.dart';
 import '../../../../domain/logic/expense_list_logic.dart';
 import '../../../../domain/logic/trip_list_money.dart';
 import '../../../../domain/models/expense.dart';
@@ -129,15 +131,18 @@ class _CalmHeroPair extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final l10n = context.l10n;
     final settled = net != null && net!.abs() < 0.01;
     final owed = (net ?? 0) > 0;
-    final label = net == null
-        ? 'YOU'
-        : settled
-        ? 'ALL SETTLED'
-        : owed
-        ? 'YOU GET'
-        : 'YOU OWE';
+    final label =
+        (net == null
+                ? l10n.summaryYou
+                : settled
+                ? l10n.summaryAllSettled
+                : owed
+                ? l10n.summaryYouGet
+                : l10n.summaryYouOwe)
+            .toUpperCase();
     final sign = settled || net == null ? '' : (owed ? '+ ' : '− ');
     final color = settled || net == null ? t.textPrimary : (owed ? t.colorSuccess : t.colorDanger);
     final tint = settled || net == null ? t.bgSurface : (owed ? t.tones.mint.bg : t.tones.peach.bg);
@@ -163,7 +168,7 @@ class _CalmHeroPair extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('GROUP SPEND', style: mono.copyWith(color: AppColors.calmDarkMute)),
+                      Text(l10n.summaryGroupSpend.toUpperCase(), style: mono.copyWith(color: AppColors.calmDarkMute)),
                       const SizedBox(height: 6),
                       FittedBox(
                         fit: BoxFit.scaleDown,
@@ -172,7 +177,7 @@ class _CalmHeroPair extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '$perPerson per person',
+                        l10n.summaryPerPerson(perPerson),
                         style: const TextStyle(
                           fontSize: 12.5,
                           color: AppColors.calmDarkTeal,
@@ -197,27 +202,38 @@ class _CalmHeroPair extends StatelessWidget {
                   key: const Key('calm-settle-up'),
                   borderRadius: BorderRadius.circular(24),
                   onTap: onSettle,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(label, style: mono.copyWith(color: color)),
-                        const SizedBox(height: 6),
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            net == null ? '–' : (settled ? netText! : '$sign$netText'),
-                            style: AppTypography.moneyDisplay(fontSize: 26, color: color),
+                  child: Semantics(
+                    button: true,
+                    label: net == null
+                        ? null
+                        : settled
+                        ? l10n.a11yAllSettled
+                        : owed
+                        ? l10n.a11yYouGetBack(spokenMoney(netText ?? ''))
+                        : l10n.a11yYouOwe(spokenMoney(netText ?? '')),
+                    excludeSemantics: net != null,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(label, style: mono.copyWith(color: color)),
+                          const SizedBox(height: 6),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              net == null ? '–' : (settled ? netText! : '$sign$netText'),
+                              style: AppTypography.moneyDisplay(fontSize: 26, color: color),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Settle up →',
-                          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: color),
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          Text(
+                            '${l10n.summarySettleUp} →',
+                            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: color),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

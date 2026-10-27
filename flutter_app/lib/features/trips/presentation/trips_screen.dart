@@ -37,6 +37,8 @@ import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/coach_hint.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/friendly_error.dart';
+import '../../../core/network/connectivity_provider.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/pull_to_refresh.dart';
 import '../../../shared/widgets/last_synced_caption.dart';
@@ -634,13 +636,18 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                 ),
                             ],
                           ),
-                          error: (_, _) => ListView(
+                          error: (e, _) => ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
                             children: [
                               EmptyState(
                                 plain: true,
                                 title: l10n.tripsLoadError,
-                                subtitle: l10n.errorGenericMessage,
+                                subtitle: friendlyError(
+                                  l10n,
+                                  e,
+                                  online: ref.watch(isOnlineProvider).value ?? true,
+                                  clear: _flagOn('enableClearErrorStates'),
+                                ).message,
                                 action: AppButton(
                                   label: l10n.actionRetry,
                                   onPressed: () => ref.invalidate(tripsProvider),
@@ -663,9 +670,16 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                 : unsorted;
                             final archived = data.archived.where((t) => !_hidden.contains(t.id)).toList();
                             final hits = searchOn && query.trim().isNotEmpty
-                                ? searchHits(query, ref.watch(allTripsProvider).value ?? const <Trip>[], [
-                                    for (final list in _expensesByTrip.values) ...list,
-                                  ])
+                                ? searchHits(
+                                    query,
+                                    ref.watch(allTripsProvider).value ?? const <Trip>[],
+                                    [for (final list in _expensesByTrip.values) ...list],
+                                    rich: true,
+                                    memberNames: {
+                                      for (final list in _membersByTrip.values)
+                                        for (final m in list) m.id: m.name,
+                                    },
+                                  )
                                 : const <SearchHit>[];
                             if (data.total == 0 && syncing) {
                               return ListView(
@@ -1170,7 +1184,7 @@ class _FilterPills extends StatelessWidget {
                             key: Key('trip-filter-$id'),
                             onTap: () => onSelect(id),
                             child: AnimatedContainer(
-                              duration: AppMotion.of(context, const Duration(milliseconds: 180)),
+                              duration: AppMotion.of(context, AppMotion.fast),
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(

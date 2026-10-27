@@ -11,6 +11,7 @@ import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_icons.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/widgets/app_sheet.dart';
+import '../../application/sync_wording.dart';
 import '../../application/trips_providers.dart';
 
 /// "N changes waiting to sync" / "Sync issue". The review sheet (retry or
@@ -35,7 +36,7 @@ class SyncChip extends ConsumerWidget {
         child: ActionChip(
           avatar: Icon(issue ? AppIcons.alert : AppIcons.sync, size: 16, color: color),
           label: Text(
-            issue ? 'Failed ${status.issues}' : l10n.syncPending(status.pending),
+            issue ? l10n.syncLineIssue(status.issues) : l10n.syncPending(status.pending),
             style: TextStyle(color: color, fontSize: 12),
           ),
           side: BorderSide(color: color.withValues(alpha: 0.4)),
@@ -61,17 +62,12 @@ class SyncButton extends ConsumerWidget {
     final online = ref.watch(isOnlineProvider).value ?? true;
     final status = ref.watch(syncStatusProvider).value ?? const SyncStatus();
     final syncing = ref.watch(tripsSyncingProvider).value ?? false;
-    final (String, IconData, Color) state = status.issues > 0
-        ? ('${l10n.syncLineIssue} ${status.issues}', Icons.sync_problem_rounded, t.colorDanger)
-        : !online
-        ? (
-            status.pending > 0 ? l10n.syncLineSyncing(status.pending) : l10n.syncLineOffline,
-            Icons.cloud_off_rounded,
-            t.textSecondary,
-          )
-        : status.pending > 0
-        ? (l10n.syncLineSyncing(status.pending), Icons.sync_rounded, t.textSecondary)
-        : ('Sync now', Icons.sync_rounded, t.textSecondary);
+    final w = syncWording(l10n, online: online, status: status);
+    final (String, IconData, Color) state = (
+      online && status.idle ? l10n.syncNow : w.text,
+      w.icon == Icons.check_circle_outline_rounded ? Icons.sync_rounded : w.icon,
+      w.tone == SyncTone.problem ? t.colorDanger : t.textSecondary,
+    );
     return IconButton(
       key: const Key('sync-action'),
       tooltip: state.$1,

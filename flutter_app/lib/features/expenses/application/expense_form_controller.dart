@@ -28,6 +28,7 @@ import '../../../domain/models/member.dart';
 import '../../../domain/models/trip.dart';
 import '../../trip_details/application/trip_nav.dart';
 import 'expenses_providers.dart';
+import '../../../core/logging/app_logger.dart';
 
 /// Which screen is being edited: a new expense in [tripId], or [editingId].
 class ExpenseFormArgs {
@@ -60,6 +61,7 @@ class FormFlags {
   bool get smartDefaults => _f('enableSmartExpenseDefaults');
   bool get saveAndAddAnother => _f('enableSaveAndAddAnother');
   bool get amountKeypad => _f('enableAmountKeypad');
+  bool get dockedKeypad => amountKeypad && _f('enableDockedKeypad');
   bool get persistentDraft => _f('enablePersistentExpenseDraft');
   bool get exclusionDefaults => _f('enableSplitExclusionDefaults');
   bool get dateRangeMembership => _f('enableDateRangeMembership');
@@ -85,6 +87,7 @@ class FormFlags {
     'enableSmartExpenseDefaults',
     'enableSaveAndAddAnother',
     'enableAmountKeypad',
+    'enableDockedKeypad',
     'enablePersistentExpenseDraft',
     'enableSplitExclusionDefaults',
     'enableDateRangeMembership',
@@ -894,9 +897,12 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
       if (!editing && flags.smartDefaults) await _rememberPayerAndCategory();
       state = state.copyWith(submitting: false);
       return outcome;
-    } catch (e) {
-      state = state.copyWith(submitting: false, error: '$e');
-      return SaveOutcome.failed('$e');
+    } catch (e, st) {
+      // The raw exception goes to the log, never the screen.
+      AppLogger.log('expense save failed', level: LogLevel.warning, error: e, stackTrace: st);
+      const msg = "Couldn't save this expense. Check the amount and try again.";
+      state = state.copyWith(submitting: false, error: msg);
+      return const SaveOutcome.failed(msg);
     }
   }
 

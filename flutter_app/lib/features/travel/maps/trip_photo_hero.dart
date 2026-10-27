@@ -57,7 +57,7 @@ class _TripPhotoHeroState extends State<TripPhotoHero> {
   @override
   Widget build(BuildContext context) {
     return AnimatedOpacity(
-      duration: AppMotion.of(context, const Duration(milliseconds: 350)),
+      duration: AppMotion.of(context, AppMotion.base),
       opacity: widget.isHidden ? 0.0 : 1.0,
       child: Container(
         height: widget.height,

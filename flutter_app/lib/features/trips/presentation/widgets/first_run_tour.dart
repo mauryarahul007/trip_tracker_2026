@@ -5,6 +5,7 @@ import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/app_typography.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_sheet.dart';
+import '../../../../core/platform/motion.dart';
 
 /// Three short cards shown once on the first visit to the Trips list: the tiles, press and hold, and the Summary.
 Future<void> showFirstRunTour(BuildContext context) =>
@@ -108,7 +109,7 @@ class _TourState extends State<_Tour> {
                   label: last ? l10n.tourDone : l10n.tourNext,
                   onPressed: () => last
                       ? Navigator.of(context).pop()
-                      : _page.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOutCubic),
+                      : _page.nextPage(duration: AppMotion.base, curve: Curves.easeOutCubic),
                 ),
               ),
             ],

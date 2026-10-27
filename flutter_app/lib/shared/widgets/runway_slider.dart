@@ -6,6 +6,7 @@ import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 
 import '../../core/platform/haptics.dart';
 import '../theme/app_colors.dart';
+import '../../core/platform/motion.dart';
 
 /// An airport-style two-way slider: a plane on a runway.
 ///
@@ -40,7 +41,7 @@ class RunwaySlider extends StatefulWidget {
 }
 
 class _RunwaySliderState extends State<RunwaySlider> with SingleTickerProviderStateMixin {
-  late final _roll = AnimationController(vsync: this, duration: const Duration(milliseconds: 220));
+  late final _roll = AnimationController(vsync: this, duration: AppMotion.fast);
   double _dx = 0; // -1 .. 1 across the runway
   double _from = 0;
   bool _armed = false; // passed the point of no return: release will trigger

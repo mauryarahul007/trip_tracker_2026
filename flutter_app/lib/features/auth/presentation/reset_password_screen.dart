@@ -101,7 +101,13 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: tokens.textPrimary),
           ),
           const SizedBox(height: 24),
-          AppTextField(controller: _password, label: l10n.resetNewPassword, obscureText: true, errorText: _error),
+          AppTextField(
+            controller: _password,
+            label: l10n.resetNewPassword,
+            obscureText: true,
+            errorText: _error,
+            autofillHints: const [AutofillHints.newPassword],
+          ),
           const SizedBox(height: 24),
           AppButton(
             label: l10n.resetSavePassword,
@@ -137,6 +143,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             label: l10n.authEmail,
             hint: l10n.authEmailHint,
             keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
             errorText: _error,
           ),
           const SizedBox(height: 24),

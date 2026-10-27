@@ -74,7 +74,7 @@ void main() {
     await pumpApp(tester, user: asha, online: false);
     final id = await goaTrip(tester);
     await openTrip(tester, id);
-    expect(tester.widget<IconButton>(key('sync-action')).tooltip, 'Offline');
+    expect(tester.widget<IconButton>(key('sync-action')).tooltip, 'Offline · all saved');
   });
 
   testApp('sync icon is absent with its flag off', (tester) async {
@@ -88,6 +88,6 @@ void main() {
     await pumpApp(tester, user: asha, flagsOn: {'enableTripHeaderStrip'}, flagsOff: {'enableTripHeaderActions'});
     final id = await goaTrip(tester);
     await openTrip(tester, id);
-    expect(find.descendant(of: key('sync-line'), matching: find.text('Saved')), findsOneWidget);
+    expect(find.descendant(of: key('sync-line'), matching: find.text('All synced')), findsOneWidget);
   });
 }

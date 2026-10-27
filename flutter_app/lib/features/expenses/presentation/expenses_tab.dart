@@ -27,6 +27,8 @@ import '../../../shared/widgets/pull_to_refresh.dart';
 import '../../../shared/widgets/ask_text.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/widgets/undo_snackbar.dart';
+import '../../../shared/widgets/save_pulse.dart';
+import '../application/just_saved.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../../trips/application/trips_providers.dart';
 import '../application/expenses_providers.dart';
@@ -96,9 +98,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = _todayKey.currentContext;
       if (ctx != null) {
-        unawaited(Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 300), alignment: 0.15));
+        unawaited(Scrollable.ensureVisible(ctx, duration: AppMotion.base, alignment: 0.15));
       } else if (_scroll.hasClients) {
-        unawaited(_scroll.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic));
+        unawaited(_scroll.animateTo(0, duration: AppMotion.base, curve: Curves.easeOutCubic));
       }
     });
   }
@@ -229,7 +231,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final tokens = context.tokens;
     final trip = ref.watch(tripProvider(id)).value;
     final all = ref.watch(tripExpensesProvider(id));
-    if (trip == null || all.isLoading) return const SkeletonPage();
+    if (trip == null || all.isLoading) return const SkeletonPage(shape: SkeletonShape.spend);
     if (ref.watch(compassFlagProvider((tripGetStartedFlag, id))) &&
         !(all.value ?? const <Expense>[]).any((e) => e.deletedAt == null && !e.isSettlement)) {
       return TripGetStarted(tripId: id);
@@ -306,6 +308,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
 
     // Compass spend uses the flat tile rows and day cards of the redesign (what the tidy flag already draws).
     final tidyOn = _flag(ref, 'enableTidyExpenses', id) || compassSpend;
+    final justSaved = _flag(ref, 'enableSaveConfirmation', id) ? ref.watch(justSavedExpenseProvider) : null;
     Widget rowFor(Expense e, {required bool lastInGroup}) {
       if (wide) {
         return _TableRow(
@@ -342,7 +345,14 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
               )
             : row,
       );
-      if (!canManageExpense(e, isAdmin: isAdmin, userId: uid)) return body;
+      final shown = e.id == justSaved
+          ? SavePulse(
+              key: ValueKey('pulse-${e.id}'),
+              onDone: () => ref.read(justSavedExpenseProvider.notifier).clear(e.id),
+              child: body,
+            )
+          : body;
+      if (!canManageExpense(e, isAdmin: isAdmin, userId: uid)) return shown;
       return ExpenseSwipe(
         itemKey: ValueKey('swipe-${e.id}'),
         onEdit: isActualExpense(e) && e.refundOfExpenseId == null ? () => _edit(e) : null,
@@ -351,7 +361,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             : null,
         isPersonal: e.excludeFromTotals,
         onDelete: () => unawaited(_delete(e)),
-        child: body,
+        child: shown,
       );
     }
 
@@ -1107,7 +1117,7 @@ class _RunwayChip extends StatelessWidget {
           behavior: HitTestBehavior.opaque, // the touch area is the full 48 px row, the pill itself stays 36
           child: Center(
             child: AnimatedContainer(
-              duration: AppMotion.of(context, const Duration(milliseconds: 180)),
+              duration: AppMotion.of(context, AppMotion.fast),
               height: 36,
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 14),

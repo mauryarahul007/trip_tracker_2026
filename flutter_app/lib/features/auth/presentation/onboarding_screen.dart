@@ -8,6 +8,8 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../application/onboarding_state.dart';
 import '../../../core/platform/motion.dart';
+import '../../../data/providers.dart';
+import 'onboarding_art.dart';
 
 /// Three-step intro shown once per user per install (web: OnboardingSwipe).
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -39,6 +41,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ('🧾', l10n.onboardingExpenseTitle, l10n.onboardingExpenseBody),
     ];
     final last = _index == steps.length - 1;
+    final art = ref.watch(flagProvider(('enableOnboardingArt', null))).value ?? true;
 
     final onDark = tokens.textPrimary;
     const stepTones = [BentoTone.mint, BentoTone.butter, BentoTone.peach];
@@ -75,7 +78,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             color: tokens.tones[stepTones[i]].bg,
                             borderRadius: BorderRadius.circular(48),
                           ),
-                          child: Text(steps[i].$1, style: const TextStyle(fontSize: 64)),
+                          child: art
+                              ? OnboardingArt(
+                                  const [
+                                    OnboardingArtKind.stamp,
+                                    OnboardingArtKind.route,
+                                    OnboardingArtKind.receipt,
+                                  ][i],
+                                  size: 116,
+                                )
+                              : Text(steps[i].$1, style: const TextStyle(fontSize: 64)),
                         ),
                         const SizedBox(height: 24),
                         Text(
@@ -105,7 +117,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: [
                   for (var i = 0; i < steps.length; i++)
                     AnimatedContainer(
-                      duration: AppMotion.of(context, const Duration(milliseconds: 200)),
+                      duration: AppMotion.of(context, AppMotion.fast),
                       margin: const EdgeInsets.all(4),
                       width: i == _index ? 22 : 8,
                       height: 8,
@@ -123,7 +135,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   isFullWidth: true,
                   onPressed: last
                       ? _finish
-                      : () => _controller.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut),
+                      : () => _controller.nextPage(duration: AppMotion.base, curve: Curves.easeOut),
                 ),
               ),
             ],

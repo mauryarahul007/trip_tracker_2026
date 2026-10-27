@@ -19,6 +19,10 @@ class AppTextField extends StatefulWidget {
   final bool autofocus;
   final int maxLines;
 
+  /// Password-manager / keyboard autofill. Defaults from the field: email keyboards get email, masked fields get
+  /// password. Pass an empty list to turn it off.
+  final Iterable<String>? autofillHints;
+
   const AppTextField({
     super.key,
     this.controller,
@@ -35,6 +39,7 @@ class AppTextField extends StatefulWidget {
     this.onSubmitted,
     this.autofocus = false,
     this.maxLines = 1,
+    this.autofillHints,
   });
 
   @override
@@ -74,6 +79,13 @@ class _AppTextFieldState extends State<AppTextField> {
           enableSuggestions: !widget.obscureText,
           autocorrect: !widget.obscureText,
           textInputAction: widget.textInputAction,
+          autofillHints:
+              widget.autofillHints ??
+              (widget.obscureText
+                  ? const [AutofillHints.password]
+                  : widget.keyboardType == TextInputType.emailAddress
+                  ? const [AutofillHints.email]
+                  : null),
           autofocus: widget.autofocus,
           maxLines: widget.maxLines,
           onChanged: widget.onChanged,

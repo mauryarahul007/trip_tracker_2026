@@ -41,6 +41,9 @@ import '../../trip_details/application/trip_nav.dart';
 import '../../trips/presentation/widgets/create_trip_sheet.dart' show dateRangePickerProvider;
 import '../application/expense_form_controller.dart';
 import '../application/expenses_providers.dart';
+import '../application/just_saved.dart';
+import '../../../app/auth_state.dart';
+import '../../../shared/widgets/undo_snackbar.dart';
 import 'receipt_ocr_modal.dart';
 import 'widgets/form_sheets.dart';
 
@@ -101,6 +104,9 @@ class _FormBodyState extends ConsumerState<_FormBody> {
   late final TextEditingController _title;
   late final TextEditingController _amount;
   final _quick = TextEditingController();
+  // Docked keypad (flag `enableDockedKeypad`): number keys under the form instead of the phone keyboard.
+  bool _docked = false;
+  bool _dockInit = false;
   bool _quickOpen = false;
   String? _quickError;
   late final Set<String> _initialExpenseIds;
@@ -153,11 +159,32 @@ class _FormBodyState extends ConsumerState<_FormBody> {
       _noticeTimer = Timer(const Duration(seconds: 3), () {
         if (mounted) setState(() => _notice = null);
       });
-      _amountFocus.requestFocus();
+      if (_c.flags.dockedKeypad) {
+        setState(() => _docked = true);
+      } else {
+        _amountFocus.requestFocus();
+      }
       return;
+    }
+    if (args.editingId == null && ref.read(flagProvider(('enableSaveConfirmation', args.tripId))).value != false) {
+      _confirmAdded(outcome.expenseId ?? savedId);
     }
     await maybeAskForPush(context, ref); // first meaningful action: the one moment we ask
     if (mounted) context.pop();
+  }
+
+  /// "Added Dinner · Undo" on the screen behind, and a one-time flash on the new row in Spend.
+  void _confirmAdded(String id) {
+    final l10n = context.l10n;
+    final title = _title.text.trim();
+    final repo = ref.read(expenseRepositoryProvider);
+    final uid = ref.read(authStateProvider).userId ?? '';
+    ref.read(justSavedExpenseProvider.notifier).set(id);
+    UndoSnackbar.show(
+      context: context,
+      message: title.isEmpty ? l10n.expAdded : l10n.expAddedNamed(title),
+      onUndo: () => unawaited(repo.delete(id, userId: uid)),
+    );
   }
 
   Future<void> _pickDate() async {
@@ -175,6 +202,10 @@ class _FormBodyState extends ConsumerState<_FormBody> {
     final s = ref.watch(expenseFormProvider(args));
     final c = _c;
     final flags = c.flags;
+    if (!_dockInit) {
+      _dockInit = true;
+      _docked = flags.dockedKeypad && !c.editing; // a new expense opens on the keys; an edit opens on the form
+    }
     final trip = ref.watch(tripProvider(id)).value!;
     final members = ref.watch(visibleMembersProvider(id));
     final byId = {for (final m in members) m.id: m};
@@ -410,7 +441,10 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                                   key: const Key('amount-field'),
                                   controller: _amount,
                                   focusNode: _amountFocus,
-                                  autofocus: !c.editing,
+                                  autofocus: !c.editing && !flags.dockedKeypad,
+                                  readOnly: flags.dockedKeypad,
+                                  showCursor: flags.dockedKeypad ? _docked : null,
+                                  onTap: flags.dockedKeypad ? () => setState(() => _docked = true) : null,
                                   // Operators are typeable (12*3+4), so a plain text keyboard with a character whitelist.
                                   keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
                                   inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-*/().,xX×÷\s]'))],
@@ -432,7 +466,7 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                                   onChanged: c.setAmount,
                                 ),
                               ),
-                              if (flags.amountKeypad)
+                              if (flags.amountKeypad && !flags.dockedKeypad)
                                 IconButton(
                                   key: const Key('amount-keypad-button'),
                                   tooltip: l10n.keypadTitle,
@@ -547,6 +581,7 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                         TextField(
                           key: const Key('title-field'),
                           controller: _title,
+                          onTap: _docked ? () => setState(() => _docked = false) : null,
                           textCapitalization: TextCapitalization.sentences,
                           decoration: InputDecoration(hintText: l10n.formWhatHint),
                           onChanged: c.setTitle,
@@ -936,6 +971,26 @@ class _FormBodyState extends ConsumerState<_FormBody> {
               ),
             ),
           ),
+          if (_docked)
+            Material(
+              color: tokens.bgSurface,
+              elevation: 8,
+              child: SafeArea(
+                top: false,
+                child: AmountKeypad(
+                  docked: true,
+                  initial: _amount.text,
+                  onChanged: (v) {
+                    _amount.value = TextEditingValue(
+                      text: v,
+                      selection: TextSelection.collapsed(offset: v.length),
+                    );
+                    c.setAmount(v);
+                  },
+                  onDone: () => setState(() => _docked = false),
+                ),
+              ),
+            ),
         ],
       ),
     );

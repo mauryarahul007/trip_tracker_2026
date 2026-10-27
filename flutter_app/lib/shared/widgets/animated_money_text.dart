@@ -16,7 +16,7 @@ class AnimatedMoneyText extends StatelessWidget {
   @override
   Widget build(BuildContext context) => TweenAnimationBuilder<double>(
     tween: Tween<double>(end: value),
-    duration: AppMotion.of(context, const Duration(milliseconds: 400)),
+    duration: AppMotion.of(context, AppMotion.slow),
     curve: Curves.easeOutCubic,
     builder: (_, v, _) => Text(format(v), style: style, textAlign: textAlign),
   );

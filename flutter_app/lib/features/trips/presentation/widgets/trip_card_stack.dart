@@ -56,7 +56,7 @@ class TripCardStack extends StatefulWidget {
 }
 
 class _TripCardStackState extends State<TripCardStack> with SingleTickerProviderStateMixin {
-  late final _anim = AnimationController(vsync: this, duration: const Duration(milliseconds: 220));
+  late final _anim = AnimationController(vsync: this, duration: AppMotion.fast);
   late List<String> _order = [for (final t in widget.trips) t.id];
   Offset _drag = Offset.zero;
   Offset _from = Offset.zero;
@@ -291,7 +291,7 @@ class _PageDots extends StatelessWidget {
           children: [
             for (var i = 0; i < shown; i++)
               AnimatedContainer(
-                duration: AppMotion.of(context, const Duration(milliseconds: 200)),
+                duration: AppMotion.of(context, AppMotion.fast),
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 width: start + i == index ? 18 : 6,
                 height: 6,
@@ -372,7 +372,7 @@ class _StackCard extends ConsumerWidget {
                 fit: BoxFit.cover,
                 frameBuilder: (_, child, frame, sync) => AnimatedOpacity(
                   opacity: frame == null && !sync ? 0 : 1,
-                  duration: AppMotion.of(context, const Duration(milliseconds: 350)),
+                  duration: AppMotion.of(context, AppMotion.base),
                   child: child,
                 ),
                 errorBuilder: (_, _, _) => const SizedBox.shrink(),

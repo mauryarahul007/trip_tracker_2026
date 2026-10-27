@@ -1408,7 +1408,7 @@ abstract class AppLocalizations {
   /// No description provided for @syncPending.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 change waiting to sync} other{{count} changes waiting to sync}}'**
+  /// **'{count, plural, =1{Syncing 1 change} other{Syncing {count} changes}}'**
   String syncPending(int count);
 
   /// No description provided for @syncIssue.
@@ -3088,32 +3088,38 @@ abstract class AppLocalizations {
   /// No description provided for @syncLineSaved.
   ///
   /// In en, this message translates to:
-  /// **'Saved'**
+  /// **'All synced'**
   String get syncLineSaved;
 
   /// No description provided for @syncLineSyncing.
   ///
   /// In en, this message translates to:
-  /// **'Waiting'**
+  /// **'Syncing {count}'**
   String syncLineSyncing(int count);
 
   /// No description provided for @syncLineOffline.
   ///
   /// In en, this message translates to:
-  /// **'Offline'**
+  /// **'Offline · all saved'**
   String get syncLineOffline;
 
   /// No description provided for @syncLineOfflineWaiting.
   ///
   /// In en, this message translates to:
-  /// **'Offline · {count} waiting'**
+  /// **'Saved on this phone · {count} to sync'**
   String syncLineOfflineWaiting(int count);
 
   /// No description provided for @syncLineIssue.
   ///
   /// In en, this message translates to:
-  /// **'Failed'**
-  String get syncLineIssue;
+  /// **'{count, plural, =1{1 needs attention} other{{count} need attention}}'**
+  String syncLineIssue(int count);
+
+  /// No description provided for @syncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get syncNow;
 
   /// No description provided for @todayTitle.
   ///
@@ -4542,6 +4548,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit message'**
   String get chatEdit;
+
+  /// No description provided for @errorOfflineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline'**
+  String get errorOfflineTitle;
+
+  /// No description provided for @errorOfflineMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This needs the internet the first time. It loads by itself when you\'re back online.'**
+  String get errorOfflineMessage;
+
+  /// No description provided for @errorSignedOutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve been signed out'**
+  String get errorSignedOutTitle;
+
+  /// No description provided for @errorSignedOutMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again to load this. Nothing saved on this phone is lost.'**
+  String get errorSignedOutMessage;
+
+  /// No description provided for @errorServerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this'**
+  String get errorServerTitle;
+
+  /// No description provided for @errorServerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Our server didn\'t answer. Try again in a moment, or report it from Settings if it keeps happening.'**
+  String get errorServerMessage;
+
+  /// No description provided for @notesCheckSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save that tick. Try again.'**
+  String get notesCheckSaveFailed;
+
+  /// No description provided for @expAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense added'**
+  String get expAdded;
+
+  /// No description provided for @expAddedNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {title}'**
+  String expAddedNamed(String title);
+
+  /// No description provided for @memGroupDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Group {name} deleted'**
+  String memGroupDeleted(String name);
+
+  /// No description provided for @a11yAllSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'All settled. Open settle up'**
+  String get a11yAllSettled;
+
+  /// No description provided for @a11yYouGetBack.
+  ///
+  /// In en, this message translates to:
+  /// **'You get back {amount}. Open settle up'**
+  String a11yYouGetBack(String amount);
+
+  /// No description provided for @a11yYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {amount}. Open settle up'**
+  String a11yYouOwe(String amount);
+
+  /// No description provided for @pushPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get trip alerts?'**
+  String get pushPromptTitle;
+
+  /// No description provided for @pushPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We can notify you when friends add expenses, ask you to settle up, or message the trip. You can change this any time in Settings.'**
+  String get pushPromptBody;
+
+  /// No description provided for @pushPromptLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get pushPromptLater;
+
+  /// No description provided for @pushPromptYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get pushPromptYes;
+
+  /// No description provided for @activityDeleteAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all activity?'**
+  String get activityDeleteAllTitle;
+
+  /// No description provided for @activityDeleteAllBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{This removes 1 update for this trip from your list. Expenses and balances are not touched.} other{This removes all {count} updates for this trip from your list. Expenses and balances are not touched.}}'**
+  String activityDeleteAllBody(int count);
+
+  /// No description provided for @activityDeleteAllConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all'**
+  String get activityDeleteAllConfirm;
+
+  /// No description provided for @notifClearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear notifications'**
+  String get notifClearTitle;
+
+  /// No description provided for @notifClearAllBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all notifications?'**
+  String get notifClearAllBody;
+
+  /// No description provided for @notifClearTripBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all notifications for this trip?'**
+  String get notifClearTripBody;
+
+  /// No description provided for @notifClearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get notifClearConfirm;
+
+  /// No description provided for @notifPaymentConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment confirmed'**
+  String get notifPaymentConfirmed;
+
+  /// No description provided for @summaryYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get summaryYou;
+
+  /// No description provided for @summaryAllSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'All settled'**
+  String get summaryAllSettled;
+
+  /// No description provided for @summaryYouGet.
+  ///
+  /// In en, this message translates to:
+  /// **'You get'**
+  String get summaryYouGet;
+
+  /// No description provided for @summaryYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe'**
+  String get summaryYouOwe;
+
+  /// No description provided for @summaryGroupSpend.
+  ///
+  /// In en, this message translates to:
+  /// **'Group spend'**
+  String get summaryGroupSpend;
+
+  /// No description provided for @summaryPerPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} per person'**
+  String summaryPerPerson(String amount);
+
+  /// No description provided for @summarySettleUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle up'**
+  String get summarySettleUp;
+
+  /// No description provided for @ledYourPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Your payments'**
+  String get ledYourPayments;
+
+  /// No description provided for @chatEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Say hi to the crew. Messages stay inside this trip.'**
+  String get chatEmptyHint;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

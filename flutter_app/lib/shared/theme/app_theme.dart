@@ -77,7 +77,8 @@ ThemeData _build(AppTokens t, Brightness brightness) {
     textTheme: textTheme,
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
-        TargetPlatform.android: ReduceMotionPageTransitionsBuilder(),
+        // Android 14+ predictive back: the back swipe peeks at the screen underneath before committing.
+        TargetPlatform.android: ReduceMotionPageTransitionsBuilder(PredictiveBackPageTransitionsBuilder()),
         TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
         TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
         TargetPlatform.linux: ReduceMotionPageTransitionsBuilder(),

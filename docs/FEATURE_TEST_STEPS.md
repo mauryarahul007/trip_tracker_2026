@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-27 | 3.82.0 | UX-POLISH-20 | [Polish pass: errors, undo, sync words, keypad, nav, a11y](#ux-polish-20--polish-pass-errors-undo-sync-words-keypad-nav-a11y) |
 | 2026-10-27 | 3.81.0 | ONE-THEME | [One Calm Passport theme across the app](#one-theme--one-calm-passport-theme-across-the-app) |
 | 2026-10-27 | 3.80.2 | HOME-BALANCES-GROUPS | [Home Balances count a square group as settled](#home-balances-groups--home-balances-count-a-square-group-as-settled) |
 | 2026-10-24 | unreleased | CALM-PASSPORT | [Calm Passport look and 5-tab trip bar](#calm-passport--calm-passport-look-and-5-tab-trip-bar) |
@@ -3855,3 +3856,40 @@ Then add a row to the **Index** table.
 9. Negative: in Ops Deck turn `enableCalmPassportUi` OFF. The dock and tab bar go back to the old layout, but colours stay Calm (no green-grey Bento palette).
 
 **Pass criteria:** No screen shows a different palette (blue slate, navy, rainbow icons). Brand colours stay only on the Google button, UPI app tiles, stamps and member avatars.
+
+---
+
+## UX-POLISH-20 — Polish pass: errors, undo, sync words, keypad, nav, a11y
+
+**Shipped:** 2026-10-27 · v3.82.0 · New Core flags (default ON): `enableClearErrorStates`, `enableSaveConfirmation`, `enableOnboardingArt`, `enableDockedKeypad`, `enableShapedSkeletons`. Reused: `enableExtendedUndo`, `enableGlobalSearch`, `enableCoachEmptyStates`, `enableAmountKeypad`. No flag (fixes): sync wording, autofill, predictive back, discard prompts, motion tokens, money read-out, background parsing, l10n strings. `enableCompassNav`, `enableCalmPassportUi` and `enableChatFirstNav` no longer change the Flutter nav.
+
+**Prep:** Install the build on Android 14+ if possible (predictive back). Have one trip with 2+ members, a group and a few expenses. Turn on TalkBack for step 12 only.
+
+**Steps**
+1. **Errors say why.** Fresh install, sign in, then turn on airplane mode before the trip list first loads (or open a share link). Pass: "You're offline" with a cloud icon and Retry, not "Something went wrong". No raw error text anywhere.
+2. **Sync words.** Airplane mode on, add an expense. Pass: the trip header and Trips chip say "Saved on this phone · 1 to sync". Back online: "Syncing 1", then "All synced". A stuck item reads "1 needs attention" in red and opens the review sheet.
+3. **Added confirmation.** Add a new expense titled "Dinner". Pass: toast "Added Dinner" with UNDO, and the new row in Spend glows teal once. Tap UNDO: the expense moves to the recycle bin. Edit an expense: no toast.
+4. **Docked keypad.** Tap + Add expense. Pass: big number keys sit under the form, the phone keyboard does not open, Save stays visible. Type 12×3, tap Done: keys hide. Tap the title: keys hide and the keyboard opens. Tap the amount: keys come back. Save & add another: keys open again for the next one.
+5. **Undo group delete.** People → open a group → Delete. Pass: toast "Group X deleted" with UNDO; UNDO brings back the same name and people.
+6. **Onboarding art.** New account (or clear app data). Pass: the three intro slides show drawings (stamp, route with two pins, receipt with three arrows), no emoji.
+7. **Loading shapes.** Open a large trip on a slow phone, or throttle. Pass: Balances shows a hero block and avatar rows; Spend shows a summary block and category rows; People shows avatar rows.
+8. **Search.** Trips search box: type a payer's name, a place name, and an amount like 1200. Pass: matching expenses list under the trips, with the place or "Paid by X" in the detail line.
+9. **One trip navigation.** Ops Deck: turn `enableCompassNav` and `enableCalmPassportUi` OFF, `enableChatFirstNav` ON. Reopen a trip. Pass: still the Calm dock (Balances, Spend, Activity, Plans, Hub), Chat opens from the Hub.
+10. **Back gesture and discard.** Android 14+: start a back swipe on any pushed screen. Pass: the screen underneath peeks before you let go. Type in New trip, Edit trip, Report a problem or Feature request, then swipe back. Pass: "Discard changes?" appears. Save still closes without asking.
+11. **Autofill.** Superadmin login and Reset password. Pass: the password manager offers the saved email and password; reset offers to generate a new password.
+12. **Screen reader money.** TalkBack on, Spend tab. Pass: the summary card reads "You owe ₹1,200. Open settle up" (no "minus"). The Balances settle bar reads "You owe ₹…".
+13. **Empty states.** New trip with nothing in it. Pass: Activity shows Add expense; Chat says "Say hi to the crew".
+14. **Big imports.** Import a backup over 256 KB (Settings → Import, or Trip tools). Pass: the screen does not freeze while it reads the file.
+15. **Motion.** Turn on Reduce motion. Pass: no row glow, sheets and pages cut instead of sliding, nothing hangs.
+
+**Flag-OFF negative checks**
+- `enableClearErrorStates` OFF: step 1 shows the old generic message.
+- `enableSaveConfirmation` OFF: step 3 has no toast and no glow.
+- `enableDockedKeypad` OFF: step 4 opens the phone keyboard; the dial button opens the pop-up keypad.
+- `enableOnboardingArt` OFF: step 6 shows the emoji.
+- `enableShapedSkeletons` OFF: step 7 shows the generic grey bars.
+- `enableExtendedUndo` OFF: step 5 deletes with no toast.
+- `enableCoachEmptyStates` OFF: step 13 shows text only, no button.
+
+**Pass criteria:** every step passes in Light and Dark, at normal and 200% text, with no raw error text, no overflow, and no screen asking "Are you sure?" for something it can undo.
+

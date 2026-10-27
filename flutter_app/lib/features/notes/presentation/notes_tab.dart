@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/flags/compass_flags.dart';
+import '../../../core/logging/app_logger.dart';
 import '../../../core/platform/motion.dart';
 
 import '../../../core/platform/external_launcher.dart';
@@ -484,7 +485,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                           borderRadius: BorderRadius.circular(99),
                           child: TweenAnimationBuilder<double>(
                             tween: Tween(end: p.done / p.total),
-                            duration: AppMotion.of(context, const Duration(milliseconds: 300)),
+                            duration: AppMotion.of(context, AppMotion.base),
                             curve: Curves.easeOutCubic,
                             builder: (_, v, _) => LinearProgressIndicator(
                               value: v,
@@ -630,12 +631,14 @@ class _NotesTabState extends ConsumerState<NotesTab> {
           else
             i,
       ];
+      final saveFailed = context.l10n.notesCheckSaveFailed;
       try {
         await _saveChecks([for (final i in seen) i.id == item.id ? _withCompleted(i, next, me) : i]);
       } catch (e) {
         if (!mounted) return;
         setState(() => _pendingDone.remove(item.id));
-        messenger.showSnackBar(SnackBar(content: Text("Couldn't save that change: $e")));
+        AppLogger.warn('notes: check save failed', e);
+        messenger.showSnackBar(SnackBar(content: Text(saveFailed)));
       }
     }
 
@@ -686,7 +689,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                     children: [
                       // Struck through only once ticked off; the colour eases between the two states.
                       AnimatedDefaultTextStyle(
-                        duration: AppMotion.of(context, const Duration(milliseconds: 220)),
+                        duration: AppMotion.of(context, AppMotion.fast),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,

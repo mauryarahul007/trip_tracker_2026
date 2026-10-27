@@ -4,6 +4,8 @@ import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/app_typography.dart';
 import '../../../../shared/theme/compass.dart';
 import '../../../../shared/widgets/app_avatar.dart';
+import '../../../../core/format/spoken_money.dart';
+import '../../../../l10n/l10n_ext.dart';
 
 /// One suggested payment: `from > to`, amount, and an action. Orange Pay when you are the payer.
 class CompassTransferRow extends StatelessWidget {
@@ -115,16 +117,24 @@ class CompassSettleBar extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(label, style: TextStyle(fontSize: 12, color: t.textSecondary)),
-                  Text(
-                    amount,
-                    style: AppTypography.moneyDisplay(fontSize: 20, color: t.sun).copyWith(fontWeight: FontWeight.w800),
+              child: Semantics(
+                label: '$label ${spokenMoney(amount)}',
+                child: ExcludeSemantics(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(label, style: TextStyle(fontSize: 12, color: t.textSecondary)),
+                      Text(
+                        amount,
+                        style: AppTypography.moneyDisplay(
+                          fontSize: 20,
+                          color: t.sun,
+                        ).copyWith(fontWeight: FontWeight.w800),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
             FilledButton(
@@ -136,7 +146,7 @@ class CompassSettleBar extends StatelessWidget {
                 shape: const StadiumBorder(),
               ),
               onPressed: onSettle,
-              child: const Text('Settle'),
+              child: Text(context.l10n.ledSettle),
             ),
           ],
         ),

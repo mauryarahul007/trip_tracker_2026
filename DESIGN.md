@@ -66,6 +66,73 @@ components:
 
 # Design System: Trip Tracker 2026
 
+> **Two apps, two specs.** The Flutter app (`flutter_app/`, the one that ships to phones) uses **Calm Passport**, described
+> directly below. Everything after "Web app (React)" describes the older web app in `src/` and its tokens in the
+> front matter. When they differ, Calm Passport wins for Flutter work. Source of truth in code:
+> `flutter_app/lib/shared/theme/` (`app_colors.dart`, `app_tokens.dart`, `app_typography.dart`) and
+> `flutter_app/lib/core/platform/` (`motion.dart`, `haptics.dart`).
+
+## Flutter app: Calm Passport
+
+**North star:** a calm paper travel document. One teal action colour, ink text, a night-green hero, and runway
+orange as a rare accent, never the main button.
+
+### Colour
+| Role | Light | Dark |
+|------|-------|------|
+| Page (paper) | `#F4F3EE` | `#0D1311` |
+| Surface | `#FFFFFF` | `#17201D` |
+| Line | `#E3E3DA` | `#26322E` |
+| Ink (text) | `#14201C` | `#ECF3EF` |
+| Muted text | `#5E6B66` | `#A9BAB3` |
+| Action (teal): buttons, links, focus, selected | `#0E6B5E` | `#4FD1C1` |
+| Night hero (trip headers, Group spend card) | `#0F1F1B` | same |
+| Runway accent (one highlight per screen) | `#F26B2A` | `#FF8A57` |
+| You owe | `#B23A24` | `#FF8A75` |
+| You are owed | `#11733F` | `#4ADE9A` |
+
+Pastel tiles (mint, butter, peach, sky, lilac) tint categories and bento tiles only.
+
+**Rules**
+- **One action colour.** Primary buttons are teal. Orange is an accent (a dot, a pin, the settle bar amount), not a CTA.
+- **Money never relies on colour alone.** Owe / owed always carry a sign and words ("You owe", "− ₹1,200"). Screen
+  readers get the words without the sign (`spokenMoney`).
+- **No pure black** except the AMOLED theme.
+
+### Type
+- **Display:** Bricolage Grotesque (titles, big numbers in heroes).
+- **Body:** Figtree.
+- **Labels and money:** IBM Plex Mono, uppercase labels at 11px with ~0.08em tracking; every amount uses tabular figures.
+
+### Shape
+Radii: 16 (small), 24 (cards), 28 (sheets, heroes), pill for buttons, chips and the dock.
+
+### Motion (`AppMotion`)
+- `fast` 200 ms: taps, chips, toggles. `base` 300 ms: rows, tab content, sheets. `slow` 400 ms: heroes, page moves.
+- Curves: `enter` easeOutCubic, `exit` easeInCubic, `standard` easeInOutCubic.
+- Always wrap durations in `AppMotion.of(context, …)` so reduce motion (app setting or phone setting) jumps to the end.
+- A new expense row gets one teal wash (`SavePulse`) after saving. Android uses predictive back.
+
+### Haptics (`AppHaptics` / `AppFeedback`)
+selection for picks and keys, success for save and settle, warning for risky or failed actions, medium for a deliberate
+slide or pay. Never call `HapticFeedback` directly.
+
+### States
+- **Loading:** `SkeletonPage(shape: …)` matches the screen (balances, spend, people). Cached data paints first.
+- **Errors:** `friendlyError` says why: offline, signed out, or server. Raw exception text never reaches the screen.
+- **Empty:** one sentence and at most one main button.
+- **Sync:** one wording everywhere (`syncWording`): "All synced", "Syncing 3", "Saved on this phone · 2 to sync",
+  "2 need attention".
+- **Destructive actions:** prefer Undo (`UndoSnackbar`) over a confirm dialog. Keep dialogs only for things that
+  cannot be undone (trip delete, account delete, permanent bin delete).
+
+### Navigation
+One trip navigation: the Calm dock (Balances, Spend, Activity, Plans, Hub) with Chat and People as extra pages.
+
+---
+
+# Web app (React)
+
 ## Overview
 
 **Creative North Star: "The Boarding Pass"**
