@@ -1,9 +1,10 @@
 import 'cached_photo.dart';
 
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 const List<Color> _avatarPalette = [
-  Color(0xFF2F6FED), // skyline blue
+  AppColors.calmTeal, // skyline blue
   Color(0xFFB98A3E), // brass
   Color(0xFF5B7FBD), // slate blue
   Color(0xFF8B5FBF), // violet

@@ -7,6 +7,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/platform/haptics.dart';
 import '../../../domain/models/travel_pass.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_colors.dart';
 
 class PassScannerModal extends StatefulWidget {
   const PassScannerModal({required this.pass, super.key});
@@ -104,7 +105,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                                   fontSize: 11,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 0.8,
-                                  color: Color(0xFF64748B),
+                                  color: AppColors.calmMute,
                                 ),
                               ),
                             ],
@@ -112,7 +113,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                           IconButton(
                             tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                             key: const Key('scanner-close'),
-                            icon: const Icon(Icons.close, color: Color(0xFF1E293B), size: 20),
+                            icon: const Icon(Icons.close, color: AppColors.calmInk, size: 20),
                             onPressed: () => Navigator.of(context).pop(),
                           ),
                         ],
@@ -123,7 +124,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                       Text(
                         pass.title,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.calmInk),
                       ),
 
                       if (pass.origin != null || pass.destination != null) ...[
@@ -131,7 +132,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                         Text(
                           [pass.origin, pass.destination].whereType<String>().join(' → '),
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF2563EB)),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.calmTeal),
                         ),
                       ],
                       const SizedBox(height: 16),
@@ -143,7 +144,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFFE2E8F0), width: 2),
+                            border: Border.all(color: AppColors.calmLine, width: 2),
                             boxShadow: [
                               BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 16, spreadRadius: 2),
                             ],
@@ -153,10 +154,10 @@ class _PassScannerModalState extends State<PassScannerModal> {
                             version: QrVersions.auto,
                             size: 210,
                             backgroundColor: Colors.white,
-                            eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF0F172A)),
+                            eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: AppColors.calmInk),
                             dataModuleStyle: const QrDataModuleStyle(
                               dataModuleShape: QrDataModuleShape.square,
-                              color: Color(0xFF0F172A),
+                              color: AppColors.calmInk,
                             ),
                           ),
                         ),
@@ -169,7 +170,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
+                            color: AppColors.calmPaperHover,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -184,7 +185,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF64748B),
+                                  color: AppColors.calmMute,
                                 ),
                               ),
                               Text(
@@ -192,7 +193,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w900,
-                                  color: Color(0xFF0F172A),
+                                  color: AppColors.calmInk,
                                   fontFamily: 'monospace',
                                 ),
                               ),
@@ -206,9 +207,9 @@ class _PassScannerModalState extends State<PassScannerModal> {
                           margin: const EdgeInsets.only(bottom: 16),
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
+                            color: AppColors.calmPaper,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFCBD5E1)),
+                            border: Border.all(color: AppColors.calmLine),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -221,7 +222,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                                     style: TextStyle(
                                       fontSize: 9.5,
                                       fontWeight: FontWeight.w800,
-                                      color: Color(0xFF64748B),
+                                      color: AppColors.calmMute,
                                     ),
                                   ),
                                   Text(
@@ -230,7 +231,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
                                       fontSize: 15,
                                       fontWeight: FontWeight.w900,
                                       fontFamily: 'monospace',
-                                      color: Color(0xFF0F172A),
+                                      color: AppColors.calmInk,
                                     ),
                                   ),
                                 ],
@@ -240,14 +241,14 @@ class _PassScannerModalState extends State<PassScannerModal> {
                                 icon: Icon(
                                   _copied ? Icons.check : Icons.copy,
                                   size: 16,
-                                  color: _copied ? tokens.colorSuccess : const Color(0xFF2563EB),
+                                  color: _copied ? tokens.colorSuccess : AppColors.calmTeal,
                                 ),
                                 label: Text(
                                   _copied ? 'Copied' : 'Copy',
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
-                                    color: _copied ? tokens.colorSuccess : const Color(0xFF2563EB),
+                                    color: _copied ? tokens.colorSuccess : AppColors.calmTeal,
                                   ),
                                 ),
                                 onPressed: () => _copy(refCode),
@@ -271,7 +272,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
               child: FilledButton(
                 key: const Key('scanner-done'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF0B0F1A),
+                  backgroundColor: AppColors.calmNightDeep,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(52),
                   shape: const StadiumBorder(),

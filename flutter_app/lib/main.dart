@@ -104,7 +104,7 @@ class TripTrackerApp extends ConsumerWidget {
         ref.watch(highContrastPrefProvider) && (ref.watch(flagProvider(('enableHighContrast', null))).value ?? true);
     AppFeedback.sound = ref.watch(soundFeedbackPrefProvider);
     AppFeedback.packOn = ref.watch(flagProvider(('enableFeedbackPack', null))).value ?? true;
-    // Calm Passport look (Ops Deck flag); OFF keeps the Bento colours.
+    // Calm Passport colours are the one theme; the flag only picks the Calm layout (dock, 5-tab bar).
     final calm = ref.watch(calmPassportProvider);
     AppMotion.reduce =
         ref.watch(reduceMotionPrefProvider) && (ref.watch(flagProvider(('enableReduceMotion', null))).value ?? true);
@@ -112,12 +112,10 @@ class TripTrackerApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Trip Tracker',
       debugShowCheckedModeBanner: false,
-      theme: contrast ? AppTheme.highContrastLight(calm: calm) : (calm ? AppTheme.calmLight() : AppTheme.light()),
+      theme: contrast ? AppTheme.highContrastLight(calm: calm) : AppTheme.light(calm: calm),
       darkTheme: contrast
           ? AppTheme.highContrastDark(calm: calm)
-          : calm
-          ? (amoled ? AppTheme.calmAmoled() : AppTheme.calmDark())
-          : (amoled ? AppTheme.amoled() : AppTheme.dark()),
+          : (amoled ? AppTheme.amoled(calm: calm) : AppTheme.dark(calm: calm)),
       themeMode: themeMode,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

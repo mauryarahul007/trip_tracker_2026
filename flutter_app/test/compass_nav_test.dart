@@ -9,7 +9,7 @@ import 'package:trip_tracker/shared/widgets/compass_cover.dart';
 import 'package:trip_tracker/shared/widgets/day_header.dart';
 
 Widget host(Widget child, {ThemeData? theme}) => MaterialApp(
-  theme: theme ?? AppTheme.light(),
+  theme: theme ?? AppTheme.light(calm: false),
   home: Scaffold(body: child),
 );
 
@@ -79,7 +79,7 @@ void main() {
     testWidgets('as a Scaffold bottom bar it stays dock-sized and leaves the body its height', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: AppTheme.light(),
+          theme: AppTheme.light(calm: false),
           home: Scaffold(
             body: const SizedBox.expand(key: Key('body')),
             bottomNavigationBar: AppBottomNav(compass: true, items: items, currentIndex: 0, onTap: (_) {}),
@@ -97,7 +97,7 @@ void main() {
             alignment: Alignment.bottomCenter,
             child: AppBottomNav(compass: true, items: items, currentIndex: 3, onTap: (_) {}, centerAction: () {}),
           ),
-          theme: AppTheme.dark(),
+          theme: AppTheme.dark(calm: false),
         ),
       );
       expect(tester.takeException(), isNull);

@@ -34,7 +34,7 @@ final boardingPhotoProvider = FutureProvider<String?>((ref) async {
   return null;
 });
 
-const boardingSheet = Color(0xFF070A10);
+const boardingSheet = AppColors.calmNightDeep;
 
 /// Full-screen destination photo under a deep navy wash; a calm gradient until (or without) a photo.
 class BoardingBackdrop extends ConsumerWidget {
@@ -51,7 +51,7 @@ class BoardingBackdrop extends ConsumerWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFF1C5A73), AppColors.heroNavy, Color(0xFF0A1827)],
+              colors: [AppColors.calmTeal, AppColors.heroNavy, AppColors.calmNightDeep],
             ),
           ),
         ),
@@ -159,7 +159,7 @@ class GateCodeField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ready = controller.text.trim().length == 6;
-    const amber = Color(0xFFE08A2E);
+    const amber = AppColors.calmRunway;
     // A fixed-height control: its text may grow with the system setting, but only so far.
     return MediaQuery.withClampedTextScaling(
       maxScaleFactor: 1.25,
@@ -175,7 +175,7 @@ class GateCodeField extends StatelessWidget {
               child: Container(
                 height: 50,
                 padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(color: const Color(0xFF0F1622), borderRadius: BorderRadius.circular(13)),
+                decoration: BoxDecoration(color: AppColors.calmNight, borderRadius: BorderRadius.circular(13)),
                 child: Row(
                   children: [
                     Text(

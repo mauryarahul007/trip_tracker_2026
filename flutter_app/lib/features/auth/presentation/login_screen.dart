@@ -20,6 +20,7 @@ import '../application/social_sign_in.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../../expenses/presentation/widgets/settle_ticket.dart' show TicketBarcode;
 import 'boarding_login_widgets.dart';
+import '../../../shared/theme/app_colors.dart';
 
 /// Whether the superadmin "signup_gate" is closing new sign-ins.
 final signInsPausedProvider = FutureProvider.autoDispose<bool>(
@@ -118,14 +119,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     Widget chip(IconData icon, String label) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF0B1B2E).withValues(alpha: 0.62),
+        color: AppColors.calmNightDeep.withValues(alpha: 0.62),
         borderRadius: BorderRadius.circular(99),
         border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 15, color: const Color(0xFFFFC857)),
+          Icon(icon, size: 15, color: AppColors.calmRunway),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
@@ -148,14 +149,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
-                color: const Color(0xFF0B1B2E).withValues(alpha: 0.62),
+                color: AppColors.calmNightDeep.withValues(alpha: 0.62),
                 borderRadius: BorderRadius.circular(99),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.wb_sunny_rounded, size: 14, color: Color(0xFFFFC857)),
+                  const Icon(Icons.wb_sunny_rounded, size: 14, color: AppColors.calmRunway),
                   const SizedBox(width: 7),
                   Flexible(
                     child: Text(
@@ -167,7 +168,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.4,
-                        color: Color(0xFF7EE0D0),
+                        color: AppColors.calmDarkTealLight,
                       ),
                     ),
                   ),
@@ -278,10 +279,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     _Banner(
                       key: const Key('paused-banner'),
                       text: l10n.authSignInsPaused,
-                      color: const Color(0xFFFFC857),
+                      color: AppColors.calmRunway,
                     ),
                   if (_error != null)
-                    _Banner(key: const Key('error-banner'), text: _error!, color: const Color(0xFFFF8A80)),
+                    _Banner(key: const Key('error-banner'), text: _error!, color: AppColors.calmDarkOwe),
                   if (_detail != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -320,7 +321,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                         ),
                         onPressed: () => context.push('/terms'),
-                        child: Text(l10n.authTerms, style: const TextStyle(color: Color(0xFF7EB6FF), fontSize: 12)),
+                        child: Text(l10n.authTerms, style: const TextStyle(color: AppColors.calmDarkTeal, fontSize: 12)),
                       ),
                       TextButton(
                         style: TextButton.styleFrom(
@@ -328,7 +329,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                         ),
                         onPressed: () => context.push('/privacy'),
-                        child: Text(l10n.authPrivacy, style: const TextStyle(color: Color(0xFF7EB6FF), fontSize: 12)),
+                        child: Text(l10n.authPrivacy, style: const TextStyle(color: AppColors.calmDarkTeal, fontSize: 12)),
                       ),
                     ],
                   ),
@@ -785,7 +786,7 @@ class _BoardButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = dark ? Colors.white : const Color(0xFF111827);
+    final fg = dark ? Colors.white : AppColors.calmInk;
     return Opacity(
       opacity: onPressed == null && !busy ? 0.5 : 1,
       child: Material(

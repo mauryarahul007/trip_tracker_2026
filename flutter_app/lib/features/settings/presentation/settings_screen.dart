@@ -35,7 +35,6 @@ import '../../trips/presentation/widgets/share_trip_sheet.dart';
 import '../application/settings_data.dart';
 import '../../trips/presentation/widgets/home_dock.dart';
 import 'settings_widgets.dart';
-import '../../../shared/theme/app_colors.dart';
 
 final backupServiceProvider = Provider<BackupService>(
   (ref) => BackupService(
@@ -228,7 +227,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsSegmentedTile<HapticsLevel>(
           key: const Key('settings-haptics'),
           icon: Icons.vibration_rounded,
-          iconColor: AppColors.accentViolet,
           title: 'Haptics',
           subtitle: switch (r.watch(hapticsLevelPrefProvider)) {
             HapticsLevel.all => 'Every tap',
@@ -256,7 +254,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsSwitchTile(
           key: const Key('settings-amoled'),
           icon: Icons.contrast_rounded,
-          iconColor: const Color(0xFF5A6173),
           title: 'Pure black dark mode',
           subtitle: 'Saves battery on OLED screens. Applies when the theme is dark.',
           value: amoled,
@@ -266,7 +263,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsSwitchTile(
           key: const Key('settings-high-contrast'),
           icon: Icons.format_color_text_rounded,
-          iconColor: const Color(0xFF5A6173),
           title: 'High contrast',
           subtitle: 'Darker text and stronger borders, easier to read in sunlight',
           value: r.watch(highContrastPrefProvider),
@@ -276,7 +272,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsSwitchTile(
           key: const Key('settings-reduce-motion'),
           icon: Icons.animation_rounded,
-          iconColor: const Color(0xFF5A6173),
           title: 'Reduce motion',
           subtitle: 'Numbers, bars and sections jump to their final state instead of animating',
           value: r.watch(reduceMotionPrefProvider),
@@ -286,7 +281,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsSwitchTile(
           key: const Key('settings-summary-collapse'),
           icon: Icons.unfold_less_rounded,
-          iconColor: const Color(0xFF16A34A),
           title: 'Collapse Trip numbers',
           subtitle: 'Open the Summary with the numbers and charts folded away; tap to expand',
           value: r.watch(summaryCollapsePrefProvider),
@@ -296,7 +290,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsSwitchTile(
           key: const Key('settings-sound'),
           icon: Icons.volume_up_rounded,
-          iconColor: const Color(0xFF0EA5C6),
           title: 'Sound feedback',
           subtitle: 'A soft click when you settle, save or undo',
           value: r.watch(soundFeedbackPrefProvider),
@@ -305,7 +298,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       SettingsTile(
         key: const Key('settings-currency'),
         icon: Icons.payments_outlined,
-        iconColor: const Color(0xFF16A34A),
         title: 'Default currency',
         subtitle: currency ?? "Follows each trip's currency",
         onTap: _pickCurrency,
@@ -317,7 +309,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     SettingsTile(
       key: const Key('settings-inbox'),
       icon: Icons.notifications_none_rounded,
-      iconColor: const Color(0xFF2F6BFF),
       title: 'Notifications',
       subtitle: switch (r.watch(unreadNotificationCountProvider)) {
         0 => 'All caught up',
@@ -328,7 +319,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     SettingsTile(
       key: const Key('settings-notifications'),
       icon: Icons.notifications_none_rounded,
-      iconColor: const Color(0xFF2F6BFF),
       title: 'Notification preferences',
       subtitle: 'Quiet hours, daily digest, muted trips',
       onTap: () => context.push('/settings/notifications'),
@@ -336,7 +326,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     SettingsSwitchTile(
       key: const Key('settings-pass-reminders'),
       icon: Icons.flight_takeoff_rounded,
-      iconColor: AppColors.accentViolet,
       title: 'Travel pass reminders',
       subtitle: 'A reminder 24 hours and 3 hours before flights and trains',
       value: r.watch(passRemindersEnabledProvider),
@@ -348,7 +337,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     SettingsSwitchTile(
       key: const Key('settings-biometric'),
       icon: Icons.fingerprint_rounded,
-      iconColor: const Color(0xFF16A34A),
       title: 'Lock with Face ID / fingerprint',
       subtitle: 'Ask to unlock after the app has been in the background',
       value: r.watch(biometricLockEnabledProvider),
@@ -360,7 +348,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     SettingsTile(
       key: const Key('settings-export'),
       icon: Icons.download_rounded,
-      iconColor: const Color(0xFF0EA5C6),
       title: 'Export backup',
       subtitle: 'All trips on this device as a JSON file',
       onTap: _export,
@@ -368,7 +355,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     SettingsTile(
       key: const Key('settings-import'),
       icon: Icons.upload_rounded,
-      iconColor: AppColors.budgetWarn,
       title: 'Restore backup',
       subtitle: 'Adds the trips in a backup file as new trips',
       onTap: _import,
@@ -379,7 +365,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     SettingsTile(
       key: const Key('settings-report-bug'),
       icon: Icons.bug_report_outlined,
-      iconColor: const Color(0xFFE5484D),
       title: 'Report a problem',
       onTap: () => context.push('/settings/report-bug'),
     ),
@@ -387,7 +372,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       SettingsTile(
         key: const Key('settings-feature-request'),
         icon: Icons.lightbulb_outline_rounded,
-        iconColor: AppColors.budgetWarn,
         title: 'Suggest a feature',
         onTap: () => context.push('/settings/feature-request'),
       ),
@@ -395,7 +379,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       SettingsTile(
         key: const Key('settings-seed-demo'),
         icon: Icons.auto_awesome_rounded,
-        iconColor: AppColors.accentViolet,
         title: 'Seed Demo Trip',
         subtitle: 'Try the app with a sample trip, expenses and splits',
         onTap: _seedDemo,
@@ -403,7 +386,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     SettingsTile(
       key: const Key('settings-diagnostics'),
       icon: Icons.monitor_heart_outlined,
-      iconColor: const Color(0xFF0EA5C6),
       title: 'Diagnostics',
       subtitle: 'Sync status and recent logs',
       onTap: () => context.push('/settings/diagnostics'),
@@ -416,7 +398,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       SettingsTile(
         key: const Key('settings-about-version'),
         icon: Icons.info_outline_rounded,
-        iconColor: const Color(0xFF5A6173),
         title: 'Version',
         subtitle: version == null ? '' : '${version.version} (${version.build})',
       ),
@@ -424,21 +405,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsTile(
           key: const Key('settings-whats-new'),
           icon: Icons.auto_awesome_rounded,
-          iconColor: AppColors.accentViolet,
           title: "What's new",
           onTap: () => _showChangelog(context),
         ),
       SettingsTile(
         key: const Key('settings-privacy'),
         icon: Icons.privacy_tip_outlined,
-        iconColor: const Color(0xFF2F6BFF),
         title: 'Privacy Policy',
         onTap: () => context.push('/privacy'),
       ),
       SettingsTile(
         key: const Key('settings-terms'),
         icon: Icons.description_outlined,
-        iconColor: const Color(0xFF5A6173),
         title: 'Terms of Service',
         onTap: () => context.push('/terms'),
       ),
@@ -461,7 +439,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       SettingsSwitchTile(
         key: const Key('settings-data-saver'),
         icon: Icons.data_saver_on_rounded,
-        iconColor: const Color(0xFF0EA5C6),
         title: 'Data saver',
         subtitle: r.watch(dataSaverPrefProvider) ? 'Map stays collapsed' : 'Map opens as usual',
         value: r.watch(dataSaverPrefProvider),
@@ -492,7 +469,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       SettingsTile(
         key: const Key('settings-trip-tools'),
         icon: Icons.build_outlined,
-        iconColor: const Color(0xFF0EA5C6),
         title: 'Trip Tools',
         subtitle: 'Splits, exports and quick actions',
         onTap: () => AppSheet.show<void>(
@@ -503,7 +479,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       SettingsTile(
         key: const Key('settings-trip-settings'),
         icon: Icons.tune_rounded,
-        iconColor: const Color(0xFF5A6173),
         title: 'Trip settings',
         subtitle: 'Money rules, categories, freeze and archive',
         onTap: () => context.push('/trip/$tripId/settings'),
@@ -512,7 +487,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsSwitchTile(
           key: const Key('settings-geotag'),
           icon: Icons.place_outlined,
-          iconColor: AppColors.budgetWarn,
           title: 'Geotag expenses',
           subtitle: 'Save a place with each expense',
           value: r.watch(geotagExpensesPrefProvider),
@@ -521,7 +495,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       SettingsTile(
         key: const Key('settings-live-location'),
         icon: Icons.my_location_rounded,
-        iconColor: const Color(0xFFE5484D),
         title: 'Live location',
         subtitle: 'Share your position for 12 hours',
         onTap: () => LiveLocationShareModal.show(
@@ -535,7 +508,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsTile(
           key: const Key('settings-close-trip'),
           icon: Icons.verified_user_outlined,
-          iconColor: const Color(0xFF16A34A),
           title: 'Close Trip',
           subtitle: result == null
               ? 'Settle up and lock the trip'
@@ -560,7 +532,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsTile(
           key: const Key('settings-storage'),
           icon: Icons.pie_chart_outline_rounded,
-          iconColor: const Color(0xFF2F6BFF),
           title: 'Storage and Data',
           subtitle: 'Space used on this phone and cache',
           trailing: size == null ? null : SettingsBadge(formatBytes(size.totalBytes)),
@@ -570,7 +541,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SettingsTile(
           key: const Key('settings-archived'),
           icon: Icons.archive_outlined,
-          iconColor: AppColors.accentViolet,
           title: 'Archived Trips',
           subtitle: archived == 0 ? 'No archived trips' : '$archived archived',
           onTap: () => context.push('/settings/archived'),
@@ -578,7 +548,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       SettingsTile(
         key: const Key('settings-backups'),
         icon: Icons.download_rounded,
-        iconColor: const Color(0xFF0EA5C6),
         title: 'Backups',
         subtitle: 'Export or restore all your trips as a JSON file',
         onTap: () => _open('Backups', _dataRows),
@@ -733,7 +702,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       SettingsTile(
                         key: const Key('settings-open-display'),
                         icon: Icons.palette_outlined,
-                        iconColor: AppColors.accentViolet,
                         title: 'More display options',
                         subtitle: 'Contrast, motion, sound, default currency',
                         onTap: () => _open('Display and sound', _displayRows),
@@ -750,7 +718,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       SettingsTile(
                         key: const Key('settings-open-about'),
                         icon: Icons.info_outline_rounded,
-                        iconColor: const Color(0xFF5A6173),
                         title: 'About & Legal',
                         subtitle: version == null
                             ? "What's new, privacy, terms"

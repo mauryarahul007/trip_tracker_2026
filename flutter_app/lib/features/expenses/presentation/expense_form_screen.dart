@@ -962,6 +962,8 @@ class _CategoryChip extends StatelessWidget {
       showCheckmark: false,
       shape: const StadiumBorder(),
       selectedColor: color.withValues(alpha: 0.16),
+      // Ink label in every state: the chip theme flips a selected label to the page colour, which vanishes on this tint.
+      labelStyle: TextStyle(color: context.tokens.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
       side: BorderSide(color: selected ? color : Colors.transparent, width: 1.5),
       onSelected: (_) => onTap(),
     );

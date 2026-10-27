@@ -10,6 +10,7 @@ import '../../../domain/logic/app_lock_policy.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../application/app_lock.dart';
+import '../../../shared/theme/app_colors.dart';
 
 /// Locks once on cold start and again after [appLockTimeout] in the
 /// background, when the user enabled the lock and the Ops Deck flag is on.
@@ -127,7 +128,7 @@ class _AppLockOverlayState extends ConsumerState<AppLockOverlay> {
     final l10n = context.l10n;
     final tokens = context.tokens;
     return Material(
-      color: const Color(0xFF0A0F1A),
+      color: AppColors.calmNightDeep,
       child: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -168,7 +169,7 @@ class _AppLockOverlayState extends ConsumerState<AppLockOverlay> {
                     Text(
                       l10n.lockFailed,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Color(0xFFFCA5A5), fontSize: 13),
+                      style: const TextStyle(color: AppColors.calmDarkOwe, fontSize: 13),
                     ),
                   ],
                   const SizedBox(height: 24),

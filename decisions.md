@@ -5387,3 +5387,8 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** In a group, home shows the group's position, not your personal share inside it.
 * **Release Cut:** version bumped to `3.80.2` via `npm run release:patch`.
 
+
+## 2026-10-27 — One theme: Calm Passport everywhere (v3.81.0)
+* **Decision:** Calm Passport is the only app theme. `AppTokens.light/dark/amoled` are now the Calm sets; the Bento sets, Bento-only `AppColors` and the Compass orange/teal literals are gone (Compass `sun` now uses the Calm runway orange). `enableCalmPassportUi` stays registered but now only picks the Calm layout (floating dock, 5-tab bar); colours are Calm either way (`AppTheme.light(calm: false)`). Hardcoded one-off colours (slate/blue/emerald hexes, `Colors.grey/blueGrey/teal/red/blue`, navy hero hexes) now map to Calm palette constants. The selected expense-category chip label is now ink (it was unreadable under Calm). Settings, notification-prefs and trip-tools icons no longer carry a rainbow of per-row colours; they use the theme accent (danger rows stay red). `heroNavy/heroTeal` alias the Calm night/teal.
+* **Trade-offs Accepted:** Brand colours kept on purpose: Google logo, UPI app brand colours, passport stamp inks, member avatar palette. Spacing and radius tokens are not yet centralised (radii 8-24 still literal in widgets).
+* **Release Cut:** version bumped to `3.81.0` via `npm run release:minor`.

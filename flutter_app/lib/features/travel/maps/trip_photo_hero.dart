@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../places/place_image_service.dart';
 import '../../../core/platform/motion.dart';
+import '../../../shared/theme/app_colors.dart';
 
 class TripPhotoHero extends StatefulWidget {
   final String? destination;
@@ -62,7 +63,7 @@ class _TripPhotoHeroState extends State<TripPhotoHero> {
         height: widget.height,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFF0F172A),
+          color: AppColors.calmInk,
           image: _resolvedUrl != null
               ? DecorationImage(
                   image: NetworkImage(_resolvedUrl!),

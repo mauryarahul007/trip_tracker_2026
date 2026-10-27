@@ -30,6 +30,7 @@ import '../../travel/presentation/live_location_chat_banner.dart';
 import '../../travel/presentation/live_location_share_modal.dart';
 import '../application/chat_providers.dart';
 import '../../../core/platform/motion.dart';
+import '../../../shared/theme/app_colors.dart';
 
 class ChatPane extends ConsumerStatefulWidget {
   const ChatPane({required this.tripId, super.key});
@@ -728,7 +729,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                 height: 32,
                 decoration: BoxDecoration(
                   color: isSettlement
-                      ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                      ? AppColors.calmOwed.withValues(alpha: 0.12)
                       : context.tokens.primaryAccent.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),

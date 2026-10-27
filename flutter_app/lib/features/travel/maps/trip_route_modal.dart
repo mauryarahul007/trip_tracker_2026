@@ -9,6 +9,7 @@ import '../places/place_suggest_service.dart';
 import 'trip_map_hero.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_surface.dart' show AppCard;
+import '../../../shared/theme/app_colors.dart';
 
 class TripRouteModal extends ConsumerStatefulWidget {
   final Trip trip;
@@ -215,11 +216,11 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                   final s = _suggestions[i];
                   return ListTile(
                     dense: true,
-                    leading: const Icon(Icons.place_outlined, size: 18, color: Colors.blueGrey),
+                    leading: const Icon(Icons.place_outlined, size: 18, color: AppColors.calmMute),
                     title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                     subtitle: s.detail.isNotEmpty ? Text(s.detail, style: const TextStyle(fontSize: 11)) : null,
                     trailing: s.source == SuggestionSource.local
-                        ? const Text('Offline', style: TextStyle(fontSize: 10, color: Colors.teal))
+                        ? const Text('Offline', style: TextStyle(fontSize: 10, color: AppColors.calmTeal))
                         : null,
                     onTap: () => _addStop(s.name),
                   );
@@ -230,11 +231,11 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
           // Reorderable / Manageable Stops List
           Expanded(
             child: _stops.isEmpty
-                ? Center(
+                ? const Center(
                     child: Text(
                       'No route stops defined yet.\nAdd cities to plan your itinerary route.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                      style: TextStyle(color: AppColors.calmMute, fontSize: 13),
                     ),
                   )
                 : ListView.builder(
@@ -245,8 +246,8 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                       final isOrigin = index == 0;
                       final isDest = index == _stops.length - 1 && _stops.length > 1;
                       final color = isOrigin
-                          ? const Color(0xFF10B981)
-                          : (isDest ? const Color(0xFFF43F5E) : const Color(0xFF3B82F6));
+                          ? AppColors.calmOwed
+                          : (isDest ? AppColors.calmOwe : AppColors.calmTeal);
 
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
@@ -265,12 +266,12 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                             subtitle: isOrigin
                                 ? const Text(
                                     'Origin / Departure',
-                                    style: TextStyle(fontSize: 11, color: Color(0xFF10B981)),
+                                    style: TextStyle(fontSize: 11, color: AppColors.calmOwed),
                                   )
                                 : (isDest
                                       ? const Text(
                                           'Final Destination',
-                                          style: TextStyle(fontSize: 11, color: Color(0xFFF43F5E)),
+                                          style: TextStyle(fontSize: 11, color: AppColors.calmOwe),
                                         )
                                       : null),
                             trailing: Row(
@@ -289,7 +290,7 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                                     tooltip: 'Move Down',
                                   ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                  icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.calmOwe),
                                   onPressed: () => _removeStop(index),
                                   tooltip: 'Remove Stop',
                                 ),

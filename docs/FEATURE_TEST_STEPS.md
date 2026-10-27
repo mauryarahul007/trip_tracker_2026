@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-27 | 3.81.0 | ONE-THEME | [One Calm Passport theme across the app](#one-theme--one-calm-passport-theme-across-the-app) |
 | 2026-10-27 | 3.80.2 | HOME-BALANCES-GROUPS | [Home Balances count a square group as settled](#home-balances-groups--home-balances-count-a-square-group-as-settled) |
 | 2026-10-24 | unreleased | CALM-PASSPORT | [Calm Passport look and 5-tab trip bar](#calm-passport--calm-passport-look-and-5-tab-trip-bar) |
 | 2026-10-23 | unreleased | SETTLE-NUDGE | [Settle-up nudge banner on quiet trips](#settle-nudge--settle-up-nudge-banner-on-quiet-trips) |
@@ -3833,3 +3834,24 @@ Then add a row to the **Index** table.
 7. On a trip with no groups. Pass: amounts unchanged from before.
 
 **Pass criteria:** every home figure matches the trip ledger; settled trips add 0 to the total.
+
+---
+
+## ONE-THEME — One Calm Passport theme across the app
+
+**Shipped:** 2026-10-27 · v3.81.0 · Flag: `enableCalmPassportUi` (now picks layout only; colours are always Calm)
+
+**Prep:** Install the build. Test in Light, Dark and Pure black (AMOLED) modes.
+
+**Steps**
+1. Open Trips home, a trip (Balances, Spend, Activity, Plans, Hub) and Settings in Light mode. Paper ground, white cards, one teal accent, orange only on the add action.
+2. Open Settings and scroll every section. All row icons share the same teal tint. Only danger rows (sign out, delete) are red.
+3. Open Notifications, a notification list and Notification preferences. Icons use teal, green (done), red (deleted) and amber (updated). No blue or purple.
+4. Open Pass scanner / Traveler passport, Trip route, Trip journey map and Trip Wrapped. No cold slate-blue or navy panels; heroes are the dark green night tone.
+5. Open Login and the lock screen. Dark panels are the dark green night tone, not navy.
+6. Switch to Dark and Pure black and repeat steps 1-5. Text is readable everywhere.
+7. Turn on High contrast in Settings. Text goes darker and borders stronger, same palette.
+8. Open Add expense and pick a category. The selected chip label stays dark and readable, light and dark mode.
+9. Negative: in Ops Deck turn `enableCalmPassportUi` OFF. The dock and tab bar go back to the old layout, but colours stay Calm (no green-grey Bento palette).
+
+**Pass criteria:** No screen shows a different palette (blue slate, navy, rainbow icons). Brand colours stay only on the Google button, UPI app tiles, stamps and member avatars.

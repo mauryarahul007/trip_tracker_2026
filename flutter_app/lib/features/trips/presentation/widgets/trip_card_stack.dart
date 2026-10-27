@@ -18,6 +18,7 @@ import '../../../expenses/application/expenses_providers.dart' show tripMembersP
 import '../../application/trips_providers.dart';
 import 'trip_card.dart' show tripHeadline;
 import '../../../../core/platform/motion.dart';
+import '../../../../shared/theme/app_colors.dart';
 
 /// Trips as a deck of full-bleed photo cards, every trip in any state.
 ///
@@ -338,7 +339,7 @@ class _StackCard extends ConsumerWidget {
     final dotColor = switch (status.phase) {
       TripPhase.active => t.colorSuccess,
       TripPhase.upcoming => t.colorWarning,
-      _ => const Color(0xFF8EA2FF),
+      _ => AppColors.calmDarkTealLight,
     };
     return Semantics(
       container: true,
@@ -357,7 +358,7 @@ class _StackCard extends ConsumerWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF14304A), Color(0xFF0A1827)],
+            colors: [AppColors.calmNight, AppColors.calmNightDeep],
           ),
         ),
         clipBehavior: Clip.antiAlias,
@@ -594,7 +595,7 @@ class _Chip extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
     decoration: BoxDecoration(
-      color: const Color(0xFF0B1B2E).withValues(alpha: 0.62),
+      color: AppColors.calmNightDeep.withValues(alpha: 0.62),
       borderRadius: BorderRadius.circular(99),
       border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
     ),
@@ -626,7 +627,7 @@ class _Crew extends ConsumerWidget {
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF0A1827), width: 2),
+                  border: Border.all(color: AppColors.calmNightDeep, width: 2),
                 ),
                 child: AppAvatar(name: shown[i], size: 34),
               ),

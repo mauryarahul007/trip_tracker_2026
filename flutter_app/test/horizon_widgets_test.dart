@@ -5,7 +5,7 @@ import 'package:trip_tracker/shared/widgets/app_bottom_nav.dart';
 import 'package:trip_tracker/shared/widgets/app_surface.dart';
 
 Widget host(Widget child) => MaterialApp(
-  theme: AppTheme.light(),
+  theme: AppTheme.light(calm: false),
   home: Scaffold(body: child),
 );
 
@@ -26,7 +26,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.bySemanticsLabel('Members')); // Bento: only the selected item shows its label
+    await tester.tap(find.bySemanticsLabel('Members')); // Pre-Calm dock: only the selected item shows its label
     expect(tapped, 2);
     expect(find.byType(Badge), findsOneWidget);
   });
@@ -50,7 +50,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('dock-center')));
     expect(centre, 1);
-    await tester.tap(find.bySemanticsLabel('Members')); // Bento: only the selected item shows its label
+    await tester.tap(find.bySemanticsLabel('Members')); // Pre-Calm dock: only the selected item shows its label
     expect(tapped, 2);
   });
 

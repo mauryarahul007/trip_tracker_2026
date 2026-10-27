@@ -23,6 +23,6 @@ final compassFlagProvider = Provider.family<bool, (String, String?)>(
 /// Global (no trip) navigation flag: the Trips home dock.
 final compassNavProvider = Provider<bool>((ref) => ref.watch(compassFlagProvider((compassNavFlag, null))));
 
-/// Calm Passport look (flag `enableCalmPassportUi`): theme colours app-wide. Per-trip overrides use
-/// [compassFlagProvider] with the trip id (the trip bar reads it that way).
+/// Calm Passport layout (flag `enableCalmPassportUi`): floating dock, 5-tab trip bar. The colours are Calm either
+/// way; this only picks the layout. Per-trip overrides use [compassFlagProvider] with the trip id.
 final calmPassportProvider = Provider<bool>((ref) => ref.watch(compassFlagProvider((calmPassportFlag, null))));

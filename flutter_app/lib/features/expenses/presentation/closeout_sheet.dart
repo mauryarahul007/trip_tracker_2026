@@ -13,6 +13,7 @@ import '../../travel/presentation/traveler_passport_modal.dart';
 import '../../travel/presentation/trip_wrapped_modal.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
+import '../../../shared/theme/app_colors.dart';
 
 /// Lock the trip (web `closeTrip`). Pulse is asked when its flag is on; the
 /// answer is not stored (the trip model has no pulse column yet).
@@ -103,7 +104,7 @@ class _CloseoutSheetState extends ConsumerState<CloseoutSheet> {
                       key: const Key('closeout-share-wrapped'),
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF0B0F1A),
+                        foregroundColor: AppColors.calmNightDeep,
                         minimumSize: const Size.fromHeight(48),
                         shape: const StadiumBorder(),
                       ),

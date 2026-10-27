@@ -12,6 +12,7 @@ import '../../settings/presentation/settings_widgets.dart';
 import '../../trips/application/trips_providers.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_surface.dart' show AppCard;
+import '../../../shared/theme/app_colors.dart';
 
 /// Support view: app and sync state, recent (scrubbed) logs, share/copy.
 class DiagnosticsScreen extends ConsumerWidget {
@@ -93,12 +94,12 @@ class DiagnosticsScreen extends ConsumerWidget {
             children: [
               Container(
                 width: double.infinity,
-                color: const Color(0xFF0B0F14),
+                color: AppColors.calmNightDeep,
                 padding: const EdgeInsets.all(14),
                 child: SelectableText(
                   logs.isEmpty ? 'No log lines yet.' : logs.reversed.take(80).toList().reversed.join('\n'),
                   key: const Key('diag-log'),
-                  style: const TextStyle(fontFamily: 'monospace', fontSize: 11, height: 1.6, color: Color(0xFF7CF0A2)),
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 11, height: 1.6, color: AppColors.calmDarkOwed),
                 ),
               ),
             ],

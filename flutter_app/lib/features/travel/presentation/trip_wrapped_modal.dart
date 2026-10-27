@@ -20,6 +20,7 @@ import 'passport_stamp.dart';
 import '../../../domain/logic/spend_insights.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../core/platform/motion.dart';
+import '../../../shared/theme/app_colors.dart';
 
 class TripWrappedModal extends ConsumerStatefulWidget {
   const TripWrappedModal({required this.tripId, super.key});
@@ -103,15 +104,15 @@ class _TripWrappedModalState extends ConsumerState<TripWrappedModal> {
 
     // Night mode is the Dusk surface (board 06): glass cards on a violet gradient.
     final bgCardColor = _isDark ? Colors.white.withValues(alpha: 0.10) : Colors.white;
-    final textPrimary = _isDark ? Colors.white : const Color(0xFF0F172A);
-    final textSecondary = _isDark ? Colors.white70 : const Color(0xFF64748B);
-    final accentColor = _isDark ? Colors.white : const Color(0xFF0F6F63);
+    final textPrimary = _isDark ? Colors.white : AppColors.calmInk;
+    final textSecondary = _isDark ? Colors.white70 : AppColors.calmMute;
+    final accentColor = _isDark ? Colors.white : AppColors.calmTeal;
 
     return Container(
       constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.92),
       decoration: BoxDecoration(
         gradient: _isDark ? AppTokens.duskGradient : null,
-        color: _isDark ? null : const Color(0xFFF8FAFC),
+        color: _isDark ? null : AppColors.calmPaper,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
@@ -819,19 +820,19 @@ class _ThemeTab extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF0F6F63) : Colors.transparent,
+          color: selected ? AppColors.calmTeal : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 12, color: selected ? Colors.white : const Color(0xFF94A3B8)),
+            Icon(icon, size: 12, color: selected ? Colors.white : AppColors.calmMute),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: selected ? Colors.white : const Color(0xFF94A3B8),
+                color: selected ? Colors.white : AppColors.calmMute,
               ),
             ),
           ],

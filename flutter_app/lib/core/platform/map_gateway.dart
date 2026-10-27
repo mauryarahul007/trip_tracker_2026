@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../shared/theme/app_colors.dart';
 
 class MapMarker {
   final String id;
@@ -108,13 +109,13 @@ class FakeMapGateway implements MapGateway {
 
     return Container(
       key: key ?? const Key('fake_map_canvas'),
-      color: const Color(0xFFE2E8F0),
+      color: AppColors.calmLine,
       child: Stack(
         children: [
           Center(
             child: Text(
               'FakeMap [${initialLat.toStringAsFixed(2)}, ${initialLng.toStringAsFixed(2)}] @ ${initialZoom}x',
-              style: const TextStyle(fontSize: 10, color: Colors.blueGrey),
+              style: const TextStyle(fontSize: 10, color: AppColors.calmMute),
             ),
           ),
           for (final route in routes) SizedBox(key: Key('map_route_${route.id}')),
@@ -127,7 +128,7 @@ class FakeMapGateway implements MapGateway {
                 onTap: marker.onTap,
                 child: Container(
                   padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(color: marker.color ?? Colors.blue, shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: marker.color ?? AppColors.calmTeal, shape: BoxShape.circle),
                   child: Text(
                     marker.icon ?? marker.label ?? '📍',
                     style: const TextStyle(fontSize: 12, color: Colors.white),
@@ -177,7 +178,7 @@ class _InteractiveCanvasMapState extends State<_InteractiveCanvasMap> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFFF1F5F9),
+      color: AppColors.calmPaperHover,
       child: CustomPaint(
         painter: _MapCanvasPainter(markers: widget.markers, routes: widget.routes),
         child: Stack(
@@ -190,7 +191,7 @@ class _InteractiveCanvasMapState extends State<_InteractiveCanvasMap> {
                 child: GestureDetector(
                   onTap: marker.onTap,
                   child: Container(
-                    decoration: BoxDecoration(color: marker.color ?? Colors.teal, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: marker.color ?? AppColors.calmTeal, shape: BoxShape.circle),
                     padding: const EdgeInsets.all(4),
                     child: Text(marker.icon ?? '📍'),
                   ),
@@ -211,7 +212,7 @@ class _MapCanvasPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final bgPaint = Paint()..color = const Color(0xFFE8EEF5);
+    final bgPaint = Paint()..color = AppColors.calmPaperHover;
     canvas.drawRect(Offset.zero & size, bgPaint);
 
     for (final route in routes) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_tokens.dart';
 import 'cached_photo.dart';
+import '../theme/app_colors.dart';
 
 /// A destination cover: the trip photo when there is one, else a teal-to-sunrise gradient, with a bottom
 /// scrim so white [child] text stays readable on either.
@@ -30,7 +31,7 @@ class CompassCover extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [t.primaryAccent, const Color(0xFFF2602B)],
+                  colors: [t.primaryAccent, AppColors.calmRunway],
                 ),
               ),
             ),

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_tokens.dart';
+import '../theme/app_colors.dart';
 
 /// White or near-black, whichever reads better on [bg] (WCAG ratio). The dark theme's bright
 /// teal made white labels 2.0:1; found by the Phase 12 accessibility test.
 Color _readableOn(Color bg) {
   const light = Colors.white;
-  const dark = Color(0xFF0D0E10);
+  const dark = AppColors.calmNightDeep;
   double ratio(Color a, Color b) {
     final l1 = a.computeLuminance(), l2 = b.computeLuminance();
     return (l1 > l2 ? l1 + 0.05 : l2 + 0.05) / (l1 > l2 ? l2 + 0.05 : l1 + 0.05);
