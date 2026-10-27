@@ -101,7 +101,7 @@ describe('featureFlags', () => {
       allArmed[k] = true;
     });
     expect(getPackStatus('core', allArmed).status).toBe('armed');
-    expect(getPackStatus('core', allArmed).activeCount).toBe(35);
+    expect(getPackStatus('core', allArmed).activeCount).toBe(40);
 
     const allSafed = { ...DEFAULT_FEATURE_FLAGS };
     getPackFlagKeys('core').forEach((k) => {
