@@ -2969,5 +2969,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-24T18:50:42.842Z",
     "shippedNote": "Shipped in commit 05ccff0 (v3.80.0), flag enableCalmPassportUi default ON"
+  },
+  {
+    "id": "FEAT-187",
+    "title": "One Calm Passport theme across the Flutter app (v3.81.0)",
+    "description": "One Calm Passport theme across the Flutter app (v3.81.0)",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "android"
+    },
+    "createdAt": "2026-10-27T12:40:00.000Z",
+    "updatedAt": "2026-10-27T12:40:00.000Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-27T12:40:00.000Z",
+    "shippedNote": "Shipped in commit 4d38bb9 (v3.81.0), flag enableCalmPassportUi now picks layout only"
   }
 ]
