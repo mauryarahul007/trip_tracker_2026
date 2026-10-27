@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **322** | All recorded bugs across sessions |
+| **Total Tracked** | **323** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **295** | Verified & closed |
+| **✅ Resolved** | **296** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -326,6 +326,7 @@
 | **BUG-322** | Header showed round crew-initial avatars that were not wanted | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1) |
 | **BUG-323** | Bottom bar stayed dark in light theme | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1) |
 | **BUG-324** | Home Balances showed "you are owed" on a settled trip with a group | `general` | `medium` | `claude-cli` | `claude-cli` | Home Balances, Trips list and Spend hero now use the group balance (group = one party, as the ledger). Test: phase7_money_test square group. Commit 3bb0688 (v3.80.2) |
+| **BUG-325** | Android showed version 3.64.0 on the 3.82.0 Flutter build | `general` | `low` | `claude-cli` | `claude-cli` | pubspec.yaml version set to 3.82.0+3 to match package.json. Commit 437f1dd (v3.82.0) |
 
 ---
 

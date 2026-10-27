@@ -9290,5 +9290,32 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-27T11:45:00.000Z",
     "resolutionNote": "Home Balances, Trips list and Spend hero now use the group balance (group = one party, as the ledger). Test: phase7_money_test square group. Commit 3bb0688 (v3.80.2)"
+  },
+  {
+    "id": "BUG-325",
+    "title": "Android showed version 3.64.0 on the 3.82.0 Flutter build",
+    "description": "flutter_app/pubspec.yaml stayed at 3.64.0+2 while package.json moved to 3.82.0, so Android versionName was stale.",
+    "severity": "low",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "android",
+      "isOnline": true,
+      "appVersion": "3.82.0"
+    },
+    "reproSteps": [
+      "Build flutter_app dev release",
+      "Install on Android",
+      "Check app info version"
+    ],
+    "expectedBehavior": "Shows 3.82.0",
+    "actualBehavior": "Shows 3.64.0",
+    "diagnostics": {},
+    "createdAt": "2026-10-27T13:55:00.000Z",
+    "updatedAt": "2026-10-27T13:55:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-27T13:55:00.000Z",
+    "resolutionNote": "pubspec.yaml version set to 3.82.0+3 to match package.json. Commit 437f1dd (v3.82.0)"
   }
 ]
