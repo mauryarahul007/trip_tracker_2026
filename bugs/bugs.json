@@ -9263,5 +9263,32 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-24T19:17:12.478Z",
     "resolutionNote": "Calm Passport fixes: floating Add button, one Add per Plans pane, no header avatars, themed bar. Commit 7682115 (v3.80.1)"
+  },
+  {
+    "id": "BUG-324",
+    "title": "Home Balances showed \"you are owed\" on a settled trip with a group",
+    "description": "Trips home Balances tab showed +35466 owed on Sikkim backpacking though the trip ledger was fully settled; home ignored trip groups.",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "android",
+      "isOnline": true,
+      "appVersion": "3.80.1"
+    },
+    "reproSteps": [
+      "Trip with a group (you + partner); you paid for partner",
+      "Settle the trip",
+      "Open Trips home > Balances"
+    ],
+    "expectedBehavior": "Trip shows Settled; adds 0 to total",
+    "actualBehavior": "Shows you are owed your partner's share",
+    "diagnostics": {},
+    "createdAt": "2026-10-27T11:45:00.000Z",
+    "updatedAt": "2026-10-27T11:45:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-27T11:45:00.000Z",
+    "resolutionNote": "Home Balances, Trips list and Spend hero now use the group balance (group = one party, as the ledger). Test: phase7_money_test square group. Commit 3bb0688 (v3.80.2)"
   }
 ]
