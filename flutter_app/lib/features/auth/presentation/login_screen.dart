@@ -276,11 +276,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 14),
                   if (paused)
-                    _Banner(
-                      key: const Key('paused-banner'),
-                      text: l10n.authSignInsPaused,
-                      color: AppColors.calmRunway,
-                    ),
+                    _Banner(key: const Key('paused-banner'), text: l10n.authSignInsPaused, color: AppColors.calmRunway),
                   if (_error != null)
                     _Banner(key: const Key('error-banner'), text: _error!, color: AppColors.calmDarkOwe),
                   if (_detail != null)
@@ -321,7 +317,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                         ),
                         onPressed: () => context.push('/terms'),
-                        child: Text(l10n.authTerms, style: const TextStyle(color: AppColors.calmDarkTeal, fontSize: 12)),
+                        child: Text(
+                          l10n.authTerms,
+                          style: const TextStyle(color: AppColors.calmDarkTeal, fontSize: 12),
+                        ),
                       ),
                       TextButton(
                         style: TextButton.styleFrom(
@@ -329,7 +328,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                         ),
                         onPressed: () => context.push('/privacy'),
-                        child: Text(l10n.authPrivacy, style: const TextStyle(color: AppColors.calmDarkTeal, fontSize: 12)),
+                        child: Text(
+                          l10n.authPrivacy,
+                          style: const TextStyle(color: AppColors.calmDarkTeal, fontSize: 12),
+                        ),
                       ),
                     ],
                   ),

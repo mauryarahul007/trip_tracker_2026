@@ -99,7 +99,12 @@ class DiagnosticsScreen extends ConsumerWidget {
                 child: SelectableText(
                   logs.isEmpty ? 'No log lines yet.' : logs.reversed.take(80).toList().reversed.join('\n'),
                   key: const Key('diag-log'),
-                  style: const TextStyle(fontFamily: 'monospace', fontSize: 11, height: 1.6, color: AppColors.calmDarkOwed),
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 11,
+                    height: 1.6,
+                    color: AppColors.calmDarkOwed,
+                  ),
                 ),
               ),
             ],

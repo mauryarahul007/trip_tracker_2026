@@ -167,7 +167,9 @@ void main() {
       e('hotel', 'me', 600, {'me': 300, 'wife': 300}),
       e('cab', 'ben', 200, {'ben': 200}),
     ];
-    final household = [const Group(id: 'g', tripId: 's', name: 'Us', memberIds: ['me', 'wife'])];
+    final household = [
+      const Group(id: 'g', tripId: 's', name: 'Us', memberIds: ['me', 'wife']),
+    ];
     // Raw member balance: me +300, wife -300, ben 0. As a household we are square.
     final ungrouped = crossTripNets(
       userId: 'u1',

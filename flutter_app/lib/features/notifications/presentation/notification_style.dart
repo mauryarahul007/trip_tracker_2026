@@ -10,9 +10,7 @@ import '../../../shared/theme/app_colors.dart';
   'expense_deleted' || 'trip_deleted' => (icon: AppIcons.delete, color: AppColors.calmOwe),
   'expense_refunded' => (icon: Icons.undo_rounded, color: AppColors.calmOwed),
   'expense_restored' => (icon: Icons.auto_awesome_rounded, color: AppColors.calmOwed),
-  'member_added' ||
-  'member_added_notice' ||
-  'member_joined' => (icon: AppIcons.members, color: AppColors.accentViolet),
+  'member_added' || 'member_added_notice' || 'member_joined' => (icon: AppIcons.members, color: AppColors.accentViolet),
   'settlement' ||
   'settle' ||
   'settlement_reminder' => (icon: Icons.check_circle_outline_rounded, color: AppColors.calmOwed),

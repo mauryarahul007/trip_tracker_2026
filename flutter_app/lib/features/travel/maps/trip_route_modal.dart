@@ -245,9 +245,7 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                       final stop = _stops[index];
                       final isOrigin = index == 0;
                       final isDest = index == _stops.length - 1 && _stops.length > 1;
-                      final color = isOrigin
-                          ? AppColors.calmOwed
-                          : (isDest ? AppColors.calmOwe : AppColors.calmTeal);
+                      final color = isOrigin ? AppColors.calmOwed : (isDest ? AppColors.calmOwe : AppColors.calmTeal);
 
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
