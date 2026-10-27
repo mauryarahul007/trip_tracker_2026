@@ -5,6 +5,11 @@
     "enableCompactSummary": true,
     "enableCompactExpenseForm": true,
     "enableCalmHaptics": true,
+    "enableClearErrorStates": true,
+    "enableSaveConfirmation": true,
+    "enableOnboardingArt": true,
+    "enableDockedKeypad": true,
+    "enableShapedSkeletons": true,
     "enableQuickTripCreate": true,
     "enableDestinationAutocomplete": true,
     "cycleDestinationCovers": true,
@@ -197,6 +202,11 @@
     "enableCompactSummary": true,
     "enableCompactExpenseForm": true,
     "enableCalmHaptics": true,
+    "enableClearErrorStates": true,
+    "enableSaveConfirmation": true,
+    "enableOnboardingArt": true,
+    "enableDockedKeypad": true,
+    "enableShapedSkeletons": true,
     "enableQuickTripCreate": true,
     "enableDestinationAutocomplete": true,
     "cycleDestinationCovers": true,
@@ -421,7 +431,12 @@
         "enableCompassMe",
         "enableCompassWeb",
         "enableSpendInsights",
-        "enableRowSyncRetry"
+        "enableRowSyncRetry",
+        "enableClearErrorStates",
+        "enableSaveConfirmation",
+        "enableOnboardingArt",
+        "enableDockedKeypad",
+        "enableShapedSkeletons"
       ]
     },
     {

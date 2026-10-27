@@ -68,7 +68,7 @@ class _TripMapHeroState extends ConsumerState<TripMapHero> {
       final s = valid[i];
       final isFirst = i == 0;
       final isLast = i == valid.length - 1;
-      final color = isFirst ? const Color(0xFF10B981) : (isLast ? const Color(0xFFF43F5E) : const Color(0xFF3B82F6));
+      final color = isFirst ? AppColors.calmOwed : (isLast ? AppColors.calmOwe : AppColors.calmTeal);
 
       markers.add(MapMarker(id: s.id, lat: s.lat!, lng: s.lng!, label: '${i + 1}', title: s.name, color: color));
     }
@@ -81,7 +81,7 @@ class _TripMapHeroState extends ConsumerState<TripMapHero> {
         MapRouteLine(
           id: 'route_glow',
           coordinates: points,
-          color: const Color(0xFF0F6F63).withValues(alpha: 0.6),
+          color: AppColors.calmTeal.withValues(alpha: 0.6),
           strokeWidth: 6.0,
           glow: true,
         ),

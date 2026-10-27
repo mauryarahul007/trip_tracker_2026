@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 
 import '../../core/platform/haptics.dart';
+import '../theme/app_colors.dart';
+import '../../core/platform/motion.dart';
 
 /// An airport-style two-way slider: a plane on a runway.
 ///
@@ -39,7 +41,7 @@ class RunwaySlider extends StatefulWidget {
 }
 
 class _RunwaySliderState extends State<RunwaySlider> with SingleTickerProviderStateMixin {
-  late final _roll = AnimationController(vsync: this, duration: const Duration(milliseconds: 220));
+  late final _roll = AnimationController(vsync: this, duration: AppMotion.fast);
   double _dx = 0; // -1 .. 1 across the runway
   double _from = 0;
   bool _armed = false; // passed the point of no return: release will trigger
@@ -85,7 +87,7 @@ class _RunwaySliderState extends State<RunwaySlider> with SingleTickerProviderSt
         width: widget.width,
         height: RunwaySlider.height,
         decoration: BoxDecoration(
-          color: const Color(0xFF0B1B2E).withValues(alpha: 0.9),
+          color: AppColors.calmNightDeep.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(99),
           border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
           boxShadow: [
@@ -139,11 +141,11 @@ class _RunwaySliderState extends State<RunwaySlider> with SingleTickerProviderSt
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [Colors.white, Color(0xFFD9E4F2)],
+                      colors: [Colors.white, AppColors.calmPaperHover],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: (_armed ? const Color(0xFFFFC857) : const Color(0xFF29D9C2)).withValues(alpha: 0.55),
+                        color: (_armed ? AppColors.calmRunway : AppColors.calmDarkTeal).withValues(alpha: 0.55),
                         blurRadius: 16,
                       ),
                     ],
@@ -151,7 +153,7 @@ class _RunwaySliderState extends State<RunwaySlider> with SingleTickerProviderSt
                   child: Transform.rotate(
                     // Nose points the way it is going; straight up while it waits on the centre line.
                     angle: _dx.abs() < 0.05 ? 0 : (_dx > 0 ? math.pi / 2 : -math.pi / 2),
-                    child: const Icon(Icons.flight_rounded, color: Color(0xFF0B1B2E), size: 28),
+                    child: const Icon(Icons.flight_rounded, color: AppColors.calmNightDeep, size: 28),
                   ),
                 ),
               ),

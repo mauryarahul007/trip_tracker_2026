@@ -8,6 +8,7 @@ import '../../../../shared/theme/app_icons.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
+import '../../../shared/theme/app_colors.dart';
 
 enum SmokeTestStatus { idle, running, success, failure }
 
@@ -171,7 +172,7 @@ class _SmokeTestScreenState extends ConsumerState<SmokeTestScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+          Text(label, style: const TextStyle(fontSize: 13, color: AppColors.calmMute)),
           Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
         ],
       ),

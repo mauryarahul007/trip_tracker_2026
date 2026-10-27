@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/platform/haptics.dart';
 import '../theme/app_icons.dart';
 import '../theme/app_tokens.dart';
+import '../../core/platform/motion.dart';
 
 /// A slide-to-confirm action slider preventing accidental high-impact actions
 /// such as debt settlements or locking trips.
@@ -37,7 +38,7 @@ class _SlideToUnlockState extends State<SlideToUnlock> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _springController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _springController = AnimationController(vsync: this, duration: AppMotion.base);
   }
 
   @override

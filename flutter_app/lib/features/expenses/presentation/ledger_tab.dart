@@ -231,7 +231,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     }
     final trip = ref.watch(tripProvider(id)).value;
     final result = ref.watch(tripSettlementProvider(id));
-    if (trip == null || result == null) return const SkeletonPage();
+    if (trip == null || result == null) return const SkeletonPage(shape: SkeletonShape.balances);
     // A trip with no expenses has nothing to settle: show the start card, not an empty pass and settlement.
     final loaded = ref.watch(tripExpensesProvider(id)).value;
     if (loaded != null &&
@@ -291,7 +291,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                   if (open) ...actions,
                   AnimatedRotation(
                     turns: open ? 0.5 : 0,
-                    duration: AppMotion.of(context, const Duration(milliseconds: 200)),
+                    duration: AppMotion.of(context, AppMotion.fast),
                     child: Icon(Icons.expand_more, color: tokens.textMuted),
                   ),
                 ],
@@ -299,7 +299,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             ),
           ),
           AnimatedSize(
-            duration: AppMotion.of(context, const Duration(milliseconds: 220)),
+            duration: AppMotion.of(context, AppMotion.fast),
             curve: Curves.easeOutCubic,
             alignment: Alignment.topCenter,
             child: !open
@@ -599,7 +599,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                     borderRadius: BorderRadius.circular(99),
                     child: TweenAnimationBuilder<double>(
                       tween: Tween(end: (c.percentage / 100).clamp(0.02, 1.0)),
-                      duration: AppMotion.of(context, const Duration(milliseconds: 400)),
+                      duration: AppMotion.of(context, AppMotion.slow),
                       curve: Curves.easeOutCubic,
                       builder: (_, v, _) => LinearProgressIndicator(
                         value: v,
@@ -864,7 +864,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                     borderRadius: BorderRadius.circular(99),
                     child: TweenAnimationBuilder<double>(
                       tween: Tween(end: (c.percentage / 100).clamp(0.02, 1.0)),
-                      duration: AppMotion.of(context, const Duration(milliseconds: 400)),
+                      duration: AppMotion.of(context, AppMotion.slow),
                       curve: Curves.easeOutCubic,
                       builder: (_, v, _) => LinearProgressIndicator(
                         value: v,
@@ -1556,7 +1556,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                                       borderRadius: BorderRadius.circular(99),
                                       child: TweenAnimationBuilder<double>(
                                         tween: Tween(end: budgetState.fraction),
-                                        duration: AppMotion.of(context, const Duration(milliseconds: 400)),
+                                        duration: AppMotion.of(context, AppMotion.slow),
                                         curve: Curves.easeOutCubic,
                                         builder: (_, v, _) => LinearProgressIndicator(
                                           key: const Key('budget-bar'),
@@ -1734,7 +1734,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
               ),
             ),
           AnimatedSwitcher(
-            duration: AppMotion.of(context, const Duration(milliseconds: 220)),
+            duration: AppMotion.of(context, AppMotion.fast),
             child: Column(
               key: ValueKey(numbersTab),
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1836,7 +1836,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             left: 12,
             right: 12,
             child: AnimatedSwitcher(
-              duration: AppMotion.of(context, const Duration(milliseconds: 200)),
+              duration: AppMotion.of(context, AppMotion.fast),
               transitionBuilder: (child, anim) => FadeTransition(
                 opacity: anim,
                 child: SlideTransition(
@@ -1857,7 +1857,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                       amountColor: tripSettled ? tokens.colorSuccess : tokens.colorDanger,
                       onTap: () => _scroll.animateTo(
                         0,
-                        duration: AppMotion.of(context, const Duration(milliseconds: 300)),
+                        duration: AppMotion.of(context, AppMotion.base),
                         curve: Curves.easeOutCubic,
                       ),
                     )
@@ -1870,12 +1870,12 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             right: 12,
             bottom: 12,
             child: CompassSettleBar(
-              label: 'You owe',
+              label: l10n.summaryYouOwe,
               amount:
                   '${tokens.calm ? '− ' : ''}${formatMoney(context, myPays.fold<double>(0, (a, t) => a + t.amount), cur)}',
               onSettle: () => AppSheet.show<void>(
                 context: context,
-                title: 'Your payments',
+                title: l10n.ledYourPayments,
                 builder: (sheetCtx) => Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [

@@ -99,9 +99,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   Future<void> _clearAll() async {
     final ok = await ConfirmDialog.show(
       context: context,
-      title: 'Clear notifications',
-      message: _scope == null ? 'Clear all notifications?' : 'Clear all notifications for this trip?',
-      confirmLabel: 'Clear',
+      title: context.l10n.notifClearTitle,
+      message: _scope == null ? context.l10n.notifClearAllBody : context.l10n.notifClearTripBody,
+      confirmLabel: context.l10n.notifClearConfirm,
       isDestructive: true,
     );
     final userId = ref.read(authStateProvider).userId;

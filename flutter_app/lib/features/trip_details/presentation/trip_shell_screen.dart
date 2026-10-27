@@ -44,6 +44,7 @@ import 'widgets/trip_actions_sheet.dart';
 import '../../trips/presentation/widgets/trip_card.dart' show TripStatusPill, tripHeadline;
 import '../../expenses/application/money_providers.dart' show allTripsProvider;
 import '../../trips/application/trip_accent.dart';
+import '../../trips/application/sync_wording.dart';
 import '../../trips/application/trips_providers.dart';
 import '../application/trip_nav.dart';
 import 'widgets/compass_balances_rail.dart';
@@ -297,7 +298,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                       SettleNudgeBanner(tripId: widget.tripId),
                       if (trip != null) _TripStrip(tripId: widget.tripId, tab: currentTab.name),
                       AnimatedSize(
-                        duration: AppMotion.of(context, const Duration(milliseconds: 220)),
+                        duration: AppMotion.of(context, AppMotion.fast),
                         curve: Curves.easeOutCubic,
                         alignment: Alignment.topCenter,
                         child: mapExpanded && trip != null
@@ -389,7 +390,7 @@ class _TripTabPagerState extends ConsumerState<TripTabPager> {
     if ((c.page ?? target.toDouble()).round() != target) {
       _programmatic = true;
       c
-          .animateToPage(target, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic)
+          .animateToPage(target, duration: AppMotion.base, curve: Curves.easeOutCubic)
           .whenComplete(() => _programmatic = false);
     }
   }
@@ -594,17 +595,13 @@ class _SyncLine extends ConsumerWidget {
     final t = context.tokens;
     final online = ref.watch(isOnlineProvider).value ?? true;
     final status = ref.watch(syncStatusProvider).value ?? const SyncStatus();
-    final (String text, IconData icon, Color color) = status.issues > 0
-        ? ('${l10n.syncLineIssue} ${status.issues}', Icons.sync_problem_rounded, onDark ? Colors.white : t.colorDanger)
-        : !online
-        ? (
-            status.pending > 0 ? l10n.syncLineSyncing(status.pending) : l10n.syncLineOffline,
-            Icons.cloud_off_rounded,
-            onDark ? Colors.white : t.textSecondary,
-          )
-        : status.pending > 0
-        ? (l10n.syncLineSyncing(status.pending), Icons.sync_rounded, onDark ? Colors.white : t.textSecondary)
-        : (l10n.syncLineSaved, Icons.check_circle_outline_rounded, onDark ? Colors.white70 : t.textMuted);
+    final w = syncWording(l10n, online: online, status: status);
+    final (String text, IconData icon) = (w.text, w.icon);
+    final Color color = switch (w.tone) {
+      SyncTone.problem => onDark ? Colors.white : t.colorDanger,
+      SyncTone.busy => onDark ? Colors.white : t.textSecondary,
+      SyncTone.calm => onDark ? Colors.white70 : t.textMuted,
+    };
     final line = Row(
       key: const Key('sync-line'),
       mainAxisSize: MainAxisSize.min,

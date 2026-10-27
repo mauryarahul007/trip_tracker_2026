@@ -4,6 +4,7 @@ import 'package:trip_tracker/domain/logic/csv_export.dart';
 import 'package:trip_tracker/domain/logic/currency.dart';
 import 'package:trip_tracker/domain/logic/exchange_rates.dart';
 import 'package:trip_tracker/domain/models/expense.dart';
+import 'package:trip_tracker/domain/models/group.dart';
 import 'package:trip_tracker/domain/models/member.dart';
 import 'package:trip_tracker/domain/models/trip.dart';
 import 'package:trip_tracker/features/expenses/presentation/widgets/settlement_card.dart';
@@ -126,6 +127,65 @@ void main() {
     );
     expect(nets.map((n) => n.currency), ['INR', 'USD']);
     expect(nets.every((n) => n.net > 0), isTrue);
+  });
+
+  test('cross-trip nets count a square group as settled', () {
+    // Sikkim case: I paid for my partner; our group owes nobody, so the trip is settled for me.
+    const trip = Trip(
+      id: 's',
+      name: 'Sikkim',
+      startDate: '2026-10-01',
+      endDate: '2026-10-09',
+      baseCurrency: 'INR',
+      ownerId: 'u1',
+      joinCode: 's',
+      memberIds: ['me', 'wife', 'ben'],
+      createdAt: 1,
+      updatedAt: 1,
+    );
+    Expense e(String id, String by, double amt, Map<String, double> shares) => Expense(
+      id: id,
+      tripId: 's',
+      title: id,
+      amount: amt,
+      currency: 'INR',
+      category: 'cat-food',
+      date: '2026-10-02',
+      paidBy: by,
+      splitMode: 'exact',
+      splitMemberIds: shares.keys.toList(),
+      resolvedShares: shares,
+      createdAt: 1,
+      updatedAt: 1,
+    );
+    const members = [
+      Member(id: 'me', name: 'Me', tripId: 's', linkedUserId: 'u1'),
+      Member(id: 'wife', name: 'Wife', tripId: 's'),
+      Member(id: 'ben', name: 'Ben', tripId: 's'),
+    ];
+    final expenses = [
+      e('hotel', 'me', 600, {'me': 300, 'wife': 300}),
+      e('cab', 'ben', 200, {'ben': 200}),
+    ];
+    final household = [
+      const Group(id: 'g', tripId: 's', name: 'Us', memberIds: ['me', 'wife']),
+    ];
+    // Raw member balance: me +300, wife -300, ben 0. As a household we are square.
+    final ungrouped = crossTripNets(
+      userId: 'u1',
+      trips: [trip],
+      membersByTrip: {'s': members},
+      expensesByTrip: {'s': expenses},
+    );
+    expect(ungrouped.single.net, 300);
+    final grouped = crossTripNets(
+      userId: 'u1',
+      trips: [trip],
+      membersByTrip: {'s': members},
+      expensesByTrip: {'s': expenses},
+      groupsByTrip: {'s': household},
+    );
+    expect(grouped, isEmpty);
   });
 
   test('share card png is a real image', () async {

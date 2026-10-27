@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.82.0',
+    date: '2026-10-27',
+    changes: [
+      'Errors now say what happened in plain words, and sync reads the same everywhere: Saved, Syncing, Offline or Needs a look.',
+      'A just-added expense shows an Added note with Undo and a soft highlight in the list, and the amount keypad can stay docked.',
+      'Loading screens match the page shape, search finds places, payers and amounts, and half-filled forms ask before closing.',
+      'Android predictive back, password autofill, and clearer screen reader labels for what you owe.',
+    ],
+  },
+  {
     version: '3.78.0',
     date: '2026-10-23',
     changes: [

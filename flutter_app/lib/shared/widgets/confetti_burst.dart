@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../core/platform/motion.dart';
+import '../theme/app_colors.dart';
 
 /// A lightweight confetti particle burst for celebrating settlements and achievements.
 class ConfettiBurst extends StatefulWidget {
@@ -41,12 +42,12 @@ class ConfettiBurstState extends State<ConfettiBurst> with SingleTickerProviderS
   void _initParticles() {
     _particles.clear();
     const colors = [
-      Color(0xFF3B82F6),
-      Color(0xFF10B981),
-      Color(0xFFF59E0B),
-      Color(0xFFEC4899),
-      Color(0xFF8B5CF6),
-      Color(0xFF06B6D4),
+      AppColors.calmTeal,
+      AppColors.calmOwed,
+      AppColors.calmWarn,
+      AppColors.calmOwe,
+      AppColors.accentViolet,
+      AppColors.calmDarkTeal,
     ];
 
     for (int i = 0; i < 40; i++) {

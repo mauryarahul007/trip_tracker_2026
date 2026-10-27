@@ -14,6 +14,7 @@ import '../application/feedback_providers.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import 'pending_feedback_note.dart';
+import '../../../shared/widgets/discard_guard.dart';
 
 class FeatureRequestScreen extends ConsumerStatefulWidget {
   const FeatureRequestScreen({super.key});
@@ -87,82 +88,89 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
   @override
   Widget build(BuildContext context) {
     final signedIn = ref.watch(authStateProvider.select((a) => a.user != null && !a.isLocalOnly));
-    return AppScaffold(
-      appBar: AppBar(
-        title: const Text('Suggest a feature'),
-        leading: IconButton(
-          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          icon: const Icon(AppIcons.back, size: 20),
-          onPressed: () => context.pop(),
+    return DiscardGuard(
+      controllers: [_title, _desc],
+      initial: const ['', ''],
+      child: AppScaffold(
+        appBar: AppBar(
+          title: const Text('Suggest a feature'),
+          leading: IconButton(
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            icon: const Icon(AppIcons.back, size: 20),
+            onPressed: () => context.pop(),
+          ),
         ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Center(
-            child: Container(
-              width: 64,
-              height: 64,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: context.tokens.warningColor.withValues(alpha: 0.16),
-              ),
-              child: Icon(Icons.lightbulb_outline_rounded, size: 30, color: context.tokens.warningColor),
-            ),
-          ),
-          const PendingFeedbackNote(),
-          if (!signedIn)
-            const Padding(padding: EdgeInsets.only(bottom: 12), child: Text('Sign in with an account to send ideas.')),
-          AppTextField(
-            key: const Key('feature-title'),
-            controller: _title,
-            label: 'Your idea',
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 12),
-          AppTextField(key: const Key('feature-desc'), controller: _desc, label: 'Why would it help?', maxLines: 4),
-          const SizedBox(height: 12),
-          _chipLabel(context, 'Area'),
-          Wrap(
-            key: const Key('feature-category'),
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              for (final c in featureCategories)
-                ChoiceChip(
-                  key: Key('feature-category-$c'),
-                  showCheckmark: false,
-                  shape: const StadiumBorder(),
-                  label: Text(c),
-                  selected: _category == c,
-                  onSelected: (_) => setState(() => _category = c),
+        body: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Center(
+              child: Container(
+                width: 64,
+                height: 64,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: context.tokens.warningColor.withValues(alpha: 0.16),
                 ),
-            ],
-          ),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(
-                _error!,
-                key: const Key('feature-error'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                child: Icon(Icons.lightbulb_outline_rounded, size: 30, color: context.tokens.warningColor),
               ),
             ),
-          if (_sent != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(_sent!, key: const Key('feature-sent')),
+            const PendingFeedbackNote(),
+            if (!signedIn)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: Text('Sign in with an account to send ideas.'),
+              ),
+            AppTextField(
+              key: const Key('feature-title'),
+              controller: _title,
+              label: 'Your idea',
+              textInputAction: TextInputAction.next,
             ),
-          const SizedBox(height: 16),
-          AppButton(
-            key: const Key('feature-submit'),
-            label: 'Send idea',
-            isLoading: _busy,
-            isFullWidth: true,
-            onPressed: _busy ? null : _submit,
-          ),
-        ],
+            const SizedBox(height: 12),
+            AppTextField(key: const Key('feature-desc'), controller: _desc, label: 'Why would it help?', maxLines: 4),
+            const SizedBox(height: 12),
+            _chipLabel(context, 'Area'),
+            Wrap(
+              key: const Key('feature-category'),
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final c in featureCategories)
+                  ChoiceChip(
+                    key: Key('feature-category-$c'),
+                    showCheckmark: false,
+                    shape: const StadiumBorder(),
+                    label: Text(c),
+                    selected: _category == c,
+                    onSelected: (_) => setState(() => _category = c),
+                  ),
+              ],
+            ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  _error!,
+                  key: const Key('feature-error'),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            if (_sent != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(_sent!, key: const Key('feature-sent')),
+              ),
+            const SizedBox(height: 16),
+            AppButton(
+              key: const Key('feature-submit'),
+              label: 'Send idea',
+              isLoading: _busy,
+              isFullWidth: true,
+              onPressed: _busy ? null : _submit,
+            ),
+          ],
+        ),
       ),
     );
   }

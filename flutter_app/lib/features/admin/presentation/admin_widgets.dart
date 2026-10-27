@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/theme/app_colors.dart';
 
 /// Small tinted label ("critical", "Banned", "OPS") used across the portal.
 class AdminPill extends StatelessWidget {
@@ -161,15 +162,15 @@ class AdminSectionLabel extends StatelessWidget {
 }
 
 Color adminSeverityColor(AppTokens t, String severity) => switch (severity) {
-  'critical' => const Color(0xFFDC2626),
-  'high' => const Color(0xFFEA580C),
+  'critical' => AppColors.calmOwe,
+  'high' => AppColors.calmRunwayDeep,
   'medium' => t.colorWarning,
   _ => t.textMuted,
 };
 
 Color adminStatusColor(AppTokens t, String status) => switch (status) {
   'resolved' || 'active' => t.colorSuccess,
-  'in_progress' || 'closed' => const Color(0xFF2563EB),
+  'in_progress' || 'closed' => AppColors.calmTeal,
   'open' || 'grounded' => t.colorDanger,
   _ => t.textMuted,
 };

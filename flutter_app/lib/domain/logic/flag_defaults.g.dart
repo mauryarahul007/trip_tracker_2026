@@ -30,6 +30,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableChatVoiceNotes': false,
   'enableChecklistCategoryProgress': true,
   'enableCleanTopBar': true,
+  'enableClearErrorStates': true,
   'enableCloneLastExpense': true,
   'enableCloneTripSquad': true,
   'enableCloseoutPrompt': true,
@@ -56,6 +57,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableDemoSeeding': false,
   'enableDestinationAutocomplete': true,
   'enableDigestNotifications': false,
+  'enableDockedKeypad': true,
   'enableDocumentVault': false,
   'enableDuplicateDetector': true,
   'enableExpenseApprovalThreshold': false,
@@ -106,6 +108,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableOfflineFeedback': true,
   'enableOfflineMapTiles': false,
   'enableOfflineSnapshot': false,
+  'enableOnboardingArt': true,
   'enablePackingAssistant': true,
   'enablePassEditDelete': true,
   'enablePassSorting': true,
@@ -126,6 +129,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableRouteStops': false,
   'enableRowSyncRetry': true,
   'enableSaveAndAddAnother': true,
+  'enableSaveConfirmation': true,
   'enableSavedFilters': true,
   'enableSavedOfflineToast': true,
   'enableSettingsDataHub': true,
@@ -138,6 +142,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableSettlementDateNote': false,
   'enableSettlementHistory': false,
   'enableSettlementViewSwitch': true,
+  'enableShapedSkeletons': true,
   'enableShareSummaryImage': true,
   'enableSimplifyDebtsToggle': false,
   'enableSkeletonLoaders': true,
@@ -272,7 +277,7 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
   'enableCalmPassportUi': (
     label: 'Calm Passport Look (Flutter)',
     pack: 'core',
-    description: 'Flutter app: ON: the app takes the Calm Passport look. Paper ground (#F4F3EE), one teal action colour, ink chips, a dark floating bottom bar with every label, owe amounts in red with a minus sign and owed amounts in green with a plus sign, and the trip bar becomes Spend, Balances, Chat, Plans and Hub (People and Activity stay reachable from the trip header and the Hub). OFF: the previous colours and trip bar. Does not change any expense, balance, split, sync or login logic, and does not touch the web app.',
+    description: 'Flutter app: ON: the app takes the Calm Passport look. Paper ground (#F4F3EE), one teal action colour, ink chips, a dark floating bottom bar with every label, owe amounts in red with a minus sign and owed amounts in green with a plus sign, and the trip bar becomes Spend, Balances, Chat, Plans and Hub (People and Activity stay reachable from the trip header and the Hub). OFF: the previous colours and trip bar. Does not change any expense, balance, split, sync or login logic, and does not touch the web app. Since v3.82 the Flutter app always uses this layout and ignores this flag (one trip navigation ships); it stays registered for older app builds.',
   ),
   'enableCategoryColorRings': (
     label: 'Category Icon Color Rings & Tabular Alignment',
@@ -293,7 +298,7 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
   'enableChatFirstNav': (
     label: 'Primary Tab-1 Chat Navigation',
     pack: 'labs',
-    description: 'Moves Chat from the Notes hub to Tab 1 on the bottom bar. Does not create Chat by itself — requires Trip Group Chat (enableTripChat). When OFF, Chat stays under Notes.',
+    description: 'Web app: moves Chat from the Notes hub to Tab 1 on the bottom bar. Does not create Chat by itself — requires Trip Group Chat (enableTripChat). When OFF, Chat stays under Notes. The Flutter app ignores this flag since v3.82: Chat is always its own page in the Calm Passport trip navigation.',
   ),
   'enableChatOfflineOutbox': (
     label: 'Offline Chat Outbox with Status Ticks',
@@ -336,6 +341,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'trip',
     description: 'Flutter app: ON: the trip top bar shows only the notification bell and one More menu (Share trip, Route map, Trip settings, App settings, Live location); a small sync icon appears only when you are offline, syncing or stuck. OFF: the older row of separate Map, Share, Settings and menu buttons. Does not remove any action.',
   ),
+  'enableClearErrorStates': (
+    label: 'Errors That Say Why (Flutter)',
+    pack: 'core',
+    description: 'Flutter app: ON: when a screen cannot load it says why: You are offline (it loads by itself when back online), You have been signed out (sign in again, nothing on the phone is lost), or the server did not answer, each with Retry. Raw technical error text is never shown. OFF: one generic Something went wrong message. Does not change syncing, retries or what is saved.',
+  ),
   'enableCloneLastExpense': (
     label: 'Clone Last Expense',
     pack: 'core',
@@ -359,7 +369,7 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
   'enableCoachEmptyStates': (
     label: 'Friendly Empty States (Flutter)',
     pack: 'trip',
-    description: 'Flutter app: ON: empty Expenses, Notes and Members lists show an illustrated card with a one-line tip and a button for the first action. OFF: the plain empty message. Does not add data.',
+    description: 'Flutter app: ON: empty Expenses, Notes and Members lists show an illustrated card with a one-line tip and a button for the first action; an empty trip Activity offers Add expense, and an empty Chat says how to start. OFF: the plain empty message with no button. Does not add data.',
   ),
   'enableCoachHints': (
     label: 'Coach Hints (Flutter)',
@@ -395,7 +405,7 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
   'enableCompassNav': (
     label: 'Compass Navigation (Flutter)',
     pack: 'core',
-    description: 'Flutter app: ON: the bottom bar inside a trip becomes Spend, Balances, an orange + Add expense button, Chat and Trip, with every label always visible. Trip is a new hub that opens People, Notes, Receipts, Insights, Invite, Live location, Tools and Trip settings; People and Notes also keep their old links. The Trips home bar keeps its four places (Trips, Wallet, Activity, Me) with the same look, and the old floating Add button is hidden because the + replaces it. OFF: the previous trip tab bar and home bar. Does not change any expense, balance or split, the login, or the Trips home layout.',
+    description: 'Flutter app: ON: the bottom bar inside a trip becomes Spend, Balances, an orange + Add expense button, Chat and Trip, with every label always visible. Trip is a new hub that opens People, Notes, Receipts, Insights, Invite, Live location, Tools and Trip settings; People and Notes also keep their old links. The Trips home bar keeps its four places (Trips, Wallet, Activity, Me) with the same look, and the old floating Add button is hidden because the + replaces it. OFF: the previous trip tab bar and home bar. Does not change any expense, balance or split, the login, or the Trips home layout. Since v3.82 the Flutter app ignores this flag and always uses the Calm Passport dock; it stays registered for older app builds.',
   ),
   'enableCompassSpend': (
     label: 'Compass Spend Header (Flutter)',
@@ -467,6 +477,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'labs',
     description: 'One daily push summary instead of a push per event. Requires the digest_cron_secret Vault setup in migration 0087.',
   ),
+  'enableDockedKeypad': (
+    label: 'Keypad Under the Add Form (Flutter)',
+    pack: 'core',
+    description: 'Flutter app: ON: adding an expense opens with big number keys docked under the form instead of the phone keyboard, so the amount is typed with one thumb and Save stays visible; Done or tapping the title hides the keys, tapping the amount brings them back. Needs the Amount Keypad flag (enableAmountKeypad). OFF: the phone keyboard opens and the keypad is a pop-up from the dial button. Does not change how amounts are checked or saved.',
+  ),
   'enableDocumentVault': (
     label: 'Document / ID Vault',
     pack: 'pro',
@@ -522,7 +537,7 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
   'enableExtendedUndo': (
     label: 'Extended Undo',
     pack: 'core',
-    description: 'Undo toast for member delete, member archive and recorded settlements.',
+    description: 'ON: an Undo toast after deleting or archiving a member, recording a settlement, and (Flutter app) deleting a group; Undo on a group puts the same name and people back. OFF: these actions happen with no Undo. Does not affect expense delete, which always has Undo, and does not change balances beyond the action itself.',
   ),
   'enableFeatureSuggestions': (
     label: 'Suggest a Feature Feedback Box',
@@ -557,7 +572,7 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
   'enableGlobalSearch': (
     label: 'Search Inside Trips (Flutter)',
     pack: 'trip',
-    description: 'Flutter app: ON: typing in the Trips search box also lists matching expenses (by title) and notes (by title or text) from all your trips under the matching trips; tapping one opens that trip on the right tab. OFF: search only filters trips by name and place. Read-only: it never changes anything and only looks at data already on this device.',
+    description: 'Flutter app: ON: typing in the Trips search box also lists matching expenses and notes from all your trips under the matching trips; tapping one opens that trip on the right tab. Expenses match on title, place, who paid, or amount (typing 1200 finds a 1,200 bill); notes match on title or text. OFF: search only filters trips by name and place. Read-only: it never changes anything and only looks at data already on this device.',
   ),
   'enableGroupSpend': (
     label: 'Group-wise Spend on the Summary (Flutter)',
@@ -722,6 +737,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'ops',
     description: 'Complete offline JSON database export and backup migration tools.',
   ),
+  'enableOnboardingArt': (
+    label: 'Drawn Intro Slides (Flutter)',
+    pack: 'core',
+    description: 'Flutter app: ON: the three intro slides show simple Calm Passport drawings (a passport stamp, a route between two pins, a receipt splitting three ways). OFF: the old emoji. Does not change the slide text, order, or when the intro shows.',
+  ),
   'enablePackingAssistant': (
     label: 'Smart Weather & Packing Assistant',
     pack: 'trip',
@@ -823,6 +843,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'trip',
     description: 'Flutter app: ON: the new-expense form shows a second button, Save and add another, under Save. It saves the expense, clears the form (starting again from your remembered payer, category and split when Smart Expense Defaults and Remember Default Split are ON) and leaves you ready to type the next one, so you can log a run of expenses without reopening the form. OFF: only Save is shown and it closes the form. Does not appear when editing an expense, and does not change how an expense is saved, split or synced.',
   ),
+  'enableSaveConfirmation': (
+    label: 'Added-Expense Confirmation (Flutter)',
+    pack: 'core',
+    description: 'Flutter app: ON: after adding a new expense the app shows Added <title> with an Undo button, and the new row briefly glows teal in Spend so the traveler can see where it went (no glow with reduce motion). Undo moves the expense to the recycle bin. OFF: the form just closes. Does not apply to edits, and does not change how the expense is saved or split.',
+  ),
   'enableSavedFilters': (
     label: 'Saved Expense Filters (Flutter)',
     pack: 'trip',
@@ -882,6 +907,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'Settlement Group / Person View (Flutter)',
     pack: 'trip',
     description: 'Flutter app: ON: on trips that have groups, everyone sees a Group view / Person view switch above Who pays whom on the Summary tab. Group view settles between groups; Person view lists the same debts person to person. It only changes what this viewer sees: it does not change balances, the trip\'s Fewest payments setting, or what other members see. OFF: Who pays whom always follows the groups.',
+  ),
+  'enableShapedSkeletons': (
+    label: 'Loading Shapes That Match (Flutter)',
+    pack: 'core',
+    description: 'Flutter app: ON: while Balances, Spend or People load, the placeholder matches the real screen (the summary hero, then avatar or category rows). OFF: a generic card and grey bars. Needs Skeleton Loaders (enableSkeletonLoaders); with that off the spinner shows. Purely visual: does not change loading speed or data.',
   ),
   'enableShareSummaryImage': (
     label: 'Share Summary as Image (Flutter)',
@@ -1241,6 +1271,11 @@ const Map<String, List<String>> consumerPacks = {
     'enableCompassWeb',
     'enableSpendInsights',
     'enableRowSyncRetry',
+    'enableClearErrorStates',
+    'enableSaveConfirmation',
+    'enableOnboardingArt',
+    'enableDockedKeypad',
+    'enableShapedSkeletons',
   ],
   'trip': [
     'enableMemberMoneyRow',

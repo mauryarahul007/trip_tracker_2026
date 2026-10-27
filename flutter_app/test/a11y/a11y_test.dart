@@ -169,6 +169,51 @@ void main() {
     }
   });
 
+  // Every routed traveler screen in dark at 200% text: no overflow, and tap targets, labels and contrast hold.
+  group('every screen, dark at 200% text', () {
+    for (final entry in {
+      'trips list': (String _) => '/',
+      'home balances': (String _) => '/balances',
+      'balances': (String id) => '/trip/$id/ledger',
+      'spend': (String id) => '/trip/$id/expenses',
+      'add expense': (String id) => '/trip/$id/expenses/new',
+      'activity': (String id) => '/trip/$id/activity',
+      'plans': (String id) => '/trip/$id/notes',
+      'hub': (String id) => '/trip/$id/hub',
+      'chat': (String id) => '/trip/$id/chat',
+      'people': (String id) => '/trip/$id/members',
+      'receipts': (String id) => '/trip/$id/receipts',
+      'spend insights': (String id) => '/trip/$id/insights',
+      'categories': (String id) => '/trip/$id/categories',
+      'recycle bin': (String id) => '/trip/$id/recycle-bin',
+      'trip settings': (String id) => '/trip/$id/settings',
+      'settings': (String _) => '/settings',
+      'notification preferences': (String _) => '/settings/notifications',
+      'storage': (String _) => '/settings/storage',
+      'archived trips': (String _) => '/settings/archived',
+      'report a problem': (String _) => '/settings/report-bug',
+      'feature request': (String _) => '/settings/feature-request',
+      'notifications': (String _) => '/notifications',
+    }.entries) {
+      testApp('${entry.key} (dark, 200%)', (tester) async {
+        tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+        tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+        addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        final handle = tester.ensureSemantics();
+        await pumpApp(tester, user: asha);
+        final s = await seedTrip(tester);
+        await addExpense(tester, s, amount: 300);
+        final path = entry.value(s.tripId);
+        if (path != '/') await go(tester, path);
+        await settle(tester);
+        expect(tester.takeException(), isNull);
+        await guidelines(tester);
+        handle.dispose();
+      });
+    }
+  });
+
   group('large text and RTL on the shared components', () {
     Widget host(Widget child, {TextDirection dir = TextDirection.ltr, double scale = 1}) => MaterialApp(
       theme: AppTheme.light(),

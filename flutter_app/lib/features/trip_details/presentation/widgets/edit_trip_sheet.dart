@@ -10,6 +10,7 @@ import '../../application/trip_nav.dart' show tripProvider;
 import '../../../trips/application/trips_providers.dart' show tripsProvider;
 import '../../../trips/presentation/widgets/create_trip_sheet.dart' show dateRangePickerProvider;
 import '../../../trips/presentation/widgets/destination_field.dart';
+import '../../../../shared/widgets/discard_guard.dart';
 
 String _iso(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -29,6 +30,7 @@ class EditTripSheet extends ConsumerStatefulWidget {
 
 class _EditTripSheetState extends ConsumerState<EditTripSheet> {
   late final TextEditingController _name;
+  late final String _initialName;
   // One box per destination; stored as one comma-separated string so the rest of the app keeps working.
   final _destinations = <TextEditingController>[];
   DateTimeRange? _range;
@@ -40,7 +42,8 @@ class _EditTripSheetState extends ConsumerState<EditTripSheet> {
   void initState() {
     super.initState();
     final trip = ref.read(tripProvider(widget.tripId)).value;
-    _name = TextEditingController(text: trip?.name ?? '');
+    _initialName = trip?.name ?? '';
+    _name = TextEditingController(text: _initialName);
     final saved = [
       for (final d in (trip?.destination ?? '').split(','))
         if (d.trim().isNotEmpty) d.trim(),
@@ -100,99 +103,103 @@ class _EditTripSheetState extends ConsumerState<EditTripSheet> {
         for (final d in (t.destination ?? '').split(','))
           if (d.trim().isNotEmpty) d.trim(),
     ];
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AppTextField(
-              key: const Key('edit-trip-name'),
-              controller: _name,
-              label: 'Trip name',
-              errorText: _nameError,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 12),
-            for (var i = 0; i < _destinations.length; i++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: DestinationField(
-                        key: ObjectKey(_destinations[i]),
-                        controller: _destinations[i],
-                        label: _destinations.length == 1 ? 'Destination (optional)' : 'Destination ${i + 1}',
-                        enabled: ref.watch(flagProvider(('enableDestinationAutocomplete', null))).value ?? true,
-                        pastDestinations: pastDestinations,
-                        onChanged: (_) {},
+    return DiscardGuard(
+      controllers: [_name],
+      initial: [_initialName],
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppTextField(
+                key: const Key('edit-trip-name'),
+                controller: _name,
+                label: 'Trip name',
+                errorText: _nameError,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 12),
+              for (var i = 0; i < _destinations.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: DestinationField(
+                          key: ObjectKey(_destinations[i]),
+                          controller: _destinations[i],
+                          label: _destinations.length == 1 ? 'Destination (optional)' : 'Destination ${i + 1}',
+                          enabled: ref.watch(flagProvider(('enableDestinationAutocomplete', null))).value ?? true,
+                          pastDestinations: pastDestinations,
+                          onChanged: (_) {},
+                        ),
                       ),
-                    ),
-                    if (_destinations.length > 1)
-                      IconButton(
-                        key: Key('edit-trip-remove-destination-$i'),
-                        tooltip: 'Remove destination',
-                        constraints: const BoxConstraints(minWidth: 48, minHeight: 56),
-                        icon: const Icon(Icons.remove_circle_outline_rounded),
-                        onPressed: () => setState(() => _destinations.removeAt(i).dispose()),
-                      ),
-                  ],
+                      if (_destinations.length > 1)
+                        IconButton(
+                          key: Key('edit-trip-remove-destination-$i'),
+                          tooltip: 'Remove destination',
+                          constraints: const BoxConstraints(minWidth: 48, minHeight: 56),
+                          icon: const Icon(Icons.remove_circle_outline_rounded),
+                          onPressed: () => setState(() => _destinations.removeAt(i).dispose()),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                key: const Key('edit-trip-add-destination'),
-                onPressed: () => setState(() => _destinations.add(TextEditingController())),
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Add destination'),
-              ),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              key: const Key('edit-trip-dates'),
-              onPressed: _pickDates,
-              icon: const Icon(Icons.date_range_rounded),
-              label: Text(_range == null ? 'Dates' : formatDateRange(_iso(_range!.start), _iso(_range!.end))),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(56),
+              Align(
                 alignment: Alignment.centerLeft,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-              ),
-            ),
-            if (_dateError != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6, left: 4),
-                child: Text(_dateError!, style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12)),
-              ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: AppButton(
-                    key: const Key('edit-trip-save'),
-                    label: 'Update Trip',
-                    isLoading: _busy,
-                    onPressed: _busy ? null : _save,
-                  ),
+                child: TextButton.icon(
+                  key: const Key('edit-trip-add-destination'),
+                  onPressed: () => setState(() => _destinations.add(TextEditingController())),
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('Add destination'),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: AppButton(
-                    key: const Key('edit-trip-cancel'),
-                    label: 'Cancel',
-                    variant: AppButtonVariant.secondary,
-                    onPressed: () => Navigator.of(context).pop(false),
-                  ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                key: const Key('edit-trip-dates'),
+                onPressed: _pickDates,
+                icon: const Icon(Icons.date_range_rounded),
+                label: Text(_range == null ? 'Dates' : formatDateRange(_iso(_range!.start), _iso(_range!.end))),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                  alignment: Alignment.centerLeft,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 ),
-              ],
-            ),
-          ],
+              ),
+              if (_dateError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, left: 4),
+                  child: Text(_dateError!, style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12)),
+                ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: AppButton(
+                      key: const Key('edit-trip-save'),
+                      label: 'Update Trip',
+                      isLoading: _busy,
+                      onPressed: _busy ? null : _save,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: AppButton(
+                      key: const Key('edit-trip-cancel'),
+                      label: 'Cancel',
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () => Navigator.of(context).pop(false),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

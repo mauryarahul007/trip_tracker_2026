@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_tokens.dart';
+import '../theme/app_colors.dart';
 
 /// A vintage rubberized passport-style stamp.
 ///
@@ -18,9 +19,7 @@ class StatusStamp extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     // Settled gets vibrant emerald / mint tone; Not Settled gets urgent vermilion / red.
-    final stampColor = settled
-        ? (tone != null ? tokens.tones[tone!].accent : tokens.colorSuccess)
-        : const Color(0xFFEF4444);
+    final stampColor = settled ? (tone != null ? tokens.tones[tone!].accent : tokens.colorSuccess) : AppColors.calmOwe;
 
     return Semantics(
       label: text,

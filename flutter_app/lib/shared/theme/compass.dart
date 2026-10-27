@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_colors.dart';
 import 'app_tokens.dart';
 
 /// Compass additions to [AppTokens]. Kept as an extension so no existing token or theme value changes:
@@ -7,13 +8,14 @@ import 'app_tokens.dart';
 extension CompassTokens on AppTokens {
   bool get _isDark => bgPage.computeLuminance() < 0.5;
 
-  /// The one orange action colour (Add expense, Pay). White text on [sun] is 5.2:1 in light, ink in dark.
-  Color get sun => _isDark ? const Color(0xFFFF8A57) : const Color(0xFFC2410C);
-  Color get onSun => _isDark ? const Color(0xFF2A0E02) : Colors.white;
-  Color get sunSoft => _isDark ? const Color(0xFF3A2014) : const Color(0xFFFDE6DA);
+  /// The one orange action colour (Add expense, Pay), taken from the Calm palette. White text on [sun] is 5.2:1 in
+  /// light, ink in dark.
+  Color get sun => _isDark ? AppColors.calmRunwayDark : AppColors.calmRunwayDeep;
+  Color get onSun => _isDark ? AppColors.calmInk : Colors.white;
+  Color get sunSoft => tones.peach.bg;
 
   /// Soft teal wash for selected chips and info rows.
-  Color get primarySoft => _isDark ? const Color(0xFF123A35) : const Color(0xFFD8EFE9);
+  Color get primarySoft => tones.mint.bg;
 
   /// Category colours for icons and charts (same hue in both themes, tint differs).
   Color categoryColor(String category) => switch (category.toLowerCase()) {

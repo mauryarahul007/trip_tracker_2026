@@ -29,9 +29,10 @@ Finder _zoom() => find.ancestor(
 void main() {
   tearDown(() => AppMotion.reduce = false);
 
-  testWidgets('Android page transition zooms normally', (tester) async {
-    await _push(tester);
-    expect(_zoom(), findsWidgets);
+  test('Android uses predictive back (the back swipe peeks at the page underneath)', () {
+    final b = AppTheme.light().pageTransitionsTheme.builders[TargetPlatform.android];
+    expect(b, isA<ReduceMotionPageTransitionsBuilder>());
+    expect((b! as ReduceMotionPageTransitionsBuilder).inner, isA<PredictiveBackPageTransitionsBuilder>());
   });
 
   testWidgets('with Reduce motion on, the page fades in instead of zooming', (tester) async {

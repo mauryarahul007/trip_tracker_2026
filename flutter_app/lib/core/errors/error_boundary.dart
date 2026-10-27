@@ -93,7 +93,7 @@ class _DefaultErrorViewState extends State<_DefaultErrorView> {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF131417),
+      color: AppColors.calmNightDeep,
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -109,11 +109,11 @@ class _DefaultErrorViewState extends State<_DefaultErrorView> {
               const Text(
                 'Your trips and expenses are still on this device. Try again, or leave and come back if it keeps happening.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFFA3A6AD), fontSize: 15, height: 1.4),
+                style: TextStyle(color: AppColors.calmDarkMute, fontSize: 15, height: 1.4),
               ),
               if (_copied) ...[
                 const SizedBox(height: 12),
-                const Text('Report copied', style: TextStyle(color: Color(0xFF16A34A), fontSize: 13)),
+                const Text('Report copied', style: TextStyle(color: AppColors.calmOwed, fontSize: 13)),
               ],
               const SizedBox(height: 24),
               ElevatedButton(

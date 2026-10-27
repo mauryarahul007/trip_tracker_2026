@@ -18,6 +18,7 @@ import '../../../expenses/application/expenses_providers.dart' show tripMembersP
 import '../../application/trips_providers.dart';
 import 'trip_card.dart' show tripHeadline;
 import '../../../../core/platform/motion.dart';
+import '../../../../shared/theme/app_colors.dart';
 
 /// Trips as a deck of full-bleed photo cards, every trip in any state.
 ///
@@ -55,7 +56,7 @@ class TripCardStack extends StatefulWidget {
 }
 
 class _TripCardStackState extends State<TripCardStack> with SingleTickerProviderStateMixin {
-  late final _anim = AnimationController(vsync: this, duration: const Duration(milliseconds: 220));
+  late final _anim = AnimationController(vsync: this, duration: AppMotion.fast);
   late List<String> _order = [for (final t in widget.trips) t.id];
   Offset _drag = Offset.zero;
   Offset _from = Offset.zero;
@@ -290,7 +291,7 @@ class _PageDots extends StatelessWidget {
           children: [
             for (var i = 0; i < shown; i++)
               AnimatedContainer(
-                duration: AppMotion.of(context, const Duration(milliseconds: 200)),
+                duration: AppMotion.of(context, AppMotion.fast),
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 width: start + i == index ? 18 : 6,
                 height: 6,
@@ -338,7 +339,7 @@ class _StackCard extends ConsumerWidget {
     final dotColor = switch (status.phase) {
       TripPhase.active => t.colorSuccess,
       TripPhase.upcoming => t.colorWarning,
-      _ => const Color(0xFF8EA2FF),
+      _ => AppColors.calmDarkTealLight,
     };
     return Semantics(
       container: true,
@@ -357,7 +358,7 @@ class _StackCard extends ConsumerWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF14304A), Color(0xFF0A1827)],
+            colors: [AppColors.calmNight, AppColors.calmNightDeep],
           ),
         ),
         clipBehavior: Clip.antiAlias,
@@ -371,7 +372,7 @@ class _StackCard extends ConsumerWidget {
                 fit: BoxFit.cover,
                 frameBuilder: (_, child, frame, sync) => AnimatedOpacity(
                   opacity: frame == null && !sync ? 0 : 1,
-                  duration: AppMotion.of(context, const Duration(milliseconds: 350)),
+                  duration: AppMotion.of(context, AppMotion.base),
                   child: child,
                 ),
                 errorBuilder: (_, _, _) => const SizedBox.shrink(),
@@ -594,7 +595,7 @@ class _Chip extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
     decoration: BoxDecoration(
-      color: const Color(0xFF0B1B2E).withValues(alpha: 0.62),
+      color: AppColors.calmNightDeep.withValues(alpha: 0.62),
       borderRadius: BorderRadius.circular(99),
       border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
     ),
@@ -626,7 +627,7 @@ class _Crew extends ConsumerWidget {
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF0A1827), width: 2),
+                  border: Border.all(color: AppColors.calmNightDeep, width: 2),
                 ),
                 child: AppAvatar(name: shown[i], size: 34),
               ),

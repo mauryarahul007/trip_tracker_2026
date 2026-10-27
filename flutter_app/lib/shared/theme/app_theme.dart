@@ -6,40 +6,23 @@ import '../../core/platform/motion.dart';
 import 'app_tokens.dart';
 import 'app_typography.dart';
 
-/// Bento chips: white pills; the selected chip flips to ink with a contrasting label (found by the Phase 12
-/// accessibility test that Material's default painted dark text on a dark fill).
+/// Calm chips: outlined surface pills; the selected chip fills with ink and its label flips to the ground.
 ChipThemeData _chipTheme(AppTokens t) {
-  if (t.calm) {
-    // Calm Passport: outlined surface pills; the selected chip fills with ink and its label flips to the ground.
-    final calmLabel = TextStyle(
-      color: WidgetStateColor.resolveWith((s) => s.contains(WidgetState.selected) ? t.bgPage : t.textPrimary),
-      fontSize: 14,
-      fontWeight: FontWeight.w600,
-    );
-    return ChipThemeData(
-      backgroundColor: t.bgSurface,
-      selectedColor: t.textPrimary,
-      side: WidgetStateBorderSide.resolveWith(
-        (s) => s.contains(WidgetState.selected) ? BorderSide(color: t.textPrimary) : BorderSide(color: t.borderColor),
-      ),
-      shape: const StadiumBorder(),
-      labelStyle: calmLabel,
-      secondaryLabelStyle: calmLabel,
-      checkmarkColor: t.bgPage,
-    );
-  }
-  // Bento chips: white pills; a selected chip takes the lilac tone (same as the nav's selected pill) and the label
-  // stays ink in every state, so contrast never depends on which style Material picks (ChoiceChip reads
-  // secondaryLabelStyle, the others labelStyle).
-  final label = TextStyle(color: t.textPrimary, fontSize: 14, fontWeight: FontWeight.w700);
+  final calmLabel = TextStyle(
+    color: WidgetStateColor.resolveWith((s) => s.contains(WidgetState.selected) ? t.bgPage : t.textPrimary),
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+  );
   return ChipThemeData(
     backgroundColor: t.bgSurface,
-    selectedColor: t.tones.lilac.bg,
-    side: BorderSide.none,
+    selectedColor: t.textPrimary,
+    side: WidgetStateBorderSide.resolveWith(
+      (s) => s.contains(WidgetState.selected) ? BorderSide(color: t.textPrimary) : BorderSide(color: t.borderColor),
+    ),
     shape: const StadiumBorder(),
-    labelStyle: label,
-    secondaryLabelStyle: label,
-    checkmarkColor: t.textPrimary,
+    labelStyle: calmLabel,
+    secondaryLabelStyle: calmLabel,
+    checkmarkColor: t.bgPage,
   );
 }
 
@@ -94,7 +77,8 @@ ThemeData _build(AppTokens t, Brightness brightness) {
     textTheme: textTheme,
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
-        TargetPlatform.android: ReduceMotionPageTransitionsBuilder(),
+        // Android 14+ predictive back: the back swipe peeks at the screen underneath before committing.
+        TargetPlatform.android: ReduceMotionPageTransitionsBuilder(PredictiveBackPageTransitionsBuilder()),
         TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
         TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
         TargetPlatform.linux: ReduceMotionPageTransitionsBuilder(),
@@ -163,9 +147,8 @@ ThemeData _build(AppTokens t, Brightness brightness) {
       backgroundColor: t.ctaBg,
       foregroundColor: t.ctaFg,
       elevation: 4,
-      // A pill, not a circle: the extended "Add expense" button carries a label and must grow with it.
-      // Calm Passport: a soft square (20px) like the mockup's ink "+" key.
-      shape: t.calm ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)) : const StadiumBorder(),
+      // A soft square (20px) like the mockup's ink "+" key.
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       extendedPadding: const EdgeInsets.symmetric(horizontal: 20),
     ),
     navigationBarTheme: NavigationBarThemeData(
@@ -210,13 +193,16 @@ ThemeData _build(AppTokens t, Brightness brightness) {
 }
 
 class AppTheme {
-  static ThemeData light() => lightTheme;
-  static ThemeData dark() => darkTheme;
-  static ThemeData amoled() => amoledTheme;
+  /// All looks share the Calm Passport colours. [calm] only picks the layout: false keeps the pre-Calm dock and
+  /// tab bar (Ops Deck flag `enableCalmPassportUi` OFF).
+  static ThemeData light({bool calm = true}) => _build(AppTokens.light.copyWith(calm: calm), Brightness.light);
+  static ThemeData dark({bool calm = true}) => _build(AppTokens.dark.copyWith(calm: calm), Brightness.dark);
+  static ThemeData amoled({bool calm = true}) => _build(AppTokens.amoled.copyWith(calm: calm), Brightness.dark);
 
   /// Darker text and stronger borders on the same surfaces (Settings > Appearance > High contrast).
-  static ThemeData highContrastLight({bool calm = false}) => _build(
-    (calm ? AppTokens.calmLight : AppTokens.light).copyWith(
+  static ThemeData highContrastLight({bool calm = true}) => _build(
+    AppTokens.light.copyWith(
+      calm: calm,
       textPrimary: const Color(0xFF000000),
       textSecondary: const Color(0xFF1F2933),
       textMuted: const Color(0xFF3A4450),
@@ -224,8 +210,9 @@ class AppTheme {
     ),
     Brightness.light,
   );
-  static ThemeData highContrastDark({bool calm = false}) => _build(
-    (calm ? AppTokens.calmDark : AppTokens.dark).copyWith(
+  static ThemeData highContrastDark({bool calm = true}) => _build(
+    AppTokens.dark.copyWith(
+      calm: calm,
       textPrimary: const Color(0xFFFFFFFF),
       textSecondary: const Color(0xFFE5E7EB),
       textMuted: const Color(0xFFC9CED6),
@@ -233,11 +220,6 @@ class AppTheme {
     ),
     Brightness.dark,
   );
-
-  /// Calm Passport (flag `enableCalmPassportUi`).
-  static ThemeData calmLight() => _build(AppTokens.calmLight, Brightness.light);
-  static ThemeData calmDark() => _build(AppTokens.calmDark, Brightness.dark);
-  static ThemeData calmAmoled() => _build(AppTokens.calmAmoled, Brightness.dark);
 
   static ThemeData get lightTheme => _build(AppTokens.light, Brightness.light);
   static ThemeData get darkTheme => _build(AppTokens.dark, Brightness.dark);

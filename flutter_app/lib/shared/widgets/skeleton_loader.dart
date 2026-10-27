@@ -88,11 +88,16 @@ class SkeletonCircle extends StatelessWidget {
   }
 }
 
-/// A whole page of soft placeholder blocks (a summary card and a few rows) shown while a tab loads. With
-/// `enableSkeletonLoaders` off it is the plain spinner.
+/// What the loading page should look like, so the skeleton matches the screen that replaces it.
+enum SkeletonShape { list, balances, spend, people }
+
+/// A whole page of soft placeholder blocks shown while a tab loads. With `enableShapedSkeletons` on, [shape] draws
+/// the real layout (Balances hero and people, Spend summary and day rows, People rows); off, a summary card and
+/// plain rows. With `enableSkeletonLoaders` off it is the plain spinner.
 class SkeletonPage extends ConsumerWidget {
-  const SkeletonPage({super.key, this.rows = 5});
+  const SkeletonPage({super.key, this.rows = 5, this.shape = SkeletonShape.list});
   final int rows;
+  final SkeletonShape shape;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -107,13 +112,80 @@ class SkeletonPage extends ConsumerWidget {
         decoration: BoxDecoration(color: t.bgSurface, borderRadius: BorderRadius.circular(t.radiusMd)),
       ),
     );
+    final shaped = ref.watch(flagProvider(('enableShapedSkeletons', null))).value ?? true;
+    final children = !shaped || shape == SkeletonShape.list
+        ? [block(120), for (var i = 0; i < rows; i++) block(64)]
+        : _shaped(t);
     return SkeletonLoader(
       child: ListView(
         key: const Key('skeleton-page'),
         physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
-        children: [block(120), for (var i = 0; i < rows; i++) block(64)],
+        children: [
+          if (shaped && shape != SkeletonShape.list) SizedBox.shrink(key: Key('skeleton-${shape.name}')),
+          ...children,
+        ],
       ),
     );
+  }
+
+  List<Widget> _shaped(AppTokens t) {
+    final fill = t.bgSurface;
+    Widget bar(double w, double h) => Container(
+      width: w,
+      height: h,
+      decoration: BoxDecoration(color: t.borderColor, borderRadius: BorderRadius.circular(h / 2)),
+    );
+    Widget row({required bool round, bool amount = true}) => Container(
+      height: 64,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(t.radiusMd)),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: t.borderColor,
+              borderRadius: BorderRadius.circular(round ? 18 : t.radiusSm),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [bar(140, 12), const SizedBox(height: 8), bar(90, 10)],
+            ),
+          ),
+          if (amount) bar(56, 14),
+        ],
+      ),
+    );
+    Widget hero(double h) => Container(
+      height: h,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(t.radiusLg)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [bar(80, 10), const SizedBox(height: 12), bar(160, 28), const SizedBox(height: 12), bar(120, 10)],
+      ),
+    );
+    return switch (shape) {
+      SkeletonShape.balances => [hero(150), for (var i = 0; i < rows; i++) row(round: true)],
+      SkeletonShape.spend => [
+        hero(110),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10, left: 4),
+          child: Align(alignment: Alignment.centerLeft, child: bar(70, 10)),
+        ),
+        for (var i = 0; i < rows; i++) row(round: false),
+      ],
+      SkeletonShape.people => [for (var i = 0; i < rows + 1; i++) row(round: true, amount: false)],
+      SkeletonShape.list => const [],
+    };
   }
 }

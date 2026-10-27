@@ -68,13 +68,11 @@ class SettingsTile extends StatelessWidget {
     this.onTap,
     this.danger = false,
     this.icon,
-    this.iconColor,
     super.key,
   });
 
   /// Optional leading icon tile (red when [danger]).
   final IconData? icon;
-  final Color? iconColor;
   final String title;
   final String? subtitle;
   final Widget? trailing;
@@ -87,7 +85,7 @@ class SettingsTile extends StatelessWidget {
     return ListTile(
       minTileHeight: 48,
       onTap: onTap,
-      leading: icon == null ? null : SettingsIcon(icon!, color: danger ? tokens.dangerColor : iconColor),
+      leading: icon == null ? null : SettingsIcon(icon!, color: danger ? tokens.dangerColor : null),
       title: Text(
         title,
         style: TextStyle(color: danger ? tokens.dangerColor : tokens.textPrimary, fontWeight: FontWeight.w600),
@@ -105,12 +103,10 @@ class SettingsSwitchTile extends StatelessWidget {
     required this.onChanged,
     this.subtitle,
     this.icon,
-    this.iconColor,
     super.key,
   });
 
   final IconData? icon;
-  final Color? iconColor;
   final String title;
   final String? subtitle;
   final bool value;
@@ -118,7 +114,7 @@ class SettingsSwitchTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SwitchListTile.adaptive(
-    secondary: icon == null ? null : SettingsIcon(icon!, color: iconColor),
+    secondary: icon == null ? null : SettingsIcon(icon!),
     title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
     subtitle: subtitle == null ? null : Text(subtitle!),
     value: value,
@@ -135,12 +131,10 @@ class SettingsSegmentedTile<T> extends StatelessWidget {
     required this.onChanged,
     this.subtitle,
     this.icon,
-    this.iconColor,
     super.key,
   });
 
   final IconData? icon;
-  final Color? iconColor;
   final String title;
   final String? subtitle;
 
@@ -156,7 +150,7 @@ class SettingsSegmentedTile<T> extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          if (icon != null) ...[SettingsIcon(icon!, color: iconColor), const SizedBox(width: 14)],
+          if (icon != null) ...[SettingsIcon(icon!), const SizedBox(width: 14)],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

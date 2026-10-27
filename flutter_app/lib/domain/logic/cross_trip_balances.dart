@@ -28,6 +28,7 @@ List<CrossTripNet> crossTripNets({
       trip,
       membersByTrip[trip.id] ?? const <Member>[],
       expensesByTrip[trip.id] ?? const [],
+      groupsByTrip[trip.id] ?? const <Group>[],
     );
     final balance = pos.net;
     if (balance == null || balance.abs() < 0.01) continue;

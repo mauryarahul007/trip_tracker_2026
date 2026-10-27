@@ -22,10 +22,16 @@ Future<void> showAmountKeypad(
 );
 
 class AmountKeypad extends StatefulWidget {
-  const AmountKeypad({required this.initial, required this.onChanged, super.key});
+  const AmountKeypad({required this.initial, required this.onChanged, this.onDone, this.docked = false, super.key});
 
   final String initial;
   final ValueChanged<String> onChanged;
+
+  /// Done: closes the sheet by default; the docked keypad (flag `enableDockedKeypad`) passes its own.
+  final VoidCallback? onDone;
+
+  /// Docked under the add-expense form: no big display (the amount field above shows it) and shorter keys.
+  final bool docked;
 
   @override
   State<AmountKeypad> createState() => _AmountKeypadState();
@@ -33,6 +39,13 @@ class AmountKeypad extends StatefulWidget {
 
 class _AmountKeypadState extends State<AmountKeypad> {
   late String _text = widget.initial;
+
+  @override
+  void didUpdateWidget(AmountKeypad old) {
+    super.didUpdateWidget(old);
+    // A quick-amount chip or "repeat last" changed the amount from outside: type on from there.
+    if (widget.initial != _text) _text = widget.initial;
+  }
 
   void _set(String v) {
     setState(() => _text = v);
@@ -75,25 +88,27 @@ class _AmountKeypadState extends State<AmountKeypad> {
       ['1', '2', '3', '-'],
       ['.', '0', '⌫', '+'],
     ];
+    final keyHeight = widget.docked ? 48.0 : 56.0;
     return Padding(
-      key: const Key('amount-keypad'),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      key: Key(widget.docked ? 'docked-keypad' : 'amount-keypad'),
+      padding: EdgeInsets.fromLTRB(16, widget.docked ? 8 : 0, 16, widget.docked ? 8 : 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            alignment: Alignment.center,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                _text.isEmpty ? '0' : _text.replaceAll('*', '×').replaceAll('/', '÷'),
-                key: const Key('keypad-display'),
-                style: AppTypography.moneyDisplay(fontSize: 40, color: _text.isEmpty ? t.textMuted : t.textPrimary),
+          if (!widget.docked)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              alignment: Alignment.center,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  _text.isEmpty ? '0' : _text.replaceAll('*', '×').replaceAll('/', '÷'),
+                  key: const Key('keypad-display'),
+                  style: AppTypography.moneyDisplay(fontSize: 40, color: _text.isEmpty ? t.textMuted : t.textPrimary),
+                ),
               ),
             ),
-          ),
           for (final row in rows)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -104,7 +119,7 @@ class _AmountKeypadState extends State<AmountKeypad> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: SizedBox(
-                          height: 56,
+                          height: keyHeight,
                           child: FilledButton.tonal(
                             key: Key('key-$k'),
                             onPressed: () => _key(k),
@@ -120,7 +135,7 @@ class _AmountKeypadState extends State<AmountKeypad> {
           AppButton(
             key: const Key('keypad-done'),
             label: context.l10n.keypadDone,
-            onPressed: () => Navigator.pop(context),
+            onPressed: widget.onDone ?? () => Navigator.pop(context),
           ),
         ],
       ),

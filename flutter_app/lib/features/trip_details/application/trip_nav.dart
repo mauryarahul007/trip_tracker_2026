@@ -13,19 +13,34 @@ import '../domain/trip_tabs.dart';
 /// The trip being viewed, live from local storage (null once deleted).
 final tripProvider = StreamProvider.family<Trip?, String>((ref, id) => ref.watch(tripRepositoryProvider).watchTrip(id));
 
-/// Bottom-nav tabs for a trip, from the same Ops Deck flags the web uses
-/// (per-trip overrides apply). Mirrors App.tsx: notes/passes/chat flags decide
-/// whether the Notes tab shows, `enableChatFirstNav` puts Chat first.
+/// Bottom-nav pages for a trip. One navigation ships: the Calm Passport dock (Balances, Spend, Activity, Plans, Hub)
+/// with Chat and People as extra pages. The old Compass dock and the chat-first legacy bar are retired in the app,
+/// so `enableCompassNav`, `enableCalmPassportUi` and `enableChatFirstNav` no longer change it. Notes, passes and chat
+/// flags (per-trip overrides apply) still decide whether Plans and Chat appear.
 final visibleTabsProvider = Provider.family<List<TripNavTab>, String>((ref, tripId) {
   // While flags load, use the registry defaults so the tab bar never flickers.
   bool flag(String key) => ref.watch(flagProvider((key, tripId))).value ?? (defaultFeatureFlags[key] ?? false);
-  final chatFirst = flag('enableChatFirstNav');
-  if (ref.watch(compassFlagProvider((calmPassportFlag, tripId)))) {
-    return calmPagerTabs(
-      chatEnabled: flag('enableTripChat'),
-      showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses'),
-    );
+  if (ref.watch(legacyNavAllowedProvider) && !ref.watch(compassFlagProvider((calmPassportFlag, tripId)))) {
+    return _legacyTabs(ref, tripId, flag);
   }
+  return calmPagerTabs(
+    chatEnabled: flag('enableTripChat'),
+    showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses'),
+  );
+});
+
+/// Tabs in the trip's bottom dock: the Calm Passport five (Plans drops out when notes and passes are off).
+final dockTabsProvider = Provider.family<List<TripNavTab>, String>((ref, tripId) {
+  bool flag(String key) => ref.watch(flagProvider((key, tripId))).value ?? (defaultFeatureFlags[key] ?? false);
+  if (ref.watch(legacyNavAllowedProvider) && !ref.watch(compassFlagProvider((calmPassportFlag, tripId)))) {
+    if (!ref.watch(compassFlagProvider((compassNavFlag, tripId)))) return ref.watch(visibleTabsProvider(tripId));
+    return compassDockTabs();
+  }
+  return calmDockTabs(showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses'));
+});
+
+/// The retired Compass and legacy tab sets, reachable only with [legacyNavAllowedProvider] (older tests).
+List<TripNavTab> _legacyTabs(Ref ref, String tripId, bool Function(String) flag) {
   if (ref.watch(compassFlagProvider((compassNavFlag, tripId)))) {
     return compassPagerTabs(
       chatEnabled: flag('enableTripChat'),
@@ -33,6 +48,7 @@ final visibleTabsProvider = Provider.family<List<TripNavTab>, String>((ref, trip
       showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses') || flag('enableTripChat'),
     );
   }
+  final chatFirst = flag('enableChatFirstNav');
   return visibleTripTabs(
     isChatFirstNav: chatFirst,
     showNotesTab: showNotesNavTab(
@@ -42,18 +58,7 @@ final visibleTabsProvider = Provider.family<List<TripNavTab>, String>((ref, trip
       isChatFirstNav: chatFirst,
     ),
   );
-});
-
-/// Tabs in the trip's bottom bar. Legacy: every visible tab. Compass: Balances, Spend, Activity, Trip (Chat,
-/// People and Notes stay swipeable pages but sit under Trip).
-final dockTabsProvider = Provider.family<List<TripNavTab>, String>((ref, tripId) {
-  if (ref.watch(compassFlagProvider((calmPassportFlag, tripId)))) {
-    bool flag(String key) => ref.watch(flagProvider((key, tripId))).value ?? (defaultFeatureFlags[key] ?? false);
-    return calmDockTabs(showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses'));
-  }
-  if (!ref.watch(compassFlagProvider((compassNavFlag, tripId)))) return ref.watch(visibleTabsProvider(tripId));
-  return compassDockTabs();
-});
+}
 
 /// Fires each time a trip shell is torn down (the trip page was left).
 final tripShellClosed = StreamController<void>.broadcast();

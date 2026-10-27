@@ -20,6 +20,7 @@ import '../../../domain/logic/cross_trip_balances.dart';
 import '../../../domain/logic/trip_list_money.dart';
 import '../../../domain/logic/trip_status.dart';
 import '../../../domain/models/expense.dart';
+import '../../../domain/models/group.dart';
 import '../../../domain/models/member.dart';
 import '../../../domain/models/trip.dart';
 import '../../../l10n/l10n_ext.dart';
@@ -36,6 +37,8 @@ import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/coach_hint.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/friendly_error.dart';
+import '../../../core/network/connectivity_provider.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/pull_to_refresh.dart';
 import '../../../shared/widgets/last_synced_caption.dart';
@@ -76,6 +79,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   // Filled in build() for the cards below (flag `enableTripListMoney`); empty when the flag is off.
   var _membersByTrip = <String, List<Member>>{};
   var _expensesByTrip = <String, List<Expense>>{};
+  var _groupsByTrip = <String, List<Group>>{};
   var _moneyOn = false;
   var _pastFolded = false;
   Set<String> _pendingIds = const {};
@@ -223,7 +227,13 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     String? money;
     Color? moneyColor;
     if (_moneyOn) {
-      final pos = myTripNet(ref.read(authStateProvider).userId, t, members, _expensesByTrip[t.id] ?? const <Expense>[]);
+      final pos = myTripNet(
+        ref.read(authStateProvider).userId,
+        t,
+        members,
+        _expensesByTrip[t.id] ?? const <Expense>[],
+        _groupsByTrip[t.id] ?? const <Group>[],
+      );
       final net = pos.net;
       if (net != null) {
         final l10n = context.l10n;
@@ -315,6 +325,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
       trips: live,
       membersByTrip: _membersByTrip,
       expensesByTrip: _expensesByTrip,
+      groupsByTrip: _groupsByTrip,
     );
     final t = context.tokens;
     final String text;
@@ -447,6 +458,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
       for (final e in ref.watch(allActiveExpensesProvider).value ?? const <Expense>[]) {
         (_expensesByTrip[e.tripId] ??= []).add(e);
       }
+      _groupsByTrip = {
+        for (final id in _membersByTrip.keys) id: ref.watch(tripGroupsProvider(id)).value ?? const <Group>[],
+      };
     }
 
     return PopScope(
@@ -622,13 +636,18 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                 ),
                             ],
                           ),
-                          error: (_, _) => ListView(
+                          error: (e, _) => ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
                             children: [
                               EmptyState(
                                 plain: true,
                                 title: l10n.tripsLoadError,
-                                subtitle: l10n.errorGenericMessage,
+                                subtitle: friendlyError(
+                                  l10n,
+                                  e,
+                                  online: ref.watch(isOnlineProvider).value ?? true,
+                                  clear: _flagOn('enableClearErrorStates'),
+                                ).message,
                                 action: AppButton(
                                   label: l10n.actionRetry,
                                   onPressed: () => ref.invalidate(tripsProvider),
@@ -651,9 +670,16 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                 : unsorted;
                             final archived = data.archived.where((t) => !_hidden.contains(t.id)).toList();
                             final hits = searchOn && query.trim().isNotEmpty
-                                ? searchHits(query, ref.watch(allTripsProvider).value ?? const <Trip>[], [
-                                    for (final list in _expensesByTrip.values) ...list,
-                                  ])
+                                ? searchHits(
+                                    query,
+                                    ref.watch(allTripsProvider).value ?? const <Trip>[],
+                                    [for (final list in _expensesByTrip.values) ...list],
+                                    rich: true,
+                                    memberNames: {
+                                      for (final list in _membersByTrip.values)
+                                        for (final m in list) m.id: m.name,
+                                    },
+                                  )
                                 : const <SearchHit>[];
                             if (data.total == 0 && syncing) {
                               return ListView(
@@ -1158,7 +1184,7 @@ class _FilterPills extends StatelessWidget {
                             key: Key('trip-filter-$id'),
                             onTap: () => onSelect(id),
                             child: AnimatedContainer(
-                              duration: AppMotion.of(context, const Duration(milliseconds: 180)),
+                              duration: AppMotion.of(context, AppMotion.fast),
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(

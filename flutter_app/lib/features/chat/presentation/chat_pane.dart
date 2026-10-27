@@ -30,6 +30,7 @@ import '../../travel/presentation/live_location_chat_banner.dart';
 import '../../travel/presentation/live_location_share_modal.dart';
 import '../application/chat_providers.dart';
 import '../../../core/platform/motion.dart';
+import '../../../shared/theme/app_colors.dart';
 
 class ChatPane extends ConsumerStatefulWidget {
   const ChatPane({required this.tripId, super.key});
@@ -108,7 +109,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
       await WidgetsBinding.instance.endOfFrame;
       final ctx = _focusKey.currentContext;
       if (ctx != null && ctx.mounted) {
-        await Scrollable.ensureVisible(ctx, alignment: 0.4, duration: const Duration(milliseconds: 250));
+        await Scrollable.ensureVisible(ctx, alignment: 0.4, duration: AppMotion.base);
         break;
       }
       if (_scroll.hasClients) {
@@ -169,7 +170,13 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
           ),
         Expanded(
           child: messages.isEmpty
-              ? EmptyState(title: l10n.chatEmpty, subtitle: '', plain: true)
+              ? EmptyState(
+                  title: l10n.chatEmpty,
+                  subtitle: (ref.watch(flagProvider(('enableCoachEmptyStates', widget.tripId))).value ?? true)
+                      ? l10n.chatEmptyHint
+                      : '',
+                  plain: true,
+                )
               : ListView.builder(
                   key: const Key('chat-list'),
                   controller: _scroll,
@@ -728,7 +735,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                 height: 32,
                 decoration: BoxDecoration(
                   color: isSettlement
-                      ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                      ? AppColors.calmOwed.withValues(alpha: 0.12)
                       : context.tokens.primaryAccent.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
@@ -794,7 +801,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
       if (mounted && _scroll.hasClients) {
         _scroll.animateTo(
           _scroll.position.maxScrollExtent,
-          duration: AppMotion.of(context, const Duration(milliseconds: 200)),
+          duration: AppMotion.of(context, AppMotion.fast),
           curve: Curves.easeOut,
         );
       }

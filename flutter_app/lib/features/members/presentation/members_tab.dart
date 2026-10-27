@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/env/app_env.dart';
 import '../../../core/format/money.dart';
 import '../../../data/providers.dart';
+import '../../../shared/widgets/undo_snackbar.dart';
 import '../../../data/supabase/supabase_gateway.dart';
 import '../../../core/flags/compass_flags.dart';
 import '../../../domain/logic/member_roles.dart';
@@ -54,7 +55,9 @@ class _MembersTabState extends ConsumerState<MembersTab> {
         builder: (_, _) => const SizedBox.shrink(),
       );
     }
-    if (membersAsync.isLoading && !membersAsync.hasValue) return const SkeletonPage(); // not an empty member list
+    if (membersAsync.isLoading && !membersAsync.hasValue) {
+      return const SkeletonPage(shape: SkeletonShape.people); // not an empty member list
+    }
     final members = membersAsync.value ?? const <Member>[];
     final groups = ref.watch(tripGroupsProvider(tripId)).value ?? const <Group>[];
     final trip = ref.watch(tripProvider(tripId)).value;
@@ -518,8 +521,24 @@ class _MembersTabState extends ConsumerState<MembersTab> {
       ),
     );
     if (!context.mounted) return;
-    if (action == 'edit') await _editGroup(context, ref, g, active);
-    if (action == 'delete') await ref.read(memberRepositoryProvider).deleteGroup(g.id);
+    if (action == 'edit') {
+      await _editGroup(context, ref, g, active);
+    } else if (action == 'delete') {
+      await _deleteGroup(context, ref, g);
+    }
+  }
+
+  /// Deletes at once; with `enableExtendedUndo` an Undo puts the same group (name and people) back.
+  Future<void> _deleteGroup(BuildContext context, WidgetRef ref, Group g) async {
+    final repo = ref.read(memberRepositoryProvider);
+    await repo.deleteGroup(g.id);
+    if (!context.mounted) return;
+    if (!(ref.read(flagProvider(('enableExtendedUndo', tripId))).value ?? true)) return;
+    UndoSnackbar.show(
+      context: context,
+      message: context.l10n.memGroupDeleted(g.name),
+      onUndo: () => unawaited(repo.createGroup(tripId, g.name, g.memberIds)),
+    );
   }
 
   Future<void> _editGroup(BuildContext context, WidgetRef ref, Group g, List<Member> active) async {

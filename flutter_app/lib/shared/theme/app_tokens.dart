@@ -46,27 +46,13 @@ class BentoTones {
   );
 
   static final BentoTones light = BentoTones(
-    mint: BentoTint.of(AppColors.tileMint),
-    butter: BentoTint.of(AppColors.tileButter),
-    peach: BentoTint.of(AppColors.tilePeach),
-    sky: BentoTint.of(AppColors.tileSky),
-    lilac: BentoTint.of(AppColors.tileLilac),
-  );
-  static final BentoTones dark = BentoTones(
-    mint: BentoTint.of(AppColors.darkTileMint),
-    butter: BentoTint.of(AppColors.darkTileButter),
-    peach: BentoTint.of(AppColors.darkTilePeach),
-    sky: BentoTint.of(AppColors.darkTileSky),
-    lilac: BentoTint.of(AppColors.darkTileLilac),
-  );
-  static final BentoTones calmLight = BentoTones(
     mint: BentoTint.of(AppColors.calmTileMint),
     butter: BentoTint.of(AppColors.calmTileButter),
     peach: BentoTint.of(AppColors.calmTilePeach),
     sky: BentoTint.of(AppColors.calmTileSky),
     lilac: BentoTint.of(AppColors.calmTileLilac),
   );
-  static final BentoTones calmDark = BentoTones(
+  static final BentoTones dark = BentoTones(
     mint: BentoTint.of(AppColors.calmDarkTileMint),
     butter: BentoTint.of(AppColors.calmDarkTileButter),
     peach: BentoTint.of(AppColors.calmDarkTilePeach),
@@ -125,8 +111,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
   final Duration dur2;
   final Duration dur3;
 
-  /// Calm Passport look (flag `enableCalmPassportUi`): shared widgets read this to pick the dark floating dock,
-  /// ink chips and signed money colours. False keeps every widget exactly as before.
+  /// Always true: Calm Passport is the single app theme. Kept so shared widgets that branch on it keep compiling.
   final bool calm;
 
   // Curves
@@ -167,7 +152,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     this.easeSpring = const Cubic(0.32, 0.72, 0.0, 1.0),
     this.easeDecel = const Cubic(0.16, 1.0, 0.3, 1.0),
     this.easeBounce = const Cubic(0.34, 1.4, 0.64, 1.0),
-    this.calm = false,
+    this.calm = true,
   });
 
   LinearGradient get headerGradient =>
@@ -267,80 +252,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
   Duration get durationNormal => dur2;
   Duration get durationSlow => dur3;
 
+  /// Calm Passport light (the one app theme): paper ground, white cards, ink text, one teal action, night-green hero.
   static final AppTokens light = AppTokens(
-    bgPage: AppColors.lightBgPage,
-    bgApp: AppColors.lightBgApp,
-    bgSurface: AppColors.lightBgSurface,
-    bgSurfaceHover: AppColors.lightBgSurfaceHover,
-    borderColor: AppColors.lightBorder,
-    borderFocus: AppColors.lightBorderFocus,
-    primaryAccent: AppColors.lightPrimaryAccent,
-    primaryAccentLight: AppColors.lightPrimaryAccentLight,
-    secondaryAccent: AppColors.lightSecondaryAccent,
-    accentOrange: AppColors.accentOrange,
-    colorSuccess: AppColors.lightSuccess,
-    colorDanger: AppColors.lightDanger,
-    colorWarning: AppColors.lightWarning,
-    textPrimary: AppColors.lightTextPrimary,
-    textSecondary: AppColors.lightTextSecondary,
-    textMuted: AppColors.lightTextMuted,
-    tones: BentoTones.light,
-    ctaBg: AppColors.lightSecondaryAccent,
-    ctaFg: const Color(0xFFFFFFFF),
-  );
-
-  static final AppTokens dark = AppTokens(
-    bgPage: AppColors.darkBgPage,
-    bgApp: AppColors.darkBgApp,
-    bgSurface: AppColors.darkBgSurface,
-    bgSurfaceHover: AppColors.darkBgSurfaceHover,
-    borderColor: AppColors.darkBorder,
-    borderFocus: AppColors.darkBorderFocus,
-    primaryAccent: AppColors.darkPrimaryAccent,
-    primaryAccentLight: AppColors.darkPrimaryAccentLight,
-    secondaryAccent: AppColors.darkSecondaryAccent,
-    accentOrange: AppColors.accentOrange,
-    colorSuccess: AppColors.darkSuccess,
-    colorDanger: AppColors.darkDanger,
-    colorWarning: AppColors.darkWarning,
-    textPrimary: AppColors.darkTextPrimary,
-    textSecondary: AppColors.darkTextSecondary,
-    textMuted: AppColors.darkTextMuted,
-    tones: BentoTones.dark,
-    ctaBg: AppColors.darkSecondaryAccent,
-    ctaFg: AppColors.darkBgPage,
-    shadowBase: const Color(0xFF000000),
-    headerStart: const Color(0xFF1F6E68),
-    headerEnd: const Color(0xFF0D2522),
-  );
-
-  static final AppTokens amoled = AppTokens(
-    bgPage: AppColors.amoledBgPage,
-    bgApp: AppColors.amoledBgApp,
-    bgSurface: AppColors.amoledBgSurface,
-    bgSurfaceHover: AppColors.amoledBgSurfaceHover,
-    borderColor: AppColors.amoledBorder,
-    borderFocus: AppColors.darkBorderFocus,
-    primaryAccent: AppColors.darkPrimaryAccent,
-    primaryAccentLight: AppColors.darkPrimaryAccentLight,
-    secondaryAccent: AppColors.darkSecondaryAccent,
-    accentOrange: AppColors.accentOrange,
-    colorSuccess: AppColors.darkSuccess,
-    colorDanger: AppColors.darkDanger,
-    colorWarning: AppColors.darkWarning,
-    textPrimary: AppColors.darkTextPrimary,
-    textSecondary: AppColors.darkTextSecondary,
-    textMuted: AppColors.darkTextMuted,
-    tones: BentoTones.amoled,
-    ctaBg: AppColors.darkSecondaryAccent,
-    ctaFg: AppColors.darkBgPage,
-    shadowBase: const Color(0xFF000000),
-    headerStart: const Color(0xFF0B2925),
-    headerEnd: const Color(0xFF000000),
-  );
-
-  /// Calm Passport light: paper ground, white cards, ink text, one teal action, night-green hero.
-  static final AppTokens calmLight = AppTokens(
     bgPage: AppColors.calmPaper,
     bgApp: AppColors.calmPaper,
     bgSurface: const Color(0xFFFFFFFF),
@@ -357,16 +270,15 @@ class AppTokens extends ThemeExtension<AppTokens> {
     textPrimary: AppColors.calmInk,
     textSecondary: AppColors.calmInk2,
     textMuted: AppColors.calmMute,
-    tones: BentoTones.calmLight,
+    tones: BentoTones.light,
     ctaBg: AppColors.calmInk,
     ctaFg: const Color(0xFFFFFFFF),
     headerStart: AppColors.calmNight,
     headerEnd: AppColors.calmNightDeep,
-    calm: true,
   );
 
   /// Calm Passport dark: near-black green ground, teal action turns bright, owe / owed stay signed.
-  static final AppTokens calmDark = AppTokens(
+  static final AppTokens dark = AppTokens(
     bgPage: AppColors.calmDarkGround,
     bgApp: AppColors.calmDarkGround,
     bgSurface: AppColors.calmDarkSurface,
@@ -383,17 +295,16 @@ class AppTokens extends ThemeExtension<AppTokens> {
     textPrimary: AppColors.calmDarkInk,
     textSecondary: const Color(0xFFC6D3CE),
     textMuted: AppColors.calmDarkMute,
-    tones: BentoTones.calmDark,
+    tones: BentoTones.dark,
     ctaBg: AppColors.calmDarkTeal,
     ctaFg: AppColors.calmInk,
     shadowBase: const Color(0xFF000000),
     headerStart: AppColors.calmNight,
     headerEnd: AppColors.calmDarkGround,
-    calm: true,
   );
 
   /// Calm Passport on pure black: the dark set with black ground and deeper tiles.
-  static final AppTokens calmAmoled = calmDark.copyWith(
+  static final AppTokens amoled = dark.copyWith(
     bgPage: AppColors.amoledBgPage,
     bgApp: AppColors.amoledBgApp,
     bgSurface: AppColors.amoledBgSurface,

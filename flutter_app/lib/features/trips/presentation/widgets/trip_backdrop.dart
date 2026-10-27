@@ -26,7 +26,7 @@ class TripBackdrop extends ConsumerWidget {
       children: [
         ColoredBox(color: t.bgPage),
         AnimatedSwitcher(
-          duration: AppMotion.of(context, const Duration(milliseconds: 450)),
+          duration: AppMotion.of(context, AppMotion.slow),
           child: url == null || url.isEmpty
               ? const SizedBox.expand(key: ValueKey('no-photo'))
               : ImageFiltered(

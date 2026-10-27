@@ -10,6 +10,7 @@ import '../../../domain/models/trip.dart';
 import '../../../shared/theme/app_tokens.dart';
 import 'live_travel_status_modal.dart';
 import 'pass_scanner_modal.dart';
+import '../../../shared/theme/app_colors.dart';
 
 DateTime? parsePassDateTime(String? dateStr) {
   if (dateStr == null || dateStr.trim().isEmpty) return null;
@@ -100,7 +101,7 @@ ImminentPassTarget? evaluateImminentPass(List<TravelPass> passes, [DateTime? ref
           pass: pass,
           status: 'en-route',
           countdownText: countdownText,
-          badgeColor: const Color(0xFF10B981),
+          badgeColor: AppColors.calmOwed,
           diffHours: diffHours,
         ),
       );
@@ -113,19 +114,19 @@ ImminentPassTarget? evaluateImminentPass(List<TravelPass> passes, [DateTime? ref
         status = 'boarding-soon';
         final mins = (diffMs / (1000 * 60)).round().clamp(1, 90);
         countdownText = 'Boarding in ${mins}m';
-        badgeColor = const Color(0xFFEF4444);
+        badgeColor = AppColors.calmOwe;
       } else if (diffHours <= 24) {
         status = 'upcoming';
         final h = diffHours.floor();
         final m = ((diffHours - h) * 60).round();
         countdownText = m > 0 ? 'Departs in ${h}h ${m}m' : 'Departs in ${h}h';
-        badgeColor = const Color(0xFF2563EB);
+        badgeColor = AppColors.calmTeal;
       } else {
         status = 'today';
         final parsedFlight = parseFlightDate(pass.startDateTime);
         final dStr = parsedFlight?.formattedDateString ?? pass.startDateTime!.split('T').first;
         countdownText = 'Tomorrow · $dStr';
-        badgeColor = const Color(0xFF6366F1);
+        badgeColor = AppColors.calmTeal;
       }
 
       upcomingCandidates.add(
@@ -144,7 +145,7 @@ ImminentPassTarget? evaluateImminentPass(List<TravelPass> passes, [DateTime? ref
           pass: pass,
           status: 'completed',
           countdownText: countdownText,
-          badgeColor: const Color(0xFF64748B),
+          badgeColor: AppColors.calmMute,
           diffHours: diffHours,
           isCompleted: true,
         ),
@@ -373,7 +374,7 @@ class NextUpTravelCapsule extends ConsumerWidget {
                   key: const Key('next-up-show-pass'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF0F172A),
+                    foregroundColor: AppColors.calmInk,
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     visualDensity: VisualDensity.compact,

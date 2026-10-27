@@ -43,18 +43,18 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
     if (geotagged.isEmpty) {
       return Container(
         height: widget.height,
-        color: const Color(0xFFF8FAFC),
-        child: Center(
+        color: AppColors.calmPaper,
+        child: const Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.map_outlined, size: 40, color: Colors.blueGrey.shade300),
-              const SizedBox(height: 8),
-              Text('No geotagged expenses yet', style: TextStyle(color: Colors.blueGrey.shade600, fontSize: 13)),
-              const SizedBox(height: 4),
+              Icon(Icons.map_outlined, size: 40, color: AppColors.calmMute),
+              SizedBox(height: 8),
+              Text('No geotagged expenses yet', style: TextStyle(color: AppColors.calmMute, fontSize: 13)),
+              SizedBox(height: 4),
               Text(
                 'Add locations to expenses to see your trip timeline map',
-                style: TextStyle(color: Colors.blueGrey.shade400, fontSize: 11),
+                style: TextStyle(color: AppColors.calmMute, fontSize: 11),
               ),
             ],
           ),
@@ -84,7 +84,7 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
           title: exp.title,
           subtitle: loc.placeName ?? exp.date,
           icon: emoji,
-          color: const Color(0xFF0F6F63),
+          color: AppColors.calmTeal,
           onTap: () {
             setState(() => _selectedExpense = exp);
           },
@@ -127,7 +127,7 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0F6F63).withValues(alpha: 0.1),
+                          color: AppColors.calmTeal.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Text(
@@ -150,7 +150,7 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
                             if (_selectedExpense!.location?.placeName != null)
                               Text(
                                 _selectedExpense!.location!.placeName!,
-                                style: const TextStyle(fontSize: 11, color: Colors.blueGrey),
+                                style: const TextStyle(fontSize: 11, color: AppColors.calmMute),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -165,7 +165,7 @@ class _TripJourneyMapState extends ConsumerState<TripJourneyMap> {
                             '$currencySymbol${formatMoneyNumber(_selectedExpense!.amount)}',
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                           ),
-                          Text(_selectedExpense!.date, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                          Text(_selectedExpense!.date, style: const TextStyle(fontSize: 10, color: AppColors.calmMute)),
                         ],
                       ),
                       IconButton(

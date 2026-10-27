@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../places/place_image_service.dart';
 import '../../../core/platform/motion.dart';
+import '../../../shared/theme/app_colors.dart';
 
 class TripPhotoHero extends StatefulWidget {
   final String? destination;
@@ -56,13 +57,13 @@ class _TripPhotoHeroState extends State<TripPhotoHero> {
   @override
   Widget build(BuildContext context) {
     return AnimatedOpacity(
-      duration: AppMotion.of(context, const Duration(milliseconds: 350)),
+      duration: AppMotion.of(context, AppMotion.base),
       opacity: widget.isHidden ? 0.0 : 1.0,
       child: Container(
         height: widget.height,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFF0F172A),
+          color: AppColors.calmInk,
           image: _resolvedUrl != null
               ? DecorationImage(
                   image: NetworkImage(_resolvedUrl!),

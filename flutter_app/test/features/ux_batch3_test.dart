@@ -321,6 +321,30 @@ void main() {
     });
   });
 
+  group('docked keypad', () {
+    testApp('a new expense opens on docked keys; Done hides them, tapping the amount brings them back', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableDockedKeypad'});
+      final s = await seedTrip(tester);
+      await openForm(tester, s);
+      expect(key('docked-keypad'), findsOneWidget);
+      expect(key('amount-keypad-button'), findsNothing);
+      for (final k in ['4', '0']) {
+        await tester.tap(key('key-$k'));
+        await tester.pump();
+      }
+      expect(tester.widget<TextField>(key('amount-field')).controller!.text, '40');
+      await tester.tap(key('keypad-done'));
+      await settle(tester, rounds: 4);
+      expect(key('docked-keypad'), findsNothing);
+      await tester.tap(key('amount-field'));
+      await settle(tester, rounds: 4);
+      expect(key('docked-keypad'), findsOneWidget);
+      await tester.tap(key('title-field'));
+      await settle(tester, rounds: 4);
+      expect(key('docked-keypad'), findsNothing);
+    });
+  });
+
   group('amount keypad', () {
     testApp('the keypad types an amount with a calculator sign and the form updates live', (tester) async {
       await pumpApp(tester, user: asha);
