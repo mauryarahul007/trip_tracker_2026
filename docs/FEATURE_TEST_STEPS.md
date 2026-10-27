@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-27 | 3.80.2 | HOME-BALANCES-GROUPS | [Home Balances count a square group as settled](#home-balances-groups--home-balances-count-a-square-group-as-settled) |
 | 2026-10-24 | unreleased | CALM-PASSPORT | [Calm Passport look and 5-tab trip bar](#calm-passport--calm-passport-look-and-5-tab-trip-bar) |
 | 2026-10-23 | unreleased | SETTLE-NUDGE | [Settle-up nudge banner on quiet trips](#settle-nudge--settle-up-nudge-banner-on-quiet-trips) |
 | 2026-10-23 | unreleased | UNDO-NOT-ASK | [Freeze, close and Settle all apply at once with Undo](#undo-not-ask--freeze-close-and-settle-all-apply-at-once-with-undo) |
@@ -3818,3 +3819,17 @@ Then add a row to the **Index** table.
 7. **Flag OFF** (`enableCalmPassportUi`, Settings > Flag overrides): reopen the app. Pass: previous colours and trip bar return; no crew avatars in the header.
 
 **Pass criteria:** no balance, split or sync value changes; only look and navigation differ.
+
+## HOME-BALANCES-GROUPS — Home Balances count a square group as settled
+
+**Flags:** none new. Uses existing Balances tab; Trips list money line needs `enableTripListMoney`. Flutter app only.
+
+1. Use a trip with a group (e.g. you + partner) where you paid for your partner and the trip ledger says everyone is settled.
+2. Open the trip's Balances (ledger). Pass: "Everyone is settled" / no transfers.
+3. Open the Trips home > Balances tab. Pass: that trip's row reads "Settled"; the across-trips total does not include it.
+4. Open the Trips list. Pass: that trip's money line reads settled, not "you are owed".
+5. Open the trip's Spend tab (Calm Passport). Pass: the You get / You owe card shows 0 / settled.
+6. On a trip where your group is owed money, check the home Balances row. Pass: the amount equals the group's balance on the trip ledger.
+7. On a trip with no groups. Pass: amounts unchanged from before.
+
+**Pass criteria:** every home figure matches the trip ledger; settled trips add 0 to the total.

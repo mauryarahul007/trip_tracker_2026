@@ -41,6 +41,7 @@ class CompassSpendSummary extends ConsumerWidget {
         trip,
         ref.watch(tripMembersProvider(tripId)).value ?? const [],
         live,
+        ref.watch(tripGroupsProvider(tripId)).value ?? const [],
       ).net;
       return _CalmHeroPair(
         spent: money(totals.totalSpent),

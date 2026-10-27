@@ -20,6 +20,7 @@ import '../../../domain/logic/cross_trip_balances.dart';
 import '../../../domain/logic/trip_list_money.dart';
 import '../../../domain/logic/trip_status.dart';
 import '../../../domain/models/expense.dart';
+import '../../../domain/models/group.dart';
 import '../../../domain/models/member.dart';
 import '../../../domain/models/trip.dart';
 import '../../../l10n/l10n_ext.dart';
@@ -76,6 +77,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   // Filled in build() for the cards below (flag `enableTripListMoney`); empty when the flag is off.
   var _membersByTrip = <String, List<Member>>{};
   var _expensesByTrip = <String, List<Expense>>{};
+  var _groupsByTrip = <String, List<Group>>{};
   var _moneyOn = false;
   var _pastFolded = false;
   Set<String> _pendingIds = const {};
@@ -223,7 +225,13 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     String? money;
     Color? moneyColor;
     if (_moneyOn) {
-      final pos = myTripNet(ref.read(authStateProvider).userId, t, members, _expensesByTrip[t.id] ?? const <Expense>[]);
+      final pos = myTripNet(
+        ref.read(authStateProvider).userId,
+        t,
+        members,
+        _expensesByTrip[t.id] ?? const <Expense>[],
+        _groupsByTrip[t.id] ?? const <Group>[],
+      );
       final net = pos.net;
       if (net != null) {
         final l10n = context.l10n;
@@ -315,6 +323,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
       trips: live,
       membersByTrip: _membersByTrip,
       expensesByTrip: _expensesByTrip,
+      groupsByTrip: _groupsByTrip,
     );
     final t = context.tokens;
     final String text;
@@ -447,6 +456,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
       for (final e in ref.watch(allActiveExpensesProvider).value ?? const <Expense>[]) {
         (_expensesByTrip[e.tripId] ??= []).add(e);
       }
+      _groupsByTrip = {
+        for (final id in _membersByTrip.keys) id: ref.watch(tripGroupsProvider(id)).value ?? const <Group>[],
+      };
     }
 
     return PopScope(

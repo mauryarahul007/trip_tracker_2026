@@ -6,6 +6,7 @@ import '../../../app/auth_state.dart';
 import '../../../core/format/money.dart';
 import '../../../domain/logic/cross_trip_balances.dart';
 import '../../../domain/models/expense.dart';
+import '../../../domain/models/group.dart';
 import '../../../domain/models/member.dart';
 import '../../../domain/models/trip.dart';
 import '../../../l10n/l10n_ext.dart';
@@ -42,9 +43,16 @@ class BalancesScreen extends ConsumerWidget {
     for (final e in ref.watch(allActiveExpensesProvider).value ?? const <Expense>[]) {
       (expenses[e.tripId] ??= []).add(e);
     }
+    // Groups settle as one party, so a square household reads settled here as it does in the trip's ledger.
+    final groups = {for (final t in trips) t.id: ref.watch(tripGroupsProvider(t.id)).value ?? const <Group>[]};
     final userId = ref.watch(authStateProvider).userId;
-    List<CrossTripNet> netsFor(List<Trip> list) =>
-        crossTripNets(userId: userId, trips: list, membersByTrip: members, expensesByTrip: expenses);
+    List<CrossTripNet> netsFor(List<Trip> list) => crossTripNets(
+      userId: userId,
+      trips: list,
+      membersByTrip: members,
+      expensesByTrip: expenses,
+      groupsByTrip: groups,
+    );
 
     final total = netsFor(trips);
     return wrapHomeBody(

@@ -5381,3 +5381,9 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** Bottom bar height is only the bar; the primary action is a Scaffold floating button (`CalmAddButton`) so lists run to the bar. Plans shows one floating Add per pane (item, note, pass) and no in-page duplicates. Crew avatars removed from the trip header. Bar follows the theme (light bar in light theme).
 * **Trade-offs Accepted:** Plans passes pane hides its in-page Add pass only under Calm Passport; other looks keep it.
 * **Release Cut:** version bumped to `3.80.1` via `npm run release:patch`.
+
+## 2026-10-27 — Home Balances respect groups (v3.80.2)
+* **Decision:** `myTripNet` now takes the trip's groups and returns the balance of the settlement party you belong to (your group, or you alone). Home Balances tab, Trips list money line, overview line and Spend hero all pass groups. A square household now reads settled, matching the trip ledger.
+* **Trade-offs Accepted:** In a group, home shows the group's position, not your personal share inside it.
+* **Release Cut:** version bumped to `3.80.2` via `npm run release:patch`.
+
