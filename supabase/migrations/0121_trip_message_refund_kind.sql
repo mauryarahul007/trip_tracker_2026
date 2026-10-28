@@ -1,4 +1,4 @@
--- Migration 0120: Trip refunds in chat
+-- Migration 0121: Trip refunds in chat
 -- Extends trip_messages.kind to officially allow 'refund_recorded'
 alter table public.trip_messages
   drop constraint if exists trip_messages_kind_check;

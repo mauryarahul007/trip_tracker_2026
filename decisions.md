@@ -5464,7 +5464,7 @@ This document logs all meaningful technical decisions, library choices, design p
   - **Direct Expense/Refund Navigation:**
     - Wired `handleNotificationNavigate` in `App.tsx` directly to `setSelectedReviewExpense`, resolving targets by `targetId`, `expenseId`, or title so tapping any notification opens its modal review card immediately.
   - **Chat Refund Cards & Event Logging:**
-    - Added Supabase migration `0120_trip_message_refund_kind.sql` allowing `'refund_recorded'` in `trip_messages_kind_check`.
+    - Added Supabase migration `0121_trip_message_refund_kind.sql` allowing `'refund_recorded'` in `trip_messages_kind_check`.
     - Updated `tripMessagesApi.ts`, `chatExpenseCards.ts`, and `TripChatPanel.tsx` in Web with emerald refund presentation, squircle avatar icons, and automatic refund event logging.
     - Updated `drift_repositories.dart`, `passes_and_chat_cards.dart`, and `chat_pane.dart` in Flutter with streamlined in-chat refund cards.
   - **Trip Hub Member Add Guardrail:**
