@@ -9397,5 +9397,32 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-28T13:35:00.000Z",
     "resolutionNote": "Insights (enableInsightsV2): hero total + budget meter, tappable daily bars, running total, ranked categories, paid vs share, top 5 expenses; refunds netted. Pass back (enableSettleStatusPass): % settled ring, confirmed/waiting counts, last 3 payments. Tests: spend_insights_test, settle_status_test, ui_round3_test. Commit 6824836 (v3.82.3)"
+  },
+  {
+    "id": "BUG-329",
+    "title": "Google sign-in failed on the Android dev build (com.triptracker.app.dev)",
+    "description": "A dev-flavor build installed as com.triptracker.app.dev showed 'Google sign in failed'. Only com.triptracker.app.dev2 has an Android OAuth client for the debug-key SHA-1.",
+    "severity": "medium",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "android",
+      "isOnline": true,
+      "appVersion": "3.82.3"
+    },
+    "reproSteps": [
+      "Build the dev flavor from the repo as committed",
+      "Install on a phone",
+      "Tap Continue with Google"
+    ],
+    "expectedBehavior": "Google sign-in succeeds",
+    "actualBehavior": "Google sign in failed",
+    "diagnostics": {},
+    "createdAt": "2026-10-28T13:56:00.000Z",
+    "updatedAt": "2026-10-28T13:56:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-28T13:56:00.000Z",
+    "resolutionNote": "Dev flavor applicationIdSuffix set to .dev2 and dev shortcuts point at com.triptracker.app.dev2, which is registered with Google. Verified on device ZA223NLS48. Commit 0fb8a3e (v3.82.4)"
   }
 ]
