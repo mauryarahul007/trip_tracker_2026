@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/auth_state.dart';
-import '../../../core/flags/compass_flags.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
@@ -38,7 +37,6 @@ class TripHubScreen extends ConsumerWidget {
     final cover = trip == null ? null : ref.watch(tripCoverProvider(tripCoverKey(trip))).value;
     final members = ref.watch(tripMembersProvider(tripId)).value?.length ?? 0;
     final hasNotes = ref.watch(visibleTabsProvider(tripId)).contains(TripNavTab.notes);
-    final insights = ref.watch(compassFlagProvider(('enableSpendInsights', tripId)));
     final mapOpen = ref.watch(tripMapOpenProvider(tripId));
     final receipts = (ref.watch(tripExpensesProvider(tripId)).value ?? const <Expense>[])
         .where((e) => (e.receiptImage ?? e.receiptPath ?? '').isNotEmpty)
@@ -80,10 +78,6 @@ class TripHubScreen extends ConsumerWidget {
       _HubTile('hub-receipts', Icons.receipt_long_outlined, l10n.receiptsTitle, receiptsFact, () {
         context.push('/trip/$tripId/receipts');
       }),
-      if (insights)
-        _HubTile('hub-insights', Icons.insights_rounded, 'Insights', 'Where the money went', () {
-          context.push('/trip/$tripId/insights');
-        }),
       _HubTile(
         'hub-invite',
         AppIcons.share,

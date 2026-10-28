@@ -5419,3 +5419,13 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** Anyone with an old `.dev` install gets `.dev2` as a separate app. Prod and staging IDs are unchanged.
 * **Release Cut:** version bumped to `3.82.4` via `npm run release:patch`; pubspec `3.82.4+7`.
 
+## 2026-10-28 — Refund day label, Expenses/Refunds filter, drop duplicate Hub Insights, FAB scoped to Balances/Spend (v3.82.5)
+* **Decision:** A collapsed Spend day whose entries are all refunds now reads "1 refund"/"N refunds" instead of "N expense(s)" (new `expDayCountRefund` string, `expenses_tab.dart`). The expense filter sheet gains a Type section with Expenses/Refunds chips (`EntryKind` on `ExpenseFilters`, `expense_list_logic.dart`). The Hub "Insights" tile is removed — Balances already shows burn rate, biggest day, top category/payer inline and links to the same Insights screen via its own icon. The Calm Passport floating Add-expense button now only renders on the Balances and Spend tabs; it was showing on every tab (Hub, Members, Activity) and overlapped Members' own Add-person button.
+* **Trade-offs Accepted:** A day mixing one refund with other expenses still reads as "N expenses" (only an all-refund day gets the refund label) — handling the mixed case wasn't asked for and would need a combined count string.
+* **Release Cut:** version bumped to `3.82.5` via `npm run release:patch`; pubspec `3.82.5+8`. BUG-330, BUG-331, BUG-332.
+
+## 2026-10-28 — Add-expense FAB no longer paints over modal sheets (v3.82.6)
+* **Decision:** `AppSheet.show` (the shared bottom-sheet helper used by Filters, Settle, Trip tools, expense detail and most other Balances/Spend sheets) and the Filters sheet's own `showModalBottomSheet` now pass `useRootNavigator: true`. The trip shell's floating Add-expense button lives on the outer shell `Scaffold`; a sheet opened with the default (nearest) navigator attaches to the active tab's nested go_router branch Navigator, which paints inside the shell's `body` — below the outer Scaffold's own FAB layer, so the FAB visually sat on top of the sheet. Root navigator puts the sheet's overlay above the whole shell, FAB included.
+* **Trade-offs Accepted:** None — `useRootNavigator: true` is the standard fix for this exact StatefulShellRoute + persistent-FAB layering issue and doesn't change dismiss/back behavior.
+* **Release Cut:** version bumped to `3.82.6` via `npm run release:patch`; pubspec `3.82.6+9`. BUG-333.
+

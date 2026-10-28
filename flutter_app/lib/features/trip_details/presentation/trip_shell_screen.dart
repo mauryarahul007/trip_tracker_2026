@@ -325,8 +325,9 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
             if (compassWebRail && currentTab == TripNavTab.expenses) CompassBalancesRail(tripId: widget.tripId),
           ],
         ),
-        // Calm Passport: one floating Add expense button over the content (Plans has its own add per pane).
-        floatingActionButton: calm && currentTab != TripNavTab.notes
+        // Calm Passport: one floating Add expense button over the content, Balances and Spend only —
+        // other tabs have their own primary action (Add person on Members, Plans' own add per pane).
+        floatingActionButton: calm && (currentTab == TripNavTab.ledger || currentTab == TripNavTab.expenses)
             ? CalmAddButton(
                 label: l10n.expAdd,
                 onTap: () => unawaited(startAddExpense(context, ref, widget.tripId, dial: dial)),

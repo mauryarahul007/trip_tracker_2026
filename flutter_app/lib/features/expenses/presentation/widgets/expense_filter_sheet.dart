@@ -182,6 +182,31 @@ class _ExpenseFilterSheetState extends ConsumerState<ExpenseFilterSheet> {
                   ]),
                   const SizedBox(height: 20),
                 ],
+                _label('Type'),
+                const SizedBox(height: 8),
+                chips([
+                  chip(
+                    key: const Key('filter-type-expense'),
+                    label: 'Expenses',
+                    selected: _f.entryKind == EntryKind.expense,
+                    onSelected: (s) => setState(
+                      () => _f = s
+                          ? _f.copyWith(entryKind: EntryKind.expense)
+                          : _f.copyWith(clearEntryKind: true),
+                    ),
+                  ),
+                  chip(
+                    key: const Key('filter-type-refund'),
+                    label: 'Refunds',
+                    selected: _f.entryKind == EntryKind.refund,
+                    onSelected: (s) => setState(
+                      () => _f = s
+                          ? _f.copyWith(entryKind: EntryKind.refund)
+                          : _f.copyWith(clearEntryKind: true),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 20),
                 _label(l10n.filterCategory),
                 const SizedBox(height: 8),
                 chips([

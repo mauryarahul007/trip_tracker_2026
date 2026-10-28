@@ -202,6 +202,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final height = MediaQuery.sizeOf(context).height;
     await showModalBottomSheet<void>(
       context: context,
+      // Root navigator: the trip shell's own Scaffold owns a persistent FAB (Add expense) that
+      // otherwise paints on top of a sheet opened on the branch's nested go_router Navigator.
+      useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       clipBehavior: Clip.antiAlias,
@@ -393,7 +396,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
           tidy: tidyOn,
           surface: tokens.bgSurface,
           border: tokens.borderColor,
-          countText: l10n.expDayCount(g.expenses.length),
+          countText: g.expenses.isNotEmpty && g.expenses.every(isRefund)
+              ? l10n.expDayCountRefund(g.expenses.length)
+              : l10n.expDayCount(g.expenses.length),
         ),
       );
       SliverList listFor(DayGroup g) => SliverList.builder(

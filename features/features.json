@@ -3001,5 +3001,18 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-27T13:36:00.000Z",
     "shippedNote": "Shipped in commit 67a0abd (v3.82.0), flags enableClearErrorStates, enableSaveConfirmation, enableOnboardingArt, enableDockedKeypad, enableShapedSkeletons default ON"
+  },
+  {
+    "id": "FEAT-189",
+    "title": "Expenses/Refunds filter chips on the Spend filter sheet",
+    "description": "Expenses/Refunds filter chips on the Spend filter sheet",
+    "category": "ui-ux",
+    "status": "requested",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-28T15:02:15.760Z",
+    "updatedAt": "2026-10-28T15:02:15.760Z"
   }
 ]

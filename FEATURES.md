@@ -9,8 +9,8 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **188** |
-| **💡 Requested** | **3** |
+| **Total Tracked** | **189** |
+| **💡 Requested** | **4** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
 | **✅ Shipped** | **185** |
@@ -25,6 +25,7 @@
 | **[FEAT-002](#feat-002)** | `ui-ux` | Test | `mauryarahul007@gmail.com` | 💡 Requested |
 | **[FEAT-024](#feat-024)** | `admin` | CI pipeline for lint, build, and test on push/PR | `claude-cli` | 💡 Requested |
 | **[FEAT-167](#feat-167)** | `ui-ux` | Automatic Android APK build from main (Flutter merged into main) | `claude-cli` | 💡 Requested |
+| **[FEAT-189](#feat-189)** | `ui-ux` | Expenses/Refunds filter chips on the Spend filter sheet | `claude-cli` | 💡 Requested |
 
 ---
 
@@ -33,7 +34,7 @@
 ### FEAT-002: Test
 
 - **Category**: `ui-ux` | **Status**: `requested`
-- **Requested By**: `mauryarahul007@gmail.com` on 8/21/2026 (web)
+- **Requested By**: `mauryarahul007@gmail.com` on 21/8/2026 (web)
 - **Route**: `#nav-3`
 
 Test
@@ -43,7 +44,7 @@ Test
 ### FEAT-024: CI pipeline for lint, build, and test on push/PR
 
 - **Category**: `admin` | **Status**: `requested`
-- **Requested By**: `claude-cli` on 9/1/2026 (web)
+- **Requested By**: `claude-cli` on 1/9/2026 (web)
 
 CI pipeline for lint, build, and test on push/PR
 
@@ -52,9 +53,18 @@ CI pipeline for lint, build, and test on push/PR
 ### FEAT-167: Automatic Android APK build from main (Flutter merged into main)
 
 - **Category**: `ui-ux` | **Status**: `requested`
-- **Requested By**: `claude-cli` on 10/19/2026 (web)
+- **Requested By**: `claude-cli` on 19/10/2026 (web)
 
 Automatic Android APK build from main (Flutter merged into main)
+
+---
+
+### FEAT-189: Expenses/Refunds filter chips on the Spend filter sheet
+
+- **Category**: `ui-ux` | **Status**: `requested`
+- **Requested By**: `claude-cli` on 28/10/2026 (web)
+
+Expenses/Refunds filter chips on the Spend filter sheet
 
 ---
 
@@ -246,7 +256,7 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-185** | Calm Passport look and 5-tab trip bar for the Flutter app (v3.79.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 05c0f68 (v3.79.0), flag enableCalmPassportUi default ON |
 | **FEAT-186** | Calm Passport round 2: Balances-first trip bar, live hero, Spend hero cards (v3.80.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 05ccff0 (v3.80.0), flag enableCalmPassportUi default ON |
 | **FEAT-187** | One Calm Passport theme across the Flutter app (v3.81.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4d38bb9 (v3.81.0), flag enableCalmPassportUi now picks layout only |
-| **FEAT-188** | UI/UX polish pass: 20 items (v3.82.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 67a0abd (v3.82.0), 5 new Core flags default ON |
+| **FEAT-188** | UI/UX polish pass: 20 items (v3.82.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 67a0abd (v3.82.0), flags enableClearErrorStates, enableSaveConfirmation, enableOnboardingArt, enableDockedKeypad, enableShapedSkeletons default ON |
 
 ---
 

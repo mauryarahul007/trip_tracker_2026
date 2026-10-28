@@ -9424,5 +9424,97 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-28T13:56:00.000Z",
     "resolutionNote": "Dev flavor applicationIdSuffix set to .dev2 and dev shortcuts point at com.triptracker.app.dev2, which is registered with Google. Verified on device ZA223NLS48. Commit 0fb8a3e (v3.82.4)"
+  },
+  {
+    "id": "BUG-330",
+    "title": "Collapsed day in Spend read '1 expense' for a lone refund",
+    "description": "Collapsed day in Spend read '1 expense' for a lone refund",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-28T15:00:27.949Z",
+    "updatedAt": "2026-10-28T15:00:27.950Z"
+  },
+  {
+    "id": "BUG-331",
+    "title": "Hub Insights tile duplicated the insights already surfaced on Balances",
+    "description": "Hub Insights tile duplicated the insights already surfaced on Balances",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-28T15:00:29.032Z",
+    "updatedAt": "2026-10-28T15:00:29.033Z"
+  },
+  {
+    "id": "BUG-332",
+    "title": "Calm Add-expense FAB overlapped Add person on Members and showed on every tab",
+    "description": "Calm Add-expense FAB overlapped Add person on Members and showed on every tab",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-28T15:00:29.811Z",
+    "updatedAt": "2026-10-28T15:00:29.812Z"
+  },
+  {
+    "id": "BUG-333",
+    "title": "Add-expense FAB painted over modal sheets (Filters, Settle, Trip tools) opened from Balances/Spend",
+    "description": "Add-expense FAB painted over modal sheets (Filters, Settle, Trip tools) opened from Balances/Spend",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-28T15:12:42.508Z",
+    "updatedAt": "2026-10-28T15:12:42.518Z"
   }
 ]

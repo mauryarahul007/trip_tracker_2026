@@ -14,6 +14,9 @@ double _jsNumber(String s) => double.tryParse(s.trim()) ?? double.nan;
 
 enum ExpenseRelation { paidByMe, involvesMe }
 
+/// Entry-type filter: plain expenses vs refund rows (see [isRefund]).
+enum EntryKind { expense, refund }
+
 class ExpenseFilters {
   const ExpenseFilters({
     this.query = '',
@@ -26,6 +29,7 @@ class ExpenseFilters {
     this.relation,
     this.location = '',
     this.onlyPersonal = false,
+    this.entryKind,
   });
 
   final String query;
@@ -40,6 +44,7 @@ class ExpenseFilters {
 
   /// Only expenses kept out of the trip totals.
   final bool onlyPersonal;
+  final EntryKind? entryKind;
 
   bool get hasActive =>
       query.isNotEmpty ||
@@ -51,7 +56,8 @@ class ExpenseFilters {
       amountMax.isNotEmpty ||
       relation != null ||
       onlyPersonal ||
-      location.isNotEmpty;
+      location.isNotEmpty ||
+      entryKind != null;
 
   ExpenseFilters copyWith({
     String? query,
@@ -65,6 +71,8 @@ class ExpenseFilters {
     bool clearRelation = false,
     String? location,
     bool? onlyPersonal,
+    EntryKind? entryKind,
+    bool clearEntryKind = false,
   }) => ExpenseFilters(
     query: query ?? this.query,
     categoryId: categoryId ?? this.categoryId,
@@ -76,6 +84,7 @@ class ExpenseFilters {
     relation: clearRelation ? null : (relation ?? this.relation),
     location: location ?? this.location,
     onlyPersonal: onlyPersonal ?? this.onlyPersonal,
+    entryKind: clearEntryKind ? null : (entryKind ?? this.entryKind),
   );
 
   /// What a saved filter keeps. Dates are left out on purpose: a fixed date range goes stale.
@@ -88,6 +97,7 @@ class ExpenseFilters {
     if (relation != null) 'relation': relation!.name,
     if (location.isNotEmpty) 'location': location,
     if (onlyPersonal) 'onlyPersonal': true,
+    if (entryKind != null) 'entryKind': entryKind!.name,
   };
 
   factory ExpenseFilters.fromJson(Map<String, dynamic> j) => ExpenseFilters(
@@ -99,6 +109,7 @@ class ExpenseFilters {
     relation: ExpenseRelation.values.where((r) => r.name == j['relation']).firstOrNull,
     location: j['location'] as String? ?? '',
     onlyPersonal: j['onlyPersonal'] == true,
+    entryKind: EntryKind.values.where((k) => k.name == j['entryKind']).firstOrNull,
   );
 }
 
@@ -150,7 +161,8 @@ List<Expense> filterExpenses(
               (f.relation == ExpenseRelation.involvesMe &&
                   (e.paidBy == myMemberId || e.splitMemberIds.contains(myMemberId)))) &&
           (!f.onlyPersonal || e.excludeFromTotals) &&
-          (f.location.isEmpty || e.location?.placeName == f.location))
+          (f.location.isEmpty || e.location?.placeName == f.location) &&
+          (f.entryKind == null || (f.entryKind == EntryKind.refund) == isRefund(e)))
         e,
   ];
 }

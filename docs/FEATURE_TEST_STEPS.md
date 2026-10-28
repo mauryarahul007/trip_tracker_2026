@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-28 | 3.82.5 | SPEND-REFUND-FILTER | [Refund day label, Expenses/Refunds filter, drop duplicate Hub Insights, FAB scoped to Balances/Spend](#spend-refund-filter--refund-day-label-expensesrefunds-filter-drop-duplicate-hub-insights-fab-scoped-to-balancesspend) |
 | 2026-10-28 | unreleased | CHAT-TAB-PLANS-HUB | [Chat in the trip dock, Plans moved into the Hub](#chat-tab-plans-hub--chat-in-the-trip-dock-plans-moved-into-the-hub) |
 | 2026-10-28 | 3.82.2 | REFUND-LABEL | [Refunds read as Refund in Spend](#refund-label--refunds-read-as-refund-in-spend) |
 | 2026-10-28 | 3.82.3 | INSIGHTS-SETTLE-PASS | [Insights upgrade and settle-up status pass](#insights-settle-pass--insights-upgrade-and-settle-up-status-pass) |
@@ -3978,4 +3979,29 @@ Then add a row to the **Index** table.
 - `enableTripBudget` OFF: no budget meter or budget line.
 
 **Pass criteria:** every figure matches Spend and Balances, refunds are netted, no screen repeats who-pays-whom on the pass back, and both flags OFF bring back the old screens exactly.
+
+---
+
+## SPEND-REFUND-FILTER — Refund day label, Expenses/Refunds filter, drop duplicate Hub Insights, FAB scoped to Balances/Spend
+
+**Shipped:** 2026-10-28 · v3.82.5, FAB layering fix in v3.82.6 · BUG-330, BUG-331, BUG-332, BUG-333. No new flags — uses existing `enableExpenseRefunds`, `enableSpendInsights`, `enableCalmPassportUi`.
+
+**Prep:** A trip with 2+ members, Calm Passport UI on. Add "Dinner" ₹1,000, then record a ₹200 refund on it so one Spend day holds only that refund row.
+
+**Steps**
+1. Spend tab, collapse the refund's day. Pass: the day header reads "1 refund", not "1 expense".
+2. Add a plain second expense on the same day, collapse again. Pass: day header reads "2 expenses" (mixed day keeps the generic count — known trade-off, not a bug).
+3. Spend tab → Filters. Pass: a "Type" row with **Expenses** and **Refunds** chips.
+4. Tap **Refunds**. Pass: the list (and the live count on "Show N expenses") shows only refund rows. Tap **Expenses** instead: only plain expenses show. Deselect: both show again.
+5. Hub. Pass: no "Insights" tile. (Insights is still reachable from Balances' insights icon — same screen as before.)
+6. Balances and Spend tabs. Pass: the orange floating Add-expense button shows in the bottom-right, same as before.
+7. Hub, Members, Activity, Notes. Pass: no floating Add button on any of them; Members' own "Add person" button is no longer covered.
+8. Spend tab → Filters (sheet opens). Pass: the floating Add button is hidden behind/under the sheet, not floating on top of it.
+9. Balances tab → tap Settle, or the sheet-menu "Trip tools". Pass: same — the sheet fully covers the Add button, nothing floats over it.
+
+**Flag-OFF negative checks**
+- `enableCalmPassportUi` OFF: no floating Add button anywhere (Compass dock's centre "+" is unaffected, still shows on its own tabs).
+- `enableSpendInsights` OFF: no Insights icon on Balances either — nothing to open since the Hub tile is gone and Balances' icon was already flag-gated.
+
+**Pass criteria:** an all-refund day never reads "expense", the Type filter correctly isolates expenses vs refunds, Insights has exactly one entry point (Balances), the floating Add button appears only on Balances and Spend, and no sheet opened from either tab ever shows the Add button floating over it.
 

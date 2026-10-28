@@ -649,6 +649,8 @@
   "expDeleted": "Expense deleted",
   "expDayCount": "{count, plural, =1{1 expense} other{{count} expenses}}",
   "@expDayCount": {"placeholders": {"count": {"type": "int"}}},
+  "expDayCountRefund": "{count, plural, =1{1 refund} other{{count} refunds}}",
+  "@expDayCountRefund": {"placeholders": {"count": {"type": "int"}}},
   "expRestored": "Expense restored",
   "detailPaidBy": "Paid by",
   "detailSplit": "Split between",

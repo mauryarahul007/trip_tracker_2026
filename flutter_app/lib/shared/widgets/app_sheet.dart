@@ -21,6 +21,9 @@ class AppSheet extends StatelessWidget {
 
     return showModalBottomSheet<T>(
       context: context,
+      // Root navigator: the trip shell's own Scaffold owns a persistent FAB (Add expense) that
+      // otherwise paints on top of a sheet opened on the branch's nested go_router Navigator.
+      useRootNavigator: true,
       isDismissible: isDismissible,
       enableDrag: enableDrag,
       isScrollControlled: true,

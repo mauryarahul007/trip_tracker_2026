@@ -2233,6 +2233,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 expense} other{{count} expenses}}'**
   String expDayCount(int count);
 
+  /// No description provided for @expDayCountRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 refund} other{{count} refunds}}'**
+  String expDayCountRefund(int count);
+
   /// No description provided for @expRestored.
   ///
   /// In en, this message translates to:

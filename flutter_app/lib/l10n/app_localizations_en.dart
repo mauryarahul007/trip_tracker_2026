@@ -1245,6 +1245,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String expDayCountRefund(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count refunds', one: '1 refund');
+    return '$_temp0';
+  }
+
+  @override
   String get expRestored => 'Expense restored';
 
   @override
