@@ -23,6 +23,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 |--------|---------|-----|---------|
 | 2026-10-28 | unreleased | CHAT-TAB-PLANS-HUB | [Chat in the trip dock, Plans moved into the Hub](#chat-tab-plans-hub--chat-in-the-trip-dock-plans-moved-into-the-hub) |
 | 2026-10-28 | 3.82.2 | REFUND-LABEL | [Refunds read as Refund in Spend](#refund-label--refunds-read-as-refund-in-spend) |
+| 2026-10-28 | 3.82.3 | INSIGHTS-SETTLE-PASS | [Insights upgrade and settle-up status pass](#insights-settle-pass--insights-upgrade-and-settle-up-status-pass) |
 | 2026-10-27 | 3.82.0 | UX-POLISH-20 | [Polish pass: errors, undo, sync words, keypad, nav, a11y](#ux-polish-20--polish-pass-errors-undo-sync-words-keypad-nav-a11y) |
 | 2026-10-27 | 3.81.0 | ONE-THEME | [One Calm Passport theme across the app](#one-theme--one-calm-passport-theme-across-the-app) |
 | 2026-10-27 | 3.80.2 | HOME-BALANCES-GROUPS | [Home Balances count a square group as settled](#home-balances-groups--home-balances-count-a-square-group-as-settled) |
@@ -3943,4 +3944,38 @@ Then add a row to the **Index** table.
 - `enableExpenseRefunds` OFF: no Record refund action. A refund recorded earlier still shows the Refund pill and −amount, and still nets off totals.
 
 **Pass criteria:** A refund is never shown as a plain expense in any row layout, day totals are net, and CSV sums to net spend.
+
+---
+
+## INSIGHTS-SETTLE-PASS — Insights upgrade and settle-up status pass
+
+**Shipped:** 2026-10-28 · v3.82.3 · BUG-328 · New Trip flags (default ON): `enableInsightsV2`, `enableSettleStatusPass`. Needs `enableSpendInsights` (opens Insights) and `enableYouPaidVsShare` + `enableSummaryUpgrades` (turn on the pass flip). Optional: `enableTripBudget` for the budget meter, `enableSettlementConfirmation` for the confirmed / waiting counts.
+
+**Prep:** A trip with 3 members, expenses on at least 3 different days in 3+ categories, paid by at least 2 people. Add one refund on an expense. Set a trip budget. Record one settle-up you sent and one you received.
+
+**Steps — Insights**
+1. Hub → Insights. Pass: a dark hero shows total spent, "day X of Y", Daily avg and On track for.
+2. With a budget set: a meter under the hero says "N% of ₹budget budget · ₹left left". Go over budget: it turns coral and says "Over budget by ₹X".
+3. Daily spend card: one bar per day, dashed average line. The readout says "Biggest · <date>" with that amount. Tap a bar: the readout shows that day and amount, other bars dim. Tap it again: back to Biggest.
+4. Running total card: a rising line ending in a dot. With a budget, a dashed budget line.
+5. By category: ranked bars with dot, name, amount and %. Over 6 categories: the rest fold into "Other".
+6. Paid vs share: one row per person. Green bar right with "↑ +₹" for who paid more than their share; red bar left with "↓ -₹" for who paid less.
+7. Biggest expenses: top 5, ranked. Tap one: its detail sheet opens.
+8. Refund check: the refunded expense shows its net amount in Biggest expenses and in the totals.
+9. Light and Dark mode, and 200% text: nothing clips or overflows.
+
+**Steps — settle-up status pass**
+10. Balances → tap the pass. Front chip says "Settle-up". The back shows a ring with % settled, "₹settled of ₹total settled" and "₹X still to move".
+11. With `enableSettlementConfirmation` ON: chips show "N confirmed", "N waiting on you" (highlighted) and "N waiting on others".
+12. Your last 3 payments list newest first: "You paid Ben" (↗) or "Cara paid you" (↙), date, amount, tick for confirmed or clock for pending. More than 3: "+N more in the history below".
+13. New trip with no payments: the back says "No payments yet. Recorded settle-ups show here."
+14. Settle everything: the back says "Everyone is square" and the ring is 100%.
+15. Tap the back: it flips to the front.
+
+**Flag-OFF negative checks**
+- `enableInsightsV2` OFF: Insights shows the older dark screen with daily line and category donut.
+- `enableSettleStatusPass` OFF: the back shows You paid / Your share / difference again, and the chip says "Your share".
+- `enableTripBudget` OFF: no budget meter or budget line.
+
+**Pass criteria:** every figure matches Spend and Balances, refunds are netted, no screen repeats who-pays-whom on the pass back, and both flags OFF bring back the old screens exactly.
 

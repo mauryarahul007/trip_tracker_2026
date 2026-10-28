@@ -84,6 +84,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableHorizonNav': true,
   'enableIcsExport': true,
   'enableInChatEventCards': false,
+  'enableInsightsV2': true,
   'enableInviteCard': true,
   'enableInviteConversion': true,
   'enableItemizedSplit': false,
@@ -137,6 +138,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableSettleAll': true,
   'enableSettleNudge': true,
   'enableSettleRounding': true,
+  'enableSettleStatusPass': true,
   'enableSettledCelebration': true,
   'enableSettlementConfirmation': false,
   'enableSettlementDateNote': false,
@@ -615,6 +617,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'labs',
     description: 'Auto-post compact expense cards into trip chat when someone adds a bill. Delete, restore, and settlement confirm update that same card in place (title, amount, tap to open).',
   ),
+  'enableInsightsV2': (
+    label: 'Insights Visual Upgrade (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: the Hub > Insights screen shows a hero total with daily average and projected total, a budget pace meter when the trip has a budget, daily bars with an average line (tap a bar for that day), a running-total line, ranked category bars with amount and %, a per-person paid vs share chart and the 5 biggest expenses. OFF: the older Insights screen (daily line, projected total, category donut) comes back. Needs Spend Insights Screen to be ON for Insights to open at all. Does not change any expense, split or balance; refunds are netted out of every figure.',
+  ),
   'enableInviteCard': (
     label: 'Invite Card (Flutter)',
     pack: 'trip',
@@ -882,6 +889,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'Round Down When Settling (Flutter)',
     pack: 'trip',
     description: 'Flutter app: ON: the settle sheet offers "Pay a round amount" which sets the amount to the owed figure rounded down to a clean number (for example 287 to 280); the rest stays owed and is shown as remaining. It never rounds up, so nobody overpays. OFF: type the amount yourself.',
+  ),
+  'enableSettleStatusPass': (
+    label: 'Settle-up Status Pass Back (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: flipping the settlement pass on Balances shows how much of the trip is settled (a ring and "X of Y settled"), counts of payments confirmed, waiting on you and waiting on others, and your last 5 payments sent or received with date and status. OFF: the back shows You paid / Your share / difference as before. Needs You Paid vs Your Share to be ON (it turns on the flip). Does not record, confirm or edit any payment.',
   ),
   'enableSettledCelebration': (
     label: 'Settled Celebration (Flutter)',
@@ -1315,6 +1327,8 @@ const Map<String, List<String>> consumerPacks = {
     'enableQuickAddSpeedDial',
     'enableSummaryNextAction',
     'enableYouPaidVsShare',
+    'enableInsightsV2',
+    'enableSettleStatusPass',
     'enableBalanceExplainer',
     'enableSavedOfflineToast',
     'enableSaveAndAddAnother',

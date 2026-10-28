@@ -10,7 +10,7 @@
         android:shortcutLongLabel="@string/shortcut_add_expense_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.triptracker.app.dev"
+            android:targetPackage="com.triptracker.app.dev2"
             android:targetClass="com.triptracker.app.MainActivity"
             android:data="com.triptracker.app://shortcut/add-expense" />
     </shortcut>
@@ -22,7 +22,7 @@
         android:shortcutLongLabel="@string/shortcut_latest_trip_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.triptracker.app.dev"
+            android:targetPackage="com.triptracker.app.dev2"
             android:targetClass="com.triptracker.app.MainActivity"
             android:data="com.triptracker.app://shortcut/latest-trip" />
     </shortcut>

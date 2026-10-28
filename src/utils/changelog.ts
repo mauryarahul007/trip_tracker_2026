@@ -9,6 +9,19 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.82.4',
+    date: '2026-10-28',
+    changes: ['Fixed Google sign-in on the Android dev test build.'],
+  },
+  {
+    version: '3.82.3',
+    date: '2026-10-28',
+    changes: [
+      'Insights in the Hub got new charts: daily bars, a running total, ranked categories, paid vs share per person and your biggest expenses.',
+      'The back of the settlement pass now shows how much of the trip is settled and your recent payments.',
+    ],
+  },
+  {
     version: '3.82.2',
     date: '2026-10-28',
     changes: ['Refunds now read as a Refund with a minus amount in Spend, and day totals subtract them.'],

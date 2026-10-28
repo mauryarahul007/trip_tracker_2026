@@ -90,7 +90,7 @@ void main() {
 
   group('settlement pass flip', () {
     testApp('tap anywhere flips to You paid / Your share / You owe and back; the strip is gone', (tester) async {
-      await pumpApp(tester, user: asha, flagsOn: {'enableCompassTripPages'});
+      await pumpApp(tester, user: asha, flagsOn: {'enableCompassTripPages'}, flagsOff: {'enableSettleStatusPass'});
       final s = await seedTrip(tester);
       await addExpense(tester, s, amount: 60, paidBy: s.ben, split: [s.me, s.ben], userId: 'u2');
       await openTab(tester, s, 'ledger');
@@ -119,7 +119,7 @@ void main() {
     testApp('calm pages off (default in tests): the old Difference label and Open payments stub return', (
       tester,
     ) async {
-      await pumpApp(tester, user: asha);
+      await pumpApp(tester, user: asha, flagsOff: {'enableSettleStatusPass'});
       final s = await seedTrip(tester);
       await addExpense(tester, s, amount: 60, paidBy: s.ben, split: [s.me, s.ben], userId: 'u2');
       await openTab(tester, s, 'ledger');
@@ -127,6 +127,24 @@ void main() {
       await tester.tap(key('hero-amount'));
       await settle(tester, rounds: 8);
       expect(find.text('DIFFERENCE'), findsOneWidget);
+    });
+
+    testApp('settle-up status back: ring, how much is settled and the empty payment list', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableCompassTripPages'});
+      final s = await seedTrip(tester);
+      await addExpense(tester, s, amount: 60, paidBy: s.ben, split: [s.me, s.ben], userId: 'u2');
+      await openTab(tester, s, 'ledger');
+      expect(find.text('Settle-up'), findsOneWidget); // front chip names what is on the back
+      await tester.tap(key('hero-amount'));
+      await settle(tester, rounds: 8);
+      expect(key('pass-back'), findsNothing);
+      expect(key('pass-back-status'), findsOneWidget);
+      expect(key('pass-back-ring'), findsOneWidget);
+      expect(find.text('0%'), findsOneWidget);
+      expect(find.textContaining(RegExp(r'of \D*30\S* settled')), findsOneWidget);
+      expect(find.textContaining('still to move'), findsOneWidget);
+      expect(key('pass-back-empty'), findsOneWidget);
+      expect(find.text('YOU PAID'), findsNothing);
     });
 
     testApp('flag off: the strip stays and the pass does not flip', (tester) async {

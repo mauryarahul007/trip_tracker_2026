@@ -40,7 +40,7 @@ android {
     productFlavors {
         create("dev") {
             dimension = "environment"
-            applicationIdSuffix = ".dev"
+            applicationIdSuffix = ".dev2" // only .dev2 is registered with Google sign-in for the debug key
             manifestPlaceholders["appName"] = "Trip Tracker (Dev)"
         }
         create("staging") {
