@@ -9344,5 +9344,32 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-28T13:20:00.000Z",
     "resolutionNote": "Calm dock now Balances, Spend, Activity, Chat, Hub; Plans opens from a Hub tile replacing the duplicate Notes tile; Hub Chat tile removed. Test: one_trip_nav_test. Commit 14c2c7e (v3.82.1)"
+  },
+  {
+    "id": "BUG-327",
+    "title": "Refunds showed as plain expenses in Spend, and day totals added them",
+    "description": "A refund row looked like any other expense (no label, positive amount), so it could not be told apart when collapsed. Day header totals added the refund instead of subtracting it, and CSV exported it as a positive amount.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "android",
+      "isOnline": true,
+      "appVersion": "3.82.1"
+    },
+    "reproSteps": [
+      "Add a 1000 expense",
+      "Open it and Record refund of 200",
+      "Look at the Spend list and the day header"
+    ],
+    "expectedBehavior": "Refund row labelled Refund with a minus amount; day total 800",
+    "actualBehavior": "Refund row looks like a 200 expense; day total 1200",
+    "diagnostics": {},
+    "createdAt": "2026-10-28T13:25:00.000Z",
+    "updatedAt": "2026-10-28T13:25:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-28T13:25:00.000Z",
+    "resolutionNote": "Refund rows show a green Refund pill, green minus amount and 'Back to <payer>' in all row layouts and the detail sheet; parent gets a Refunded mark. DayGroup.total nets refunds; CSV exports them negative. Tests: refunds_test, expenses_tab_test. Commit b9dd72c (v3.82.2)"
   }
 ]
