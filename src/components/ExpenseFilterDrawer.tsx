@@ -26,10 +26,14 @@ type Props = {
   setFilterRelation: (v: '' | 'paidByMe' | 'involvesMe') => void;
   filterLocation: string;
   setFilterLocation: (v: string) => void;
+  filterEntryKind: '' | 'expense' | 'refund';
+  setFilterEntryKind: (v: '' | 'expense' | 'refund') => void;
   locations: string[];
   // Hidden entirely for a viewer with no linked member in this trip --
   // "paid by me"/"involves me" have no meaning without a "me".
   showRelationFilters: boolean;
+  // Flag `enableExpenseTypeFilter`.
+  showEntryKindFilter: boolean;
 
   onClearFilters: () => void;
   onClose: () => void;
@@ -60,8 +64,11 @@ export function ExpenseFilterDrawer({
   setFilterRelation,
   filterLocation,
   setFilterLocation,
+  filterEntryKind,
+  setFilterEntryKind,
   locations,
   showRelationFilters,
+  showEntryKindFilter,
   onClearFilters,
   onClose,
 }: Props) {
@@ -70,7 +77,7 @@ export function ExpenseFilterDrawer({
   useFocusTrap(sheetRef, true, false, onClose);
 
   const hasAnyFilter = Boolean(
-    filterCategory || filterMember || filterDateFrom || filterDateTo || filterAmountMin || filterAmountMax || filterRelation || filterLocation
+    filterCategory || filterMember || filterDateFrom || filterDateTo || filterAmountMin || filterAmountMax || filterRelation || filterLocation || (showEntryKindFilter && filterEntryKind)
   );
 
   return (
@@ -129,6 +136,34 @@ export function ExpenseFilterDrawer({
                 </button>
               </div>
             </div>
+          )}
+
+          {showEntryKindFilter && (
+          <div className="settings-group">
+            <h3 className="settings-group-title">Type</h3>
+            <div className="filter-chips-track" style={{ overflowX: 'visible', flexWrap: 'wrap', padding: '2px 0 0' }}>
+              <button
+                type="button"
+                className={`filter-chip ${filterEntryKind === 'expense' ? 'active' : ''}`}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setFilterEntryKind(filterEntryKind === 'expense' ? '' : 'expense');
+                }}
+              >
+                <span>Expenses</span>
+              </button>
+              <button
+                type="button"
+                className={`filter-chip ${filterEntryKind === 'refund' ? 'active' : ''}`}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setFilterEntryKind(filterEntryKind === 'refund' ? '' : 'refund');
+                }}
+              >
+                <span>Refunds</span>
+              </button>
+            </div>
+          </div>
           )}
 
           <div className="settings-group">

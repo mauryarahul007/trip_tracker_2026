@@ -29,6 +29,7 @@ import { SettingsCell } from './common/SettingsCell';
 import { SettingsSection } from './common/SettingsSection';
 import { SettingsToggleRow } from './common/SettingsSwitch';
 import { computeTravelerPassport } from '../utils/travelerPassport';
+import { downloadTripIcs } from '../utils/icsExport';
 import { useTripStore } from '../store/tripStore';
 import { useDataSaverEnabled, setDataSaverEnabled } from '../hooks/useDataSaverEnabled';
 import { useCompactLedgerView, setCompactLedgerView } from '../hooks/useCompactLedgerView';
@@ -729,6 +730,8 @@ export function SettingsView({
         onOpenTripWrapped={isFeatureEnabled('enableTripWrapped', { tripId: activeTrip.id, userId: userId || undefined }) ? onOpenTripWrapped : undefined}
         onExportCsv={onExportCsv}
         onOpenSplitwiseImport={isFeatureEnabled('enableSplitwiseImport', { tripId: activeTrip.id, userId: userId || undefined }) ? onOpenSplitwiseImport : undefined}
+        onOpenOfflineSnapshot={isFeatureEnabled('enableOfflineSnapshot') ? onOpenOfflineSnapshot : undefined}
+        onExportIcs={isFeatureEnabled('enableIcsExport', { tripId: activeTrip.id, userId: userId || undefined }) ? () => downloadTripIcs(activeTrip) : undefined}
       />
     );
   } else if (visibleScreen === 'notifications') {

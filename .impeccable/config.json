@@ -281,6 +281,18 @@
         "value": "13px",
         "createdAt": "2026-10-08T10:25:10.986Z",
         "reason": "Claude: 13px is the Horizon kit's .t-sm step in design/new-app-ui/kit.css; DESIGN.md still documents the pre-Horizon ramp"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "clamp(1.1rem, 3vw, 1.4rem)",
+        "createdAt": "2026-10-28T15:35:36.315Z",
+        "reason": "DESIGN.md L181 documents this exact clamp() as the h3 display/title step; TripHubTab header uses it verbatim"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.1rem",
+        "createdAt": "2026-10-28T15:36:29.120Z",
+        "reason": "DESIGN.md L181 documents clamp(1.1rem, 3vw, 1.4rem) as the h3 display/title step; flagged sub-token of that exact clamp() used in TripHubTab/TripActivityTab headers"
       }
     ]
   }

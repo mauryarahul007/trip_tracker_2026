@@ -11,6 +11,7 @@ import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { triggerHaptic } from '../utils/haptics';
 import { tripDayNumber } from '../utils/dateRange';
+import { isRefund } from '../utils/refunds';
 import { usePullToRefresh } from '../utils/usePullToRefresh';
 import { PullToRefreshIndicator } from './PullToRefreshIndicator';
 import { useTripStore } from '../store/tripStore';
@@ -647,7 +648,9 @@ export function ExpenseList({
                   flexShrink: 0,
                 }}
               >
-                {group.expenses.length}
+                {group.expenses.length > 0 && group.expenses.every(isRefund)
+                  ? `${group.expenses.length} refund${group.expenses.length === 1 ? '' : 's'}`
+                  : group.expenses.length}
               </span>
             )}
           </div>

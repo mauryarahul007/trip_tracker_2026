@@ -1,10 +1,11 @@
 import { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { IconExpenses, IconMembers, IconReceipt, IconClipboardList, IconPlus, IconWallet, IconChat } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
-import { FlightAddExpenseTooltip, STORAGE_KEY } from './FlightAddExpenseTooltip';
+import { FlightAddExpenseTooltip, STORAGE_KEY, type TooltipTab } from './FlightAddExpenseTooltip';
 import { useFeatureNudge } from '../hooks/useFeatureNudge';
+import { IconBell, IconLayers } from './Icons';
 
-type Tab = 'chat' | 'expenses' | 'ledger' | 'members' | 'notes' | 'settings';
+type Tab = 'chat' | 'expenses' | 'ledger' | 'members' | 'notes' | 'settings' | 'hub' | 'activity';
 
 type Props = {
   activeTab: Tab;
@@ -22,6 +23,12 @@ type Props = {
   isHidden?: boolean;
   isChatFirstNav?: boolean;
   chatHasUnread?: boolean;
+  /** Calm Passport dock (flag `enableCalmPassportUi`): Balances, Spend, Activity, Chat, Hub --
+   * Members and Notes drop off the bar and move into the Hub tile list. */
+  calmMode?: boolean;
+  activityUnreadCount?: number;
+  /** Calm dock only: whether trip chat gets its own dock slot (Flutter: `calmDockTabs(chatEnabled:)`). */
+  chatEnabled?: boolean;
 };
 
 export function NavTabs({
@@ -39,8 +46,14 @@ export function NavTabs({
   isHidden = false,
   isChatFirstNav = false,
   chatHasUnread = false,
+  calmMode = false,
+  activityUnreadCount = 0,
+  chatEnabled = false,
 }: Props) {
   const isMembersTab = activeTab === 'members';
+  // Calm Passport: Add-expense FAB only makes sense on Balances/Spend -- Activity, Chat and Hub
+  // each either have no "add" concept or (Hub) route to their own screen's own add action.
+  const calmFabVisible = activeTab === 'ledger' || activeTab === 'expenses';
   const navRef = useRef<HTMLElement | null>(null);
   const [pillStyle, setPillStyle] = useState<{ left: number; width: number } | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -165,9 +178,11 @@ export function NavTabs({
       className={isFloating ? `nav-floating-fab-wrap ${isHidden ? 'is-hidden' : ''}` : 'nav-tab-fab-wrap'}
       role="presentation"
     >
-      {activeTab !== 'settings' && activeTab !== 'notes' && activeTab !== 'chat' && (
+      {(calmMode ? calmFabVisible : activeTab !== 'settings' && activeTab !== 'notes' && activeTab !== 'chat') && (
         <FlightAddExpenseTooltip
-          activeTab={activeTab}
+          // Only reachable when activeTab is 'ledger' or 'expenses' here (calmFabVisible, or the
+          // legacy guard above) -- both valid TooltipTab members; the cast just narrows the wider Tab type.
+          activeTab={activeTab as TooltipTab}
           onAddExpense={onAddExpense}
           onAddMember={onAddMember}
           expenseCount={expenseCount}
@@ -220,6 +235,93 @@ export function NavTabs({
           />
         )}
 
+        {calmMode ? (
+          <>
+            {/* Balances tab */}
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'ledger'}
+              data-tab="ledger"
+              className={`nav-tab-item ${activeTab === 'ledger' ? 'active' : ''}`}
+              onClick={() => goTo('ledger')}
+              aria-label="Balances"
+            >
+              <span className="nav-tab-icon"><IconWallet size={24} /></span>
+              <span>Balances</span>
+            </button>
+
+            {/* Spend tab */}
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'expenses'}
+              data-tab="expenses"
+              className={`nav-tab-item ${activeTab === 'expenses' ? 'active' : ''}`}
+              onClick={() => goTo('expenses')}
+              aria-label="Spend"
+            >
+              <span className="nav-tab-icon"><IconReceipt size={24} /></span>
+              <span>Spend</span>
+              {expenseCount !== undefined && expenseCount > 0 && (
+                <span className="nav-tab-badge" aria-label={`${expenseCount} expenses`}>{expenseCount > 99 ? '99+' : expenseCount}</span>
+              )}
+            </button>
+
+            {/* Center Action (+) FAB: Balances/Spend only, see calmFabVisible */}
+            {calmFabVisible && renderFab(false)}
+
+            {/* Activity tab */}
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'activity'}
+              data-tab="activity"
+              className={`nav-tab-item ${activeTab === 'activity' ? 'active' : ''}`}
+              onClick={() => goTo('activity')}
+              aria-label={activityUnreadCount > 0 ? `Activity, ${activityUnreadCount} unread` : 'Activity'}
+            >
+              <span className="nav-tab-icon"><IconBell size={24} /></span>
+              <span>Activity</span>
+              {activityUnreadCount > 0 && (
+                <span className="nav-tab-badge" aria-label={`${activityUnreadCount} unread`}>{activityUnreadCount > 99 ? '99+' : activityUnreadCount}</span>
+              )}
+            </button>
+
+            {/* Chat tab (drops out when trip chat is off) */}
+            {chatEnabled && (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'chat'}
+                data-tab="chat"
+                className={`nav-tab-item ${activeTab === 'chat' ? 'active' : ''}`}
+                onClick={() => goTo('chat')}
+                onMouseEnter={prefetchChat}
+                aria-label={chatHasUnread ? 'Chat, unread' : 'Chat'}
+              >
+                <span className="nav-tab-icon"><IconChat size={24} /></span>
+                <span>Chat</span>
+                {chatHasUnread && <span className="nav-tab-badge nav-tab-badge-dot" aria-hidden="true" />}
+              </button>
+            )}
+
+            {/* Hub tab: People, Plans, Invite and the rest of the trip menu */}
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'hub'}
+              data-tab="hub"
+              className={`nav-tab-item ${activeTab === 'hub' ? 'active' : ''}`}
+              onClick={() => goTo('hub')}
+              aria-label="Trip"
+            >
+              <span className="nav-tab-icon"><IconLayers size={24} /></span>
+              <span>Hub</span>
+            </button>
+          </>
+        ) : (
+          <>
         {/* Tab 1: Chat (if isChatFirstNav) */}
         {isChatFirstNav && (
           <button
@@ -315,10 +417,12 @@ export function NavTabs({
             )}
           </button>
         )}
+          </>
+        )}
       </nav>
 
       {/* Floating + for chat-first nav — hidden on Chat so it does not cover the composer */}
-      {isChatFirstNav && activeTab !== 'chat' && renderFab(true)}
+      {!calmMode && isChatFirstNav && activeTab !== 'chat' && renderFab(true)}
     </>
   );
 }

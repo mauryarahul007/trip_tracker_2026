@@ -150,6 +150,81 @@
   --bp-line: #ECE3D2;
   --bp-line-strong: #E6DAC4;
   --bp-shadow: rgba(31, 27, 20, 0.06);
+
+  /* ==========================================================================
+     CALM PASSPORT TOKENS (Flutter design-system port, Phase 0)
+     Additive only -- ported 1:1 from flutter_app/lib/shared/theme/{app_colors,
+     app_tokens,compass}.dart. No existing selector references these yet; Phase 1
+     wires components over from the legacy --bg, --text, etc vars above.
+     ========================================================================== */
+  --calm-bg-page: #F4F3EE;
+  --calm-bg-app: #F4F3EE;
+  --calm-bg-surface: #FFFFFF;
+  --calm-bg-surface-hover: #EDEDE5;
+  --calm-border: #E3E3DA;
+  --calm-border-focus: rgba(14, 107, 94, 0.35);
+
+  --calm-primary: #0E6B5E;
+  --calm-primary-light: #3FA396;
+  --calm-secondary: #14201C;
+  --calm-accent-orange: #F26B2A;
+
+  --calm-success: #11733F;
+  --calm-danger: #B23A24;
+  --calm-warning: #AC5F05;
+  --calm-budget-warn: #E8890C;
+
+  --calm-text-primary: #14201C;
+  --calm-text-secondary: #3F4D48;
+  --calm-text-muted: #5E6B66;
+
+  --calm-cta-bg: #14201C;
+  --calm-cta-fg: #FFFFFF;
+  --calm-sun: #C2410C;
+  --calm-on-sun: #FFFFFF;
+  --calm-sun-soft: #FFDCC8;
+  --calm-primary-soft: #D6F0E6;
+
+  --calm-header-start: #0F1F1B;
+  --calm-header-end: #0A1512;
+  --calm-header-gradient-solid: linear-gradient(135deg, var(--calm-header-start), var(--calm-header-end));
+
+  --calm-shadow-sm: 0 1px 2px rgba(11, 15, 26, 0.04), 0 4px 12px -4px rgba(11, 15, 26, 0.08);
+  --calm-shadow-md: 0 4px 12px rgba(11, 15, 26, 0.08), 0 12px 32px -8px rgba(11, 15, 26, 0.14);
+  --calm-shadow-lg: 0 8px 24px rgba(11, 15, 26, 0.12), 0 20px 48px -12px rgba(11, 15, 26, 0.2);
+  --calm-glass-shadow: 0 1px 3px rgba(11, 15, 26, 0.06), 0 6px 20px -6px rgba(11, 15, 26, 0.12);
+
+  --calm-radius-sm: 16px;
+  --calm-radius-md: 24px;
+  --calm-radius-lg: 28px;
+  --calm-radius-full: 9999px;
+
+  --calm-dur-1: 120ms;
+  --calm-dur-2: 200ms;
+  --calm-dur-3: 320ms;
+  --calm-ease-spring: var(--ease-spring);
+  --calm-ease-decel: var(--ease-decel);
+  --calm-ease-bounce: var(--ease-bounce-back);
+
+  /* Bento tile pairs: [bg, label-accent]. */
+  --calm-tile-mint-bg: #D6F0E6;
+  --calm-tile-mint-accent: #1F5E4E;
+  --calm-tile-butter-bg: #FFEDB3;
+  --calm-tile-butter-accent: #6E5200;
+  --calm-tile-peach-bg: #FFDCC8;
+  --calm-tile-peach-accent: #8A3F1C;
+  --calm-tile-sky-bg: #D6E8F6;
+  --calm-tile-sky-accent: #285A80;
+  --calm-tile-lilac-bg: #E7DEF8;
+  --calm-tile-lilac-accent: #553A9E;
+
+  /* Category colours -- same hue both themes, tint differs per theme block below. */
+  --calm-cat-food: #F08A3C;
+  --calm-cat-stay: #5B8DEF;
+  --calm-cat-transport: #34B27B;
+  --calm-cat-activities: #A66BE8;
+  --calm-cat-shopping: #E4578A;
+  --calm-cat-default: #8A9A94;
 }
 
 /* Native View Transitions (trip select, tab switch -- see utils/viewTransition.ts)
@@ -239,6 +314,45 @@
     --bp-line: #2E271B;
     --bp-line-strong: #362D1E;
     --bp-shadow: rgba(0, 0, 0, 0.35);
+
+    /* Calm Passport dark (Phase 0, additive) -- see light block in :root above. */
+    --calm-bg-page: #0D1311;
+    --calm-bg-app: #0D1311;
+    --calm-bg-surface: #17201D;
+    --calm-bg-surface-hover: #1F2A26;
+    --calm-border: #26322E;
+    --calm-border-focus: rgba(79, 209, 193, 0.4);
+    --calm-primary: #4FD1C1;
+    --calm-primary-light: #7DDDD1;
+    --calm-secondary: #ECF3EF;
+    --calm-success: #4ADE9A;
+    --calm-danger: #FF8A75;
+    --calm-warning: #FBBF24;
+    --calm-text-primary: #ECF3EF;
+    --calm-text-secondary: #C6D3CE;
+    --calm-text-muted: #A9BAB3;
+    --calm-cta-bg: #4FD1C1;
+    --calm-cta-fg: #14201C;
+    --calm-sun: #FF8A57;
+    --calm-on-sun: #14201C;
+    --calm-sun-soft: #3D2418;
+    --calm-primary-soft: #17332C;
+    --calm-header-start: #0F1F1B;
+    --calm-header-end: #0D1311;
+    --calm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.064), 0 4px 12px -4px rgba(0, 0, 0, 0.128);
+    --calm-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.128), 0 12px 32px -8px rgba(0, 0, 0, 0.224);
+    --calm-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.192), 0 20px 48px -12px rgba(0, 0, 0, 0.32);
+    --calm-glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.096), 0 6px 20px -6px rgba(0, 0, 0, 0.192);
+    --calm-tile-mint-bg: #17332C;
+    --calm-tile-mint-accent: #7FD6BC;
+    --calm-tile-butter-bg: #3A3214;
+    --calm-tile-butter-accent: #F2D27A;
+    --calm-tile-peach-bg: #3D2418;
+    --calm-tile-peach-accent: #F5A882;
+    --calm-tile-sky-bg: #1A2C3D;
+    --calm-tile-sky-accent: #9CC8EC;
+    --calm-tile-lilac-bg: #2A2340;
+    --calm-tile-lilac-accent: #C3AEF5;
   }
 }
 :root[data-theme="dark"] {
@@ -292,6 +406,45 @@
   --bp-line: #2E271B;
   --bp-line-strong: #362D1E;
   --bp-shadow: rgba(0, 0, 0, 0.35);
+
+  /* Calm Passport dark (Phase 0, additive) -- see light block in :root above. */
+  --calm-bg-page: #0D1311;
+  --calm-bg-app: #0D1311;
+  --calm-bg-surface: #17201D;
+  --calm-bg-surface-hover: #1F2A26;
+  --calm-border: #26322E;
+  --calm-border-focus: rgba(79, 209, 193, 0.4);
+  --calm-primary: #4FD1C1;
+  --calm-primary-light: #7DDDD1;
+  --calm-secondary: #ECF3EF;
+  --calm-success: #4ADE9A;
+  --calm-danger: #FF8A75;
+  --calm-warning: #FBBF24;
+  --calm-text-primary: #ECF3EF;
+  --calm-text-secondary: #C6D3CE;
+  --calm-text-muted: #A9BAB3;
+  --calm-cta-bg: #4FD1C1;
+  --calm-cta-fg: #14201C;
+  --calm-sun: #FF8A57;
+  --calm-on-sun: #14201C;
+  --calm-sun-soft: #3D2418;
+  --calm-primary-soft: #17332C;
+  --calm-header-start: #0F1F1B;
+  --calm-header-end: #0D1311;
+  --calm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.064), 0 4px 12px -4px rgba(0, 0, 0, 0.128);
+  --calm-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.128), 0 12px 32px -8px rgba(0, 0, 0, 0.224);
+  --calm-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.192), 0 20px 48px -12px rgba(0, 0, 0, 0.32);
+  --calm-glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.096), 0 6px 20px -6px rgba(0, 0, 0, 0.192);
+  --calm-tile-mint-bg: #17332C;
+  --calm-tile-mint-accent: #7FD6BC;
+  --calm-tile-butter-bg: #3A3214;
+  --calm-tile-butter-accent: #F2D27A;
+  --calm-tile-peach-bg: #3D2418;
+  --calm-tile-peach-accent: #F5A882;
+  --calm-tile-sky-bg: #1A2C3D;
+  --calm-tile-sky-accent: #9CC8EC;
+  --calm-tile-lilac-bg: #2A2340;
+  --calm-tile-lilac-accent: #C3AEF5;
 }
 
 /* ==========================================================================
@@ -349,6 +502,89 @@
   --bp-line: #1A1F26;
   --bp-line-strong: #252D37;
   --bp-shadow: rgba(0, 0, 0, 0.8);
+
+  /* Calm Passport AMOLED (Phase 0, additive) -- dark set with black ground + deeper tiles. */
+  --calm-bg-page: #000000;
+  --calm-bg-app: #000000;
+  --calm-bg-surface: #0A0F0D;
+  --calm-bg-surface-hover: #121916;
+  --calm-border: #1B2420;
+  --calm-border-focus: rgba(79, 209, 193, 0.4);
+  --calm-primary: #4FD1C1;
+  --calm-primary-light: #7DDDD1;
+  --calm-secondary: #ECF3EF;
+  --calm-success: #4ADE9A;
+  --calm-danger: #FF8A75;
+  --calm-warning: #FBBF24;
+  --calm-text-primary: #ECF3EF;
+  --calm-text-secondary: #C6D3CE;
+  --calm-text-muted: #A9BAB3;
+  --calm-cta-bg: #4FD1C1;
+  --calm-cta-fg: #14201C;
+  --calm-sun: #FF8A57;
+  --calm-on-sun: #14201C;
+  --calm-sun-soft: #281810;
+  --calm-primary-soft: #0F211C;
+  --calm-header-start: #0F1F1B;
+  --calm-header-end: #000000;
+  --calm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.064), 0 4px 12px -4px rgba(0, 0, 0, 0.128);
+  --calm-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.128), 0 12px 32px -8px rgba(0, 0, 0, 0.224);
+  --calm-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.192), 0 20px 48px -12px rgba(0, 0, 0, 0.32);
+  --calm-glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.096), 0 6px 20px -6px rgba(0, 0, 0, 0.192);
+  --calm-tile-mint-bg: #0F211C;
+  --calm-tile-mint-accent: #7FD6BC;
+  --calm-tile-butter-bg: #262010;
+  --calm-tile-butter-accent: #E8C65A;
+  --calm-tile-peach-bg: #281810;
+  --calm-tile-peach-accent: #FFA877;
+  --calm-tile-sky-bg: #0F1E29;
+  --calm-tile-sky-accent: #8EC4F0;
+  --calm-tile-lilac-bg: #1B1629;
+  --calm-tile-lilac-accent: #B9A2F5;
+}
+
+/* ==========================================================================
+   CALM PASSPORT WIRING (Phase 1) -- `enableCalmPassportUi` flag, toggled via
+   data-calm-ui by App.tsx. Repoints the base semantic vars every existing
+   component already consumes (var(--bg-page), var(--primary-accent), etc.)
+   at the Calm tokens above, so every surface picks it up with no per-file
+   edits needed. Same specificity as the data-theme blocks above; placed
+   after them in source order so it wins regardless of light/dark/oled.
+   ========================================================================== */
+:root[data-calm-ui="on"] {
+  --bg-page: var(--calm-bg-page);
+  --bg-app: var(--calm-bg-app);
+  --bg-surface: var(--calm-bg-surface);
+  --bg-surface-hover: var(--calm-bg-surface-hover);
+  --border-color: var(--calm-border);
+  --border-color-focus: var(--calm-border-focus);
+
+  --primary-accent: var(--calm-primary);
+  --primary-accent-light: var(--calm-primary-light);
+  --secondary-accent: var(--calm-secondary);
+  --accent-orange: var(--calm-accent-orange);
+
+  --color-success: var(--calm-success);
+  --color-danger: var(--calm-danger);
+  --color-warning: var(--calm-warning);
+  --color-success-text: var(--calm-success);
+  --color-warning-text: var(--calm-warning);
+
+  --text-primary: var(--calm-text-primary);
+  --text-secondary: var(--calm-text-secondary);
+  --text-muted: var(--calm-text-muted);
+
+  --bg-header: var(--calm-header-start);
+  --header-gradient-solid: var(--calm-header-gradient-solid);
+  --glass-shadow: var(--calm-glass-shadow);
+  --shadow-sm: var(--calm-shadow-sm);
+  --shadow-md: var(--calm-shadow-md);
+  --shadow-lg: var(--calm-shadow-lg);
+
+  --border-radius-sm: var(--calm-radius-sm);
+  --border-radius-md: var(--calm-radius-md);
+  --border-radius-lg: var(--calm-radius-lg);
+  --border-radius-pill: var(--calm-radius-full);
 }
 
 :root[data-theme="oled"] .glass-card {

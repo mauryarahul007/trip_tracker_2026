@@ -9528,5 +9528,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-28T15:13:39.886Z",
     "resolutionNote": "AppSheet.show and the Filters sheet now pass useRootNavigator: true so sheets paint above the shell's persistent FAB. Commit 03d1bbf (v3.82.6)."
+  },
+  {
+    "id": "BUG-334",
+    "title": "Collapsed-day refund label missing on web Spend list",
+    "description": "Collapsed-day refund label missing on web Spend list",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-28T15:56:26.929Z",
+    "updatedAt": "2026-10-28T15:56:30.912Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-28T15:56:30.911Z",
+    "resolutionNote": "ExpenseList.tsx's collapsed-day badge now reads \"N refund(s)\" instead of a bare count when every expense in the group is a refund (isRefund from utils/refunds.ts), matching the fix already shipped to the Flutter app this session. Commit pending (v3.82.7)."
   }
 ]

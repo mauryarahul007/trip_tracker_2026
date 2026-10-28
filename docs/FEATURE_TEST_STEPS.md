@@ -23,6 +23,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 |--------|---------|-----|---------|
 | 2026-10-28 | 3.82.5 | SPEND-REFUND-FILTER | [Refund day label, Expenses/Refunds filter, drop duplicate Hub Insights, FAB scoped to Balances/Spend](#spend-refund-filter--refund-day-label-expensesrefunds-filter-drop-duplicate-hub-insights-fab-scoped-to-balancesspend) |
 | 2026-10-28 | unreleased | CHAT-TAB-PLANS-HUB | [Chat in the trip dock, Plans moved into the Hub](#chat-tab-plans-hub--chat-in-the-trip-dock-plans-moved-into-the-hub) |
+| 2026-10-28 | 3.82.7 | WEB-CALM-PASSPORT | [Calm Passport design/feature propagation to webapp](#web-calm-passport--calm-passport-designfeature-propagation-to-webapp) |
 | 2026-10-28 | 3.82.2 | REFUND-LABEL | [Refunds read as Refund in Spend](#refund-label--refunds-read-as-refund-in-spend) |
 | 2026-10-28 | 3.82.3 | INSIGHTS-SETTLE-PASS | [Insights upgrade and settle-up status pass](#insights-settle-pass--insights-upgrade-and-settle-up-status-pass) |
 | 2026-10-27 | 3.82.0 | UX-POLISH-20 | [Polish pass: errors, undo, sync words, keypad, nav, a11y](#ux-polish-20--polish-pass-errors-undo-sync-words-keypad-nav-a11y) |
@@ -4005,3 +4006,27 @@ Then add a row to the **Index** table.
 
 **Pass criteria:** an all-refund day never reads "expense", the Type filter correctly isolates expenses vs refunds, Insights has exactly one entry point (Balances), the floating Add button appears only on Balances and Spend, and no sheet opened from either tab ever shows the Add button floating over it.
 
+
+## WEB-CALM-PASSPORT — Calm Passport design/feature propagation to webapp
+
+**Shipped:** 2026-10-28 · v3.82.7 · BUG-334, FEAT-190, FEAT-191, FEAT-192. Flags: `enableCalmPassportUi` (existing, default ON), `enableExpenseTypeFilter` (new, default ON), `enableIcsExport`/`enableOfflineSnapshot` (existing, reused).
+
+**Prep:** Open the webapp with a trip that has at least one member besides you, a few expenses, and at least one refund (an expense with "Refund of" set). Superadmin access to Ops Deck flags for the negative checks.
+
+**Steps:**
+1. Open any trip. Bottom nav reads Balances, Spend, Activity, (Chat if trip chat is on), Hub — not the old Chat/Summary/Expenses/Members/Notes bar.
+2. Tap Hub. See a tile list: People, Plans (if notes/passes enabled), Invite, Edit trip, Live location (if enabled), Mute/Unmute alerts, Settings, Switch trip. Tap People — lands on the member list (same screen as before, just reached via Hub instead of a bottom tab). Tap Plans — lands on Notes/Checklist.
+3. Tap Activity. See this trip's notifications only, newest first. Tap one — navigates to the right screen and marks it read. Mark-all-read and delete-all buttons work and only touch this trip's notifications (switch to another trip with its own notifications first to confirm they're untouched).
+4. On Balances or Spend, confirm the floating Add-expense button is visible; on Activity, Hub or Chat, confirm it is not.
+5. Collapse a day in Spend where every expense is a refund — the day's count badge reads "1 refund" / "N refunds", not "N expense(s)". A day with a mix of expenses and refunds still reads "N expenses".
+6. Open Filters (Spend tab). See a new "Type" chip row: Expenses / Refunds. Tap Refunds — list shows only refund rows. Tap Expenses — list shows only non-refund rows. Clear filters resets it.
+7. Trip → Hub → Settings → Trip Tools. See "Add to calendar" (downloads a `.ics` with every pass that has a start time) and "Offline Snapshot" (opens the existing snapshot flow) alongside the existing Categories/Recycle Bin/Wrapped/FX/CSV/Splitwise tiles.
+8. Toggle light/dark/AMOLED theme — colors, card radii and shadows stay visually consistent with the Flutter app's Calm Passport look in every mode.
+
+**Flag-OFF negative checks:**
+- `enableCalmPassportUi` OFF: bottom nav reverts to the previous Chat/Summary/Expenses/Members/Notes bar; no Hub or Activity tab anywhere; `data-calm-ui` attribute absent, colors/radii/shadows revert to the pre-existing palette.
+- `enableExpenseTypeFilter` OFF: the Filters sheet has no Type chip row; every other filter still works; the list is unfiltered by expense/refund type.
+- `enableIcsExport` OFF: no "Add to calendar" tile in Trip Tools (other tiles unaffected).
+- `enableOfflineSnapshot` OFF: no "Offline Snapshot" tile in Trip Tools (other tiles unaffected).
+
+**Pass criteria:** nav, Hub, Activity, FAB scoping, refund day label, Type filter and the two new Trip Tools entries all behave as above with the flags ON, and each flag's OFF state removes exactly its own surface with no effect on anything else or on the Flutter app.

@@ -81,7 +81,7 @@ export function getNotificationDisplay(
 
 const SWIPE_DELETE_THRESHOLD = 75;
 
-function NotificationCard({
+export function NotificationCard({
   notification,
   tripName,
   isCurrentTrip,

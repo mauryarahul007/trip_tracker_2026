@@ -3017,5 +3017,53 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-28T15:13:40.272Z",
     "shippedNote": "Expenses/Refunds Type chips added to ExpenseFilterSheet, backed by EntryKind on ExpenseFilters. Commit 03d1bbf (v3.82.5)."
+  },
+  {
+    "id": "FEAT-190",
+    "title": "Calm Passport design tokens + Hub/Activity nav on web",
+    "description": "Calm Passport design tokens + Hub/Activity nav on web",
+    "category": "general",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-28T15:56:35.506Z",
+    "updatedAt": "2026-10-28T15:56:44.985Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-28T15:56:44.984Z",
+    "shippedNote": "Ported Flutter's Calm Passport palette/radii/shadows into src/index.css as additive --calm-* tokens, wired behind the existing enableCalmPassportUi flag via data-calm-ui on <html> (App.tsx). Added Hub and Activity as real nav tabs (src/utils/tripTabs.ts calmDockTabs, NavTabs.tsx calmMode dock, new TripHubTab.tsx/TripActivityTab.tsx), mirroring flutter_app's trip_tabs.dart dock order. Commit pending (v3.82.7)."
+  },
+  {
+    "id": "FEAT-191",
+    "title": "Expenses/Refunds filter chips on web Filters sheet",
+    "description": "Expenses/Refunds filter chips on web Filters sheet",
+    "category": "general",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-28T15:56:36.417Z",
+    "updatedAt": "2026-10-28T15:56:45.454Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-28T15:56:45.453Z",
+    "shippedNote": "New enableExpenseTypeFilter flag (Core/trip pack, default ON) gates an Expenses/Refunds chip row in ExpenseFilterDrawer.tsx, mirroring the Flutter EntryKind chips shipped earlier this session. Commit pending (v3.82.7)."
+  },
+  {
+    "id": "FEAT-192",
+    "title": "Trip Tools: calendar export + Offline Snapshot wiring",
+    "description": "Trip Tools: calendar export + Offline Snapshot wiring",
+    "category": "general",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-28T15:56:37.202Z",
+    "updatedAt": "2026-10-28T15:56:45.871Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-28T15:56:45.870Z",
+    "shippedNote": "SettingsTripToolsHub.tsx gained Add-to-calendar (reuses existing downloadTripIcs + enableIcsExport flag) and Offline Snapshot (prop existed on SettingsView, was never threaded down) tiles. Commit pending (v3.82.7)."
   }
 ]

@@ -1,4 +1,4 @@
-import { netAmount, refundsFor, refundableRemaining } from './utils/refunds';
+import { netAmount, refundsFor, refundableRemaining, isRefund } from './utils/refunds';
 import React, { useEffect, useLayoutEffect, useRef, useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import { useTripStore, getTripNotificationRecipients, collectDirtyExpenseIds } from './store/tripStore';
@@ -71,6 +71,9 @@ const ExpenseReviewModal = lazy(lazyImport(() =>
 ));
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
+import { TripHubTab } from './components/TripHubTab';
+import { TripActivityTab } from './components/TripActivityTab';
+import { useNotificationsStore } from './store/notificationsStore';
 const ShareTripModal = lazy(lazyImport(() =>
   import('./components/ShareTripModal').then((m) => ({ default: m.ShareTripModal }))
 ));
@@ -81,7 +84,7 @@ import { FitHeading } from './components/FitHeading';
 import { triggerHaptic, configureHaptics } from './utils/haptics';
 import { getLatestNonSettlementExpense } from './utils/lastExpense';
 import { useEscapeKey } from './utils/useEscapeKey';
-import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers, IconClose, IconShare, IconSettings, IconBell, IconEdit, IconPieChart, IconReceipt, IconTag, IconLock } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers, IconClose, IconShare, IconSettings, IconBell, IconEdit, IconPieChart, IconReceipt, IconTag, IconLock, IconClipboardList } from './components/Icons';
 import { TripStartCard } from './components/TripStartCard';
 import { DeferredTripMapHero } from './components/DeferredTripMapHero';
 import { ActionSheet } from './components/common/ActionSheet';
@@ -92,7 +95,7 @@ import { pushTab, popTab } from './utils/tabTrail';
 import { parseDeepLink, withDeepLink, type DeepLink } from './utils/deepLink';
 import { getCatColor } from './utils/categoryColor';
 import { useTabSwipe } from './utils/useTabSwipe';
-import { showNotesNavTab, visibleTripTabs } from './utils/tripTabs';
+import { showNotesNavTab, visibleTripTabs, calmDockTabs } from './utils/tripTabs';
 // ChecklistNotesTab (1,183 lines) stays mounted once visited -- code-split
 // and gate on hasVisitedNotes, same pattern as MembersGroupsTab above.
 const ChecklistNotesTab = lazy(lazyImport(() =>
@@ -250,7 +253,8 @@ export default function App() {
   }, [userId, isBiometricFeatureEnabled]);
 
   // Navigation tabs: 'chat' (if elevated) | 'expenses' (Summary) | 'ledger' (day-wise Expenses) | 'members' | 'notes' | 'settings'
-  type Tab = 'chat' | 'expenses' | 'ledger' | 'members' | 'notes' | 'settings';
+  // Calm Passport dock (flag `enableCalmPassportUi`) adds 'hub' and 'activity' -- see calmDockTabs in utils/tripTabs.ts.
+  type Tab = 'chat' | 'expenses' | 'ledger' | 'members' | 'notes' | 'settings' | 'hub' | 'activity';
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const isNotesEnabled = isFeatureEnabled('enableNotesAndChecklist', { tripId: activeTripId || undefined, userId: userId || undefined });
   const isPassesEnabled = isFeatureEnabled('enableTravelPasses', { tripId: activeTripId || undefined, userId: userId || undefined });
@@ -273,6 +277,16 @@ export default function App() {
   useEffect(() => {
     configureHaptics({ calm: isCalmHaptics });
   }, [isCalmHaptics]);
+
+  // Global, not per-trip: the Calm Passport look should not change as you switch
+  // trips. Every enableCalmPassportUi CSS rule is scoped under :root[data-calm-ui].
+  const isCalmPassportUi = isFeatureEnabled('enableCalmPassportUi', { userId: userId || undefined });
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isCalmPassportUi) root.setAttribute('data-calm-ui', 'on');
+    else root.removeAttribute('data-calm-ui');
+    return () => root.removeAttribute('data-calm-ui');
+  }, [isCalmPassportUi]);
 
   // Global, not per-trip: motion should not change as you switch trips.
   // Every enableMotionPolish CSS rule is scoped under :root[data-motion].
@@ -303,8 +317,10 @@ export default function App() {
     isChatFirstNav,
   });
   const currentTabOrder = useMemo(
-    () => visibleTripTabs({ isChatFirstNav, showNotesTab }),
-    [isChatFirstNav, showNotesTab],
+    () => isCalmPassportUi
+      ? calmDockTabs({ chatEnabled: isTripChatEnabled })
+      : visibleTripTabs({ isChatFirstNav, showNotesTab }),
+    [isCalmPassportUi, isTripChatEnabled, isChatFirstNav, showNotesTab],
   );
 
   const [activeTab, setActiveTabRaw] = useState<Tab>('expenses');
@@ -359,7 +375,33 @@ export default function App() {
     if (activeTab === 'chat' && !isChatFirstNav) {
       setActiveTabRaw('expenses');
     }
-  }, [activeTab, showNotesTab, isChatFirstNav]);
+    if ((activeTab === 'hub' || activeTab === 'activity') && !isCalmPassportUi) {
+      setActiveTabRaw('expenses');
+    }
+  }, [activeTab, showNotesTab, isChatFirstNav, isCalmPassportUi]);
+
+  // Activity tab (Calm Passport): this trip's own notifications, newest first.
+  // Mark-all/delete-all loop the single-item store actions rather than the
+  // store's global markAllAsRead/clearAll, which are not trip-scoped and
+  // would otherwise touch every other trip's notifications too.
+  const allNotifications = useNotificationsStore((s) => s.notifications);
+  const notifMarkAsRead = useNotificationsStore((s) => s.markAsRead);
+  const notifToggleRead = useNotificationsStore((s) => s.toggleRead);
+  const notifDeleteOne = useNotificationsStore((s) => s.deleteOne);
+  const tripActivityNotifications = useMemo(
+    () => allNotifications.filter((n) => n.tripId === activeTripId),
+    [allNotifications, activeTripId],
+  );
+  const tripActivityUnreadCount = useMemo(
+    () => tripActivityNotifications.filter((n) => !n.read).length,
+    [tripActivityNotifications],
+  );
+  const handleActivityMarkAllRead = useCallback(() => {
+    tripActivityNotifications.forEach((n) => { if (!n.read) notifMarkAsRead(n.id); });
+  }, [tripActivityNotifications, notifMarkAsRead]);
+  const handleActivityDeleteAll = useCallback(() => {
+    tripActivityNotifications.forEach((n) => notifDeleteOne(n.id));
+  }, [tripActivityNotifications, notifDeleteOne]);
 
   // Tab panes stay mounted once rendered (display:none swap, not unmount --
   // see the .tab-pane comment below), so a lazy SettingsTab would suspend on
@@ -720,6 +762,8 @@ export default function App() {
   const [expenseFilterAmountMax, setExpenseFilterAmountMax] = useState('');
   const [expenseFilterRelation, setExpenseFilterRelation] = useState<'' | 'paidByMe' | 'involvesMe'>('');
   const [expenseFilterLocation, setExpenseFilterLocation] = useState('');
+  // Mirrors Flutter's EntryKind filter (domain/logic/expense_list_logic.dart) added this session.
+  const [expenseFilterEntryKind, setExpenseFilterEntryKind] = useState<'' | 'expense' | 'refund'>('');
   // Rendered at the top level (see ExpenseFilterDrawer near the other
   // full-screen overlays below) rather than inside ExpenseList/TripContentSheet
   // -- .trip-sheet has overflow:hidden, which clips position:fixed
@@ -1294,6 +1338,7 @@ export default function App() {
         if (expenseFilterRelation === 'involvesMe' && e.paidBy !== myMemberId && !e.splitMemberIds.includes(myMemberId)) return false;
       }
       if (expenseFilterLocation && e.location?.placeName !== expenseFilterLocation) return false;
+      if (expenseFilterEntryKind && (expenseFilterEntryKind === 'refund') !== isRefund(e)) return false;
       return true;
     });
   }, [
@@ -1307,6 +1352,7 @@ export default function App() {
     expenseFilterAmountMax,
     expenseFilterRelation,
     expenseFilterLocation,
+    expenseFilterEntryKind,
     myMemberId,
   ]);
 
@@ -1320,7 +1366,8 @@ export default function App() {
       expenseFilterAmountMin ||
       expenseFilterAmountMax ||
       expenseFilterRelation ||
-      expenseFilterLocation
+      expenseFilterLocation ||
+      expenseFilterEntryKind
     );
   }, [
     expenseSearch,
@@ -1332,6 +1379,7 @@ export default function App() {
     expenseFilterAmountMax,
     expenseFilterRelation,
     expenseFilterLocation,
+    expenseFilterEntryKind,
   ]);
 
   const clearExpenseFilters = () => {
@@ -1344,6 +1392,7 @@ export default function App() {
     setExpenseFilterAmountMax('');
     setExpenseFilterRelation('');
     setExpenseFilterLocation('');
+    setExpenseFilterEntryKind('');
   };
 
   const expenseLocations = useMemo(() => {
@@ -3060,6 +3109,110 @@ export default function App() {
               </TabErrorBoundary>
             </div>
 
+            {isCalmPassportUi && (
+            <div
+              className="tab-pane"
+              style={
+                activeTab === 'hub' ? { display: 'block', ...tabSwipe.activePaneStyle }
+                : tabSwipe.previewTab === 'hub' ? { display: 'block', ...tabSwipe.previewPaneStyle }
+                : { display: 'none' }
+              }
+            >
+              <TabErrorBoundary label="Hub">
+              {activeTrip && (
+              <TripHubTab
+                tripName={activeTrip.name}
+                tripDestination={activeTrip.destination}
+                items={[
+                  {
+                    id: 'hub-people',
+                    icon: <IconMembers size={18} />,
+                    title: 'People',
+                    subtitle: `${visibleMembers.length} traveler${visibleMembers.length === 1 ? '' : 's'}`,
+                    onClick: () => setActiveTab('members'),
+                  },
+                  ...(showNotesTab
+                    ? [{
+                        id: 'hub-plans',
+                        icon: <IconClipboardList size={18} />,
+                        title: 'Plans',
+                        subtitle: 'Checklist, notes, passes',
+                        onClick: () => setActiveTab('notes'),
+                      }]
+                    : []),
+                  {
+                    id: 'hub-invite',
+                    icon: <IconShare size={18} />,
+                    title: 'Invite',
+                    subtitle: activeTrip.joinCode ? `Code ${activeTrip.joinCode}` : 'Code, link, QR',
+                    onClick: () => setShowShareTrip(true),
+                  },
+                  {
+                    id: 'hub-edit',
+                    icon: <IconEdit size={18} />,
+                    title: 'Edit trip',
+                    subtitle: 'Name, dates, destination',
+                    onClick: () => handleStartEditTrip(activeTrip),
+                  },
+                  ...(myMemberId && isFeatureEnabled('enableLiveLocationShare', { tripId: activeTrip.id, userId: userId || undefined })
+                    ? [{
+                        id: 'hub-live',
+                        icon: <IconMapPin size={18} />,
+                        title: 'Live location',
+                        subtitle: 'Share where you are',
+                        onClick: () => setShowLiveLocationShare(true),
+                      }]
+                    : []),
+                  {
+                    id: 'hub-mute',
+                    icon: <IconBell size={18} />,
+                    title: isActiveTripMuted ? 'Unmute alerts' : 'Mute alerts',
+                    subtitle: isActiveTripMuted ? 'Silenced on this device' : 'Silence this trip',
+                    onClick: () => { void setTripMuted(activeTrip.id, !isActiveTripMuted); },
+                  },
+                  {
+                    id: 'hub-settings',
+                    icon: <IconSettings size={18} />,
+                    title: 'Settings',
+                    subtitle: 'Currency, categories, data & account',
+                    onClick: () => { setHasVisitedSettings(true); setActiveTab('settings'); },
+                  },
+                  {
+                    id: 'hub-switch-trip',
+                    icon: <IconChevronLeft size={18} />,
+                    title: 'Switch trip',
+                    subtitle: 'Back to your trips list',
+                    onClick: () => { withViewTransition(() => { void selectTrip(null); }); },
+                  },
+                ]}
+              />
+              )}
+              </TabErrorBoundary>
+            </div>
+            )}
+
+            {isCalmPassportUi && (
+            <div
+              className="tab-pane"
+              style={
+                activeTab === 'activity' ? { display: 'block', ...tabSwipe.activePaneStyle }
+                : tabSwipe.previewTab === 'activity' ? { display: 'block', ...tabSwipe.previewPaneStyle }
+                : { display: 'none' }
+              }
+            >
+              <TabErrorBoundary label="Activity">
+              <TripActivityTab
+                notifications={tripActivityNotifications}
+                onOpen={(n) => { notifMarkAsRead(n.id); handleNotificationNavigate(n); }}
+                onToggleRead={(n) => notifToggleRead(n.id)}
+                onDelete={(n) => notifDeleteOne(n.id)}
+                onMarkAllRead={handleActivityMarkAllRead}
+                onDeleteAll={handleActivityDeleteAll}
+              />
+              </TabErrorBoundary>
+            </div>
+            )}
+
             <div
               className="tab-pane"
               style={
@@ -3142,6 +3295,9 @@ export default function App() {
             isChatFirstNav={isChatFirstNav}
             chatHasUnread={chatHasUnread}
             isHidden={chatComposerFocused && (activeTab === 'notes' || activeTab === 'chat')}
+            calmMode={isCalmPassportUi}
+            chatEnabled={isTripChatEnabled}
+            activityUnreadCount={tripActivityUnreadCount}
           />
         </div>
       )}
@@ -3167,8 +3323,11 @@ export default function App() {
           setFilterRelation={setExpenseFilterRelation}
           filterLocation={expenseFilterLocation}
           setFilterLocation={setExpenseFilterLocation}
+          filterEntryKind={expenseFilterEntryKind}
+          setFilterEntryKind={setExpenseFilterEntryKind}
           locations={expenseLocations}
           showRelationFilters={!!myMemberId}
+          showEntryKindFilter={isFeatureEnabled('enableExpenseTypeFilter', { tripId: activeTrip?.id, userId: userId || undefined })}
           onClearFilters={clearExpenseFilters}
           onClose={() => setShowExpenseFilterDrawer(false)}
         />

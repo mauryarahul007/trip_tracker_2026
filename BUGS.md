@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **331** | All recorded bugs across sessions |
+| **Total Tracked** | **332** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **304** | Verified & closed |
+| **✅ Resolved** | **305** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -335,6 +335,7 @@
 | **BUG-331** | Hub Insights tile duplicated the insights already surfaced on Balances | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Removed the Hub Insights tile; Balances already surfaces burn rate/biggest day/top category inline and has its own icon to the same Insights screen. Commit 03d1bbf (v3.82.5). |
 | **BUG-332** | Calm Add-expense FAB overlapped Add person on Members and showed on every tab | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Calm Add-expense FAB now only renders when currentTab is ledger or expenses. Commit 03d1bbf (v3.82.5). |
 | **BUG-333** | Add-expense FAB painted over modal sheets (Filters, Settle, Trip tools) opened from Balances/Spend | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | AppSheet.show and the Filters sheet now pass useRootNavigator: true so sheets paint above the shell's persistent FAB. Commit 03d1bbf (v3.82.6). |
+| **BUG-334** | Collapsed-day refund label missing on web Spend list | `ui-ux` | `low` | `claude-cli` | `claude-cli` | ExpenseList.tsx's collapsed-day badge now reads "N refund(s)" instead of a bare count when every expense in the group is a refund (isRefund from utils/refunds.ts), matching the fix already shipped to the Flutter app this session. Commit pending (v3.82.7). |
 
 ---
 

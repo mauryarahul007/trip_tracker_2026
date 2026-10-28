@@ -89,6 +89,7 @@ export type FeatureFlagKey =
   | 'enableCloneTripSquad'
   | 'enableContactInvite'
   | 'enableExpenseQuickFilterChips'
+  | 'enableExpenseTypeFilter'
   | 'enableHorizonNav'
   | 'enableTripGetStarted'
   | 'enableCompassNav'

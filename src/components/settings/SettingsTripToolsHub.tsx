@@ -1,5 +1,5 @@
 import type { Category, Trip } from '../../types';
-import { IconFileSpreadsheet, IconSparkles, IconTag, IconTrash, IconUpload, IconWallet } from '../Icons';
+import { IconFileSpreadsheet, IconSparkles, IconTag, IconTrash, IconUpload, IconWallet, IconCalendar, IconDatabase } from '../Icons';
 import { SettingsCell } from '../common/SettingsCell';
 import { triggerHaptic } from '../../utils/haptics';
 import { SettingsSubscreenFrame } from './SettingsNavHeader';
@@ -18,6 +18,8 @@ type Props = {
   onExportCsv?: () => void;
   onOpenSplitwiseImport?: () => void;
   onOpenTripWrapped?: () => void;
+  onOpenOfflineSnapshot?: () => void;
+  onExportIcs?: () => void;
 };
 
 export function SettingsTripToolsHub({
@@ -34,6 +36,8 @@ export function SettingsTripToolsHub({
   onExportCsv,
   onOpenSplitwiseImport,
   onOpenTripWrapped,
+  onOpenOfflineSnapshot,
+  onExportIcs,
 }: Props) {
   return (
     <SettingsSubscreenFrame
@@ -104,7 +108,7 @@ export function SettingsTripToolsHub({
               title="Excel CSV Export"
               subtitle="Download settlement ledger & expense breakdown"
               badge="CSV"
-              hasDivider={Boolean(onOpenSplitwiseImport)}
+              hasDivider={Boolean(onOpenSplitwiseImport || onExportIcs || onOpenOfflineSnapshot)}
               onClick={onExportCsv}
             />
           )}
@@ -116,8 +120,31 @@ export function SettingsTripToolsHub({
               title="Import Splitwise CSV"
               subtitle="Bring a Splitwise group spreadsheet into this trip"
               badge="CSV"
-              hasDivider={false}
+              hasDivider={Boolean(onExportIcs || onOpenOfflineSnapshot)}
               onClick={onOpenSplitwiseImport}
+            />
+          )}
+
+          {onExportIcs && (
+            <SettingsCell
+              icon={<IconCalendar size={18} />}
+              title="Add to calendar"
+              subtitle="Download an .ics with every flight, train & stay pass"
+              hasDivider={Boolean(onOpenOfflineSnapshot)}
+              onClick={() => {
+                triggerHaptic('light');
+                onExportIcs();
+              }}
+            />
+          )}
+
+          {onOpenOfflineSnapshot && (
+            <SettingsCell
+              icon={<IconDatabase size={18} />}
+              title="Offline Snapshot"
+              subtitle="Save a .triptracker backup you can restore later"
+              hasDivider={false}
+              onClick={onOpenOfflineSnapshot}
             />
           )}
         </div>

@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **189** |
+| **Total Tracked** | **192** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **186** |
+| **✅ Shipped** | **189** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -248,6 +248,9 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-187** | One Calm Passport theme across the Flutter app (v3.81.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4d38bb9 (v3.81.0), flag enableCalmPassportUi now picks layout only |
 | **FEAT-188** | UI/UX polish pass: 20 items (v3.82.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 67a0abd (v3.82.0), flags enableClearErrorStates, enableSaveConfirmation, enableOnboardingArt, enableDockedKeypad, enableShapedSkeletons default ON |
 | **FEAT-189** | Expenses/Refunds filter chips on the Spend filter sheet | `ui-ux` | `claude-cli` | `claude-cli` | Expenses/Refunds Type chips added to ExpenseFilterSheet, backed by EntryKind on ExpenseFilters. Commit 03d1bbf (v3.82.5). |
+| **FEAT-190** | Calm Passport design tokens + Hub/Activity nav on web | `general` | `claude-cli` | `claude-cli` | Ported Flutter's Calm Passport palette/radii/shadows into src/index.css as additive --calm-* tokens, wired behind the existing enableCalmPassportUi flag via data-calm-ui on <html> (App.tsx). Added Hub and Activity as real nav tabs (src/utils/tripTabs.ts calmDockTabs, NavTabs.tsx calmMode dock, new TripHubTab.tsx/TripActivityTab.tsx), mirroring flutter_app's trip_tabs.dart dock order. Commit pending (v3.82.7). |
+| **FEAT-191** | Expenses/Refunds filter chips on web Filters sheet | `general` | `claude-cli` | `claude-cli` | New enableExpenseTypeFilter flag (Core/trip pack, default ON) gates an Expenses/Refunds chip row in ExpenseFilterDrawer.tsx, mirroring the Flutter EntryKind chips shipped earlier this session. Commit pending (v3.82.7). |
+| **FEAT-192** | Trip Tools: calendar export + Offline Snapshot wiring | `general` | `claude-cli` | `claude-cli` | SettingsTripToolsHub.tsx gained Add-to-calendar (reuses existing downloadTripIcs + enableIcsExport flag) and Offline Snapshot (prop existed on SettingsView, was never threaded down) tiles. Commit pending (v3.82.7). |
 
 ---
 
