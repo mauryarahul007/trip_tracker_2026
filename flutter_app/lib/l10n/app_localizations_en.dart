@@ -113,6 +113,72 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledHowWorked => 'How is this worked out?';
 
   @override
+  String get ledSettleStatus => 'Settle-up';
+
+  @override
+  String ledSettledOf(String settled, String total) {
+    return '$settled of $total settled';
+  }
+
+  @override
+  String ledStillToMove(String amount) {
+    return '$amount still to move';
+  }
+
+  @override
+  String get ledAllSquare => 'Everyone is square';
+
+  @override
+  String ledConfirmedCount(int count) {
+    return '$count confirmed';
+  }
+
+  @override
+  String ledWaitingOnYou(int count) {
+    return '$count waiting on you';
+  }
+
+  @override
+  String ledWaitingOnOthers(int count) {
+    return '$count waiting on others';
+  }
+
+  @override
+  String ledPaymentsRecorded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payments recorded',
+      one: '1 payment recorded',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ledYouPaidName(String name) {
+    return 'You paid $name';
+  }
+
+  @override
+  String ledNamePaidYou(String name) {
+    return '$name paid you';
+  }
+
+  @override
+  String get ledStatusConfirmed => 'Confirmed';
+
+  @override
+  String get ledStatusPending => 'Pending';
+
+  @override
+  String get ledNoPaymentsYet => 'No payments yet. Recorded settle-ups show here.';
+
+  @override
+  String ledMorePayments(int count) {
+    return '+$count more in the history below';
+  }
+
+  @override
   String get ledYouPaid => 'You paid';
 
   @override

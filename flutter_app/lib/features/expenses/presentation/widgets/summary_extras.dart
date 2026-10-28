@@ -605,3 +605,268 @@ class AtAGlanceGrid extends StatelessWidget {
     );
   }
 }
+
+/// One payment line on [SettleStatusBack]: who, when, how much, and whether it is confirmed.
+typedef SettleBackRow = ({String key, String who, String date, String amount, bool sent, bool confirmed});
+
+/// Reverse of the settlement pass with `enableSettleStatusPass`: how much of the trip is settled, payment counts,
+/// and my last payments. Nothing here repeats who-pays-whom or the trip totals.
+class SettleStatusBack extends StatelessWidget {
+  const SettleStatusBack({
+    required this.title,
+    required this.chipLabel,
+    required this.fraction,
+    required this.headline,
+    required this.subline,
+    required this.counts,
+    required this.rows,
+    required this.emptyLabel,
+    required this.confirmedLabel,
+    required this.pendingLabel,
+    this.moreLabel,
+    super.key,
+  });
+
+  final String title;
+  final String chipLabel;
+
+  /// 0..1 of the trip's settle-up already recorded.
+  final double fraction;
+  final String headline;
+  final String subline;
+
+  /// Count labels, e.g. "3 confirmed"; the second one is highlighted when it is "waiting on you".
+  final List<({String label, bool attention})> counts;
+  final List<SettleBackRow> rows;
+  final String emptyLabel;
+  final String confirmedLabel;
+  final String pendingLabel;
+  final String? moreLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final pct = (fraction * 100).round();
+    return DefaultTextStyle.merge(
+      style: TextStyle(color: t.textPrimary),
+      child: Container(
+        key: const Key('pass-back-status'),
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: t.bgSurface,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: t.borderColor.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 16, offset: const Offset(0, 4)),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 14, 14, 14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [AppColors.heroNavyDeep, AppColors.heroNavy, AppColors.heroTeal]),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: AppTypography.fontTitle,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  FlipChip(chipLabel),
+                ],
+              ),
+            ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (_, c) => FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    width: c.maxWidth,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Semantics(
+                                label: '$pct%',
+                                child: SizedBox(
+                                  key: const Key('pass-back-ring'),
+                                  width: 60,
+                                  height: 60,
+                                  child: CustomPaint(
+                                    painter: _SettleRingPainter(fraction, t.colorSuccess, t.borderColor),
+                                    child: Center(
+                                      child: Text(
+                                        '$pct%',
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w800,
+                                          fontFeatures: AppTypography.tabularFigures,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      headline,
+                                      key: const Key('pass-back-headline'),
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(subline, style: TextStyle(fontSize: 12.5, color: t.textSecondary)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (counts.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Wrap(
+                              key: const Key('pass-back-counts'),
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: [
+                                for (final c in counts)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: c.attention
+                                          ? t.colorWarning.withValues(alpha: 0.18)
+                                          : t.borderColor.withValues(alpha: 0.3),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Text(
+                                      c.label,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: c.attention ? FontWeight.w800 : FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                          const SizedBox(height: 12),
+                          if (rows.isEmpty)
+                            Text(
+                              emptyLabel,
+                              key: const Key('pass-back-empty'),
+                              style: TextStyle(fontSize: 13, color: t.textSecondary),
+                            )
+                          else
+                            for (final r in rows)
+                              Padding(
+                                key: Key('pass-back-row-${r.key}'),
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      r.sent ? Icons.north_east_rounded : Icons.south_west_rounded,
+                                      size: 16,
+                                      color: t.textSecondary,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        r.who,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                    Text(r.date, style: TextStyle(fontSize: 12, color: t.textMuted)),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      r.amount,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                        fontFeatures: AppTypography.tabularFigures,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Icon(
+                                      r.confirmed ? Icons.check_circle_rounded : Icons.schedule_rounded,
+                                      size: 15,
+                                      semanticLabel: r.confirmed ? confirmedLabel : pendingLabel,
+                                      color: r.confirmed ? t.colorSuccess : t.colorWarning,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          if (moreLabel != null) ...[
+                            const SizedBox(height: 4),
+                            Text(moreLabel!, style: TextStyle(fontSize: 12, color: t.textSecondary)),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettleRingPainter extends CustomPainter {
+  const _SettleRingPainter(this.fraction, this.color, this.track);
+
+  final double fraction;
+  final Color color;
+  final Color track;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const stroke = 7.0;
+    final rect = Rect.fromLTWH(stroke / 2, stroke / 2, size.width - stroke, size.height - stroke);
+    canvas.drawArc(
+      rect,
+      0,
+      6.2832,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke
+        ..color = track.withValues(alpha: 0.5),
+    );
+    if (fraction <= 0) return;
+    canvas.drawArc(
+      rect,
+      -1.5708,
+      6.2832 * fraction.clamp(0.0, 1.0),
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke
+        ..strokeCap = StrokeCap.round
+        ..color = color,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SettleRingPainter old) => old.fraction != fraction || old.color != color;
+}

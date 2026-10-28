@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../app/auth_state.dart';
 import '../../../core/clock.dart';
@@ -26,6 +27,7 @@ import '../../../domain/repositories/repositories.dart' show ExpenseRepository;
 import '../../../domain/logic/group_spend.dart';
 import '../../../domain/logic/expense_form_logic.dart';
 import '../../../domain/logic/settle_up.dart';
+import '../../../domain/logic/settle_status.dart';
 import '../../../domain/logic/settlement.dart';
 import '../../../domain/logic/settlement_share_card.dart';
 import '../../../domain/logic/trip_utilities.dart';
@@ -371,6 +373,8 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final counts = ref.watch(tripSettlementCountsProvider(id));
     final upgradesOn = _flag(ref, 'enableSummaryUpgrades', id);
     final flipOn = iAmIn && upgradesOn && _flag(ref, 'enableYouPaidVsShare', id);
+    // Settle-up status on the back of the pass instead of You paid / Your share.
+    final statusPassOn = flipOn && _flag(ref, 'enableSettleStatusPass', id);
     final totals = computeTotals(
       ref.watch(tripExpensesProvider(id)).value ?? const <Expense>[],
       visibleMemberCount: ref.watch(visibleMembersProvider(id)).length,
@@ -1164,13 +1168,73 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             ),
           ),
         ),
-      // 1. Hero boarding pass: what is owed, stamped SETTLED or NOT SETTLED (flips to You paid / Your share).
+      // 1. Hero boarding pass: what is owed, stamped SETTLED or NOT SETTLED (flips to You paid / Your share,
+      // or to the settle-up status with enableSettleStatusPass).
       Padding(
         key: const Key('sticky-balance'),
         padding: const EdgeInsets.only(bottom: 20),
         child: _flipWrap(
           on: flipOn,
           back: () {
+            if (statusPassOn) {
+              final status = settleStatus(
+                ref.read(tripExpensesProvider(id)).value ?? const <Expense>[],
+                outstanding: outstanding,
+                me: mine,
+                confirmationOn: _flag(ref, 'enableSettlementConfirmation', id),
+                recentCount: null,
+              );
+              final shown = status.recent.take(3).toList();
+              String day(String d) {
+                final p = DateTime.tryParse(d);
+                return p == null ? d : DateFormat('d MMM').format(p);
+              }
+
+              return SettleStatusBack(
+                title: trip.name,
+                chipLabel: l10n.ledPassTitle,
+                fraction: status.fraction,
+                headline: tripSettled
+                    ? l10n.ledAllSquare
+                    : l10n.ledSettledOf(
+                        formatMoney(context, status.settled, cur),
+                        formatMoney(context, status.settled + status.outstanding, cur),
+                      ),
+                subline: tripSettled
+                    ? l10n.ledPaymentsRecorded(status.payments)
+                    : l10n.ledStillToMove(formatMoney(context, status.outstanding, cur)),
+                counts: _flag(ref, 'enableSettlementConfirmation', id) && status.payments > 0
+                    ? [
+                        (label: l10n.ledConfirmedCount(status.confirmed), attention: false),
+                        if (status.waitingOnMe > 0) (label: l10n.ledWaitingOnYou(status.waitingOnMe), attention: true),
+                        if (status.waitingOnOthers > 0)
+                          (label: l10n.ledWaitingOnOthers(status.waitingOnOthers), attention: false),
+                      ]
+                    : [
+                        if (!tripSettled && status.payments > 0)
+                          (label: l10n.ledPaymentsRecorded(status.payments), attention: false),
+                      ],
+                rows: [
+                  for (final r in shown)
+                    (
+                      key: r.id,
+                      who: r.sent
+                          ? l10n.ledYouPaidName(names[r.otherMemberId] ?? '?')
+                          : l10n.ledNamePaidYou(names[r.otherMemberId] ?? '?'),
+                      date: day(r.date),
+                      amount: formatMoney(context, r.amount, cur),
+                      sent: r.sent,
+                      confirmed: r.confirmed,
+                    ),
+                ],
+                emptyLabel: l10n.ledNoPaymentsYet,
+                confirmedLabel: l10n.ledStatusConfirmed,
+                pendingLabel: l10n.ledStatusPending,
+                moreLabel: status.recent.length > shown.length
+                    ? l10n.ledMorePayments(status.recent.length - shown.length)
+                    : null,
+              );
+            }
             final paid = spend.paid[mine] ?? 0.0, share = spend.share[mine] ?? 0.0;
             final before = double.parse((paid - share).toStringAsFixed(2));
             // Calm pages: the third cell is what is really still due (recorded payments included), in plain words.
@@ -1213,8 +1277,8 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                   : null,
             );
           },
-          chipLabel: l10n.ledYourShare,
-          flipLabel: _flipped ? l10n.ledPassTitle : l10n.ledYourShare,
+          chipLabel: statusPassOn ? l10n.ledSettleStatus : l10n.ledYourShare,
+          flipLabel: _flipped ? l10n.ledPassTitle : (statusPassOn ? l10n.ledSettleStatus : l10n.ledYourShare),
           front: BoardingPassCard(
             tone: heroTone,
             banner: _PassBanner(

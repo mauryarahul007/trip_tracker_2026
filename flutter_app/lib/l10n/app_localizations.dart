@@ -259,6 +259,90 @@ abstract class AppLocalizations {
   /// **'How is this worked out?'**
   String get ledHowWorked;
 
+  /// No description provided for @ledSettleStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle-up'**
+  String get ledSettleStatus;
+
+  /// No description provided for @ledSettledOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{settled} of {total} settled'**
+  String ledSettledOf(String settled, String total);
+
+  /// No description provided for @ledStillToMove.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} still to move'**
+  String ledStillToMove(String amount);
+
+  /// No description provided for @ledAllSquare.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone is square'**
+  String get ledAllSquare;
+
+  /// No description provided for @ledConfirmedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} confirmed'**
+  String ledConfirmedCount(int count);
+
+  /// No description provided for @ledWaitingOnYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} waiting on you'**
+  String ledWaitingOnYou(int count);
+
+  /// No description provided for @ledWaitingOnOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} waiting on others'**
+  String ledWaitingOnOthers(int count);
+
+  /// No description provided for @ledPaymentsRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 payment recorded} other{{count} payments recorded}}'**
+  String ledPaymentsRecorded(int count);
+
+  /// No description provided for @ledYouPaidName.
+  ///
+  /// In en, this message translates to:
+  /// **'You paid {name}'**
+  String ledYouPaidName(String name);
+
+  /// No description provided for @ledNamePaidYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} paid you'**
+  String ledNamePaidYou(String name);
+
+  /// No description provided for @ledStatusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get ledStatusConfirmed;
+
+  /// No description provided for @ledStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get ledStatusPending;
+
+  /// No description provided for @ledNoPaymentsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No payments yet. Recorded settle-ups show here.'**
+  String get ledNoPaymentsYet;
+
+  /// No description provided for @ledMorePayments.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more in the history below'**
+  String ledMorePayments(int count);
+
   /// No description provided for @ledYouPaid.
   ///
   /// In en, this message translates to:

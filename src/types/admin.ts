@@ -119,6 +119,8 @@ export type FeatureFlagKey =
   | 'enableQuickAddSpeedDial'
   | 'enableSummaryNextAction'
   | 'enableYouPaidVsShare'
+  | 'enableInsightsV2'
+  | 'enableSettleStatusPass'
   | 'enableBalanceExplainer'
   | 'enableSavedOfflineToast'
   | 'enableSaveAndAddAnother'

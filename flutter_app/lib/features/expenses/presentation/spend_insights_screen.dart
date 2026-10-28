@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/flags/compass_flags.dart';
 import '../../../core/format/money.dart';
 import '../../../domain/logic/burn_rate.dart';
 import '../../../domain/logic/category_color.dart';
@@ -16,9 +17,11 @@ import '../../../shared/widgets/app_surface.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
+import 'spend_insights_v2.dart';
 
 /// Board 04 #11: Slate insights screen, opened by tapping the Expenses summary card
-/// (flag `enableSpendInsights`). Daily line, projected total and category donut.
+/// (flag `enableSpendInsights`). Daily line, projected total and category donut. With `enableInsightsV2` ON it shows
+/// [SpendInsightsV2Body] in the app's own theme instead.
 class SpendInsightsScreen extends ConsumerWidget {
   const SpendInsightsScreen({required this.tripId, super.key});
 
@@ -26,6 +29,26 @@ class SpendInsightsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (ref.watch(compassFlagProvider(('enableInsightsV2', tripId)))) {
+      return Scaffold(
+        backgroundColor: context.tokens.bgPage,
+        appBar: AppBar(
+          title: const Text('Insights'),
+          leading: IconButton(
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+            onPressed: context.pop,
+          ),
+        ),
+        body: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 960),
+            child: SafeArea(child: SpendInsightsV2Body(tripId: tripId)),
+          ),
+        ),
+      );
+    }
     return Theme(
       data: AppTheme.dark(),
       child: Builder(

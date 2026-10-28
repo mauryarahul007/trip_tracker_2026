@@ -39,3 +39,15 @@ List<CategorySpend> spendByCategory(Iterable<Expense> all) {
   out.sort((a, b) => b.total.compareTo(a.total));
   return out;
 }
+
+/// Running total after each day in [days] (same order), for the "how spend built up" line.
+List<double> runningTotals(List<DaySpend> days) {
+  var sum = 0.0;
+  return [for (final d in days) sum += d.total];
+}
+
+/// The [n] biggest spending rows, refunds already netted into their parent, biggest first.
+List<Expense> topExpenses(Iterable<Expense> all, {int n = 5}) {
+  final out = _spending(all).toList()..sort((a, b) => b.amount.compareTo(a.amount));
+  return out.take(n).toList();
+}
