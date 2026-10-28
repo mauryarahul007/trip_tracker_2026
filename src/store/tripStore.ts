@@ -71,6 +71,7 @@ import { reverseGeocode, searchPlaces, resolveTripStopCoordinates } from '../uti
 import { sendPushNotification } from '../services/pushApi';
 import {
   sendExpenseAddedEventMessage,
+  sendRefundRecordedEventMessage,
   sendExpenseDisputedEventMessage,
   sendExpenseDisputeResolvedEventMessage,
   sendSettlementRecordedEventMessage,
@@ -530,7 +531,7 @@ async function postExpenseLifecycleChatCard(
   get: () => TripStore,
   tripId: string,
   userId: string,
-  expense: Pick<Expense, 'id' | 'title' | 'amount' | 'currency' | 'isSettlement'>,
+  expense: Pick<Expense, 'id' | 'title' | 'amount' | 'currency' | 'isSettlement' | 'refundOfExpenseId'>,
   kind: 'added' | 'disputed' | 'dispute_resolved',
   note?: string
 ): Promise<void> {
@@ -547,7 +548,9 @@ async function postExpenseLifecycleChatCard(
       note: note || undefined,
     };
     if (kind === 'added') {
-      if (expense.isSettlement) {
+      if (expense.refundOfExpenseId) {
+        await sendRefundRecordedEventMessage(tripId, memberId, payload);
+      } else if (expense.isSettlement) {
         await sendSettlementRecordedEventMessage(tripId, memberId, payload);
       } else {
         await sendExpenseAddedEventMessage(tripId, memberId, payload);
@@ -900,6 +903,7 @@ export const useTripStore = create<TripStore>()(
     splitConfig: e.splitConfig,
     itemizedConfig: e.itemizedConfig,
     refundOfExpenseId: e.refundOfExpenseId ?? null,
+    excludeFromTotals: e.excludeFromTotals,
     resolvedShares,
     receiptPath: extra?.receiptPath,
     location: e.location ?? null,
@@ -1473,7 +1477,7 @@ export const useTripStore = create<TripStore>()(
               sendPushNotification(
                 recipients,
                 trip?.name || 'Trip Tracker',
-                'expense_added',
+                savedExpense.refundOfExpenseId ? 'expense_refunded' : 'expense_added',
                 { expenseTitle: savedExpense.title, amount: savedExpense.amount.toFixed(2), currency: savedExpense.currency },
                 tripId
               );
@@ -2883,6 +2887,7 @@ export const useTripStore = create<TripStore>()(
         splitConfig: expenseData.splitConfig,
         itemizedConfig: expenseData.itemizedConfig,
         refundOfExpenseId: expenseData.refundOfExpenseId ?? null,
+        excludeFromTotals: expenseData.excludeFromTotals ?? false,
         resolvedShares,
         location: expenseData.location ?? undefined,
       };
@@ -2912,7 +2917,7 @@ export const useTripStore = create<TripStore>()(
         sendPushNotification(
           recipients,
           trip?.name || 'Trip Tracker',
-          'expense_added',
+          savedExpense.refundOfExpenseId ? 'expense_refunded' : 'expense_added',
           { expenseTitle: savedExpense.title, amount: savedExpense.amount.toFixed(2), currency: savedExpense.currency },
           tripId
         );

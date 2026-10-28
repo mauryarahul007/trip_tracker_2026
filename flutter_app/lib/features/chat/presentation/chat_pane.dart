@@ -669,6 +669,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
   Widget _eventLine(BuildContext context, TripMessage m, bool pending) {
     final t = context.tokens;
     final expenseId = m.payload?['expenseId'] as String?;
+    final isRefund = m.eventKind == 'refund_recorded' || (m.eventKind?.contains('refund') ?? false);
     final isSettlement = m.eventKind?.contains('settle') ?? false;
     return Center(
       child: InkWell(
@@ -684,9 +685,9 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                isSettlement ? Icons.handshake_outlined : Icons.receipt_long_outlined,
+                isSettlement ? Icons.handshake_outlined : (isRefund ? Icons.undo_rounded : Icons.receipt_long_outlined),
                 size: 15,
-                color: isSettlement ? t.colorSuccess : t.textSecondary,
+                color: isSettlement || isRefund ? t.colorSuccess : t.textSecondary,
               ),
               const SizedBox(width: 7),
               Flexible(
@@ -707,9 +708,26 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
   }
 
   Widget _event(BuildContext context, TripMessage m, bool pending) {
+    final t = context.tokens;
     final expenseId = m.payload?['expenseId'] as String?;
+    final isRefund = m.eventKind == 'refund_recorded' || (m.eventKind?.contains('refund') ?? false);
     final isExpense = expenseId != null || (m.eventKind?.contains('expense') ?? false);
     final isSettlement = m.eventKind?.contains('settle') ?? false;
+
+    final tintColor = isRefund
+        ? t.colorSuccess
+        : (isSettlement ? AppColors.calmOwed : t.primaryAccent);
+    final iconEmoji = isRefund ? '↩️' : (isSettlement ? '🤝' : (isExpense ? '🧾' : '📌'));
+    final badgeLabel = isRefund
+        ? 'Refund'
+        : (isSettlement ? 'Settlement' : (isExpense ? 'Expense' : 'Event'));
+
+    final title = m.payload?['title'] as String?;
+    final amount = m.payload?['amount'] as num?;
+    final currency = m.payload?['currency'] as String?;
+    final formattedAmount = (amount != null && currency != null)
+        ? '$currency ${amount.toStringAsFixed(2)}'
+        : null;
 
     return Align(
       alignment: Alignment.center,
@@ -719,63 +737,99 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
         borderRadius: BorderRadius.circular(16),
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 6),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           constraints: const BoxConstraints(maxWidth: 340),
           decoration: BoxDecoration(
-            color: context.tokens.bgSurface,
+            color: t.bgSurface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: context.tokens.borderColor),
-            boxShadow: context.tokens.shadowSm,
+            border: Border.all(color: tintColor.withValues(alpha: 0.28)),
+            boxShadow: t.shadowSm,
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: isSettlement
-                      ? AppColors.calmOwed.withValues(alpha: 0.12)
-                      : context.tokens.primaryAccent.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(isSettlement ? '🤝' : (isExpense ? '🧾' : '📌'), style: const TextStyle(fontSize: 15)),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      m.body,
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.tokens.textPrimary),
-                    ),
-                    if (expenseId != null) ...[
-                      const SizedBox(height: 2),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'View expense details',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: context.tokens.primaryAccent,
-                            ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          color: tintColor.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(iconEmoji, style: const TextStyle(fontSize: 13)),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: tintColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          badgeLabel,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.4,
+                            color: tintColor,
                           ),
-                          const SizedBox(width: 3),
-                          Icon(Icons.arrow_forward_ios_rounded, size: 9, color: context.tokens.primaryAccent),
-                        ],
+                        ),
                       ),
                     ],
-                    if (pending)
-                      Text(context.l10n.chatPending, style: TextStyle(fontSize: 10.5, color: context.tokens.textMuted)),
-                  ],
+                  ),
+                  if (formattedAmount != null)
+                    Text(
+                      formattedAmount,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: t.textPrimary,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                title ?? m.body,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: t.textPrimary,
                 ),
               ),
+              if (expenseId != null) ...[
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      isRefund ? 'View refund details' : 'View transaction',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: tintColor,
+                      ),
+                    ),
+                    const SizedBox(width: 3),
+                    Icon(Icons.arrow_forward_ios_rounded, size: 9, color: tintColor),
+                  ],
+                ),
+              ],
+              if (pending)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(context.l10n.chatPending, style: TextStyle(fontSize: 10.5, color: t.textMuted)),
+                ),
             ],
           ),
         ),

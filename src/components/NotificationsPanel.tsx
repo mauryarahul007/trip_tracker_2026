@@ -19,6 +19,7 @@ import {
   IconEdit,
   IconSparkles,
   IconMail,
+  IconRotateCcw,
 } from './Icons';
 
 
@@ -36,6 +37,8 @@ function relativeTime(iso: string): string {
 
 export function getNotificationMeta(type?: string): { icon: React.ReactNode; colorClass: string } {
   switch (type) {
+    case 'expense_refunded':
+      return { icon: <IconRotateCcw size={17} />, colorClass: 'squircle-emerald' };
     case 'expense_added':
       return { icon: <IconExpenses size={17} />, colorClass: 'squircle-teal' };
     case 'expense_updated':

@@ -207,6 +207,8 @@ String expenseEventBody(String kind, Map<String, dynamic> expense) {
   switch (kind) {
     case 'expense_added':
       return 'Added $title · $money';
+    case 'refund_recorded':
+      return 'Refunded $title · $money';
     case 'settlement_recorded':
       return 'Settlement $title · $money';
     case 'expense_disputed':

@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.82.10',
+    date: '2026-10-28',
+    changes: [
+      'Added an expense exclude-from-totals toggle, and transformed Hub into an icon tile grid.',
+      'Refined navigation with a floating action button on Balances and Spend, edge-to-edge Activity feed, and destination blurred ambient background in Hub.',
+    ],
+  },
+  {
     version: '3.82.4',
     date: '2026-10-28',
     changes: ['Fixed Google sign-in on the Android dev test build.'],

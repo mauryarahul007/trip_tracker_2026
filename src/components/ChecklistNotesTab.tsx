@@ -423,7 +423,8 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
   const isDataSaverFlagEnabled = isFeatureEnabled('enableDataSaverMode', { tripId: liveTrip.id });
   const dataSaverPref = useDataSaverEnabled();
   const dataSaverActive = isDataSaverFlagEnabled && dataSaverPref;
-  const isChatSubTabEnabled = isChatEnabled && !isChatFirstNav;
+  const isCalmPassportUi = isFeatureEnabled('enableCalmPassportUi', { tripId: liveTrip.id });
+  const isChatSubTabEnabled = isChatEnabled && !isChatFirstNav && !isCalmPassportUi;
   const isTalkPackPass = isFeatureEnabled('enableNotesTalkPackPass', { tripId: liveTrip.id });
 
   const [viewMode, setViewMode] = useState<ViewMode>(() => {

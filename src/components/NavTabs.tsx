@@ -29,6 +29,8 @@ type Props = {
   activityUnreadCount?: number;
   /** Calm dock only: whether trip chat gets its own dock slot (Flutter: `calmDockTabs(chatEnabled:)`). */
   chatEnabled?: boolean;
+  /** Whether any modal, popup, drawer, or subpage is active */
+  isSubpageOrModalOpen?: boolean;
 };
 
 export function NavTabs({
@@ -49,6 +51,7 @@ export function NavTabs({
   calmMode = false,
   activityUnreadCount = 0,
   chatEnabled = false,
+  isSubpageOrModalOpen = false,
 }: Props) {
   const isMembersTab = activeTab === 'members';
   // Calm Passport: Add-expense FAB only makes sense on Balances/Spend -- Activity, Chat and Hub
@@ -276,7 +279,7 @@ export function NavTabs({
 
             {/* Center Action (+) FAB: always mounted (reserves its grid column); hidden off
                 Balances/Spend by calmFabVisible inside renderFab itself. */}
-            {renderFab(false)}
+
 
             {/* Activity tab */}
             <button
@@ -429,6 +432,8 @@ export function NavTabs({
       </nav>
 
       {/* Floating + for chat-first nav — hidden on Chat so it does not cover the composer */}
+      {/* Floating + for calm mode (only active on Balances and Spend home pages, never in popups/subpages) */}
+      {calmMode && calmFabVisible && !isSubpageOrModalOpen && renderFab(true)}
       {!calmMode && isChatFirstNav && activeTab !== 'chat' && renderFab(true)}
     </>
   );

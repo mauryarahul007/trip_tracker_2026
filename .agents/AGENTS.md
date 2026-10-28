@@ -66,6 +66,11 @@ Follow `.cursor/rules/ai-software-engineering.mdc` and the phase docs under `doc
   - Clear narrative explanation of user-facing changes and domain impacts.
   - Verification & testing status (tests passed, lint status).
 
+## Target Scope & Planning Protocols (Mandatory)
+
+- **Rule -1 (Mandatory Target Scope Inquiry — Web UI vs Flutter App):** For EVERY update, feature request, or bug fix, you MUST explicitly ask the user whether the changes are intended for the **Web UI** or the **Flutter app** before starting implementation. Never assume without asking.
+- **Rule 0 (Mandatory Implementation Plan Before Code):** For any coding task (bug fixes, UI overhauls, features, or refactors), you MUST first formulate and present a clear, structured implementation plan to the user. Wait for the user's feedback or approval before modifying code files.
+
 ## Deployment Target Scope & Defaults
 
 - **Default Scope:** ALL changes made in this codebase are strictly targeted for the **webapp only**.

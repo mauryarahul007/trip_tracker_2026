@@ -2454,10 +2454,11 @@ html.capacitor-ios .tab-pane {
    legacy 5-track grid above when Chat is in the dock, so it needs its own explicit column count
    or the overflow item wraps into an implicit second grid row instead of staying on one line. */
 .nav-tabs.calm-nav {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-width: 400px;
 }
 .nav-tabs.calm-nav.has-chat {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   max-width: 460px;
 }
 
@@ -6819,6 +6820,11 @@ input:checked + .toggle-slider:before {
   font-weight: 600;
   color: var(--primary-accent);
   cursor: pointer;
+}
+.member-section-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: auto;
 }
 .member-roster-main {
   display: flex;
@@ -16480,4 +16486,110 @@ textarea.input-field {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+/* Bottom dock scrim for smooth fadeout of scrolling ledger entries */
+.nav-dock-scrim {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 110px;
+  background: linear-gradient(
+    to top,
+    var(--bg-app) 45%,
+    color-mix(in srgb, var(--bg-app) 70%, transparent) 75%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 45;
+}
+
+/* Floating Action Button (FAB) suppression when modals/popups/subpages are open */
+body:has(.modal-backdrop) .nav-floating-fab-wrap,
+body:has(.modal-sheet) .nav-floating-fab-wrap,
+body:has(.action-sheet-backdrop) .nav-floating-fab-wrap,
+body:has(.drawer-backdrop) .nav-floating-fab-wrap,
+body:has(.filter-drawer) .nav-floating-fab-wrap,
+body:has([role="dialog"]) .nav-floating-fab-wrap {
+  display: none !important;
+}
+
+/* Edge-to-edge Activity tab layout */
+.trip-sheet .tab-pane.activity-tab-pane {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.activity-edge-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.activity-edge-row {
+  width: 100%;
+}
+
+.activity-edge-row .notif-card {
+  border-radius: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 14px 16px !important;
+  background: var(--bg-surface);
+  box-shadow: none !important;
+  width: 100%;
+}
+
+.activity-edge-row .notif-card.unread {
+  background: color-mix(in srgb, var(--primary-accent) 6%, var(--bg-surface)) !important;
+}
+
+.activity-edge-row .notif-card-inner {
+  width: 100%;
+}
+
+
+/* Multi-select activity styling */
+.activity-edge-row.select-mode {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.activity-edge-row.select-mode .notif-card {
+  border-bottom: none !important;
+}
+
+.activity-edge-row.select-mode:hover {
+  background: color-mix(in srgb, var(--primary-accent) 4%, var(--bg-surface));
+}
+
+.activity-edge-row.select-mode.selected {
+  background: color-mix(in srgb, var(--primary-accent) 12%, var(--bg-surface)) !important;
+}
+
+.activity-select-checkbox {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  margin-left: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  background: var(--bg-surface);
+  color: #ffffff;
+}
+
+.activity-select-checkbox.checked {
+  background: var(--primary-accent);
+  border-color: var(--primary-accent);
 }

@@ -29,6 +29,7 @@ const MESSAGE_FETCH_LIMIT = 200;
 const KNOWN_KINDS = new Set<TripMessageKind>([
   'text',
   'expense_added',
+  'refund_recorded',
   'settlement_recorded',
   'expense_disputed',
   'expense_dispute_resolved',
@@ -42,6 +43,7 @@ const KNOWN_KINDS = new Set<TripMessageKind>([
 
 const EVENT_KINDS = new Set<TripMessageKind>([
   'expense_added',
+  'refund_recorded',
   'settlement_recorded',
   'expense_disputed',
   'expense_dispute_resolved',
@@ -64,6 +66,7 @@ function mapExpensePayload(raw: Record<string, unknown>): TripMessageExpensePayl
   const payload: TripMessageExpensePayload = { expenseId, title, amount, currency };
   if (typeof raw.note === 'string') payload.note = raw.note;
   if (raw.source === 'tripbot') payload.source = 'tripbot';
+  if (raw.isRefund === true) payload.isRefund = true;
   return payload;
 }
 
@@ -407,4 +410,17 @@ export function subscribeToTripMessages(
   return () => {
     supabase.removeChannel(channel);
   };
+}
+export async function sendRefundRecordedEventMessage(
+  tripId: string,
+  memberId: string,
+  expense: TripMessageExpensePayload
+): Promise<TripMessage | null> {
+  return sendEventMessage(
+    tripId,
+    memberId,
+    'refund_recorded',
+    expenseEventBody('refund_recorded', expense),
+    expense
+  );
 }

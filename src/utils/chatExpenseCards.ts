@@ -3,6 +3,7 @@ import type { TripMessage, TripMessageExpensePayload, TripMessageKind } from '..
 export type ExpenseLifecycleKind = Extract<
   TripMessageKind,
   | 'expense_added'
+  | 'refund_recorded'
   | 'settlement_recorded'
   | 'expense_disputed'
   | 'expense_dispute_resolved'
@@ -28,11 +29,14 @@ export function expenseEventBody(kind: ExpenseLifecycleKind, expense: TripMessag
       return `Restored ${expense.title} · ${money}`;
     case 'settlement_confirmed':
       return `Confirmed settlement ${expense.title} · ${money}`;
+    case 'refund_recorded':
+      return `Refunded ${expense.title} · ${money}`;
   }
 }
 
 export type ChatExpenseCardVariant =
   | 'expense'
+  | 'refund'
   | 'settlement'
   | 'dispute'
   | 'resolved'
@@ -49,6 +53,9 @@ export function getChatExpenseCardPresentation(
   senderName: string
 ): { variant: ChatExpenseCardVariant; icon: string; whoLabel: string } {
   const who = isMine ? 'You' : senderName;
+  if (kind === 'refund_recorded') {
+    return { variant: 'refund', icon: '↩️', whoLabel: `${who} recorded refund` };
+  }
   if (kind === 'settlement_recorded') {
     return { variant: 'settlement', icon: '🤝', whoLabel: `${who} recorded settlement` };
   }
@@ -94,6 +101,7 @@ export function shouldMarkChatExpenseCardStale(
 
 const MONEY_EVENT_KINDS = new Set<TripMessageKind>([
   'expense_added',
+  'refund_recorded',
   'settlement_recorded',
   'expense_disputed',
   'expense_dispute_resolved',

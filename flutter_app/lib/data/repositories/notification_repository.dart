@@ -99,6 +99,17 @@ class NotificationRepository {
     _remote((c) => c.from('notifications').delete().eq('id', id));
   }
 
+  Future<void> deleteBatch(Iterable<String> ids) async {
+    final list = ids.where((id) => !id.startsWith('log-')).toList();
+    if (list.isEmpty) return;
+    await (db.delete(db.notificationsTable)..where((t) => t.id.isIn(list))).go();
+    _remote((c) async {
+      for (final id in list) {
+        await c.from('notifications').delete().eq('id', id);
+      }
+    });
+  }
+
   Future<void> deleteAll(String userId, {String? tripId}) async {
     await (db.delete(
       db.notificationsTable,

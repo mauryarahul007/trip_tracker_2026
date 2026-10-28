@@ -56,6 +56,8 @@ type Props = {
   addMemberSignal?: number;
   onlineUserIds?: string[];
   lastSeenByUserId?: Record<string, string>;
+  tripClosed?: boolean;
+  tripArchived?: boolean;
 };
 
 export function MembersGroupsTab({
@@ -83,12 +85,19 @@ export function MembersGroupsTab({
   addMemberSignal,
   onlineUserIds,
   lastSeenByUserId,
+  tripClosed,
+  tripArchived,
 }: Props) {
   const showLastSeen = useTripStore((s) => s.isFeatureEnabled('enableMemberLastSeen'));
   // enableMemberMoneyRow: a Remind button beside anyone (other than you) who
   // owes money, sharing a ready-made nudge through the phone's share sheet.
   const showMemberRemind = useTripStore((s) => s.isFeatureEnabled('enableMemberMoneyRow'));
-  const tripName = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)?.name);
+  const activeTrip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId));
+  const tripName = activeTrip?.name;
+  const isTripClosedOrArchived = Boolean(
+    (tripClosed !== undefined ? tripClosed : activeTrip?.closed) ||
+    (tripArchived !== undefined ? tripArchived : activeTrip?.archived)
+  );
   const dateRangeMembershipEnabled = useTripStore((s) => s.isFeatureEnabled('enableDateRangeMembership'));
   // Member Form State
   const [newMemberName, setNewMemberName] = React.useState('');
@@ -712,10 +721,29 @@ export function MembersGroupsTab({
           </button>
         </div>
       )}
-      {/* 1. Add Members Section -- the bottom-nav FAB is the only entry
-          point for adding a member, so no in-page trigger here. */}
+      {/* 1. Add Members Section */}
       <div className="member-section-head">
         <h3 className="member-section-title">Trip Members</h3>
+        {!showAddForm && (
+          <button
+            type="button"
+            className="member-section-action add-member-head-btn"
+            disabled={isTripClosedOrArchived || !isAdmin}
+            onClick={() => {
+              triggerHaptic('light');
+              setShowAddForm(true);
+            }}
+            title={
+              isTripClosedOrArchived
+                ? 'Cannot add members to a closed or archived trip'
+                : !isAdmin
+                  ? 'Only trip admins can add members'
+                  : 'Add traveler'
+            }
+          >
+            + Add member
+          </button>
+        )}
       </div>
 
       {isAdmin && showAddForm && createPortal(
@@ -1050,8 +1078,8 @@ export function MembersGroupsTab({
       {activeTripMembers.length === 0 ? (
         <QuietStatus
           sentence="No one is on this trip yet."
-          actionLabel={isAdmin ? 'Add a member' : undefined}
-          onAction={isAdmin ? () => setShowAddForm(true) : undefined}
+          actionLabel={isAdmin && !isTripClosedOrArchived ? 'Add a member' : undefined}
+          onAction={isAdmin && !isTripClosedOrArchived ? () => setShowAddForm(true) : undefined}
         />
       ) : (
         <div className="luggage-list">

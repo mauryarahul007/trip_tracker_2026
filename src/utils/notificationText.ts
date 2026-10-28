@@ -3,6 +3,7 @@ import type { AppNotification } from '../types';
 
 export const NOTIFICATION_TYPE_HEADLINES: Record<string, string> = {
   expense_added: 'Expense Added',
+  expense_refunded: 'Refund Recorded',
   expense_updated: 'Expense Updated',
   expense_deleted: 'Expense Deleted',
   expense_restored: 'Expense Restored',
@@ -57,6 +58,14 @@ export function renderNotificationBody(notification: AppNotification): string {
   const data = notification.data;
   const type = data?.type;
   switch (type) {
+        case 'expense_refunded':
+      if (data?.expenseTitle && data?.currency && data?.amount) {
+        return `${data.expenseTitle} — ${data.currency} ${formatMoneyNumber(parseFloat(data.amount), data.currency)}`;
+      }
+      if (data?.expenseTitle) {
+        return data.expenseTitle;
+      }
+      return cleanFallbackBody(notification.body, 'refunded');
     case 'expense_added':
       if (data?.expenseTitle && data?.currency && data?.amount) {
         return `${data.expenseTitle} — ${data.currency} ${formatMoneyNumber(parseFloat(data.amount), data.currency)}`;

@@ -7,8 +7,8 @@ android {
         applicationId "com.triptracker.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 746
-        versionName "3.39.2"
+        versionCode 948
+        versionName "3.83.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

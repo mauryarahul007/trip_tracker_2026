@@ -27,6 +27,7 @@ import {
   sendImageMessage,
   sendTripMessage,
   sendVoiceNoteMessage,
+  sendRefundRecordedEventMessage,
   subscribeToTripMessages,
   updateMessageReactions,
   updateMessagePin,
@@ -45,7 +46,7 @@ import { compressDataUrlToDataUrl, compressImageToDataUrl } from '../utils/image
 import { parseQuickExpense, type ParsedQuickExpense } from '../utils/expenseQuickParser';
 import { ActionSheet, type ActionSheetItem } from './common/ActionSheet';
 import type { ConfirmRequest } from './ConfirmDialog';
-import { IconEdit, IconTrash, IconClose } from './Icons';
+import { IconEdit, IconTrash, IconClose, IconChevronRight } from './Icons';
 import { LiveLocationChatBanner } from './LiveLocationChatBanner';
 import { ExpenseSplitExplainSheet, type SplitShareRow } from './ExpenseSplitExplainSheet';
 import { TripbotConfirmSheet } from './TripbotConfirmSheet';
@@ -277,6 +278,26 @@ export function TripChatPanel({
       queuedMapped.forEach((q) => {
         if (!existingIds.has(q.id)) merged.push(q);
       });
+
+      // Backfill any recorded refunds that didn't post due to schema check constraint
+      const refundExpenses = useTripStore.getState().expenses.filter((e) => e.tripId === tripId && e.refundOfExpenseId);
+      const existingExpenseIds = new Set(
+        merged.map((m) => (m.payload && 'expenseId' in m.payload ? (m.payload as any).expenseId : null)).filter(Boolean)
+      );
+      for (const refund of refundExpenses) {
+        if (!existingExpenseIds.has(refund.id) && myMemberId) {
+          void sendRefundRecordedEventMessage(tripId, myMemberId, {
+            expenseId: refund.id,
+            title: refund.title,
+            amount: refund.amount,
+            currency: refund.currency,
+          }).then((newMsg: TripMessage | null) => {
+            if (newMsg) {
+              setMessages((prev) => (prev.some((m) => m.id === newMsg.id) ? prev : [...prev, newMsg]));
+            }
+          });
+        }
+      }
 
       setMessages(merged.sort((a, b) => a.createdAt - b.createdAt));
     } finally {
@@ -1062,12 +1083,32 @@ export function TripChatPanel({
           ? 'In recycle bin'
           : 'Tap to view';
 
+    const badgeText = isStale
+      ? liveStatus === 'deleted' ? 'Deleted' : 'Removed'
+      : isConfirmed
+        ? 'Confirmed'
+        : variant === 'refund'
+          ? 'Refund'
+          : variant === 'settlement'
+            ? 'Settlement'
+            : variant === 'dispute'
+              ? 'Disputed'
+              : variant === 'resolved'
+                ? 'Resolved'
+                : variant === 'deleted'
+                  ? 'Recycled'
+                  : 'Expense';
+
+    const actionText = isStale || !canOpen
+      ? hint
+      : 'View transaction';
+
     return (
       <div
         key={message.id}
         id={`msg-${message.id}`}
         className="trip-chat-expense-card-wrap"
-        style={{ alignSelf: 'center', width: '100%', maxWidth: '320px' }}
+        style={{ alignSelf: 'center', width: '100%', maxWidth: '340px' }}
       >
         <button
           type="button"
@@ -1080,16 +1121,31 @@ export function TripChatPanel({
           onPointerCancel={handleBubblePointerUp}
           onContextMenu={(e) => e.preventDefault()}
         >
-          <span className="trip-chat-expense-card-icon" aria-hidden="true">
-            {icon}
-          </span>
-          <span className="trip-chat-expense-card-text">
-            <span className="trip-chat-expense-card-who">{whoLabel}</span>
-            <span className="trip-chat-expense-card-title">{expensePayload.title}</span>
-            {amount ? <span className="trip-chat-expense-card-amount">{amount}</span> : null}
-            {note ? <span className="trip-chat-expense-card-note">{note}</span> : null}
-          </span>
-          <span className="trip-chat-expense-card-hint">{hint}</span>
+          <div className="trip-chat-card-header">
+            <div className="trip-chat-card-actor">
+              <span className="trip-chat-card-icon-squircle" aria-hidden="true">
+                {icon}
+              </span>
+              <span className="trip-chat-card-who">{whoLabel}</span>
+            </div>
+            <span className={`trip-chat-card-badge trip-chat-card-badge--${variant}`}>
+              {badgeText}
+            </span>
+          </div>
+
+          <div className="trip-chat-card-body">
+            <span className="trip-chat-card-title">{expensePayload.title}</span>
+            {amount ? <span className="trip-chat-card-amount">{amount}</span> : null}
+          </div>
+
+          {note ? <div className="trip-chat-card-note">{note}</div> : null}
+
+          <div className="trip-chat-card-footer">
+            <span className="trip-chat-card-hint">
+              {actionText}
+              {canOpen && <IconChevronRight size={13} style={{ marginLeft: 3, verticalAlign: 'middle' }} />}
+            </span>
+          </div>
         </button>
       </div>
     );

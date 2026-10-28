@@ -8,6 +8,7 @@ export interface TripStop {
 export type TripMessageKind =
   | 'text'
   | 'expense_added'
+  | 'refund_recorded'
   | 'settlement_recorded'
   | 'expense_disputed'
   | 'expense_dispute_resolved'
@@ -25,6 +26,7 @@ export interface TripMessageExpensePayload {
   currency: string;
   source?: 'tripbot';
   note?: string;
+  isRefund?: boolean;
 }
 
 export interface TripMessageMediaPayload {

@@ -611,6 +611,7 @@ export interface ExpenseInput {
   receiptPath?: string; // set only when a new receipt was just uploaded — omit to leave existing untouched
   location?: import('../types').ExpenseLocation | null;
   approvalStatus?: 'confirmed' | 'pending_approval'; // enableExpenseApprovalThreshold; omit/confirmed = no gate
+  excludeFromTotals?: boolean;
 }
 
 export async function insertExpense(tripId: string, createdByUserId: string, input: ExpenseInput): Promise<Expense> {
@@ -627,7 +628,13 @@ export async function insertExpense(tripId: string, createdByUserId: string, inp
     split_mode: input.splitMode,
     split_member_ids: input.splitMemberIds,
     split_config: input.splitConfig ?? null,
-    itemized_config: input.refundOfExpenseId ? { refundOfExpenseId: input.refundOfExpenseId } : (input.itemizedConfig ?? null),
+    itemized_config: (() => {
+      const cfg: Record<string, unknown> = {};
+      if (input.itemizedConfig) Object.assign(cfg, input.itemizedConfig);
+      if (input.refundOfExpenseId) cfg.refundOfExpenseId = input.refundOfExpenseId;
+      if (input.excludeFromTotals) cfg.excludeFromTotals = true;
+      return Object.keys(cfg).length > 0 ? cfg : null;
+    })(),
     resolved_shares: input.resolvedShares,
     receipt_path: input.receiptPath ?? null,
     is_settlement: input.title.startsWith('Settlement:'),
@@ -663,7 +670,13 @@ export async function updateExpenseRow(id: string, input: ExpenseInput): Promise
     split_mode: input.splitMode,
     split_member_ids: input.splitMemberIds,
     split_config: input.splitConfig ?? null,
-    itemized_config: input.itemizedConfig ?? null,
+    itemized_config: (() => {
+      const cfg: Record<string, unknown> = {};
+      if (input.itemizedConfig) Object.assign(cfg, input.itemizedConfig);
+      if (input.refundOfExpenseId) cfg.refundOfExpenseId = input.refundOfExpenseId;
+      if (input.excludeFromTotals) cfg.excludeFromTotals = true;
+      return Object.keys(cfg).length > 0 ? cfg : null;
+    })(),
     resolved_shares: input.resolvedShares,
     updated_at: new Date().toISOString(),
     ...(input.receiptPath ? { receipt_path: input.receiptPath } : {}),

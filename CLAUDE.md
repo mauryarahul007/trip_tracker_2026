@@ -2,6 +2,10 @@
 
 Until the user says explicitly to "commit and push" (or commands a push directly), NEVER commit or push any changes to GitHub or to any repository. All modifications, builds, tests, and verifications must remain strictly local until explicit user instruction.
 
+## Mandatory Target Scope Inquiry (Web UI vs Flutter App)
+
+For EVERY update, feature request, or bug fix, stop and explicitly ask the user whether the changes are intended for the **Web UI** or the **Flutter app** before modifying code or starting implementation. Never assume or apply changes blindly to Flutter or web without asking.
+
 ## Plan before code (mandatory, no exceptions)
 
 For any coding task (feature, fix, refactor), post short implementation plan

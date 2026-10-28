@@ -73,6 +73,7 @@ import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
 import { TripHubTab } from './components/TripHubTab';
 import { TripActivityTab } from './components/TripActivityTab';
+import { buildTripActivityLog } from './utils/tripActivityLog';
 import { useNotificationsStore } from './store/notificationsStore';
 const ShareTripModal = lazy(lazyImport(() =>
   import('./components/ShareTripModal').then((m) => ({ default: m.ShareTripModal }))
@@ -391,19 +392,56 @@ export default function App() {
   const notifMarkAsRead = useNotificationsStore((s) => s.markAsRead);
   const notifToggleRead = useNotificationsStore((s) => s.toggleRead);
   const notifDeleteOne = useNotificationsStore((s) => s.deleteOne);
-  const tripActivityNotifications = useMemo(
-    () => allNotifications.filter((n) => n.tripId === activeTripId),
-    [allNotifications, activeTripId],
-  );
+  const deletedExpenses = useTripStore((s) => s.deletedExpenses);
+  const [dismissedLogIds, setDismissedLogIds] = useState<Set<string>>(new Set());
+
+  const tripActivityNotifications = useMemo(() => {
+    if (!activeTripId) return [];
+    const base = buildTripActivityLog({
+      tripId: activeTripId,
+      expenses: expenses.filter((e) => e.tripId === activeTripId),
+      recycled: deletedExpenses.filter((e) => e.tripId === activeTripId),
+      members,
+      notifications: allNotifications,
+    });
+    return dismissedLogIds.size > 0 ? base.filter((n) => !dismissedLogIds.has(n.id)) : base;
+  }, [activeTripId, expenses, deletedExpenses, members, allNotifications, dismissedLogIds]);
+
   const tripActivityUnreadCount = useMemo(
     () => tripActivityNotifications.filter((n) => !n.read).length,
     [tripActivityNotifications],
   );
   const handleActivityMarkAllRead = useCallback(() => {
-    tripActivityNotifications.forEach((n) => { if (!n.read) notifMarkAsRead(n.id); });
+    tripActivityNotifications.forEach((n) => { if (!n.read && !n.id.startsWith('log-')) notifMarkAsRead(n.id); });
   }, [tripActivityNotifications, notifMarkAsRead]);
+  const handleActivityDeleteOne = useCallback((id: string) => {
+    if (id.startsWith('log-')) {
+      setDismissedLogIds((prev) => new Set([...prev, id]));
+    } else {
+      notifDeleteOne(id);
+    }
+  }, [notifDeleteOne]);
+  const handleActivityDeleteBatch = useCallback((ids: string[]) => {
+    const logIdsToAdd: string[] = [];
+    ids.forEach((id) => {
+      if (id.startsWith('log-')) {
+        logIdsToAdd.push(id);
+      } else {
+        notifDeleteOne(id);
+      }
+    });
+    if (logIdsToAdd.length > 0) {
+      setDismissedLogIds((prev) => new Set([...prev, ...logIdsToAdd]));
+    }
+  }, [notifDeleteOne]);
   const handleActivityDeleteAll = useCallback(() => {
-    tripActivityNotifications.forEach((n) => notifDeleteOne(n.id));
+    tripActivityNotifications.forEach((n) => {
+      if (n.id.startsWith('log-')) {
+        setDismissedLogIds((prev) => new Set([...prev, n.id]));
+      } else {
+        notifDeleteOne(n.id);
+      }
+    });
   }, [tripActivityNotifications, notifDeleteOne]);
 
   // Tab panes stay mounted once rendered (display:none swap, not unmount --
@@ -451,41 +489,7 @@ export default function App() {
     else clearDir();
   }, [recordTabSwitch, currentTabOrder]);
 
-  // Tapping a notification should land the traveler on the screen it's
-  // actually about, not just mark it read and leave them wherever they were.
-  // Trip switching (if the notification belongs to a different trip) is
-  // handled by the caller (NotificationsPanel) before this runs.
-  const handleNotificationNavigate = useCallback((notification: AppNotification) => {
-    const type = notification.data?.type;
-    switch (type) {
-      case 'expense_added':
-      case 'expense_updated':
-      case 'expense_deleted':
-      case 'expense_restored':
-        setActiveTab('ledger');
-        break;
-      case 'member_added':
-      case 'member_added_notice':
-      case 'member_joined':
-        setActiveTab('members');
-        break;
-      case 'settlement':
-      case 'settle':
-      case 'settlement_reminder':
-        setActiveTab('expenses');
-        break;
-      case 'chat_message':
-        if (isChatFirstNav) {
-          setActiveTab('chat');
-        } else {
-          setActiveTab('notes');
-          setPendingNotesView('chat');
-        }
-        break;
-      default:
-        break;
-    }
-  }, [setActiveTab, isChatFirstNav]);
+
 
   // Right-hand-friendly horizontal swipe between the bottom-nav tabs,
   // WhatsApp-style. Skips gestures that start on a row/map that already
@@ -749,6 +753,63 @@ export default function App() {
   const [activeTransitionSourceId, setActiveTransitionSourceId] = useState<string | null>(null);
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [selectedReviewExpense, setSelectedReviewExpense] = useState<Expense | null>(null);
+
+  // Tapping a notification opens that specific expense, refund, settlement, or tab
+  const handleNotificationNavigate = useCallback((notification: AppNotification) => {
+    const type = notification.data?.type;
+    switch (type) {
+      case 'expense_added':
+      case 'expense_refunded':
+      case 'expense_updated': {
+        setActiveTab('ledger');
+        const targetId = notification.data?.targetId || notification.data?.expenseId;
+        const targetTitle = notification.data?.expenseTitle;
+        let exp = targetId ? expenses.find((e) => e.id === targetId) : null;
+        if (!exp && targetTitle) {
+          exp = expenses.find((e) => e.tripId === (notification.tripId || activeTripId) && e.title === targetTitle) || null;
+        }
+        if (exp) {
+          setSelectedReviewExpense(exp);
+        }
+        break;
+      }
+      case 'expense_deleted':
+      case 'expense_restored':
+        setActiveTab('ledger');
+        break;
+      case 'member_added':
+      case 'member_added_notice':
+      case 'member_joined':
+        setActiveTab('members');
+        break;
+      case 'settlement':
+      case 'settle':
+      case 'settlement_reminder':
+      case 'settlement_confirmation_requested': {
+        setActiveTab('expenses');
+        const targetId = notification.data?.targetId || notification.data?.expenseId;
+        const targetTitle = notification.data?.expenseTitle;
+        let exp = targetId ? expenses.find((e) => e.id === targetId) : null;
+        if (!exp && targetTitle) {
+          exp = expenses.find((e) => e.tripId === (notification.tripId || activeTripId) && e.title === targetTitle) || null;
+        }
+        if (exp) {
+          setSelectedReviewExpense(exp);
+        }
+        break;
+      }
+      case 'chat_message':
+        if (isChatFirstNav || isCalmPassportUi) {
+          setActiveTab('chat');
+        } else {
+          setActiveTab('notes');
+          setPendingNotesView('chat');
+        }
+        break;
+      default:
+        break;
+    }
+  }, [setActiveTab, expenses, activeTripId, isChatFirstNav, isCalmPassportUi, setSelectedReviewExpense]);
   // Queue of expense ids still to review after "Review N affected expenses"
   // (a member was removed) — save/cancel on the open form advances to the
   // next id instead of just closing, so the whole batch can be worked
@@ -767,6 +828,7 @@ export default function App() {
   const [expenseFilterLocation, setExpenseFilterLocation] = useState('');
   // Mirrors Flutter's EntryKind filter (domain/logic/expense_list_logic.dart) added this session.
   const [expenseFilterEntryKind, setExpenseFilterEntryKind] = useState<'' | 'expense' | 'refund'>('');
+  const [expenseFilterExcludedOnly, setExpenseFilterExcludedOnly] = useState(false);
   // Rendered at the top level (see ExpenseFilterDrawer near the other
   // full-screen overlays below) rather than inside ExpenseList/TripContentSheet
   // -- .trip-sheet has overflow:hidden, which clips position:fixed
@@ -1342,6 +1404,7 @@ export default function App() {
       }
       if (expenseFilterLocation && e.location?.placeName !== expenseFilterLocation) return false;
       if (expenseFilterEntryKind && (expenseFilterEntryKind === 'refund') !== isRefund(e)) return false;
+      if (expenseFilterExcludedOnly && !e.excludeFromTotals) return false;
       return true;
     });
   }, [
@@ -1356,6 +1419,7 @@ export default function App() {
     expenseFilterRelation,
     expenseFilterLocation,
     expenseFilterEntryKind,
+    expenseFilterExcludedOnly,
     myMemberId,
   ]);
 
@@ -1370,7 +1434,8 @@ export default function App() {
       expenseFilterAmountMax ||
       expenseFilterRelation ||
       expenseFilterLocation ||
-      expenseFilterEntryKind
+      expenseFilterEntryKind ||
+      expenseFilterExcludedOnly
     );
   }, [
     expenseSearch,
@@ -1383,6 +1448,7 @@ export default function App() {
     expenseFilterRelation,
     expenseFilterLocation,
     expenseFilterEntryKind,
+    expenseFilterExcludedOnly,
   ]);
 
   const clearExpenseFilters = () => {
@@ -1396,6 +1462,7 @@ export default function App() {
     setExpenseFilterRelation('');
     setExpenseFilterLocation('');
     setExpenseFilterEntryKind('');
+    setExpenseFilterExcludedOnly(false);
   };
 
   const expenseLocations = useMemo(() => {
@@ -1789,6 +1856,7 @@ export default function App() {
     itemizedConfig?: import('./types').ItemizedReceiptConfig;
     receiptImage?: string;
     location?: import('./types').ExpenseLocation | null;
+    excludeFromTotals?: boolean;
   }): Promise<{ success: boolean; error?: string }> => {
     if (!activeTripId) return { success: false, error: 'No active trip' };
     try {
@@ -1810,6 +1878,7 @@ export default function App() {
         itemizedConfig: expenseData.itemizedConfig,
         receiptImage: expenseData.receiptImage,
         location: expenseData.location,
+        excludeFromTotals: expenseData.excludeFromTotals,
       };
 
       if (editingExpenseId) {
@@ -3006,6 +3075,8 @@ export default function App() {
                 addMemberSignal={addMemberSignal}
                 onlineUserIds={activePeers.map((p) => p.userId)}
                 lastSeenByUserId={lastSeenByUserId}
+                tripClosed={activeTrip?.closed}
+                tripArchived={activeTrip?.archived}
               />
               </Suspense>
               )}
@@ -3022,7 +3093,7 @@ export default function App() {
                 }
               >
                 <TabErrorBoundary label="Ledger">
-                <div className="fade-in" style={{ paddingBottom: '100px' }}>
+                <div className="fade-in" style={{ paddingBottom: '140px' }}>
                 <ExpenseList
                   trip={activeTrip}
                   members={members}
@@ -3055,6 +3126,8 @@ export default function App() {
                   filterRelation={expenseFilterRelation}
                   setFilterRelation={setExpenseFilterRelation}
                   filterLocation={expenseFilterLocation}
+                  filterExcludedOnly={expenseFilterExcludedOnly}
+                  setFilterExcludedOnly={setExpenseFilterExcludedOnly}
                   myMemberId={myMemberId}
                   onClearFilters={clearExpenseFilters}
                   onOpenFilters={() => setShowExpenseFilterDrawer(true)}
@@ -3114,7 +3187,7 @@ export default function App() {
             </div>
 
             {isCalmPassportUi && (
-            <div
+                        <div
               className="tab-pane"
               style={
                 activeTab === 'hub' ? { display: 'block', ...tabSwipe.activePaneStyle }
@@ -3127,6 +3200,8 @@ export default function App() {
               <TripHubTab
                 tripName={activeTrip.name}
                 tripDestination={activeTrip.destination}
+                coverImageUrl={activeTrip.coverImageUrl}
+                stops={activeTrip.stops?.map((s) => s.name).filter(Boolean)}
                 items={[
                   {
                     id: 'hub-people',
@@ -3204,8 +3279,8 @@ export default function App() {
             )}
 
             {isCalmPassportUi && (
-            <div
-              className="tab-pane"
+                        <div
+              className="tab-pane activity-tab-pane"
               style={
                 activeTab === 'activity' ? { display: 'block', ...tabSwipe.activePaneStyle }
                 : tabSwipe.previewTab === 'activity' ? { display: 'block', ...tabSwipe.previewPaneStyle }
@@ -3215,9 +3290,10 @@ export default function App() {
               <TabErrorBoundary label="Activity">
               <TripActivityTab
                 notifications={tripActivityNotifications}
-                onOpen={(n) => { notifMarkAsRead(n.id); handleNotificationNavigate(n); }}
-                onToggleRead={(n) => notifToggleRead(n.id)}
-                onDelete={(n) => notifDeleteOne(n.id)}
+                onOpen={(n) => { if (!n.id.startsWith('log-')) notifMarkAsRead(n.id); handleNotificationNavigate(n); }}
+                onToggleRead={(n) => { if (!n.id.startsWith('log-')) notifToggleRead(n.id); }}
+                onDelete={(n) => handleActivityDeleteOne(n.id)}
+                onDeleteBatch={handleActivityDeleteBatch}
                 onMarkAllRead={handleActivityMarkAllRead}
                 onDeleteAll={handleActivityDeleteAll}
               />
@@ -3292,7 +3368,33 @@ export default function App() {
           </main>
           </TripContentSheet>
 
+          {/* Bottom dock scrim for smooth fadeout */}
+          <div className="nav-dock-scrim" aria-hidden="true" />
+
           <NavTabs
+            isSubpageOrModalOpen={Boolean(
+              showAddExpense ||
+              showExpenseFilterDrawer ||
+              showShareTrip ||
+              showTripActionSheet ||
+              showRouteModal ||
+              showSplitwiseImport ||
+              showMediaGallery ||
+              showDocumentVault ||
+              showTripWrapped ||
+              showLiveLocationShare ||
+              showCloseout ||
+              showOfflineSnapshot ||
+              showFxRates ||
+              showGlobalSettings ||
+              showCommandPalette ||
+              showAchievements ||
+              showShortcutsModal ||
+              showSmartQuickAdd ||
+              confirmRequest ||
+              pendingDeleteExpense ||
+              editingExpenseId
+            )}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             onAddExpense={handleOpenAddExpense}

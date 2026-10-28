@@ -82,6 +82,7 @@ type Props = {
     itemizedConfig?: ItemizedReceiptConfig;
     receiptImage?: string;
     location?: ExpenseLocation | null;
+    excludeFromTotals?: boolean;
   }) => Promise<{ success: boolean; error?: string }>;
   onCancel: () => void;
   initialTemplate?: ExpenseFormTemplate;
@@ -312,6 +313,7 @@ export function ExpenseForm({
   const [ignoredDuplicateId, setIgnoredDuplicateId] = useState<string | null>(null);
   const [showDuplicateDetails, setShowDuplicateDetails] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [countInTotals, setCountInTotals] = useState<boolean>(() => !editingExpense?.excludeFromTotals);
 
   // Draft auto-recovery via sessionStorage
   const DRAFT_KEY = trip ? `tt_draft_expense_${trip.id}` : 'tt_draft_expense_default';
@@ -1021,6 +1023,7 @@ export function ExpenseForm({
         itemizedConfig: finalItemizedConfig,
         receiptImage: receiptImage || undefined,
         location: location || null,
+        excludeFromTotals: !countInTotals ? true : undefined,
       });
 
       if (!res.success && res.error) {
@@ -2783,6 +2786,38 @@ export function ExpenseForm({
         </details>
       ) : receiptFields}
 
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 14px',
+          marginTop: '12px',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '12px',
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingRight: '12px' }}>
+          <span style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+            Count in trip totals & balances
+          </span>
+          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', lineHeight: 1.3 }}>
+            When off, expense remains in your list but is excluded from group totals and balances
+          </span>
+        </div>
+        <input
+          type="checkbox"
+          checked={countInTotals}
+          onChange={(e) => {
+            triggerHaptic('light');
+            setCountInTotals(e.target.checked);
+          }}
+          aria-label="Count in trip totals and balances"
+          style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: 'var(--primary-accent)' }}
+        />
+      </div>
       {isGeneralFormError && (
         <p id="expense-form-error" role="alert" aria-live="assertive" style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <IconAlertCircle size={15} />

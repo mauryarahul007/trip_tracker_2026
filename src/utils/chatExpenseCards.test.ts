@@ -45,6 +45,7 @@ describe('expenseEventBody', () => {
     expect(expenseEventBody('expense_added', expense)).toBe('Added Dinner · INR 12.50');
     expect(expenseEventBody('expense_deleted', expense)).toBe('Deleted Dinner · INR 12.50');
     expect(expenseEventBody('expense_restored', expense)).toBe('Restored Dinner · INR 12.50');
+    expect(expenseEventBody('refund_recorded', expense)).toBe('Refunded Dinner · INR 12.50');
     expect(expenseEventBody('settlement_confirmed', { ...expense, title: 'Settlement: A ➔ B' })).toBe(
       'Confirmed settlement Settlement: A ➔ B · INR 12.50'
     );

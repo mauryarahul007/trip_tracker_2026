@@ -41,6 +41,9 @@ class TripActivityPane extends ConsumerStatefulWidget {
 
 class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
   ActivityFilter _filter = ActivityFilter.all;
+  bool _selectMode = false;
+  final Set<String> _selectedIds = {};
+  final Set<String> _dismissedLogIds = {};
 
   static const _labels = {
     ActivityFilter.all: 'All',
@@ -90,7 +93,7 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
     }
   }
 
-  Future<void> _deleteAll(int count) async {
+  Future<void> _deleteAll(int count, Iterable<String> logIds) async {
     final userId = ref.read(authStateProvider).userId;
     if (userId == null) return;
     final ok = await ConfirmDialog.show(
@@ -101,6 +104,11 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
       isDestructive: true,
     );
     if (!ok) return;
+    setState(() {
+      _dismissedLogIds.addAll(logIds);
+      _selectedIds.clear();
+      _selectMode = false;
+    });
     await ref.read(notificationRepositoryProvider).deleteAll(userId, tripId: widget.tripId);
   }
 
@@ -131,6 +139,7 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
     final tripExpenses = ref.watch(tripExpensesProvider(widget.tripId)).value ?? const <Expense>[];
     final shown =
         [...all, ...log]
+            .where((n) => !_dismissedLogIds.contains(n.id))
             .where((n) => matchesActivityFilter(n, _filter))
             .where((n) => only == null || activityTargetOf(n, tripExpenses, const [])?.id == only)
             .toList()
@@ -155,30 +164,95 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 8, 0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  unread == 0 ? 'Activity' : 'Activity · $unread new',
-                  style: Theme.of(context).textTheme.titleLarge,
+          child: !_selectMode
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        unread == 0 ? 'Activity' : 'Activity · $unread new',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    if (shown.isNotEmpty)
+                      IconButton(
+                        key: const Key('activity-select-mode'),
+                        tooltip: 'Select items',
+                        onPressed: () => setState(() => _selectMode = true),
+                        icon: const Icon(Icons.checklist_rounded),
+                      ),
+                    IconButton(
+                      key: const Key('activity-mark-all'),
+                      tooltip: 'Mark all as read',
+                      onPressed: unread == 0 || userId == null
+                          ? null
+                          : () => unawaited(repo.markAllRead(userId, tripId: widget.tripId)),
+                      icon: const Icon(Icons.done_all_rounded),
+                    ),
+                    IconButton(
+                      key: const Key('activity-delete-all'),
+                      tooltip: 'Delete all activity',
+                      onPressed: shown.isEmpty
+                          ? null
+                          : () => unawaited(_deleteAll(
+                              shown.length,
+                              shown.where((n) => n.id.startsWith('log-')).map((n) => n.id),
+                            )),
+                      icon: const Icon(AppIcons.delete),
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${_selectedIds.length} of ${shown.length} selected',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    TextButton(
+                      key: const Key('activity-select-all'),
+                      onPressed: () {
+                        setState(() {
+                          if (_selectedIds.length == shown.length) {
+                            _selectedIds.clear();
+                          } else {
+                            _selectedIds.addAll(shown.map((n) => n.id));
+                          }
+                        });
+                      },
+                      child: Text(_selectedIds.length == shown.length ? 'Deselect all' : 'Select all'),
+                    ),
+                    IconButton(
+                      key: const Key('activity-delete-selected'),
+                      tooltip: 'Delete selected',
+                      onPressed: _selectedIds.isEmpty
+                          ? null
+                          : () async {
+                              final idsToDelete = Set<String>.from(_selectedIds);
+                              final logIds = idsToDelete.where((id) => id.startsWith('log-')).toSet();
+                              final realIds = idsToDelete.where((id) => !id.startsWith('log-')).toList();
+                              setState(() {
+                                _dismissedLogIds.addAll(logIds);
+                                _selectedIds.clear();
+                                _selectMode = false;
+                              });
+                              if (realIds.isNotEmpty) {
+                                await repo.deleteBatch(realIds);
+                              }
+                            },
+                      icon: Icon(AppIcons.delete, color: _selectedIds.isEmpty ? t.textMuted : t.dangerColor),
+                    ),
+                    IconButton(
+                      key: const Key('activity-cancel-select'),
+                      tooltip: 'Done',
+                      onPressed: () => setState(() {
+                        _selectedIds.clear();
+                        _selectMode = false;
+                      }),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
                 ),
-              ),
-              IconButton(
-                key: const Key('activity-mark-all'),
-                tooltip: 'Mark all as read',
-                onPressed: unread == 0 || userId == null
-                    ? null
-                    : () => unawaited(repo.markAllRead(userId, tripId: widget.tripId)),
-                icon: const Icon(Icons.done_all_rounded),
-              ),
-              IconButton(
-                key: const Key('activity-delete-all'),
-                tooltip: 'Delete all activity',
-                onPressed: all.isEmpty ? null : () => unawaited(_deleteAll(all.length)),
-                icon: const Icon(AppIcons.delete),
-              ),
-            ],
-          ),
         ),
         if (only != null)
           Padding(
@@ -254,6 +328,17 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
                         _ActivityRow(
                           key: ValueKey('activity-${n.id}'),
                           item: n,
+                          selectMode: _selectMode,
+                          selected: _selectedIds.contains(n.id),
+                          onToggleSelect: () {
+                            setState(() {
+                              if (_selectedIds.contains(n.id)) {
+                                _selectedIds.remove(n.id);
+                              } else {
+                                _selectedIds.add(n.id);
+                              }
+                            });
+                          },
                           onTap: () => unawaited(_open(n)),
                           onDelete: () => unawaited(repo.delete(n.id)),
                           confirmable: n.data?['type'] == 'settlement_confirmation_requested'
@@ -289,6 +374,9 @@ class _ActivityRow extends StatelessWidget {
     required this.onDelete,
     required this.onConfirm,
     this.confirmable,
+    this.selectMode = false,
+    this.selected = false,
+    this.onToggleSelect,
     super.key,
   });
 
@@ -297,6 +385,9 @@ class _ActivityRow extends StatelessWidget {
   final Future<void> Function(NotificationItem, Expense) onConfirm;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final bool selectMode;
+  final bool selected;
+  final VoidCallback? onToggleSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -308,7 +399,7 @@ class _ActivityRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Dismissible(
         key: ValueKey('dismiss-${item.id}'),
-        direction: item.id.startsWith('log-') ? DismissDirection.none : DismissDirection.endToStart,
+        direction: (selectMode || item.id.startsWith('log-')) ? DismissDirection.none : DismissDirection.endToStart,
         onDismissed: (_) => onDelete(),
         background: Container(
           decoration: BoxDecoration(color: t.dangerColor, borderRadius: BorderRadius.circular(20)),
@@ -319,19 +410,43 @@ class _ActivityRow extends StatelessWidget {
         child: Semantics(
           label: '${item.read ? 'Read' : 'Unread'}: $headline',
           child: Material(
-            color: t.bgSurface,
+            color: selected ? t.primaryAccent.withValues(alpha: 0.08) : t.bgSurface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: item.read ? t.borderColor : meta.color.withValues(alpha: 0.6)),
+              side: BorderSide(
+                color: selected
+                    ? t.primaryAccent
+                    : (item.read ? t.borderColor : meta.color.withValues(alpha: 0.6)),
+                width: selected ? 1.5 : 1.0,
+              ),
             ),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
-              onTap: onTap,
+              onTap: selectMode ? onToggleSelect : onTap,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (selectMode)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12, top: 9),
+                        child: Container(
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: selected ? t.primaryAccent : Colors.transparent,
+                            border: Border.all(
+                              color: selected ? t.primaryAccent : t.borderColor,
+                              width: 2,
+                            ),
+                          ),
+                          child: selected
+                              ? const Icon(Icons.check, size: 14, color: Colors.white)
+                              : null,
+                        ),
+                      ),
                     Container(
                       width: 40,
                       height: 40,

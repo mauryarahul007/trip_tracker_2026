@@ -684,3 +684,11 @@ export function IconFlag({ size = 20, className = 'icon' }: IconProps) {
     </svg>
   );
 }
+export function IconRotateCcw({ size = 20, className = 'icon', style }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} style={style} {...base}>
+      <path d="M3 2v6h6" />
+      <path d="M3 8a9 9 0 1 1-1 7.2" />
+    </svg>
+  );
+}

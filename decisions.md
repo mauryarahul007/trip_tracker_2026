@@ -5449,3 +5449,25 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** Added the "Count in trip totals" toggle to `ExpenseReviewModal.tsx` (behind the already-registered-but-unconsumed `enableExpenseExclusion` flag), matching Flutter's `expense_detail_sheet.dart`. No database migration needed: `excludeFromTotals` rides in the existing `itemized_config` jsonb column exactly like `refundOfExpenseId` already does (`flutter_app`'s `row_mappers.dart` confirmed the pattern) — `tripApi.ts` gained a read-mapping and a targeted-PATCH `setExpenseExcludeFromTotals` that merges the key in/out without touching amount/split/payer fields, and a `toggleExpenseExcludeFromTotals` tripStore action. Excluded expenses are skipped at the three places that compute totals/balances/who-pays-whom (`settlement.ts`'s two `activeTripExpenses` filters, `App.tsx`'s `nonSettlementExpenses` filter) but stay visible in the raw expense list, same as Flutter. Separately, `TripHubTab.tsx` moved from a flat `SettingsCell` list to a responsive icon-tile grid (colored squircle icon, bold title, muted subtitle), matching the `Wrap` of tiles in `trip_hub_screen.dart`, reusing the existing `.settings-squircle`/`squircle-*-glow` CSS and `glass-card` token — no new CSS.
 * **Trade-offs Accepted:** No "Personal" badge on individual expense-list rows for excluded expenses yet (Flutter shows one via `expense_row.dart`'s `_badge`), and no swipe-to-exclude gesture (Flutter's `expenses_tab.dart` has one with an undo snackbar) — the toggle inside the review sheet was the ask; the list-row badge and swipe gesture are follow-ups if wanted. "Balances tab needs improvement" was raised but not actioned this round — no specific issue was pointed at.
 * **Release Cut:** version bumped to `3.82.10` via `npm run release:patch`. FEAT-193, FEAT-194.
+
+
+## 2026-10-29 — Activity multi-select & batch clear, chat refund cards, and direct notification navigation (v3.83.0)
+* **Context:** Users required:
+  1. Activity tab notification clicks to navigate directly to the target expense or refund review sheet instead of defaulting generically.
+  2. Recorded refunds to appear with clear, streamlined card presentations in both Web and Flutter chat timelines alongside an updated database schema check constraint.
+  3. Multi-select capabilities with "Select All" / "Deselect All" and bulk clearing of activity entries across both Web UI and Flutter app.
+  4. Active status gating for adding members in Hub, preventing modifications on closed or archived trips.
+* **Decision & Implementation:**
+  - **Activity Multi-Select & Batch Clear:**
+    - Web (`TripActivityTab.tsx`, `App.tsx`, `index.css`): Added `isSelectMode` state with circular selection check indicators, bulk toolbar with dynamic counters (`X of Y selected`), `Select All` / `Deselect All` toggles, `Clear (X)` batch action with danger styling, and keyboard accessible checkboxes. `handleActivityDeleteBatch` partitions synthesized log entries (`log-*`) into local dismissals while executing remote batch notification deletes.
+    - Flutter (`trip_activity_pane.dart`, `notification_repository.dart`): Added multi-select mode with `Icons.checklist_rounded` toggle, `deleteBatch(Iterable<String> ids)` in `NotificationRepository` with atomic Drift/Supabase deletions, and in-memory log row dismissals (`_dismissedLogIds`).
+  - **Direct Expense/Refund Navigation:**
+    - Wired `handleNotificationNavigate` in `App.tsx` directly to `setSelectedReviewExpense`, resolving targets by `targetId`, `expenseId`, or title so tapping any notification opens its modal review card immediately.
+  - **Chat Refund Cards & Event Logging:**
+    - Added Supabase migration `0120_trip_message_refund_kind.sql` allowing `'refund_recorded'` in `trip_messages_kind_check`.
+    - Updated `tripMessagesApi.ts`, `chatExpenseCards.ts`, and `TripChatPanel.tsx` in Web with emerald refund presentation, squircle avatar icons, and automatic refund event logging.
+    - Updated `drift_repositories.dart`, `passes_and_chat_cards.dart`, and `chat_pane.dart` in Flutter with streamlined in-chat refund cards.
+  - **Trip Hub Member Add Guardrail:**
+    - Gated "Add member" action in `TripHubTab.tsx` and `MembersGroupsTab.tsx` to remain active only when trip status is active (`isTripActive`).
+* **Trade-offs Accepted:** Batch clearing in Flutter maintains session-scoped dismissal for synthesized log items while permanently deleting remote notifications; permanent deletion of underlying expenses or messages requires deleting the expense itself.
+* **Release Cut:** Version bumped to `3.83.0` via `npm run release:minor`. ADR logged.

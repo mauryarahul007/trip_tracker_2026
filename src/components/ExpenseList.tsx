@@ -111,6 +111,8 @@ type Props = {
   filterRelation: '' | 'paidByMe' | 'involvesMe';
   setFilterRelation?: (v: '' | 'paidByMe' | 'involvesMe') => void;
   filterLocation: string;
+  filterExcludedOnly?: boolean;
+  setFilterExcludedOnly?: (v: boolean) => void;
   myMemberId: string | null;
   onClearFilters: () => void;
   onOpenFilters: () => void;
@@ -161,6 +163,8 @@ export function ExpenseList({
   filterRelation,
   setFilterRelation,
   filterLocation,
+  filterExcludedOnly,
+  setFilterExcludedOnly,
   myMemberId,
   onClearFilters,
   onOpenFilters,
@@ -212,7 +216,7 @@ export function ExpenseList({
   const [showDateFilter, setShowDateFilter] = useState(false);
   useHistoryBack(showDateFilter, () => setShowDateFilter(false));
   useEscapeKey(showDateFilter, () => setShowDateFilter(false));
-  const isAllActive = !filterCategory && !filterMember && !filterDateFrom && !filterDateTo && !filterAmountMin && !filterAmountMax && !filterRelation && !filterLocation;
+  const isAllActive = !filterCategory && !filterMember && !filterDateFrom && !filterDateTo && !filterAmountMin && !filterAmountMax && !filterRelation && !filterLocation && !filterExcludedOnly;
 
   // Stats + quick-filter chips default collapsed behind one visible toggle
   // instead of stacking unconditionally above the list -- a trip with a
@@ -237,11 +241,18 @@ export function ExpenseList({
 
   // 2. Pagination State for virtualization
   const [visibleCount, setVisibleCount] = useState(50);
+  const isSearchingOrFiltered = Boolean(search.trim() || hasActiveFilters || filterExcludedOnly);
+  const DEFAULT_EXPANDED_DAYS = isSearchingOrFiltered ? 999 : 3;
+
+  const [collapseOverrides, setCollapseOverrides] = useState<Record<string, boolean>>({});
   
-  // Reset pagination when filter criteria change
+  // Reset pagination and expand matching days when filter criteria or search change
   useEffect(() => {
     setVisibleCount(50);
-  }, [trip?.id, filterCategory, filterMember, filterDateFrom, filterDateTo, search, filterAmountMin, filterAmountMax, filterRelation, filterLocation]);
+    if (search.trim() || hasActiveFilters || filterExcludedOnly) {
+      setCollapseOverrides({});
+    }
+  }, [trip?.id, filterCategory, filterMember, filterDateFrom, filterDateTo, search, filterAmountMin, filterAmountMax, filterRelation, filterLocation, filterExcludedOnly, hasActiveFilters]);
 
   const displayedExpenses = filteredExpenses.slice(0, visibleCount);
 
@@ -273,21 +284,13 @@ export function ExpenseList({
 
   const avgDailySpend = useMemo(() => {
     const dailyTotals = dayGroups
-      .map((g) => g.expenses.reduce((sum, e) => sum + e.amount, 0))
+      .map((g) => g.expenses.filter((e) => !e.excludeFromTotals).reduce((sum, e) => sum + e.amount, 0))
       .filter((tot) => tot > 0);
     if (dailyTotals.length === 0) return 0;
     const total = dailyTotals.reduce((acc, t) => acc + t, 0);
     return total / dailyTotals.length;
   }, [dayGroups]);
 
-  // Every day-group starts collapsed on entering the tab to keep
-  // the ledger clean and high-level; days expand on tap or toggle.
-  const DEFAULT_EXPANDED_DAYS = 0;
-  // Only stores days the user has explicitly toggled away from their
-  // default state -- the default itself (first N groups open, rest
-  // collapsed) is derived fresh from dayGroups every render, so it stays
-  // correct as Load More or filters change which dates are present.
-  const [collapseOverrides, setCollapseOverrides] = useState<Record<string, boolean>>({});
   const isDayCollapsedByDefault = (groupIndex: number) => groupIndex >= DEFAULT_EXPANDED_DAYS;
   const isDayCollapsed = (date: string, groupIndex: number) =>
     collapseOverrides[date] ?? isDayCollapsedByDefault(groupIndex);
@@ -421,6 +424,23 @@ export function ExpenseList({
                 {exp.disputedAt && (
                   <span style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--color-warning)' }} title={exp.disputeNote ? `Flagged: ${exp.disputeNote}` : 'Flagged as disputed'} aria-label="Disputed"><IconFlag size={13} /></span>
                 )}
+{exp.excludeFromTotals && (
+                  <span
+                    style={{
+                      fontSize: '10.5px',
+                      fontWeight: 600,
+                      padding: '1px 6px',
+                      borderRadius: '4px',
+                      background: 'rgba(100, 116, 139, 0.15)',
+                      color: 'var(--text-muted)',
+                      border: '1px solid var(--border-color)',
+                      flexShrink: 0,
+                    }}
+                    title="Excluded from trip totals and balances"
+                  >
+                    Excluded
+                  </span>
+                )}
                 {exp.approvalStatus === 'pending_approval' && (
                   <span style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--color-warning)' }} title="Pending approval — excluded from balances until a second member approves it" aria-label="Pending approval"><IconClock size={13} /></span>
                 )}
@@ -458,7 +478,7 @@ export function ExpenseList({
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span className="money" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                      <span className="money" style={{ fontSize: '15px', fontWeight: '600', color: exp.excludeFromTotals ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: exp.excludeFromTotals ? 'line-through' : undefined, opacity: exp.excludeFromTotals ? 0.75 : 1, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }} title={exp.excludeFromTotals ? 'Excluded from trip calculations' : undefined}>
                         {formatAmount(displayAmount, displaySymbol)}
                       </span>
                       {isForeign && (
@@ -587,7 +607,10 @@ export function ExpenseList({
       : groupDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
     const dayNum = trip?.startDate ? tripDayNumber(trip.startDate, group.date) : null;
     const groupLabel = dayNum ? `Day ${dayNum} · ${dateLabel}` : dateLabel;
-    const groupTotal = group.expenses.reduce((sum, e) => sum + e.amount, 0);
+    const activeDayExpenses = group.expenses.filter((e) => !e.excludeFromTotals);
+    const groupTotal = activeDayExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const excludedDayExpenses = group.expenses.filter((e) => e.excludeFromTotals);
+    const excludedDayTotal = excludedDayExpenses.reduce((sum, e) => sum + e.amount, 0);
     const collapsed = isDayCollapsed(collapseKey, groupIdx);
     // Burn indicator strictly measures real expense burn rate against daily averages (never debt settlements)
     const isHighBurn = (opts?.showBurn ?? false) && avgDailySpend > 0 && groupTotal > avgDailySpend * 1.5 && group.expenses.length > 1;
@@ -635,24 +658,22 @@ export function ExpenseList({
             <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {groupLabel}
             </span>
-            {isSticky && (
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: 'var(--text-muted)',
-                  background: 'var(--bg-surface)',
-                  padding: '1px 6px',
-                  borderRadius: '10px',
-                  border: '1px solid var(--border-color)',
-                  flexShrink: 0,
-                }}
-              >
-                {group.expenses.length > 0 && group.expenses.every(isRefund)
-                  ? `${group.expenses.length} refund${group.expenses.length === 1 ? '' : 's'}`
-                  : group.expenses.length}
-              </span>
-            )}
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 600,
+                color: 'var(--text-muted)',
+                background: 'var(--bg-surface)',
+                padding: '1px 6px',
+                borderRadius: '10px',
+                border: '1px solid var(--border-color)',
+                flexShrink: 0,
+              }}
+            >
+              {group.expenses.length > 0 && group.expenses.every(isRefund)
+                ? `${group.expenses.length} refund${group.expenses.length === 1 ? '' : 's'}`
+                : group.expenses.length}
+            </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
             {isHighBurn && (
@@ -670,9 +691,39 @@ export function ExpenseList({
                 High burn
               </span>
             )}
-            <span className="money" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
-              {formatAmount(groupTotal, currencySymbol)}{opts?.amountSuffix ? ` ${opts.amountSuffix}` : ''}
-            </span>
+            {excludedDayExpenses.length > 0 && activeDayExpenses.length === 0 ? (
+              <span
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: 'var(--text-muted)',
+                  fontVariantNumeric: 'tabular-nums',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                }}
+                title="Excluded from trip totals and balances"
+              >
+                <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '4px', background: 'rgba(100, 116, 139, 0.15)', border: '1px solid var(--border-color)' }}>
+                  Excluded
+                </span>
+                <span>{formatAmount(excludedDayTotal, currencySymbol)}</span>
+              </span>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '1px' }}>
+                <span className="money" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                  {formatAmount(groupTotal, currencySymbol)}{opts?.amountSuffix ? ` ${opts.amountSuffix}` : ''}
+                </span>
+                {excludedDayExpenses.length > 0 && (
+                  <span
+                    style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 500 }}
+                    title={`${excludedDayExpenses.length} expense${excludedDayExpenses.length === 1 ? '' : 's'} excluded from trip totals`}
+                  >
+                    +{formatAmount(excludedDayTotal, currencySymbol)} excl.
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -986,6 +1037,20 @@ export function ExpenseList({
                 Paid by Me
               </button>
             </>
+          )}
+          {activeTripExpenses.some((e) => e.excludeFromTotals) && (
+            <button
+              type="button"
+              className={`filter-chip ${filterExcludedOnly ? 'active' : ''}`}
+              onClick={() => {
+                triggerHaptic('light');
+                setFilterExcludedOnly?.(!filterExcludedOnly);
+              }}
+              style={{ flexShrink: 0 }}
+              title="Expenses excluded from trip calculations"
+            >
+              Excluded ({activeTripExpenses.filter((e) => e.excludeFromTotals).length})
+            </button>
           )}
           {activeTripExpenses.some((e) => e.approvalStatus === 'pending_approval') && (
             <button
