@@ -372,13 +372,15 @@ export default function App() {
     if (activeTab === 'notes' && !showNotesTab) {
       setActiveTabRaw('expenses');
     }
-    if (activeTab === 'chat' && !isChatFirstNav) {
+    // Calm Passport dock gives Chat its own real tab (gated on isTripChatEnabled, not
+    // isChatFirstNav, which is a legacy-nav-only concept) -- don't bounce it back.
+    if (activeTab === 'chat' && !isChatFirstNav && !(isCalmPassportUi && isTripChatEnabled)) {
       setActiveTabRaw('expenses');
     }
     if ((activeTab === 'hub' || activeTab === 'activity') && !isCalmPassportUi) {
       setActiveTabRaw('expenses');
     }
-  }, [activeTab, showNotesTab, isChatFirstNav, isCalmPassportUi]);
+  }, [activeTab, showNotesTab, isChatFirstNav, isCalmPassportUi, isTripChatEnabled]);
 
   // Activity tab (Calm Passport): this trip's own notifications, newest first.
   // Mark-all/delete-all loop the single-item store actions rather than the
@@ -2831,11 +2833,11 @@ export default function App() {
             key={(isFeatureEnabled('enableMapCollapsedByDefault', { tripId: activeTrip?.id, userId: userId || undefined }) || dataSaverActive) ? 'map-full' : 'map-half'}
             startFull={isFeatureEnabled('enableMapCollapsedByDefault', { tripId: activeTrip?.id, userId: userId || undefined }) || dataSaverActive}
             onFullChange={setSheetFull}
-            forceFull={chatViewActive || (isChatFirstNav && activeTab === 'chat')}
+            forceFull={chatViewActive || activeTab === 'chat'}
           >
           <main className="app-main" ref={setSwipeHost}>
             {/* View Switching Tab Content */}
-            {isChatFirstNav && (
+            {(isChatFirstNav || (isCalmPassportUi && isTripChatEnabled)) && (
               <div
                 className={`tab-pane ${activeTab === 'chat' ? 'chat-tab-pane' : ''}`}
                 style={

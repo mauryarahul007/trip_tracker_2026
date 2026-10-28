@@ -96,7 +96,10 @@
   --header-gradient: linear-gradient(135deg, rgba(15, 111, 99, 0.64) 0%, rgba(11, 83, 72, 0.64) 100%);
   --header-gradient-scrolled: linear-gradient(135deg, rgba(15, 111, 99, 0.82) 0%, rgba(11, 83, 72, 0.82) 100%);
   --header-gradient-solid: linear-gradient(135deg, #0F6F63, #0B5348);
-  --bg-header-glass: rgba(15, 111, 99, 0.88);
+  /* Sticky day-header glass (ExpenseList.tsx) only -- not the page header, which uses
+     --header-gradient directly. Neutral frosted paper, not a bold accent fill: Flutter's
+     DayHeader (shared/widgets/day_header.dart) has no background at all, just text. */
+  --bg-header-glass: rgba(255, 255, 255, 0.92);
   --bg-header-glass-scrolled: rgba(11, 83, 72, 0.95);
   --glass-shadow: 0 1px 3px rgba(22, 24, 29, 0.06), 0 6px 20px -6px rgba(22, 24, 29, 0.12);
   --shadow-sm: 0 1px 2px rgba(22, 24, 29, 0.04), 0 4px 12px -4px rgba(22, 24, 29, 0.08);
@@ -288,7 +291,7 @@
     --header-gradient: linear-gradient(135deg, rgba(63, 203, 189, 0.5) 0%, rgba(22, 59, 54, 0.64) 100%);
     --header-gradient-scrolled: linear-gradient(135deg, rgba(63, 203, 189, 0.62) 0%, rgba(13, 37, 34, 0.85) 100%);
     --header-gradient-solid: linear-gradient(135deg, #1F6E68, #0D2522);
-    --bg-header-glass: rgba(22, 59, 54, 0.85);
+    --bg-header-glass: rgba(26, 28, 32, 0.9);
     --bg-header-glass-scrolled: rgba(13, 37, 34, 0.95);
     --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
     --bg-nav-glass: rgba(19, 20, 23, 0.95);
@@ -382,7 +385,7 @@
   --header-gradient: linear-gradient(135deg, rgba(63, 203, 189, 0.5) 0%, rgba(22, 59, 54, 0.64) 100%);
   --header-gradient-scrolled: linear-gradient(135deg, rgba(63, 203, 189, 0.62) 0%, rgba(13, 37, 34, 0.85) 100%);
   --header-gradient-solid: linear-gradient(135deg, #1F6E68, #0D2522);
-  --bg-header-glass: rgba(22, 59, 54, 0.85);
+  --bg-header-glass: rgba(26, 28, 32, 0.9);
   --bg-header-glass-scrolled: rgba(13, 37, 34, 0.95);
   --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
   --bg-nav-glass: rgba(19, 20, 23, 0.95);
@@ -478,7 +481,7 @@
   --header-gradient: linear-gradient(135deg, rgba(63, 203, 189, 0.45) 0%, rgba(4, 18, 16, 0.9) 100%);
   --header-gradient-scrolled: linear-gradient(135deg, rgba(63, 203, 189, 0.55) 0%, #000000 100%);
   --header-gradient-solid: linear-gradient(135deg, #0B2925, #000000);
-  --bg-header-glass: rgba(0, 0, 0, 0.92);
+  --bg-header-glass: rgba(10, 12, 14, 0.92);
   --bg-header-glass-scrolled: #000000;
   --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.6), 0 6px 20px rgba(0, 0, 0, 0.8);
   --bg-nav-glass: rgba(0, 0, 0, 0.94);

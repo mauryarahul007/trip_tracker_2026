@@ -9580,5 +9580,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-28T16:14:37.211Z",
     "resolutionNote": "Two bugs from the v3.82.7 calm-dock rollout, both in NavTabs.tsx/tripTabs.ts. (1) The 'Balances' button pointed at the ledger tab key and 'Spend' at the expenses key -- backwards, since App.tsx's expenses pane renders BalancesSettlements and the ledger pane renders ExpenseList (legacy naming, inverted from what it sounds like). Swapped both the button bindings and calmDockTabs() order. (2) .nav-tabs is a fixed 5-column CSS grid sized for the legacy layout; calm mode renders 6 grid children with Chat on (Balances/Spend/FAB/Activity/Chat/Hub), overflowing into an implicit second row. Added .calm-nav/.calm-nav.has-chat grid-template-columns (5/6 cols). Also stopped conditionally un-rendering the FAB's wrapper div per-tab (was changing the grid's child count on every tab switch) -- it now always renders, just visibility:hidden off Balances/Spend. User caught via screenshots after deploy."
+  },
+  {
+    "id": "BUG-336",
+    "title": "Calm Passport web: Chat tab redirected back to Balances; sticky day-header kept old teal, clashing with new palette",
+    "description": "Calm Passport web: Chat tab redirected back to Balances; sticky day-header kept old teal, clashing with new palette",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-28T16:27:27.603Z",
+    "updatedAt": "2026-10-28T16:27:32.789Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-28T16:27:32.788Z",
+    "resolutionNote": "(1) Clicking Chat in the calm dock bounced back to Balances: App.tsx's chat-pane render condition and its activeTab-reset effect were both still gated on the legacy isChatFirstNav flag only, which calm mode never sets. Both now also check (isCalmPassportUi && isTripChatEnabled). (2) ExpenseList.tsx's sticky day-header (enableStickyDayHeaders) reused --bg-header-glass, a leftover pre-Calm teal (#0F6F63) that clashed once the rest of the UI moved to the Calm palette -- Flutter's own DayHeader has no background at all. --bg-header-glass is consumed nowhere else, so retoned it to a neutral frosted surface per theme instead. Commit pending (v3.82.9)."
   }
 ]

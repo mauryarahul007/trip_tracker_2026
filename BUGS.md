@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **333** | All recorded bugs across sessions |
+| **Total Tracked** | **334** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **306** | Verified & closed |
+| **✅ Resolved** | **307** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -337,6 +337,7 @@
 | **BUG-333** | Add-expense FAB painted over modal sheets (Filters, Settle, Trip tools) opened from Balances/Spend | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | AppSheet.show and the Filters sheet now pass useRootNavigator: true so sheets paint above the shell's persistent FAB. Commit 03d1bbf (v3.82.6). |
 | **BUG-334** | Collapsed-day refund label missing on web Spend list | `ui-ux` | `low` | `claude-cli` | `claude-cli` | ExpenseList.tsx's collapsed-day badge now reads "N refund(s)" instead of a bare count when every expense in the group is a refund (isRefund from utils/refunds.ts), matching the fix already shipped to the Flutter app this session. Commit pending (v3.82.7). |
 | **BUG-335** | Calm Passport web dock: Balances/Spend tabs swapped, bar wrapped to 2 rows with Chat on | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Two bugs from the v3.82.7 calm-dock rollout, both in NavTabs.tsx/tripTabs.ts. (1) The 'Balances' button pointed at the ledger tab key and 'Spend' at the expenses key -- backwards, since App.tsx's expenses pane renders BalancesSettlements and the ledger pane renders ExpenseList (legacy naming, inverted from what it sounds like). Swapped both the button bindings and calmDockTabs() order. (2) .nav-tabs is a fixed 5-column CSS grid sized for the legacy layout; calm mode renders 6 grid children with Chat on (Balances/Spend/FAB/Activity/Chat/Hub), overflowing into an implicit second row. Added .calm-nav/.calm-nav.has-chat grid-template-columns (5/6 cols). Also stopped conditionally un-rendering the FAB's wrapper div per-tab (was changing the grid's child count on every tab switch) -- it now always renders, just visibility:hidden off Balances/Spend. User caught via screenshots after deploy. |
+| **BUG-336** | Calm Passport web: Chat tab redirected back to Balances; sticky day-header kept old teal, clashing with new palette | `ui-ux` | `high` | `claude-cli` | `claude-cli` | (1) Clicking Chat in the calm dock bounced back to Balances: App.tsx's chat-pane render condition and its activeTab-reset effect were both still gated on the legacy isChatFirstNav flag only, which calm mode never sets. Both now also check (isCalmPassportUi && isTripChatEnabled). (2) ExpenseList.tsx's sticky day-header (enableStickyDayHeaders) reused --bg-header-glass, a leftover pre-Calm teal (#0F6F63) that clashed once the rest of the UI moved to the Calm palette -- Flutter's own DayHeader has no background at all. --bg-header-glass is consumed nowhere else, so retoned it to a neutral frosted surface per theme instead. Commit pending (v3.82.9). |
 
 ---
 
