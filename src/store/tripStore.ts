@@ -58,6 +58,7 @@ import {
   updateExpensePhotoPaths,
   flagExpenseDispute,
   resolveExpenseDispute,
+  setExpenseExcludeFromTotals,
   confirmSettlement,
   approveExpense,
   updateApprovalThreshold,
@@ -260,6 +261,7 @@ interface TripStore extends TripState {
   removeExpensePhoto: (expenseId: string, path: string) => Promise<void>;
   flagExpenseDispute: (expenseId: string, note?: string) => Promise<void>;
   resolveExpenseDispute: (expenseId: string) => Promise<void>;
+  toggleExpenseExcludeFromTotals: (expenseId: string, exclude: boolean) => Promise<void>;
   confirmSettlement: (expenseId: string) => Promise<void>;
   approveExpense: (expenseId: string) => Promise<void>;
   updateApprovalThreshold: (tripId: string, threshold: number | null) => Promise<void>;
@@ -3100,6 +3102,16 @@ export const useTripStore = create<TripStore>()(
         ),
       }));
       void postDisputeChatCard(get, expenseId, true);
+    },
+
+    toggleExpenseExcludeFromTotals: async (expenseId, exclude) => {
+      if (isMissingSupabaseEnv) return;
+      const expense = get().expenses.find((e) => e.id === expenseId);
+      if (!expense) return;
+      await setExpenseExcludeFromTotals(expense, exclude);
+      set((state) => ({
+        expenses: state.expenses.map((e) => (e.id === expenseId ? { ...e, excludeFromTotals: exclude } : e)),
+      }));
     },
 
     // Routed through the SECURITY DEFINER confirm_settlement RPC (migration

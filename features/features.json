@@ -3065,5 +3065,37 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-28T15:56:45.870Z",
     "shippedNote": "SettingsTripToolsHub.tsx gained Add-to-calendar (reuses existing downloadTripIcs + enableIcsExport flag) and Offline Snapshot (prop existed on SettingsView, was never threaded down) tiles. Commit pending (v3.82.7)."
+  },
+  {
+    "id": "FEAT-193",
+    "title": "Expense Count-in-totals toggle (exclude from balances)",
+    "description": "Expense Count-in-totals toggle (exclude from balances)",
+    "category": "general",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-28T16:35:07.028Z",
+    "updatedAt": "2026-10-28T16:35:15.565Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-28T16:35:15.565Z",
+    "shippedNote": "No DB migration needed -- it rides in the existing itemized_config jsonb column, same trick as refundOfExpenseId (see flutter_app's row_mappers.dart expenseToUpsertArgs). Added excludeFromTotals to the Expense type, tripApi.ts read-mapping + a new targeted-PATCH setExpenseExcludeFromTotals, a tripStore action, and a Count-in-trip-totals SettingsToggleRow in ExpenseReviewModal.tsx behind the existing enableExpenseExclusion flag (was registered, zero consumers). Excluded expenses are skipped in the 3 balance/total chokepoints: settlement.ts's two activeTripExpenses filters and App.tsx's nonSettlementExpenses filter -- still visible in the raw expense list, same as Flutter. Commit pending (v3.82.10)."
+  },
+  {
+    "id": "FEAT-194",
+    "title": "Hub redesigned as icon tile grid, matching Flutter",
+    "description": "Hub redesigned as icon tile grid, matching Flutter",
+    "category": "general",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-10-28T16:35:07.800Z",
+    "updatedAt": "2026-10-28T16:35:16.055Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-28T16:35:16.055Z",
+    "shippedNote": "TripHubTab.tsx rebuilt from a flat SettingsCell list into a responsive icon-tile grid (auto-fill, 150px min column), matching the Wrap-of-tiles layout in flutter_app's trip_hub_screen.dart -- colored squircle icon, bold title, 2-line muted subtitle, reusing the existing .settings-squircle/squircle-*-glow CSS and glass-card token. Commit pending (v3.82.10)."
   }
 ]

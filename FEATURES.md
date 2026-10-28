@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **192** |
+| **Total Tracked** | **194** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **189** |
+| **✅ Shipped** | **191** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -251,6 +251,8 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-190** | Calm Passport design tokens + Hub/Activity nav on web | `general` | `claude-cli` | `claude-cli` | Ported Flutter's Calm Passport palette/radii/shadows into src/index.css as additive --calm-* tokens, wired behind the existing enableCalmPassportUi flag via data-calm-ui on <html> (App.tsx). Added Hub and Activity as real nav tabs (src/utils/tripTabs.ts calmDockTabs, NavTabs.tsx calmMode dock, new TripHubTab.tsx/TripActivityTab.tsx), mirroring flutter_app's trip_tabs.dart dock order. Commit pending (v3.82.7). |
 | **FEAT-191** | Expenses/Refunds filter chips on web Filters sheet | `general` | `claude-cli` | `claude-cli` | New enableExpenseTypeFilter flag (Core/trip pack, default ON) gates an Expenses/Refunds chip row in ExpenseFilterDrawer.tsx, mirroring the Flutter EntryKind chips shipped earlier this session. Commit pending (v3.82.7). |
 | **FEAT-192** | Trip Tools: calendar export + Offline Snapshot wiring | `general` | `claude-cli` | `claude-cli` | SettingsTripToolsHub.tsx gained Add-to-calendar (reuses existing downloadTripIcs + enableIcsExport flag) and Offline Snapshot (prop existed on SettingsView, was never threaded down) tiles. Commit pending (v3.82.7). |
+| **FEAT-193** | Expense Count-in-totals toggle (exclude from balances) | `general` | `claude-cli` | `claude-cli` | No DB migration needed -- it rides in the existing itemized_config jsonb column, same trick as refundOfExpenseId (see flutter_app's row_mappers.dart expenseToUpsertArgs). Added excludeFromTotals to the Expense type, tripApi.ts read-mapping + a new targeted-PATCH setExpenseExcludeFromTotals, a tripStore action, and a Count-in-trip-totals SettingsToggleRow in ExpenseReviewModal.tsx behind the existing enableExpenseExclusion flag (was registered, zero consumers). Excluded expenses are skipped in the 3 balance/total chokepoints: settlement.ts's two activeTripExpenses filters and App.tsx's nonSettlementExpenses filter -- still visible in the raw expense list, same as Flutter. Commit pending (v3.82.10). |
+| **FEAT-194** | Hub redesigned as icon tile grid, matching Flutter | `general` | `claude-cli` | `claude-cli` | TripHubTab.tsx rebuilt from a flat SettingsCell list into a responsive icon-tile grid (auto-fill, 150px min column), matching the Wrap-of-tiles layout in flutter_app's trip_hub_screen.dart -- colored squircle icon, bold title, 2-line muted subtitle, reusing the existing .settings-squircle/squircle-*-glow CSS and glass-card token. Commit pending (v3.82.10). |
 
 ---
 

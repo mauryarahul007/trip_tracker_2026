@@ -234,6 +234,7 @@ export interface Expense {
   disputeNote?: string | null;
   isSettlement: boolean;
   refundOfExpenseId?: string | null; // set on a refund row: money returned to the payer for this expense (rides in itemized_config, no column)
+  excludeFromTotals?: boolean; // ON: this row is left out of totals, charts and who-pays-whom (rides in itemized_config, no column; see refundOfExpenseId above)
   settlementConfirmedAt?: number | null; // set once the recipient confirms receipt (enableSettlementConfirmation)
   settlementConfirmedByUserId?: string | null;
   approvalStatus?: 'confirmed' | 'pending_approval'; // enableExpenseApprovalThreshold; excluded from balances while pending

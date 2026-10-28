@@ -1,6 +1,6 @@
 import React from 'react';
-import { SettingsSection } from './common/SettingsSection';
-import { SettingsCell, type SquircleGlow } from './common/SettingsCell';
+import { triggerHaptic } from '../utils/haptics';
+import type { SquircleGlow } from './common/SettingsCell';
 
 export interface TripHubItem {
   id: string;
@@ -18,11 +18,11 @@ type Props = {
 };
 
 /**
- * Calm Passport "Trip" hub (flag `enableCalmPassportUi`): everything that is not the daily
- * expense/balance loop lives here as one list, mirroring the tile grid in
- * flutter_app/lib/features/trip_details/presentation/trip_hub_screen.dart. People and Plans
- * (Notes) also keep working as plain tabs underneath -- this just gives them a second,
- * always-visible entry point once they drop off the bottom bar.
+ * Calm Passport "Trip" hub (flag `enableCalmPassportUi`): a tile grid for everything that is not
+ * the daily expense/balance loop, mirroring the Wrap of icon tiles in
+ * flutter_app/lib/features/trip_details/presentation/trip_hub_screen.dart (cols = 2 under 560px,
+ * 3 above it). People and Plans also keep working as plain tabs underneath -- this just gives
+ * them a second, always-visible entry point once they drop off the bottom bar.
  */
 export function TripHubTab({ tripName, tripDestination, items }: Props) {
   return (
@@ -39,18 +39,59 @@ export function TripHubTab({ tripName, tripDestination, items }: Props) {
           )}
         </div>
       )}
-      <SettingsSection>
-        {items.map((item, i) => (
-          <SettingsCell
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+          gap: '10px',
+        }}
+      >
+        {items.map((item) => (
+          <button
             key={item.id}
-            icon={item.icon}
-            title={item.title}
-            subtitle={item.subtitle}
-            onClick={item.onClick}
-            hasDivider={i < items.length - 1}
-          />
+            type="button"
+            className="glass-card"
+            onClick={() => {
+              triggerHaptic('light');
+              item.onClick();
+            }}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              textAlign: 'left',
+              minHeight: '104px',
+              padding: '14px',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--border-radius-md)',
+              background: 'var(--bg-surface)',
+              cursor: 'pointer',
+            }}
+          >
+            <div className={`settings-squircle squircle-${item.iconGlow ?? 'teal'}-glow`} aria-hidden="true">
+              {item.icon}
+            </div>
+            <span style={{ marginTop: '10px', fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {item.title}
+            </span>
+            {item.subtitle && (
+              <span
+                style={{
+                  marginTop: '2px',
+                  fontSize: '12px',
+                  color: 'var(--text-muted)',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                }}
+              >
+                {item.subtitle}
+              </span>
+            )}
+          </button>
         ))}
-      </SettingsSection>
+      </div>
     </div>
   );
 }

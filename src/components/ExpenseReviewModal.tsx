@@ -1,10 +1,11 @@
 import { useRef, useState, useEffect } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { getReceiptSignedUrl } from '../services/tripApi';
-import { IconEdit, IconTrash, IconCopy, IconAlertCircle, IconClose, IconRefresh } from './Icons';
+import { IconEdit, IconTrash, IconCopy, IconAlertCircle, IconClose, IconRefresh, IconCheck } from './Icons';
 import { getCurrencySymbol, formatMoneyNumber } from '../utils/currency';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { isRefund } from '../utils/refunds';
+import { SettingsToggleRow } from './common/SettingsSwitch';
 
 
 type Props = {
@@ -29,9 +30,11 @@ type Props = {
   onRecordRefund?: (amount: number) => void;
   refunds?: Expense[];
   refundable?: number;
+  /** enableExpenseExclusion: set to show the "Count in trip totals" toggle. */
+  onToggleExcludeFromTotals?: (exclude: boolean) => void;
 };
 
-export function ExpenseReviewModal({ expense, members, categories, trip, canManage, currentUserId, isTripAdmin, onClose, onEdit, onDelete, onDuplicate, onFlagDispute, onResolveDispute, myMemberId, onConfirmSettlement, settlementConfirmationEnabled, onApproveExpense, onRecordRefund, refunds = [], refundable = 0 }: Props) {
+export function ExpenseReviewModal({ expense, members, categories, trip, canManage, currentUserId, isTripAdmin, onClose, onEdit, onDelete, onDuplicate, onFlagDispute, onResolveDispute, myMemberId, onConfirmSettlement, settlementConfirmationEnabled, onApproveExpense, onRecordRefund, refunds = [], refundable = 0, onToggleExcludeFromTotals }: Props) {
   const isSettlement = expense.title.startsWith('Settlement:') || isRefund(expense);
   const [refundOpen, setRefundOpen] = useState(false);
   const [refundText, setRefundText] = useState('');
@@ -174,6 +177,19 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
             </button>
           )}
         </div>
+
+        {canManage && onToggleExcludeFromTotals && (
+          <div style={{ marginBottom: '16px' }}>
+            <SettingsToggleRow
+              icon={<IconCheck size={16} />}
+              title="Count in trip totals"
+              subtitle="Off keeps it out of totals, charts and who pays whom."
+              label="Count in trip totals"
+              checked={!expense.excludeFromTotals}
+              onChange={(counted) => onToggleExcludeFromTotals(!counted)}
+            />
+          </div>
+        )}
 
         {expense.approvalStatus === 'pending_approval' && (
           <div style={{

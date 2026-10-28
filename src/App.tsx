@@ -205,6 +205,7 @@ export default function App() {
     deleteExpense,
     flagExpenseDispute,
     resolveExpenseDispute,
+    toggleExpenseExcludeFromTotals,
     confirmSettlement,
     approveExpense,
     addCategory,
@@ -1432,7 +1433,8 @@ export default function App() {
     // stays out of every money total here -- it's still visible in the
     // expense list itself (activeTripExpenses, unfiltered) so it can be
     // reviewed and approved, it just doesn't move any balance yet.
-    return activeTripExpenses.filter((e) => !e.title.startsWith('Settlement:') && e.approvalStatus !== 'pending_approval');
+    // excludeFromTotals (enableExpenseExclusion) is the traveler's own "count in totals" toggle.
+    return activeTripExpenses.filter((e) => !e.title.startsWith('Settlement:') && e.approvalStatus !== 'pending_approval' && !e.excludeFromTotals);
   }, [activeTripExpenses]);
 
   const totalSpent = useMemo(() => {
@@ -3129,6 +3131,7 @@ export default function App() {
                   {
                     id: 'hub-people',
                     icon: <IconMembers size={18} />,
+                    iconGlow: 'purple',
                     title: 'People',
                     subtitle: `${visibleMembers.length} traveler${visibleMembers.length === 1 ? '' : 's'}`,
                     onClick: () => setActiveTab('members'),
@@ -3137,6 +3140,7 @@ export default function App() {
                     ? [{
                         id: 'hub-plans',
                         icon: <IconClipboardList size={18} />,
+                        iconGlow: 'blue' as const,
                         title: 'Plans',
                         subtitle: 'Checklist, notes, passes',
                         onClick: () => setActiveTab('notes'),
@@ -3145,6 +3149,7 @@ export default function App() {
                   {
                     id: 'hub-invite',
                     icon: <IconShare size={18} />,
+                    iconGlow: 'teal',
                     title: 'Invite',
                     subtitle: activeTrip.joinCode ? `Code ${activeTrip.joinCode}` : 'Code, link, QR',
                     onClick: () => setShowShareTrip(true),
@@ -3152,6 +3157,7 @@ export default function App() {
                   {
                     id: 'hub-edit',
                     icon: <IconEdit size={18} />,
+                    iconGlow: 'amber',
                     title: 'Edit trip',
                     subtitle: 'Name, dates, destination',
                     onClick: () => handleStartEditTrip(activeTrip),
@@ -3160,6 +3166,7 @@ export default function App() {
                     ? [{
                         id: 'hub-live',
                         icon: <IconMapPin size={18} />,
+                        iconGlow: 'emerald' as const,
                         title: 'Live location',
                         subtitle: 'Share where you are',
                         onClick: () => setShowLiveLocationShare(true),
@@ -3168,6 +3175,7 @@ export default function App() {
                   {
                     id: 'hub-mute',
                     icon: <IconBell size={18} />,
+                    iconGlow: 'slate',
                     title: isActiveTripMuted ? 'Unmute alerts' : 'Mute alerts',
                     subtitle: isActiveTripMuted ? 'Silenced on this device' : 'Silence this trip',
                     onClick: () => { void setTripMuted(activeTrip.id, !isActiveTripMuted); },
@@ -3175,6 +3183,7 @@ export default function App() {
                   {
                     id: 'hub-settings',
                     icon: <IconSettings size={18} />,
+                    iconGlow: 'indigo',
                     title: 'Settings',
                     subtitle: 'Currency, categories, data & account',
                     onClick: () => { setHasVisitedSettings(true); setActiveTab('settings'); },
@@ -3182,6 +3191,7 @@ export default function App() {
                   {
                     id: 'hub-switch-trip',
                     icon: <IconChevronLeft size={18} />,
+                    iconGlow: 'slate',
                     title: 'Switch trip',
                     subtitle: 'Back to your trips list',
                     onClick: () => { withViewTransition(() => { void selectTrip(null); }); },
@@ -3478,6 +3488,11 @@ export default function App() {
             onFlagDispute={
               isFeatureEnabled('enableExpenseDisputes', { tripId: activeTrip?.id, userId: userId || undefined })
                 ? () => void flagExpenseDispute(selectedReviewExpense.id)
+                : undefined
+            }
+            onToggleExcludeFromTotals={
+              isFeatureEnabled('enableExpenseExclusion', { tripId: activeTrip?.id, userId: userId || undefined })
+                ? (exclude) => void toggleExpenseExcludeFromTotals(liveExpense.id, exclude)
                 : undefined
             }
             onRecordRefund={

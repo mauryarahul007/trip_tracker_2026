@@ -87,6 +87,7 @@ function mapExpense(row: ExpenseRow & { location?: any }): Expense {
     // itemized_config also carries { refundOfExpenseId } on a refund row; only a real breakdown has items.
     itemizedConfig: (row.itemized_config as any)?.items ? (row.itemized_config as unknown as import('../types').ItemizedReceiptConfig) : undefined,
     refundOfExpenseId: (row.itemized_config as any)?.refundOfExpenseId ?? null,
+    excludeFromTotals: (row.itemized_config as any)?.excludeFromTotals === true,
     resolvedShares: row.resolved_shares,
     receiptPath: row.receipt_path ?? undefined,
     photoPaths: row.photo_paths ?? undefined,
@@ -741,6 +742,27 @@ export async function flagExpenseDispute(expenseId: string, note?: string): Prom
 
 export async function resolveExpenseDispute(expenseId: string): Promise<void> {
   const { error } = await supabase.rpc('resolve_expense_dispute', { p_expense_id: expenseId });
+  if (error) throw error;
+}
+
+// enableExpenseExclusion: "count in trip totals" toggle. No dedicated column -- rides in
+// itemized_config like refundOfExpenseId, same as flutter_app's row_mappers.dart
+// expenseToUpsertArgs. A targeted PATCH (not the full updateExpenseRow path) so toggling this
+// never touches amount/split/payer fields.
+export async function setExpenseExcludeFromTotals(expense: Expense, exclude: boolean): Promise<void> {
+  const itemizedConfig: Record<string, unknown> = {};
+  if (expense.refundOfExpenseId) itemizedConfig.refundOfExpenseId = expense.refundOfExpenseId;
+  if (expense.itemizedConfig) Object.assign(itemizedConfig, expense.itemizedConfig);
+  if (exclude) itemizedConfig.excludeFromTotals = true;
+  else delete itemizedConfig.excludeFromTotals;
+
+  const { error } = await supabase
+    .from('expenses')
+    .update({
+      itemized_config: Object.keys(itemizedConfig).length > 0 ? itemizedConfig : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', expense.id);
   if (error) throw error;
 }
 

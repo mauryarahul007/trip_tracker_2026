@@ -185,7 +185,8 @@ export function calculateDirectSettlements(
   // approvalStatus === 'pending_approval' (enableExpenseApprovalThreshold) is
   // excluded from every balance/transfer calc until a second member approves
   // it -- otherwise an unapproved big expense would silently move money.
-  const activeTripExpenses = applyRefunds(expenses.filter((e) => e.tripId === trip.id && !e.deletedAt && e.approvalStatus !== 'pending_approval'));
+  // excludeFromTotals (enableExpenseExclusion) is the traveler's own "count in totals" toggle.
+  const activeTripExpenses = applyRefunds(expenses.filter((e) => e.tripId === trip.id && !e.deletedAt && e.approvalStatus !== 'pending_approval' && !e.excludeFromTotals));
 
   // Group membership index
   const groupOfMember: Record<string, string> = {};
@@ -312,7 +313,7 @@ export function calculateSettlements(
   // approvalStatus === 'pending_approval' (enableExpenseApprovalThreshold) is
   // excluded until a second member approves it, same reasoning as
   // calculateDirectSettlements above.
-  const activeTripExpenses = applyRefunds(expenses.filter((e) => e.tripId === trip.id && !e.deletedAt && e.approvalStatus !== 'pending_approval'));
+  const activeTripExpenses = applyRefunds(expenses.filter((e) => e.tripId === trip.id && !e.deletedAt && e.approvalStatus !== 'pending_approval' && !e.excludeFromTotals));
 
   // 1. Calculate net balances for every member of the trip
   const netBalances: Record<string, number> = {};
