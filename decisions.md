@@ -5414,3 +5414,8 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** The pass back lists 3 payments, not 5, so the text stays readable on the card size; the rest are in Settlement history. Flag count 195 -> 197.
 * **Release Cut:** version bumped to `3.82.3` via `npm run release:patch`; pubspec `3.82.3+6`. Test steps: INSIGHTS-SETTLE-PASS. BUG-328.
 
+## 2026-10-28 — Dev flavor app ID is now .dev2 (v3.82.4)
+* **Decision:** The Flutter `dev` flavor's `applicationIdSuffix` changes from `.dev` to `.dev2` (and both dev launcher shortcuts point to `com.triptracker.app.dev2`). Only `com.triptracker.app.dev2` has an Android OAuth client registered for the debug-key SHA-1, so a `.dev` build failed Google sign-in. This matches the change the user already had locally on their PC.
+* **Trade-offs Accepted:** Anyone with an old `.dev` install gets `.dev2` as a separate app. Prod and staging IDs are unchanged.
+* **Release Cut:** version bumped to `3.82.4` via `npm run release:patch`; pubspec `3.82.4+7`.
+

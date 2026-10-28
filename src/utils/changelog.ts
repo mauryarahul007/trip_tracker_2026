@@ -9,6 +9,11 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.82.4',
+    date: '2026-10-28',
+    changes: ['Fixed Google sign-in on the Android dev test build.'],
+  },
+  {
     version: '3.82.3',
     date: '2026-10-28',
     changes: [
