@@ -4,6 +4,7 @@ import '../../../../core/format/money.dart';
 import '../../../../domain/logic/category_color.dart';
 import '../../../../domain/logic/currency.dart';
 import '../../../../domain/logic/expense_list_logic.dart';
+import '../../../../domain/logic/refunds.dart';
 import '../../../../domain/models/category.dart';
 import '../../../../domain/models/expense.dart';
 import '../../../../domain/models/member.dart';
@@ -33,6 +34,7 @@ class ExpenseRow extends StatefulWidget {
     this.isDirty = false,
     this.isConflict = false,
     this.onRetrySync,
+    this.refunded = false,
     super.key,
   });
 
@@ -52,6 +54,9 @@ class ExpenseRow extends StatefulWidget {
 
   /// Set when this row's change is stuck (flag `enableRowSyncRetry`): shows a red mark that calls it.
   final VoidCallback? onRetrySync;
+
+  /// This expense has at least one refund recorded against it: shows a small Refunded mark.
+  final bool refunded;
 
   @override
   State<ExpenseRow> createState() => _ExpenseRowState();
@@ -80,6 +85,21 @@ class _ExpenseRowState extends State<ExpenseRow> {
       );
     }
     return _badge(Icons.sync_rounded, tokens.textMuted, l10n.rowSyncPending);
+  }
+
+  bool get _isRefund => isRefund(widget.expense);
+
+  /// Refund rows read as money coming back: minus sign, success colour.
+  String _money(BuildContext context, double amount, String code) =>
+      _isRefund ? '−${formatMoney(context, amount, code)}' : formatMoney(context, amount, code);
+
+  Color _amountColor(AppTokens tokens) => _isRefund ? tokens.colorSuccess : tokens.textPrimary;
+
+  /// "Back to X" for a refund, else "Paid by X" / "N payers".
+  String _who(AppLocalizations l10n, List<String>? payers, Member? payer) {
+    final name = payer?.name ?? l10n.rowRemovedMember;
+    if (_isRefund) return l10n.rowRefundTo(name);
+    return payers != null ? l10n.rowPayers(payers.length) : l10n.rowPaidBy(name);
   }
 
   bool get _hasSyncMark => widget.isConflict || widget.onRetrySync != null || widget.isDirty;
@@ -111,8 +131,10 @@ class _ExpenseRowState extends State<ExpenseRow> {
     final shareText = myShare != null ? l10n.rowYourShare(formatMoney(context, myShare, base)) : null;
     final backText = getBack != null && getBack > 0.01 ? l10n.rowGetBack(formatMoney(context, getBack, base)) : null;
     final pill = (shareText != null && backText != null) ? '$shareText · $backText' : (backText ?? shareText);
-    final who = payers != null ? l10n.rowPayers(payers.length) : l10n.rowPaidBy(payer?.name ?? l10n.rowRemovedMember);
-    final sub = e.splitMemberIds.length > 1 ? '$who · ${l10n.rowSplitWith(e.splitMemberIds.length)}' : who;
+    final who = _who(l10n, payers, payer);
+    final sub = !_isRefund && e.splitMemberIds.length > 1
+        ? '$who · ${l10n.rowSplitWith(e.splitMemberIds.length)}'
+        : who;
     final glow = review.needsReview ? tokens.colorWarning : accent;
     return Semantics(
       container: true,
@@ -180,11 +202,11 @@ class _ExpenseRowState extends State<ExpenseRow> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          formatMoney(context, shownAmount, shownCode),
+                          _money(context, shownAmount, shownCode),
                           key: const Key('row-amount'),
                           style: AppTypography.moneyDisplay(
                             fontSize: 17,
-                            color: tokens.textPrimary,
+                            color: _amountColor(tokens),
                           ).copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3),
                         ),
                         if (isForeign) _currencyToggle(tokens, l10n, e, base, showingForeign),
@@ -245,8 +267,10 @@ class _ExpenseRowState extends State<ExpenseRow> {
     final getBack = iAmPayer && e.splitMemberIds.any((id) => id != widget.myMemberId)
         ? e.amount - (e.resolvedShares[widget.myMemberId] ?? 0)
         : null;
-    final who = payers != null ? l10n.rowPayers(payers.length) : l10n.rowPaidBy(payer?.name ?? l10n.rowRemovedMember);
-    final sub = e.splitMemberIds.length > 1 ? '$who · ${l10n.rowSplitWith(e.splitMemberIds.length)}' : who;
+    final who = _who(l10n, payers, payer);
+    final sub = !_isRefund && e.splitMemberIds.length > 1
+        ? '$who · ${l10n.rowSplitWith(e.splitMemberIds.length)}'
+        : who;
     final hasBack = getBack != null && getBack > 0.01;
     final shareLine = myShare != null ? l10n.rowYourShare(formatMoney(context, myShare, base)) : null;
     final backLine = hasBack ? l10n.rowGetBack(formatMoney(context, getBack, base)) : null;
@@ -324,11 +348,11 @@ class _ExpenseRowState extends State<ExpenseRow> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              formatMoney(context, shownAmount, shownCode),
+                              _money(context, shownAmount, shownCode),
                               key: const Key('row-amount'),
                               style: AppTypography.moneyDisplay(
                                 fontSize: 16,
-                                color: tokens.textPrimary,
+                                color: _amountColor(tokens),
                               ).copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.2),
                             ),
                             if (isForeign) _currencyToggle(tokens, l10n, e, base, showingForeign),
@@ -365,6 +389,8 @@ class _ExpenseRowState extends State<ExpenseRow> {
   }
 
   List<Widget> _badges(AppLocalizations l10n, AppTokens tokens, Expense e) => [
+    if (_isRefund) const Padding(padding: EdgeInsets.only(right: 4), child: RefundChip()),
+    if (widget.refunded && !_isRefund) _refundedBadge(tokens, l10n),
     if (e.receiptPath != null || e.receiptImage != null)
       _badge(Icons.photo_camera_outlined, tokens.textMuted, l10n.rowReceipt),
     if (e.disputedAt != null)
@@ -378,6 +404,11 @@ class _ExpenseRowState extends State<ExpenseRow> {
       _badge(Icons.schedule_rounded, tokens.colorWarning, l10n.rowPendingApprovalTip),
     if (_hasSyncMark) _syncBadge(tokens, l10n),
   ];
+
+  Widget _refundedBadge(AppTokens tokens, AppLocalizations l10n) => KeyedSubtree(
+    key: const Key('row-refunded-badge'),
+    child: _badge(Icons.undo_rounded, tokens.colorSuccess, l10n.rowRefunded),
+  );
 
   Widget _currencyToggle(AppTokens tokens, AppLocalizations l10n, Expense e, String base, bool showingForeign) =>
       Padding(
@@ -501,6 +532,8 @@ class _ExpenseRowState extends State<ExpenseRow> {
                             ),
                           ),
                           const SizedBox(width: 5),
+                          if (_isRefund) const Padding(padding: EdgeInsets.only(right: 4), child: RefundChip()),
+                          if (widget.refunded && !_isRefund) _refundedBadge(tokens, l10n),
                           if (e.receiptPath != null || e.receiptImage != null)
                             _badge(Icons.photo_camera_outlined, tokens.textMuted, l10n.rowReceipt),
                           if (e.disputedAt != null)
@@ -524,11 +557,11 @@ class _ExpenseRowState extends State<ExpenseRow> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              formatMoney(context, shownAmount, shownCode),
+                              _money(context, shownAmount, shownCode),
                               key: const Key('row-amount'),
                               style: AppTypography.moneyDisplay(
                                 fontSize: 16,
-                                color: tokens.textPrimary,
+                                color: _amountColor(tokens),
                               ).copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.3),
                             ),
                             if (isForeign)
@@ -589,7 +622,7 @@ class _ExpenseRowState extends State<ExpenseRow> {
                           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: tokens.textSecondary),
                         ),
                       ] else
-                        Tooltip(message: l10n.rowPaidBy(payer?.name ?? l10n.rowRemovedMember), child: avatar(e.paidBy)),
+                        Tooltip(message: _who(l10n, null, payer), child: avatar(e.paidBy)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 6),
                         child: Text('→', style: TextStyle(fontSize: 12, color: tokens.textMuted)),
@@ -612,6 +645,28 @@ class _ExpenseRowState extends State<ExpenseRow> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Small "Refund" pill so a refund row is told apart from spend even in the compact list.
+class RefundChip extends StatelessWidget {
+  const RefundChip({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    return Container(
+      key: const Key('row-refund-chip'),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        color: tokens.colorSuccess.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        context.l10n.rowRefund,
+        style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: tokens.colorSuccess),
       ),
     );
   }

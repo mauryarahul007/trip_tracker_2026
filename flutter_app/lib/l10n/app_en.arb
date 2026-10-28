@@ -594,6 +594,16 @@
   },
   "rowRemovedMember": "Removed member",
   "rowReceipt": "Receipt attached",
+  "rowRefund": "Refund",
+  "rowRefunded": "Refunded",
+  "rowRefundTo": "Back to {name}",
+  "@rowRefundTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "rowDisputed": "Disputed",
   "rowPendingApproval": "Pending approval",
   "rowPendingApprovalTip": "Pending approval — excluded from balances until a second member approves it",

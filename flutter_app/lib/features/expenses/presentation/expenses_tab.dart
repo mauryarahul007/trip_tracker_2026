@@ -12,6 +12,7 @@ import '../../../domain/logic/expense_form_logic.dart';
 import '../../../core/storage/prefs.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/expense_list_logic.dart';
+import '../../../domain/logic/refunds.dart';
 import '../../../domain/models/expense.dart';
 import '../../../domain/models/member.dart';
 import '../../../l10n/l10n_ext.dart';
@@ -259,6 +260,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final binOn = _flag(ref, 'enableRecycleBin', id);
 
     final shown = filtered.take(_visible).toList();
+    final refundedIds = {
+      for (final r in active)
+        if (isRefund(r) && r.deletedAt == null) r.refundOfExpenseId!,
+    };
     final compassSpend = ref.watch(compassFlagProvider((compassSpendFlag, id)));
     final dayGroups = groupByDay(shown.where(isActualExpense).toList());
     final settlementGroups = groupByDay(shown.where((e) => !isActualExpense(e)).toList());
@@ -316,6 +321,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
           baseCurrency: trip.baseCurrency,
           payer: members[e.paidBy]?.name ?? '',
           category: categories.where((c) => c.id == e.category).firstOrNull?.name ?? e.category,
+          refunded: refundedIds.contains(e.id),
           selected: e.id == _selectedId,
           onTap: () => _openDetail(e),
         );
@@ -333,6 +339,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         isDirty: dirty.contains(e.id),
         isConflict: conflicts.contains(e.id),
         onRetrySync: failed.contains(e.id) ? () => ref.read(retryRowSyncProvider)(e.id) : null,
+        refunded: refundedIds.contains(e.id),
         onTap: () => _openDetail(e),
       );
       // Bento: each expense is a rounded tile tinted by its category.
@@ -1030,6 +1037,7 @@ class _TableRow extends StatelessWidget {
     required this.category,
     required this.selected,
     required this.onTap,
+    this.refunded = false,
   });
 
   final Expense expense;
@@ -1038,11 +1046,14 @@ class _TableRow extends StatelessWidget {
   final String category;
   final bool selected;
   final VoidCallback onTap;
+  final bool refunded;
 
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
     final muted = TextStyle(fontSize: 13.5, color: t.textSecondary);
+    final refund = isRefund(expense);
+    final money = formatMoney(context, expense.amount, baseCurrency);
     return Material(
       color: selected ? t.primaryAccent.withValues(alpha: 0.08) : Colors.transparent,
       child: InkWell(
@@ -1057,11 +1068,27 @@ class _TableRow extends StatelessWidget {
             children: [
               Expanded(
                 flex: _tableCols[0],
-                child: Text(
-                  expense.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontWeight: FontWeight.w600, color: t.textPrimary),
+                child: Row(
+                  children: [
+                    if (refund) const Padding(padding: EdgeInsets.only(right: 6), child: RefundChip()),
+                    Flexible(
+                      child: Text(
+                        expense.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontWeight: FontWeight.w600, color: t.textPrimary),
+                      ),
+                    ),
+                    if (refunded && !refund)
+                      Padding(
+                        key: const Key('row-refunded-badge'),
+                        padding: const EdgeInsets.only(left: 5),
+                        child: Tooltip(
+                          message: context.l10n.rowRefunded,
+                          child: Icon(Icons.undo_rounded, size: 14, color: t.colorSuccess),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               Expanded(
@@ -1079,12 +1106,12 @@ class _TableRow extends StatelessWidget {
               Expanded(
                 flex: _tableCols[4],
                 child: Text(
-                  formatMoney(context, expense.amount, baseCurrency),
+                  refund ? '−$money' : money,
                   textAlign: TextAlign.right,
                   style: TextStyle(
                     fontFeatures: AppTypography.tabularFigures,
                     fontWeight: FontWeight.w800,
-                    color: t.textPrimary,
+                    color: refund ? t.colorSuccess : t.textPrimary,
                   ),
                 ),
               ),

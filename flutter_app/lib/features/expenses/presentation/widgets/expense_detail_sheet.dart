@@ -31,6 +31,7 @@ import '../../../trip_details/application/trip_nav.dart';
 import '../../../notifications/application/activity_focus.dart';
 import '../../application/expenses_providers.dart';
 import '../../application/money_providers.dart';
+import 'expense_row.dart' show RefundChip;
 
 final expenseProvider = StreamProvider.family<Expense?, String>(
   (ref, id) => ref.watch(expenseRepositoryProvider).watchExpense(id),
@@ -219,8 +220,9 @@ class ExpenseDetailSheet extends ConsumerWidget {
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                     ),
                     const SizedBox(height: 2),
+                    if (isRefund(e)) const Padding(padding: EdgeInsets.only(top: 4), child: RefundChip()),
                     Text(
-                      formatMoney(context, e.amount, base),
+                      isRefund(e) ? '−${formatMoney(context, e.amount, base)}' : formatMoney(context, e.amount, base),
                       key: const Key('detail-amount'),
                       style: TextStyle(
                         fontFeatures: AppTypography.tabularFigures,
@@ -228,7 +230,7 @@ class ExpenseDetailSheet extends ConsumerWidget {
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.8,
-                        color: tokens.textPrimary,
+                        color: isRefund(e) ? tokens.colorSuccess : tokens.textPrimary,
                       ),
                     ),
                   ],

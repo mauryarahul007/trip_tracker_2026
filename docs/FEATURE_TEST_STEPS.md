@@ -21,6 +21,8 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-28 | unreleased | CHAT-TAB-PLANS-HUB | [Chat in the trip dock, Plans moved into the Hub](#chat-tab-plans-hub--chat-in-the-trip-dock-plans-moved-into-the-hub) |
+| 2026-10-28 | 3.82.2 | REFUND-LABEL | [Refunds read as Refund in Spend](#refund-label--refunds-read-as-refund-in-spend) |
 | 2026-10-27 | 3.82.0 | UX-POLISH-20 | [Polish pass: errors, undo, sync words, keypad, nav, a11y](#ux-polish-20--polish-pass-errors-undo-sync-words-keypad-nav-a11y) |
 | 2026-10-27 | 3.81.0 | ONE-THEME | [One Calm Passport theme across the app](#one-theme--one-calm-passport-theme-across-the-app) |
 | 2026-10-27 | 3.80.2 | HOME-BALANCES-GROUPS | [Home Balances count a square group as settled](#home-balances-groups--home-balances-count-a-square-group-as-settled) |
@@ -3874,7 +3876,7 @@ Then add a row to the **Index** table.
 6. **Onboarding art.** New account (or clear app data). Pass: the three intro slides show drawings (stamp, route with two pins, receipt with three arrows), no emoji.
 7. **Loading shapes.** Open a large trip on a slow phone, or throttle. Pass: Balances shows a hero block and avatar rows; Spend shows a summary block and category rows; People shows avatar rows.
 8. **Search.** Trips search box: type a payer's name, a place name, and an amount like 1200. Pass: matching expenses list under the trips, with the place or "Paid by X" in the detail line.
-9. **One trip navigation.** Ops Deck: turn `enableCompassNav` and `enableCalmPassportUi` OFF, `enableChatFirstNav` ON. Reopen a trip. Pass: still the Calm dock (Balances, Spend, Activity, Plans, Hub), Chat opens from the Hub.
+9. **One trip navigation.** Ops Deck: turn `enableCompassNav` and `enableCalmPassportUi` OFF, `enableChatFirstNav` ON. Reopen a trip. Pass: still the Calm dock (Balances, Spend, Activity, Chat, Hub), Plans opens from the Hub (changed by CHAT-TAB-PLANS-HUB).
 10. **Back gesture and discard.** Android 14+: start a back swipe on any pushed screen. Pass: the screen underneath peeks before you let go. Type in New trip, Edit trip, Report a problem or Feature request, then swipe back. Pass: "Discard changes?" appears. Save still closes without asking.
 11. **Autofill.** Superadmin login and Reset password. Pass: the password manager offers the saved email and password; reset offers to generate a new password.
 12. **Screen reader money.** TalkBack on, Spend tab. Pass: the summary card reads "You owe ₹1,200. Open settle up" (no "minus"). The Balances settle bar reads "You owe ₹…".
@@ -3892,4 +3894,53 @@ Then add a row to the **Index** table.
 - `enableCoachEmptyStates` OFF: step 13 shows text only, no button.
 
 **Pass criteria:** every step passes in Light and Dark, at normal and 200% text, with no raw error text, no overflow, and no screen asking "Are you sure?" for something it can undo.
+
+---
+
+## CHAT-TAB-PLANS-HUB — Chat in the trip dock, Plans moved into the Hub
+
+**Shipped:** 2026-10-28 · unreleased · No new flag (layout change to the one shipped trip nav). Reused: `enableTripChat` decides the Chat tab; `enableNotesAndChecklist` / `enableTravelPasses` decide the Hub Plans tile.
+
+**Prep:** One trip with 2+ members, a checklist item, a note and (if passes on) a travel pass. Second phone or web signed in as another member to send a chat message.
+
+**Steps**
+1. Open the trip. Pass: dock reads Balances, Spend, Activity, Chat, Hub. No Plans tab.
+2. Tap Chat. Pass: the trip chat opens and Chat is lit in the dock.
+3. From the other member, send a message while you sit on Balances. Pass: an unread dot shows on the dock Chat tab.
+4. Tap Hub. Pass: a **Plans** tile ("Checklist, notes, passes") is in the grid. No Notes tile and no Chat tile.
+5. Tap Plans. Pass: Passes, Checklist and Notes panes open with the same items as before. Hub stays lit in the dock. No Chat pane inside Plans.
+6. Add a checklist item and a note, go back to Hub, reopen Plans. Pass: both are still there.
+7. Open an old Plans/notes link or notification (`/trip/<id>/notes`). Pass: Plans opens, Hub lit.
+8. Swipe across trip pages. Pass: Chat comes after Activity; Plans and People come after Hub.
+
+**Flag-OFF negative checks**
+- `enableTripChat` OFF (Ops Deck or trip override): dock shows 4 items (Balances, Spend, Activity, Hub). No Chat anywhere.
+- `enableNotesAndChecklist` and `enableTravelPasses` both OFF: Hub has no Plans tile. Dock unchanged.
+
+**Pass criteria:** Light and Dark, normal and 200% text: dock labels fit with no overflow, nothing from Notes/Plans is lost, Chat unread badge shows only on the dock.
+
+---
+
+## REFUND-LABEL — Refunds read as Refund in Spend
+
+**Shipped:** 2026-10-28 · v3.82.2 (Flutter) · Reuses `enableExpenseRefunds` (Trip pack, default ON) for recording. The labels need no flag: refunds already recorded keep changing balances when the flag is OFF, so they always show as refunds.
+
+**Prep:** A trip with 2+ members. Add "Dinner" ₹1,000 split equally, paid by you.
+
+**Steps**
+1. Open Dinner → Record refund → ₹200 → Save.
+2. Spend tab, normal rows. Pass: a row "Refund: Dinner" with a green **Refund** pill by the title, amount **−₹200** in green, sub line "Back to <payer>". No "your share" line on it.
+3. Pass: the Dinner row shows a small green undo mark (tooltip "Refunded").
+4. Pass: the day header total for the refund's day nets it off (both rows on one day: ₹800, not ₹1,200).
+5. Turn on compact rows (Pro, `enableCompactLedgerView`). Pass: the Refund pill and green −₹200 still show on the collapsed row.
+6. Turn `enableTidyExpenses` OFF (receipt rows). Pass: same pill and minus amount.
+7. Wide window or tablet (table view). Pass: Refund pill in the title column, −₹200 green in the amount column, undo mark on Dinner.
+8. Tap the refund row. Pass: detail shows the Refund pill and −₹200 in green.
+9. Trip tools → Export CSV. Pass: the refund line has amount `-200.00` as a number (no leading quote); SUM of the column gives net spend.
+10. Balances, trip total and Insights. Pass: unchanged from before this fix (they already used net ₹800).
+
+**Flag-OFF negative checks**
+- `enableExpenseRefunds` OFF: no Record refund action. A refund recorded earlier still shows the Refund pill and −amount, and still nets off totals.
+
+**Pass criteria:** A refund is never shown as a plain expense in any row layout, day totals are net, and CSV sums to net spend.
 

@@ -2065,6 +2065,24 @@ abstract class AppLocalizations {
   /// **'Receipt attached'**
   String get rowReceipt;
 
+  /// No description provided for @rowRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get rowRefund;
+
+  /// No description provided for @rowRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get rowRefunded;
+
+  /// No description provided for @rowRefundTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to {name}'**
+  String rowRefundTo(String name);
+
   /// No description provided for @rowDisputed.
   ///
   /// In en, this message translates to:

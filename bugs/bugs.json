@@ -9290,5 +9290,86 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-27T11:45:00.000Z",
     "resolutionNote": "Home Balances, Trips list and Spend hero now use the group balance (group = one party, as the ledger). Test: phase7_money_test square group. Commit 3bb0688 (v3.80.2)"
+  },
+  {
+    "id": "BUG-325",
+    "title": "Android showed version 3.64.0 on the 3.82.0 Flutter build",
+    "description": "flutter_app/pubspec.yaml stayed at 3.64.0+2 while package.json moved to 3.82.0, so Android versionName was stale.",
+    "severity": "low",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "android",
+      "isOnline": true,
+      "appVersion": "3.82.0"
+    },
+    "reproSteps": [
+      "Build flutter_app dev release",
+      "Install on Android",
+      "Check app info version"
+    ],
+    "expectedBehavior": "Shows 3.82.0",
+    "actualBehavior": "Shows 3.64.0",
+    "diagnostics": {},
+    "createdAt": "2026-10-27T13:55:00.000Z",
+    "updatedAt": "2026-10-27T13:55:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-27T13:55:00.000Z",
+    "resolutionNote": "pubspec.yaml version set to 3.82.0+3 to match package.json. Commit 437f1dd (v3.82.0)"
+  },
+  {
+    "id": "BUG-326",
+    "title": "Trip bar had Plans instead of Chat, and Hub repeated Plans as Notes",
+    "description": "The Calm trip dock showed Plans and hid Chat in the Hub, while the Hub Notes tile opened the same page as Plans.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "android",
+      "isOnline": true,
+      "appVersion": "3.82.0"
+    },
+    "reproSteps": [
+      "Open a trip",
+      "Look at the bottom bar",
+      "Open Hub"
+    ],
+    "expectedBehavior": "Chat in the bar; Plans only in the Hub, no duplicate Notes",
+    "actualBehavior": "Plans in the bar, Chat only in Hub, Hub also lists Notes (same page as Plans)",
+    "diagnostics": {},
+    "createdAt": "2026-10-28T13:20:00.000Z",
+    "updatedAt": "2026-10-28T13:20:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-28T13:20:00.000Z",
+    "resolutionNote": "Calm dock now Balances, Spend, Activity, Chat, Hub; Plans opens from a Hub tile replacing the duplicate Notes tile; Hub Chat tile removed. Test: one_trip_nav_test. Commit 14c2c7e (v3.82.1)"
+  },
+  {
+    "id": "BUG-327",
+    "title": "Refunds showed as plain expenses in Spend, and day totals added them",
+    "description": "A refund row looked like any other expense (no label, positive amount), so it could not be told apart when collapsed. Day header totals added the refund instead of subtracting it, and CSV exported it as a positive amount.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "android",
+      "isOnline": true,
+      "appVersion": "3.82.1"
+    },
+    "reproSteps": [
+      "Add a 1000 expense",
+      "Open it and Record refund of 200",
+      "Look at the Spend list and the day header"
+    ],
+    "expectedBehavior": "Refund row labelled Refund with a minus amount; day total 800",
+    "actualBehavior": "Refund row looks like a 200 expense; day total 1200",
+    "diagnostics": {},
+    "createdAt": "2026-10-28T13:25:00.000Z",
+    "updatedAt": "2026-10-28T13:25:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-28T13:25:00.000Z",
+    "resolutionNote": "Refund rows show a green Refund pill, green minus amount and 'Back to <payer>' in all row layouts and the detail sheet; parent gets a Refunded mark. DayGroup.total nets refunds; CSV exports them negative. Tests: refunds_test, expenses_tab_test. Commit b9dd72c (v3.82.2)"
   }
 ]

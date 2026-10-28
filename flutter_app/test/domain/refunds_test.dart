@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:trip_tracker/domain/logic/csv_export.dart';
+import 'package:trip_tracker/domain/logic/expense_list_logic.dart';
 import 'package:trip_tracker/domain/logic/refunds.dart';
 import 'package:trip_tracker/domain/logic/settlement.dart';
 import 'package:trip_tracker/domain/models/expense.dart';
@@ -59,6 +61,17 @@ void main() {
     expect(refundableRemaining(parent, [parent, refund(1000), refund(500, 'r2')]), 3500);
     expect(applyRefunds([parent, refund(9000)]).single.amount, 0);
     expect(applyRefunds([parent, refund(1000).copyWith(deletedAt: 1)]).single.amount, 5000);
+  });
+
+  test('day total nets a refund off instead of adding it', () {
+    expect(groupByDay([parent, refund(1000)]).single.total, 4000);
+  });
+
+  test('CSV exports a refund as a negative amount', () {
+    final trip = Trip.fromJson({'id': 't1', 'name': 'T', 'memberIds': ids});
+    final csv = exportTripLedgerCsv(trip: trip, members: const [], expenses: [parent, refund(1000)]);
+    expect(csv, contains('5000.00'));
+    expect(csv, contains(',-1000.00,'));
   });
 
   test('json round trip keeps the link', () {

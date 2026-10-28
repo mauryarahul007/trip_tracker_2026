@@ -163,7 +163,9 @@ class DayGroup {
   DayGroup(this.date, this.expenses);
   final String date;
   final List<Expense> expenses;
-  double get total => expenses.fold(0.0, (s, e) => s + e.amount);
+
+  /// Net spend for the day: a refund row takes its amount back off.
+  double get total => expenses.fold(0.0, (s, e) => s + (isRefund(e) ? -e.amount : e.amount));
 }
 
 /// Consecutive expenses sharing a date (input is already newest-first).
