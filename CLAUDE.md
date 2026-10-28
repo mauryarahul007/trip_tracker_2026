@@ -90,3 +90,18 @@ Before committing and pushing changes:
 
 Immediately after a successful git push (or when testing is done), terminate every local `npm run dev` / Vite / `vite preview` process and free their ports. Do not leave background dev servers running. This releases RAM, CPU, and network resources.
 
+## Flutter dev builds must pass dart-defines (mandatory, no exceptions)
+
+Every `flutter run` / `flutter build` / `flutter install` for the Flutter app
+must include `--dart-define-from-file=env/<flavor>.json` (e.g.
+`env/dev.json` for the dev flavor, run from `flutter_app/`). Omitting it
+leaves `GOOGLE_SERVER_CLIENT_ID`/`GOOGLE_IOS_CLIENT_ID` empty, causing
+Google Sign-In to fail with `GoogleSignInException
+(clientConfigurationError)`. Never use `flutter install` alone to deploy —
+it reinstalls whatever stale APK already sits in
+`build/app/outputs/flutter-apk/` without rebuilding. Use:
+```
+flutter run --flavor dev --dart-define-from-file=env/dev.json
+flutter build apk --flavor dev --debug --dart-define-from-file=env/dev.json
+```
+
