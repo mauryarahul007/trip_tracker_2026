@@ -2447,6 +2447,17 @@ html.capacitor-ios .tab-pane {
   will-change: transform, opacity;
 }
 
+/* Calm Passport dock: Balances, Spend, FAB, Activity, [Chat], Hub -- one more item than the
+   legacy 5-track grid above when Chat is in the dock, so it needs its own explicit column count
+   or the overflow item wraps into an implicit second grid row instead of staying on one line. */
+.nav-tabs.calm-nav {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr);
+}
+.nav-tabs.calm-nav.has-chat {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  max-width: 460px;
+}
+
 .nav-tabs.is-hidden {
   transform: translate(-50%, calc(100% + 40px + var(--safe-bottom, 0px))) !important;
   opacity: 0 !important;

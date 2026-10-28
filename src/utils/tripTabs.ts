@@ -28,7 +28,9 @@ export function visibleTripTabs(input: {
  * off. Mirrors `calmDockTabs` in
  * flutter_app/lib/features/trip_details/domain/trip_tabs.dart. */
 export function calmDockTabs(input: { chatEnabled: boolean }): readonly TripNavTab[] {
-  const tabs: TripNavTab[] = ['ledger', 'expenses', 'activity'];
+  // 'expenses' is the Balances/Summary pane and 'ledger' is the Spend/day-list pane (legacy
+  // naming, inverted from what it sounds like -- see visibleTripTabs above, same order).
+  const tabs: TripNavTab[] = ['expenses', 'ledger', 'activity'];
   if (input.chatEnabled) tabs.push('chat');
   tabs.push('hub');
   return tabs;

@@ -203,6 +203,11 @@ export function NavTabs({
       <button
         type="button"
         className={isFloating ? `nav-floating-fab ${isMembersTab ? 'mode-member' : ''}` : `nav-tab-fab ${isMembersTab ? 'mode-member' : ''}`}
+        // Calm mode: stay mounted (keeps this slot's CSS Grid column reserved so the rest of the
+        // bar doesn't reflow between tabs) but invisible/inert off Balances-Spend.
+        style={calmMode && !calmFabVisible ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}
+        tabIndex={calmMode && !calmFabVisible ? -1 : undefined}
+        aria-hidden={calmMode && !calmFabVisible ? true : undefined}
         onPointerDown={handlePointerDown}
         onPointerUp={clearLongPress}
         onPointerCancel={clearLongPress}
@@ -220,7 +225,7 @@ export function NavTabs({
     <>
       <nav
         ref={navRef}
-        className={`nav-tabs ${isChatFirstNav ? 'has-chat-nav' : ''} ${hasNotesOrPassesTab ? 'has-notes' : 'no-notes'} ${isHidden ? 'is-hidden' : ''}`}
+        className={`nav-tabs ${calmMode ? `calm-nav ${chatEnabled ? 'has-chat' : ''}` : isChatFirstNav ? 'has-chat-nav' : ''} ${hasNotesOrPassesTab ? 'has-notes' : 'no-notes'} ${isHidden ? 'is-hidden' : ''}`}
         role="tablist"
         aria-label="Trip navigation tabs"
       >
@@ -237,21 +242,8 @@ export function NavTabs({
 
         {calmMode ? (
           <>
-            {/* Balances tab */}
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'ledger'}
-              data-tab="ledger"
-              className={`nav-tab-item ${activeTab === 'ledger' ? 'active' : ''}`}
-              onClick={() => goTo('ledger')}
-              aria-label="Balances"
-            >
-              <span className="nav-tab-icon"><IconWallet size={24} /></span>
-              <span>Balances</span>
-            </button>
-
-            {/* Spend tab */}
+            {/* Balances tab -- the 'expenses' tab key renders BalancesSettlements/SummaryAttentionStrip
+                (see App.tsx's "Summary" pane); legacy naming is inverted from what it sounds like. */}
             <button
               type="button"
               role="tab"
@@ -259,6 +251,20 @@ export function NavTabs({
               data-tab="expenses"
               className={`nav-tab-item ${activeTab === 'expenses' ? 'active' : ''}`}
               onClick={() => goTo('expenses')}
+              aria-label="Balances"
+            >
+              <span className="nav-tab-icon"><IconWallet size={24} /></span>
+              <span>Balances</span>
+            </button>
+
+            {/* Spend tab -- the 'ledger' tab key renders ExpenseList (day-grouped expenses). */}
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'ledger'}
+              data-tab="ledger"
+              className={`nav-tab-item ${activeTab === 'ledger' ? 'active' : ''}`}
+              onClick={() => goTo('ledger')}
               aria-label="Spend"
             >
               <span className="nav-tab-icon"><IconReceipt size={24} /></span>
@@ -268,8 +274,9 @@ export function NavTabs({
               )}
             </button>
 
-            {/* Center Action (+) FAB: Balances/Spend only, see calmFabVisible */}
-            {calmFabVisible && renderFab(false)}
+            {/* Center Action (+) FAB: always mounted (reserves its grid column); hidden off
+                Balances/Spend by calmFabVisible inside renderFab itself. */}
+            {renderFab(false)}
 
             {/* Activity tab */}
             <button

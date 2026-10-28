@@ -9554,5 +9554,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-28T15:56:30.911Z",
     "resolutionNote": "ExpenseList.tsx's collapsed-day badge now reads \"N refund(s)\" instead of a bare count when every expense in the group is a refund (isRefund from utils/refunds.ts), matching the fix already shipped to the Flutter app this session. Commit pending (v3.82.7)."
+  },
+  {
+    "id": "BUG-335",
+    "title": "Calm Passport web dock: Balances/Spend tabs swapped, bar wrapped to 2 rows with Chat on",
+    "description": "Calm Passport web dock: Balances/Spend tabs swapped, bar wrapped to 2 rows with Chat on",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-10-28T16:14:28.362Z",
+    "updatedAt": "2026-10-28T16:14:37.214Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-28T16:14:37.211Z",
+    "resolutionNote": "Two bugs from the v3.82.7 calm-dock rollout, both in NavTabs.tsx/tripTabs.ts. (1) The 'Balances' button pointed at the ledger tab key and 'Spend' at the expenses key -- backwards, since App.tsx's expenses pane renders BalancesSettlements and the ledger pane renders ExpenseList (legacy naming, inverted from what it sounds like). Swapped both the button bindings and calmDockTabs() order. (2) .nav-tabs is a fixed 5-column CSS grid sized for the legacy layout; calm mode renders 6 grid children with Chat on (Balances/Spend/FAB/Activity/Chat/Hub), overflowing into an implicit second row. Added .calm-nav/.calm-nav.has-chat grid-template-columns (5/6 cols). Also stopped conditionally un-rendering the FAB's wrapper div per-tab (was changing the grid's child count on every tab switch) -- it now always renders, just visibility:hidden off Balances/Spend. User caught via screenshots after deploy."
   }
 ]
