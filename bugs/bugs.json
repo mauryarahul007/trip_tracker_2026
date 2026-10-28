@@ -9371,5 +9371,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-10-28T13:25:00.000Z",
     "resolutionNote": "Refund rows show a green Refund pill, green minus amount and 'Back to <payer>' in all row layouts and the detail sheet; parent gets a Refunded mark. DayGroup.total nets refunds; CSV exports them negative. Tests: refunds_test, expenses_tab_test. Commit b9dd72c (v3.82.2)"
+  },
+  {
+    "id": "BUG-328",
+    "title": "Hub Insights was a plain screen, and the settlement pass back repeated You paid / Your share",
+    "description": "Insights only had a daily line and a small donut. The back of the settlement pass showed You paid / Your share, which the who-pays-whom list and trip numbers already show.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "android",
+      "isOnline": true,
+      "appVersion": "3.82.2"
+    },
+    "reproSteps": [
+      "Open a trip, Hub > Insights",
+      "Go to Balances and tap the settlement pass"
+    ],
+    "expectedBehavior": "Richer charts in Insights; the pass back shows new settle-up info",
+    "actualBehavior": "Basic Insights; pass back duplicates numbers shown elsewhere",
+    "diagnostics": {},
+    "createdAt": "2026-10-28T13:35:00.000Z",
+    "updatedAt": "2026-10-28T13:35:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-28T13:35:00.000Z",
+    "resolutionNote": "Insights (enableInsightsV2): hero total + budget meter, tappable daily bars, running total, ranked categories, paid vs share, top 5 expenses; refunds netted. Pass back (enableSettleStatusPass): % settled ring, confirmed/waiting counts, last 3 payments. Tests: spend_insights_test, settle_status_test, ui_round3_test. Commit 6824836 (v3.82.3)"
   }
 ]
