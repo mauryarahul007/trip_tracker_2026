@@ -5404,3 +5404,7 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** Plans is one tap deeper. Test steps: CHAT-TAB-PLANS-HUB.
 * **Release Cut:** version bumped to `3.82.1` via `npm run release:patch`; pubspec `3.82.1+4`.
 
+## 2026-10-28 — Refunds read as Refund in Spend (v3.82.2)
+* **Decision:** A refund row (`refundOfExpenseId` set) now shows a green "Refund" pill, a green minus amount and "Back to <payer>" in every row layout (tidy, receipt, compact, desktop table) and in the detail sheet. Its parent expense gets a small "Refunded" undo mark. `DayGroup.total` subtracts refunds, so day headers and the daily average are net. CSV export writes refunds as negative plain numbers (no `_cell` formula guard on the amount, which would have quoted `-200.00` into text). No new flag: labels show even with `enableExpenseRefunds` OFF, because recorded refunds still change money.
+* **Trade-offs Accepted:** A refund recorded on a later day can make that day's header total negative. CSV consumers that assumed positive amounts now see negatives for refunds.
+* **Release Cut:** version bumped to `3.82.2` via `npm run release:patch`; pubspec `3.82.2+5`.

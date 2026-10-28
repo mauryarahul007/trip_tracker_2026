@@ -9,6 +9,7 @@ import 'package:trip_tracker/data/repositories/drift_repositories.dart';
 import 'package:trip_tracker/data/sync/conflict_store.dart';
 import 'package:trip_tracker/domain/logic/expense_form_logic.dart';
 import 'package:trip_tracker/domain/logic/sync_merge.dart';
+import 'package:trip_tracker/domain/models/expense.dart';
 import 'package:trip_tracker/domain/models/expense_io.dart';
 import 'package:trip_tracker/shared/widgets/app_button.dart';
 
@@ -282,6 +283,50 @@ void main() {
       await tester.tap(find.byKey(const Key('row-currency-toggle')));
       await settle(tester);
       expect(tester.widget<Text>(find.byKey(const Key('row-amount'))).data, '₹872.50');
+    });
+
+    testApp('a refund row reads as a Refund with a minus amount; its parent gets a Refunded mark', (tester) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      final parentId = await addExpense(tester, s, title: 'Dinner', amount: 300);
+      final c = containerOf(tester);
+      await real(
+        tester,
+        () => c
+            .read(expenseRepositoryProvider)
+            .add(
+              Expense(
+                id: 'refund-1',
+                tripId: s.tripId,
+                title: 'Refund: Dinner',
+                amount: 60,
+                currency: 'INR',
+                category: 'cat-food',
+                date: '2026-10-06',
+                paidBy: s.me,
+                splitMode: 'exact',
+                splitMemberIds: [s.me],
+                splitConfig: {s.me: 60},
+                resolvedShares: {s.me: 60},
+                refundOfExpenseId: parentId,
+                createdAt: 0,
+                updatedAt: 0,
+              ),
+            ),
+      );
+      await openExpenses(tester, s);
+      await tester.tap(find.byKey(const Key('tab-menu')));
+      await settle(tester);
+      await tester.tap(find.text('Expand all days'));
+      await settle(tester);
+      expect(find.byKey(const Key('row-refund-chip')), findsOneWidget);
+      expect(find.byKey(const Key('row-refunded-badge')), findsOneWidget);
+      expect(find.textContaining('Back to '), findsOneWidget);
+      final amounts = tester.widgetList<Text>(find.byKey(const Key('row-amount'))).map((t) => t.data).toList();
+      expect(amounts, contains('−₹60.00'));
+      // The day header nets the refund off: 300 − 60.
+      final total = find.byWidgetPredicate((w) => w.key.toString().contains("'day-total-"));
+      expect(tester.widget<Text>(total).data, '₹240.00');
     });
   });
 

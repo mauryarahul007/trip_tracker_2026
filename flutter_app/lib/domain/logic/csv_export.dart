@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../models/expense.dart';
 import '../models/member.dart';
 import '../models/trip.dart';
+import 'refunds.dart';
 
 String _cell(String raw) {
   var cleaned = raw.replaceAll('"', '""');
@@ -35,18 +36,19 @@ String exportTripLedgerCsv({
   for (final e in active) {
     final payer = names[e.paidBy] ?? e.paidBy;
     final split = e.splitMemberIds.map((id) => names[id] ?? id).join('; ');
-    lines.add(
-      [
-        e.date,
-        e.title,
-        e.category,
-        e.currency,
-        e.amount.toStringAsFixed(2),
-        payer,
-        split,
-        e.isSettlement ? 'yes' : 'no',
-      ].map(_cell).join(','),
-    );
+    // A refund is money back, so it exports negative and a spreadsheet SUM gives net spend. A plain number
+    // skips _cell: its formula guard would turn "-1000.00" into text.
+    final amount = (isRefund(e) ? -e.amount : e.amount).toStringAsFixed(2);
+    final cells = [
+      e.date,
+      e.title,
+      e.category,
+      e.currency,
+      payer,
+      split,
+      e.isSettlement ? 'yes' : 'no',
+    ].map(_cell).toList()..insert(4, amount);
+    lines.add(cells.join(','));
   }
   return lines.join('\n');
 }

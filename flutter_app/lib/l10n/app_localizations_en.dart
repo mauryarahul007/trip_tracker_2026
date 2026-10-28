@@ -1130,6 +1130,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rowReceipt => 'Receipt attached';
 
   @override
+  String get rowRefund => 'Refund';
+
+  @override
+  String get rowRefunded => 'Refunded';
+
+  @override
+  String rowRefundTo(String name) {
+    return 'Back to $name';
+  }
+
+  @override
   String get rowDisputed => 'Disputed';
 
   @override

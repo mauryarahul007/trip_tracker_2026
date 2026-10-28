@@ -22,6 +22,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
 | 2026-10-28 | unreleased | CHAT-TAB-PLANS-HUB | [Chat in the trip dock, Plans moved into the Hub](#chat-tab-plans-hub--chat-in-the-trip-dock-plans-moved-into-the-hub) |
+| 2026-10-28 | 3.82.2 | REFUND-LABEL | [Refunds read as Refund in Spend](#refund-label--refunds-read-as-refund-in-spend) |
 | 2026-10-27 | 3.82.0 | UX-POLISH-20 | [Polish pass: errors, undo, sync words, keypad, nav, a11y](#ux-polish-20--polish-pass-errors-undo-sync-words-keypad-nav-a11y) |
 | 2026-10-27 | 3.81.0 | ONE-THEME | [One Calm Passport theme across the app](#one-theme--one-calm-passport-theme-across-the-app) |
 | 2026-10-27 | 3.80.2 | HOME-BALANCES-GROUPS | [Home Balances count a square group as settled](#home-balances-groups--home-balances-count-a-square-group-as-settled) |
@@ -3917,3 +3918,29 @@ Then add a row to the **Index** table.
 - `enableNotesAndChecklist` and `enableTravelPasses` both OFF: Hub has no Plans tile. Dock unchanged.
 
 **Pass criteria:** Light and Dark, normal and 200% text: dock labels fit with no overflow, nothing from Notes/Plans is lost, Chat unread badge shows only on the dock.
+
+---
+
+## REFUND-LABEL — Refunds read as Refund in Spend
+
+**Shipped:** 2026-10-28 · v3.82.2 (Flutter) · Reuses `enableExpenseRefunds` (Trip pack, default ON) for recording. The labels need no flag: refunds already recorded keep changing balances when the flag is OFF, so they always show as refunds.
+
+**Prep:** A trip with 2+ members. Add "Dinner" ₹1,000 split equally, paid by you.
+
+**Steps**
+1. Open Dinner → Record refund → ₹200 → Save.
+2. Spend tab, normal rows. Pass: a row "Refund: Dinner" with a green **Refund** pill by the title, amount **−₹200** in green, sub line "Back to <payer>". No "your share" line on it.
+3. Pass: the Dinner row shows a small green undo mark (tooltip "Refunded").
+4. Pass: the day header total for the refund's day nets it off (both rows on one day: ₹800, not ₹1,200).
+5. Turn on compact rows (Pro, `enableCompactLedgerView`). Pass: the Refund pill and green −₹200 still show on the collapsed row.
+6. Turn `enableTidyExpenses` OFF (receipt rows). Pass: same pill and minus amount.
+7. Wide window or tablet (table view). Pass: Refund pill in the title column, −₹200 green in the amount column, undo mark on Dinner.
+8. Tap the refund row. Pass: detail shows the Refund pill and −₹200 in green.
+9. Trip tools → Export CSV. Pass: the refund line has amount `-200.00` as a number (no leading quote); SUM of the column gives net spend.
+10. Balances, trip total and Insights. Pass: unchanged from before this fix (they already used net ₹800).
+
+**Flag-OFF negative checks**
+- `enableExpenseRefunds` OFF: no Record refund action. A refund recorded earlier still shows the Refund pill and −amount, and still nets off totals.
+
+**Pass criteria:** A refund is never shown as a plain expense in any row layout, day totals are net, and CSV sums to net spend.
+
