@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-10-28 | unreleased | CHAT-TAB-PLANS-HUB | [Chat in the trip dock, Plans moved into the Hub](#chat-tab-plans-hub--chat-in-the-trip-dock-plans-moved-into-the-hub) |
 | 2026-10-27 | 3.82.0 | UX-POLISH-20 | [Polish pass: errors, undo, sync words, keypad, nav, a11y](#ux-polish-20--polish-pass-errors-undo-sync-words-keypad-nav-a11y) |
 | 2026-10-27 | 3.81.0 | ONE-THEME | [One Calm Passport theme across the app](#one-theme--one-calm-passport-theme-across-the-app) |
 | 2026-10-27 | 3.80.2 | HOME-BALANCES-GROUPS | [Home Balances count a square group as settled](#home-balances-groups--home-balances-count-a-square-group-as-settled) |
@@ -3874,7 +3875,7 @@ Then add a row to the **Index** table.
 6. **Onboarding art.** New account (or clear app data). Pass: the three intro slides show drawings (stamp, route with two pins, receipt with three arrows), no emoji.
 7. **Loading shapes.** Open a large trip on a slow phone, or throttle. Pass: Balances shows a hero block and avatar rows; Spend shows a summary block and category rows; People shows avatar rows.
 8. **Search.** Trips search box: type a payer's name, a place name, and an amount like 1200. Pass: matching expenses list under the trips, with the place or "Paid by X" in the detail line.
-9. **One trip navigation.** Ops Deck: turn `enableCompassNav` and `enableCalmPassportUi` OFF, `enableChatFirstNav` ON. Reopen a trip. Pass: still the Calm dock (Balances, Spend, Activity, Plans, Hub), Chat opens from the Hub.
+9. **One trip navigation.** Ops Deck: turn `enableCompassNav` and `enableCalmPassportUi` OFF, `enableChatFirstNav` ON. Reopen a trip. Pass: still the Calm dock (Balances, Spend, Activity, Chat, Hub), Plans opens from the Hub (changed by CHAT-TAB-PLANS-HUB).
 10. **Back gesture and discard.** Android 14+: start a back swipe on any pushed screen. Pass: the screen underneath peeks before you let go. Type in New trip, Edit trip, Report a problem or Feature request, then swipe back. Pass: "Discard changes?" appears. Save still closes without asking.
 11. **Autofill.** Superadmin login and Reset password. Pass: the password manager offers the saved email and password; reset offers to generate a new password.
 12. **Screen reader money.** TalkBack on, Spend tab. Pass: the summary card reads "You owe ₹1,200. Open settle up" (no "minus"). The Balances settle bar reads "You owe ₹…".
@@ -3893,3 +3894,26 @@ Then add a row to the **Index** table.
 
 **Pass criteria:** every step passes in Light and Dark, at normal and 200% text, with no raw error text, no overflow, and no screen asking "Are you sure?" for something it can undo.
 
+---
+
+## CHAT-TAB-PLANS-HUB — Chat in the trip dock, Plans moved into the Hub
+
+**Shipped:** 2026-10-28 · unreleased · No new flag (layout change to the one shipped trip nav). Reused: `enableTripChat` decides the Chat tab; `enableNotesAndChecklist` / `enableTravelPasses` decide the Hub Plans tile.
+
+**Prep:** One trip with 2+ members, a checklist item, a note and (if passes on) a travel pass. Second phone or web signed in as another member to send a chat message.
+
+**Steps**
+1. Open the trip. Pass: dock reads Balances, Spend, Activity, Chat, Hub. No Plans tab.
+2. Tap Chat. Pass: the trip chat opens and Chat is lit in the dock.
+3. From the other member, send a message while you sit on Balances. Pass: an unread dot shows on the dock Chat tab.
+4. Tap Hub. Pass: a **Plans** tile ("Checklist, notes, passes") is in the grid. No Notes tile and no Chat tile.
+5. Tap Plans. Pass: Passes, Checklist and Notes panes open with the same items as before. Hub stays lit in the dock. No Chat pane inside Plans.
+6. Add a checklist item and a note, go back to Hub, reopen Plans. Pass: both are still there.
+7. Open an old Plans/notes link or notification (`/trip/<id>/notes`). Pass: Plans opens, Hub lit.
+8. Swipe across trip pages. Pass: Chat comes after Activity; Plans and People come after Hub.
+
+**Flag-OFF negative checks**
+- `enableTripChat` OFF (Ops Deck or trip override): dock shows 4 items (Balances, Spend, Activity, Hub). No Chat anywhere.
+- `enableNotesAndChecklist` and `enableTravelPasses` both OFF: Hub has no Plans tile. Dock unchanged.
+
+**Pass criteria:** Light and Dark, normal and 200% text: dock labels fit with no overflow, nothing from Notes/Plans is lost, Chat unread badge shows only on the dock.

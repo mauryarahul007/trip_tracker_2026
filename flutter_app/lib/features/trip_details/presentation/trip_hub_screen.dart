@@ -23,7 +23,7 @@ import '../../trips/presentation/widgets/share_trip_sheet.dart';
 import '../application/trip_nav.dart';
 import '../domain/trip_tabs.dart';
 
-/// The Compass "Trip" tab: a cover and a grid of everything that is not the daily loop (People, Notes,
+/// The Compass "Trip" tab: a cover and a grid of everything that is not the daily loop (People, Plans,
 /// Receipts, Insights, Invite, Live location, Tools, Settings). Behind flag `enableCompassNav`.
 class TripHubScreen extends ConsumerWidget {
   const TripHubScreen({required this.tripId, super.key});
@@ -62,21 +62,15 @@ class TripHubScreen extends ConsumerWidget {
       _HubTile('hub-people', AppIcons.members, l10n.navMembers, '$members traveler${members == 1 ? '' : 's'}', () {
         context.go('/trip/$tripId/members');
       }),
-      // Calm Passport has no Chat tab in the bar; it opens from here.
-      if (t.calm && ref.watch(visibleTabsProvider(tripId)).contains(TripNavTab.chat))
-        _HubTile(
-          'hub-chat',
-          Icons.chat_bubble_outline_rounded,
-          'Chat',
-          unreadChat ? 'New messages' : 'Talk to the crew',
-          () => context.go('/trip/$tripId/chat'),
-        ),
+      // Calm Passport keeps Chat in the dock and Plans (checklist, notes, passes) here.
       if (hasNotes)
         _HubTile(
-          'hub-notes',
-          AppIcons.notes,
-          l10n.navNotes,
-          unreadChat && !ref.watch(visibleTabsProvider(tripId)).contains(TripNavTab.chat)
+          t.calm ? 'hub-plans' : 'hub-notes',
+          t.calm ? Icons.confirmation_number_outlined : AppIcons.notes,
+          t.calm ? 'Plans' : l10n.navNotes,
+          t.calm
+              ? 'Checklist, notes, passes'
+              : unreadChat && !ref.watch(visibleTabsProvider(tripId)).contains(TripNavTab.chat)
               ? 'New chat messages'
               : 'Notes, chat, passes',
           () {

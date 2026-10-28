@@ -13,8 +13,8 @@ import '../domain/trip_tabs.dart';
 /// The trip being viewed, live from local storage (null once deleted).
 final tripProvider = StreamProvider.family<Trip?, String>((ref, id) => ref.watch(tripRepositoryProvider).watchTrip(id));
 
-/// Bottom-nav pages for a trip. One navigation ships: the Calm Passport dock (Balances, Spend, Activity, Plans, Hub)
-/// with Chat and People as extra pages. The old Compass dock and the chat-first legacy bar are retired in the app,
+/// Bottom-nav pages for a trip. One navigation ships: the Calm Passport dock (Balances, Spend, Activity, Chat, Hub)
+/// with Plans and People as extra pages opened from the Hub. The old Compass dock and the chat-first legacy bar are retired in the app,
 /// so `enableCompassNav`, `enableCalmPassportUi` and `enableChatFirstNav` no longer change it. Notes, passes and chat
 /// flags (per-trip overrides apply) still decide whether Plans and Chat appear.
 final visibleTabsProvider = Provider.family<List<TripNavTab>, String>((ref, tripId) {
@@ -29,14 +29,14 @@ final visibleTabsProvider = Provider.family<List<TripNavTab>, String>((ref, trip
   );
 });
 
-/// Tabs in the trip's bottom dock: the Calm Passport five (Plans drops out when notes and passes are off).
+/// Tabs in the trip's bottom dock: the Calm Passport five (Chat drops out when trip chat is off).
 final dockTabsProvider = Provider.family<List<TripNavTab>, String>((ref, tripId) {
   bool flag(String key) => ref.watch(flagProvider((key, tripId))).value ?? (defaultFeatureFlags[key] ?? false);
   if (ref.watch(legacyNavAllowedProvider) && !ref.watch(compassFlagProvider((calmPassportFlag, tripId)))) {
     if (!ref.watch(compassFlagProvider((compassNavFlag, tripId)))) return ref.watch(visibleTabsProvider(tripId));
     return compassDockTabs();
   }
-  return calmDockTabs(showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses'));
+  return calmDockTabs(chatEnabled: flag('enableTripChat'));
 });
 
 /// The retired Compass and legacy tab sets, reachable only with [legacyNavAllowedProvider] (older tests).

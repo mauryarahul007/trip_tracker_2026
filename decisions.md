@@ -5398,3 +5398,9 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** Legacy Compass/chat-first dock widgets stay in the tree (unreachable) to keep the diff reviewable; removing them is a follow-up. Haptics were already semantic (`AppHaptics` policy table, enforced by a test), so no change there. Only a slice of hard-coded strings moved to l10n (sync, push prompt, activity/notification dialogs, spend summary, settle bar); most of Settings and Feedback are still inline (B-044). A real TalkBack pass and device perf numbers still need a phone (B-151, PERF.md).
 * **Release Cut:** version bumped to `3.82.0` via `npm run release:minor`.
 * **Follow-up:** `flutter_app/pubspec.yaml` was still `3.64.0+2`, so Android showed 3.64.0 for a 3.82.0 build (BUG-325). Now `3.82.0+3`; no new release cut, since the marketing version did not change.
+
+## 2026-10-28 — Chat in the trip dock, Plans moved into the Hub (v3.82.1)
+* **Decision:** Calm dock is now Balances, Spend, Activity, Chat, Hub (`calmDockTabs(chatEnabled:)`). Plans (the `notes` page: checklist, notes, passes) moved off the dock to a Hub tile `hub-plans`, which replaces the Hub Notes tile that opened the same page. The Hub Chat tile is gone; the unread dot is on the dock Chat tab. Plans and People light Hub. No new flag: `enableTripChat` and `enableNotesAndChecklist`/`enableTravelPasses` still decide visibility.
+* **Trade-offs Accepted:** Plans is one tap deeper. Test steps: CHAT-TAB-PLANS-HUB.
+* **Release Cut:** version bumped to `3.82.1` via `npm run release:patch`; pubspec `3.82.1+4`.
+

@@ -22,4 +22,40 @@ void main() {
     await settle(tester, rounds: 10);
     expect(find.byKey(const Key('calm-dock')), findsOneWidget);
   });
+
+  test('Calm dock keeps Chat and moves Plans into the Hub', () {
+    expect(calmDockTabs(chatEnabled: true), [
+      TripNavTab.ledger,
+      TripNavTab.expenses,
+      TripNavTab.activity,
+      TripNavTab.chat,
+      TripNavTab.hub,
+    ]);
+    expect(calmDockTabs(chatEnabled: false), isNot(contains(TripNavTab.chat)));
+    expect(calmDockTabs(chatEnabled: true), isNot(contains(TripNavTab.notes)));
+    expect(calmPagerTabs(chatEnabled: true, showNotesTab: true), containsAll([TripNavTab.notes, TripNavTab.members]));
+    expect(calmPagerTabs(chatEnabled: true, showNotesTab: false), isNot(contains(TripNavTab.notes)));
+    expect(calmDockTabFor(TripNavTab.notes), TripNavTab.hub);
+    expect(calmDockTabFor(TripNavTab.members), TripNavTab.hub);
+    expect(calmDockTabFor(TripNavTab.chat), TripNavTab.chat);
+  });
+
+  testApp('Hub shows Plans instead of Notes and no Chat tile; Chat sits in the dock', (tester) async {
+    await pumpApp(tester, user: asha, legacyNav: false, flagsOn: {'enableTripChat', 'enableNotesAndChecklist'});
+    final s = await seedTrip(tester);
+    final c = containerOf(tester);
+    expect(c.read(dockTabsProvider(s.tripId)), contains(TripNavTab.chat));
+    expect(c.read(dockTabsProvider(s.tripId)), isNot(contains(TripNavTab.notes)));
+    c.read(routerProvider).go('/trip/${s.tripId}/hub');
+    await settle(tester, rounds: 10);
+    expect(find.byKey(const Key('hub-plans')), findsOneWidget);
+    expect(find.byKey(const Key('hub-notes')), findsNothing);
+    expect(find.byKey(const Key('hub-chat')), findsNothing);
+    expect(find.descendant(of: find.byKey(const Key('calm-dock')), matching: find.text('Chat')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('calm-dock')), matching: find.text('Plans')), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('hub-plans')));
+    await tester.tap(find.byKey(const Key('hub-plans')));
+    await settle(tester, rounds: 10);
+    expect(find.byKey(const Key('tab-notes')), findsOneWidget);
+  });
 }
