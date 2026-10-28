@@ -3007,12 +3007,15 @@
     "title": "Expenses/Refunds filter chips on the Spend filter sheet",
     "description": "Expenses/Refunds filter chips on the Spend filter sheet",
     "category": "ui-ux",
-    "status": "requested",
+    "status": "shipped",
     "requestedBy": "claude-cli",
     "environment": {
       "platform": "web"
     },
     "createdAt": "2026-10-28T15:02:15.760Z",
-    "updatedAt": "2026-10-28T15:02:15.760Z"
+    "updatedAt": "2026-10-28T15:13:40.272Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-10-28T15:13:40.272Z",
+    "shippedNote": "Expenses/Refunds Type chips added to ExpenseFilterSheet, backed by EntryKind on ExpenseFilters. Commit 03d1bbf (v3.82.5)."
   }
 ]

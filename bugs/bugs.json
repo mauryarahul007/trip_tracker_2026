@@ -9431,7 +9431,7 @@
     "description": "Collapsed day in Spend read '1 expense' for a lone refund",
     "severity": "low",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -9446,7 +9446,10 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-10-28T15:00:27.949Z",
-    "updatedAt": "2026-10-28T15:00:27.950Z"
+    "updatedAt": "2026-10-28T15:13:38.551Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-28T15:13:38.550Z",
+    "resolutionNote": "Day header now reads refund-plural when every row in the day is a refund (expDayCountRefund). Commit 03d1bbf (v3.82.5)."
   },
   {
     "id": "BUG-331",
@@ -9454,7 +9457,7 @@
     "description": "Hub Insights tile duplicated the insights already surfaced on Balances",
     "severity": "low",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -9469,7 +9472,10 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-10-28T15:00:29.032Z",
-    "updatedAt": "2026-10-28T15:00:29.033Z"
+    "updatedAt": "2026-10-28T15:13:38.995Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-28T15:13:38.994Z",
+    "resolutionNote": "Removed the Hub Insights tile; Balances already surfaces burn rate/biggest day/top category inline and has its own icon to the same Insights screen. Commit 03d1bbf (v3.82.5)."
   },
   {
     "id": "BUG-332",
@@ -9477,7 +9483,7 @@
     "description": "Calm Add-expense FAB overlapped Add person on Members and showed on every tab",
     "severity": "medium",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -9492,7 +9498,10 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-10-28T15:00:29.811Z",
-    "updatedAt": "2026-10-28T15:00:29.812Z"
+    "updatedAt": "2026-10-28T15:13:39.452Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-28T15:13:39.451Z",
+    "resolutionNote": "Calm Add-expense FAB now only renders when currentTab is ledger or expenses. Commit 03d1bbf (v3.82.5)."
   },
   {
     "id": "BUG-333",
@@ -9500,7 +9509,7 @@
     "description": "Add-expense FAB painted over modal sheets (Filters, Settle, Trip tools) opened from Balances/Spend",
     "severity": "medium",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -9515,6 +9524,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-10-28T15:12:42.508Z",
-    "updatedAt": "2026-10-28T15:12:42.518Z"
+    "updatedAt": "2026-10-28T15:13:39.886Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-10-28T15:13:39.886Z",
+    "resolutionNote": "AppSheet.show and the Filters sheet now pass useRootNavigator: true so sheets paint above the shell's persistent FAB. Commit 03d1bbf (v3.82.6)."
   }
 ]

@@ -10,81 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **331** | All recorded bugs across sessions |
-| **🟢 Open** | **4** | No critical blockers, 0 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **300** | Verified & closed |
+| **✅ Resolved** | **304** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-330](#bug-330)** | ⚪ Low | `ui-ux` | Collapsed day in Spend read '1 expense' for a lone refund | `claude-cli` | 🟢 Open |
-| **[BUG-331](#bug-331)** | ⚪ Low | `ui-ux` | Hub Insights tile duplicated the insights already surfaced on Balances | `claude-cli` | 🟢 Open |
-| **[BUG-332](#bug-332)** | 🟡 Medium | `ui-ux` | Calm Add-expense FAB overlapped Add person on Members and showed on every tab | `claude-cli` | 🟢 Open |
-| **[BUG-333](#bug-333)** | 🟡 Medium | `ui-ux` | Add-expense FAB painted over modal sheets (Filters, Settle, Trip tools) opened from Balances/Spend | `claude-cli` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-330: Collapsed day in Spend read '1 expense' for a lone refund
-
-- **Severity**: `LOW` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 28/10/2026 (web)
-
-**Description**:
-Collapsed day in Spend read '1 expense' for a lone refund
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
-
-### BUG-331: Hub Insights tile duplicated the insights already surfaced on Balances
-
-- **Severity**: `LOW` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 28/10/2026 (web)
-
-**Description**:
-Hub Insights tile duplicated the insights already surfaced on Balances
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
-
-### BUG-332: Calm Add-expense FAB overlapped Add person on Members and showed on every tab
-
-- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 28/10/2026 (web)
-
-**Description**:
-Calm Add-expense FAB overlapped Add person on Members and showed on every tab
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
-
-### BUG-333: Add-expense FAB painted over modal sheets (Filters, Settle, Trip tools) opened from Balances/Spend
-
-- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 28/10/2026 (web)
-
-**Description**:
-Add-expense FAB painted over modal sheets (Filters, Settle, Trip tools) opened from Balances/Spend
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -390,6 +331,10 @@ Add-expense FAB painted over modal sheets (Filters, Settle, Trip tools) opened f
 | **BUG-327** | Refunds showed as plain expenses in Spend, and day totals added them | `ui-ux` | `medium` | `human` | `claude-cli` | Refund rows show a green Refund pill, green minus amount and 'Back to <payer>' in all row layouts and the detail sheet; parent gets a Refunded mark. DayGroup.total nets refunds; CSV exports them negative. Tests: refunds_test, expenses_tab_test. Commit b9dd72c (v3.82.2) |
 | **BUG-328** | Hub Insights was a plain screen, and the settlement pass back repeated You paid / Your share | `ui-ux` | `low` | `human` | `claude-cli` | Insights (enableInsightsV2): hero total + budget meter, tappable daily bars, running total, ranked categories, paid vs share, top 5 expenses; refunds netted. Pass back (enableSettleStatusPass): % settled ring, confirmed/waiting counts, last 3 payments. Tests: spend_insights_test, settle_status_test, ui_round3_test. Commit 6824836 (v3.82.3) |
 | **BUG-329** | Google sign-in failed on the Android dev build (com.triptracker.app.dev) | `auth` | `medium` | `human` | `claude-cli` | Dev flavor applicationIdSuffix set to .dev2 and dev shortcuts point at com.triptracker.app.dev2, which is registered with Google. Verified on device ZA223NLS48. Commit 0fb8a3e (v3.82.4) |
+| **BUG-330** | Collapsed day in Spend read '1 expense' for a lone refund | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Day header now reads refund-plural when every row in the day is a refund (expDayCountRefund). Commit 03d1bbf (v3.82.5). |
+| **BUG-331** | Hub Insights tile duplicated the insights already surfaced on Balances | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Removed the Hub Insights tile; Balances already surfaces burn rate/biggest day/top category inline and has its own icon to the same Insights screen. Commit 03d1bbf (v3.82.5). |
+| **BUG-332** | Calm Add-expense FAB overlapped Add person on Members and showed on every tab | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Calm Add-expense FAB now only renders when currentTab is ledger or expenses. Commit 03d1bbf (v3.82.5). |
+| **BUG-333** | Add-expense FAB painted over modal sheets (Filters, Settle, Trip tools) opened from Balances/Spend | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | AppSheet.show and the Filters sheet now pass useRootNavigator: true so sheets paint above the shell's persistent FAB. Commit 03d1bbf (v3.82.6). |
 
 ---
 

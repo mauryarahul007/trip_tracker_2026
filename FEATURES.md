@@ -10,10 +10,10 @@
 | Metric | Count |
 | :--- | :--- |
 | **Total Tracked** | **189** |
-| **💡 Requested** | **4** |
+| **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **185** |
+| **✅ Shipped** | **186** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -25,7 +25,6 @@
 | **[FEAT-002](#feat-002)** | `ui-ux` | Test | `mauryarahul007@gmail.com` | 💡 Requested |
 | **[FEAT-024](#feat-024)** | `admin` | CI pipeline for lint, build, and test on push/PR | `claude-cli` | 💡 Requested |
 | **[FEAT-167](#feat-167)** | `ui-ux` | Automatic Android APK build from main (Flutter merged into main) | `claude-cli` | 💡 Requested |
-| **[FEAT-189](#feat-189)** | `ui-ux` | Expenses/Refunds filter chips on the Spend filter sheet | `claude-cli` | 💡 Requested |
 
 ---
 
@@ -56,15 +55,6 @@ CI pipeline for lint, build, and test on push/PR
 - **Requested By**: `claude-cli` on 19/10/2026 (web)
 
 Automatic Android APK build from main (Flutter merged into main)
-
----
-
-### FEAT-189: Expenses/Refunds filter chips on the Spend filter sheet
-
-- **Category**: `ui-ux` | **Status**: `requested`
-- **Requested By**: `claude-cli` on 28/10/2026 (web)
-
-Expenses/Refunds filter chips on the Spend filter sheet
 
 ---
 
@@ -257,6 +247,7 @@ Expenses/Refunds filter chips on the Spend filter sheet
 | **FEAT-186** | Calm Passport round 2: Balances-first trip bar, live hero, Spend hero cards (v3.80.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 05ccff0 (v3.80.0), flag enableCalmPassportUi default ON |
 | **FEAT-187** | One Calm Passport theme across the Flutter app (v3.81.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4d38bb9 (v3.81.0), flag enableCalmPassportUi now picks layout only |
 | **FEAT-188** | UI/UX polish pass: 20 items (v3.82.0) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 67a0abd (v3.82.0), flags enableClearErrorStates, enableSaveConfirmation, enableOnboardingArt, enableDockedKeypad, enableShapedSkeletons default ON |
+| **FEAT-189** | Expenses/Refunds filter chips on the Spend filter sheet | `ui-ux` | `claude-cli` | `claude-cli` | Expenses/Refunds Type chips added to ExpenseFilterSheet, backed by EntryKind on ExpenseFilters. Commit 03d1bbf (v3.82.5). |
 
 ---
 
