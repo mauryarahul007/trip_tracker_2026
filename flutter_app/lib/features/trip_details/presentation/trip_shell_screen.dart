@@ -1,5 +1,3 @@
-import '../../../shared/widgets/cached_photo.dart';
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -10,7 +8,6 @@ import '../../../app/auth_state.dart';
 import '../../../core/env/app_env.dart';
 import '../../../core/clock.dart';
 import '../../../core/errors/tab_error_boundary.dart';
-import '../../../core/network/connectivity_provider.dart';
 import '../../../core/platform/haptics.dart';
 import '../../../core/flags/compass_flags.dart';
 import '../../../data/providers.dart';
@@ -23,34 +20,28 @@ import '../../../domain/models/trip.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
-import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../chat/application/chat_providers.dart';
-import '../../../domain/logic/expense_list_logic.dart' show isActualExpense;
-import '../../../domain/models/expense.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../../expenses/presentation/widgets/settle_nudge_banner.dart';
-import '../../travel/maps/trip_route_panel.dart';
-import '../../travel/maps/trip_route_modal.dart';
+import '../../travel/maps/deferred_trip_map_hero.dart';
+import 'widgets/trip_content_sheet.dart';
+import 'widgets/trip_dashboard_header.dart';
 import '../../travel/presentation/live_location_share_modal.dart';
 import '../../trips/presentation/widgets/share_trip_sheet.dart';
-import '../../trips/presentation/widgets/sync_chip.dart';
 import 'widgets/edit_trip_sheet.dart';
 import 'widgets/trip_header_actions.dart';
 import 'widgets/trip_actions_sheet.dart';
-import '../../trips/presentation/widgets/trip_card.dart' show TripStatusPill, tripHeadline;
+import '../../trips/presentation/widgets/trip_card.dart' show tripHeadline;
 import '../../expenses/application/money_providers.dart' show allTripsProvider;
-import '../../trips/application/trip_accent.dart';
-import '../../trips/application/sync_wording.dart';
 import '../../trips/application/trips_providers.dart';
 import '../application/trip_nav.dart';
 import 'widgets/compass_balances_rail.dart';
 import '../domain/trip_tabs.dart';
 import '../../../core/platform/motion.dart';
-import '../../../shared/theme/app_colors.dart';
 
 /// Branch order == [TripNavTab] order (chat, expenses, ledger, members, notes).
 String tripTabLabel(BuildContext context, TripNavTab tab) {
@@ -121,6 +112,8 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
   late int _current;
 
   RealtimeManager? _realtime;
+  final _sheetKey = GlobalKey<TripContentSheetState>();
+  final _sheetProgressNotifier = ValueNotifier<double>(0.0);
 
   @override
   void initState() {
@@ -141,6 +134,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
 
   @override
   void dispose() {
+    _sheetProgressNotifier.dispose();
     unawaited(_realtime?.closeTrip());
     tripShellClosed.add(null);
     super.dispose();
@@ -167,6 +161,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
         );
       case 'map':
         ref.read(tripMapOpenProvider(widget.tripId).notifier).toggle();
+        _sheetKey.currentState?.toggle();
       case 'edit-trip':
         AppSheet.show<bool>(
           context: context,
@@ -194,6 +189,10 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
 
   /// Back: previous tab from the trail, else leave the trip.
   void _onBack() {
+    if (_sheetProgressNotifier.value > 0.8) {
+      _sheetKey.currentState?.collapseToPeek();
+      return;
+    }
     final popped = popTab(_trail);
     if (popped.tab != null) {
       _trail = popped.trail;
@@ -202,6 +201,56 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
     } else {
       _leave();
     }
+  }
+
+  void _openTripActions() {
+    final l10n = context.l10n;
+    final switchOn = ref.watch(flagProvider(('enableTripSwitcher', widget.tripId))).value ?? true;
+    final now = ref.read(nowProvider)();
+    final others = switchOn
+        ? sortTripModels([
+            for (final x in ref.watch(allTripsProvider).value ?? const <Trip>[])
+              if (!x.archived) x,
+          ], ref.watch(tripSortProvider))
+        : const <Trip>[];
+
+    TripActionsSheet.show(
+      context,
+      tripId: widget.tripId,
+      onSwitch: others.length > 1
+          ? () {
+              AppSheet.show<void>(
+                context: context,
+                title: l10n.tripSwitchTitle,
+                builder: (sheetCtx) => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final x in others)
+                      ListTile(
+                        key: Key('switch-to-${x.id}'),
+                        selected: x.id == widget.tripId,
+                        leading: Icon(x.id == widget.tripId ? Icons.check_circle_rounded : Icons.luggage_outlined),
+                        title: Text(x.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        subtitle: Text(
+                          [
+                            tripHeadline(sheetCtx, tripStatus(x.startDate, x.endDate, now)),
+                            if (x.startDate.isNotEmpty) formatDateRange(x.startDate, x.endDate),
+                          ].where((e) => e.isNotEmpty).join(' · '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onTap: () {
+                          unawaited(AppHaptics.selection());
+                          Navigator.of(sheetCtx).pop();
+                          if (x.id != widget.tripId) openTripFresh(context, x.id, name: x.name);
+                        },
+                      ),
+                  ],
+                ),
+              );
+            }
+          : null,
+    );
   }
 
   @override
@@ -224,7 +273,13 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
     final wide = MediaQuery.sizeOf(context).width >= kSideNavBreakpoint && tabs.length >= 2;
     final calm = ref.watch(compassFlagProvider((calmPassportFlag, widget.tripId)));
     final compass = !calm && ref.watch(compassFlagProvider((compassNavFlag, widget.tripId)));
-    final mapExpanded = ref.watch(tripMapOpenProvider(widget.tripId));
+    ref.listen(tripMapOpenProvider(widget.tripId), (_, open) {
+      if (open) {
+        _sheetKey.currentState?.collapseToPeek();
+      } else {
+        _sheetKey.currentState?.expandFull();
+      }
+    });
     final dial = ref.watch(flagProvider(('enableQuickAddSpeedDial', widget.tripId))).value ?? true;
     final dock = ref.watch(dockTabsProvider(widget.tripId));
     final dockActive = dock.indexOf(
@@ -251,6 +306,71 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
         ),
     ];
 
+    final headerActions = tripHeaderActions(
+      context,
+      ref,
+      tripId: widget.tripId,
+      variant: compass || calm
+          ? TripHeaderVariant.compass
+          : cleanBar
+          ? TripHeaderVariant.clean
+          : TripHeaderVariant.legacy,
+      onMenu: _onMenu,
+    );
+
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final backdropHeight = screenHeight * 0.55;
+
+    final dashboardStack = Stack(
+      fit: StackFit.expand,
+      children: [
+        // 0. Continuous Backdrop Photo / Map Hero in upper 55% of viewport
+        if (trip != null)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: backdropHeight,
+            child: DeferredTripMapHero(
+              trip: trip,
+              height: backdropHeight,
+            ),
+          ),
+
+        // 1. Draggable Content Sheet (snaps 50% peek <-> 100% full screen)
+        Positioned.fill(
+          child: TripContentSheet(
+            key: _sheetKey,
+            progressNotifier: _sheetProgressNotifier,
+            headerHeight: 52.0,
+            collapsedFraction: 0.50,
+            child: Column(
+              children: [
+                const OfflineBanner(),
+                SettleNudgeBanner(tripId: widget.tripId),
+                Expanded(child: widget.body),
+              ],
+            ),
+          ),
+        ),
+
+        // 2. Floating Squeezable Header
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: TripDashboardHeader(
+            trip: trip,
+            progressNotifier: _sheetProgressNotifier,
+            onBack: _onBack,
+            actions: headerActions,
+            tab: currentTab.name,
+            onTitleTap: _openTripActions,
+          ),
+        ),
+      ],
+    );
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -258,25 +378,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
       },
       child: AppScaffold(
         maxContentWidth: null,
-        appBar: AppBar(
-          // Bento: the app bar sits on the ground colour with an ink title; the theme supplies both.
-          leading: IconButton(tooltip: l10n.actionBack, icon: const Icon(AppIcons.back, size: 20), onPressed: _onBack),
-          title: _TripTitle(tripId: widget.tripId, tab: currentTab.name),
-          // Compass nav: Share, Edit trip, Route map, Live location and App settings moved to the Trip tab.
-          actions: [
-            ...tripHeaderActions(
-              context,
-              ref,
-              tripId: widget.tripId,
-              variant: compass || calm
-                  ? TripHeaderVariant.compass
-                  : cleanBar
-                  ? TripHeaderVariant.clean
-                  : TripHeaderVariant.legacy,
-              onMenu: _onMenu,
-            ),
-          ],
-        ),
+        safeTop: false,
         body: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -292,33 +394,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1040),
-                  child: Column(
-                    children: [
-                      const OfflineBanner(),
-                      SettleNudgeBanner(tripId: widget.tripId),
-                      if (trip != null) _TripStrip(tripId: widget.tripId, tab: currentTab.name),
-                      AnimatedSize(
-                        duration: AppMotion.of(context, AppMotion.fast),
-                        curve: Curves.easeOutCubic,
-                        alignment: Alignment.topCenter,
-                        child: mapExpanded && trip != null
-                            ? TripRoutePanel(
-                                trip: trip,
-                                showStops:
-                                    ref.watch(flagProvider(('enableTripHeaderActions', widget.tripId))).value ?? true,
-                                onOpen: () => showModalBottomSheet<void>(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  showDragHandle: true, // same grab handle as every AppSheet
-                                  useSafeArea: true,
-                                  builder: (_) => TripRouteModal(trip: trip),
-                                ),
-                              )
-                            : const SizedBox(width: double.infinity),
-                      ),
-                      Expanded(child: widget.body),
-                    ],
-                  ),
+                  child: dashboardStack,
                 ),
               ),
             ),
@@ -478,347 +554,3 @@ class TripTabPlaceholder extends StatelessWidget {
 /// Slim strip under the top bar on every tab: status and dates (flag `enableTripHeaderStrip`). With
 /// `enableTripCoverHeader` it becomes a cover photo band, and `enableSyncLine` adds a saved / syncing line.
 /// (members, expenses) shown in the header chip: active members, and real expenses (not settlements or bin items).
-(int, int) _tripCounts(WidgetRef ref, String tripId) => (
-  ref.watch(visibleMembersProvider(tripId)).length,
-  [
-    for (final e in ref.watch(tripExpensesProvider(tripId)).value ?? const <Expense>[])
-      if (isActualExpense(e) && e.deletedAt == null) e,
-  ].length,
-);
-
-class _TripStrip extends ConsumerWidget {
-  const _TripStrip({required this.tripId, required this.tab});
-  final String tripId;
-
-  /// The tab the traveller is on; switching trips keeps it.
-  final String tab;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // With header actions on, the meta line sits under the trip name and this strip is not shown.
-    final actionsOn = ref.watch(flagProvider(('enableTripHeaderActions', tripId))).value ?? true;
-    final on = !actionsOn && (ref.watch(flagProvider(('enableTripHeaderStrip', tripId))).value ?? false);
-    final trip = ref.watch(tripProvider(tripId)).value;
-    if (!on || trip == null) return const SizedBox.shrink();
-    final t = context.tokens;
-    final status = tripStatus(trip.startDate, trip.endDate, ref.read(nowProvider)());
-    final headline = tripHeadline(context, status);
-    final dates = trip.startDate.isEmpty ? '' : formatDateRange(trip.startDate, trip.endDate);
-    final coverOn = ref.watch(flagProvider(('enableTripCoverHeader', tripId))).value ?? true;
-    final cover = coverOn ? ref.watch(tripCoverProvider(tripCoverKey(trip))).value : null;
-    final syncOn = ref.watch(flagProvider(('enableSyncLine', tripId))).value ?? true;
-    final accentOn = ref.watch(flagProvider(('enableTripAccent', tripId))).value ?? true;
-    final accent = accentOn ? ref.watch(tripAccentProvider(tripId)).value : null;
-    final hasCover = cover != null && cover.isNotEmpty;
-
-    final row = Row(
-      children: [
-        // Status and dates take whatever room the trailing controls leave; dates shorten first.
-        Expanded(
-          child: Row(
-            children: [
-              if (headline.isNotEmpty) ...[
-                Flexible(flex: 2, child: TripStatusPill(headline, color: accent)),
-                const SizedBox(width: 10),
-              ],
-              if (dates.isNotEmpty)
-                Flexible(
-                  child: Text(
-                    dates,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: hasCover ? Colors.white : t.textSecondary,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        if (syncOn) Flexible(child: _SyncLine(onDark: hasCover)),
-      ],
-    );
-    if (!hasCover) {
-      return Padding(key: const Key('trip-strip'), padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: row);
-    }
-    return Padding(
-      key: const Key('trip-strip'),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(t.radiusMd),
-        child: SizedBox(
-          height: 92,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              const DecoratedBox(
-                decoration: BoxDecoration(gradient: LinearGradient(colors: [AppColors.heroNavy, AppColors.heroTeal])),
-              ),
-              Hero(
-                tag: 'trip-photo-$tripId',
-                child: Image(
-                  image: cachedPhotoSized(context, cover, logicalWidth: MediaQuery.sizeOf(context).width),
-                  key: const Key('trip-cover'),
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                ),
-              ),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.black.withValues(alpha: 0.15), Colors.black.withValues(alpha: 0.7)],
-                  ),
-                ),
-              ),
-              Positioned(left: 12, right: 12, bottom: 10, child: row),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// "All saved" / "Syncing 3 changes" / "Offline - 2 waiting" / "Sync issue - Retry": local-first trust at a glance.
-class _SyncLine extends ConsumerWidget {
-  const _SyncLine({required this.onDark});
-  final bool onDark;
-
-  /// Icon only unless something is wrong (room is tight next to the trip arrows); problems still say it in words.
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final t = context.tokens;
-    final online = ref.watch(isOnlineProvider).value ?? true;
-    final status = ref.watch(syncStatusProvider).value ?? const SyncStatus();
-    final w = syncWording(l10n, online: online, status: status);
-    final (String text, IconData icon) = (w.text, w.icon);
-    final Color color = switch (w.tone) {
-      SyncTone.problem => onDark ? Colors.white : t.colorDanger,
-      SyncTone.busy => onDark ? Colors.white : t.textSecondary,
-      SyncTone.calm => onDark ? Colors.white70 : t.textMuted,
-    };
-    final line = Row(
-      key: const Key('sync-line'),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
-          ),
-        ),
-      ],
-    );
-    if (status.issues == 0) return line;
-    return InkWell(
-      key: const Key('sync-line-retry'),
-      onTap: () => showSyncReviewSheet(context),
-      child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: line),
-    );
-  }
-}
-
-/// The trip name in the top bar. With more than one trip it is a button: a small arrow opens a list of your other
-/// trips (in the Trips list order) and picking one opens it on the tab you are on (flag `enableTripSwitcher`).
-class _TripTitle extends ConsumerWidget {
-  const _TripTitle({required this.tripId, required this.tab});
-  final String tripId;
-  final String tab;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final tokens = context.tokens;
-    final trip = ref.watch(tripProvider(tripId)).value;
-    final switchOn = ref.watch(flagProvider(('enableTripSwitcher', tripId))).value ?? true;
-    final now = ref.read(nowProvider)();
-    final others = switchOn
-        ? sortTripModels([
-            for (final x in ref.watch(allTripsProvider).value ?? const <Trip>[])
-              if (!x.archived) x,
-          ], ref.watch(tripSortProvider))
-        : const <Trip>[];
-    final canSwitch = others.length > 1 && others.any((x) => x.id == tripId);
-    final name = Text(
-      trip?.name ?? '',
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: TextStyle(
-        fontFamily: AppTypography.fontTitle,
-        fontWeight: FontWeight.w800,
-        fontSize: 22,
-        letterSpacing: -0.5,
-        color: tokens.textPrimary,
-      ),
-    );
-    final title = Hero(
-      tag: 'trip-title-$tripId',
-      child: Material(type: MaterialType.transparency, child: name),
-    );
-    final actionsOn = ref.watch(flagProvider(('enableTripHeaderActions', tripId))).value ?? true;
-    final compassNav = ref.watch(compassFlagProvider((compassNavFlag, tripId)));
-    void openSwitcher() => AppSheet.show<void>(
-      context: context,
-      title: l10n.tripSwitchTitle,
-      builder: (sheetCtx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final x in others)
-            ListTile(
-              key: Key('switch-to-${x.id}'),
-              selected: x.id == tripId,
-              leading: Icon(x.id == tripId ? Icons.check_circle_rounded : Icons.luggage_outlined),
-              title: Text(x.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-              subtitle: Text(
-                [
-                  tripHeadline(sheetCtx, tripStatus(x.startDate, x.endDate, now)),
-                  if (x.startDate.isNotEmpty) formatDateRange(x.startDate, x.endDate),
-                ].where((e) => e.isNotEmpty).join(' · '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              onTap: () {
-                unawaited(AppHaptics.selection());
-                Navigator.of(sheetCtx).pop();
-                if (x.id != tripId) openTripFresh(context, x.id, name: x.name);
-              },
-            ),
-        ],
-      ),
-    );
-
-    if (actionsOn && trip != null) {
-      final counts = _tripCounts(ref, tripId);
-      final status = tripStatus(trip.startDate, trip.endDate, now);
-      final dot = switch (status.phase) {
-        TripPhase.active => tokens.colorSuccess,
-        TripPhase.upcoming => tokens.primaryAccent,
-        _ => tokens.textMuted,
-      };
-      final meta = [
-        if (trip.startDate.isNotEmpty) formatDateRange(trip.startDate, trip.endDate),
-        '${counts.$1} member${counts.$1 == 1 ? '' : 's'}',
-        '${counts.$2} expense${counts.$2 == 1 ? '' : 's'}',
-      ].join('  ·  ');
-      return KeyedSubtree(
-        key: const Key('trip-title'),
-        child: Semantics(
-          button: true,
-          label: '${trip.name}. $meta. Trip actions',
-          excludeSemantics: true,
-          child: InkWell(
-            key: const Key('trip-title-actions'),
-            borderRadius: BorderRadius.circular(tokens.radiusMd),
-            // Compass nav: everything else this sheet offered lives in the Trip tab, so the title only switches trips.
-            onTap: compassNav
-                ? (canSwitch ? openSwitcher : null)
-                : () => TripActionsSheet.show(context, tripId: tripId, onSwitch: canSwitch ? openSwitcher : null),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 48),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Hero(
-                          tag: 'trip-title-$tripId',
-                          child: Material(
-                            type: MaterialType.transparency,
-                            child: Text(
-                              trip.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontTitle,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 20,
-                                height: 1.15,
-                                letterSpacing: -0.2,
-                                color: tokens.textPrimary,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (!compassNav || canSwitch)
-                        Icon(Icons.expand_more_rounded, size: 20, color: tokens.textSecondary),
-                    ],
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        key: const Key('trip-status-dot'),
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          meta,
-                          key: const Key('trip-meta'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontBody,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w500,
-                            height: 1.25,
-                            letterSpacing: 0.1,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                            color: tokens.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-    if (!canSwitch) {
-      return KeyedSubtree(key: const Key('trip-title'), child: title);
-    }
-    return KeyedSubtree(
-      key: const Key('trip-title'),
-      child: Semantics(
-        button: true,
-        label: '${trip?.name ?? ''}. ${l10n.tripSwitchTitle}',
-        excludeSemantics: true,
-        child: InkWell(
-          key: const Key('trip-switcher'),
-          borderRadius: BorderRadius.circular(tokens.radiusMd),
-          onTap: openSwitcher,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(child: title),
-                Icon(Icons.expand_more_rounded, color: tokens.textSecondary),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

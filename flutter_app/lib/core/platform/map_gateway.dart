@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../shared/theme/app_colors.dart';
 
@@ -57,7 +59,8 @@ abstract class MapGateway {
   });
 }
 
-/// Fallback interactive vector canvas implementation for environments without native C++ MapLibre binaries.
+/// Live interactive vector and raster tile map engine backed by OpenStreetMap.
+/// 100% pure Dart, 0 native C++ dependencies, keyless, and cross-platform.
 class DefaultMapGateway implements MapGateway {
   const DefaultMapGateway();
 
@@ -73,7 +76,7 @@ class DefaultMapGateway implements MapGateway {
     VoidCallback? onMapReady,
     Key? key,
   }) {
-    return _InteractiveCanvasMap(
+    return _LiveFlutterMap(
       key: key,
       initialLat: initialLat,
       initialLng: initialLng,
@@ -82,6 +85,149 @@ class DefaultMapGateway implements MapGateway {
       routes: routes,
       padding: padding,
       onMapReady: onMapReady,
+    );
+  }
+}
+
+class _LiveFlutterMap extends StatefulWidget {
+  final double initialLat;
+  final double initialLng;
+  final double initialZoom;
+  final List<MapMarker> markers;
+  final List<MapRouteLine> routes;
+  final EdgeInsets padding;
+  final VoidCallback? onMapReady;
+
+  const _LiveFlutterMap({
+    super.key,
+    required this.initialLat,
+    required this.initialLng,
+    required this.initialZoom,
+    required this.markers,
+    required this.routes,
+    required this.padding,
+    this.onMapReady,
+  });
+
+  @override
+  State<_LiveFlutterMap> createState() => _LiveFlutterMapState();
+}
+
+class _LiveFlutterMapState extends State<_LiveFlutterMap> {
+  late final MapController _mapController;
+
+  @override
+  void initState() {
+    super.initState();
+    _mapController = MapController();
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final points = <LatLng>[];
+    for (final m in widget.markers) {
+      points.add(LatLng(m.lat, m.lng));
+    }
+    for (final r in widget.routes) {
+      for (final c in r.coordinates) {
+        points.add(LatLng(c.lat, c.lng));
+      }
+    }
+
+    final initialCenter = LatLng(widget.initialLat, widget.initialLng);
+
+    CameraFit? cameraFit;
+    if (points.length >= 2) {
+      cameraFit = CameraFit.bounds(
+        bounds: LatLngBounds.fromPoints(points),
+        padding: widget.padding == EdgeInsets.zero
+            ? const EdgeInsets.symmetric(horizontal: 32, vertical: 48)
+            : widget.padding,
+      );
+    }
+
+    return FlutterMap(
+      mapController: _mapController,
+      options: MapOptions(
+        initialCenter: initialCenter,
+        initialZoom: widget.initialZoom,
+        initialCameraFit: cameraFit,
+        interactionOptions: const InteractionOptions(
+          flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+        ),
+        onMapReady: () {
+          widget.onMapReady?.call();
+        },
+      ),
+      children: [
+        // OpenStreetMap raster tile layer (Free, keyless, global)
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.triptracker.app',
+          maxZoom: 19,
+        ),
+
+        // Route polyline layer (road-following OSRM or straight-line fallback)
+        if (widget.routes.isNotEmpty)
+          PolylineLayer(
+            polylines: [
+              for (final route in widget.routes)
+                Polyline(
+                  points: route.coordinates.map((c) => LatLng(c.lat, c.lng)).toList(),
+                  strokeWidth: route.strokeWidth,
+                  color: route.color,
+                  strokeCap: StrokeCap.round,
+                  strokeJoin: StrokeJoin.round,
+                ),
+            ],
+          ),
+
+        // Stop and destination markers
+        if (widget.markers.isNotEmpty)
+          MarkerLayer(
+            markers: [
+              for (final m in widget.markers)
+                Marker(
+                  key: Key('map_marker_${m.id}'),
+                  point: LatLng(m.lat, m.lng),
+                  width: 38,
+                  height: 38,
+                  child: GestureDetector(
+                    onTap: m.onTap,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: m.color ?? AppColors.calmTeal,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        m.icon ?? m.label ?? '📍',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+      ],
     );
   }
 }
@@ -141,99 +287,6 @@ class FakeMapGateway implements MapGateway {
       ),
     );
   }
-}
-
-class _InteractiveCanvasMap extends StatefulWidget {
-  final double initialLat;
-  final double initialLng;
-  final double initialZoom;
-  final List<MapMarker> markers;
-  final List<MapRouteLine> routes;
-  final EdgeInsets padding;
-  final VoidCallback? onMapReady;
-
-  const _InteractiveCanvasMap({
-    super.key,
-    required this.initialLat,
-    required this.initialLng,
-    required this.initialZoom,
-    required this.markers,
-    required this.routes,
-    required this.padding,
-    this.onMapReady,
-  });
-
-  @override
-  State<_InteractiveCanvasMap> createState() => _InteractiveCanvasMapState();
-}
-
-class _InteractiveCanvasMapState extends State<_InteractiveCanvasMap> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.onMapReady?.call();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.calmPaperHover,
-      child: CustomPaint(
-        painter: _MapCanvasPainter(markers: widget.markers, routes: widget.routes),
-        child: Stack(
-          children: [
-            for (final marker in widget.markers)
-              Positioned(
-                key: Key('map_marker_${marker.id}'),
-                left: 30,
-                top: 30,
-                child: GestureDetector(
-                  onTap: marker.onTap,
-                  child: Container(
-                    decoration: BoxDecoration(color: marker.color ?? AppColors.calmTeal, shape: BoxShape.circle),
-                    padding: const EdgeInsets.all(4),
-                    child: Text(marker.icon ?? '📍'),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MapCanvasPainter extends CustomPainter {
-  final List<MapMarker> markers;
-  final List<MapRouteLine> routes;
-
-  _MapCanvasPainter({required this.markers, required this.routes});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final bgPaint = Paint()..color = AppColors.calmPaperHover;
-    canvas.drawRect(Offset.zero & size, bgPaint);
-
-    for (final route in routes) {
-      if (route.coordinates.length < 2) continue;
-      final paint = Paint()
-        ..color = route.color
-        ..strokeWidth = route.strokeWidth
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
-
-      final path = Path();
-      // Draw simulated subtle curve across the viewport
-      path.moveTo(size.width * 0.15, size.height * 0.35);
-      path.quadraticBezierTo(size.width * 0.5, size.height * 0.7, size.width * 0.85, size.height * 0.4);
-      canvas.drawPath(path, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
 final mapGatewayProvider = Provider<MapGateway>((ref) {

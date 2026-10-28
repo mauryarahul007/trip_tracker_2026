@@ -53,5 +53,32 @@ void main() {
       final cached = await resolveDestinationImage('Shimla');
       expect(cached, img);
     });
+
+    test('extractPlaceCandidates strips noise words and parses routes', () {
+      final candidates = extractPlaceCandidates('Sikkim Bagpacking');
+      expect(candidates, contains('Sikkim'));
+
+      final routeCandidates = extractPlaceCandidates('Bagdogra -> Gangtok -> Lachung');
+      expect(routeCandidates, contains('Bagdogra'));
+      expect(routeCandidates, contains('Gangtok'));
+      expect(routeCandidates, contains('Lachung'));
+    });
+
+    test('getFallbackTravelPhoto returns thematic mountain photo for Sikkim and Switzerland', () {
+      final sikkimPhoto = getFallbackTravelPhoto('Sikkim Bagpacking');
+      final swissPhoto = getFallbackTravelPhoto('Switzerland');
+      expect(sikkimPhoto, contains('photo-1464822759023-fed622ff2c3b')); // Alps/Mountain
+      expect(swissPhoto, contains('photo-1464822759023-fed622ff2c3b'));
+    });
+
+    test('resolveDestinationImage returns fallback photo when remote API fails', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Not found', 404);
+      });
+
+      final img = await resolveDestinationImage('UnknownMysteriousPlace', client: mockClient);
+      expect(img, isNotNull);
+      expect(img, startsWith('https://images.unsplash.com/photo-'));
+    });
   });
 }

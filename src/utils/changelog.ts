@@ -9,6 +9,23 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.84.0',
+    date: '2026-10-29',
+    changes: [
+      'Flutter app brings Web-parity destination photo & OpenStreetMap route hero across all tabs.',
+      'Squeezable sticky header and effortless single-swipe content sheet drawer with intelligent fling snapping.',
+      'Guaranteed non-blank destination travel photography with travel noise word stripping and Wikivoyage support.',
+    ],
+  },
+  {
+    version: '3.83.0',
+    date: '2026-10-28',
+    changes: [
+      'Activity feed supports multi-select clearing and direct navigation to expenses and refunds.',
+      'Chat timeline includes refund transactions with streamlined styling.',
+    ],
+  },
+  {
     version: '3.82.10',
     date: '2026-10-28',
     changes: [

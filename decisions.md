@@ -5471,3 +5471,25 @@ This document logs all meaningful technical decisions, library choices, design p
     - Gated "Add member" action in `TripHubTab.tsx` and `MembersGroupsTab.tsx` to remain active only when trip status is active (`isTripActive`).
 * **Trade-offs Accepted:** Batch clearing in Flutter maintains session-scoped dismissal for synthesized log items while permanently deleting remote notifications; permanent deletion of underlying expenses or messages requires deleting the expense itself.
 * **Release Cut:** Version bumped to `3.83.0` via `npm run release:minor`. ADR logged.
+
+## 2026-10-29 — Flutter Web-Parity Destination Map & Photo Hero, Squeezable Header, and Smooth Content Drawer (v3.84.0)
+* **Context:** The Web app featured a trip UI where opening a trip shows the destination photograph for 1.8 seconds before smoothly fading to an interactive OpenStreetMap route with marked destination stops, framed below a floating squeezable header and a draggable tab content sheet. In Flutter, trips lacked this signature backdrop hero, the drawer gesture was difficult to initiate (requiring multiple swipes due to high velocity thresholds and small handle hit-areas), and destination photography was frequently blank for trips with suffixes or noise words (such as "Sikkim Bagpacking" or "Switzerland").
+* **Decision & Implementation:**
+  - **Destination Route & Geocoding Engine:**
+    - Created `resolve_trip_stops.dart` (`parseDestinationStopNames`, `geocodePlaceName` via Photon Komoot OSM API with in-memory caching, and `resolveTripStops` Riverpod provider).
+    - Integrated real OpenStreetMap tile rendering in `DefaultMapGateway.buildMap` via `flutter_map: ^8.3.2` and `latlong2: ^0.10.1`, rendering glowing cyan road routes and stop markers.
+  - **Deferred Hero Presentation:**
+    - Updated `DeferredTripMapHero` with a 1.8-second initial destination photo presentation before smoothly cross-fading into the interactive route map (`Curves.easeInOut`).
+  - **Squeezable Header & Web-Parity Stack:**
+    - Created `TripDashboardHeader` supporting full metadata display at peek progress (0.0) and squeezing smoothly into a compact sticky bar at progress 1.0 without removing ANY back, title, sync, or action menu buttons.
+    - Integrated `TripDashboardHeader`, `DeferredTripMapHero`, and `TripContentSheet` into `TripShellScreen` across all navigation tabs.
+  - **Single-Swipe Drawer & Gesture Tuning:**
+    - Overhauled `TripContentSheet`: replaced the rigid 300 px/s threshold and 50% distance requirement with intuitive fling detection (80 px/s) and an 8% upward threshold from collapsed state, enabling immediate one-swipe full-screen expansion.
+    - Added `NotificationListener<ScrollNotification>` on the tab body, enabling upward swipes anywhere across the entire sheet (cards, lists, or background) to drive drawer expansion.
+    - Enlarged the drag handle pill and widened its hit-test bounds.
+  - **Guaranteed Non-Blank Destination Photography:**
+    - Overhauled `place_image_service.dart`: added `extractPlaceCandidates` to strip travel noise words (`bagpacking`, `backpacking`, `trip`, `tour`, `trek`), dual-tier Wikivoyage and Wikipedia REST queries, and the 16 curated high-res Unsplash destination photo collection (`getFallbackTravelPhoto`) matching web.
+    - Updated `TripPhotoHero` to immediately paint thematic alpine/mountain photography for "Sikkim Bagpacking" and "Switzerland", completely eliminating blank screens.
+* **Trade-offs Accepted:** Geocoding relies on OSM Nominatim / Photon Komoot APIs with local memory caching; geocoding results are cached per session to prevent rate-limiting while providing accurate coordinates for custom trip routes.
+* **Release Cut:** Version bumped to `3.84.0` via `npm run release:minor`. ADR logged.
+
