@@ -45,7 +45,7 @@ class EmptyState extends StatelessWidget {
     return CustomPaint(
       painter: _DotsPainter(tokens.textMuted.withValues(alpha: 0.22)),
       child: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
           child: Column(
             mainAxisSize: MainAxisSize.min,

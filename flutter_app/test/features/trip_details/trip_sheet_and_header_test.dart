@@ -5,6 +5,9 @@ import 'package:trip_tracker/domain/models/trip.dart';
 import 'package:trip_tracker/features/trip_details/presentation/widgets/trip_content_sheet.dart';
 import 'package:trip_tracker/features/trip_details/presentation/widgets/trip_dashboard_header.dart';
 
+import '../../support/pump_app.dart';
+import '../../support/seed.dart';
+
 void main() {
   const sampleTrip = Trip(
     id: 't_sikkim',
@@ -21,13 +24,15 @@ void main() {
   );
 
   group('TripDashboardHeader', () {
-    testWidgets('renders expanded state at progress 0.0 with title, status, and actions', (tester) async {
+    testApp('renders expanded state at progress 0.0 with title, status, and actions', (tester) async {
+      await pumpApp(tester, user: asha);
       final progressNotifier = ValueNotifier<double>(0.0);
       var backPressed = false;
       var morePressed = false;
 
       await tester.pumpWidget(
-        ProviderScope(
+        UncontrolledProviderScope(
+          container: containerOf(tester),
           child: MaterialApp(
             home: Scaffold(
               body: TripDashboardHeader(
@@ -64,12 +69,14 @@ void main() {
       expect(backPressed, isTrue);
     });
 
-    testWidgets('squeezes at progress 1.0 without removing any action buttons or title', (tester) async {
+    testApp('squeezes at progress 1.0 without removing any action buttons or title', (tester) async {
+      await pumpApp(tester, user: asha);
       final progressNotifier = ValueNotifier<double>(1.0);
       var morePressed = false;
 
       await tester.pumpWidget(
-        ProviderScope(
+        UncontrolledProviderScope(
+          container: containerOf(tester),
           child: MaterialApp(
             home: Scaffold(
               body: TripDashboardHeader(
@@ -96,7 +103,7 @@ void main() {
       await tester.tap(find.byKey(const Key('header_more_test')));
       expect(morePressed, isTrue);
 
-      // Metadata row is collapsed (height <= 1)
+      // Metadata row is collapsed
       expect(find.text('Upcoming'), findsNothing);
     });
   });
@@ -119,20 +126,21 @@ void main() {
         ),
       );
 
-      expect(find.text('Sheet Content Body'), findsOneWidget);
+      // Initially at collapsed state (progress = 0.0)
       expect(progressNotifier.value, 0.0);
+      expect(find.text('Sheet Content Body'), findsOneWidget);
+      expect(find.byKey(const Key('trip_content_sheet_drag_handle')), findsOneWidget);
 
-      // Find the drag handle bar and tap it to toggle expand
-      final handle = find.byType(GestureDetector).first;
-      await tester.tap(handle);
+      // Tap on drag handle toggles to full screen
+      await tester.tap(find.byKey(const Key('trip_content_sheet_drag_handle')));
       await tester.pumpAndSettle();
 
-      // Progress should now be 1.0 (full screen)
+      // Expanded to full screen (progress = 1.0, isFull = true)
       expect(progressNotifier.value, 1.0);
       expect(isFullState, isTrue);
 
-      // Tap again to collapse
-      await tester.tap(handle);
+      // Tap again toggles back to collapsed
+      await tester.tap(find.byKey(const Key('trip_content_sheet_drag_handle')));
       await tester.pumpAndSettle();
 
       expect(progressNotifier.value, 0.0);
@@ -148,17 +156,20 @@ void main() {
             body: TripContentSheet(
               progressNotifier: progressNotifier,
               collapsedFraction: 0.50,
-              child: const Text('Sheet Content Body'),
+              child: const Text('Sheet Drag Target'),
             ),
           ),
         ),
       );
 
-      final handle = find.byType(GestureDetector).first;
-      // Single gentle upward swipe of 40 pixels
-      await tester.drag(handle, const Offset(0, -40));
+      expect(progressNotifier.value, 0.0);
+
+      // Perform a gentle upward drag of 50px (enough to exceed 8% threshold from 50vh)
+      final handle = find.byKey(const Key('trip_content_sheet_drag_handle'));
+      await tester.drag(handle, const Offset(0, -50));
       await tester.pumpAndSettle();
 
+      // Drawer must immediately snap fully open
       expect(progressNotifier.value, 1.0);
     });
 
@@ -171,7 +182,10 @@ void main() {
             body: TripContentSheet(
               progressNotifier: progressNotifier,
               collapsedFraction: 0.50,
-              child: ListView(children: List.generate(20, (i) => ListTile(title: Text('Item $i')))),
+              child: ListView.builder(
+                itemCount: 50,
+                itemBuilder: (context, index) => ListTile(title: Text('Item $index')),
+              ),
             ),
           ),
         ),
@@ -179,10 +193,11 @@ void main() {
 
       expect(progressNotifier.value, 0.0);
 
-      // Swipe up on the list item inside the sheet
-      await tester.drag(find.text('Item 0'), const Offset(0, -60));
+      // Dragging on the list scroll area upward pulls the drawer up
+      await tester.drag(find.text('Item 2'), const Offset(0, -60));
       await tester.pumpAndSettle();
 
+      // Drawer must snap fully open
       expect(progressNotifier.value, 1.0);
     });
   });

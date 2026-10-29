@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.84.2',
+    date: '2026-10-29',
+    changes: [
+      'Fixed Flutter CI widget visibility and drawer initial position by respecting default map collapsed state.',
+      'Restored instant trip switching from the header title in compass navigation mode.',
+      'Squeezable header preserves trip member and expense metadata across all device font scales without layout overflow.',
+      'Synchronized multi-platform test fixtures and formatting for 100% green CI runs.',
+    ],
+  },
+  {
     version: '3.84.1',
     date: '2026-10-29',
     changes: [

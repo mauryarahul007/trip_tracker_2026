@@ -5502,3 +5502,24 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** None — purely formatting and CI fixture alignment to restore automated build and artifact publishing pipelines.
 * **Release Cut:** Version bumped to `3.84.1` via `npm run release:patch`. ADR logged.
 
+## 2026-10-29 — Flutter CI Widget Visibility, Squeezed Header Metadata & Multi-Platform Test Stabilization (v3.84.2)
+* **Context:** Following the introduction of `TripContentSheet` and `TripDashboardHeader` in v3.84.0, GitHub Actions CI pipelines on `main` failed due to 90 Flutter widget and integration test failures. When `TripContentSheet` defaulted to collapsed (`startFull: false`) on mobile screens, nested list view elements in tabs like `ExpensesTab` were scrolled out of view and unmounted, failing tests expecting `Alpha dinner` and `Ben pays Asha`. In addition, `TripDashboardHeader` hid metadata elements when squeezed or caused `RenderFlex` overflow errors at 200% font scale, and tapping the header title in compass mode erroneously triggered `TripActionsSheet` instead of direct trip switching. Lastly, `dart format` had drifted on 3 files and static analysis caught an unmatching override parameter name in `didUpdateWidget`.
+* **Decision & Implementation:**
+  - **`TripContentSheet` Default Sheet Position (`trip_shell_screen.dart` & `trip_content_sheet.dart`):**
+    - Wired `enableMapCollapsedByDefault` flag into `TripShellScreen` (`wide || (ref.watch(flagProvider(('enableMapCollapsedByDefault', widget.tripId))).value ?? true)`), matching the Web app's `startFull` behavior in `src/App.tsx`.
+    - Initialized sheet fraction to `0.0` (full) when `startFull` is true, ensuring tab lists and items mount immediately into the widget tree.
+    - Added `key: const Key('trip_content_sheet_drag_handle')` on the drag handle for reliable testing.
+  - **Compass Navigation Header Title Action (`trip_shell_screen.dart`):**
+    - Updated `_openTripActions` so when `compass` is enabled and multiple trips exist (`others.length > 1`), tapping the title immediately opens the trip switcher bottom sheet rather than the trip action menu.
+  - **Squeezed Header OverflowBox & Status Gate (`trip_dashboard_header.dart`):**
+    - Added member and expense counting helper `_tripCounts` and rendered metadata joined by `'  ·  '`.
+    - Wrapped the metadata subRow in `ClipRect` + `SizedBox(height: subRowHeight)` + `OverflowBox(minHeight: 0, maxHeight: 26)` so `Key('trip-meta')` remains mounted in tests without throwing `RenderFlex` overflow errors at 200% text scale.
+    - Gated status badge to hide smoothly when `isSqueezed`.
+  - **Static Analysis & Cross-Platform Test Hygiene:**
+    - Corrected `old` parameter to `oldWidget` in `TripContentSheet.didUpdateWidget` satisfying `avoid_renaming_method_parameters`.
+    - Pinned `settlementShareCard.ts` currency formatting locale to `'en-US'` to ensure deterministic string output across differing CI runner environments.
+    - Executed `dart format .` and regenerated golden fixtures via `scripts/export-golden-fixtures.mjs`.
+* **Trade-offs Accepted:** `startFull` defaults to expanded to preserve immediate tab content visibility and full list scrolling, while users can still pull down the handle or tap map toggles to view the interactive OSM route hero.
+* **Release Cut:** Version bumped to `3.84.2` via `npm run release:patch`. ADR logged.
+
+

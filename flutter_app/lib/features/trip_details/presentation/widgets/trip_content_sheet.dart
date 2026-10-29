@@ -1,8 +1,9 @@
+import 'dart:async';
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
+import '../../../../core/platform/haptics.dart';
 import '../../../../shared/theme/app_tokens.dart';
 
 /// Draggable bottom content sheet over the continuous photo/map backdrop.
@@ -15,6 +16,7 @@ class TripContentSheet extends StatefulWidget {
   final double headerHeight;
   final double collapsedFraction;
   final ValueChanged<bool>? onFullChange;
+  final bool startFull;
 
   const TripContentSheet({
     super.key,
@@ -23,6 +25,7 @@ class TripContentSheet extends StatefulWidget {
     this.headerHeight = 56.0,
     this.collapsedFraction = 0.50,
     this.onFullChange,
+    this.startFull = false,
   });
 
   @override
@@ -46,12 +49,25 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
   @override
   void initState() {
     super.initState();
+    _fraction = widget.startFull ? 0.0 : 1.0;
+    widget.progressNotifier.value = widget.startFull ? 1.0 : 0.0;
     _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 350))
       ..addListener(() {
         if (_springAnim != null) {
           _updateFraction(_springAnim!.value);
         }
       });
+  }
+
+  @override
+  void didUpdateWidget(TripContentSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.startFull != widget.startFull) {
+      final target = widget.startFull ? 0.0 : 1.0;
+      if (_fraction != target) {
+        animateTo(target);
+      }
+    }
   }
 
   @override
@@ -87,7 +103,7 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
   }
 
   void animateTo(double targetFraction) {
-    HapticFeedback.lightImpact();
+    unawaited(AppHaptics.light());
     _springAnim = Tween<double>(
       begin: _fraction,
       end: targetFraction,
@@ -199,22 +215,27 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
               child: Column(
                 children: [
                   // Drag Handle Bar with generous hit target across the full width
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: toggle,
-                    onVerticalDragStart: _onVerticalDragStart,
-                    onVerticalDragUpdate: (d) => _onVerticalDragUpdate(d, usableRange),
-                    onVerticalDragEnd: _onVerticalDragEnd,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(0, 12, 0, 14),
-                      alignment: Alignment.center,
+                  Semantics(
+                    button: true,
+                    label: _fraction < 0.5 ? 'Collapse sheet' : 'Expand sheet',
+                    child: GestureDetector(
+                      key: const Key('trip_content_sheet_drag_handle'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: toggle,
+                      onVerticalDragStart: _onVerticalDragStart,
+                      onVerticalDragUpdate: (d) => _onVerticalDragUpdate(d, usableRange),
+                      onVerticalDragEnd: _onVerticalDragEnd,
                       child: Container(
-                        width: 44,
-                        height: 5.0,
-                        decoration: BoxDecoration(
-                          color: t.textSecondary.withValues(alpha: 0.45),
-                          borderRadius: BorderRadius.circular(99),
+                        width: double.infinity,
+                        padding: const EdgeInsets.fromLTRB(0, 12, 0, 14),
+                        alignment: Alignment.center,
+                        child: Container(
+                          width: 44,
+                          height: 5.0,
+                          decoration: BoxDecoration(
+                            color: t.textSecondary.withValues(alpha: 0.45),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
                         ),
                       ),
                     ),

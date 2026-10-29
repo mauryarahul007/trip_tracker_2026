@@ -8,6 +8,12 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.84.2', '2026-10-29', [
+    'Fixed Flutter CI widget visibility and drawer initial position by respecting default map collapsed state.',
+    'Restored instant trip switching from the header title in compass navigation mode.',
+    'Squeezable header preserves trip member and expense metadata across all device font scales without layout overflow.',
+    'Synchronized multi-platform test fixtures and formatting for 100% green CI runs.',
+  ]),
   ChangelogEntry('3.84.1', '2026-10-29', [
     'Fixed Flutter CI formatting and synchronized golden fixtures across Flutter and web pipelines.',
     'Unblocked automated Android APK releases on main builds.',
@@ -50,8 +56,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.77.5', '2026-10-22', [
     'Tap an Activity row to jump straight to that chat message or expense, and use See in Activity on an expense to see its history.',
-  ]),
-  ChangelogEntry('3.77.4', '2026-10-22', [
-    'Trip Activity is now a full log: your own expenses, refunds, settlements, edits, recent deletions and chat messages all show up, not only what others did.',
   ]),
 ];

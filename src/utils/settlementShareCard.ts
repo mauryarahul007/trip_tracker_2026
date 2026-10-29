@@ -16,9 +16,9 @@ export interface SettlementShareCardLayout {
   lines: string[];
 }
 
-export function formatSettlementAmount(amount: number, currencySymbol: string): string {
+export function formatSettlementAmount(amount: number, currencySymbol: string, locale: string = 'en-US'): string {
   const n = Number.isFinite(amount) ? amount : 0;
-  return `${currencySymbol}${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `${currencySymbol}${n.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function buildSettlementShareCaption(input: SettlementShareCardInput): string {

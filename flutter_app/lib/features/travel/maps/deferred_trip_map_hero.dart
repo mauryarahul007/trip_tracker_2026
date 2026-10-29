@@ -8,6 +8,11 @@ import '../../../domain/models/trip.dart';
 import 'trip_map_hero.dart';
 import 'trip_photo_hero.dart';
 
+/// Reactive provider for resolved trip stops with valid coordinates.
+final resolvedTripStopsProvider = FutureProvider.family<List<TripStop>, Trip>((ref, trip) async {
+  return resolveTripStops(trip);
+});
+
 class DeferredTripMapHero extends ConsumerStatefulWidget {
   final Trip trip;
   final ValueChanged<String>? onToneChange;

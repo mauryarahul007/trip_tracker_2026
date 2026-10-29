@@ -28,6 +28,8 @@ import '../../chat/application/chat_providers.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../../expenses/presentation/widgets/settle_nudge_banner.dart';
 import '../../travel/maps/deferred_trip_map_hero.dart';
+import '../../travel/maps/trip_route_modal.dart';
+import '../../travel/maps/trip_route_panel.dart';
 import 'widgets/trip_content_sheet.dart';
 import 'widgets/trip_dashboard_header.dart';
 import '../../travel/presentation/live_location_share_modal.dart';
@@ -35,7 +37,13 @@ import '../../trips/presentation/widgets/share_trip_sheet.dart';
 import 'widgets/edit_trip_sheet.dart';
 import 'widgets/trip_header_actions.dart';
 import 'widgets/trip_actions_sheet.dart';
-import '../../trips/presentation/widgets/trip_card.dart' show tripHeadline;
+import '../../../core/network/connectivity_provider.dart';
+import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/cached_photo.dart';
+import '../../trips/application/sync_wording.dart';
+import '../../trips/application/trip_accent.dart';
+import '../../trips/presentation/widgets/sync_chip.dart' show showSyncReviewSheet;
+import '../../trips/presentation/widgets/trip_card.dart' show TripStatusPill, tripHeadline;
 import '../../expenses/application/money_providers.dart' show allTripsProvider;
 import '../../trips/application/trips_providers.dart';
 import '../application/trip_nav.dart';
@@ -189,10 +197,6 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
 
   /// Back: previous tab from the trail, else leave the trip.
   void _onBack() {
-    if (_sheetProgressNotifier.value > 0.8) {
-      _sheetKey.currentState?.collapseToPeek();
-      return;
-    }
     final popped = popTab(_trail);
     if (popped.tab != null) {
       _trail = popped.trail;
@@ -205,52 +209,59 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
 
   void _openTripActions() {
     final l10n = context.l10n;
-    final switchOn = ref.watch(flagProvider(('enableTripSwitcher', widget.tripId))).value ?? true;
+    final switchOn = ref.read(flagProvider(('enableTripSwitcher', widget.tripId))).value ?? true;
     final now = ref.read(nowProvider)();
     final others = switchOn
         ? sortTripModels([
-            for (final x in ref.watch(allTripsProvider).value ?? const <Trip>[])
+            for (final x in ref.read(allTripsProvider).value ?? const <Trip>[])
               if (!x.archived) x,
-          ], ref.watch(tripSortProvider))
+          ], ref.read(tripSortProvider))
         : const <Trip>[];
 
-    TripActionsSheet.show(
-      context,
-      tripId: widget.tripId,
-      onSwitch: others.length > 1
-          ? () {
-              AppSheet.show<void>(
-                context: context,
-                title: l10n.tripSwitchTitle,
-                builder: (sheetCtx) => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final x in others)
-                      ListTile(
-                        key: Key('switch-to-${x.id}'),
-                        selected: x.id == widget.tripId,
-                        leading: Icon(x.id == widget.tripId ? Icons.check_circle_rounded : Icons.luggage_outlined),
-                        title: Text(x.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        subtitle: Text(
-                          [
-                            tripHeadline(sheetCtx, tripStatus(x.startDate, x.endDate, now)),
-                            if (x.startDate.isNotEmpty) formatDateRange(x.startDate, x.endDate),
-                          ].where((e) => e.isNotEmpty).join(' · '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        onTap: () {
-                          unawaited(AppHaptics.selection());
-                          Navigator.of(sheetCtx).pop();
-                          if (x.id != widget.tripId) openTripFresh(context, x.id, name: x.name);
-                        },
-                      ),
-                  ],
+    final calm = ref.read(compassFlagProvider((calmPassportFlag, widget.tripId)));
+    final compass = !calm && ref.read(compassFlagProvider((compassNavFlag, widget.tripId)));
+    final canSwitch = others.length > 1 && others.any((x) => x.id == widget.tripId);
+
+    void openSwitcher() {
+      AppSheet.show<void>(
+        context: context,
+        title: l10n.tripSwitchTitle,
+        builder: (sheetCtx) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final x in others)
+              ListTile(
+                key: Key('switch-to-${x.id}'),
+                selected: x.id == widget.tripId,
+                leading: Icon(x.id == widget.tripId ? Icons.check_circle_rounded : Icons.luggage_outlined),
+                title: Text(x.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                subtitle: Text(
+                  [
+                    tripHeadline(sheetCtx, tripStatus(x.startDate, x.endDate, now)),
+                    if (x.startDate.isNotEmpty) formatDateRange(x.startDate, x.endDate),
+                  ].where((e) => e.isNotEmpty).join(' · '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              );
-            }
-          : null,
-    );
+                onTap: () {
+                  unawaited(AppHaptics.selection());
+                  Navigator.of(sheetCtx).pop();
+                  if (x.id != widget.tripId) openTripFresh(context, x.id, name: x.name);
+                },
+              ),
+          ],
+        ),
+      );
+    }
+
+    if (compass) {
+      if (canSwitch) {
+        openSwitcher();
+      }
+      return;
+    }
+
+    TripActionsSheet.show(context, tripId: widget.tripId, onSwitch: canSwitch ? openSwitcher : null);
   }
 
   @override
@@ -271,8 +282,12 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
 
     final cleanBar = ref.watch(flagProvider(('enableCleanTopBar', widget.tripId))).value ?? true;
     final wide = MediaQuery.sizeOf(context).width >= kSideNavBreakpoint && tabs.length >= 2;
+    final mapCollapsedByDefault = ref.watch(flagProvider(('enableMapCollapsedByDefault', widget.tripId))).value ?? true;
+    final startFull = wide || mapCollapsedByDefault;
     final calm = ref.watch(compassFlagProvider((calmPassportFlag, widget.tripId)));
     final compass = !calm && ref.watch(compassFlagProvider((compassNavFlag, widget.tripId)));
+    final mapExpanded = ref.watch(tripMapOpenProvider(widget.tripId));
+    ref.watch(allTripsProvider);
     ref.listen(tripMapOpenProvider(widget.tripId), (_, open) {
       if (open) {
         _sheetKey.currentState?.collapseToPeek();
@@ -338,13 +353,33 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
         Positioned.fill(
           child: TripContentSheet(
             key: _sheetKey,
+            startFull: startFull,
             progressNotifier: _sheetProgressNotifier,
             headerHeight: 52.0,
-            collapsedFraction: 0.50,
+            collapsedFraction: wide ? 0.0 : 0.50,
             child: Column(
               children: [
                 const OfflineBanner(),
                 SettleNudgeBanner(tripId: widget.tripId),
+                if (trip != null) _TripStrip(tripId: widget.tripId, tab: currentTab.name),
+                AnimatedSize(
+                  duration: AppMotion.of(context, AppMotion.fast),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: mapExpanded && trip != null
+                      ? TripRoutePanel(
+                          trip: trip,
+                          showStops: ref.watch(flagProvider(('enableTripHeaderActions', widget.tripId))).value ?? true,
+                          onOpen: () => showModalBottomSheet<void>(
+                            context: context,
+                            isScrollControlled: true,
+                            showDragHandle: true,
+                            useSafeArea: true,
+                            builder: (_) => TripRouteModal(trip: trip),
+                          ),
+                        )
+                      : const SizedBox(width: double.infinity),
+                ),
                 Expanded(child: widget.body),
               ],
             ),
@@ -547,4 +582,142 @@ class TripTabPlaceholder extends StatelessWidget {
 
 /// Slim strip under the top bar on every tab: status and dates (flag `enableTripHeaderStrip`). With
 /// `enableTripCoverHeader` it becomes a cover photo band, and `enableSyncLine` adds a saved / syncing line.
-/// (members, expenses) shown in the header chip: active members, and real expenses (not settlements or bin items).
+class _TripStrip extends ConsumerWidget {
+  const _TripStrip({required this.tripId, required this.tab});
+  final String tripId;
+
+  /// The tab the traveller is on; switching trips keeps it.
+  final String tab;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // With header actions on, the meta line sits under the trip name and this strip is not shown.
+    final actionsOn = ref.watch(flagProvider(('enableTripHeaderActions', tripId))).value ?? true;
+    final on = !actionsOn && (ref.watch(flagProvider(('enableTripHeaderStrip', tripId))).value ?? false);
+    final trip = ref.watch(tripProvider(tripId)).value;
+    if (!on || trip == null) return const SizedBox.shrink();
+    final t = context.tokens;
+    final status = tripStatus(trip.startDate, trip.endDate, ref.read(nowProvider)());
+    final headline = tripHeadline(context, status);
+    final dates = trip.startDate.isEmpty ? '' : formatDateRange(trip.startDate, trip.endDate);
+    final coverOn = ref.watch(flagProvider(('enableTripCoverHeader', tripId))).value ?? true;
+    final cover = coverOn ? ref.watch(tripCoverProvider(tripCoverKey(trip))).value : null;
+    final syncOn = ref.watch(flagProvider(('enableSyncLine', tripId))).value ?? true;
+    final accentOn = ref.watch(flagProvider(('enableTripAccent', tripId))).value ?? true;
+    final accent = accentOn ? ref.watch(tripAccentProvider(tripId)).value : null;
+    final hasCover = cover != null && cover.isNotEmpty;
+
+    final row = Row(
+      children: [
+        // Status and dates take whatever room the trailing controls leave; dates shorten first.
+        Expanded(
+          child: Row(
+            children: [
+              if (headline.isNotEmpty) ...[
+                Flexible(flex: 2, child: TripStatusPill(headline, color: accent)),
+                const SizedBox(width: 10),
+              ],
+              if (dates.isNotEmpty)
+                Flexible(
+                  child: Text(
+                    dates,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: hasCover ? Colors.white : t.textSecondary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (syncOn) Flexible(child: _SyncLine(onDark: hasCover)),
+      ],
+    );
+    if (!hasCover) {
+      return Padding(key: const Key('trip-strip'), padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: row);
+    }
+    return Padding(
+      key: const Key('trip-strip'),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(t.radiusMd),
+        child: SizedBox(
+          height: 92,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const DecoratedBox(
+                decoration: BoxDecoration(gradient: LinearGradient(colors: [AppColors.heroNavy, AppColors.heroTeal])),
+              ),
+              Hero(
+                tag: 'trip-photo-$tripId',
+                child: Image(
+                  image: cachedPhotoSized(context, cover, logicalWidth: MediaQuery.sizeOf(context).width),
+                  key: const Key('trip-cover'),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.black.withValues(alpha: 0.15), Colors.black.withValues(alpha: 0.7)],
+                  ),
+                ),
+              ),
+              Positioned(left: 12, right: 12, bottom: 10, child: row),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "All saved" / "Syncing 3 changes" / "Offline - 2 waiting" / "Sync issue - Retry": local-first trust at a glance.
+class _SyncLine extends ConsumerWidget {
+  const _SyncLine({required this.onDark});
+  final bool onDark;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final online = ref.watch(isOnlineProvider).value ?? true;
+    final status = ref.watch(syncStatusProvider).value ?? const SyncStatus();
+    final w = syncWording(l10n, online: online, status: status);
+    final (String text, IconData icon) = (w.text, w.icon);
+    final Color color = switch (w.tone) {
+      SyncTone.problem => onDark ? Colors.white : t.colorDanger,
+      SyncTone.busy => onDark ? Colors.white : t.textSecondary,
+      SyncTone.calm => onDark ? Colors.white70 : t.textMuted,
+    };
+    final line = Row(
+      key: const Key('sync-line'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+          ),
+        ),
+      ],
+    );
+    if (status.issues == 0) return line;
+    return InkWell(
+      key: const Key('sync-line-retry'),
+      onTap: () => showSyncReviewSheet(context),
+      child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: line),
+    );
+  }
+}

@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/trip.dart';
@@ -133,8 +132,3 @@ Future<List<TripStop>> resolveTripStops(Trip trip, {http.Client? client}) async 
   // Filter to only those with valid numeric coordinates
   return resolved.where((s) => s.lat != null && s.lng != null).toList();
 }
-
-/// Reactive provider for resolved trip stops with valid coordinates.
-final resolvedTripStopsProvider = FutureProvider.family<List<TripStop>, Trip>((ref, trip) async {
-  return resolveTripStops(trip);
-});
