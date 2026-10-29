@@ -13,14 +13,7 @@ class TripMapHero extends ConsumerStatefulWidget {
   final ValueChanged<String>? onToneChange;
   final double height;
 
-  const TripMapHero({
-    super.key,
-    required this.trip,
-    this.stops,
-    this.onReady,
-    this.onToneChange,
-    this.height = 220,
-  });
+  const TripMapHero({super.key, required this.trip, this.stops, this.onReady, this.onToneChange, this.height = 220});
 
   @override
   ConsumerState<TripMapHero> createState() => _TripMapHeroState();
@@ -79,14 +72,16 @@ class _TripMapHeroState extends ConsumerState<TripMapHero> {
       final isLast = i == valid.length - 1;
       final color = isFirst ? AppColors.calmOwed : (isLast ? AppColors.calmOwe : AppColors.calmTeal);
 
-      markers.add(MapMarker(
-        id: s.id,
-        lat: s.lat!,
-        lng: s.lng!,
-        label: valid.length > 1 ? '${i + 1}' : '📍',
-        title: s.name,
-        color: color,
-      ));
+      markers.add(
+        MapMarker(
+          id: s.id,
+          lat: s.lat!,
+          lng: s.lng!,
+          label: valid.length > 1 ? '${i + 1}' : '📍',
+          title: s.name,
+          color: color,
+        ),
+      );
     }
 
     final routes = <MapRouteLine>[];
@@ -102,12 +97,7 @@ class _TripMapHeroState extends ConsumerState<TripMapHero> {
           glow: true,
         ),
       );
-      routes.add(MapRouteLine(
-        id: 'route_main',
-        coordinates: points,
-        color: AppColors.accentCyan,
-        strokeWidth: 3.5,
-      ));
+      routes.add(MapRouteLine(id: 'route_main', coordinates: points, color: AppColors.accentCyan, strokeWidth: 3.5));
     }
 
     final mapGateway = ref.watch(mapGatewayProvider);

@@ -8,6 +8,40 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.84.1', '2026-10-29', [
+    'Fixed Flutter CI formatting and synchronized golden fixtures across Flutter and web pipelines.',
+    'Unblocked automated Android APK releases on main builds.',
+  ]),
+  ChangelogEntry('3.84.0', '2026-10-29', [
+    'Flutter app brings Web-parity destination photo & OpenStreetMap route hero across all tabs.',
+    'Squeezable sticky header and effortless single-swipe content sheet drawer with intelligent fling snapping.',
+    'Guaranteed non-blank destination travel photography with travel noise word stripping and Wikivoyage support.',
+  ]),
+  ChangelogEntry('3.83.0', '2026-10-28', [
+    'Activity feed supports multi-select clearing and direct navigation to expenses and refunds.',
+    'Chat timeline includes refund transactions with streamlined styling.',
+  ]),
+  ChangelogEntry('3.82.10', '2026-10-28', [
+    'Added an expense exclude-from-totals toggle, and transformed Hub into an icon tile grid.',
+    'Refined navigation with a floating action button on Balances and Spend, edge-to-edge Activity feed, and destination blurred ambient background in Hub.',
+  ]),
+  ChangelogEntry('3.82.4', '2026-10-28', ['Fixed Google sign-in on the Android dev test build.']),
+  ChangelogEntry('3.82.3', '2026-10-28', [
+    'Insights in the Hub got new charts: daily bars, a running total, ranked categories, paid vs share per person and your biggest expenses.',
+    'The back of the settlement pass now shows how much of the trip is settled and your recent payments.',
+  ]),
+  ChangelogEntry('3.82.2', '2026-10-28', [
+    'Refunds now read as a Refund with a minus amount in Spend, and day totals subtract them.',
+  ]),
+  ChangelogEntry('3.82.1', '2026-10-28', [
+    'Chat is back in the trip bar, and Plans (checklist, notes, passes) now opens from the Hub.',
+  ]),
+  ChangelogEntry('3.82.0', '2026-10-27', [
+    'Errors now say what happened in plain words, and sync reads the same everywhere: Saved, Syncing, Offline or Needs a look.',
+    'A just-added expense shows an Added note with Undo and a soft highlight in the list, and the amount keypad can stay docked.',
+    'Loading screens match the page shape, search finds places, payers and amounts, and half-filled forms ask before closing.',
+    'Android predictive back, password autofill, and clearer screen reader labels for what you owe.',
+  ]),
   ChangelogEntry('3.78.0', '2026-10-23', [
     'A failed sync now shows a red mark on the expense or message with a Retry button, and a Sync button sits in the home and trip headers.',
     'Half-typed expenses, notes and chat messages are kept if you close by accident, and are cleared when you sign out.',
@@ -19,43 +53,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.77.4', '2026-10-22', [
     'Trip Activity is now a full log: your own expenses, refunds, settlements, edits, recent deletions and chat messages all show up, not only what others did.',
-  ]),
-  ChangelogEntry('3.77.3', '2026-10-23', [
-    'On the trips home, a closed or archived trip shows a greyed Add expense button that says why it is unavailable, instead of leaving a gap.',
-  ]),
-  ChangelogEntry('3.77.2', '2026-10-23', [
-    'Trip cards on the home stack are all the same size, and Add expense sits clear of the Join / New Trip slider (a closed trip no longer stretches its card over it).',
-  ]),
-  ChangelogEntry('3.77.1', '2026-10-23', [
-    'Per person view no longer tells you to pay someone while the pass says you are owed: when payments cross between two groups, Balances lists the one net payment.',
-    'Clearer settlement pass: Spent / Settled / Pending on the front, and You owe / You are owed on the flip side with a note on how your group differs from you.',
-  ]),
-  ChangelogEntry('3.77.0', '2026-10-23', [
-    'Record a refund on an expense: money returned to the payer is shared back across the original split, so balances and who pays whom drop by exactly that amount, and the expense shows its refund history.',
-  ]),
-  ChangelogEntry('3.76.1', '2026-10-23', [
-    'Balances no longer repeats You paid and Your share under the settlement pass; flip the pass to see them.',
-  ]),
-  ChangelogEntry('3.76.0', '2026-10-23', [
-    'Scan a receipt with your camera or a photo: the bill is read on your phone and fills the amount, date and title for you to confirm.',
-    'Chat reactions: press and hold a message to react with 👍 ❤️ 😂 😮 🙏.',
-    'Trip polls: ask the group a question from the chat box; everyone votes once and sees live results.',
-    'Join an invite with just your name, no account needed.',
-  ]),
-  ChangelogEntry('3.75.1', '2026-10-22', [
-    'The Trip tab has an All trips tile that takes you back to your trips home.',
-  ]),
-  ChangelogEntry('3.75.0', '2026-10-22', [
-    'Chat shows expenses and payments as small centered lines ("Ben paid Asha · UPI · ₹500"), with avatars and grouped messages.',
-    'Notes are tidy preview cards: tap one to edit it. The Checklist folds finished items into a Done section.',
-    'The settle sheet is simpler: who pays whom, one big amount you can edit, Mark settled, and extras under More options.',
-    'Balances says "settled" once instead of repeating it in several cards.',
-  ]),
-  ChangelogEntry('3.74.0', '2026-10-22', [
-    'Balances has a summary strip (Total spent, Per person, You paid, Your share) and a bar at the bottom, "You owe ₹X · Settle", that lists your payments to settle.',
-    'The trip name now only switches trips, and Chat is no longer a separate Trip tile because it lives in Notes. Mute alerts moved to the Trip tab.',
-    'Switching trips shows a "Switching to…" cover instead of flashing the home screen.',
-    'Spend search also finds category, who paid and amount, and active filters show as chips you can remove.',
-    'Activity rows offer Confirm received for payments and Reply for chat. People shows who owes or is owed, and Trip tiles show live facts.',
   ]),
 ];

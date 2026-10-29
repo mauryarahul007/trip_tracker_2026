@@ -158,9 +158,7 @@ class _LiveFlutterMapState extends State<_LiveFlutterMap> {
         initialCenter: initialCenter,
         initialZoom: widget.initialZoom,
         initialCameraFit: cameraFit,
-        interactionOptions: const InteractionOptions(
-          flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-        ),
+        interactionOptions: const InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
         onMapReady: () {
           widget.onMapReady?.call();
         },
@@ -216,11 +214,7 @@ class _LiveFlutterMapState extends State<_LiveFlutterMap> {
                       alignment: Alignment.center,
                       child: Text(
                         m.icon ?? m.label ?? '📍',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
                   ),

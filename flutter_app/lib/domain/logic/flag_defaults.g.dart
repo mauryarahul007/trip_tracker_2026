@@ -67,6 +67,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableExpensePhotoLinking': false,
   'enableExpenseQuickFilterChips': true,
   'enableExpenseRefunds': true,
+  'enableExpenseTypeFilter': true,
   'enableExplainThisNumber': true,
   'enableExtendedUndo': true,
   'enableFeatureSuggestions': false,
@@ -279,7 +280,7 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
   'enableCalmPassportUi': (
     label: 'Calm Passport Look (Flutter)',
     pack: 'core',
-    description: 'Flutter app: ON: the app takes the Calm Passport look. Paper ground (#F4F3EE), one teal action colour, ink chips, a dark floating bottom bar with every label, owe amounts in red with a minus sign and owed amounts in green with a plus sign, and the trip bar becomes Spend, Balances, Chat, Plans and Hub (People and Activity stay reachable from the trip header and the Hub). OFF: the previous colours and trip bar. Does not change any expense, balance, split, sync or login logic, and does not touch the web app. Since v3.82 the Flutter app always uses this layout and ignores this flag (one trip navigation ships); it stays registered for older app builds.',
+    description: 'Flutter app and web app: ON: the app takes the Calm Passport look -- paper ground (#F4F3EE), one teal action colour, ink chips, owe amounts in red with a minus sign and owed amounts in green with a plus sign, matching card/button/sheet radii and shadows. On Flutter this also sets the trip bar to Spend, Balances, Chat, Plans and Hub (People and Activity stay reachable from the trip header and the Hub). OFF: the previous colours, radii and shadows (and on Flutter, the previous trip bar). Does not change any expense, balance, split, sync or login logic. Since v3.82 the Flutter app always uses this layout and ignores this flag (one trip navigation ships) but the colour/shape tokens stay flag-read on both platforms.',
   ),
   'enableCategoryColorRings': (
     label: 'Category Icon Color Rings & Tabular Alignment',
@@ -529,6 +530,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'Record a Refund on an Expense',
     pack: 'trip',
     description: 'ON: an expense has a Record refund action; the traveler enters the amount returned to the payer (for example 1000 back on a 5000 hotel), it is shared back across the original split in proportion, balances and Who pays whom drop by exactly that, and the expense shows a Refunded badge with its refund history. If members had already settled, the payer then owes them the difference, which is settled with the normal Settle flow. OFF: no Record refund action or badge; refunds already recorded still reduce balances so money never silently changes. Does not move money by itself, does not refund to anyone except the original payer, and older app versions ignore a refund (they show it as a plain line and keep the pre-refund balances).',
+  ),
+  'enableExpenseTypeFilter': (
+    label: 'Expenses/Refunds Filter',
+    pack: 'trip',
+    description: 'ON: the Filters sheet gets an Expenses/Refunds chip row so a traveler can isolate refund rows (or hide them) from the Spend list. OFF: the chip row is gone and the list is unfiltered by type; every other filter (category, payer, date, amount, location) still works. Does not change any expense, balance or refund math -- display filtering only. Mirrors the Flutter app\'s EntryKind filter chips (flutter_app/lib/features/expenses/presentation/widgets/expense_filter_sheet.dart).',
   ),
   'enableExplainThisNumber': (
     label: 'Why This Amount? Settlement Audit',
@@ -1372,6 +1378,7 @@ const Map<String, List<String>> consumerPacks = {
     'enableSummaryTwoPane',
     'enableInviteCard',
     'enableExpenseQuickFilterChips',
+    'enableExpenseTypeFilter',
     'enableOfflineFeedback',
     'enableExpenseExclusion',
     'enableUndoSettlement',

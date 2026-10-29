@@ -5493,3 +5493,12 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** Geocoding relies on OSM Nominatim / Photon Komoot APIs with local memory caching; geocoding results are cached per session to prevent rate-limiting while providing accurate coordinates for custom trip routes.
 * **Release Cut:** Version bumped to `3.84.0` via `npm run release:minor`. ADR logged.
 
+## 2026-10-29 — Flutter CI Dart Formatting & Golden Fixture Synchronization (v3.84.1)
+* **Context:** CI runs on `main` were failing on `Flutter CI` during the `dart format --output=none --set-exit-if-changed .` step because 14 modified Flutter files had not been formatted with the standard Dart formatter prior to commit. Because the automated `Android APK (latest)` workflow in `.github/workflows/android-apk.yml` depends on `Flutter CI` completing with `success`, the APK build step was systematically skipped on every push. Additionally, `changelog.g.dart` and golden migration fixtures had drifted after recent customer changelog additions.
+* **Decision & Implementation:**
+  - Ran `dart format .` across all 530 files in `flutter_app/`, bringing all 14 modified files into strict compliance with the zero-tolerance CI formatting check.
+  - Executed `scripts/export-golden-fixtures.mjs` to regenerate and synchronize golden test fixtures and `changelog.g.dart` from web source, satisfying the `git diff --exit-code -- docs/flutter-migration/fixtures flutter_app/lib/domain/logic` drift check.
+  - Bumped version to `3.84.1` in `package.json` with matching entries in `src/utils/changelog.ts`.
+* **Trade-offs Accepted:** None — purely formatting and CI fixture alignment to restore automated build and artifact publishing pipelines.
+* **Release Cut:** Version bumped to `3.84.1` via `npm run release:patch`. ADR logged.
+

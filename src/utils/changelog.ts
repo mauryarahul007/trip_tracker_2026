@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.84.1',
+    date: '2026-10-29',
+    changes: [
+      'Fixed Flutter CI formatting and synchronized golden fixtures across Flutter and web pipelines.',
+      'Unblocked automated Android APK releases on main builds.',
+    ],
+  },
+  {
     version: '3.84.0',
     date: '2026-10-29',
     changes: [

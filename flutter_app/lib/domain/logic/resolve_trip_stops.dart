@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
@@ -30,10 +31,7 @@ List<String> parseDestinationStopNames(String destination) {
 
 /// Geocodes a place name to (lat, lng) using Photon (Komoot) with Nominatim fallback.
 /// Caches responses in memory so repeated queries across screen transitions are instantaneous.
-Future<({double lat, double lng})?> geocodePlaceName(
-  String query, {
-  http.Client? client,
-}) async {
+Future<({double lat, double lng})?> geocodePlaceName(String query, {http.Client? client}) async {
   final q = query.trim().toLowerCase();
   if (q.isEmpty) return null;
 
@@ -43,9 +41,7 @@ Future<({double lat, double lng})?> geocodePlaceName(
   final httpClient = client ?? http.Client();
   try {
     // 1. Try Photon Komoot OSM geocoder (fast, keyless, rate-limit tolerant)
-    final photonUri = Uri.parse(
-      'https://photon.komoot.io/api/?limit=1&lang=en&q=${Uri.encodeComponent(query.trim())}',
-    );
+    final photonUri = Uri.parse('https://photon.komoot.io/api/?limit=1&lang=en&q=${Uri.encodeComponent(query.trim())}');
     final photonRes = await httpClient.get(photonUri).timeout(const Duration(seconds: 4));
 
     if (photonRes.statusCode == 200) {
@@ -100,10 +96,7 @@ Future<({double lat, double lng})?> geocodePlaceName(
 /// If `trip.stops` is empty, extracts stop names from `trip.destination`
 /// (e.g. "Bagdogra -> Gangtok -> Lachung") and geocodes any missing coordinates.
 /// Parity with web `useResolvedTripStops` in `src/hooks/useResolvedTripStops.ts`.
-Future<List<TripStop>> resolveTripStops(
-  Trip trip, {
-  http.Client? client,
-}) async {
+Future<List<TripStop>> resolveTripStops(Trip trip, {http.Client? client}) async {
   // If trip already has explicit stops with coordinates, return them
   if (trip.stops.isNotEmpty && trip.stops.any((s) => s.lat != null && s.lng != null)) {
     return trip.stops.where((s) => s.lat != null && s.lng != null).toList();
@@ -131,12 +124,7 @@ Future<List<TripStop>> resolveTripStops(
 
     final coords = await geocodePlaceName(stop.name, client: client);
     if (coords != null) {
-      resolved.add(TripStop(
-        id: stop.id,
-        name: stop.name,
-        lat: coords.lat,
-        lng: coords.lng,
-      ));
+      resolved.add(TripStop(id: stop.id, name: stop.name, lat: coords.lat, lng: coords.lng));
     } else {
       resolved.add(stop);
     }

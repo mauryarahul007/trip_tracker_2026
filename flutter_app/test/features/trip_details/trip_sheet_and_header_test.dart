@@ -171,9 +171,7 @@ void main() {
             body: TripContentSheet(
               progressNotifier: progressNotifier,
               collapsedFraction: 0.50,
-              child: ListView(
-                children: List.generate(20, (i) => ListTile(title: Text('Item $i'))),
-              ),
+              child: ListView(children: List.generate(20, (i) => ListTile(title: Text('Item $i')))),
             ),
           ),
         ),

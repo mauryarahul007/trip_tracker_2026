@@ -331,10 +331,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
             left: 0,
             right: 0,
             height: backdropHeight,
-            child: DeferredTripMapHero(
-              trip: trip,
-              height: backdropHeight,
-            ),
+            child: DeferredTripMapHero(trip: trip, height: backdropHeight),
           ),
 
         // 1. Draggable Content Sheet (snaps 50% peek <-> 100% full screen)
@@ -392,10 +389,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
             Expanded(
               child: Align(
                 alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1040),
-                  child: dashboardStack,
-                ),
+                child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 1040), child: dashboardStack),
               ),
             ),
             if (compassWebRail && currentTab == TripNavTab.expenses) CompassBalancesRail(tripId: widget.tripId),

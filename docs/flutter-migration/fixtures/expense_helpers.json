@@ -314,14 +314,14 @@
       "layout": {
         "width": 1080,
         "height": 640,
-        "amountText": "£1,234,567.89",
-        "caption": "Hey P, just a reminder to settle £1,234,567.89 to Q for our trip \"Big\".",
+        "amountText": "£12,34,567.89",
+        "caption": "Hey P, just a reminder to settle £12,34,567.89 to Q for our trip \"Big\".",
         "fileName": "Big_settle.png",
         "lines": [
           "Big",
           "Settle up",
           "P → Q",
-          "£1,234,567.89",
+          "£12,34,567.89",
           "Tracked with Trip Tracker"
         ]
       }

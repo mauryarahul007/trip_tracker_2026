@@ -46,10 +46,8 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 350),
-    )..addListener(() {
+    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 350))
+      ..addListener(() {
         if (_springAnim != null) {
           _updateFraction(_springAnim!.value);
         }
@@ -90,9 +88,10 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
 
   void animateTo(double targetFraction) {
     HapticFeedback.lightImpact();
-    _springAnim = Tween<double>(begin: _fraction, end: targetFraction).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
-    );
+    _springAnim = Tween<double>(
+      begin: _fraction,
+      end: targetFraction,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
     _animController.forward(from: 0.0);
   }
 
@@ -177,9 +176,7 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
           Positioned.fill(
             child: IgnorePointer(
               ignoring: progress < 0.8,
-              child: Container(
-                color: Colors.black.withValues(alpha: progress * 0.45),
-              ),
+              child: Container(color: Colors.black.withValues(alpha: progress * 0.45)),
             ),
           ),
 
@@ -196,11 +193,7 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
                 color: t.bgPage,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(cornerRadius)),
                 boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.18),
-                    blurRadius: 18,
-                    offset: const Offset(0, -4),
-                  ),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 18, offset: const Offset(0, -4)),
                 ],
               ),
               child: Column(

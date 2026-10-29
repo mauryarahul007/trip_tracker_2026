@@ -193,10 +193,9 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
                       tooltip: 'Delete all activity',
                       onPressed: shown.isEmpty
                           ? null
-                          : () => unawaited(_deleteAll(
-                              shown.length,
-                              shown.where((n) => n.id.startsWith('log-')).map((n) => n.id),
-                            )),
+                          : () => unawaited(
+                              _deleteAll(shown.length, shown.where((n) => n.id.startsWith('log-')).map((n) => n.id)),
+                            ),
                       icon: const Icon(AppIcons.delete),
                     ),
                   ],
@@ -414,9 +413,7 @@ class _ActivityRow extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(
-                color: selected
-                    ? t.primaryAccent
-                    : (item.read ? t.borderColor : meta.color.withValues(alpha: 0.6)),
+                color: selected ? t.primaryAccent : (item.read ? t.borderColor : meta.color.withValues(alpha: 0.6)),
                 width: selected ? 1.5 : 1.0,
               ),
             ),
@@ -437,14 +434,9 @@ class _ActivityRow extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: selected ? t.primaryAccent : Colors.transparent,
-                            border: Border.all(
-                              color: selected ? t.primaryAccent : t.borderColor,
-                              width: 2,
-                            ),
+                            border: Border.all(color: selected ? t.primaryAccent : t.borderColor, width: 2),
                           ),
-                          child: selected
-                              ? const Icon(Icons.check, size: 14, color: Colors.white)
-                              : null,
+                          child: selected ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
                         ),
                       ),
                     Container(

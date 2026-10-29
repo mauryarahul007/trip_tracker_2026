@@ -30,10 +30,7 @@ final RegExp _travelNoiseWords = RegExp(
   caseSensitive: false,
 );
 
-final RegExp _prepositionPattern = RegExp(
-  r'^(to|in|at|around|near|of|from)\s+',
-  caseSensitive: false,
-);
+final RegExp _prepositionPattern = RegExp(r'^(to|in|at|around|near|of|from)\s+', caseSensitive: false);
 
 const List<String> fallbackTravelPhotos = [
   // 1. Tropical Paradise Beach
@@ -89,9 +86,15 @@ String getFallbackTravelPhoto(String? seed, {int width = coverWidth}) {
   final s = seed.toLowerCase().trim();
   int matchedIndex = -1;
 
-  if (RegExp(r'(beach|sea|ocean|coast|island|surf|tropical|goa|bali|maldives|phuket)', caseSensitive: false).hasMatch(s)) {
+  if (RegExp(
+    r'(beach|sea|ocean|coast|island|surf|tropical|goa|bali|maldives|phuket)',
+    caseSensitive: false,
+  ).hasMatch(s)) {
     matchedIndex = 0;
-  } else if (RegExp(r'(mountain|alps|himalaya|peak|summit|snow|ski|trek|hike|sikkim|switzerland|manali|ladakh)', caseSensitive: false).hasMatch(s)) {
+  } else if (RegExp(
+    r'(mountain|alps|himalaya|peak|summit|snow|ski|trek|hike|sikkim|switzerland|manali|ladakh)',
+    caseSensitive: false,
+  ).hasMatch(s)) {
     matchedIndex = 1;
   } else if (RegExp(r'(forest|bamboo|nature|jungle|green|camp|trail)', caseSensitive: false).hasMatch(s)) {
     matchedIndex = 2;

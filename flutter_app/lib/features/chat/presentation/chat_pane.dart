@@ -714,20 +714,14 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     final isExpense = expenseId != null || (m.eventKind?.contains('expense') ?? false);
     final isSettlement = m.eventKind?.contains('settle') ?? false;
 
-    final tintColor = isRefund
-        ? t.colorSuccess
-        : (isSettlement ? AppColors.calmOwed : t.primaryAccent);
+    final tintColor = isRefund ? t.colorSuccess : (isSettlement ? AppColors.calmOwed : t.primaryAccent);
     final iconEmoji = isRefund ? '↩️' : (isSettlement ? '🤝' : (isExpense ? '🧾' : '📌'));
-    final badgeLabel = isRefund
-        ? 'Refund'
-        : (isSettlement ? 'Settlement' : (isExpense ? 'Expense' : 'Event'));
+    final badgeLabel = isRefund ? 'Refund' : (isSettlement ? 'Settlement' : (isExpense ? 'Expense' : 'Event'));
 
     final title = m.payload?['title'] as String?;
     final amount = m.payload?['amount'] as num?;
     final currency = m.payload?['currency'] as String?;
-    final formattedAmount = (amount != null && currency != null)
-        ? '$currency ${amount.toStringAsFixed(2)}'
-        : null;
+    final formattedAmount = (amount != null && currency != null) ? '$currency ${amount.toStringAsFixed(2)}' : null;
 
     return Align(
       alignment: Alignment.center,
@@ -762,9 +756,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                           color: tintColor.withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Center(
-                          child: Text(iconEmoji, style: const TextStyle(fontSize: 13)),
-                        ),
+                        child: Center(child: Text(iconEmoji, style: const TextStyle(fontSize: 13))),
                       ),
                       const SizedBox(width: 8),
                       Container(
@@ -788,11 +780,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                   if (formattedAmount != null)
                     Text(
                       formattedAmount,
-                      style: TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                        color: t.textPrimary,
-                      ),
+                      style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: t.textPrimary),
                     ),
                 ],
               ),
@@ -801,11 +789,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                 title ?? m.body,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w600,
-                  color: t.textPrimary,
-                ),
+                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: t.textPrimary),
               ),
               if (expenseId != null) ...[
                 const SizedBox(height: 8),
@@ -814,11 +798,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
                   children: [
                     Text(
                       isRefund ? 'View refund details' : 'View transaction',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: tintColor,
-                      ),
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: tintColor),
                     ),
                     const SizedBox(width: 3),
                     Icon(Icons.arrow_forward_ios_rounded, size: 9, color: tintColor),

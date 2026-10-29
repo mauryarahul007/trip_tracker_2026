@@ -88,9 +88,7 @@ class TripDashboardHeader extends ConsumerWidget {
             color: t.bgPage.withValues(alpha: bgOpacity),
             border: Border(
               bottom: BorderSide(
-                color: isSqueezed
-                    ? t.textSecondary.withValues(alpha: 0.15)
-                    : Colors.transparent,
+                color: isSqueezed ? t.textSecondary.withValues(alpha: 0.15) : Colors.transparent,
                 width: 1.0,
               ),
             ),
@@ -170,13 +168,8 @@ class TripDashboardHeader extends ConsumerWidget {
                     // Trailing actions (Sync, Notifications, More Menu, Bug tracker)
                     // Never removed, fully accessible in both expanded and squeezed states!
                     Theme(
-                      data: Theme.of(context).copyWith(
-                        iconTheme: IconThemeData(color: iconColor, size: 20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: actions,
-                      ),
+                      data: Theme.of(context).copyWith(iconTheme: IconThemeData(color: iconColor, size: 20)),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: actions),
                     ),
                   ],
                 ),
@@ -223,10 +216,7 @@ class TripDashboardHeader extends ConsumerWidget {
                                     Container(
                                       width: 6,
                                       height: 6,
-                                      decoration: BoxDecoration(
-                                        color: statusColor,
-                                        shape: BoxShape.circle,
-                                      ),
+                                      decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
                                     ),
                                     const SizedBox(width: 4),
                                     Text(

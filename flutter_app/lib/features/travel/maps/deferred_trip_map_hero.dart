@@ -13,12 +13,7 @@ class DeferredTripMapHero extends ConsumerStatefulWidget {
   final ValueChanged<String>? onToneChange;
   final double height;
 
-  const DeferredTripMapHero({
-    super.key,
-    required this.trip,
-    this.onToneChange,
-    this.height = 220,
-  });
+  const DeferredTripMapHero({super.key, required this.trip, this.onToneChange, this.height = 220});
 
   @override
   ConsumerState<DeferredTripMapHero> createState() => _DeferredTripMapHeroState();
@@ -94,8 +89,8 @@ class _DeferredTripMapHeroState extends ConsumerState<DeferredTripMapHero> {
   Widget build(BuildContext context) {
     // Resolve stops: either existing stops or parsed destination geocodes
     final resolvedStopsAsync = ref.watch(resolvedTripStopsProvider(widget.trip));
-    final resolvedStops = resolvedStopsAsync.value ??
-        widget.trip.stops.where((s) => s.lat != null && s.lng != null).toList();
+    final resolvedStops =
+        resolvedStopsAsync.value ?? widget.trip.stops.where((s) => s.lat != null && s.lng != null).toList();
     final hasValidStops = resolvedStops.isNotEmpty;
 
     return SizedBox(
@@ -113,9 +108,7 @@ class _DeferredTripMapHeroState extends ConsumerState<DeferredTripMapHero> {
               onReady: _onMapReady,
             ),
           TripPhotoHero(
-            destination: widget.trip.destination?.isNotEmpty == true
-                ? widget.trip.destination
-                : widget.trip.name,
+            destination: widget.trip.destination?.isNotEmpty == true ? widget.trip.destination : widget.trip.name,
             tripName: widget.trip.name,
             coverImageUrl: widget.trip.coverImageUrl,
             height: widget.height,

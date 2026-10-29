@@ -381,7 +381,9 @@ class DriftExpenseRepository extends _DriftRepo implements ExpenseRepository {
       'userIds': ids,
       'tripName': trip.name,
       'tripId': trip.id,
-      'type': isSettlement ? 'settlement_confirmation_requested' : (e.refundOfExpenseId != null ? 'expense_refunded' : 'expense_added'),
+      'type': isSettlement
+          ? 'settlement_confirmation_requested'
+          : (e.refundOfExpenseId != null ? 'expense_refunded' : 'expense_added'),
       'params': {'expenseTitle': e.title, 'currency': e.currency, 'amount': e.amount.toString()},
     };
   }
@@ -490,7 +492,14 @@ class DriftExpenseRepository extends _DriftRepo implements ExpenseRepository {
             'ext': receipt.ext,
             'mime': receipt.mime,
           },
-        if (memberId != null) 'chat': _chatRow(saved, saved.refundOfExpenseId != null ? 'refund_recorded' : (isSettlement ? 'settlement_recorded' : 'expense_added'), memberId),
+        if (memberId != null)
+          'chat': _chatRow(
+            saved,
+            saved.refundOfExpenseId != null
+                ? 'refund_recorded'
+                : (isSettlement ? 'settlement_recorded' : 'expense_added'),
+            memberId,
+          ),
         'push': ?push,
       }, tripId: tripId);
     });

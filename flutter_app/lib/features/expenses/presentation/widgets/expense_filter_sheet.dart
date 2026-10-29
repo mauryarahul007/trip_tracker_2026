@@ -190,9 +190,7 @@ class _ExpenseFilterSheetState extends ConsumerState<ExpenseFilterSheet> {
                     label: 'Expenses',
                     selected: _f.entryKind == EntryKind.expense,
                     onSelected: (s) => setState(
-                      () => _f = s
-                          ? _f.copyWith(entryKind: EntryKind.expense)
-                          : _f.copyWith(clearEntryKind: true),
+                      () => _f = s ? _f.copyWith(entryKind: EntryKind.expense) : _f.copyWith(clearEntryKind: true),
                     ),
                   ),
                   chip(
@@ -200,9 +198,7 @@ class _ExpenseFilterSheetState extends ConsumerState<ExpenseFilterSheet> {
                     label: 'Refunds',
                     selected: _f.entryKind == EntryKind.refund,
                     onSelected: (s) => setState(
-                      () => _f = s
-                          ? _f.copyWith(entryKind: EntryKind.refund)
-                          : _f.copyWith(clearEntryKind: true),
+                      () => _f = s ? _f.copyWith(entryKind: EntryKind.refund) : _f.copyWith(clearEntryKind: true),
                     ),
                   ),
                 ]),
