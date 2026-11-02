@@ -9684,5 +9684,51 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-11-02T12:27:52.240Z",
     "resolutionNote": "ExpensesTab applies the 50-row page cap to expenses only; settlements always render. Commit 7ebb980 (v3.85.0). Exact on-device symptom not reproduced; verify on device."
+  },
+  {
+    "id": "BUG-340",
+    "title": "Flutter: trip header hidden under the sheet on phones with a tall status bar",
+    "description": "TripDashboardHeader's AppBar added the status-bar inset on top of the header's own padding, pushing the title row under the content sheet so back, title, sync and bell were invisible.",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "flutter",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-11-02T12:45:46.620Z",
+    "updatedAt": "2026-11-02T12:45:46.621Z"
+  },
+  {
+    "id": "BUG-341",
+    "title": "Flutter: sheet ignored tab-list scrolls and opened on horizontal tab swipes",
+    "description": "TripContentSheet only listened to depth-0 scroll notifications. Tab lists sit inside the tab pager so their vertical scrolls were ignored, while the pager's own horizontal swipes were counted.",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "flutter",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-11-02T12:45:47.999Z",
+    "updatedAt": "2026-11-02T12:45:47.999Z"
   }
 ]

@@ -201,6 +201,60 @@ void main() {
       expect(progressNotifier.value, 1.0);
     });
 
+    testWidgets('a list nested inside a pager (like the trip tabs) also opens the sheet in one swipe', (tester) async {
+      final progressNotifier = ValueNotifier<double>(0.0);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TripContentSheet(
+              progressNotifier: progressNotifier,
+              collapsedFraction: 0.50,
+              child: PageView(
+                children: [
+                  ListView.builder(
+                    itemCount: 50,
+                    itemBuilder: (context, index) => ListTile(title: Text('Item $index')),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.drag(find.text('Item 2'), const Offset(0, -40));
+      await tester.pumpAndSettle();
+
+      expect(progressNotifier.value, 1.0);
+    });
+
+    testWidgets('a horizontal swipe between tabs does not move the sheet', (tester) async {
+      final progressNotifier = ValueNotifier<double>(0.0);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TripContentSheet(
+              progressNotifier: progressNotifier,
+              collapsedFraction: 0.50,
+              child: PageView(
+                children: [
+                  ListView(children: const [Text('first')]),
+                  ListView(children: const [Text('second')]),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.drag(find.text('first'), const Offset(-300, 0));
+      await tester.pumpAndSettle();
+
+      expect(progressNotifier.value, 0.0);
+    });
+
     testWidgets('a short single swipe on the child list is enough to open fully', (tester) async {
       final progressNotifier = ValueNotifier<double>(0.0);
 

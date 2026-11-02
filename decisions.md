@@ -5533,3 +5533,14 @@ This document logs all meaningful technical decisions, library choices, design p
   - `TripContentSheet`: about 16px of upward inner scroll on a collapsed sheet now snaps it open. `ChatPane` jumps to the latest message on first open (re-jumping a few frames for variable row heights) and follows new messages only near the bottom. `ExpensesTab` pages expenses only; settlements always render.
 * **Trade-offs Accepted:** Chat has no unread count in the data, so it keeps a dot. The web pill keeps its JS measurement rather than a shared-element view transition. Old Compass/Bento dock visuals are gone for anyone running with the Calm theme off.
 * **Release Cut:** Version bumped to `3.85.0` via `npm run release:minor`. Bugs BUG-337/338/339 and the nav polish feature logged in the trackers.
+
+---
+
+## Trip header visibility and sheet scroll listener (v3.85.1)
+* **Context:** On-device testing (Android 17, about 60dp status inset) showed the trip header blank and the sheet still needing several swipes after v3.85.0.
+* **Decision & Implementation:**
+  - `TripDashboardHeader`: `AppBar(primary: false)`. The header already pads `safeTop + 4`; AppBar's own SafeArea doubled the inset and pushed the title row under the sheet. `TripContentSheet` header height is now 60 (4 + 52 toolbar + 4) so the squeezed header and sheet do not overlap.
+  - `TripContentSheet` scroll listener: match `notification.metrics.axis == Axis.vertical` instead of `depth == 0`. Tab lists sit inside the tab `PageView`, so their notifications are depth 1+ and were ignored, while the pager's horizontal swipes (depth 0) were counted. Overscroll past the end of a short list also counts as an upward scroll.
+  - Tests: nested-in-pager list opens the sheet in one swipe; a horizontal tab swipe leaves it alone.
+* **Trade-offs Accepted:** Any vertical scrollable inside the sheet can open it (e.g. a list in a tab), which is the intent. Tabs with content too short to scroll still use the handle.
+* **Release Cut:** Version bumped to `3.85.1` via `npm run release:patch`. Bugs BUG-340 and BUG-341 logged.

@@ -374,7 +374,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
             key: _sheetKey,
             startFull: startFull,
             progressNotifier: _sheetProgressNotifier,
-            headerHeight: 52.0,
+            headerHeight: 60.0, // 4 + 52 toolbar + 4, the squeezed header's height below the status bar
             collapsedFraction: wide ? 0.0 : 0.50,
             child: Column(
               children: [

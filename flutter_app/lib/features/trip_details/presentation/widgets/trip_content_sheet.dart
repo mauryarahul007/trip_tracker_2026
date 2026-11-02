@@ -250,12 +250,19 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
                   Expanded(
                     child: NotificationListener<ScrollNotification>(
                       onNotification: (notification) {
-                        if (notification.depth != 0) return false;
+                        // Tab lists sit inside the tab pager, so they are not at depth 0: match on the axis instead, and
+                        // ignore the pager's own horizontal swipes between tabs.
+                        if (notification.metrics.axis != Axis.vertical) return false;
                         if (notification is ScrollStartNotification) {
                           _scrollUpAccum = 0.0;
                           _autoExpanding = false;
-                        } else if (notification is ScrollUpdateNotification) {
-                          final delta = notification.scrollDelta ?? 0.0;
+                        } else if (notification is ScrollUpdateNotification || notification is OverscrollNotification) {
+                          // Scrolling forward (finger up), or pushing past the end of a short list.
+                          final delta = switch (notification) {
+                            ScrollUpdateNotification(:final scrollDelta) => scrollDelta ?? 0.0,
+                            OverscrollNotification(:final overscroll) => overscroll,
+                            _ => 0.0,
+                          };
                           if (_fraction > 0.02 && delta > 0 && !_autoExpanding) {
                             _scrollUpAccum += delta;
                             if (_scrollUpAccum >= _expandScrollThreshold) {

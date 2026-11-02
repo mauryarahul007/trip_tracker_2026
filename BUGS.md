@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **337** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **339** | All recorded bugs across sessions |
+| **🟢 Open** | **2** | No critical blockers, 2 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **310** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
@@ -19,13 +19,42 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-340](#bug-340)** | 🟠 High | `ui-ux` | Flutter: trip header hidden under the sheet on phones with a tall status bar | `claude-cli` | 🟢 Open |
+| **[BUG-341](#bug-341)** | 🟠 High | `ui-ux` | Flutter: sheet ignored tab-list scrolls and opened on horizontal tab swipes | `claude-cli` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-340: Flutter: trip header hidden under the sheet on phones with a tall status bar
+
+- **Severity**: `HIGH` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `claude-cli` on 2/11/2026 (flutter)
+
+**Description**:
+TripDashboardHeader's AppBar added the status-bar inset on top of the header's own padding, pushing the title row under the content sheet so back, title, sync and bell were invisible.
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
+
+### BUG-341: Flutter: sheet ignored tab-list scrolls and opened on horizontal tab swipes
+
+- **Severity**: `HIGH` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `claude-cli` on 2/11/2026 (flutter)
+
+**Description**:
+TripContentSheet only listened to depth-0 scroll notifications. Tab lists sit inside the tab pager so their vertical scrolls were ignored, while the pager's own horizontal swipes were counted.
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
 
 ## ✅ Resolved Bugs History
 

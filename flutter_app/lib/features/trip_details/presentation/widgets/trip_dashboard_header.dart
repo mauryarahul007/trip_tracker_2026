@@ -153,6 +153,8 @@ class TripDashboardHeader extends ConsumerWidget {
               SizedBox(
                 height: 52,
                 child: AppBar(
+                  // The header already pads for the status bar; AppBar adding it again pushed the title row under the sheet.
+                  primary: false,
                   backgroundColor: Colors.transparent,
                   elevation: 0,
                   scrolledUnderElevation: 0,

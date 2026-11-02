@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.85.1',
+    date: '2026-11-02',
+    changes: [
+      'Fixed the trip header (back, title, sync, bell) being hidden under the sheet on phones with a tall status bar.',
+      'Fixed the trip sheet needing several swipes to open: it now opens in one swipe from any tab list, and swiping between tabs no longer moves it.',
+    ],
+  },
+  {
     version: '3.85.0',
     date: '2026-11-02',
     changes: [

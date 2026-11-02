@@ -8,6 +8,10 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.85.1', '2026-11-02', [
+    'Fixed the trip header (back, title, sync, bell) being hidden under the sheet on phones with a tall status bar.',
+    'Fixed the trip sheet needing several swipes to open: it now opens in one swipe from any tab list, and swiping between tabs no longer moves it.',
+  ]),
   ChangelogEntry('3.85.0', '2026-11-02', [
     'Trip navigation bar: the selected tab now has a soft pill behind its icon that slides between tabs, a filled icon, and a press-down feel. Re-tap the current tab to scroll it to the top.',
     'Activity shows how many unread updates it has, and jumping across tabs fades instead of sweeping through the ones in between.',
@@ -54,11 +58,5 @@ const List<ChangelogEntry> changelogEntries = [
     'A just-added expense shows an Added note with Undo and a soft highlight in the list, and the amount keypad can stay docked.',
     'Loading screens match the page shape, search finds places, payers and amounts, and half-filled forms ask before closing.',
     'Android predictive back, password autofill, and clearer screen reader labels for what you owe.',
-  ]),
-  ChangelogEntry('3.78.0', '2026-10-23', [
-    'A failed sync now shows a red mark on the expense or message with a Retry button, and a Sync button sits in the home and trip headers.',
-    'Half-typed expenses, notes and chat messages are kept if you close by accident, and are cleared when you sign out.',
-    'Freeze, close and Settle all now apply at once with an Undo, and a quiet trip where you still owe shows a Settle up reminder.',
-    'Smoother and clearer: aligned money columns, balances that count to their new value, fits large text, and respects Reduce motion.',
   ]),
 ];
