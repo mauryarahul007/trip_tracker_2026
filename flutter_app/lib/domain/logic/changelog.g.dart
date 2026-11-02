@@ -8,16 +8,53 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
-  ChangelogEntry('3.85.2', '2026-11-02', ['Fixed settlements being hidden behind Load More in the Spend list on web.', 'The trip sheet now opens fully in one swipe on web instead of stopping at 80%.']),
-  ChangelogEntry('3.85.1', '2026-11-02', ['Fixed the trip header (back, title, sync, bell) being hidden under the sheet on phones with a tall status bar.', 'Fixed the trip sheet needing several swipes to open: it now opens in one swipe from any tab list, and swiping between tabs no longer moves it.']),
-  ChangelogEntry('3.85.0', '2026-11-02', ['Trip navigation bar: the selected tab now has a soft pill behind its icon that slides between tabs, a filled icon, and a press-down feel. Re-tap the current tab to scroll it to the top.', 'Activity shows how many unread updates it has, and jumping across tabs fades instead of sweeping through the ones in between.', 'Fixed the trip sheet needing several swipes to open fully over the map.', 'Fixed Chat opening at the oldest message; it now opens on the latest.', 'Fixed settlements being hidden behind Load more in Spend.']),
-  ChangelogEntry('3.84.2', '2026-10-29', ['Fixed Flutter CI widget visibility and drawer initial position by respecting default map collapsed state.', 'Restored instant trip switching from the header title in compass navigation mode.', 'Squeezable header preserves trip member and expense metadata across all device font scales without layout overflow.', 'Synchronized multi-platform test fixtures and formatting for 100% green CI runs.']),
-  ChangelogEntry('3.84.1', '2026-10-29', ['Fixed Flutter CI formatting and synchronized golden fixtures across Flutter and web pipelines.', 'Unblocked automated Android APK releases on main builds.']),
-  ChangelogEntry('3.84.0', '2026-10-29', ['Flutter app brings Web-parity destination photo & OpenStreetMap route hero across all tabs.', 'Squeezable sticky header and effortless single-swipe content sheet drawer with intelligent fling snapping.', 'Guaranteed non-blank destination travel photography with travel noise word stripping and Wikivoyage support.']),
-  ChangelogEntry('3.83.0', '2026-10-28', ['Activity feed supports multi-select clearing and direct navigation to expenses and refunds.', 'Chat timeline includes refund transactions with streamlined styling.']),
-  ChangelogEntry('3.82.10', '2026-10-28', ['Added an expense exclude-from-totals toggle, and transformed Hub into an icon tile grid.', 'Refined navigation with a floating action button on Balances and Spend, edge-to-edge Activity feed, and destination blurred ambient background in Hub.']),
+  ChangelogEntry('3.85.2', '2026-11-02', [
+    'Fixed settlements being hidden behind Load More in the Spend list on web.',
+    'The trip sheet now opens fully in one swipe on web instead of stopping at 80%.',
+  ]),
+  ChangelogEntry('3.85.1', '2026-11-02', [
+    'Fixed the trip header (back, title, sync, bell) being hidden under the sheet on phones with a tall status bar.',
+    'Fixed the trip sheet needing several swipes to open: it now opens in one swipe from any tab list, and swiping between tabs no longer moves it.',
+  ]),
+  ChangelogEntry('3.85.0', '2026-11-02', [
+    'Trip navigation bar: the selected tab now has a soft pill behind its icon that slides between tabs, a filled icon, and a press-down feel. Re-tap the current tab to scroll it to the top.',
+    'Activity shows how many unread updates it has, and jumping across tabs fades instead of sweeping through the ones in between.',
+    'Fixed the trip sheet needing several swipes to open fully over the map.',
+    'Fixed Chat opening at the oldest message; it now opens on the latest.',
+    'Fixed settlements being hidden behind Load more in Spend.',
+  ]),
+  ChangelogEntry('3.84.2', '2026-10-29', [
+    'Fixed Flutter CI widget visibility and drawer initial position by respecting default map collapsed state.',
+    'Restored instant trip switching from the header title in compass navigation mode.',
+    'Squeezable header preserves trip member and expense metadata across all device font scales without layout overflow.',
+    'Synchronized multi-platform test fixtures and formatting for 100% green CI runs.',
+  ]),
+  ChangelogEntry('3.84.1', '2026-10-29', [
+    'Fixed Flutter CI formatting and synchronized golden fixtures across Flutter and web pipelines.',
+    'Unblocked automated Android APK releases on main builds.',
+  ]),
+  ChangelogEntry('3.84.0', '2026-10-29', [
+    'Flutter app brings Web-parity destination photo & OpenStreetMap route hero across all tabs.',
+    'Squeezable sticky header and effortless single-swipe content sheet drawer with intelligent fling snapping.',
+    'Guaranteed non-blank destination travel photography with travel noise word stripping and Wikivoyage support.',
+  ]),
+  ChangelogEntry('3.83.0', '2026-10-28', [
+    'Activity feed supports multi-select clearing and direct navigation to expenses and refunds.',
+    'Chat timeline includes refund transactions with streamlined styling.',
+  ]),
+  ChangelogEntry('3.82.10', '2026-10-28', [
+    'Added an expense exclude-from-totals toggle, and transformed Hub into an icon tile grid.',
+    'Refined navigation with a floating action button on Balances and Spend, edge-to-edge Activity feed, and destination blurred ambient background in Hub.',
+  ]),
   ChangelogEntry('3.82.4', '2026-10-28', ['Fixed Google sign-in on the Android dev test build.']),
-  ChangelogEntry('3.82.3', '2026-10-28', ['Insights in the Hub got new charts: daily bars, a running total, ranked categories, paid vs share per person and your biggest expenses.', 'The back of the settlement pass now shows how much of the trip is settled and your recent payments.']),
-  ChangelogEntry('3.82.2', '2026-10-28', ['Refunds now read as a Refund with a minus amount in Spend, and day totals subtract them.']),
-  ChangelogEntry('3.82.1', '2026-10-28', ['Chat is back in the trip bar, and Plans (checklist, notes, passes) now opens from the Hub.']),
+  ChangelogEntry('3.82.3', '2026-10-28', [
+    'Insights in the Hub got new charts: daily bars, a running total, ranked categories, paid vs share per person and your biggest expenses.',
+    'The back of the settlement pass now shows how much of the trip is settled and your recent payments.',
+  ]),
+  ChangelogEntry('3.82.2', '2026-10-28', [
+    'Refunds now read as a Refund with a minus amount in Spend, and day totals subtract them.',
+  ]),
+  ChangelogEntry('3.82.1', '2026-10-28', [
+    'Chat is back in the trip bar, and Plans (checklist, notes, passes) now opens from the Hub.',
+  ]),
 ];
