@@ -9743,7 +9743,7 @@
     "description": "ExpenseList sliced filteredExpenses to 50 before splitting expenses and settlements, so settlements could sit behind Load More (web counterpart of BUG-339).",
     "severity": "medium",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -9758,7 +9758,10 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-11-02T12:52:38.011Z",
-    "updatedAt": "2026-11-02T12:52:38.012Z"
+    "updatedAt": "2026-11-02T12:52:52.573Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-11-02T12:52:52.573Z",
+    "resolutionNote": "ExpenseList.tsx applies the 50-row cap to real expenses only; settlements always render; Load More counts expenses. Commit 6396261 (v3.85.2)."
   },
   {
     "id": "BUG-343",
@@ -9766,7 +9769,7 @@
     "description": "TripContentSheet touch drags could rest on 50%, 20% or 0%, so one swipe from collapsed landed on 80% coverage and a second was needed to reach full (web counterpart of BUG-337).",
     "severity": "medium",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -9781,6 +9784,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-11-02T12:52:39.276Z",
-    "updatedAt": "2026-11-02T12:52:39.277Z"
+    "updatedAt": "2026-11-02T12:52:53.046Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-11-02T12:52:53.045Z",
+    "resolutionNote": "Touch drags rest on full or collapsed only (sheetSnap.ts, 6vh commit or flick); 80% step kept for keyboard. Commit 6396261 (v3.85.2)."
   }
 ]

@@ -10,51 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **341** | All recorded bugs across sessions |
-| **🟢 Open** | **2** | No critical blockers, 0 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **312** | Verified & closed |
+| **✅ Resolved** | **314** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-342](#bug-342)** | 🟡 Medium | `ui-ux` | Web: Spend 'Load More' cap hid settlements | `claude-cli` | 🟢 Open |
-| **[BUG-343](#bug-343)** | 🟡 Medium | `ui-ux` | Web: trip sheet needed two swipes (extra 80% rest point) | `claude-cli` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-342: Web: Spend 'Load More' cap hid settlements
-
-- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 2/11/2026 (web)
-
-**Description**:
-ExpenseList sliced filteredExpenses to 50 before splitting expenses and settlements, so settlements could sit behind Load More (web counterpart of BUG-339).
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
-
-### BUG-343: Web: trip sheet needed two swipes (extra 80% rest point)
-
-- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 2/11/2026 (web)
-
-**Description**:
-TripContentSheet touch drags could rest on 50%, 20% or 0%, so one swipe from collapsed landed on 80% coverage and a second was needed to reach full (web counterpart of BUG-337).
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -372,6 +343,8 @@ TripContentSheet touch drags could rest on 50%, 20% or 0%, so one swipe from col
 | **BUG-339** | Flutter: Spend tab settlements hidden behind Load more | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | ExpensesTab applies the 50-row page cap to expenses only; settlements always render. Commit 7ebb980 (v3.85.0). Exact on-device symptom not reproduced; verify on device. |
 | **BUG-340** | Flutter: trip header hidden under the sheet on phones with a tall status bar | `ui-ux` | `high` | `claude-cli` | `claude-cli` | AppBar(primary:false) in TripDashboardHeader so the status-bar inset is not applied twice; sheet header height 60. Verified on device (Android 17). Commit 6c39de0 (v3.85.1). |
 | **BUG-341** | Flutter: sheet ignored tab-list scrolls and opened on horizontal tab swipes | `ui-ux` | `high` | `claude-cli` | `claude-cli` | TripContentSheet scroll listener matches vertical axis at any depth instead of depth 0; counts overscroll; ignores horizontal tab swipes. One swipe opens it on device. Commit 6c39de0 (v3.85.1). |
+| **BUG-342** | Web: Spend 'Load More' cap hid settlements | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | ExpenseList.tsx applies the 50-row cap to real expenses only; settlements always render; Load More counts expenses. Commit 6396261 (v3.85.2). |
+| **BUG-343** | Web: trip sheet needed two swipes (extra 80% rest point) | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Touch drags rest on full or collapsed only (sheetSnap.ts, 6vh commit or flick); 80% step kept for keyboard. Commit 6396261 (v3.85.2). |
 
 ---
 
