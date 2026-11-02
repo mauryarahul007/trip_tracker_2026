@@ -91,3 +91,11 @@ Follow `.cursor/rules/ai-software-engineering.mdc` and the phase docs under `doc
 
 - **Rule 1 (Immediate Server Shutdown):** Immediately after code is committed and pushed to GitHub (or when a testing phase concludes and the user moves on), you MUST terminate all active background dev servers (`npm run dev`), architecture/preview servers (e.g. Archify, Vite preview), and child processes to free system resources (RAM, CPU, and network ports).
 - **Rule 2 (Resource Verification):** Always query `manage_task` with action `'list'` and explicitly `'kill'` any remaining daemons or server tasks. The agent must never leave orphaned servers running indefinitely after a release has been pushed.
+
+## Flutter App Build & Deploy Protocol (Mandatory)
+
+- **Mandatory Environment Flags:** Whenever compiling, running, or building the Flutter app for Android or iOS, you MUST ALWAYS include `--flavor <flavor> --dart-define-from-file=env/<flavor>.json` (typically `--flavor dev --dart-define-from-file=env/dev.json`).
+  - Example build command: `flutter build apk --flavor dev --debug --dart-define-from-file=env/dev.json`
+  - Example run command: `flutter run --flavor dev -t lib/main.dart --dart-define-from-file=env/dev.json`
+  - Never run plain `flutter build apk` or `flutter run` without `--flavor` and `--dart-define-from-file=env/<flavor>.json`. Omitting this leaves `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `GOOGLE_SERVER_CLIENT_ID` as unconfigured placeholders, breaking Google Sign-In and cloud synchronization.
+- **Android Dev Package ID:** Note that the `dev` flavor uses application suffix `.dev2` (`com.triptracker.app.dev2`) because Google Cloud OAuth and SHA-1 keys are registered against `.dev2`.
