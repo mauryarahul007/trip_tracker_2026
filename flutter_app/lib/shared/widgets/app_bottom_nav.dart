@@ -1,5 +1,6 @@
 import 'dart:ui' show ImageFilter;
 
+import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -40,6 +41,7 @@ class AppBottomNav extends StatelessWidget {
     required this.onTap,
     this.forceDock,
     this.polish = false,
+    this.notch = false,
     this.centerAction,
     this.centerLabel,
     super.key,
@@ -50,6 +52,10 @@ class AppBottomNav extends StatelessWidget {
   final ValueChanged<int> onTap;
   final bool? forceDock;
   final bool polish;
+
+  /// Flag `enableNotchNav`: the animated notch bar (a bubble that slides under the selected icon). Used when there are
+  /// 2-5 items and no centre action to draw; otherwise the regular dock is built.
+  final bool notch;
 
   /// Round button between the two halves of the dock (e.g. New trip). Not drawn in the Calm theme, where the
   /// screen's primary action floats over the content ([CalmAddButton]).
@@ -64,6 +70,8 @@ class AppBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!_useDock) return _M3Bar(this);
+    final canNotch = notch && items.length >= 2 && items.length <= 5 && (centerAction == null || context.tokens.calm);
+    if (canNotch) return _NotchDock(items: items, currentIndex: currentIndex, onTap: onTap);
     return _Dock(
       items: items,
       currentIndex: currentIndex,
@@ -93,6 +101,137 @@ class _M3Bar extends StatelessWidget {
       selectedIndex: nav.currentIndex,
       onDestinationSelected: nav.onTap,
       destinations: [for (final it in nav.items) NavigationDestination(icon: _icon(it), label: it.label)],
+    );
+  }
+}
+
+/// The notch bar (package `animated_notch_bottom_bar`): a bubble slides under the selected icon. The package has no
+/// badges, semantics or text-scale handling, so those are added here: numbers and dots on the icons, a button label
+/// on every tab for screen readers, and text scale capped so labels cannot overflow the fixed-size items.
+class _NotchDock extends StatefulWidget {
+  const _NotchDock({required this.items, required this.currentIndex, required this.onTap});
+
+  final List<AppNavItem> items;
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  @override
+  State<_NotchDock> createState() => _NotchDockState();
+}
+
+class _NotchDockState extends State<_NotchDock> {
+  static const double _iconSize = 24;
+  static const double _maxTextScale = 1.3;
+  static const double _tapTarget = 56;
+
+  // Mirrors the package's own layout maths (notch_bottom_bar.dart) so the overlay targets sit on its icons.
+  static const double _maxBarWidth = 500; // wider screens get a centred bar of this width
+  static const double _barMargin = 14;
+  static const double _circle = 30; // package kCircleRadius
+  static const double _circleMargin = 8;
+  static const double _inset = 0.1;
+
+  late final NotchBottomBarController _controller = NotchBottomBarController(index: _clamped(widget.currentIndex));
+
+  int _clamped(int i) => i.clamp(0, widget.items.length - 1);
+
+  @override
+  void didUpdateWidget(_NotchDock old) {
+    super.didUpdateWidget(old);
+    // The router (or a tab swipe) moved the selection: slide the bubble there without echoing it back through onTap.
+    if (_clamped(widget.currentIndex) != _controller.index) _controller.jumpTo(_clamped(widget.currentIndex));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// Centre x of item [i] inside a bar [width] wide, as the package places it.
+  double _centerX(int i, double width) {
+    final first = (width - _barMargin * 2) * _inset;
+    final last = width - (width - _barMargin * 2) * _inset - (_circle + _circleMargin) * 2;
+    final distance = widget.items.length > 1 ? (last - first) / (widget.items.length - 1) : 0.0;
+    return _circleMargin + first + distance * i + _circle;
+  }
+
+  String _semanticLabel(AppNavItem it) {
+    if (it.count > 0) return '${it.label}, ${it.count > 99 ? '99+' : it.count} unread';
+    return it.badge ? '${it.label}, unread' : it.label;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final idle = t.textMuted;
+    final active = Theme.of(context).brightness == Brightness.dark ? AppColors.calmInk : Colors.white;
+    final mq = MediaQuery.of(context);
+    final width = mq.size.width <= _maxBarWidth ? mq.size.width : _maxBarWidth;
+    final selectedIndex = _clamped(widget.currentIndex);
+    return MediaQuery(
+      data: mq.copyWith(textScaler: mq.textScaler.clamp(maxScaleFactor: _maxTextScale)),
+      child: SafeArea(
+        top: false,
+        // heightFactor 1: a plain Center fills the whole slot a Scaffold offers its bottom bar and floats mid-screen.
+        child: Center(
+          heightFactor: 1,
+          child: SizedBox(
+            key: const Key('calm-dock'),
+            width: width,
+            child: Stack(
+              children: [
+                // The package has no accessibility support and gives the selected icon only a 24dp tap area, so its own
+                // semantics are hidden and the overlay below provides one 56dp button per tab.
+                ExcludeSemantics(
+                  child: AnimatedNotchBottomBar(
+                    notchBottomBarController: _controller,
+                    bottomBarItems: [
+                      for (final it in widget.items)
+                        BottomBarItem(
+                          inActiveItem: _icon(it, color: idle),
+                          activeItem: _icon(it, color: active, icon: it.selectedIcon),
+                          itemLabel: it.label,
+                        ),
+                    ],
+                    onTap: widget.onTap,
+                    kIconSize: _iconSize,
+                    kBottomRadius: 28,
+                    bottomBarHeight: 56,
+                    color: t.bgSurface,
+                    notchColor: t.primaryAccent,
+                    showLabel: true,
+                    itemLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: idle),
+                    showShadow: true,
+                    elevation: 6,
+                    durationInMilliSeconds: 300,
+                  ),
+                ),
+                for (var i = 0; i < widget.items.length; i++)
+                  Positioned(
+                    left: _centerX(i, width) - _tapTarget / 2,
+                    top: 14,
+                    width: _tapTarget,
+                    height: _tapTarget + 8,
+                    child: Semantics(
+                      button: true,
+                      selected: i == selectedIndex,
+                      label: _semanticLabel(widget.items[i]),
+                      child: GestureDetector(
+                        key: Key('notch-tab-$i'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          if (i != selectedIndex) _controller.jumpTo(i);
+                          widget.onTap(i);
+                        },
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

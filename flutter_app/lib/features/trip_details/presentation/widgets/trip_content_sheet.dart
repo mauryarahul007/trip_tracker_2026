@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 
 import '../../../../core/platform/haptics.dart';
+import '../../../../core/platform/motion.dart';
 import '../../../../shared/theme/app_tokens.dart';
 
 /// Draggable bottom content sheet over the continuous photo/map backdrop.
@@ -18,6 +20,9 @@ class TripContentSheet extends StatefulWidget {
   final ValueChanged<bool>? onFullChange;
   final bool startFull;
 
+  /// Settle with a spring that carries the release velocity (flag `enableNavPolish`) instead of a fixed 350ms curve.
+  final bool spring;
+
   const TripContentSheet({
     super.key,
     required this.child,
@@ -26,14 +31,21 @@ class TripContentSheet extends StatefulWidget {
     this.collapsedFraction = 0.50,
     this.onFullChange,
     this.startFull = false,
+    this.spring = false,
   });
 
   @override
   State<TripContentSheet> createState() => TripContentSheetState();
 }
 
-class TripContentSheetState extends State<TripContentSheet> with SingleTickerProviderStateMixin {
+class TripContentSheetState extends State<TripContentSheet> with TickerProviderStateMixin {
   late AnimationController _animController;
+  late final AnimationController _springController = AnimationController.unbounded(vsync: this)
+    ..addListener(() => _updateFraction(_springController.value));
+
+  /// Slightly under-damped so the sheet settles with a small, quick give instead of stopping dead.
+  static final SpringDescription _spring = SpringDescription.withDampingRatio(mass: 1, stiffness: 340, ratio: 0.88);
+  double _usableRange = 1.0;
   Animation<double>? _springAnim;
 
   // topFraction: 0.0 means full screen (top of sheet is right below header);
@@ -78,6 +90,7 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
   @override
   void dispose() {
     _animController.dispose();
+    _springController.dispose();
     super.dispose();
   }
 
@@ -107,8 +120,25 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
     animateTo(1.0);
   }
 
-  void animateTo(double targetFraction) {
+  /// [velocity] is in sheet-fractions per second (positive = moving down), carried into the spring.
+  void animateTo(double targetFraction, {double velocity = 0.0}) {
     unawaited(AppHaptics.light());
+    if (widget.spring) {
+      _animController.stop();
+      if (AppMotion.of(context, AppMotion.fast) == Duration.zero) {
+        _updateFraction(targetFraction);
+        return;
+      }
+      _springController.stop();
+      _springController.value = _fraction;
+      // A stop() (new drag) cancels the ticker future, so this only runs when the spring really finished: land exactly.
+      unawaited(
+        _springController
+            .animateWith(SpringSimulation(_spring, _fraction, targetFraction, velocity))
+            .then((_) => _updateFraction(targetFraction)),
+      );
+      return;
+    }
     _springAnim = Tween<double>(
       begin: _fraction,
       end: targetFraction,
@@ -118,6 +148,7 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
 
   void _onVerticalDragStart(DragStartDetails details) {
     _animController.stop();
+    _springController.stop();
     _dragStartY = details.globalPosition.dy;
     _dragStartFraction = _fraction;
     _lastMoveTime = DateTime.now();
@@ -171,7 +202,7 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
         target = _fraction < 0.5 ? 0.0 : 1.0;
       }
     }
-    animateTo(target);
+    animateTo(target, velocity: _usableRange > 0 ? v / _usableRange : 0.0);
   }
 
   @override
@@ -183,6 +214,7 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
     final fullTop = safeTop + widget.headerHeight;
     final peekTop = totalHeight * widget.collapsedFraction;
     final usableRange = (peekTop - fullTop).clamp(1.0, totalHeight);
+    _usableRange = usableRange;
 
     // Current top offset of the sheet in pixels
     final currentTop = lerpDouble(fullTop, peekTop, _fraction)!;

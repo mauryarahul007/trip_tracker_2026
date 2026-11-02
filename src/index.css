@@ -132,6 +132,7 @@
   --dur-1: 120ms;
   --dur-2: 200ms;
   --dur-3: 320ms;
+  --dur-4: 400ms; /* hero and page-level moves; mirrors Flutter AppMotion.slow */
   --ease-out: var(--ease-decel);
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
 
@@ -16631,3 +16632,26 @@ body:has([role="dialog"]) .nav-floating-fab-wrap {
 }
 @keyframes motionTabFadeOut { to { opacity: 0; } }
 @keyframes motionTabFadeIn { from { opacity: 0; } }
+
+/* Types-based tab transitions (Chrome 125+): same motion as the data-tab-dir / data-tab-jump rules above, without
+   the attribute having to be set and cleared around the call. */
+:root:active-view-transition-type(tab-next)::view-transition-old(tab-pane) { animation: motionTabOutLeft var(--dur-2) var(--ease-in) both; }
+:root:active-view-transition-type(tab-next)::view-transition-new(tab-pane) { animation: motionTabInRight var(--dur-3) var(--ease-out) both; }
+:root:active-view-transition-type(tab-prev)::view-transition-old(tab-pane) { animation: motionTabOutRight var(--dur-2) var(--ease-in) both; }
+:root:active-view-transition-type(tab-prev)::view-transition-new(tab-pane) { animation: motionTabInLeft var(--dur-3) var(--ease-out) both; }
+:root:active-view-transition-type(tab-far)::view-transition-old(tab-pane) { animation: motionTabFadeOut var(--dur-2) var(--ease-in) both; }
+:root:active-view-transition-type(tab-far)::view-transition-new(tab-pane) { animation: motionTabFadeIn var(--dur-3) var(--ease-out) both; }
+
+/* Low-end devices and users who ask for less transparency: a solid bar, no backdrop blur. */
+.nav-tabs.nav-solid {
+  background: var(--bg-surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .nav-tabs.nav-polish {
+    background: var(--bg-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

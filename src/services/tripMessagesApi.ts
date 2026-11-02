@@ -424,3 +424,19 @@ export async function sendRefundRecordedEventMessage(
     expense
   );
 }
+
+/** Messages from other members newer than `sinceMs` (0 = all of them), for the Chat tab's unread number. */
+export async function countUnreadTripMessages(tripId: string, myMemberId: string, sinceMs: number): Promise<number> {
+  const { count, error } = await supabase
+    .from('trip_messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('trip_id', tripId)
+    .is('deleted_at', null)
+    .neq('member_id', myMemberId)
+    .gt('created_at', new Date(sinceMs).toISOString());
+  if (error) {
+    console.warn('[tripMessagesApi] countUnreadTripMessages skipped:', error.message);
+    return 0;
+  }
+  return count ?? 0;
+}

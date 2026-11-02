@@ -82,6 +82,7 @@ Widget? buildHomeDock(BuildContext context, WidgetRef ref, HomeTab current) {
     centerAction: () => unawaited(createTripFlow(context)),
     centerLabel: l10n.tripsNewTrip,
     polish: ref.watch(compassFlagProvider((navPolishFlag, null))),
+    notch: ref.watch(compassFlagProvider((notchNavFlag, null))),
     items: _homeItems(context, compass: compass),
     currentIndex: current.index,
     onTap: (i) => _goTab(context, current, i),

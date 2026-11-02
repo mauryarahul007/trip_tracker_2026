@@ -23,6 +23,8 @@ type Props = {
   isHidden?: boolean;
   isChatFirstNav?: boolean;
   chatHasUnread?: boolean;
+  /** Flag `enableNavPolish`: replaces the Chat unread dot with a number (99+ cap). */
+  chatUnreadCount?: number;
   /** Calm Passport dock (flag `enableCalmPassportUi`): Balances, Spend, Activity, Chat, Hub --
    * Members and Notes drop off the bar and move into the Hub tile list. */
   calmMode?: boolean;
@@ -34,6 +36,13 @@ type Props = {
   /** Flag `enableNavPolish`: icon-sized sliding pill, filled active icon, re-tap scrolls to top. */
   polish?: boolean;
 };
+
+// Backdrop blur is costly on low-memory / few-core Android WebViews; those get a solid bar instead.
+function isLowEndDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const nav = navigator as Navigator & { deviceMemory?: number };
+  return (nav.deviceMemory !== undefined && nav.deviceMemory <= 4) || (nav.hardwareConcurrency !== undefined && nav.hardwareConcurrency <= 4);
+}
 
 const NAV_PILL_WIDTH = 56;
 const NAV_PILL_HEIGHT = 32;
@@ -53,6 +62,7 @@ export function NavTabs({
   isHidden = false,
   isChatFirstNav = false,
   chatHasUnread = false,
+  chatUnreadCount = 0,
   calmMode = false,
   activityUnreadCount = 0,
   chatEnabled = false,
@@ -255,7 +265,7 @@ export function NavTabs({
     <>
       <nav
         ref={navRef}
-        className={`nav-tabs ${polish ? 'nav-polish' : ''} ${calmMode ? `calm-nav ${chatEnabled ? 'has-chat' : ''}` : isChatFirstNav ? 'has-chat-nav' : ''} ${hasNotesOrPassesTab ? 'has-notes' : 'no-notes'} ${isHidden ? 'is-hidden' : ''}`}
+        className={`nav-tabs ${polish ? 'nav-polish' : ''} ${polish && isLowEndDevice() ? 'nav-solid' : ''} ${calmMode ? `calm-nav ${chatEnabled ? 'has-chat' : ''}` : isChatFirstNav ? 'has-chat-nav' : ''} ${hasNotesOrPassesTab ? 'has-notes' : 'no-notes'} ${isHidden ? 'is-hidden' : ''}`}
         role="tablist"
         aria-label="Trip navigation tabs"
       >
@@ -344,7 +354,12 @@ export function NavTabs({
               >
                 <span className="nav-tab-icon"><IconChat size={24} /></span>
                 <span>Chat</span>
-                {chatHasUnread && <span className="nav-tab-badge nav-tab-badge-dot" aria-hidden="true" />}
+                {chatHasUnread &&
+              (polish && chatUnreadCount > 0 ? (
+                <span className="nav-tab-badge" aria-label={`${chatUnreadCount} unread`}>{chatUnreadCount > 99 ? '99+' : chatUnreadCount}</span>
+              ) : (
+                <span className="nav-tab-badge nav-tab-badge-dot" aria-hidden="true" />
+              ))}
               </button>
             )}
 
@@ -378,7 +393,12 @@ export function NavTabs({
           >
             <span className="nav-tab-icon"><IconChat size={24} /></span>
             <span>Chat</span>
-            {chatHasUnread && <span className="nav-tab-badge nav-tab-badge-dot" aria-hidden="true" />}
+            {chatHasUnread &&
+              (polish && chatUnreadCount > 0 ? (
+                <span className="nav-tab-badge" aria-label={`${chatUnreadCount} unread`}>{chatUnreadCount > 99 ? '99+' : chatUnreadCount}</span>
+              ) : (
+                <span className="nav-tab-badge nav-tab-badge-dot" aria-hidden="true" />
+              ))}
           </button>
         )}
 

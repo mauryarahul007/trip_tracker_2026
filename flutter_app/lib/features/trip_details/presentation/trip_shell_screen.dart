@@ -329,7 +329,13 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
         AppNavItem(
           icon: calm ? calmTabIcon(t) : tripTabIcon(t),
           selectedIcon: polish && calm ? calmTabIconFilled(t) : null,
-          count: polish && t == TripNavTab.activity ? ref.watch(tripActivityUnreadProvider(widget.tripId)) : 0,
+          count: !polish
+              ? 0
+              : t == TripNavTab.activity
+              ? ref.watch(tripActivityUnreadProvider(widget.tripId))
+              : t == TripNavTab.chat
+              ? ref.watch(chatUnreadCountProvider(widget.tripId))
+              : 0,
           label: calm
               ? calmTabLabel(context, t)
               : compass
@@ -373,6 +379,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
           child: TripContentSheet(
             key: _sheetKey,
             startFull: startFull,
+            spring: polish,
             progressNotifier: _sheetProgressNotifier,
             headerHeight: 60.0, // 4 + 52 toolbar + 4, the squeezed header's height below the status bar
             collapsedFraction: wide ? 0.0 : 0.50,
@@ -459,17 +466,52 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
             : null,
         bottomNavigationBar: dock.length < 2 || wide
             ? null
-            : AppBottomNav(
-                polish: polish,
-                currentIndex: dockActive < 0 ? 0 : dockActive,
-                onTap: (i) => _goTab(dock[i].index, polish: polish),
-                items: navItems,
-                centerAction: compass
-                    ? () => unawaited(startAddExpense(context, ref, widget.tripId, dial: dial))
-                    : null,
-                centerLabel: l10n.expAdd,
+            : _KeyboardAwareDock(
+                enabled: polish,
+                child: AppBottomNav(
+                  polish: polish,
+                  notch: ref.watch(compassFlagProvider((notchNavFlag, widget.tripId))),
+                  currentIndex: dockActive < 0 ? 0 : dockActive,
+                  onTap: (i) => _goTab(dock[i].index, polish: polish),
+                  items: navItems,
+                  centerAction: compass
+                      ? () => unawaited(startAddExpense(context, ref, widget.tripId, dial: dial))
+                      : null,
+                  centerLabel: l10n.expAdd,
+                ),
               ),
       ),
+    );
+  }
+}
+
+/// Slides the bottom bar away while the keyboard is open so it does not sit on top of the keyboard (flag
+/// `enableNavPolish`); with [enabled] false it is just [child].
+class _KeyboardAwareDock extends StatelessWidget {
+  const _KeyboardAwareDock({required this.enabled, required this.child});
+
+  final bool enabled;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) return child;
+    final hidden = MediaQuery.viewInsetsOf(context).bottom > 0;
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(end: hidden ? 0.0 : 1.0),
+      duration: AppMotion.of(context, AppMotion.fast),
+      curve: Curves.easeOutCubic,
+      builder: (context, shown, child) => ClipRect(
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: shown,
+          child: IgnorePointer(
+            ignoring: shown < 1,
+            child: Opacity(opacity: shown, child: child),
+          ),
+        ),
+      ),
+      child: child,
     );
   }
 }

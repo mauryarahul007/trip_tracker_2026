@@ -113,7 +113,8 @@ void main() {
     await settle(tester, rounds: 12);
     final db = containerOf(tester).read(appDatabaseProvider);
     expect((await real(tester, () => db.select(db.notificationsTable).get())).single.read, isTrue);
-    expect(find.text('Members'), findsWidgets); // landed on the Members tab
+    // Landed on the Members tab: its people list is showing (the notch bar draws no label for the selected tab).
+    expect(find.text('Add person'), findsWidgets);
 
     await tester.tap(find.byKey(const Key('action-notifications')));
     await settle(tester, rounds: 12);

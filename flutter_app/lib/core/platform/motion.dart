@@ -8,8 +8,9 @@ import 'package:flutter/widgets.dart';
 class AppMotion {
   static bool reduce = false;
 
+  // Same scale as the web CSS: fast = --dur-2, base = --dur-3, slow = --dur-4 (see motion_tokens_parity_test.dart).
   static const fast = Duration(milliseconds: 200);
-  static const base = Duration(milliseconds: 300);
+  static const base = Duration(milliseconds: 320);
   static const slow = Duration(milliseconds: 400);
 
   static const Curve enter = Curves.easeOutCubic;

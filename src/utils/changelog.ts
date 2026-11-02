@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.86.0',
+    date: '2026-11-02',
+    changes: [
+      'New notch bottom bar on the Flutter app: a round bubble slides under the selected tab, with unread numbers and large touch targets.',
+      'The trip sheet settles with a spring that follows your flick, and the bottom bar slides away while the keyboard is open (Flutter).',
+      'Chat shows an unread number instead of a dot, on both the app and the web.',
+      'Web tab changes use view-transition types, and low-memory devices get a solid bar instead of blur.',
+    ],
+  },
+  {
     version: '3.85.2',
     date: '2026-11-02',
     changes: [

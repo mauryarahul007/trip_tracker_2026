@@ -402,7 +402,9 @@ void main() {
 
     testApp('Trip numbers: People tab with the ring and the switch', (tester) async {
       final handle = tester.ensureSemantics();
-      await pumpApp(tester, user: asha);
+      // These two tests scroll the Balances list, which has no spare height on this surface once the taller notch bar
+      // takes its 16dp; they are about the Numbers tab, not navigation, so they run with the regular dock.
+      await pumpApp(tester, user: asha, flagsOff: {'enableNotchNav'});
       final s = await seedTrip(tester);
       await real(
         tester,
@@ -457,7 +459,9 @@ void main() {
 
     testApp('Trip numbers tabs', (tester) async {
       await big(tester);
-      await pumpApp(tester, user: asha, flagsOff: {'enableSummaryUpgrades'});
+      // These two tests scroll the Balances list, which has no spare height on this surface once the taller notch bar
+      // takes its 16dp; they are about the Numbers tab, not navigation, so they run with the regular dock.
+      await pumpApp(tester, user: asha, flagsOff: {'enableSummaryUpgrades', 'enableNotchNav'});
       final s = await seedTrip(tester);
       await addExpense(tester, s, amount: 90);
       await addExpense(tester, s, title: 'Taxi', amount: 30, paidBy: s.ben, userId: 'u2');

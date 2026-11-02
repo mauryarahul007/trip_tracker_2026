@@ -5551,3 +5551,15 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Context:** BUG-337 and BUG-339 were found on Flutter. The web had the same two defects: `TripContentSheet` rested on 50/20/0 so one swipe stopped at 80%, and `ExpenseList` sliced to 50 rows before splitting expenses from settlements. Chat-at-latest (web scrolls on mount), the header (single CSS `--safe-top` padding) and the sheet gesture axis check were already correct on web.
 * **Decision & Implementation:** Snap logic moved to `src/utils/sheetSnap.ts` (touch rests on full or collapsed only, 6vh commit distance or a flick; 80% kept for the keyboard handle) with unit tests. `ExpenseList` pages real expenses only and always lists settlements; Load More counts expenses only.
 * **Release Cut:** Version bumped to `3.85.2`. Bugs BUG-342 and BUG-343 logged.
+
+---
+
+## Notch bottom bar and nav motion batch (v3.86.0)
+* **Context:** Follow-up to the nav polish (v3.85.0): shared motion tokens, spring-settled sheet, keyboard-aware bar, unread numbers, web view-transition types, solid bar on weak devices, and a request to try the `animated_notch_bottom_bar` package.
+* **Decision & Implementation:**
+  - `enableNavPolish` (existing) now also covers: sheet spring seeded with the release velocity (`SpringSimulation`, lands exactly), bar slides away under the keyboard, Chat unread number (Flutter `unreadMessageCount`, web `useTripChatUnreadCount` + `countUnreadTripMessages`), web snap haptic through `triggerHaptic`, and a solid web bar on low-memory/few-core devices or `prefers-reduced-transparency`.
+  - Motion tokens: web `--dur-4: 400ms`; Flutter `AppMotion.base` 320ms; `motion_tokens_parity_test.dart` reads `src/index.css` so the two cannot drift.
+  - Web `withViewTransition(update, types)` uses `startViewTransition({ update, types })` with a callback-form fallback; CSS adds `:active-view-transition-type(tab-next|tab-prev|tab-far)` rules next to the existing data-attribute ones.
+  - New Core flag `enableNotchNav` (default ON, Flutter): `AppBottomNav(notch: true)` wraps the package. Added here because the package has none: unread numbers/dots on icons, 56dp tap targets and semantics as an overlay (the package gives the selected icon a 24dp touch area and no accessibility support), text scale capped at 130%, `heightFactor: 1` so the bar sits at the bottom of the Scaffold slot. Falls back to the regular dock for more than 5 items, or a centre action off the Calm theme.
+* **Trade-offs Accepted:** The package draws no label on the selected tab (screen readers still announce it) and is about 16dp taller than the old dock; two a11y layout tests that need the spare height run with the regular dock. The package mutates global size constants and is pinned to ^1.0.4. Not done on purpose: pull-down-to-collapse (conflicts with pull-to-refresh), replacing the web pill with a view transition (swipes bypass transitions), native scroll-snap for the tab swipe (rewrite risk, no bug).
+* **Release Cut:** Version bumped to `3.86.0` via `npm run release:minor`.

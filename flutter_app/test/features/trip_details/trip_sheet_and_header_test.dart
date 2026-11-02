@@ -229,6 +229,34 @@ void main() {
       expect(progressNotifier.value, 1.0);
     });
 
+    testWidgets('with spring on, a flick settles fully open and a drag down settles collapsed', (tester) async {
+      final progressNotifier = ValueNotifier<double>(0.0);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TripContentSheet(
+              progressNotifier: progressNotifier,
+              collapsedFraction: 0.50,
+              spring: true,
+              child: ListView.builder(
+                itemCount: 50,
+                itemBuilder: (context, index) => ListTile(title: Text('Item $index')),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.fling(find.text('Item 2'), const Offset(0, -200), 1500);
+      await tester.pumpAndSettle();
+      expect(progressNotifier.value, 1.0);
+
+      await tester.drag(find.byKey(const Key('trip_content_sheet_drag_handle')), const Offset(0, 400));
+      await tester.pumpAndSettle();
+      expect(progressNotifier.value, 0.0);
+    });
+
     testWidgets('a horizontal swipe between tabs does not move the sheet', (tester) async {
       final progressNotifier = ValueNotifier<double>(0.0);
 

@@ -42,3 +42,24 @@ final chatUnreadProvider = Provider.family<bool, String>((ref, tripId) {
   if (latest.memberId == ref.watch(myMemberIdProvider(tripId))) return false;
   return latest.id != ref.watch(chatSeenProvider(tripId));
 });
+
+/// Messages from other people after the last one this device has seen (all of theirs when nothing is marked seen).
+int unreadMessageCount(List<TripMessage> messages, {required String? seenId, required String? myMemberId}) {
+  final seenAt = seenId == null ? -1 : messages.indexWhere((m) => m.id == seenId);
+  var count = 0;
+  for (var i = seenAt + 1; i < messages.length; i++) {
+    final m = messages[i];
+    if (m.deletedAt == null && m.memberId != myMemberId) count++;
+  }
+  return count;
+}
+
+/// The number behind [chatUnreadProvider], shown on the Chat tab when `enableNavPolish` is on.
+final chatUnreadCountProvider = Provider.family<int, String>((ref, tripId) {
+  if (!ref.watch(chatUnreadProvider(tripId))) return 0;
+  return unreadMessageCount(
+    ref.watch(tripMessagesProvider(tripId)).value ?? const [],
+    seenId: ref.watch(chatSeenProvider(tripId)),
+    myMemberId: ref.watch(myMemberIdProvider(tripId)),
+  );
+});

@@ -33,6 +33,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.1"
+  animated_notch_bottom_bar:
+    dependency: "direct main"
+    description:
+      name: animated_notch_bottom_bar
+      sha256: efea7a4e8a0fc9bfd5679a059f98025c4f8bc878e016921b898303b0e5a26882
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.4"
   app_links:
     dependency: "direct main"
     description:

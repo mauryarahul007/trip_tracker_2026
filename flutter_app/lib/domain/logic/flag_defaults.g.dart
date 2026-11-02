@@ -102,6 +102,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableMultiTripAnalytics': false,
   'enableNavPolish': true,
   'enableNextUpCapsule': true,
+  'enableNotchNav': true,
   'enableNotesAndChecklist': true,
   'enableNotesQuickCapture': true,
   'enableNotesTalkPackPass': true,
@@ -703,12 +704,17 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
   'enableNavPolish': (
     label: 'Polished Trip Navigation Bar (Flutter + web)',
     pack: 'core',
-    description: 'Flutter app and web app: ON: the trip bottom bar highlights the selected tab with a soft pill behind its icon that slides to the next tab (labels always visible), the selected icon fills in, tabs press down slightly when tapped, tapping the tab you are already on scrolls it back to the top, and jumping several tabs at once fades instead of sweeping past the tabs in between. Flutter also blurs the bar over the content. OFF: the previous full-width teal tile highlight, no scroll-to-top on re-tap, and the sweep through every tab in between. Does not change which tabs exist, the unread badges, the add-expense button, or any expense, balance or sync logic.',
+    description: 'Flutter app and web app: ON: the trip bottom bar highlights the selected tab with a soft pill behind its icon that slides to the next tab (labels always visible), the selected icon fills in, tabs press down slightly when tapped, tapping the tab you are already on scrolls it back to the top, and jumping several tabs at once fades instead of sweeping past the tabs in between. The Chat tab shows an unread number (99+ cap) instead of a dot, and the Activity tab shows its unread count. Flutter also blurs the bar over the content, settles the trip sheet with a spring that follows your flick, and slides the bar away while the keyboard is open; the web app uses a solid bar instead of blur on low-memory devices or when the device asks for reduced transparency. OFF: the previous full-width teal tile highlight, a dot on Chat, no scroll-to-top on re-tap, a fixed-speed sheet settle, the bar staying above the keyboard, and the sweep through every tab in between. Does not change which tabs exist, the add-expense button, or any expense, balance or sync logic.',
   ),
   'enableNextUpCapsule': (
     label: '"Next Up" Travel Island Capsule',
     pack: 'travel',
     description: 'Pinned transit countdown capsule tracking imminent flights and trains within 36h.',
+  ),
+  'enableNotchNav': (
+    label: 'Notch Bottom Bar (Flutter)',
+    pack: 'core',
+    description: 'Flutter app only: ON: the trip bottom bar and the Trips home bar use the animated notch style -- a round bubble holding the selected icon slides along the bar and the other tabs show their icon with a label underneath. The selected tab shows its icon only, tabs keep their unread numbers and dots, and text is capped at 130% inside the bar so labels never overflow. OFF: the polished dock (soft pill behind the icon, label on every tab). Does not change which tabs exist, the add-expense button, the web app, or any expense, balance or sync logic. The Trips home bar keeps the polished dock when the Calm theme is off and it needs its centre New trip button.',
   ),
   'enableNotesAndChecklist': (
     label: 'Collaborative Notes & Checklist Hub',
@@ -1292,6 +1298,7 @@ const Map<String, List<String>> consumerPacks = {
     'enableCompassNav',
     'enableCalmPassportUi',
     'enableNavPolish',
+    'enableNotchNav',
     'enableCompassMe',
     'enableCompassWeb',
     'enableSpendInsights',

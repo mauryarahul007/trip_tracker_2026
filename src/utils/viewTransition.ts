@@ -8,15 +8,26 @@ type ViewTransition = {
   finished: Promise<void>;
 };
 
-export function withViewTransition(update: () => void | Promise<void>): ViewTransition | undefined {
+export function withViewTransition(
+  update: () => void | Promise<void>,
+  // View-transition types (Chrome 125+): CSS can target `:root:active-view-transition-type(name)` instead of a
+  // data attribute that has to be set and cleared around the call. Ignored where unsupported.
+  types?: string[],
+): ViewTransition | undefined {
   const doc = document as Document & {
-    startViewTransition?: (callback: () => void | Promise<void>) => ViewTransition;
+    startViewTransition?: (callback: (() => void | Promise<void>) | { update: () => void | Promise<void>; types: string[] }) => ViewTransition;
   };
   const prefersReducedMotion =
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   if (typeof doc.startViewTransition === 'function' && !prefersReducedMotion) {
-    const transition = doc.startViewTransition(update);
+    let transition: ViewTransition;
+    try {
+      transition = types?.length ? doc.startViewTransition({ update, types }) : doc.startViewTransition(update);
+    } catch {
+      // Browsers that only know the callback form throw on the options object.
+      transition = doc.startViewTransition(update);
+    }
     // The browser rejects `ready`/`finished` whenever a transition is
     // interrupted by a newer one before it completes -- expected behavior
     // on rapid tab taps or trip switches, not a bug. Left uncaught it's an

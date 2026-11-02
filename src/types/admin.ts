@@ -95,6 +95,7 @@ export type FeatureFlagKey =
   | 'enableCompassNav'
   | 'enableCalmPassportUi'
   | 'enableNavPolish'
+  | 'enableNotchNav'
   | 'enableCompassSpend'
   | 'enableCompassMoney'
   | 'enableCompassTripPages'

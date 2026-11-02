@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-02 | unreleased | NOTCH-NAV | [Notch bottom bar (Flutter)](#notch-nav--notch-bottom-bar-flutter) |
 | 2026-11-02 | unreleased | NAV-POLISH | [Polished trip navigation bar, one-swipe sheet, chat opens at latest, settlements always listed](#nav-polish--polished-trip-navigation-bar-one-swipe-sheet-chat-opens-at-latest-settlements-always-listed) |
 | 2026-10-28 | 3.82.5 | SPEND-REFUND-FILTER | [Refund day label, Expenses/Refunds filter, drop duplicate Hub Insights, FAB scoped to Balances/Spend](#spend-refund-filter--refund-day-label-expensesrefunds-filter-drop-duplicate-hub-insights-fab-scoped-to-balancesspend) |
 | 2026-10-28 | unreleased | CHAT-TAB-PLANS-HUB | [Chat in the trip dock, Plans moved into the Hub](#chat-tab-plans-hub--chat-in-the-trip-dock-plans-moved-into-the-hub) |
@@ -4052,9 +4053,37 @@ Then add a row to the **Index** table.
 **Steps (web app, phone width):**
 9. Same bar: pill behind the icon slides between tabs, filled active icon, press-down on tap. Re-tapping the current tab scrolls it to the top (not on Chat). Balances to Hub fades; neighbouring tabs slide.
 
+**Extra checks added in v3.86 (same flag):**
+10. Flutter: flick the sheet up or down and release: it settles with a small spring that follows your flick speed (not a fixed-speed slide) and lands exactly open or collapsed.
+11. Flutter: open Chat and tap the message box: the bottom bar slides away while the keyboard is up and returns when it closes.
+12. Chat shows a number (not a dot) for unread messages from others, on both Flutter and web; it clears after you open Chat. Over 99 reads 99+.
+13. Web: on a low-memory phone, or with the device's "reduce transparency" setting on, the bar is solid instead of blurred.
+14. Web (Chrome 125+): tab changes still slide in the direction of travel and fade for far jumps (now driven by view-transition types).
+
 **Flag-OFF negative checks (`enableNavPolish` OFF):**
 - The selected tab fills its whole cell with the accent colour (previous look), the icon does not fill, nothing is blurred, no pill slide.
 - No Activity count number on Flutter (web keeps its existing Activity count); re-tapping the current tab does nothing; Balances to Hub sweeps through the tabs in between.
 - Sheet one-swipe, chat-at-latest and settlements-listed still work (they are not behind the flag).
 
 **Pass criteria:** the ON checks above all hold, the OFF state restores the previous bar exactly, and no tab, badge, or add-expense behaviour changes in either state.
+
+
+## NOTCH-NAV — Notch bottom bar (Flutter)
+
+**Shipped:** unreleased. Flag: `enableNotchNav` (new, Core pack, default ON, Flutter only). Uses the `animated_notch_bottom_bar` package (MIT) wrapped for badges, accessibility and text scale.
+
+**Prep:** The Flutter app with a trip that has unread Activity updates and unread Chat messages. Superadmin access to Ops Deck for the OFF check.
+
+**Steps:**
+1. Open a trip. The bottom bar is a floating white bar with a round bubble under the selected tab holding its icon (no label on the selected tab); the other four show icon + label. It sits at the bottom of the screen, not mid-screen.
+2. Tap another tab: the bubble slides to it and the page changes. Swipe between tab pages: the bubble follows.
+3. Activity shows a number (99+ cap) and Chat shows its unread number; they disappear once read.
+4. Re-tap the selected tab (tap the bubble): the tab scrolls to the top (Chat stays put).
+5. Open the Trips home: Trips, Balances, Alerts, You with the same bar. The New Trip button still floats above it.
+6. Turn on TalkBack: each tab is read as a button with its name, selected state and unread count; every tab is easy to hit (large touch area), including the selected one.
+7. Set the phone font size to the largest: labels stay inside the bar (the bar caps text at 130%).
+8. Tap the message box in Chat: the bar slides away while the keyboard is up (needs `enableNavPolish`).
+
+**Flag-OFF negative checks (`enableNotchNav` OFF):** the polished dock returns (soft pill behind the icon, label on every tab, including the selected one).
+
+**Pass criteria:** the bar is at the bottom, tabs and badges behave as above, accessibility labels and touch targets are present, and OFF restores the previous dock with no change to which tabs exist.

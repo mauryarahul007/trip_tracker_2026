@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **195** |
+| **Total Tracked** | **197** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **192** |
+| **✅ Shipped** | **194** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -254,6 +254,8 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-193** | Expense Count-in-totals toggle (exclude from balances) | `general` | `claude-cli` | `claude-cli` | No DB migration needed -- it rides in the existing itemized_config jsonb column, same trick as refundOfExpenseId (see flutter_app's row_mappers.dart expenseToUpsertArgs). Added excludeFromTotals to the Expense type, tripApi.ts read-mapping + a new targeted-PATCH setExpenseExcludeFromTotals, a tripStore action, and a Count-in-trip-totals SettingsToggleRow in ExpenseReviewModal.tsx behind the existing enableExpenseExclusion flag (was registered, zero consumers). Excluded expenses are skipped in the 3 balance/total chokepoints: settlement.ts's two activeTripExpenses filters and App.tsx's nonSettlementExpenses filter -- still visible in the raw expense list, same as Flutter. Commit pending (v3.82.10). |
 | **FEAT-194** | Hub redesigned as icon tile grid, matching Flutter | `general` | `claude-cli` | `claude-cli` | TripHubTab.tsx rebuilt from a flat SettingsCell list into a responsive icon-tile grid (auto-fill, 150px min column), matching the Wrap-of-tiles layout in flutter_app's trip_hub_screen.dart -- colored squircle icon, bold title, 2-line muted subtitle, reusing the existing .settings-squircle/squircle-*-glow CSS and glass-card token. Commit pending (v3.82.10). |
 | **FEAT-195** | Polished trip navigation bar (sliding icon pill, filled icons, re-tap to top, fade on far jumps) | `ui-ux` | `claude-cli` | `claude-cli` | Flag enableNavPolish (Core, default ON). Web + Flutter nav bar polish, Compass/Bento docks folded into one. Commit 7ebb980 (v3.85.0). |
+| **FEAT-196** | Nav motion polish batch (spring sheet, keyboard-aware bar, unread numbers, view-transition types, solid bar on weak devices) | `ui-ux` | `claude-cli` | `claude-cli` | Flag enableNavPolish (Core, default ON). Flutter sheet spring and bar hiding under the keyboard; Chat unread number on both apps; web view-transition types, snap haptic and low-end solid bar; shared motion tokens with a parity test. Commit pending (v3.86.0). |
+| **FEAT-197** | Notch bottom bar (Flutter) | `ui-ux` | `claude-cli` | `claude-cli` | Flag enableNotchNav (Core, default ON). animated_notch_bottom_bar wrapped with unread badges, 56dp accessible tap targets, text-scale cap and fallback to the polished dock. Commit pending (v3.86.0). |
 
 ---
 

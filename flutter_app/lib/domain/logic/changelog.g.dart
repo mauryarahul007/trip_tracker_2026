@@ -8,6 +8,12 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.86.0', '2026-11-02', [
+    'New notch bottom bar on the Flutter app: a round bubble slides under the selected tab, with unread numbers and large touch targets.',
+    'The trip sheet settles with a spring that follows your flick, and the bottom bar slides away while the keyboard is open (Flutter).',
+    'Chat shows an unread number instead of a dot, on both the app and the web.',
+    'Web tab changes use view-transition types, and low-memory devices get a solid bar instead of blur.',
+  ]),
   ChangelogEntry('3.85.2', '2026-11-02', [
     'Fixed settlements being hidden behind Load More in the Spend list on web.',
     'The trip sheet now opens fully in one swipe on web instead of stopping at 80%.',
@@ -53,8 +59,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.82.2', '2026-10-28', [
     'Refunds now read as a Refund with a minus amount in Spend, and day totals subtract them.',
-  ]),
-  ChangelogEntry('3.82.1', '2026-10-28', [
-    'Chat is back in the trip bar, and Plans (checklist, notes, passes) now opens from the Hub.',
   ]),
 ];

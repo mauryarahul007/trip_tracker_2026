@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect, type PointerEvent, type ReactNode } from 'react';
-import { Capacitor } from '@capacitor/core';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { triggerHaptic } from '../utils/haptics';
 
 import {
   SHEET_COLLAPSED_TOP,
@@ -12,9 +11,9 @@ import {
 // Exported so TripMapHero can size its fitBounds padding to match.
 export { SHEET_COLLAPSED_TOP };
 
+// Same preference-aware haptic as the rest of the app (native engine on iOS/Android builds, vibrate on web).
 function triggerSnapHaptic(): void {
-  if (!Capacitor.isNativePlatform()) return;
-  void Haptics.impact({ style: ImpactStyle.Light });
+  triggerHaptic('light');
 }
 
 // Rubber-band resistance past the drag bounds instead of a hard stop --

@@ -25,7 +25,7 @@ import { lazyImport } from './utils/lazyImport';
 import { syncOfflineMapTilesFlag } from './utils/mapTileCacheFlag';
 import { useCrossTripBalances } from './hooks/useCrossTripBalances';
 import { useDataSaverEnabled, setDataSaverEnabled } from './hooks/useDataSaverEnabled';
-import { useTripChatUnread } from './hooks/useTripChatUnread';
+import { useTripChatUnread, useTripChatUnreadCount } from './hooks/useTripChatUnread';
 // Code-split secondary modals and heavy views so initial bundle only ships
 // the critical path for the active trip view.
 const GlobalSettingsModal = lazy(lazyImport(() =>
@@ -483,9 +483,12 @@ export default function App() {
     root.setAttribute('data-tab-dir', hops >= 0 ? 'next' : 'prev');
     // Jumping past a tab fades instead of sliding (enableNavPolish), so it doesn't read as sweeping through the tabs between.
     if (isNavPolish && Math.abs(hops) > 1) root.setAttribute('data-tab-jump', 'far');
-    const transition = withViewTransition(() => {
-      flushSync(() => setActiveTabRaw(tab));
-    });
+    const transition = withViewTransition(
+      () => {
+        flushSync(() => setActiveTabRaw(tab));
+      },
+      [hops >= 0 ? 'tab-next' : 'tab-prev', ...(isNavPolish && Math.abs(hops) > 1 ? ['tab-far'] : [])],
+    );
     const clearDir = () => {
       root.removeAttribute('data-tab-dir');
       root.removeAttribute('data-tab-jump');
@@ -1367,6 +1370,12 @@ export default function App() {
       })
     ),
     isViewingChat: isChatFirstNav ? activeTab === 'chat' : activeTab === 'notes' && chatViewActive,
+  });
+  const chatUnreadCount = useTripChatUnreadCount({
+    tripId: activeTripId || undefined,
+    memberId: myMemberId,
+    hasUnread: chatHasUnread,
+    enabled: isNavPolish,
   });
 
   // Keep live-location heartbeats alive after the share sheet closes, as long
@@ -3415,6 +3424,7 @@ export default function App() {
             passesCount={activeTrip?.passes?.length || 0}
             isChatFirstNav={isChatFirstNav}
             chatHasUnread={chatHasUnread}
+            chatUnreadCount={chatUnreadCount}
             isHidden={chatComposerFocused && (activeTab === 'notes' || activeTab === 'chat')}
             calmMode={isCalmPassportUi}
             chatEnabled={isTripChatEnabled}
