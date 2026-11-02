@@ -9691,7 +9691,7 @@
     "description": "TripDashboardHeader's AppBar added the status-bar inset on top of the header's own padding, pushing the title row under the content sheet so back, title, sync and bell were invisible.",
     "severity": "high",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "flutter",
@@ -9706,7 +9706,10 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-11-02T12:45:46.620Z",
-    "updatedAt": "2026-11-02T12:45:46.621Z"
+    "updatedAt": "2026-11-02T12:46:10.713Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-11-02T12:46:10.712Z",
+    "resolutionNote": "AppBar(primary:false) in TripDashboardHeader so the status-bar inset is not applied twice; sheet header height 60. Verified on device (Android 17). Commit 6c39de0 (v3.85.1)."
   },
   {
     "id": "BUG-341",
@@ -9714,7 +9717,7 @@
     "description": "TripContentSheet only listened to depth-0 scroll notifications. Tab lists sit inside the tab pager so their vertical scrolls were ignored, while the pager's own horizontal swipes were counted.",
     "severity": "high",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "flutter",
@@ -9729,6 +9732,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-11-02T12:45:47.999Z",
-    "updatedAt": "2026-11-02T12:45:47.999Z"
+    "updatedAt": "2026-11-02T12:46:11.396Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-11-02T12:46:11.395Z",
+    "resolutionNote": "TripContentSheet scroll listener matches vertical axis at any depth instead of depth 0; counts overscroll; ignores horizontal tab swipes. One swipe opens it on device. Commit 6c39de0 (v3.85.1)."
   }
 ]
