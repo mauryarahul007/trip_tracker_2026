@@ -5544,3 +5544,10 @@ This document logs all meaningful technical decisions, library choices, design p
   - Tests: nested-in-pager list opens the sheet in one swipe; a horizontal tab swipe leaves it alone.
 * **Trade-offs Accepted:** Any vertical scrollable inside the sheet can open it (e.g. a list in a tab), which is the intent. Tabs with content too short to scroll still use the handle.
 * **Release Cut:** Version bumped to `3.85.1` via `npm run release:patch`. Bugs BUG-340 and BUG-341 logged.
+
+---
+
+## Web parity for the sheet and Spend list fixes (v3.85.2)
+* **Context:** BUG-337 and BUG-339 were found on Flutter. The web had the same two defects: `TripContentSheet` rested on 50/20/0 so one swipe stopped at 80%, and `ExpenseList` sliced to 50 rows before splitting expenses from settlements. Chat-at-latest (web scrolls on mount), the header (single CSS `--safe-top` padding) and the sheet gesture axis check were already correct on web.
+* **Decision & Implementation:** Snap logic moved to `src/utils/sheetSnap.ts` (touch rests on full or collapsed only, 6vh commit distance or a flick; 80% kept for the keyboard handle) with unit tests. `ExpenseList` pages real expenses only and always lists settlements; Load More counts expenses only.
+* **Release Cut:** Version bumped to `3.85.2`. Bugs BUG-342 and BUG-343 logged.

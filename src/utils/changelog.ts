@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.85.2',
+    date: '2026-11-02',
+    changes: [
+      'Fixed settlements being hidden behind Load More in the Spend list on web.',
+      'The trip sheet now opens fully in one swipe on web instead of stopping at 80%.',
+    ],
+  },
+  {
     version: '3.85.1',
     date: '2026-11-02',
     changes: [

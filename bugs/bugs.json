@@ -9736,5 +9736,51 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-11-02T12:46:11.395Z",
     "resolutionNote": "TripContentSheet scroll listener matches vertical axis at any depth instead of depth 0; counts overscroll; ignores horizontal tab swipes. One swipe opens it on device. Commit 6c39de0 (v3.85.1)."
+  },
+  {
+    "id": "BUG-342",
+    "title": "Web: Spend 'Load More' cap hid settlements",
+    "description": "ExpenseList sliced filteredExpenses to 50 before splitting expenses and settlements, so settlements could sit behind Load More (web counterpart of BUG-339).",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-11-02T12:52:38.011Z",
+    "updatedAt": "2026-11-02T12:52:38.012Z"
+  },
+  {
+    "id": "BUG-343",
+    "title": "Web: trip sheet needed two swipes (extra 80% rest point)",
+    "description": "TripContentSheet touch drags could rest on 50%, 20% or 0%, so one swipe from collapsed landed on 80% coverage and a second was needed to reach full (web counterpart of BUG-337).",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-11-02T12:52:39.276Z",
+    "updatedAt": "2026-11-02T12:52:39.277Z"
   }
 ]

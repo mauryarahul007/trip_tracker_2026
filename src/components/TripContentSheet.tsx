@@ -2,33 +2,15 @@ import { useRef, useState, useEffect, type PointerEvent, type ReactNode } from '
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
-// Exported so TripMapHero can size its fitBounds padding to match --
-// the map needs to fit the whole route above wherever the sheet's top
-// edge actually sits, not just this file's own layout.
-export const SHEET_COLLAPSED_TOP = 50; // vh% -- map half visible when the user peeks it
-const SHEET_EXPANDED_TOP = 20; // vh% -- swiped-up state, 80% coverage
-const SHEET_FULL_TOP = 0; // vh% -- fully expanded, Uber-style: covers the map entirely
+import {
+  SHEET_COLLAPSED_TOP,
+  SHEET_EXPANDED_TOP,
+  SHEET_FULL_TOP,
+  resolveSnapPoint,
+} from '../utils/sheetSnap';
 
-const SNAP_POINTS = [SHEET_FULL_TOP, SHEET_EXPANDED_TOP, SHEET_COLLAPSED_TOP];
-function nearestSnapPoint(value: number): number {
-  return SNAP_POINTS.reduce((closest, point) =>
-    Math.abs(point - value) < Math.abs(closest - value) ? point : closest
-  );
-}
-
-// A quick short flick should move one snap step in the flick's direction,
-// same as iOS/Android native sheets, instead of always settling on whichever
-// point the finger happened to end up closest to. %-of-viewport-height per ms;
-// tuned so an ordinary drag (which stays well under this) never triggers it.
-const FLING_VELOCITY_THRESHOLD = 0.08;
-function resolveSnapPoint(value: number, velocity: number, startTop: number): number {
-  if (Math.abs(velocity) >= FLING_VELOCITY_THRESHOLD) {
-    const startIdx = SNAP_POINTS.indexOf(nearestSnapPoint(startTop));
-    if (velocity < 0 && startIdx > 0) return SNAP_POINTS[startIdx - 1]; // flung up
-    if (velocity > 0 && startIdx < SNAP_POINTS.length - 1) return SNAP_POINTS[startIdx + 1]; // flung down
-  }
-  return nearestSnapPoint(value);
-}
+// Exported so TripMapHero can size its fitBounds padding to match.
+export { SHEET_COLLAPSED_TOP };
 
 function triggerSnapHaptic(): void {
   if (!Capacitor.isNativePlatform()) return;

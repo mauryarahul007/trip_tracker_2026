@@ -254,15 +254,19 @@ export function ExpenseList({
     }
   }, [trip?.id, filterCategory, filterMember, filterDateFrom, filterDateTo, search, filterAmountMin, filterAmountMax, filterRelation, filterLocation, filterExcludedOnly, hasActiveFilters]);
 
-  const displayedExpenses = filteredExpenses.slice(0, visibleCount);
+  // Page only real expenses: settlements are few and must stay reachable without tapping "Load More".
+  const isActualExpense = (e: Expense) => !e.isSettlement && !e.title.startsWith('Settlement:');
+  const filteredActualExpenses = filteredExpenses.filter(isActualExpense);
+  const displayedExpenses = [
+    ...filteredActualExpenses.slice(0, visibleCount),
+    ...filteredExpenses.filter((e) => !isActualExpense(e)),
+  ];
 
   // Group the flat "List" view into per-day sections so a long trip reads
   // as a scannable list of day totals instead of one endless feed.
   // Expenses already arrive newest date first, so the first N groups
   // encountered are the most recent days -- expand those by default,
   // collapse the rest.
-  const isActualExpense = (e: Expense) => !e.isSettlement && !e.title.startsWith('Settlement:');
-
   const groupByDay = (list: Expense[]) =>
     list.reduce<{ date: string; expenses: Expense[] }[]>((groups, exp) => {
       const lastGroup = groups[groups.length - 1];
@@ -1214,7 +1218,7 @@ export function ExpenseList({
         </>
       )}
 
-      {filteredExpenses.length > visibleCount && (
+      {filteredActualExpenses.length > visibleCount && (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
           <button
             type="button"
@@ -1222,7 +1226,7 @@ export function ExpenseList({
             style={{ width: '100%', padding: '12px' }}
             onClick={() => setVisibleCount((prev) => prev + 50)}
           >
-            Load More (showing {visibleCount} of {filteredExpenses.length})
+            Load More (showing {visibleCount} of {filteredActualExpenses.length})
           </button>
         </div>
       )}

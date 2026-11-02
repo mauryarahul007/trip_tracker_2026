@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **339** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **341** | All recorded bugs across sessions |
+| **🟢 Open** | **2** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **312** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
@@ -19,13 +19,42 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-342](#bug-342)** | 🟡 Medium | `ui-ux` | Web: Spend 'Load More' cap hid settlements | `claude-cli` | 🟢 Open |
+| **[BUG-343](#bug-343)** | 🟡 Medium | `ui-ux` | Web: trip sheet needed two swipes (extra 80% rest point) | `claude-cli` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-342: Web: Spend 'Load More' cap hid settlements
+
+- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `claude-cli` on 2/11/2026 (web)
+
+**Description**:
+ExpenseList sliced filteredExpenses to 50 before splitting expenses and settlements, so settlements could sit behind Load More (web counterpart of BUG-339).
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
+
+### BUG-343: Web: trip sheet needed two swipes (extra 80% rest point)
+
+- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `claude-cli` on 2/11/2026 (web)
+
+**Description**:
+TripContentSheet touch drags could rest on 50%, 20% or 0%, so one swipe from collapsed landed on 80% coverage and a second was needed to reach full (web counterpart of BUG-337).
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
 
 ## ✅ Resolved Bugs History
 
