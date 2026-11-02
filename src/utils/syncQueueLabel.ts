@@ -16,7 +16,7 @@ export function describeSyncItem(item: QueueItemLike): string {
     case 'restoreExpense': return 'Restore expense';
     case 'permanentlyDeleteExpense': return 'Permanently delete expense';
     case 'emptyRecycleBin': return 'Empty recycle bin';
-    case 'createTrip': return named('Create trip', p.name);
+    case 'createTrip': return named('Create trip', p.trip?.name ?? p.name);
     case 'addMember': return named('Add member', p.name);
     case 'updateMember': return named('Update member', p.name);
     case 'toggleArchiveMember': return named(p.archived ? 'Archive member' : 'Unarchive member', p.name);

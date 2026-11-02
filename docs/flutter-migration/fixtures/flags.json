@@ -49,6 +49,7 @@
     "enableMapCollapsedByDefault": true,
     "enableTravelerPassport": true,
     "enableTravelPasses": true,
+    "enableVisualTravelTimeline": false,
     "enablePassSorting": true,
     "enableNextUpCapsule": true,
     "enableGateScanner": true,
@@ -181,6 +182,9 @@
     "enableExpenseApprovalThreshold": false,
     "enableTripStackSort": false,
     "enableTabBackHistory": false,
+    "enableDesktopCommandCenter": false,
+    "enableBentoHub": false,
+    "enableAmbientOutboxDrawer": false,
     "enableChatFirstNav": false,
     "enableChatReactionsAndReplies": false,
     "enableChatOfflineOutbox": false,
@@ -255,6 +259,7 @@
     "enableMapCollapsedByDefault": true,
     "enableTravelerPassport": true,
     "enableTravelPasses": true,
+    "enableVisualTravelTimeline": false,
     "enablePassSorting": true,
     "enableNextUpCapsule": true,
     "enableGateScanner": true,
@@ -387,6 +392,9 @@
     "enableExpenseApprovalThreshold": false,
     "enableTripStackSort": false,
     "enableTabBackHistory": false,
+    "enableDesktopCommandCenter": false,
+    "enableBentoHub": false,
+    "enableAmbientOutboxDrawer": false,
     "enableChatFirstNav": false,
     "enableChatReactionsAndReplies": false,
     "enableChatOfflineOutbox": false,
@@ -568,6 +576,7 @@
       "id": "travel",
       "flagKeys": [
         "enableTravelPasses",
+        "enableVisualTravelTimeline",
         "enablePassSorting",
         "enableNextUpCapsule",
         "enableGateScanner",
@@ -608,7 +617,10 @@
         "enableExpenseDisputes",
         "enableExpenseApprovalThreshold",
         "enableTripStackSort",
-        "enableTabBackHistory"
+        "enableTabBackHistory",
+        "enableDesktopCommandCenter",
+        "enableBentoHub",
+        "enableAmbientOutboxDrawer"
       ]
     },
     {

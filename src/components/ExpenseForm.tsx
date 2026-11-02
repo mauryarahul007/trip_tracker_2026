@@ -60,6 +60,7 @@ export type ExpenseFormTemplate = {
   splitMode?: SplitMode;
   splitMemberIds?: string[];
   splitConfig?: Record<string, number>;
+  date?: string;
 };
 
 type Props = {
@@ -114,7 +115,7 @@ export function ExpenseForm({
     editingExpense?.category ||
     (initialTemplate?.category && categories.some((c) => c.id === initialTemplate.category) ? initialTemplate.category : (categories[0]?.id || ''))
   );
-  const [date, setDate] = useState(editingExpense?.date || getTodayDateString());
+  const [date, setDate] = useState(editingExpense?.date || initialTemplate?.date || getTodayDateString());
   const [payer, setPayer] = useState(
     editingExpense?.paidBy
     || resolveDefaultExpensePayerId(visibleMembers, {

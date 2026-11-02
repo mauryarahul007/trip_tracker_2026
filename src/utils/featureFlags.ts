@@ -175,6 +175,7 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
     targetAudience: 'Air and rail travelers who add a boarding pass or ticket.',
     flagKeys: [
       'enableTravelPasses',
+      'enableVisualTravelTimeline',
       'enablePassSorting',
       'enableNextUpCapsule',
       'enableGateScanner',
@@ -222,6 +223,9 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
       'enableExpenseApprovalThreshold',
       'enableTripStackSort',
       'enableTabBackHistory',
+      'enableDesktopCommandCenter',
+      'enableBentoHub',
+      'enableAmbientOutboxDrawer',
     ],
   },
   {
@@ -595,6 +599,15 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     category: 'transit',
     pack: 'travel',
     defaultEnabledForUsers: true,
+  },
+  enableVisualTravelTimeline: {
+    key: 'enableVisualTravelTimeline',
+    label: 'Visual Travel Timeline',
+    description:
+      'ON: Shows a toggle in the expense ledger allowing travelers to switch to an interactive Day-by-Day Journey Timeline combining expenses, flights, trains, stays, and daily running totals. OFF: Ledger stays in standard day-grouped list.',
+    category: 'transit',
+    pack: 'travel',
+    defaultEnabledForUsers: false,
   },
   enablePassSorting: {
     key: 'enablePassSorting',
@@ -1032,6 +1045,15 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     category: 'core',
     pack: 'core',
     defaultEnabledForUsers: true,
+  },
+  enableDesktopCommandCenter: {
+    key: 'enableDesktopCommandCenter',
+    label: 'Desktop Command Center Layout (web)',
+    description:
+      'ON: On viewports at least 1024px wide, transforms the trip workspace into a responsive dual-pane command center with a pinned master column, expanded canvas, and desktop hotkeys (/ to search, N for bill, J/K navigation). OFF: single mobile-proportioned column.',
+    category: 'core',
+    pack: 'pro',
+    defaultEnabledForUsers: false,
   },
   enableCompassNav: {
     key: 'enableCompassNav',
@@ -1609,6 +1631,24 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     pack: 'trip',
     defaultEnabledForUsers: true,
   },
+  enableBentoHub: {
+    key: 'enableBentoHub',
+    label: 'Trip Hub Bento Grid (Flutter)',
+    description:
+      'Flutter app: ON: Replaces the flat uniform grid on the Trip tab with an asymmetric Material 3 Bento Grid featuring hero squad & route cards, pastel tones, staggered entrance motion, and tiered haptics. OFF: Standard uniform card wrap.',
+    category: 'core',
+    pack: 'pro',
+    defaultEnabledForUsers: false,
+  },
+  enableAmbientOutboxDrawer: {
+    key: 'enableAmbientOutboxDrawer',
+    label: 'Ambient Offline Outbox Drawer (Flutter)',
+    description:
+      'Flutter app: ON: Upgrades the sync indicator with an ambient pulsing state and provides a rich Material 3 offline outbox drawer displaying queued mutations, connection banner, retry controls, and queue metrics. OFF: Classic minimal sync review sheet.',
+    category: 'core',
+    pack: 'pro',
+    defaultEnabledForUsers: false,
+  },
   enableInviteCard: {
     key: 'enableInviteCard',
     label: 'Invite Card (Flutter)',
@@ -1990,6 +2030,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
 
   // Travel — pass holders (chrome gated; route stops / tiles / data-saver OFF)
   enableTravelPasses: true,
+  enableVisualTravelTimeline: false,
   enablePassSorting: true,
   enableNextUpCapsule: true,
   enableGateScanner: true,
@@ -2124,6 +2165,9 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableExpenseApprovalThreshold: false,
   enableTripStackSort: false,
   enableTabBackHistory: false,
+  enableDesktopCommandCenter: false,
+  enableBentoHub: false,
+  enableAmbientOutboxDrawer: false,
 
   // Labs — do not ship (default OFF)
   enableChatFirstNav: false,

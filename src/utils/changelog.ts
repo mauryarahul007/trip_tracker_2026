@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.89.0',
+    date: '2026-11-02',
+    changes: [
+      'Visual Travel Timeline: day-by-day transit spine unifying itinerary, travel passes (flights, trains, hotels), daily expenses, and burn-rate warnings.',
+      'Desktop Command Center: widescreen dashboard layout with keyboard hotkeys (/ to search, N to add bill, 1-5 for tabs, J/K navigation, Esc to close).',
+      'Trip Hub Bento Grid & Tiered Haptics: Material 3 asymmetric cards, pastel tones, staggered entrance motion, and calibrated tactile feedback on the Trip tab (Flutter).',
+      'Ambient Offline Outbox Drawer & Sync Line Polish: ambient pulse indicator for staged writes, connection status banner, outbox queue metrics, and one-tap batch retries (Flutter).',
+    ],
+  },
+  {
     version: '3.87.0',
     date: '2026-11-02',
     changes: [

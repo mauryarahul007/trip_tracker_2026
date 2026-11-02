@@ -723,7 +723,8 @@ String describeSyncItem(Map<String, dynamic> item) {
     case 'emptyRecycleBin':
       return 'Empty recycle bin';
     case 'createTrip':
-      return named('Create trip', p['name']);
+      final tripMap = p['trip'] as Map<String, dynamic>?;
+      return named('Create trip', tripMap?['name'] ?? p['name']);
     case 'addMember':
       return named('Add member', p['name']);
     case 'updateMember':

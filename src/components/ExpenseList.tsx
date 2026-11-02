@@ -20,6 +20,7 @@ import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { NextUpTravelCapsule } from './NextUpTravelCapsule';
 import { SettlementHistorySection } from './SettlementHistorySection';
+import { VisualTravelTimeline } from './VisualTravelTimeline';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
 // wrapping the row in it at all when the viewer isn't allowed to delete.
@@ -124,7 +125,7 @@ type Props = {
   isAdmin: boolean;
   userId: string | null;
   activeTransitionSourceId?: string | null;
-  onAddExpense?: (template?: { title?: string; category?: string }) => void;
+  onAddExpense?: (template?: { title?: string; category?: string; date?: string }) => void;
   onCloneLastExpense?: () => void;
   onOpenSmartQuickAdd?: (autoListen?: boolean) => void;
   dirtyExpenseIds?: Set<string>;
@@ -203,6 +204,24 @@ export function ExpenseList({
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const compactLedgerPref = useCompactLedgerView();
   const compactLedgerActive = isFeatureEnabled('enableCompactLedgerView', { tripId: trip?.id }) && compactLedgerPref;
+  const isTimelineFeatureEnabled = isFeatureEnabled('enableVisualTravelTimeline', { tripId: trip?.id });
+  const [ledgerViewMode, setLedgerViewMode] = useState<'list' | 'timeline'>(() => {
+    try {
+      return localStorage.getItem('tt-ledger-view-mode') === 'timeline' ? 'timeline' : 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleSetLedgerViewMode = (mode: 'list' | 'timeline') => {
+    triggerHaptic('light');
+    setLedgerViewMode(mode);
+    try {
+      localStorage.setItem('tt-ledger-view-mode', mode);
+    } catch {
+      /* storage unavailable */
+    }
+  };
   const ptrIndicatorRef = useRef<HTMLDivElement>(null);
   const pullToRefresh = usePullToRefresh(paneRef, ptrIndicatorRef, () => refreshActiveTripExpenses());
   const expensesLoadingTripId = useTripStore((s) => s.expensesLoadingTripId);
@@ -792,6 +811,66 @@ export function ExpenseList({
         </button>
       )}
 
+      {/* View Switcher: Classic Ledger List vs Visual Travel Timeline */}
+      {isTimelineFeatureEnabled && activeTripExpenseCount > 0 && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '10px',
+            padding: '3px',
+            marginBottom: '12px',
+          }}
+        >
+          <button
+            type="button"
+            style={{
+              flex: 1,
+              padding: '6px 12px',
+              borderRadius: '8px',
+              border: 'none',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              background: ledgerViewMode === 'list' ? 'var(--text-primary)' : 'transparent',
+              color: ledgerViewMode === 'list' ? 'var(--bg-surface)' : 'var(--text-secondary)',
+              transition: 'all 0.15s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+            }}
+            onClick={() => handleSetLedgerViewMode('list')}
+          >
+            <span>📑 Ledger List</span>
+          </button>
+          <button
+            type="button"
+            style={{
+              flex: 1,
+              padding: '6px 12px',
+              borderRadius: '8px',
+              border: 'none',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              background: ledgerViewMode === 'timeline' ? 'var(--text-primary)' : 'transparent',
+              color: ledgerViewMode === 'timeline' ? 'var(--bg-surface)' : 'var(--text-secondary)',
+              transition: 'all 0.15s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+            }}
+            onClick={() => handleSetLedgerViewMode('timeline')}
+          >
+            <span>🗺️ Travel Timeline</span>
+          </button>
+        </div>
+      )}
+
       {/* Search & Filters -- always visible; previously hidden behind an
           undiscoverable pull-down-from-top gesture with no visual hint it
           existed, which read as "filtering doesn't work". */}
@@ -1138,8 +1217,27 @@ export function ExpenseList({
         </div>
       )}
 
-      {/* Clean Transaction Feed with Date Dividers or Quick Starters */}
-      {filteredExpenses.length === 0 && isLoadingExpenses ? (
+      {isTimelineFeatureEnabled && ledgerViewMode === 'timeline' ? (
+        <VisualTravelTimeline
+          trip={trip}
+          members={members}
+          categories={categories}
+          expenses={filteredExpenses}
+          passes={trip?.passes || []}
+          currencySymbol={currencySymbol}
+          myMemberId={myMemberId}
+          isAdmin={isAdmin}
+          userId={userId}
+          onReviewExpense={onReview}
+          onEditExpense={onEdit}
+          onDeleteExpense={onDelete}
+          onAddExpenseForDate={(date) => onAddExpense?.({ date })}
+          getCatColor={getCatColor}
+        />
+      ) : (
+        <>
+          {/* Clean Transaction Feed with Date Dividers or Quick Starters */}
+          {filteredExpenses.length === 0 && isLoadingExpenses ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {[0, 1, 2].map((i) => (
             <div key={i} className="skeleton" style={{ height: '68px', borderRadius: '14px', opacity: 1 - i * 0.15 }} />
@@ -1237,17 +1335,19 @@ export function ExpenseList({
         </>
       )}
 
-      {filteredActualExpenses.length > visibleCount && (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
-          <button
-            type="button"
-            className="secondary-btn"
-            style={{ width: '100%', padding: '12px' }}
-            onClick={() => setVisibleCount((prev) => prev + 50)}
-          >
-            Load More (showing {visibleCount} of {filteredActualExpenses.length})
-          </button>
-        </div>
+          {filteredActualExpenses.length > visibleCount && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ width: '100%', padding: '12px' }}
+                onClick={() => setVisibleCount((prev) => prev + 50)}
+              >
+                Load More (showing {visibleCount} of {filteredActualExpenses.length})
+              </button>
+            </div>
+          )}
+        </>
       )}
 
     </div>

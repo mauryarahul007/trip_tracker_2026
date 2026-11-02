@@ -151,6 +151,7 @@ const FxRatesModal = lazy(lazyImport(() =>
   import('./components/FxRatesModal').then((m) => ({ default: m.FxRatesModal }))
 ));
 import { usePeerPresence } from './hooks/usePeerPresence';
+import { useDesktopCommandCenterHotkeys } from './hooks/useDesktopCommandCenterHotkeys';
 import type { AdminTab } from './components/admin/AdminPortalLayout';
 import { BiometricLockOverlay } from './components/BiometricLockOverlay';
 import {
@@ -285,6 +286,20 @@ export default function App() {
   const isCalmPassportUi = isFeatureEnabled('enableCalmPassportUi', { userId: userId || undefined });
   const isNavPolish = isFeatureEnabled('enableNavPolish', { userId: userId || undefined });
   const isDesktopRail = isFeatureEnabled('enableDesktopRail', { userId: userId || undefined });
+  const isDesktopCommandCenter = isFeatureEnabled('enableDesktopCommandCenter', { tripId: activeTripId || undefined, userId: userId || undefined });
+
+  useDesktopCommandCenterHotkeys({
+    enabled: isDesktopCommandCenter && Boolean(activeTripId),
+    onNewExpense: () => handleOpenAddExpense(),
+    onSelectTab: (tabKey) => setActiveTab(tabKey),
+    onEscape: () => {
+      if (showAddExpense) handleCancelExpenseForm();
+      else if (selectedReviewExpense) setSelectedReviewExpense(null);
+      else if (showExpenseFilterDrawer) setShowExpenseFilterDrawer(false);
+      else if (showTripActionSheet) setShowTripActionSheet(false);
+      else if (showCommandPalette) setShowCommandPalette(false);
+    },
+  });
   useEffect(() => {
     const root = document.documentElement;
     if (isCalmPassportUi) root.setAttribute('data-calm-ui', 'on');
@@ -2554,7 +2569,7 @@ export default function App() {
   );
 
   return (
-    <div className="app-container">
+    <div className={`app-container${isDesktopCommandCenter && activeTripId ? ' desktop-command-center' : ''}`}>
       <a href="#main-content" className="skip-link">Skip to content</a>
       <OfflineTravelBanner />
       {showDataSaverSuggestion && isFeatureEnabled('enableDataSaverMode') && (
@@ -4265,6 +4280,15 @@ export default function App() {
               ✕
             </button>
           </div>
+        </div>
+      )}
+      {isDesktopCommandCenter && Boolean(activeTripId) && (
+        <div className="desktop-command-center-hint" role="status" aria-label="Keyboard Shortcuts">
+          <span className="dcc-key font-mono">/</span> Search &middot;{' '}
+          <span className="dcc-key font-mono">N</span> Add Bill &middot;{' '}
+          <span className="dcc-key font-mono">J / K</span> Navigate &middot;{' '}
+          <span className="dcc-key font-mono">1-5</span> Tabs &middot;{' '}
+          <span className="dcc-key font-mono">Esc</span> Close
         </div>
       )}
     </div>

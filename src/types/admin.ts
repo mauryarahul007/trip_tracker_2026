@@ -39,6 +39,7 @@ export type FeatureFlagKey =
   | 'enableExpenseApprovalThreshold'
   // Phase 3: Smart Travel Navigator & Pass Hub
   | 'enableTravelPasses'
+  | 'enableVisualTravelTimeline'
   | 'enablePassSorting'
   | 'enableNextUpCapsule'
   | 'enableProgressiveNextUp'
@@ -154,6 +155,9 @@ export type FeatureFlagKey =
   | 'enablePendingDots'
   | 'enableTripTemplates'
   | 'enableSummaryTwoPane'
+  | 'enableDesktopCommandCenter'
+  | 'enableBentoHub'
+  | 'enableAmbientOutboxDrawer'
   | 'enableInviteCard'
   | 'enableExpenseExclusion'
   | 'enableUndoSettlement'

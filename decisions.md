@@ -5574,3 +5574,88 @@ This document logs all meaningful technical decisions, library choices, design p
   - **Web:** `RollingNumber` takes a `format` so Total Spent keeps locale grouping (`enableMotionPolish`); Spend rows are keyboard-focusable with ArrowUp/ArrowDown; PWA manifest and theme colours match Calm; desktop rail (`enableDesktopRail`) is CSS only (`.nav-tabs.nav-rail`, 1000px and up) and was checked in headless Chrome at 1400px and 390px.
 * **Trade-offs Accepted:** Selection mode has no custom back handling (back leaves the trip; use the X). Web multi-select, a guided settle-up flow and a unified search are not built. The web Activity swipe has no undo (no restore API for deleted notifications). Wallpaper colours can lower contrast on some palettes; only accent tokens change.
 * **Release Cut:** Version bumped to `3.87.0` via `npm run release:minor`. FEAT-198/199/200 and BUG-345 logged.
+
+---
+
+## Visual Travel Timeline & Day-by-Day Journey (v3.88.0)
+* **Context:** In travel groups, members needed a unified chronological view that connects their itinerary passes (flight departures, train tickets, hotel stays) directly with daily expenses and daily running spend totals, rather than having expenses isolated in a flat list and passes buried in a separate wallet.
+* **Decision & Implementation:**
+  - New Travel-pack feature flag `enableVisualTravelTimeline` (default OFF, Ops Deck gated).
+  - Built `VisualTravelTimeline.tsx` unifying expenses, passes, and hotel stays into a vertical journey transit spine.
+  - Features:
+    - Quick-jump Day scrubber bar (`Day 1`, `Day 2`...) with smooth scroll-into-view.
+    - Day nodes with day marker (`D1`), formatted date, city/stop badge, and daily spend total with high-burn indicator (>1.5x average).
+    - Chronological event cards:
+      - Travel Pass Cards (Flights ✈️ with origin → destination, seat, terminal; Stays 🏨 with room/address; Trains 🚆 with PNR).
+      - Expense Cards with category accents, payer avatar, split breakdown, and receipt/dispute tags.
+    - Rapid "+ Add bill" action prefilled with the specific travel day date.
+    - Integrated view mode toggle in `ExpenseList.tsx` allowing one-tap switching between "📑 Ledger List" and "🗺️ Travel Timeline".
+  - Automated tests added in `src/components/VisualTravelTimeline.test.ts`. Golden fixtures exported for Flutter parity (`flag_defaults.g.dart`).
+* **Trade-offs Accepted:**
+  - The timeline caps auto-generated date spans at 45 days to prevent excessive DOM generation when trips have loose placeholder future dates.
+  - Gated behind `enableVisualTravelTimeline` so standard trips remain in the classic day-grouped list until armed.
+
+---
+
+## Desktop Master-Detail Command Center & Hotkeys (v3.88.0, Phase 2)
+* **Context:** On large desktop displays ($\ge 1024\text{px}$), the single-column mobile bottom sheet modal created excessive dead space and forced travelers on laptops/desktops to drag a phone-sized drawer up and down to manage travel accounting. Travelers requested a power-user split-screen layout with immediate keyboard navigation.
+* **Decision & Implementation:**
+  - Added feature flag `enableDesktopCommandCenter` (PRO pack, default `false`, Ops Deck gated).
+  - Built custom hook `src/hooks/useDesktopCommandCenterHotkeys.ts`:
+    - `/` focuses search bar with auto-text selection.
+    - `N` or `n` triggers Add Bill modal.
+    - `1` through `5` switches tabs directly (`expenses`, `members`, `ledger`, `notes`, `chat`).
+    - `J` / `K` focuses previous/next expense rows.
+    - `Escape` dismisses open forms, filter drawers, or command palette.
+    - Input element detection ensures hotkeys never interfere with form input typing.
+  - Wired into `src/App.tsx` conditionally applying `.desktop-command-center` container class and rendering a floating glass shortcut pill (`.desktop-command-center-hint`).
+  - Added desktop split styles in `src/index.css`:
+    - Responsive grid: fixed 400px master sidebar (trip hero, stats, quick stops) + 1fr fluid detail canvas (`.trip-sheet`).
+    - Flattened bottom sheet transform (`transform: none`, hidden drag handle and scrim) on desktop displays for instantaneous browsing.
+  - Comprehensive unit tests in `src/hooks/useDesktopCommandCenterHotkeys.test.ts`. Golden fixtures exported for Flutter parity.
+* **Trade-offs Accepted:**
+  - Master-detail grid is active only at $\ge 1024\text{px}$ viewports; tablets and mobile devices remain with the gesture bottom sheet to preserve touch ergonomics.
+  - Hotkeys require `enableDesktopCommandCenter` to be enabled in Ops Deck/flags.
+
+---
+
+## Trip Hub Bento Grid & Tiered Haptics (v3.88.0, Phase 3)
+* **Context:** In the Flutter app, the Trip Hub screen (`trip_hub_screen.dart`) previously displayed a flat, uniform `Wrap` grid of identical rounded cards with white backgrounds. There was no visual hierarchy between hero sections (like People or Route Map) and secondary utilities, nor were tactile micro-feedbacks calibrated for distinct interaction weights.
+* **Decision & Implementation:**
+  - Added feature flag `enableBentoHub` under the `PRO` pack (default `false`, Ops Deck gated).
+  - Built an asymmetric Material 3 **Bento Grid** on `trip_hub_screen.dart`:
+    - Wide hero cards: Route Map (`BentoTone.mint`, with route preview and live toggle state pill) and Squad & People (`BentoTone.sky`, with member count and avatar styling).
+    - Asymmetric feature tiles: Plans & Passes (`BentoTone.butter`), Receipt Vault (`BentoTone.peach`), Invite & Share (`BentoTone.lilac`), Live Location (`BentoTone.mint`), and Trip Tools (`BentoTone.lilac`).
+    - Staggered entrance animation using `BentoEntrance(index: i)` for smooth sequential elevation and fade-in, automatically disabling when reduced motion is requested.
+    - Preserved 100% semantic keys (`hub-home`, `hub-people`, `hub-map`, etc.) ensuring complete backward compatibility with all existing test suites.
+    - Clean fallback to classic uniform wrap when `enableBentoHub` is toggled off.
+  - Integrated the **Tiered Haptic Feedback Engine**:
+    - `AppHaptics.selection()` for internal tab transitions and screen navigation.
+    - `AppHaptics.medium()` for launching modal sheets (Edit Trip, Share Trip, Trip Tools, Live Location).
+    - `AppHaptics.light()` for state toggles (Route Map display toggle, Mute/Unmute alerts).
+    - Full respect for the traveler's `HapticsSetting` (`all`, `important`, `off`).
+  - Added automated widget tests in `flutter_app/test/features/trip_details/trip_hub_bento_test.dart`.
+* **Trade-offs Accepted:**
+  - On narrow phones (<560px), wide cards take the full container width (`c.maxWidth`) to ensure comfortable tap targets, transitioning gracefully to a 3-column layout on tablets and landscape orientations.
+
+### ADR 282: Flutter App — Ambient Offline Outbox Drawer & Sync Line Polish (Phase 4)
+* **Context of the Problem:**
+  - When travelers travel in low-connectivity or offline regions (e.g., mountain trails or remote road trips), mutations (expenses, members, notes, chat messages) are staged locally in the drift-backed outbox.
+  - Previously, travelers had minimal visibility into what operations were pending versus in-flight, and the sync button in `sync_chip.dart` only exposed a review sheet on severe errors. If users wanted to inspect their offline queue or manually trigger batch retries, there was no ambient indicator or interactive drawer.
+* **Selected Decision & Resolution:**
+  - Added Superadmin feature flag `enableAmbientOutboxDrawer` (Pack: `PRO`, default `false`) with metadata and exported golden fixtures to Flutter.
+  - Implemented `AmbientOutboxSheet` in `flutter_app/lib/features/trips/presentation/widgets/ambient_outbox_sheet.dart`:
+    - Dynamic connection & sync banner: distinguishes between Offline mode, in-flight syncing, sync errors, and up-to-date states.
+    - 3-column metrics pill row: `Pending (N)` · `In Flight (N)` · `Issues (N)`.
+    - Item mutation cards featuring entity-specific icons, readable action summaries via `describeSyncItem`, attempt counts, and formatted error snippets.
+    - Footer batch actions: "Sync Now" with loading state and "Retry All Issues" with tiered haptics.
+  - Enhanced `SyncButton` and `SyncChip`:
+    - When `enableAmbientOutboxDrawer` is active, displays an ambient pulse badge for pending mutations/issues.
+    - Tapping opens `AmbientOutboxSheet` whenever offline, syncing, or when mutations are queued.
+  - Added comprehensive widget test suite `flutter_app/test/features/trips/ambient_outbox_test.dart` verifying empty state, queued items, and offline tap interactions.
+* **Trade-offs Accepted:**
+  - When `enableAmbientOutboxDrawer` is disabled, the system gracefully falls back to the classic minimal `_SyncSheet` without changing existing test assertions.
+
+
+
+

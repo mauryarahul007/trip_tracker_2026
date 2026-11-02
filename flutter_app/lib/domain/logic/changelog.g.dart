@@ -8,60 +8,16 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
-  ChangelogEntry('3.87.0', '2026-11-02', [
-    'Select several expenses at once on the Spend tab: press and hold, then Delete, Personal or Category for all of them, with one Undo (Flutter).',
-    'The selected tab now shows its name inside the notch bubble; new users see one intro instead of two (Flutter).',
-    'Swipe away an Activity update with an Undo; tap a donut slice or badge to highlight a category, then see or clear it (Flutter).',
-    'Match phone colours (Android 12+) in Settings; a Clear filters button when a search finds nothing (Flutter).',
-    'On wide screens the trip tabs sit in a side rail; arrow keys move through Spend rows; Total Spent counts up (web).',
-  ]),
-  ChangelogEntry('3.86.0', '2026-11-02', [
-    'New notch bottom bar on the Flutter app: a round bubble slides under the selected tab, with unread numbers and large touch targets.',
-    'The trip sheet settles with a spring that follows your flick, and the bottom bar slides away while the keyboard is open (Flutter).',
-    'Chat shows an unread number instead of a dot, on both the app and the web.',
-    'Web tab changes use view-transition types, and low-memory devices get a solid bar instead of blur.',
-  ]),
-  ChangelogEntry('3.85.2', '2026-11-02', [
-    'Fixed settlements being hidden behind Load More in the Spend list on web.',
-    'The trip sheet now opens fully in one swipe on web instead of stopping at 80%.',
-  ]),
-  ChangelogEntry('3.85.1', '2026-11-02', [
-    'Fixed the trip header (back, title, sync, bell) being hidden under the sheet on phones with a tall status bar.',
-    'Fixed the trip sheet needing several swipes to open: it now opens in one swipe from any tab list, and swiping between tabs no longer moves it.',
-  ]),
-  ChangelogEntry('3.85.0', '2026-11-02', [
-    'Trip navigation bar: the selected tab now has a soft pill behind its icon that slides between tabs, a filled icon, and a press-down feel. Re-tap the current tab to scroll it to the top.',
-    'Activity shows how many unread updates it has, and jumping across tabs fades instead of sweeping through the ones in between.',
-    'Fixed the trip sheet needing several swipes to open fully over the map.',
-    'Fixed Chat opening at the oldest message; it now opens on the latest.',
-    'Fixed settlements being hidden behind Load more in Spend.',
-  ]),
-  ChangelogEntry('3.84.2', '2026-10-29', [
-    'Fixed Flutter CI widget visibility and drawer initial position by respecting default map collapsed state.',
-    'Restored instant trip switching from the header title in compass navigation mode.',
-    'Squeezable header preserves trip member and expense metadata across all device font scales without layout overflow.',
-    'Synchronized multi-platform test fixtures and formatting for 100% green CI runs.',
-  ]),
-  ChangelogEntry('3.84.1', '2026-10-29', [
-    'Fixed Flutter CI formatting and synchronized golden fixtures across Flutter and web pipelines.',
-    'Unblocked automated Android APK releases on main builds.',
-  ]),
-  ChangelogEntry('3.84.0', '2026-10-29', [
-    'Flutter app brings Web-parity destination photo & OpenStreetMap route hero across all tabs.',
-    'Squeezable sticky header and effortless single-swipe content sheet drawer with intelligent fling snapping.',
-    'Guaranteed non-blank destination travel photography with travel noise word stripping and Wikivoyage support.',
-  ]),
-  ChangelogEntry('3.83.0', '2026-10-28', [
-    'Activity feed supports multi-select clearing and direct navigation to expenses and refunds.',
-    'Chat timeline includes refund transactions with streamlined styling.',
-  ]),
-  ChangelogEntry('3.82.10', '2026-10-28', [
-    'Added an expense exclude-from-totals toggle, and transformed Hub into an icon tile grid.',
-    'Refined navigation with a floating action button on Balances and Spend, edge-to-edge Activity feed, and destination blurred ambient background in Hub.',
-  ]),
+  ChangelogEntry('3.89.0', '2026-11-02', ['Visual Travel Timeline: day-by-day transit spine unifying itinerary, travel passes (flights, trains, hotels), daily expenses, and burn-rate warnings.', 'Desktop Command Center: widescreen dashboard layout with keyboard hotkeys (/ to search, N to add bill, 1-5 for tabs, J/K navigation, Esc to close).', 'Trip Hub Bento Grid & Tiered Haptics: Material 3 asymmetric cards, pastel tones, staggered entrance motion, and calibrated tactile feedback on the Trip tab (Flutter).', 'Ambient Offline Outbox Drawer & Sync Line Polish: ambient pulse indicator for staged writes, connection status banner, outbox queue metrics, and one-tap batch retries (Flutter).']),
+  ChangelogEntry('3.87.0', '2026-11-02', ['Select several expenses at once on the Spend tab: press and hold, then Delete, Personal or Category for all of them, with one Undo (Flutter).', 'The selected tab now shows its name inside the notch bubble; new users see one intro instead of two (Flutter).', 'Swipe away an Activity update with an Undo; tap a donut slice or badge to highlight a category, then see or clear it (Flutter).', 'Match phone colours (Android 12+) in Settings; a Clear filters button when a search finds nothing (Flutter).', 'On wide screens the trip tabs sit in a side rail; arrow keys move through Spend rows; Total Spent counts up (web).']),
+  ChangelogEntry('3.86.0', '2026-11-02', ['New notch bottom bar on the Flutter app: a round bubble slides under the selected tab, with unread numbers and large touch targets.', 'The trip sheet settles with a spring that follows your flick, and the bottom bar slides away while the keyboard is open (Flutter).', 'Chat shows an unread number instead of a dot, on both the app and the web.', 'Web tab changes use view-transition types, and low-memory devices get a solid bar instead of blur.']),
+  ChangelogEntry('3.85.2', '2026-11-02', ['Fixed settlements being hidden behind Load More in the Spend list on web.', 'The trip sheet now opens fully in one swipe on web instead of stopping at 80%.']),
+  ChangelogEntry('3.85.1', '2026-11-02', ['Fixed the trip header (back, title, sync, bell) being hidden under the sheet on phones with a tall status bar.', 'Fixed the trip sheet needing several swipes to open: it now opens in one swipe from any tab list, and swiping between tabs no longer moves it.']),
+  ChangelogEntry('3.85.0', '2026-11-02', ['Trip navigation bar: the selected tab now has a soft pill behind its icon that slides between tabs, a filled icon, and a press-down feel. Re-tap the current tab to scroll it to the top.', 'Activity shows how many unread updates it has, and jumping across tabs fades instead of sweeping through the ones in between.', 'Fixed the trip sheet needing several swipes to open fully over the map.', 'Fixed Chat opening at the oldest message; it now opens on the latest.', 'Fixed settlements being hidden behind Load more in Spend.']),
+  ChangelogEntry('3.84.2', '2026-10-29', ['Fixed Flutter CI widget visibility and drawer initial position by respecting default map collapsed state.', 'Restored instant trip switching from the header title in compass navigation mode.', 'Squeezable header preserves trip member and expense metadata across all device font scales without layout overflow.', 'Synchronized multi-platform test fixtures and formatting for 100% green CI runs.']),
+  ChangelogEntry('3.84.1', '2026-10-29', ['Fixed Flutter CI formatting and synchronized golden fixtures across Flutter and web pipelines.', 'Unblocked automated Android APK releases on main builds.']),
+  ChangelogEntry('3.84.0', '2026-10-29', ['Flutter app brings Web-parity destination photo & OpenStreetMap route hero across all tabs.', 'Squeezable sticky header and effortless single-swipe content sheet drawer with intelligent fling snapping.', 'Guaranteed non-blank destination travel photography with travel noise word stripping and Wikivoyage support.']),
+  ChangelogEntry('3.83.0', '2026-10-28', ['Activity feed supports multi-select clearing and direct navigation to expenses and refunds.', 'Chat timeline includes refund transactions with streamlined styling.']),
+  ChangelogEntry('3.82.10', '2026-10-28', ['Added an expense exclude-from-totals toggle, and transformed Hub into an icon tile grid.', 'Refined navigation with a floating action button on Balances and Spend, edge-to-edge Activity feed, and destination blurred ambient background in Hub.']),
   ChangelogEntry('3.82.4', '2026-10-28', ['Fixed Google sign-in on the Android dev test build.']),
-  ChangelogEntry('3.82.3', '2026-10-28', [
-    'Insights in the Hub got new charts: daily bars, a running total, ranked categories, paid vs share per person and your biggest expenses.',
-    'The back of the settlement pass now shows how much of the trip is settled and your recent payments.',
-  ]),
 ];

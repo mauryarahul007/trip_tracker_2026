@@ -14,8 +14,11 @@ import '../../../../shared/widgets/app_sheet.dart';
 import '../../application/sync_wording.dart';
 import '../../application/trips_providers.dart';
 
+import 'ambient_outbox_sheet.dart';
+
 /// "N changes waiting to sync" / "Sync issue". The review sheet (retry or
 /// discard stuck items) is behind the `enableSyncQueueInspector` flag.
+/// When `enableAmbientOutboxDrawer` is enabled, tapping opens the rich Material 3 Ambient Outbox Drawer.
 class SyncChip extends ConsumerWidget {
   const SyncChip({super.key});
 
@@ -26,6 +29,7 @@ class SyncChip extends ConsumerWidget {
     final l10n = context.l10n;
     final tokens = context.tokens;
     final inspector = ref.watch(flagProvider(('enableSyncQueueInspector', null))).value ?? false;
+    final ambientOutbox = ref.watch(flagProvider(('enableAmbientOutboxDrawer', null))).value ?? false;
     final issue = status.issues > 0;
     final color = issue ? tokens.colorDanger : tokens.primaryAccent;
 
@@ -41,7 +45,12 @@ class SyncChip extends ConsumerWidget {
           ),
           side: BorderSide(color: color.withValues(alpha: 0.4)),
           backgroundColor: color.withValues(alpha: 0.08),
-          onPressed: issue || inspector ? () => showSyncReviewSheet(context) : null,
+          onPressed: ambientOutbox
+              ? () {
+                  AppHaptics.selection();
+                  showAmbientOutboxSheet(context);
+                }
+              : (issue || inspector ? () => showSyncReviewSheet(context) : null),
         ),
       ),
     );
@@ -50,6 +59,8 @@ class SyncChip extends ConsumerWidget {
 
 /// Header sync button (flag `enableSyncLine`): tap pulls and pushes now, spins while it runs,
 /// and turns red with the review sheet when items are stuck. Offline / pending only change the icon.
+/// When `enableAmbientOutboxDrawer` is active, displays an ambient pulse badge for pending/issues and
+/// opens the rich Material 3 offline outbox drawer.
 class SyncButton extends ConsumerWidget {
   const SyncButton({this.tripId, super.key});
   final String? tripId;
@@ -62,26 +73,60 @@ class SyncButton extends ConsumerWidget {
     final online = ref.watch(isOnlineProvider).value ?? true;
     final status = ref.watch(syncStatusProvider).value ?? const SyncStatus();
     final syncing = ref.watch(tripsSyncingProvider).value ?? false;
+    final ambientOutbox = ref.watch(flagProvider(('enableAmbientOutboxDrawer', tripId))).value ?? false;
     final w = syncWording(l10n, online: online, status: status);
     final (String, IconData, Color) state = (
       online && status.idle ? l10n.syncNow : w.text,
       w.icon == Icons.check_circle_outline_rounded ? Icons.sync_rounded : w.icon,
       w.tone == SyncTone.problem ? t.colorDanger : t.textSecondary,
     );
+
+    Widget iconWidget = syncing
+        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+        : (ambientOutbox && (status.pending > 0 || status.issues > 0))
+            ? Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Icon(state.$2, color: state.$3),
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: status.issues > 0 ? t.colorDanger : t.tones.sky.accent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: t.bgSurface, width: 1.5),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Icon(state.$2, color: state.$3);
+
     return IconButton(
       key: const Key('sync-action'),
       tooltip: state.$1,
-      icon: syncing
-          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-          : Icon(state.$2, color: state.$3),
+      icon: iconWidget,
       onPressed: syncing
           ? null
-          : status.issues > 0
-          ? () => showSyncReviewSheet(context)
-          : () async {
-              await AppHaptics.light();
-              await ref.read(syncCoordinatorProvider).syncNow();
-            },
+          : ambientOutbox
+              ? () async {
+                  await AppHaptics.selection();
+                  if (status.issues > 0 || status.pending > 0 || !online) {
+                    if (context.mounted) showAmbientOutboxSheet(context);
+                  } else {
+                    await ref.read(syncCoordinatorProvider).syncNow();
+                  }
+                }
+              : (status.issues > 0
+                  ? () => showSyncReviewSheet(context)
+                  : () async {
+                      await AppHaptics.light();
+                      await ref.read(syncCoordinatorProvider).syncNow();
+                    }),
     );
   }
 }
