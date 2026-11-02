@@ -3157,10 +3157,10 @@
       "platform": "both"
     },
     "createdAt": "2026-11-02T15:23:55.781Z",
-    "updatedAt": "2026-11-02T15:23:55.781Z",
-    "shippedAt": "2026-11-02T15:23:55.781Z",
+    "updatedAt": "2026-11-02T15:37:46.935Z",
+    "shippedAt": "2026-11-02T15:37:46.935Z",
     "shippedBy": "claude-cli",
-    "shippedNote": "Flags enableDynamicColor, enableInteractiveCharts (new) plus enableNavPolish, enableExtendedUndo, enableMotionPolish. Flutter bubble label, wallpaper accent switch, Activity swipe undo, tappable category donut with Clear selection, Clear filters in the empty Spend state; web Total Spent count-up, keyboard row navigation, PWA colours. Commit pending (v3.87.0)."
+    "shippedNote": "Shipped in commit b0b1816 (v3.87.0); see decisions.md and docs/FEATURE_TEST_STEPS.md."
   },
   {
     "id": "FEAT-199",
@@ -3173,10 +3173,10 @@
       "platform": "flutter"
     },
     "createdAt": "2026-11-02T15:23:57.285Z",
-    "updatedAt": "2026-11-02T15:23:57.285Z",
-    "shippedAt": "2026-11-02T15:23:57.285Z",
+    "updatedAt": "2026-11-02T15:37:47.490Z",
+    "shippedAt": "2026-11-02T15:37:47.490Z",
     "shippedBy": "claude-cli",
-    "shippedNote": "Flag enableExpenseMultiSelect (Trip pack, default ON). Press and hold to select, bar with All, Personal, Category and Delete, one Undo for the whole group. Commit pending (v3.87.0)."
+    "shippedNote": "Shipped in commit b0b1816 (v3.87.0); see decisions.md and docs/FEATURE_TEST_STEPS.md."
   },
   {
     "id": "FEAT-200",
@@ -3189,9 +3189,9 @@
       "platform": "web"
     },
     "createdAt": "2026-11-02T15:23:58.740Z",
-    "updatedAt": "2026-11-02T15:23:58.740Z",
-    "shippedAt": "2026-11-02T15:23:58.740Z",
+    "updatedAt": "2026-11-02T15:37:48.022Z",
+    "shippedAt": "2026-11-02T15:37:48.021Z",
     "shippedBy": "claude-cli",
-    "shippedNote": "Flag enableDesktopRail (Core, default ON). At 1000px and wider the trip tabs become a vertical rail beside the page column; verified in headless Chrome at 1400px and 390px. Commit pending (v3.87.0)."
+    "shippedNote": "Shipped in commit b0b1816 (v3.87.0); see decisions.md and docs/FEATURE_TEST_STEPS.md."
   }
 ]

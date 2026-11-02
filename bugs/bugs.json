@@ -9795,7 +9795,7 @@
     "description": "After the 3-slide onboarding carousel the Trips list opened the 3-card first-run tour straight away, so a brand-new user went through two intro sequences.",
     "severity": "low",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "flutter",
@@ -9810,6 +9810,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-11-02T15:23:53.932Z",
-    "updatedAt": "2026-11-02T15:23:53.934Z"
+    "updatedAt": "2026-11-02T15:37:45.837Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-11-02T15:37:45.835Z",
+    "resolutionNote": "Finishing or skipping the onboarding carousel now marks the first-run tour done (onboarding_state.dart tourDoneKey), so a new user sees one intro. Commit b0b1816 (v3.87.0)."
   }
 ]

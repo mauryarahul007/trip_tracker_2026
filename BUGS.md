@@ -10,36 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **342** | All recorded bugs across sessions |
-| **🟢 Open** | **1** | No critical blockers, 0 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **314** | Verified & closed |
+| **✅ Resolved** | **315** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-345](#bug-345)** | ⚪ Low | `ui-ux` | Flutter: new users saw two intros back to back (carousel then tour) | `claude-cli` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-345: Flutter: new users saw two intros back to back (carousel then tour)
-
-- **Severity**: `LOW` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 2/11/2026 (flutter)
-
-**Description**:
-After the 3-slide onboarding carousel the Trips list opened the 3-card first-run tour straight away, so a brand-new user went through two intro sequences.
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -359,6 +345,7 @@ After the 3-slide onboarding carousel the Trips list opened the 3-card first-run
 | **BUG-341** | Flutter: sheet ignored tab-list scrolls and opened on horizontal tab swipes | `ui-ux` | `high` | `claude-cli` | `claude-cli` | TripContentSheet scroll listener matches vertical axis at any depth instead of depth 0; counts overscroll; ignores horizontal tab swipes. One swipe opens it on device. Commit 6c39de0 (v3.85.1). |
 | **BUG-342** | Web: Spend 'Load More' cap hid settlements | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | ExpenseList.tsx applies the 50-row cap to real expenses only; settlements always render; Load More counts expenses. Commit 6396261 (v3.85.2). |
 | **BUG-343** | Web: trip sheet needed two swipes (extra 80% rest point) | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Touch drags rest on full or collapsed only (sheetSnap.ts, 6vh commit or flick); 80% step kept for keyboard. Commit 6396261 (v3.85.2). |
+| **BUG-345** | Flutter: new users saw two intros back to back (carousel then tour) | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Finishing or skipping the onboarding carousel now marks the first-run tour done (onboarding_state.dart tourDoneKey), so a new user sees one intro. Commit b0b1816 (v3.87.0). |
 
 ---
 
