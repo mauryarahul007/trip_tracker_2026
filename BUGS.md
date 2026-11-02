@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **334** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **337** | All recorded bugs across sessions |
+| **🟢 Open** | **3** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **307** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
@@ -19,13 +19,57 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-337](#bug-337)** | 🟡 Medium | `ui-ux` | Flutter: trip sheet needs 4-5 swipes to expand over the map | `claude-cli` | 🟢 Open |
+| **[BUG-338](#bug-338)** | 🟡 Medium | `ui-ux` | Flutter: Chat tab opens at the oldest message instead of the latest | `claude-cli` | 🟢 Open |
+| **[BUG-339](#bug-339)** | 🟡 Medium | `ui-ux` | Flutter: Spend tab settlements hidden behind Load more | `claude-cli` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-337: Flutter: trip sheet needs 4-5 swipes to expand over the map
+
+- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `claude-cli` on 2/11/2026 (flutter)
+
+**Description**:
+Scrolling a tab with the sheet half-open moved the sheet 1px per ~350px of scroll, so users had to swipe 4-5 times to cover the background map.
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
+
+### BUG-338: Flutter: Chat tab opens at the oldest message instead of the latest
+
+- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `claude-cli` on 2/11/2026 (flutter)
+
+**Description**:
+ChatPane only scrolled to the bottom after sending; opening the tab left the list at the top.
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
+
+### BUG-339: Flutter: Spend tab settlements hidden behind Load more
+
+- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `claude-cli` on 2/11/2026 (flutter)
+
+**Description**:
+The 50-row page cap ran before expenses and settlements were split, so settlements could be pushed behind Load more and never appear on scroll.
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
 
 ## ✅ Resolved Bugs History
 

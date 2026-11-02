@@ -55,7 +55,6 @@ void main() {
           Align(
             alignment: Alignment.bottomCenter,
             child: AppBottomNav(
-              compass: true,
               items: items,
               currentIndex: 0,
               onTap: (i) => tapped = i,
@@ -82,11 +81,11 @@ void main() {
           theme: AppTheme.light(calm: false),
           home: Scaffold(
             body: const SizedBox.expand(key: Key('body')),
-            bottomNavigationBar: AppBottomNav(compass: true, items: items, currentIndex: 0, onTap: (_) {}),
+            bottomNavigationBar: AppBottomNav(items: items, currentIndex: 0, onTap: (_) {}),
           ),
         ),
       );
-      expect(tester.getSize(find.byKey(const Key('compass-dock'))).height, lessThan(120));
+      expect(tester.getSize(find.byKey(const Key('calm-dock'))).height, lessThan(120));
       expect(tester.getSize(find.byKey(const Key('body'))).height, greaterThan(400));
     });
 
@@ -95,13 +94,13 @@ void main() {
         host(
           Align(
             alignment: Alignment.bottomCenter,
-            child: AppBottomNav(compass: true, items: items, currentIndex: 3, onTap: (_) {}, centerAction: () {}),
+            child: AppBottomNav(items: items, currentIndex: 3, onTap: (_) {}, centerAction: () {}),
           ),
           theme: AppTheme.dark(calm: false),
         ),
       );
       expect(tester.takeException(), isNull);
-      expect(find.byKey(const Key('compass-dock')), findsOneWidget);
+      expect(find.byKey(const Key('calm-dock')), findsOneWidget);
     });
   });
 

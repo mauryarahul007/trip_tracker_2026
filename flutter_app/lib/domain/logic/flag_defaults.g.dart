@@ -100,6 +100,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableMotionPolish': true,
   'enableMultiPayerExpenses': false,
   'enableMultiTripAnalytics': false,
+  'enableNavPolish': true,
   'enableNextUpCapsule': true,
   'enableNotesAndChecklist': true,
   'enableNotesQuickCapture': true,
@@ -699,6 +700,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'pro',
     description: 'Cross-trip net balance, category breakdown, and spending charts.',
   ),
+  'enableNavPolish': (
+    label: 'Polished Trip Navigation Bar (Flutter + web)',
+    pack: 'core',
+    description: 'Flutter app and web app: ON: the trip bottom bar highlights the selected tab with a soft pill behind its icon that slides to the next tab (labels always visible), the selected icon fills in, tabs press down slightly when tapped, tapping the tab you are already on scrolls it back to the top, and jumping several tabs at once fades instead of sweeping past the tabs in between. Flutter also blurs the bar over the content. OFF: the previous full-width teal tile highlight, no scroll-to-top on re-tap, and the sweep through every tab in between. Does not change which tabs exist, the unread badges, the add-expense button, or any expense, balance or sync logic.',
+  ),
   'enableNextUpCapsule': (
     label: '"Next Up" Travel Island Capsule',
     pack: 'travel',
@@ -1285,6 +1291,7 @@ const Map<String, List<String>> consumerPacks = {
     'enableHorizonNav',
     'enableCompassNav',
     'enableCalmPassportUi',
+    'enableNavPolish',
     'enableCompassMe',
     'enableCompassWeb',
     'enableSpendInsights',

@@ -45,6 +45,40 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
   final _scroll = ScrollController();
   final _focusKey = GlobalKey();
   String? _highlightId;
+  var _openedAtLatest = false;
+  var _lastCount = 0;
+
+  /// Rows differ in height, so `maxScrollExtent` is only an estimate until the bottom is built; re-jump a few frames.
+  Future<void> _jumpToLatest() async {
+    for (var t = 0; t < 6 && mounted; t++) {
+      if (_scroll.hasClients) {
+        final max = _scroll.position.maxScrollExtent;
+        if (t > 0 && (_scroll.offset - max).abs() < 1) return;
+        _scroll.jumpTo(max);
+      }
+      await WidgetsBinding.instance.endOfFrame;
+    }
+  }
+
+  /// Open on the newest message; afterwards follow new messages only while the reader is already near the bottom.
+  void _followLatest(int count, {required bool revealing}) {
+    if (revealing) {
+      _openedAtLatest = true; // opened on a specific message: don't yank to the bottom afterwards
+      _lastCount = count;
+    }
+    if (count == 0 || revealing || !_scroll.hasClients) return;
+    if (!_openedAtLatest) {
+      _openedAtLatest = true;
+      _lastCount = count;
+      unawaited(_jumpToLatest());
+    } else if (count > _lastCount) {
+      _lastCount = count;
+      final p = _scroll.position;
+      if (p.maxScrollExtent - p.pixels < 120) unawaited(_jumpToLatest());
+    } else {
+      _lastCount = count;
+    }
+  }
 
   // Unsent text survives leaving the trip or an app kill (flag `enablePersistentExpenseDraft`).
   late final _prefs = ref.read(sharedPreferencesProvider);
@@ -150,6 +184,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _markSeen(messages);
+      _followLatest(messages.length, revealing: focusId != null);
       if (focusId != null && ref.read(activityFocusProvider)?.id == focusId) {
         ref.read(activityFocusProvider.notifier).set(null);
         unawaited(_reveal(messages, focusId));

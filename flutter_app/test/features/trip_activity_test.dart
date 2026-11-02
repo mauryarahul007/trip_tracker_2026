@@ -52,7 +52,7 @@ Future<void> note(WidgetTester t, String id, String type, String tripId, {bool r
 
 Future<void> openActivity(WidgetTester tester, String tripId) async {
   await goTo(tester, '/trip/$tripId/ledger');
-  await tester.tap(find.descendant(of: key('compass-dock'), matching: find.text('Activity')));
+  await tester.tap(find.descendant(of: key('calm-dock'), matching: find.text('Activity')));
   await settle(tester, rounds: 14);
 }
 
@@ -188,7 +188,7 @@ void main() {
       final s = await seedTrip(tester);
       await goTo(tester, '/trip/${s.tripId}/ledger');
       expect(key('action-trip-more'), findsNothing);
-      await tester.tap(find.descendant(of: key('compass-dock'), matching: find.text('Trip')));
+      await tester.tap(find.descendant(of: key('calm-dock'), matching: find.text('Trip')));
       await settle(tester, rounds: 14);
       for (final k in [
         'hub-edit',
@@ -255,14 +255,14 @@ void main() {
       // Visit Spend on Trip A so that tab is alive, then come back to Balances and switch from there.
       await goTo(tester, '/trip/${a.tripId}/expenses');
       expect(find.text('Alpha dinner'), findsWidgets);
-      await tester.tap(find.descendant(of: key('compass-dock'), matching: find.text('Balances')));
+      await tester.tap(find.descendant(of: key('calm-dock'), matching: find.text('Balances')));
       await settle(tester, rounds: 12);
       await tester.tap(key('trip-title-actions'));
       await settle(tester, rounds: 8);
       await tester.tap(key('switch-to-$b'));
       await settle(tester, rounds: 16);
       expect(appBarTitle(tester), 'Bravo Trip');
-      await tester.tap(find.descendant(of: key('compass-dock'), matching: find.text('Spend')));
+      await tester.tap(find.descendant(of: key('calm-dock'), matching: find.text('Spend')));
       await settle(tester, rounds: 14);
       expect(find.text('Bravo breakfast'), findsWidgets);
       expect(find.text('Alpha dinner'), findsNothing);

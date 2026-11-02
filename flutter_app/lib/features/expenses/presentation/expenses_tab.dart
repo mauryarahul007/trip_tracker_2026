@@ -262,7 +262,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final receiptsOn = _flag(ref, 'enableReceiptGallery', id);
     final binOn = _flag(ref, 'enableRecycleBin', id);
 
-    final shown = filtered.take(_visible).toList();
+    // Page only real expenses; settlements are few and must stay reachable without tapping "Load more".
+    final filteredExpenses = filtered.where(isActualExpense).toList();
+    final shown = [...filteredExpenses.take(_visible), ...filtered.where((e) => !isActualExpense(e))];
     final refundedIds = {
       for (final r in active)
         if (isRefund(r) && r.deletedAt == null) r.refundOfExpenseId!,
@@ -694,7 +696,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                   ),
                   ...section(settlementGroups, collapsible: false),
                 ],
-                if (filtered.length > _visible)
+                if (filteredExpenses.length > _visible)
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(16),

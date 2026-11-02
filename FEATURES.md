@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **194** |
+| **Total Tracked** | **195** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **191** |
+| **✅ Shipped** | **192** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -253,6 +253,7 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-192** | Trip Tools: calendar export + Offline Snapshot wiring | `general` | `claude-cli` | `claude-cli` | SettingsTripToolsHub.tsx gained Add-to-calendar (reuses existing downloadTripIcs + enableIcsExport flag) and Offline Snapshot (prop existed on SettingsView, was never threaded down) tiles. Commit pending (v3.82.7). |
 | **FEAT-193** | Expense Count-in-totals toggle (exclude from balances) | `general` | `claude-cli` | `claude-cli` | No DB migration needed -- it rides in the existing itemized_config jsonb column, same trick as refundOfExpenseId (see flutter_app's row_mappers.dart expenseToUpsertArgs). Added excludeFromTotals to the Expense type, tripApi.ts read-mapping + a new targeted-PATCH setExpenseExcludeFromTotals, a tripStore action, and a Count-in-trip-totals SettingsToggleRow in ExpenseReviewModal.tsx behind the existing enableExpenseExclusion flag (was registered, zero consumers). Excluded expenses are skipped in the 3 balance/total chokepoints: settlement.ts's two activeTripExpenses filters and App.tsx's nonSettlementExpenses filter -- still visible in the raw expense list, same as Flutter. Commit pending (v3.82.10). |
 | **FEAT-194** | Hub redesigned as icon tile grid, matching Flutter | `general` | `claude-cli` | `claude-cli` | TripHubTab.tsx rebuilt from a flat SettingsCell list into a responsive icon-tile grid (auto-fill, 150px min column), matching the Wrap-of-tiles layout in flutter_app's trip_hub_screen.dart -- colored squircle icon, bold title, 2-line muted subtitle, reusing the existing .settings-squircle/squircle-*-glow CSS and glass-card token. Commit pending (v3.82.10). |
+| **FEAT-195** | Polished trip navigation bar (sliding icon pill, filled icons, re-tap to top, fade on far jumps) | `ui-ux` | `claude-cli` | `claude-cli` | Flag enableNavPolish (Core, default ON). Web NavTabs.tsx + index.css and Flutter app_bottom_nav.dart/trip_shell_screen.dart: icon-sized sliding pill, filled active icon, press scale, Flutter blur and numeric Activity badge, re-tap scrolls to top, far-jump crossfade; Compass/Bento docks folded into one dock. Commit pending (v3.85.0). |
 
 ---
 

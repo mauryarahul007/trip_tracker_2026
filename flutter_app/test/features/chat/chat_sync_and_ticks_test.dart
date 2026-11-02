@@ -143,5 +143,45 @@ void main() {
       expect(find.text('2:25 PM'), findsOneWidget);
       expect(find.byKey(const Key('chat-status-sent-msg-alice-1')), findsOneWidget);
     });
+
+    testWidgets('ChatPane opens scrolled to the latest message', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final base = DateTime(2026, 10, 19, 9).millisecondsSinceEpoch;
+      final msgs = [
+        for (var i = 0; i < 60; i++)
+          TripMessage(
+            id: 'msg-$i',
+            tripId: 'trip-1',
+            memberId: 'm1',
+            body: 'Message number $i',
+            createdAt: base + i * 60000,
+          ),
+      ];
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            tripMessagesProvider('trip-1').overrideWith((ref) => Stream.value(msgs)),
+            tripMembersProvider('trip-1')
+                .overrideWith((ref) => Stream.value([const Member(id: 'm1', name: 'Alice', tripId: 'trip-1')])),
+            myMemberIdProvider('trip-1').overrideWithValue('m1'),
+            flagsRepositoryProvider.overrideWithValue(FakeFlags({'enableTripChat'}, {})),
+            dirtyIdsProvider.overrideWith((ref) => Stream.value(const <String>{})),
+            failedIdsProvider.overrideWith((ref) => Stream.value(const <String>{})),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: ChatPane(tripId: 'trip-1')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Message number 59'), findsOneWidget);
+      expect(find.text('Message number 0'), findsNothing);
+    });
   });
 }

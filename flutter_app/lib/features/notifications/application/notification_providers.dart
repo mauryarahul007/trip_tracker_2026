@@ -24,3 +24,9 @@ final notificationsProvider = StreamProvider<List<NotificationItem>>((ref) {
 final unreadNotificationCountProvider = Provider<int>(
   (ref) => (ref.watch(notificationsProvider).value ?? const []).where((n) => !n.read).length,
 );
+
+/// Unread notifications for one trip: the count shown on that trip's Activity tab.
+final tripActivityUnreadProvider = Provider.family<int, String>(
+  (ref, tripId) =>
+      (ref.watch(notificationsProvider).value ?? const []).where((n) => n.tripId == tripId && !n.read).length,
+);

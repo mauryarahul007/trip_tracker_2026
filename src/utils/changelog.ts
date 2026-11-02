@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.85.0',
+    date: '2026-11-02',
+    changes: [
+      'Trip navigation bar: the selected tab now has a soft pill behind its icon that slides between tabs, a filled icon, and a press-down feel. Re-tap the current tab to scroll it to the top.',
+      'Activity shows how many unread updates it has, and jumping across tabs fades instead of sweeping through the ones in between.',
+      'Fixed the trip sheet needing several swipes to open fully over the map.',
+      'Fixed Chat opening at the oldest message; it now opens on the latest.',
+      'Fixed settlements being hidden behind Load more in Spend.',
+    ],
+  },
+  {
     version: '3.84.2',
     date: '2026-10-29',
     changes: [

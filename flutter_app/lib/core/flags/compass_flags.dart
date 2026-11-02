@@ -13,6 +13,7 @@ const guestJoinFlag = 'enableGuestJoin';
 const compassMeFlag = 'enableCompassMe';
 const compassWebFlag = 'enableCompassWeb';
 const calmPassportFlag = 'enableCalmPassportUi';
+const navPolishFlag = 'enableNavPolish';
 
 /// `(flag key, trip id)`: pass the trip id inside a trip so per-trip overrides apply, null elsewhere.
 /// Falls back to the registry default while flags load so a screen never flickers between layouts.

@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-02 | unreleased | NAV-POLISH | [Polished trip navigation bar, one-swipe sheet, chat opens at latest, settlements always listed](#nav-polish--polished-trip-navigation-bar-one-swipe-sheet-chat-opens-at-latest-settlements-always-listed) |
 | 2026-10-28 | 3.82.5 | SPEND-REFUND-FILTER | [Refund day label, Expenses/Refunds filter, drop duplicate Hub Insights, FAB scoped to Balances/Spend](#spend-refund-filter--refund-day-label-expensesrefunds-filter-drop-duplicate-hub-insights-fab-scoped-to-balancesspend) |
 | 2026-10-28 | unreleased | CHAT-TAB-PLANS-HUB | [Chat in the trip dock, Plans moved into the Hub](#chat-tab-plans-hub--chat-in-the-trip-dock-plans-moved-into-the-hub) |
 | 2026-10-28 | 3.82.7 | WEB-CALM-PASSPORT | [Calm Passport design/feature propagation to webapp](#web-calm-passport--calm-passport-designfeature-propagation-to-webapp) |
@@ -4030,3 +4031,30 @@ Then add a row to the **Index** table.
 - `enableOfflineSnapshot` OFF: no "Offline Snapshot" tile in Trip Tools (other tiles unaffected).
 
 **Pass criteria:** nav, Hub, Activity, FAB scoping, refund day label, Type filter and the two new Trip Tools entries all behave as above with the flags ON, and each flag's OFF state removes exactly its own surface with no effect on anything else or on the Flutter app.
+
+
+## NAV-POLISH — Polished trip navigation bar, one-swipe sheet, chat opens at latest, settlements always listed
+
+**Shipped:** unreleased. Flag: `enableNavPolish` (new, Core pack, default ON) for the bar, re-tap and fade changes. The sheet swipe, chat scroll and settlements fixes are bug fixes and have no flag.
+
+**Prep:** A trip with Chat on, 60+ chat messages, 55+ expenses plus at least one settlement, and unread Activity notifications. Run on a phone-width screen (Flutter app, and the web app at ≤ 500px wide). Superadmin access to Ops Deck for the OFF checks.
+
+**Steps (Flutter app):**
+1. Open a trip. The bottom bar has Balances, Spend, Activity, Chat, Hub. The selected tab has a soft pill behind its **icon only** (label stays below) and a filled icon. Tap another tab: the pill slides across and the icon fills in; pressing a tab shrinks it slightly.
+2. With unread Activity notifications the Activity icon shows a number (99+ above 99). Chat still shows a dot when unread.
+3. Scroll Spend down, then tap the **Spend** tab again: the list scrolls to the top. Repeat on Balances and Activity. On Chat, re-tapping does nothing.
+4. From Balances tap **Hub** directly: the content fades to Hub; it does not sweep past Spend, Activity and Chat. Tapping the neighbouring tab still slides.
+5. Scroll content under the bar: the bar is slightly translucent and blurred.
+6. Sheet: with the map showing behind (sheet half-open), swipe the Spend list up **once**: the sheet opens fully in that single swipe.
+7. Spend: scroll to the bottom. Day groups, then a "Settlements" heading with settlement rows, are reachable without tapping "Load more" (Load more only pages older expenses).
+8. Chat: open the Chat tab. It opens on the newest message. Receive or send a message while at the bottom: it follows. Scroll up, receive a message: it does not jump. Open a message from Activity: it jumps to that message, not the bottom.
+
+**Steps (web app, phone width):**
+9. Same bar: pill behind the icon slides between tabs, filled active icon, press-down on tap. Re-tapping the current tab scrolls it to the top (not on Chat). Balances to Hub fades; neighbouring tabs slide.
+
+**Flag-OFF negative checks (`enableNavPolish` OFF):**
+- The selected tab fills its whole cell with the accent colour (previous look), the icon does not fill, nothing is blurred, no pill slide.
+- No Activity count number on Flutter (web keeps its existing Activity count); re-tapping the current tab does nothing; Balances to Hub sweeps through the tabs in between.
+- Sheet one-swipe, chat-at-latest and settlements-listed still work (they are not behind the flag).
+
+**Pass criteria:** the ON checks above all hold, the OFF state restores the previous bar exactly, and no tab, badge, or add-expense behaviour changes in either state.

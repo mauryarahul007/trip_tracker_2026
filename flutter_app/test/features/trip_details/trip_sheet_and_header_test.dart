@@ -200,5 +200,29 @@ void main() {
       // Drawer must snap fully open
       expect(progressNotifier.value, 1.0);
     });
+
+    testWidgets('a short single swipe on the child list is enough to open fully', (tester) async {
+      final progressNotifier = ValueNotifier<double>(0.0);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TripContentSheet(
+              progressNotifier: progressNotifier,
+              collapsedFraction: 0.50,
+              child: ListView.builder(
+                itemCount: 50,
+                itemBuilder: (context, index) => ListTile(title: Text('Item $index')),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.drag(find.text('Item 2'), const Offset(0, -30));
+      await tester.pumpAndSettle();
+
+      expect(progressNotifier.value, 1.0);
+    });
   });
 }

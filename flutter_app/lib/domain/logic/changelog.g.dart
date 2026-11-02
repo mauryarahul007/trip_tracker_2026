@@ -8,6 +8,13 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.85.0', '2026-11-02', [
+    'Trip navigation bar: the selected tab now has a soft pill behind its icon that slides between tabs, a filled icon, and a press-down feel. Re-tap the current tab to scroll it to the top.',
+    'Activity shows how many unread updates it has, and jumping across tabs fades instead of sweeping through the ones in between.',
+    'Fixed the trip sheet needing several swipes to open fully over the map.',
+    'Fixed Chat opening at the oldest message; it now opens on the latest.',
+    'Fixed settlements being hidden behind Load more in Spend.',
+  ]),
   ChangelogEntry('3.84.2', '2026-10-29', [
     'Fixed Flutter CI widget visibility and drawer initial position by respecting default map collapsed state.',
     'Restored instant trip switching from the header title in compass navigation mode.',
@@ -53,8 +60,5 @@ const List<ChangelogEntry> changelogEntries = [
     'Half-typed expenses, notes and chat messages are kept if you close by accident, and are cleared when you sign out.',
     'Freeze, close and Settle all now apply at once with an Undo, and a quiet trip where you still owe shows a Settle up reminder.',
     'Smoother and clearer: aligned money columns, balances that count to their new value, fits large text, and respects Reduce motion.',
-  ]),
-  ChangelogEntry('3.77.5', '2026-10-22', [
-    'Tap an Activity row to jump straight to that chat message or expense, and use See in Activity on an expense to see its history.',
   ]),
 ];

@@ -3097,5 +3097,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-10-28T16:35:16.055Z",
     "shippedNote": "TripHubTab.tsx rebuilt from a flat SettingsCell list into a responsive icon-tile grid (auto-fill, 150px min column), matching the Wrap-of-tiles layout in flutter_app's trip_hub_screen.dart -- colored squircle icon, bold title, 2-line muted subtitle, reusing the existing .settings-squircle/squircle-*-glow CSS and glass-card token. Commit pending (v3.82.10)."
+  },
+  {
+    "id": "FEAT-195",
+    "title": "Polished trip navigation bar (sliding icon pill, filled icons, re-tap to top, fade on far jumps)",
+    "description": "Trip bottom bar redesigned against WhatsApp/M3 patterns, behind enableNavPolish.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "both"
+    },
+    "createdAt": "2026-11-02T12:27:38.181Z",
+    "updatedAt": "2026-11-02T12:27:38.181Z",
+    "shippedAt": "2026-11-02T12:27:38.181Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Flag enableNavPolish (Core, default ON). Web NavTabs.tsx + index.css and Flutter app_bottom_nav.dart/trip_shell_screen.dart: icon-sized sliding pill, filled active icon, press scale, Flutter blur and numeric Activity badge, re-tap scrolls to top, far-jump crossfade; Compass/Bento docks folded into one dock. Commit pending (v3.85.0)."
   }
 ]

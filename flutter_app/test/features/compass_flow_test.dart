@@ -21,10 +21,10 @@ void main() {
       await pumpApp(tester, user: asha, flagsOn: compassOn);
       final s = await seedTrip(tester);
       await goTo(tester, '/trip/${s.tripId}/expenses');
-      expect(key('compass-dock'), findsOneWidget);
+      expect(key('calm-dock'), findsOneWidget);
       expect(key('dock-center'), findsOneWidget);
       for (final l in ['Balances', 'Spend', 'Activity', 'Trip']) {
-        expect(find.descendant(of: key('compass-dock'), matching: find.text(l)), findsOneWidget);
+        expect(find.descendant(of: key('calm-dock'), matching: find.text(l)), findsOneWidget);
       }
       expect(key('compass-spend-summary'), findsOneWidget);
     });
@@ -33,10 +33,10 @@ void main() {
       await pumpApp(tester, user: asha, flagsOn: {...compassOn, 'enableTripChat'});
       final s = await seedTrip(tester);
       await goTo(tester, '/trip/${s.tripId}/ledger');
-      await tester.tap(find.descendant(of: key('compass-dock'), matching: find.text('Activity')));
+      await tester.tap(find.descendant(of: key('calm-dock'), matching: find.text('Activity')));
       await settle(tester, rounds: 14);
       expect(find.text('No activity yet'), findsOneWidget);
-      await tester.tap(find.descendant(of: key('compass-dock'), matching: find.text('Trip')));
+      await tester.tap(find.descendant(of: key('calm-dock'), matching: find.text('Trip')));
       await settle(tester, rounds: 14);
       expect(key('hub-home'), findsOneWidget);
       expect(key('hub-chat'), findsNothing); // Chat lives inside Notes, not as its own entry
@@ -82,28 +82,27 @@ void main() {
       await pumpApp(tester, user: asha, flagsOn: compassOn);
       final s = await seedTrip(tester);
       await goTo(tester, '/trip/${s.tripId}/expenses');
-      await tester.tap(find.descendant(of: key('compass-dock'), matching: find.text('Trip')));
+      await tester.tap(find.descendant(of: key('calm-dock'), matching: find.text('Trip')));
       await settle(tester, rounds: 14);
       expect(key('trip-hub'), findsOneWidget);
       await tester.tap(key('hub-people'));
       await settle(tester, rounds: 14);
       expect(key('trip-hub'), findsNothing);
-      expect(key('compass-dock'), findsOneWidget); // still inside the trip, dock stays
+      expect(key('calm-dock'), findsOneWidget); // still inside the trip, dock stays
     });
 
     testApp('flag on: a direct link to Notes still opens it (old URLs keep working)', (tester) async {
       await pumpApp(tester, user: asha, flagsOn: compassOn);
       final s = await seedTrip(tester);
       await goTo(tester, '/trip/${s.tripId}/notes');
-      expect(key('compass-dock'), findsOneWidget);
+      expect(key('calm-dock'), findsOneWidget);
       expect(find.byType(Scaffold), findsWidgets);
     });
 
-    testApp('flag off: the previous tab bar, no hub, no Compass dock', (tester) async {
+    testApp('flag off: the previous tab bar, no hub, no centre Add', (tester) async {
       await pumpApp(tester, user: asha);
       final s = await seedTrip(tester);
       await goTo(tester, '/trip/${s.tripId}/expenses');
-      expect(key('compass-dock'), findsNothing);
       expect(key('compass-spend-summary'), findsNothing);
       expect(key('dock-center'), findsNothing);
     });

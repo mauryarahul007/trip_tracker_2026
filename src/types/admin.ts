@@ -94,6 +94,7 @@ export type FeatureFlagKey =
   | 'enableTripGetStarted'
   | 'enableCompassNav'
   | 'enableCalmPassportUi'
+  | 'enableNavPolish'
   | 'enableCompassSpend'
   | 'enableCompassMoney'
   | 'enableCompassTripPages'

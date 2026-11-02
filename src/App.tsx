@@ -283,6 +283,7 @@ export default function App() {
   // Global, not per-trip: the Calm Passport look should not change as you switch
   // trips. Every enableCalmPassportUi CSS rule is scoped under :root[data-calm-ui].
   const isCalmPassportUi = isFeatureEnabled('enableCalmPassportUi', { userId: userId || undefined });
+  const isNavPolish = isFeatureEnabled('enableNavPolish', { userId: userId || undefined });
   useEffect(() => {
     const root = document.documentElement;
     if (isCalmPassportUi) root.setAttribute('data-calm-ui', 'on');
@@ -478,16 +479,22 @@ export default function App() {
     // transition ends so trip open/close transitions don't inherit it.
     const order = currentTabOrder as readonly Tab[];
     const root = document.documentElement;
-    root.setAttribute('data-tab-dir', order.indexOf(tab) >= order.indexOf(activeTabRef.current) ? 'next' : 'prev');
+    const hops = order.indexOf(tab) - order.indexOf(activeTabRef.current);
+    root.setAttribute('data-tab-dir', hops >= 0 ? 'next' : 'prev');
+    // Jumping past a tab fades instead of sliding (enableNavPolish), so it doesn't read as sweeping through the tabs between.
+    if (isNavPolish && Math.abs(hops) > 1) root.setAttribute('data-tab-jump', 'far');
     const transition = withViewTransition(() => {
       flushSync(() => setActiveTabRaw(tab));
     });
-    const clearDir = () => root.removeAttribute('data-tab-dir');
+    const clearDir = () => {
+      root.removeAttribute('data-tab-dir');
+      root.removeAttribute('data-tab-jump');
+    };
     // then(clear, clear), not finally(): `finished` rejects when a newer
     // transition interrupts this one, and finally() would re-throw that.
     if (transition) transition.finished.then(clearDir, clearDir);
     else clearDir();
-  }, [recordTabSwitch, currentTabOrder]);
+  }, [recordTabSwitch, currentTabOrder, isNavPolish]);
 
 
 
@@ -3412,6 +3419,7 @@ export default function App() {
             calmMode={isCalmPassportUi}
             chatEnabled={isTripChatEnabled}
             activityUnreadCount={tripActivityUnreadCount}
+            polish={isNavPolish}
           />
         </div>
       )}

@@ -46,7 +46,9 @@ import '../../trips/presentation/widgets/sync_chip.dart' show showSyncReviewShee
 import '../../trips/presentation/widgets/trip_card.dart' show TripStatusPill, tripHeadline;
 import '../../expenses/application/money_providers.dart' show allTripsProvider;
 import '../../trips/application/trips_providers.dart';
+import '../application/scroll_to_top.dart';
 import '../application/trip_nav.dart';
+import '../../notifications/application/notification_providers.dart' show tripActivityUnreadProvider;
 import 'widgets/compass_balances_rail.dart';
 import '../domain/trip_tabs.dart';
 import '../../../core/platform/motion.dart';
@@ -90,6 +92,15 @@ IconData calmTabIcon(TripNavTab tab) => switch (tab) {
   TripNavTab.notes => Icons.confirmation_number_outlined,
   TripNavTab.hub => Icons.grid_view_rounded,
   _ => tripTabIcon(tab),
+};
+
+/// Filled twin of [calmTabIcon], shown while the tab is selected (flag `enableNavPolish`).
+IconData calmTabIconFilled(TripNavTab tab) => switch (tab) {
+  TripNavTab.expenses => Icons.receipt_long_rounded,
+  TripNavTab.activity => Icons.notifications_rounded,
+  TripNavTab.chat => Icons.chat_bubble_rounded,
+  TripNavTab.notes => Icons.confirmation_number_rounded,
+  _ => calmTabIcon(tab),
 };
 
 IconData tripTabIcon(TripNavTab tab) => switch (tab) {
@@ -187,7 +198,12 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
     }
   }
 
-  void _goTab(int branch) {
+  void _goTab(int branch, {bool polish = false}) {
+    if (polish && branch == widget.navigationShell.currentIndex) {
+      // Re-tapping the current tab scrolls it back to the top; Chat keeps its place at the latest message.
+      if (branch != TripNavTab.chat.index && scrollVisibleTabToTop(context)) unawaited(AppHaptics.selection());
+      return;
+    }
     unawaited(AppHaptics.selection());
     widget.navigationShell.goBranch(branch);
   }
@@ -307,17 +323,20 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
     // Compass web: a third pane with Settle up beside the expense table on very wide windows.
     final compassWebRail =
         ref.watch(compassFlagProvider((compassWebFlag, widget.tripId))) && MediaQuery.sizeOf(context).width >= 1280;
+    final polish = ref.watch(compassFlagProvider((navPolishFlag, widget.tripId)));
     final navItems = [
       for (final t in dock)
         AppNavItem(
           icon: calm ? calmTabIcon(t) : tripTabIcon(t),
+          selectedIcon: polish && calm ? calmTabIconFilled(t) : null,
+          count: polish && t == TripNavTab.activity ? ref.watch(tripActivityUnreadProvider(widget.tripId)) : 0,
           label: calm
               ? calmTabLabel(context, t)
               : compass
               ? compassTabLabel(context, t)
               : tripTabLabel(context, t),
           badge: t == TripNavTab.chat && ref.watch(chatUnreadProvider(widget.tripId)),
-          badgeKey: const Key('chat-tab-unread'),
+          badgeKey: Key(t == TripNavTab.chat ? 'chat-tab-unread' : 'tab-count-${t.name}'),
         ),
     ];
 
@@ -441,9 +460,9 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
         bottomNavigationBar: dock.length < 2 || wide
             ? null
             : AppBottomNav(
-                compass: compass,
+                polish: polish,
                 currentIndex: dockActive < 0 ? 0 : dockActive,
-                onTap: (i) => _goTab(dock[i].index),
+                onTap: (i) => _goTab(dock[i].index, polish: polish),
                 items: navItems,
                 centerAction: compass
                     ? () => unawaited(startAddExpense(context, ref, widget.tripId, dial: dial))
@@ -473,6 +492,8 @@ class TripTabPager extends ConsumerStatefulWidget {
 class _TripTabPagerState extends ConsumerState<TripTabPager> {
   PageController? _controller;
   bool _programmatic = false;
+  double _opacity = 1;
+  static const _fadeOut = Duration(milliseconds: 90);
 
   List<TripNavTab> get _tabs => ref.read(visibleTabsProvider(widget.tripId));
 
@@ -493,12 +514,30 @@ class _TripTabPagerState extends ConsumerState<TripTabPager> {
     final c = _controller;
     if (c == null || !c.hasClients) return;
     final target = _page;
-    if ((c.page ?? target.toDouble()).round() != target) {
+    final from = (c.page ?? target.toDouble()).round();
+    if (from != target) {
       _programmatic = true;
+      // Jumping past a tab fades instead of sweeping through the tabs in between (flag `enableNavPolish`).
+      if ((target - from).abs() > 1 && ref.read(compassFlagProvider((navPolishFlag, widget.tripId)))) {
+        unawaited(_crossfadeTo(c, target));
+        return;
+      }
       c
           .animateToPage(target, duration: AppMotion.base, curve: Curves.easeOutCubic)
           .whenComplete(() => _programmatic = false);
     }
+  }
+
+  Future<void> _crossfadeTo(PageController c, int target) async {
+    final reduce = MediaQuery.disableAnimationsOf(context);
+    if (!reduce) {
+      setState(() => _opacity = 0);
+      await Future<void>.delayed(_fadeOut);
+    }
+    if (!mounted) return;
+    if (c.hasClients) c.jumpToPage(target);
+    setState(() => _opacity = 1);
+    _programmatic = false;
   }
 
   @override
@@ -518,17 +557,21 @@ class _TripTabPagerState extends ConsumerState<TripTabPager> {
         if (mounted && c != null && c.hasClients && (c.page ?? 0).round() != _page) c.jumpToPage(_page);
       });
     });
-    return PageView(
-      controller: _controller,
-      onPageChanged: (page) {
-        if (_programmatic || page >= tabs.length) return;
-        final branch = tabs[page].index;
-        if (branch != widget.navigationShell.currentIndex) {
-          unawaited(AppHaptics.selection());
-          widget.navigationShell.goBranch(branch);
-        }
-      },
-      children: [for (final t in tabs) _KeepAlive(child: TabErrorBoundary(child: widget.branches[t.index]))],
+    return AnimatedOpacity(
+      opacity: _opacity,
+      duration: _opacity == 0 ? _fadeOut : const Duration(milliseconds: 160),
+      child: PageView(
+        controller: _controller,
+        onPageChanged: (page) {
+          if (_programmatic || page >= tabs.length) return;
+          final branch = tabs[page].index;
+          if (branch != widget.navigationShell.currentIndex) {
+            unawaited(AppHaptics.selection());
+            widget.navigationShell.goBranch(branch);
+          }
+        },
+        children: [for (final t in tabs) _KeepAlive(child: TabErrorBoundary(child: widget.branches[t.index]))],
+      ),
     );
   }
 }

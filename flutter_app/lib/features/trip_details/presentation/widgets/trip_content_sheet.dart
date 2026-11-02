@@ -46,6 +46,11 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
   double _lastMoveFraction = 1.0;
   double _velocity = 0.0;
 
+  /// Upward inner-scroll pixels after which a collapsed sheet snaps to full in one gesture.
+  static const double _expandScrollThreshold = 16.0;
+  double _scrollUpAccum = 0.0;
+  bool _autoExpanding = false;
+
   @override
   void initState() {
     super.initState();
@@ -247,20 +252,19 @@ class TripContentSheetState extends State<TripContentSheet> with SingleTickerPro
                       onNotification: (notification) {
                         if (notification.depth != 0) return false;
                         if (notification is ScrollStartNotification) {
-                          if (_fraction > 0.05) {
-                            _animController.stop();
-                            _dragStartFraction = _fraction;
-                          }
+                          _scrollUpAccum = 0.0;
+                          _autoExpanding = false;
                         } else if (notification is ScrollUpdateNotification) {
-                          if (_fraction > 0.02) {
-                            final delta = notification.scrollDelta ?? 0.0;
-                            if (delta > 0 && usableRange > 0) {
-                              final deltaFraction = delta / usableRange;
-                              _updateFraction((_fraction - deltaFraction).clamp(0.0, 1.0));
+                          final delta = notification.scrollDelta ?? 0.0;
+                          if (_fraction > 0.02 && delta > 0 && !_autoExpanding) {
+                            _scrollUpAccum += delta;
+                            if (_scrollUpAccum >= _expandScrollThreshold) {
+                              _autoExpanding = true;
+                              animateTo(0.0);
                             }
                           }
                         } else if (notification is ScrollEndNotification) {
-                          if (_fraction > 0.01 && _fraction < 0.95) {
+                          if (!_autoExpanding && _fraction > 0.01 && _fraction < 0.95) {
                             animateTo(0.0);
                           }
                         }

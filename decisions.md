@@ -5522,4 +5522,14 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:** `startFull` defaults to expanded to preserve immediate tab content visibility and full list scrolling, while users can still pull down the handle or tap map toggles to view the interactive OSM route hero.
 * **Release Cut:** Version bumped to `3.84.2` via `npm run release:patch`. ADR logged.
 
+---
 
+## Trip navigation bar polish, dock cleanup and Flutter scroll fixes (v3.85.0)
+* **Context:** A review of the trip bottom bar against WhatsApp, Instagram, Airbnb and Splitwise found a heavy full-tile selected state, dot-only badges in Flutter, no filled icons, a pager that swept through every tab between a far jump, no scroll-to-top on re-tap, and three parallel Flutter dock designs (Calm, Compass, Bento) of which only Calm ships. Separate Flutter bugs: the trip sheet needed 4-5 swipes to open (scroll deltas moved it 1:1 over about 350px), Chat opened at the oldest message, and the 50-row Spend page cap ran before the expense/settlement split so settlements could sit behind Load more.
+* **Decision & Implementation:**
+  - New Core-pack flag `enableNavPolish` (default ON, web + Flutter). ON: icon-sized sliding pill (web measures the icon; Flutter `AnimatedPositioned`), filled active icon, press scale, blurred Flutter bar, numeric Activity badge on Flutter (99+ cap), re-tap scrolls the tab to the top (Chat excluded), and far jumps crossfade (web `data-tab-jump` view-transition, Flutter `TripTabPager` fade + `jumpToPage`). OFF restores the previous full-tile look.
+  - Flutter dock cleanup: `_CompassDock` and the Bento `_Dock` are folded into one `_Dock`. The centre action is kept (not drawn under the Calm theme, as before) because the Trips home "+ New trip" uses it. Tab-list logic and the Compass/Calm flags are untouched.
+  - Flutter `scrollVisibleTabToTop` walks the widget tree for the on-screen vertical scrollable, because pager pages are kept alive side by side and tabs own their own controllers.
+  - `TripContentSheet`: about 16px of upward inner scroll on a collapsed sheet now snaps it open. `ChatPane` jumps to the latest message on first open (re-jumping a few frames for variable row heights) and follows new messages only near the bottom. `ExpensesTab` pages expenses only; settlements always render.
+* **Trade-offs Accepted:** Chat has no unread count in the data, so it keeps a dot. The web pill keeps its JS measurement rather than a shared-element view transition. Old Compass/Bento dock visuals are gone for anyone running with the Calm theme off.
+* **Release Cut:** Version bumped to `3.85.0` via `npm run release:minor`. Bugs BUG-337/338/339 and the nav polish feature logged in the trackers.

@@ -31,7 +31,12 @@ type Props = {
   chatEnabled?: boolean;
   /** Whether any modal, popup, drawer, or subpage is active */
   isSubpageOrModalOpen?: boolean;
+  /** Flag `enableNavPolish`: icon-sized sliding pill, filled active icon, re-tap scrolls to top. */
+  polish?: boolean;
 };
+
+const NAV_PILL_WIDTH = 56;
+const NAV_PILL_HEIGHT = 32;
 
 export function NavTabs({
   activeTab,
@@ -52,13 +57,14 @@ export function NavTabs({
   activityUnreadCount = 0,
   chatEnabled = false,
   isSubpageOrModalOpen = false,
+  polish = false,
 }: Props) {
   const isMembersTab = activeTab === 'members';
   // Calm Passport: Add-expense FAB only makes sense on Balances/Spend -- Activity, Chat and Hub
   // each either have no "add" concept or (Hub) route to their own screen's own add action.
   const calmFabVisible = activeTab === 'ledger' || activeTab === 'expenses';
   const navRef = useRef<HTMLElement | null>(null);
-  const [pillStyle, setPillStyle] = useState<{ left: number; width: number } | null>(null);
+  const [pillStyle, setPillStyle] = useState<{ left: number; width: number; top?: number; height?: number } | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
   const [showDeniedHint, setShowDeniedHint] = useState(false);
@@ -72,13 +78,22 @@ export function NavTabs({
   const updatePill = useCallback(() => {
     if (!navRef.current) return;
     const activeBtn = navRef.current.querySelector<HTMLButtonElement>(`[data-tab="${activeTab}"]`);
-    if (activeBtn) {
+    if (!activeBtn) return;
+    const icon = polish ? activeBtn.querySelector<HTMLElement>('.nav-tab-icon') : null;
+    if (icon) {
+      // Soft pill hugging the icon (WhatsApp / Material 3 style); the label stays below it.
+      const nav = navRef.current.getBoundingClientRect();
+      const box = icon.getBoundingClientRect();
       setPillStyle({
-        left: activeBtn.offsetLeft,
-        width: activeBtn.offsetWidth,
+        left: box.left - nav.left + box.width / 2 - NAV_PILL_WIDTH / 2,
+        width: NAV_PILL_WIDTH,
+        top: box.top - nav.top + box.height / 2 - NAV_PILL_HEIGHT / 2,
+        height: NAV_PILL_HEIGHT,
       });
+      return;
     }
-  }, [activeTab]);
+    setPillStyle({ left: activeBtn.offsetLeft, width: activeBtn.offsetWidth });
+  }, [activeTab, polish]);
 
   const hasNotesOrPassesTab = showNotesTab ?? (isNotesEnabled || isPassesEnabled);
 
@@ -94,7 +109,19 @@ export function NavTabs({
   }, [updatePill]);
 
   const goTo = (tab: Tab) => {
-    if (tab === activeTab) return;
+    if (tab === activeTab) {
+      // Re-tapping the current tab scrolls it back to the top (Chat is skipped: it opens at the latest message).
+      if (polish && tab !== 'chat') {
+        const pane = Array.from(document.querySelectorAll<HTMLElement>('.app-main .tab-pane')).find(
+          (el) => getComputedStyle(el).display !== 'none',
+        );
+        if (pane && pane.scrollTop > 0) {
+          triggerHaptic('light');
+          pane.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+      return;
+    }
     if (tab === 'notes' && !hasNotesOrPassesTab) return;
     if (tab === 'notes' && showNotesNudge) dismissNotesNudge();
     triggerHaptic('light');
@@ -228,7 +255,7 @@ export function NavTabs({
     <>
       <nav
         ref={navRef}
-        className={`nav-tabs ${calmMode ? `calm-nav ${chatEnabled ? 'has-chat' : ''}` : isChatFirstNav ? 'has-chat-nav' : ''} ${hasNotesOrPassesTab ? 'has-notes' : 'no-notes'} ${isHidden ? 'is-hidden' : ''}`}
+        className={`nav-tabs ${polish ? 'nav-polish' : ''} ${calmMode ? `calm-nav ${chatEnabled ? 'has-chat' : ''}` : isChatFirstNav ? 'has-chat-nav' : ''} ${hasNotesOrPassesTab ? 'has-notes' : 'no-notes'} ${isHidden ? 'is-hidden' : ''}`}
         role="tablist"
         aria-label="Trip navigation tabs"
       >
@@ -238,6 +265,11 @@ export function NavTabs({
             style={{
               left: `${pillStyle.left}px`,
               width: `${pillStyle.width}px`,
+              ...(pillStyle.top !== undefined && {
+                top: `${pillStyle.top}px`,
+                height: `${pillStyle.height}px`,
+                bottom: 'auto',
+              }),
             }}
             aria-hidden="true"
           />

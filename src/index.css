@@ -16593,3 +16593,41 @@ body:has([role="dialog"]) .nav-floating-fab-wrap {
   background: var(--primary-accent);
   border-color: var(--primary-accent);
 }
+
+/* enableNavPolish: soft icon-sized pill (positioned by NavTabs), filled active icon, press feedback. */
+.nav-tabs.nav-polish .nav-tabs-pill {
+  border-radius: 9999px;
+  box-shadow: none;
+  transition:
+    left 0.34s var(--ease-uber-spring),
+    top 0.34s var(--ease-uber-spring),
+    width 0.34s var(--ease-uber-spring);
+}
+.nav-tabs.nav-polish .nav-tab-item.active {
+  color: var(--color-nav-item-active);
+}
+.nav-tabs.nav-polish .nav-tab-item.active .nav-tab-icon {
+  transform: none;
+}
+.nav-tabs.nav-polish .nav-tab-item.active .nav-tab-icon svg :is(path, polygon, rect, circle) {
+  fill: currentColor;
+  fill-opacity: 0.22;
+}
+.nav-tabs.nav-polish .nav-tab-item:active {
+  transform: scale(0.94);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-tabs.nav-polish .nav-tabs-pill {
+    transition: none !important;
+  }
+}
+
+/* Jumping past a tab: fade only, no sideways sweep. */
+:root[data-tab-jump="far"]::view-transition-old(tab-pane) {
+  animation: motionTabFadeOut var(--dur-2) var(--ease-in) both;
+}
+:root[data-tab-jump="far"]::view-transition-new(tab-pane) {
+  animation: motionTabFadeIn var(--dur-3) var(--ease-out) both;
+}
+@keyframes motionTabFadeOut { to { opacity: 0; } }
+@keyframes motionTabFadeIn { from { opacity: 0; } }
