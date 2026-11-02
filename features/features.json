@@ -3125,10 +3125,10 @@
       "platform": "both"
     },
     "createdAt": "2026-11-02T13:56:02.233Z",
-    "updatedAt": "2026-11-02T13:56:02.233Z",
-    "shippedAt": "2026-11-02T13:56:02.233Z",
+    "updatedAt": "2026-11-02T13:56:15.069Z",
+    "shippedAt": "2026-11-02T13:56:15.069Z",
     "shippedBy": "claude-cli",
-    "shippedNote": "Flag enableNavPolish (Core, default ON). Flutter sheet spring and bar hiding under the keyboard; Chat unread number on both apps; web view-transition types, snap haptic and low-end solid bar; shared motion tokens with a parity test. Commit pending (v3.86.0)."
+    "shippedNote": "Flag enableNavPolish (Core, default ON). Spring sheet, keyboard-aware bar, Chat unread number, web view-transition types, snap haptic and low-end solid bar, shared motion tokens. Commit 0fe8656 (v3.86.0)."
   },
   {
     "id": "FEAT-197",
@@ -3141,9 +3141,9 @@
       "platform": "flutter"
     },
     "createdAt": "2026-11-02T13:56:03.023Z",
-    "updatedAt": "2026-11-02T13:56:03.023Z",
-    "shippedAt": "2026-11-02T13:56:03.023Z",
+    "updatedAt": "2026-11-02T13:56:15.525Z",
+    "shippedAt": "2026-11-02T13:56:15.525Z",
     "shippedBy": "claude-cli",
-    "shippedNote": "Flag enableNotchNav (Core, default ON). animated_notch_bottom_bar wrapped with unread badges, 56dp accessible tap targets, text-scale cap and fallback to the polished dock. Commit pending (v3.86.0)."
+    "shippedNote": "Flag enableNotchNav (Core, default ON). animated_notch_bottom_bar wrapped for badges, accessible tap targets and text scale; falls back to the polished dock. Commit 0fe8656 (v3.86.0)."
   }
 ]
