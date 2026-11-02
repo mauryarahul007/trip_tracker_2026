@@ -853,6 +853,7 @@ export function MembersGroupsTab({
                           <img
                             src={suggestion.avatarUrl}
                             alt=""
+                            loading="lazy"
                             decoding="async"
                             style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
                             referrerPolicy="no-referrer"

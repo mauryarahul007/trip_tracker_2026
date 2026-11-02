@@ -13,6 +13,7 @@ import '../../../core/storage/prefs.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/expense_list_logic.dart';
 import '../../../domain/logic/refunds.dart';
+import '../../../domain/models/category.dart';
 import '../../../domain/models/expense.dart';
 import '../../../domain/models/member.dart';
 import '../../../l10n/l10n_ext.dart';
@@ -48,6 +49,7 @@ import 'widgets/compass_active_filters.dart';
 import 'widgets/compass_spend_summary.dart';
 import 'widgets/expense_row.dart';
 import 'widgets/expense_swipe.dart';
+import 'widgets/expense_selection_bar.dart';
 import '../../../core/platform/motion.dart';
 
 const _pageSize = 50;
@@ -78,6 +80,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
   // Compass spend opens each day the first time it is seen; Collapse all / Expand all and taps work after that.
   final _seenDays = <String>{};
   final _hidden = <String>{}; // rows removed from view the instant they are swiped
+  final _picked = <String>{}; // rows ticked for the bulk actions (flag enableExpenseMultiSelect)
 
   /// Wide windows show the selected expense in a side panel (board 08) instead of a bottom sheet.
   String? _selectedId;
@@ -173,6 +176,104 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     );
   }
 
+  void _togglePick(Expense e) {
+    unawaited(AppHaptics.selection());
+    setState(() => _picked.contains(e.id) ? _picked.remove(e.id) : _picked.add(e.id));
+  }
+
+  void _clearPicks() => setState(_picked.clear);
+
+  /// Delete every selected expense at once; one Undo brings them all back.
+  Future<void> _deleteMany(List<Expense> list) async {
+    final repo = ref.read(expenseRepositoryProvider);
+    final uid = ref.read(authStateProvider).userId ?? '';
+    final ids = [for (final e in list) e.id];
+    setState(() {
+      _hidden.addAll(ids);
+      _picked.clear();
+    });
+    for (final id in ids) {
+      await repo.delete(id, userId: uid);
+    }
+    if (!mounted) return;
+    setState(() => _hidden.removeAll(ids));
+    UndoSnackbar.show(
+      context: context,
+      message: ids.length == 1 ? context.l10n.expDeleted : '${ids.length} expenses deleted',
+      onUndo: () {
+        for (final id in ids) {
+          unawaited(repo.restore(id));
+        }
+      },
+    );
+  }
+
+  /// Mark the selected expenses personal (out of the trip totals), or count them again when they all already are.
+  Future<void> _personalMany(List<Expense> list) async {
+    final repo = ref.read(expenseRepositoryProvider);
+    final targets = [
+      for (final e in list)
+        if (e.refundOfExpenseId == null) e,
+    ];
+    if (targets.isEmpty) return;
+    final markPersonal = !targets.every((e) => e.excludeFromTotals);
+    setState(_picked.clear);
+    for (final e in targets) {
+      await repo.update(e.copyWith(excludeFromTotals: markPersonal));
+    }
+    if (!mounted) return;
+    UndoSnackbar.show(
+      context: context,
+      message: markPersonal ? '${targets.length} marked personal' : '${targets.length} counted in totals again',
+      onUndo: () {
+        for (final e in targets) {
+          unawaited(repo.update(e));
+        }
+      },
+    );
+  }
+
+  /// Pick a category once and apply it to every selected expense.
+  Future<void> _categoryMany(List<Expense> list, List<Category> categories) async {
+    final repo = ref.read(expenseRepositoryProvider);
+    final chosen = await AppSheet.show<String>(
+      context: context,
+      title: 'Change category',
+      builder: (sheetCtx) => ListView(
+        key: const Key('selection-category-sheet'),
+        shrinkWrap: true,
+        children: [
+          for (final c in categories)
+            ListTile(
+              key: Key('pick-category-${c.id}'),
+              leading: Text(c.icon ?? '', style: const TextStyle(fontSize: 22)),
+              title: Text(c.name),
+              onTap: () => Navigator.of(sheetCtx).pop(c.id),
+            ),
+        ],
+      ),
+    );
+    if (chosen == null || !mounted) return;
+    final targets = [
+      for (final e in list)
+        if (e.category != chosen) e,
+    ];
+    setState(_picked.clear);
+    for (final e in targets) {
+      await repo.update(e.copyWith(category: chosen));
+    }
+    if (!mounted || targets.isEmpty) return;
+    UndoSnackbar.show(
+      context: context,
+      message: 'Category changed on ${targets.length}',
+      onUndo: () {
+        for (final e in targets) {
+          unawaited(repo.update(e));
+        }
+      },
+    );
+  }
+
   void _edit(Expense e) => context.push('/trip/$id/expenses/${e.id}/edit');
 
   void _openDetail(Expense e) {
@@ -265,6 +366,16 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     // Page only real expenses; settlements are few and must stay reachable without tapping "Load more".
     final filteredExpenses = filtered.where(isActualExpense).toList();
     final shown = [...filteredExpenses.take(_visible), ...filtered.where((e) => !isActualExpense(e))];
+    // Bulk selection: only on narrow layouts, only expenses the viewer may change, never settlements.
+    final multiOn =
+        (ref.watch(flagProvider(('enableExpenseMultiSelect', id))).value ?? true) &&
+        MediaQuery.sizeOf(context).width < _kDetailPanelBreakpoint;
+    bool pickable(Expense e) => multiOn && isActualExpense(e) && canManageExpense(e, isAdmin: isAdmin, userId: uid);
+    final pickedList = [
+      for (final e in shown)
+        if (_picked.contains(e.id) && pickable(e)) e,
+    ];
+    final selecting = pickedList.isNotEmpty;
     final refundedIds = {
       for (final r in active)
         if (isRefund(r) && r.deletedAt == null) r.refundOfExpenseId!,
@@ -345,7 +456,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         isConflict: conflicts.contains(e.id),
         onRetrySync: failed.contains(e.id) ? () => ref.read(retryRowSyncProvider)(e.id) : null,
         refunded: refundedIds.contains(e.id),
-        onTap: () => _openDetail(e),
+        onTap: selecting && pickable(e) ? () => _togglePick(e) : () => _openDetail(e),
       );
       // Bento: each expense is a rounded tile tinted by its category.
       final body = Padding(
@@ -365,15 +476,60 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             )
           : body;
       if (!canManageExpense(e, isAdmin: isAdmin, userId: uid)) return shown;
-      return ExpenseSwipe(
-        itemKey: ValueKey('swipe-${e.id}'),
-        onEdit: isActualExpense(e) && e.refundOfExpenseId == null ? () => _edit(e) : null,
-        onTogglePersonal: personalOn && isActualExpense(e) && e.refundOfExpenseId == null
-            ? () => unawaited(_togglePersonal(e))
-            : null,
-        isPersonal: e.excludeFromTotals,
-        onDelete: () => unawaited(_delete(e)),
-        child: shown,
+      // Press and hold starts selecting; while selecting, a tap ticks or unticks and swipes are off.
+      Widget withPick(Widget child) {
+        if (!pickable(e)) return child;
+        final on = _picked.contains(e.id);
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onLongPress: () => _togglePick(e),
+          child: Stack(
+            children: [
+              child,
+              if (on) ...[
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: DecoratedBox(
+                        key: Key('picked-${e.id}'),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(tokens.radiusMd),
+                          color: tokens.primaryAccent.withValues(alpha: 0.08),
+                          border: Border.all(color: tokens.primaryAccent, width: 2),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 2,
+                  left: 20,
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(color: tokens.bgSurface, shape: BoxShape.circle),
+                      child: Icon(Icons.check_circle_rounded, size: 22, color: tokens.primaryAccent),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      }
+
+      if (selecting) return withPick(shown);
+      return withPick(
+        ExpenseSwipe(
+          itemKey: ValueKey('swipe-${e.id}'),
+          onEdit: isActualExpense(e) && e.refundOfExpenseId == null ? () => _edit(e) : null,
+          onTogglePersonal: personalOn && isActualExpense(e) && e.refundOfExpenseId == null
+              ? () => unawaited(_togglePersonal(e))
+              : null,
+          isPersonal: e.excludeFromTotals,
+          onDelete: () => unawaited(_delete(e)),
+          child: shown,
+        ),
       );
     }
 
@@ -665,9 +821,23 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             subtitle: l10n.expNoneBody,
             action: AppButton(label: l10n.expAdd, onPressed: () => context.push('/trip/$id/expenses/new')),
           )
-        : Padding(
-            padding: const EdgeInsets.all(32),
-            child: Center(child: Text(l10n.expNoMatches)),
+        : EmptyState(
+            plain: true,
+            title: l10n.expNoMatches,
+            subtitle: '',
+            // One tap back to the full list instead of hunting for the chips that are filtering it.
+            action: filters.hasActive
+                ? AppButton(
+                    key: const Key('empty-clear-filters'),
+                    label: l10n.expClearFilters,
+                    variant: AppButtonVariant.secondary,
+                    onPressed: () {
+                      _search.clear();
+                      ref.read(expenseFiltersProvider(id).notifier).clear();
+                      setState(() => _visible = _pageSize);
+                    },
+                  )
+                : null,
           );
 
     final list = Stack(
@@ -733,7 +903,35 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
               ),
             ),
           ),
-        AddExpenseFab(tripId: id),
+        if (selecting)
+          // At the top, like a contextual action bar: the app's floating + button owns the bottom-right corner.
+          Positioned(
+            left: 12,
+            right: 12,
+            top: 8,
+            child: ExpenseSelectionBar(
+              count: pickedList.length,
+              onClose: _clearPicks,
+              onSelectAll: () => setState(() {
+                _picked
+                  ..clear()
+                  ..addAll([
+                    for (final e in shown)
+                      if (pickable(e)) e.id,
+                  ]);
+              }),
+              onDelete: () => unawaited(_deleteMany(pickedList)),
+              onPersonal: personalOn && pickedList.any((e) => e.refundOfExpenseId == null)
+                  ? () => unawaited(_personalMany(pickedList))
+                  : null,
+              personalLabel: pickedList.where((e) => e.refundOfExpenseId == null).every((e) => e.excludeFromTotals)
+                  ? 'Count again'
+                  : 'Personal',
+              onCategory: categories.isEmpty ? null : () => unawaited(_categoryMany(pickedList, categories)),
+            ),
+          )
+        else
+          AddExpenseFab(tripId: id),
       ],
     );
 

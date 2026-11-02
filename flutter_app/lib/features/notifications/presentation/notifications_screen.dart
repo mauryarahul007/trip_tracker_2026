@@ -26,6 +26,7 @@ import '../../expenses/application/expenses_providers.dart';
 import '../../trips/application/trips_providers.dart';
 import '../../trips/presentation/widgets/home_dock.dart';
 import '../../trip_details/application/trip_nav.dart' show openTripFresh;
+import '../application/delete_with_undo.dart';
 import '../application/notification_providers.dart';
 import 'notification_style.dart';
 
@@ -43,6 +44,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   late bool _thisTrip = widget.tripId != null;
   bool _moneyOnly = false;
   final _expanded = <String>{};
+  final _pendingDelete = <String>{}; // rows swiped away that are still inside their Undo window
 
   String? get _scope => _thisTrip ? widget.tripId : null;
 
@@ -114,7 +116,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final tokens = context.tokens;
     final repo = ref.watch(notificationRepositoryProvider);
     final userId = ref.watch(authStateProvider.select((a) => a.userId));
-    final all = ref.watch(notificationsProvider).value ?? const <NotificationItem>[];
+    final all = [
+      for (final n in ref.watch(notificationsProvider).value ?? const <NotificationItem>[])
+        if (!_pendingDelete.contains(n.id)) n,
+    ];
     final groupingOn = ref.watch(flagProvider(('enableNotificationGrouping', null))).value ?? false;
     final dayGroups = ref.watch(flagProvider(('enableNotificationDayGroups', null))).value ?? true;
     final nowDt = ref.read(nowProvider)();
@@ -253,7 +258,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                                 onConfirm: (e) => _confirm(n, e),
                                 onTap: () => _open(n),
                                 onToggleRead: () => repo.setRead(n.id, !n.read),
-                                onDelete: () => repo.delete(n.id),
+                                onDelete: () => deleteNotificationWithUndo(
+                                  context,
+                                  repo: repo,
+                                  id: n.id,
+                                  undoOn: ref.read(flagProvider(('enableExtendedUndo', widget.tripId))).value ?? true,
+                                  hide: () => setState(() => _pendingDelete.add(n.id)),
+                                  show: () => setState(() => _pendingDelete.remove(n.id)),
+                                ),
                               ),
                             if (g.length > 1)
                               TextButton(

@@ -23,6 +23,7 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../chat/application/chat_providers.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../application/activity_focus.dart';
+import '../application/delete_with_undo.dart';
 import '../application/notification_providers.dart';
 import 'notification_style.dart';
 import '../../../l10n/l10n_ext.dart';
@@ -339,7 +340,14 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
                             });
                           },
                           onTap: () => unawaited(_open(n)),
-                          onDelete: () => unawaited(repo.delete(n.id)),
+                          onDelete: () => deleteNotificationWithUndo(
+                            context,
+                            repo: repo,
+                            id: n.id,
+                            undoOn: ref.read(flagProvider(('enableExtendedUndo', widget.tripId))).value ?? true,
+                            hide: () => setState(() => _dismissedLogIds.add(n.id)),
+                            show: () => setState(() => _dismissedLogIds.remove(n.id)),
+                          ),
                           confirmable: n.data?['type'] == 'settlement_confirmation_requested'
                               ? settlementToConfirm(
                                   tripId: n.tripId,

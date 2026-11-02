@@ -15,6 +15,7 @@ import '../../../core/format/money.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/back_exit.dart';
 import '../../../domain/logic/flag_defaults.g.dart';
+import '../../auth/application/onboarding_state.dart' show tourDoneKey;
 import '../../../domain/logic/global_search.dart';
 import '../../../domain/logic/cross_trip_balances.dart';
 import '../../../domain/logic/trip_list_money.dart';
@@ -396,10 +397,10 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   /// The first time the Trips list is shown, a three-card tour (once per device, flag `enableFirstRunTour`).
   void _maybeTour() {
     final prefs = ref.read(sharedPreferencesProvider);
-    if (prefs.getBool('tour.done') ?? false) return;
+    if (prefs.getBool(tourDoneKey) ?? false) return;
     // Only once the flag has actually resolved to ON: a loading flag must not count as permission.
     if (ref.watch(flagProvider(('enableFirstRunTour', null))).value != true) return;
-    unawaited(prefs.setBool('tour.done', true));
+    unawaited(prefs.setBool(tourDoneKey, true));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) unawaited(showFirstRunTour(context));
     });

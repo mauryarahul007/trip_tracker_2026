@@ -5,6 +5,7 @@ import { IconAnalytics, IconTrophy, IconChevronDown, IconChevronUp } from './Ico
 import { getCurrencySymbol, formatAmount } from '../utils/currency';
 import { computeBurnRateInsight } from '../utils/burnRate';
 import { useTripStore } from '../store/tripStore';
+import { RollingNumber } from './common/RollingNumber';
 
 type CategoryDatum = { id: string; name: string; icon: string; amount: number; percentage: number };
 type MemberSpend = { id: string; name: string; amount: number; percentage: number };
@@ -57,6 +58,7 @@ export function AnalyticsTab({
   const [chartFilled, setChartFilled] = useState(false);
   const [showTrends, setShowTrends] = useState(false);
 
+  const motionPolish = useTripStore((s) => s.isFeatureEnabled('enableMotionPolish', { tripId: trip?.id }));
   const burnRateEnabled = useTripStore((s) => s.isFeatureEnabled('enableBurnRateInsight', { tripId: trip?.id }));
   const burnRate = useMemo(() => {
     if (!burnRateEnabled || !trip?.startDate || !trip?.endDate) return null;
@@ -126,7 +128,11 @@ export function AnalyticsTab({
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Spent</span>
           <strong className="money" style={{ fontSize: '19px', color: 'var(--primary-accent)' }}>
-            {formatAmount(totalSpent, currencySymbol)}
+            {motionPolish ? (
+              <RollingNumber value={totalSpent} format={(n) => formatAmount(n, currencySymbol)} />
+            ) : (
+              formatAmount(totalSpent, currencySymbol)
+            )}
           </strong>
           {loggedCurrencies.length > 1 && (
             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>

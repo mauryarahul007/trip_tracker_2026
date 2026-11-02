@@ -54,6 +54,9 @@ final amoledPrefProvider = _boolPref('settings.amoled', false);
 /// Darker text and stronger borders. Only honoured while `enableHighContrast` is on.
 final highContrastPrefProvider = _boolPref('settings.high_contrast', false);
 
+/// Settings > Appearance > Match phone colours (Android 12+): tint the accent from the wallpaper (flag `enableDynamicColor`).
+final dynamicColorPrefProvider = _boolPref('settings.dynamic_color', false);
+
 /// Jump animations to their end state. Only honoured while `enableReduceMotion` is on.
 final reduceMotionPrefProvider = _boolPref('settings.reduce_motion', false, onChange: (v) => AppMotion.reduce = v);
 

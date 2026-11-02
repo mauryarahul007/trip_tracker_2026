@@ -30,6 +30,7 @@ import 'core/telemetry/auto_bug_reporter.dart';
 import 'data/supabase/supabase_gateway.dart';
 import 'l10n/app_localizations.dart';
 import 'shared/theme/app_theme.dart';
+import 'shared/theme/system_accent.dart';
 
 void main() {
   const crashReporter = ReportingCrashReporter();
@@ -106,16 +107,17 @@ class TripTrackerApp extends ConsumerWidget {
     AppFeedback.packOn = ref.watch(flagProvider(('enableFeedbackPack', null))).value ?? true;
     // Calm Passport colours are the one theme; the flag only picks the Calm layout (dock, 5-tab bar).
     final calm = ref.watch(calmPassportProvider);
+    final accent = ref.watch(dynamicAccentProvider);
     AppMotion.reduce =
         ref.watch(reduceMotionPrefProvider) && (ref.watch(flagProvider(('enableReduceMotion', null))).value ?? true);
 
     return MaterialApp.router(
       title: 'Trip Tracker',
       debugShowCheckedModeBanner: false,
-      theme: contrast ? AppTheme.highContrastLight(calm: calm) : AppTheme.light(calm: calm),
+      theme: contrast ? AppTheme.highContrastLight(calm: calm) : AppTheme.light(calm: calm, accent: accent),
       darkTheme: contrast
           ? AppTheme.highContrastDark(calm: calm)
-          : (amoled ? AppTheme.amoled(calm: calm) : AppTheme.dark(calm: calm)),
+          : (amoled ? AppTheme.amoled(calm: calm, accent: accent) : AppTheme.dark(calm: calm, accent: accent)),
       themeMode: themeMode,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

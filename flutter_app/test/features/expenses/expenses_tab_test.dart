@@ -11,6 +11,7 @@ import 'package:trip_tracker/domain/logic/expense_form_logic.dart';
 import 'package:trip_tracker/domain/logic/sync_merge.dart';
 import 'package:trip_tracker/domain/models/expense.dart';
 import 'package:trip_tracker/domain/models/expense_io.dart';
+import 'package:trip_tracker/features/expenses/application/expenses_providers.dart' show tripExpensesProvider;
 import 'package:trip_tracker/shared/widgets/app_button.dart';
 
 import '../../data/expense_submit_test.dart' show FakeApi;
@@ -375,6 +376,116 @@ void main() {
       await tester.tap(find.byKey(const Key('clear-filters')));
       await settle(tester);
       expect(find.text('Beach lunch'), findsOneWidget);
+    });
+
+    testApp('an empty result offers a one-tap Clear filters right in the empty state', (tester) async {
+      await setup(tester);
+      await tester.enterText(find.byType(TextField).first, 'zzz');
+      await tester.pump(const Duration(milliseconds: 300));
+      await settle(tester);
+      expect(find.text('No expenses match these filters.'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('empty-clear-filters')));
+      await settle(tester);
+      expect(find.text('Beach lunch'), findsOneWidget);
+      expect(find.byKey(const Key('empty-clear-filters')), findsNothing);
+    });
+
+    Future<List<Expense>> stored(WidgetTester tester, Seed s) async =>
+        await real(tester, () => containerOf(tester).read(tripExpensesProvider(s.tripId).future));
+
+    testApp('press and hold selects, taps tick more rows, and the bar counts them', (tester) async {
+      await setup(tester);
+      expect(find.byKey(const Key('selection-bar')), findsNothing);
+      await tester.longPress(find.text('Taxi to airport'));
+      await settle(tester);
+      expect(find.byKey(const Key('selection-bar')), findsOneWidget);
+      expect(find.text('1 selected'), findsOneWidget);
+      await tester.tap(find.text('Beach lunch')); // selecting: a tap ticks the row instead of opening it
+      await settle(tester);
+      expect(find.text('2 selected'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('selection-all')));
+      await settle(tester);
+      expect(find.text('3 selected'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('selection-close')));
+      await settle(tester);
+      expect(find.byKey(const Key('selection-bar')), findsNothing);
+    });
+
+    testApp('Personal marks every selected expense and Undo puts them back', (tester) async {
+      final s = await setup(tester);
+      await tester.longPress(find.text('Taxi to airport'));
+      await settle(tester);
+      await tester.tap(find.text('Beach lunch'));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('selection-personal')));
+      await settle(tester);
+      expect(find.byKey(const Key('selection-bar')), findsNothing);
+      var all = await stored(tester, s);
+      expect(
+        all.where((e) => e.title == 'Taxi to airport' || e.title == 'Beach lunch').every((e) => e.excludeFromTotals),
+        isTrue,
+      );
+      expect(all.firstWhere((e) => e.title == 'Hotel').excludeFromTotals, isFalse);
+
+      await tester.tap(find.text('UNDO'));
+      await settle(tester);
+      all = await stored(tester, s);
+      expect(all.any((e) => e.excludeFromTotals), isFalse);
+    });
+
+    testApp('Delete removes every selected expense and Undo restores them', (tester) async {
+      final s = await setup(tester);
+      await tester.longPress(find.text('Taxi to airport'));
+      await settle(tester);
+      await tester.tap(find.text('Beach lunch'));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('selection-delete')));
+      await settle(tester);
+      expect(find.text('Taxi to airport'), findsNothing);
+      expect(find.text('Beach lunch'), findsNothing);
+      expect(find.text('Hotel'), findsOneWidget);
+      expect(find.text('2 expenses deleted'), findsOneWidget);
+
+      await tester.tap(find.text('UNDO'));
+      await settle(tester);
+      expect(find.text('Taxi to airport'), findsOneWidget);
+      expect(find.text('Beach lunch'), findsOneWidget);
+      expect((await stored(tester, s)).length, 3);
+    });
+
+    testApp('Category applies one category to every selected expense', (tester) async {
+      final s = await setup(tester);
+      await tester.longPress(find.text('Taxi to airport'));
+      await settle(tester);
+      await tester.tap(find.text('Beach lunch'));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('selection-category')));
+      await settle(tester);
+      expect(find.byKey(const Key('selection-category-sheet')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('pick-category-cat-stay')));
+      await settle(tester);
+      final all = await stored(tester, s);
+      expect(
+        all
+            .where((e) => e.title == 'Taxi to airport' || e.title == 'Beach lunch')
+            .every((e) => e.category == 'cat-stay'),
+        isTrue,
+      );
+      expect(find.byKey(const Key('selection-bar')), findsNothing);
+    });
+
+    testApp('with its flag off press and hold does nothing', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableExpenseMultiSelect'});
+      final s = await seedTrip(tester);
+      await addExpense(tester, s, title: 'Beach lunch', amount: 120, category: 'cat-food', paidBy: s.me);
+      await openExpenses(tester, s);
+      await tester.tap(find.byKey(const Key('tab-menu')));
+      await settle(tester);
+      await tester.tap(find.text('Expand all days'));
+      await settle(tester);
+      await tester.longPress(find.text('Beach lunch'));
+      await settle(tester);
+      expect(find.byKey(const Key('selection-bar')), findsNothing);
     });
 
     testApp('filter sheet: pick a traveler and category, see the live count, apply, clear', (tester) async {

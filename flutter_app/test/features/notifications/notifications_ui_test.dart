@@ -120,8 +120,12 @@ void main() {
     await settle(tester, rounds: 12);
     await tester.drag(find.byKey(const ValueKey('notif-a')), const Offset(-600, 0));
     await settle(tester, rounds: 12);
-    expect(await real(tester, () => db.select(db.notificationsTable).get()), isEmpty);
+    // The row is gone at once but only deleted for good when the Undo window closes.
     expect(find.text('No notifications'), findsOneWidget);
+    expect(find.text('UNDO'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 6));
+    await settle(tester, rounds: 12);
+    expect(await real(tester, () => db.select(db.notificationsTable).get()), isEmpty);
   });
 
   testApp('a notification arriving now pops the banner and swipes away; old rows do not', (tester) async {

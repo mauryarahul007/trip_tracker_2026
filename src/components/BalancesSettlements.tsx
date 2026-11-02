@@ -345,6 +345,8 @@ function TransferRow({
             <img
               src={displayAvatarUrl}
               alt={displayName}
+              loading="lazy"
+              decoding="async"
               className="traveler-settlement-avatar"
               style={{
                 width: '56px',

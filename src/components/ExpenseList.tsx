@@ -132,6 +132,12 @@ type Props = {
   onReviewConflict?: () => void;
 };
 
+// Arrow keys walk the Spend rows in page order; collapsed days have no rows, so they are skipped.
+function moveRowFocus(from: HTMLElement, step: 1 | -1): void {
+  const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-expense-row]'));
+  rows[rows.indexOf(from) + step]?.focus();
+}
+
 export function ExpenseList({
   trip,
   members,
@@ -393,8 +399,21 @@ export function ExpenseList({
             }}
           >
             <div
+              role="button"
+              tabIndex={0}
+              data-expense-row=""
               style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
               onClick={() => { triggerHaptic('light'); onReview(exp); }}
+              onKeyDown={(e) => {
+                if (e.target !== e.currentTarget) return; // keys typed inside nested controls stay theirs
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onReview(exp);
+                } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  moveRowFocus(e.currentTarget, e.key === 'ArrowDown' ? 1 : -1);
+                }
+              }}
             >
               <div
                 style={{

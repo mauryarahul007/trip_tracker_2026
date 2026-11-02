@@ -71,7 +71,7 @@ class AppBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!_useDock) return _M3Bar(this);
     final canNotch = notch && items.length >= 2 && items.length <= 5 && (centerAction == null || context.tokens.calm);
-    if (canNotch) return _NotchDock(items: items, currentIndex: currentIndex, onTap: onTap);
+    if (canNotch) return _NotchDock(items: items, currentIndex: currentIndex, onTap: onTap, labelInBubble: polish);
     return _Dock(
       items: items,
       currentIndex: currentIndex,
@@ -109,11 +109,14 @@ class _M3Bar extends StatelessWidget {
 /// badges, semantics or text-scale handling, so those are added here: numbers and dots on the icons, a button label
 /// on every tab for screen readers, and text scale capped so labels cannot overflow the fixed-size items.
 class _NotchDock extends StatefulWidget {
-  const _NotchDock({required this.items, required this.currentIndex, required this.onTap});
+  const _NotchDock({required this.items, required this.currentIndex, required this.onTap, required this.labelInBubble});
 
   final List<AppNavItem> items;
   final int currentIndex;
   final ValueChanged<int> onTap;
+
+  /// Flag `enableNavPolish`: the selected tab's name is drawn under its icon inside the bubble (the package draws none).
+  final bool labelInBubble;
 
   @override
   State<_NotchDock> createState() => _NotchDockState();
@@ -156,6 +159,26 @@ class _NotchDockState extends State<_NotchDock> {
     return _circleMargin + first + distance * i + _circle;
   }
 
+  /// Icon above a one-line name, centred on the bubble; the package sizes this slot to the icon, so let it overflow.
+  Widget _bubbleContent(AppNavItem it, Color color) => OverflowBox(
+    maxWidth: 50,
+    maxHeight: 44,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _icon(it, color: color, icon: it.selectedIcon),
+        const SizedBox(height: 1),
+        Text(
+          it.label,
+          maxLines: 1,
+          overflow: TextOverflow.clip,
+          softWrap: false,
+          style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: color, height: 1.1),
+        ),
+      ],
+    ),
+  );
+
   String _semanticLabel(AppNavItem it) {
     if (it.count > 0) return '${it.label}, ${it.count > 99 ? '99+' : it.count} unread';
     return it.badge ? '${it.label}, unread' : it.label;
@@ -190,7 +213,9 @@ class _NotchDockState extends State<_NotchDock> {
                       for (final it in widget.items)
                         BottomBarItem(
                           inActiveItem: _icon(it, color: idle),
-                          activeItem: _icon(it, color: active, icon: it.selectedIcon),
+                          activeItem: widget.labelInBubble
+                              ? _bubbleContent(it, active)
+                              : _icon(it, color: active, icon: it.selectedIcon),
                           itemLabel: it.label,
                         ),
                     ],

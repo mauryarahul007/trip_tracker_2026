@@ -15,6 +15,7 @@ import '../../../domain/logic/changelog.g.dart';
 import '../../../domain/logic/currency.dart' show defaultExchangeRates;
 import '../../../domain/logic/csv_export.dart' show summarizeBackup;
 import '../../../shared/theme/app_icons.dart';
+import '../../../shared/theme/system_accent.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/widgets/app_scaffold.dart';
@@ -260,6 +261,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           subtitle: 'Saves battery on OLED screens. Applies when the theme is dark.',
           value: amoled,
           onChanged: (v) => r.read(amoledPrefProvider.notifier).set(v),
+        ),
+      if ((r.watch(flagProvider((dynamicColorFlag, null))).value ?? true) &&
+          r.watch(systemAccentProvider).value != null)
+        SettingsSwitchTile(
+          key: const Key('settings-dynamic-color'),
+          icon: Icons.palette_rounded,
+          title: 'Match phone colours',
+          subtitle: 'Tints buttons, tabs and highlights from your wallpaper (Android 12 and up)',
+          value: r.watch(dynamicColorPrefProvider),
+          onChanged: (v) => r.read(dynamicColorPrefProvider.notifier).set(v),
         ),
       if (r.watch(flagProvider(('enableHighContrast', null))).value ?? true)
         SettingsSwitchTile(

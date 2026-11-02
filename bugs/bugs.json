@@ -9788,5 +9788,28 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-11-02T12:52:53.045Z",
     "resolutionNote": "Touch drags rest on full or collapsed only (sheetSnap.ts, 6vh commit or flick); 80% step kept for keyboard. Commit 6396261 (v3.85.2)."
+  },
+  {
+    "id": "BUG-345",
+    "title": "Flutter: new users saw two intros back to back (carousel then tour)",
+    "description": "After the 3-slide onboarding carousel the Trips list opened the 3-card first-run tour straight away, so a brand-new user went through two intro sequences.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "flutter",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-11-02T15:23:53.932Z",
+    "updatedAt": "2026-11-02T15:23:53.934Z"
   }
 ]

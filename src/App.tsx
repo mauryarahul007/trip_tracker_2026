@@ -284,6 +284,7 @@ export default function App() {
   // trips. Every enableCalmPassportUi CSS rule is scoped under :root[data-calm-ui].
   const isCalmPassportUi = isFeatureEnabled('enableCalmPassportUi', { userId: userId || undefined });
   const isNavPolish = isFeatureEnabled('enableNavPolish', { userId: userId || undefined });
+  const isDesktopRail = isFeatureEnabled('enableDesktopRail', { userId: userId || undefined });
   useEffect(() => {
     const root = document.documentElement;
     if (isCalmPassportUi) root.setAttribute('data-calm-ui', 'on');
@@ -3430,6 +3431,7 @@ export default function App() {
             chatEnabled={isTripChatEnabled}
             activityUnreadCount={tripActivityUnreadCount}
             polish={isNavPolish}
+            rail={isDesktopRail}
           />
         </div>
       )}

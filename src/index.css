@@ -16655,3 +16655,47 @@ body:has([role="dialog"]) .nav-floating-fab-wrap {
     -webkit-backdrop-filter: none;
   }
 }
+
+/* enableDesktopRail: on wide windows the trip tabs become a vertical rail just left of the page column instead of the
+   floating bottom bar. Same buttons, only the layout changes. The column is 680px wide from 900px and 820px from
+   1200px (see .app-container), so the rail sits 16px left of its edge. */
+@media (min-width: 1000px) {
+  .nav-tabs.nav-rail {
+    position: fixed;
+    top: 50%;
+    bottom: auto;
+    left: calc(50vw - 340px - 104px);
+    transform: translateY(-50%);
+    width: 88px;
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 10px 8px;
+    border-radius: 28px;
+  }
+  .nav-tabs.nav-rail .nav-tabs-pill {
+    display: none;
+  }
+  .nav-tabs.nav-rail .nav-tab-item {
+    width: 100%;
+    min-height: 64px;
+    border-radius: 18px;
+  }
+  .nav-tabs.nav-rail .nav-tab-item.active {
+    background: var(--bg-nav-item-active);
+  }
+  .nav-tabs.nav-rail.is-hidden {
+    transform: translate(-160%, -50%) !important;
+  }
+  .nav-tabs.nav-rail .nav-tab-fab-wrap {
+    margin-top: 0;
+    align-self: center;
+  }
+}
+@media (min-width: 1200px) {
+  .nav-tabs.nav-rail {
+    left: calc(50vw - 410px - 104px);
+  }
+}

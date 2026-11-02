@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.87.0',
+    date: '2026-11-02',
+    changes: [
+      'Select several expenses at once on the Spend tab: press and hold, then Delete, Personal or Category for all of them, with one Undo (Flutter).',
+      'The selected tab now shows its name inside the notch bubble; new users see one intro instead of two (Flutter).',
+      'Swipe away an Activity update with an Undo; tap a donut slice or badge to highlight a category, then see or clear it (Flutter).',
+      'Match phone colours (Android 12+) in Settings; a Clear filters button when a search finds nothing (Flutter).',
+      'On wide screens the trip tabs sit in a side rail; arrow keys move through Spend rows; Total Spent counts up (web).',
+    ],
+  },
+  {
     version: '3.86.0',
     date: '2026-11-02',
     changes: [

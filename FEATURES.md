@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **197** |
+| **Total Tracked** | **200** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **194** |
+| **✅ Shipped** | **197** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -256,6 +256,9 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-195** | Polished trip navigation bar (sliding icon pill, filled icons, re-tap to top, fade on far jumps) | `ui-ux` | `claude-cli` | `claude-cli` | Flag enableNavPolish (Core, default ON). Web + Flutter nav bar polish, Compass/Bento docks folded into one. Commit 7ebb980 (v3.85.0). |
 | **FEAT-196** | Nav motion polish batch (spring sheet, keyboard-aware bar, unread numbers, view-transition types, solid bar on weak devices) | `ui-ux` | `claude-cli` | `claude-cli` | Flag enableNavPolish (Core, default ON). Spring sheet, keyboard-aware bar, Chat unread number, web view-transition types, snap haptic and low-end solid bar, shared motion tokens. Commit 0fe8656 (v3.86.0). |
 | **FEAT-197** | Notch bottom bar (Flutter) | `ui-ux` | `claude-cli` | `claude-cli` | Flag enableNotchNav (Core, default ON). animated_notch_bottom_bar wrapped for badges, accessible tap targets and text scale; falls back to the polished dock. Commit 0fe8656 (v3.86.0). |
+| **FEAT-198** | UI upgrades batch (notch bubble label, Material You, undo on Activity swipe, tappable donut, empty-state clear, web Total Spent count-up and arrow-key rows) | `ui-ux` | `claude-cli` | `claude-cli` | Flags enableDynamicColor, enableInteractiveCharts (new) plus enableNavPolish, enableExtendedUndo, enableMotionPolish. Flutter bubble label, wallpaper accent switch, Activity swipe undo, tappable category donut with Clear selection, Clear filters in the empty Spend state; web Total Spent count-up, keyboard row navigation, PWA colours. Commit pending (v3.87.0). |
+| **FEAT-199** | Select several expenses (Flutter Spend tab) | `ui-ux` | `claude-cli` | `claude-cli` | Flag enableExpenseMultiSelect (Trip pack, default ON). Press and hold to select, bar with All, Personal, Category and Delete, one Undo for the whole group. Commit pending (v3.87.0). |
+| **FEAT-200** | Desktop side rail (web) | `ui-ux` | `claude-cli` | `claude-cli` | Flag enableDesktopRail (Core, default ON). At 1000px and wider the trip tabs become a vertical rail beside the page column; verified in headless Chrome at 1400px and 390px. Commit pending (v3.87.0). |
 
 ---
 

@@ -107,6 +107,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
   var _collapseChecked = false;
   var _numbersTab = 'categories';
   var _allCats = false;
+  int? _donutSel; // the highlighted category segment (flag `enableInteractiveCharts`)
   bool? _wasSettled; // to notice the moment the trip becomes settled
   var _personView = false; // Who paid card as people, not groups (this viewer only; never touches Who pays whom)
 
@@ -527,6 +528,8 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
       if (cats.isNotEmpty || (timelineOn && recentDays.isNotEmpty)) ('details', l10n.numbersTabDetails),
     ];
     final numbersTab = numberTabs.any((t) => t.$1 == _numbersTab) ? _numbersTab : (numberTabs.firstOrNull?.$1 ?? '');
+    final chartsOn = ref.watch(flagProvider(('enableInteractiveCharts', id))).value ?? true;
+    final pickedCat = _donutSel != null && _donutSel! < cats.length ? cats[_donutSel!] : null;
     List<Widget> numbersBody() => switch (numbersTab) {
       'categories' => [
         Text(
@@ -539,8 +542,10 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             key: const Key('spend-donut'),
             values: [for (final c in cats) c.percentage],
             colors: [for (final c in cats) Color(categoryColorArgb(c.id))],
-            centerLabel: l10n.expTotalSpent,
-            centerValue: formatMoney(context, totals.totalSpent, cur),
+            centerLabel: pickedCat == null ? l10n.expTotalSpent : pickedCat.name,
+            centerValue: formatMoney(context, pickedCat == null ? totals.totalSpent : pickedCat.amount, cur),
+            selectedIndex: pickedCat == null ? null : _donutSel,
+            onSegmentTap: chartsOn ? (i) => setState(() => _donutSel = i == _donutSel ? null : i) : null,
           ),
         ),
         const SizedBox(height: 12),
@@ -550,10 +555,38 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           spacing: 8,
           runSpacing: 6,
           children: [
-            for (final c in cats)
-              DonutLegendBadge(label: '${c.name} ${c.percentage.round()}%', color: Color(categoryColorArgb(c.id))),
+            for (var i = 0; i < cats.length; i++)
+              DonutLegendBadge(
+                key: Key('donut-badge-${cats[i].id}'),
+                label: '${cats[i].name} ${cats[i].percentage.round()}%',
+                color: Color(categoryColorArgb(cats[i].id)),
+                selected: chartsOn && _donutSel == i,
+                onTap: chartsOn ? () => setState(() => _donutSel = _donutSel == i ? null : i) : null,
+              ),
           ],
         ),
+        if (chartsOn && pickedCat != null)
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              TextButton.icon(
+                key: const Key('donut-see-expenses'),
+                icon: const Icon(Icons.receipt_long_rounded, size: 18),
+                label: Text('See ${pickedCat.name} expenses'),
+                onPressed: () {
+                  ref.read(expenseFiltersProvider(id).notifier).set(ExpenseFilters(categoryId: pickedCat.id));
+                  context.go('/trip/$id/expenses');
+                },
+              ),
+              TextButton.icon(
+                key: const Key('donut-clear-selection'),
+                icon: const Icon(Icons.close_rounded, size: 18),
+                label: const Text('Clear selection'),
+                onPressed: () => setState(() => _donutSel = null),
+              ),
+            ],
+          ),
         const SizedBox(height: 14),
         ...[
           for (final c in cats.take(_allCats ? cats.length : 3))

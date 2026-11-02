@@ -21,6 +21,8 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-02 | unreleased | MULTI-SELECT | [Select several expenses (Flutter)](#multi-select--select-several-expenses-flutter) |
+| 2026-11-02 | unreleased | UI-UPGRADES-1 | [UI upgrades, phases 1-2](#ui-upgrades-1--ui-upgrades-phases-1-2) |
 | 2026-11-02 | unreleased | NOTCH-NAV | [Notch bottom bar (Flutter)](#notch-nav--notch-bottom-bar-flutter) |
 | 2026-11-02 | unreleased | NAV-POLISH | [Polished trip navigation bar, one-swipe sheet, chat opens at latest, settlements always listed](#nav-polish--polished-trip-navigation-bar-one-swipe-sheet-chat-opens-at-latest-settlements-always-listed) |
 | 2026-10-28 | 3.82.5 | SPEND-REFUND-FILTER | [Refund day label, Expenses/Refunds filter, drop duplicate Hub Insights, FAB scoped to Balances/Spend](#spend-refund-filter--refund-day-label-expensesrefunds-filter-drop-duplicate-hub-insights-fab-scoped-to-balancesspend) |
@@ -4087,3 +4089,54 @@ Then add a row to the **Index** table.
 **Flag-OFF negative checks (`enableNotchNav` OFF):** the polished dock returns (soft pill behind the icon, label on every tab, including the selected one).
 
 **Pass criteria:** the bar is at the bottom, tabs and badges behave as above, accessibility labels and touch targets are present, and OFF restores the previous dock with no change to which tabs exist.
+
+
+## UI-UPGRADES-1 — UI upgrades, phases 1-2
+
+**Shipped:** unreleased. Flags: `enableDesktopRail` (new, Core, ON, web), `enableDynamicColor` (new, Core, ON), `enableInteractiveCharts` (new, Core, ON), existing `enableNavPolish` (label in the notch bubble), `enableExtendedUndo` (Activity undo) and `enableMotionPolish` (web Total Spent count-up).
+
+**Steps (Flutter):**
+1. Open a trip: the selected tab's name now shows under its icon inside the notch bubble (Trips home too).
+2. Settings > Display and sound > "Match phone colours" (Android 12+ only; hidden elsewhere). Turn it on: buttons, tabs and highlights take the wallpaper colour; turn it off: back to the Calm teal.
+3. Activity (trip tab or the Alerts list): swipe a row left. It disappears at once and an "Update removed / UNDO" bar shows for about 5 seconds. Tap UNDO: the row returns. Let it close: the row is deleted for good.
+4. Balances > Trip numbers > Categories: tap a slice of the donut, or a category badge. That category highlights (others fade), the middle shows its name and amount. Tap the same slice or the middle: cleared.
+5. With a category selected tap "See <category> expenses": Spend opens filtered to that category.
+6. Spend: search for something that matches nothing: the empty message now has a "Clear filters" button; tap it to get the full list back.
+7. With a donut category selected, a "Clear selection" button sits beside "See <category> expenses"; tapping it un-highlights the slice and the middle shows Total spent again.
+8. New user on a fresh install: after the 3-slide carousel (finished or skipped) the Trips list does NOT also open the 3-card tour sheet. Someone who skipped the carousel in an older version still gets the tour once.
+
+**Steps (web):**
+9. Analytics: Total Spent counts up to its new value when expenses change (not with Reduce Motion on).
+10. Spend list: Tab to a row, Up/Down arrows move between rows, Enter opens it. Arrow keys inside a text field are unaffected.
+11. Installed app (PWA): the splash and status bar colours match the Calm look.
+
+12. Desktop: in a browser window at least 1000px wide, the trip tabs sit in a vertical rail just left of the page column (Balances, Spend with its count, Activity, Chat, Hub), the + button still works, and a phone-width window still shows the bottom bar.
+
+**Flag-OFF negative checks:**
+- `enableDesktopRail` OFF: the bottom bar at every window width.
+- `enableDynamicColor` OFF: no "Match phone colours" row.
+- `enableInteractiveCharts` OFF: donut and badges are display only, no See-expenses button.
+- `enableExtendedUndo` OFF: a swiped Activity row is deleted immediately with no bar.
+- `enableNavPolish` OFF: no label in the bubble. `enableMotionPolish` OFF: Total Spent changes without counting.
+
+**Pass criteria:** each ON step behaves as described, each OFF check removes only its own surface, and no amount, balance or sync value changes.
+
+
+## MULTI-SELECT — Select several expenses (Flutter)
+
+**Shipped:** unreleased. Flag: `enableExpenseMultiSelect` (new, Trip pack, default ON, Flutter only). Personal also needs the existing `enableExpenseExclusion` flag.
+
+**Prep:** A trip with at least three expenses you can edit (you added them, or you are the trip admin) and one settlement. Use a throwaway trip: these steps delete and change expenses.
+
+**Steps:**
+1. Spend tab: press and hold an expense. The row gets a teal border and a tick on its top-left corner, and a bar appears at the top of the list: "1 selected", All, Personal, Category, Delete (the buttons may wrap onto a second line on a phone).
+2. While selecting, tap other expenses: each tick toggles and the count follows. Tapping does not open the expense and swipe actions are off. A settlement row and an expense you cannot edit cannot be ticked.
+3. Tap All: every editable expense in the list is ticked. Tap the X: selection ends and the bar goes away.
+4. Select two expenses and tap Personal: both are marked personal (left out of trip totals) and an Undo bar shows; tap UNDO and both count again. Select the same two again: the button now reads "Count again".
+5. Select two expenses and tap Category: a sheet lists the categories; pick one and both change to it. UNDO restores their old categories.
+6. Select two expenses and tap Delete: both disappear and the bar says "2 expenses deleted" with UNDO; tap UNDO and both return.
+7. Select one expense and tap Delete: the message is the normal single "expense deleted".
+
+**Flag-OFF negative check (`enableExpenseMultiSelect` OFF):** press and hold does nothing; swiping an expense to edit, mark personal or delete still works.
+
+**Pass criteria:** every action applies to exactly the ticked expenses, each has one Undo that reverses all of them, no amounts or splits change, and a wide window (tablet) is unaffected.

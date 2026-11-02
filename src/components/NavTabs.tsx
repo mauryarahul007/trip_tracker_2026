@@ -35,6 +35,8 @@ type Props = {
   isSubpageOrModalOpen?: boolean;
   /** Flag `enableNavPolish`: icon-sized sliding pill, filled active icon, re-tap scrolls to top. */
   polish?: boolean;
+  /** Flag `enableDesktopRail`: on wide windows the bar becomes a vertical rail beside the page (CSS only). */
+  rail?: boolean;
 };
 
 // Backdrop blur is costly on low-memory / few-core Android WebViews; those get a solid bar instead.
@@ -68,6 +70,7 @@ export function NavTabs({
   chatEnabled = false,
   isSubpageOrModalOpen = false,
   polish = false,
+  rail = false,
 }: Props) {
   const isMembersTab = activeTab === 'members';
   // Calm Passport: Add-expense FAB only makes sense on Balances/Spend -- Activity, Chat and Hub
@@ -265,7 +268,7 @@ export function NavTabs({
     <>
       <nav
         ref={navRef}
-        className={`nav-tabs ${polish ? 'nav-polish' : ''} ${polish && isLowEndDevice() ? 'nav-solid' : ''} ${calmMode ? `calm-nav ${chatEnabled ? 'has-chat' : ''}` : isChatFirstNav ? 'has-chat-nav' : ''} ${hasNotesOrPassesTab ? 'has-notes' : 'no-notes'} ${isHidden ? 'is-hidden' : ''}`}
+        className={`nav-tabs ${polish ? 'nav-polish' : ''} ${rail ? 'nav-rail' : ''} ${polish && isLowEndDevice() ? 'nav-solid' : ''} ${calmMode ? `calm-nav ${chatEnabled ? 'has-chat' : ''}` : isChatFirstNav ? 'has-chat-nav' : ''} ${hasNotesOrPassesTab ? 'has-notes' : 'no-notes'} ${isHidden ? 'is-hidden' : ''}`}
         role="tablist"
         aria-label="Trip navigation tabs"
       >

@@ -8,6 +8,13 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.87.0', '2026-11-02', [
+    'Select several expenses at once on the Spend tab: press and hold, then Delete, Personal or Category for all of them, with one Undo (Flutter).',
+    'The selected tab now shows its name inside the notch bubble; new users see one intro instead of two (Flutter).',
+    'Swipe away an Activity update with an Undo; tap a donut slice or badge to highlight a category, then see or clear it (Flutter).',
+    'Match phone colours (Android 12+) in Settings; a Clear filters button when a search finds nothing (Flutter).',
+    'On wide screens the trip tabs sit in a side rail; arrow keys move through Spend rows; Total Spent counts up (web).',
+  ]),
   ChangelogEntry('3.86.0', '2026-11-02', [
     'New notch bottom bar on the Flutter app: a round bubble slides under the selected tab, with unread numbers and large touch targets.',
     'The trip sheet settles with a spring that follows your flick, and the bottom bar slides away while the keyboard is open (Flutter).',
@@ -56,8 +63,5 @@ const List<ChangelogEntry> changelogEntries = [
   ChangelogEntry('3.82.3', '2026-10-28', [
     'Insights in the Hub got new charts: daily bars, a running total, ranked categories, paid vs share per person and your biggest expenses.',
     'The back of the settlement pass now shows how much of the trip is settled and your recent payments.',
-  ]),
-  ChangelogEntry('3.82.2', '2026-10-28', [
-    'Refunds now read as a Refund with a minus amount in Spend, and day totals subtract them.',
   ]),
 ];

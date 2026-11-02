@@ -55,15 +55,18 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableDateRangeMembership': false,
   'enableDeepLinkedTabs': true,
   'enableDemoSeeding': false,
+  'enableDesktopRail': true,
   'enableDestinationAutocomplete': true,
   'enableDigestNotifications': false,
   'enableDockedKeypad': true,
   'enableDocumentVault': false,
   'enableDuplicateDetector': true,
+  'enableDynamicColor': true,
   'enableExpenseApprovalThreshold': false,
   'enableExpenseDisputes': false,
   'enableExpenseExclusion': true,
   'enableExpenseHistory': true,
+  'enableExpenseMultiSelect': true,
   'enableExpensePhotoLinking': false,
   'enableExpenseQuickFilterChips': true,
   'enableExpenseRefunds': true,
@@ -86,6 +89,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableIcsExport': true,
   'enableInChatEventCards': false,
   'enableInsightsV2': true,
+  'enableInteractiveCharts': true,
   'enableInviteCard': true,
   'enableInviteConversion': true,
   'enableItemizedSplit': false,
@@ -472,6 +476,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'ops',
     description: 'Shows "Seed Demo Data" button in Settings.',
   ),
+  'enableDesktopRail': (
+    label: 'Desktop Side Rail (web)',
+    pack: 'core',
+    description: 'Web app on windows at least 1000px wide: ON: the trip tabs (Balances, Spend, Activity, Chat, Hub) move from the floating bottom bar to a vertical rail just left of the page column, with the same buttons, badges and + button. Phones and narrow windows keep the bottom bar. OFF: the bottom bar on every screen size. Does not change which tabs exist, the Flutter app, or any expense, balance or sync logic.',
+  ),
   'enableDestinationAutocomplete': (
     label: 'Destination Suggestions & Spell-Fix',
     pack: 'core',
@@ -498,6 +507,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'core',
     description: 'Heuristic check preventing duplicate check-ins or companion double-entries.',
   ),
+  'enableDynamicColor': (
+    label: 'Match Phone Colours (Flutter, Android 12+)',
+    pack: 'core',
+    description: 'Flutter app on Android 12 and newer: ON: Settings > Appearance shows a "Match phone colours" switch (off until the traveller turns it on). When it is on, buttons, selected tabs and highlights take their colour from the phone wallpaper instead of the Calm teal. Backgrounds, text and borders keep their colours so contrast does not change. Phones without wallpaper colours (older Android, iOS) never see the switch. OFF: the switch is hidden and everyone keeps the Calm teal. Does not change the web app, the dark/light choice, or any expense, balance or sync logic.',
+  ),
   'enableExpenseApprovalThreshold': (
     label: 'Big-Expense Mutual Approval',
     pack: 'pro',
@@ -517,6 +531,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'Expense History Line (Flutter)',
     pack: 'trip',
     description: 'Flutter app: ON: an expense\'s detail sheet shows who added it and when, and "Edited 2 h ago" when it was changed afterwards. OFF: no history line. It shows what the app records (author and times), not a field-by-field change list.',
+  ),
+  'enableExpenseMultiSelect': (
+    label: 'Select Several Expenses (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: on the Spend tab, press and hold an expense to start selecting. Taps then tick or untick rows (swipes are off while selecting) and a bar at the bottom shows how many are selected with Select all, Delete, Personal and Category. Delete, Personal and Category each apply to every selected expense and offer one Undo that puts them all back. Only expenses you are allowed to edit can be selected; settlements cannot. OFF: press and hold does nothing and expenses are changed one at a time by swiping. Does not change any amount or split, and does not affect the web app.',
   ),
   'enableExpensePhotoLinking': (
     label: 'Extra Expense Photos',
@@ -547,7 +566,7 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
   'enableExtendedUndo': (
     label: 'Extended Undo',
     pack: 'core',
-    description: 'ON: an Undo toast after deleting or archiving a member, recording a settlement, and (Flutter app) deleting a group; Undo on a group puts the same name and people back. OFF: these actions happen with no Undo. Does not affect expense delete, which always has Undo, and does not change balances beyond the action itself.',
+    description: 'ON: an Undo toast after deleting or archiving a member, recording a settlement, swiping away an Activity update (Flutter app: the row hides at once and is only deleted when the Undo toast closes), and (Flutter app) deleting a group; Undo on a group puts the same name and people back. OFF: these actions happen with no Undo (a swiped Activity update is deleted immediately). Does not affect expense delete, which always has Undo, and does not change balances beyond the action itself.',
   ),
   'enableFeatureSuggestions': (
     label: 'Suggest a Feature Feedback Box',
@@ -630,6 +649,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     pack: 'trip',
     description: 'Flutter app: ON: the Hub > Insights screen shows a hero total with daily average and projected total, a budget pace meter when the trip has a budget, daily bars with an average line (tap a bar for that day), a running-total line, ranked category bars with amount and %, a per-person paid vs share chart and the 5 biggest expenses. OFF: the older Insights screen (daily line, projected total, category donut) comes back. Needs Spend Insights Screen to be ON for Insights to open at all. Does not change any expense, split or balance; refunds are netted out of every figure.',
   ),
+  'enableInteractiveCharts': (
+    label: 'Tappable Spend Charts (Flutter)',
+    pack: 'core',
+    description: 'Flutter app: ON: on Balances > Trip numbers > Categories, tapping a slice of the donut or a category badge highlights it (the others fade) and the middle shows that category and its amount; a "See expenses" button then opens Spend filtered to that category. Tapping the middle or the same slice again clears it. OFF: the donut and badges are display only, as before. Does not change any amount, total or split, and does not affect the web app.',
+  ),
   'enableInviteCard': (
     label: 'Invite Card (Flutter)',
     pack: 'trip',
@@ -688,7 +712,7 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
   'enableMotionPolish': (
     label: 'Smooth Motion & Touch Feedback',
     pack: 'core',
-    description: 'ON: every dialog, sheet and drawer fades/slides out when closed instead of vanishing; bottom sheets (split explainer, @tripbot confirm, UPI pay) can be dragged down to dismiss; buttons shrink slightly on press; opening a trip morphs the tapped card into the trip header; switching tabs slides content in the direction of travel; home trip cards, new ledger rows and changed balances animate in. OFF: dialogs close instantly, those sheets only close via buttons/backdrop, no press shrink, plain crossfades. Does not change any data, layout, or the Ops Deck; users with Reduce Motion set see no animation either way.',
+    description: 'ON: every dialog, sheet and drawer fades/slides out when closed instead of vanishing; bottom sheets (split explainer, @tripbot confirm, UPI pay) can be dragged down to dismiss; buttons shrink slightly on press; opening a trip morphs the tapped card into the trip header; switching tabs slides content in the direction of travel; home trip cards, new ledger rows and changed balances animate in, and the Analytics Total Spent counts up to its new value. OFF: dialogs close instantly, those sheets only close via buttons/backdrop, no press shrink, plain crossfades. Does not change any data, layout, or the Ops Deck; users with Reduce Motion set see no animation either way.',
   ),
   'enableMultiPayerExpenses': (
     label: 'Multi-Payer Shared Expenses',
@@ -1299,6 +1323,9 @@ const Map<String, List<String>> consumerPacks = {
     'enableCalmPassportUi',
     'enableNavPolish',
     'enableNotchNav',
+    'enableDynamicColor',
+    'enableInteractiveCharts',
+    'enableDesktopRail',
     'enableCompassMe',
     'enableCompassWeb',
     'enableSpendInsights',
@@ -1311,6 +1338,7 @@ const Map<String, List<String>> consumerPacks = {
   ],
   'trip': [
     'enableMemberMoneyRow',
+    'enableExpenseMultiSelect',
     'enableTripGetStarted',
     'enableCompassSpend',
     'enableCompassMoney',

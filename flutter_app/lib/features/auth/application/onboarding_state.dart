@@ -5,6 +5,9 @@ import '../../../core/storage/prefs.dart';
 
 String onboardedKey(String userId) => 'tt-$userId-tt-onboarded-v1';
 
+/// Device flag for the 3-card first-run tour on the Trips list (flag `enableFirstRunTour`).
+const tourDoneKey = 'tour.done';
+
 /// Whether the signed-in user already saw the intro carousel (per user,
 /// per install; same key shape as the web's localStorage entry).
 class OnboardedNotifier extends Notifier<bool> {
@@ -17,7 +20,11 @@ class OnboardedNotifier extends Notifier<bool> {
 
   Future<void> markDone() async {
     final uid = ref.read(authStateProvider).userId;
-    if (uid != null) await ref.read(sharedPreferencesProvider).setBool(onboardedKey(uid), true);
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (uid != null) await prefs.setBool(onboardedKey(uid), true);
+    // A new user has just been through the intro carousel; the Trips-list tour straight after it would be a second
+    // intro, so it counts as seen. (Someone who skipped the carousel earlier still gets the tour.)
+    await prefs.setBool(tourDoneKey, true);
     state = true;
   }
 }

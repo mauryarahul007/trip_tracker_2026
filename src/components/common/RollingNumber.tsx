@@ -5,6 +5,8 @@ interface RollingNumberProps {
   prefix?: string;
   suffix?: string;
   decimals?: number;
+  /** Formats the animated value for display (e.g. the app's locale-aware money format); replaces prefix/decimals. */
+  format?: (value: number) => string;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -18,6 +20,7 @@ export const RollingNumber: React.FC<RollingNumberProps> = ({
   prefix = '',
   suffix = '',
   decimals = 2,
+  format,
   className = '',
   style = {},
 }) => {
@@ -28,6 +31,13 @@ export const RollingNumber: React.FC<RollingNumberProps> = ({
     const startVal = prevValueRef.current;
     const endVal = value;
     if (startVal === endVal) return;
+
+    // Reduce Motion users get the final number straight away.
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setDisplayValue(endVal);
+      prevValueRef.current = endVal;
+      return;
+    }
 
     const startTime = performance.now();
     const duration = 450; // ms
@@ -54,10 +64,12 @@ export const RollingNumber: React.FC<RollingNumberProps> = ({
     return () => cancelAnimationFrame(animFrame);
   }, [value]);
 
-  const formatted = displayValue.toLocaleString('en-US', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
+  const formatted = format
+    ? format(displayValue)
+    : displayValue.toLocaleString('en-US', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      });
 
   return (
     <span

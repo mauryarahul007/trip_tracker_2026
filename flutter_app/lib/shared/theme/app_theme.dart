@@ -6,6 +6,14 @@ import '../../core/platform/motion.dart';
 import 'app_tokens.dart';
 import 'app_typography.dart';
 
+/// [base] with its accent colours replaced by a Material 3 scheme seeded from [accent] (Material You). Only the accent
+/// tokens change, so surfaces, text and borders keep the Calm Passport contrast. A null [accent] returns [base].
+AppTokens tintTokens(AppTokens base, Color? accent, Brightness brightness) {
+  if (accent == null) return base;
+  final scheme = ColorScheme.fromSeed(seedColor: accent, brightness: brightness);
+  return base.copyWith(primaryAccent: scheme.primary, primaryAccentLight: scheme.primaryContainer);
+}
+
 /// Calm chips: outlined surface pills; the selected chip fills with ink and its label flips to the ground.
 ChipThemeData _chipTheme(AppTokens t) {
   final calmLabel = TextStyle(
@@ -195,9 +203,14 @@ ThemeData _build(AppTokens t, Brightness brightness) {
 class AppTheme {
   /// All looks share the Calm Passport colours. [calm] only picks the layout: false keeps the pre-Calm dock and
   /// tab bar (Ops Deck flag `enableCalmPassportUi` OFF).
-  static ThemeData light({bool calm = true}) => _build(AppTokens.light.copyWith(calm: calm), Brightness.light);
-  static ThemeData dark({bool calm = true}) => _build(AppTokens.dark.copyWith(calm: calm), Brightness.dark);
-  static ThemeData amoled({bool calm = true}) => _build(AppTokens.amoled.copyWith(calm: calm), Brightness.dark);
+  ///
+  /// [accent] (Material You, flag `enableDynamicColor`) recolours only the accent tokens; null keeps the Calm teal.
+  static ThemeData light({bool calm = true, Color? accent}) =>
+      _build(tintTokens(AppTokens.light.copyWith(calm: calm), accent, Brightness.light), Brightness.light);
+  static ThemeData dark({bool calm = true, Color? accent}) =>
+      _build(tintTokens(AppTokens.dark.copyWith(calm: calm), accent, Brightness.dark), Brightness.dark);
+  static ThemeData amoled({bool calm = true, Color? accent}) =>
+      _build(tintTokens(AppTokens.amoled.copyWith(calm: calm), accent, Brightness.dark), Brightness.dark);
 
   /// Darker text and stronger borders on the same surfaces (Settings > Appearance > High contrast).
   static ThemeData highContrastLight({bool calm = true}) => _build(
