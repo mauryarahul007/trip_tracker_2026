@@ -10,66 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **337** | All recorded bugs across sessions |
-| **🟢 Open** | **3** | No critical blockers, 0 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **307** | Verified & closed |
+| **✅ Resolved** | **310** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-337](#bug-337)** | 🟡 Medium | `ui-ux` | Flutter: trip sheet needs 4-5 swipes to expand over the map | `claude-cli` | 🟢 Open |
-| **[BUG-338](#bug-338)** | 🟡 Medium | `ui-ux` | Flutter: Chat tab opens at the oldest message instead of the latest | `claude-cli` | 🟢 Open |
-| **[BUG-339](#bug-339)** | 🟡 Medium | `ui-ux` | Flutter: Spend tab settlements hidden behind Load more | `claude-cli` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-337: Flutter: trip sheet needs 4-5 swipes to expand over the map
-
-- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 2/11/2026 (flutter)
-
-**Description**:
-Scrolling a tab with the sheet half-open moved the sheet 1px per ~350px of scroll, so users had to swipe 4-5 times to cover the background map.
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
-
-### BUG-338: Flutter: Chat tab opens at the oldest message instead of the latest
-
-- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 2/11/2026 (flutter)
-
-**Description**:
-ChatPane only scrolled to the bottom after sending; opening the tab left the list at the top.
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
-
-### BUG-339: Flutter: Spend tab settlements hidden behind Load more
-
-- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 2/11/2026 (flutter)
-
-**Description**:
-The 50-row page cap ran before expenses and settlements were split, so settlements could be pushed behind Load more and never appear on scroll.
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -382,6 +338,9 @@ The 50-row page cap ran before expenses and settlements were split, so settlemen
 | **BUG-334** | Collapsed-day refund label missing on web Spend list | `ui-ux` | `low` | `claude-cli` | `claude-cli` | ExpenseList.tsx's collapsed-day badge now reads "N refund(s)" instead of a bare count when every expense in the group is a refund (isRefund from utils/refunds.ts), matching the fix already shipped to the Flutter app this session. Commit pending (v3.82.7). |
 | **BUG-335** | Calm Passport web dock: Balances/Spend tabs swapped, bar wrapped to 2 rows with Chat on | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Two bugs from the v3.82.7 calm-dock rollout, both in NavTabs.tsx/tripTabs.ts. (1) The 'Balances' button pointed at the ledger tab key and 'Spend' at the expenses key -- backwards, since App.tsx's expenses pane renders BalancesSettlements and the ledger pane renders ExpenseList (legacy naming, inverted from what it sounds like). Swapped both the button bindings and calmDockTabs() order. (2) .nav-tabs is a fixed 5-column CSS grid sized for the legacy layout; calm mode renders 6 grid children with Chat on (Balances/Spend/FAB/Activity/Chat/Hub), overflowing into an implicit second row. Added .calm-nav/.calm-nav.has-chat grid-template-columns (5/6 cols). Also stopped conditionally un-rendering the FAB's wrapper div per-tab (was changing the grid's child count on every tab switch) -- it now always renders, just visibility:hidden off Balances/Spend. User caught via screenshots after deploy. |
 | **BUG-336** | Calm Passport web: Chat tab redirected back to Balances; sticky day-header kept old teal, clashing with new palette | `ui-ux` | `high` | `claude-cli` | `claude-cli` | (1) Clicking Chat in the calm dock bounced back to Balances: App.tsx's chat-pane render condition and its activeTab-reset effect were both still gated on the legacy isChatFirstNav flag only, which calm mode never sets. Both now also check (isCalmPassportUi && isTripChatEnabled). (2) ExpenseList.tsx's sticky day-header (enableStickyDayHeaders) reused --bg-header-glass, a leftover pre-Calm teal (#0F6F63) that clashed once the rest of the UI moved to the Calm palette -- Flutter's own DayHeader has no background at all. --bg-header-glass is consumed nowhere else, so retoned it to a neutral frosted surface per theme instead. Commit pending (v3.82.9). |
+| **BUG-337** | Flutter: trip sheet needs 4-5 swipes to expand over the map | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | TripContentSheet now snaps open after ~16px of upward inner scroll instead of mapping scroll 1:1 over ~350px. Commit 7ebb980 (v3.85.0). |
+| **BUG-338** | Flutter: Chat tab opens at the oldest message instead of the latest | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | ChatPane jumps to the latest message on first open (re-jumps a few frames for variable row heights) and follows new messages only near the bottom. Commit 7ebb980 (v3.85.0). |
+| **BUG-339** | Flutter: Spend tab settlements hidden behind Load more | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | ExpensesTab applies the 50-row page cap to expenses only; settlements always render. Commit 7ebb980 (v3.85.0). Exact on-device symptom not reproduced; verify on device. |
 
 ---
 

@@ -9613,7 +9613,7 @@
     "description": "Scrolling a tab with the sheet half-open moved the sheet 1px per ~350px of scroll, so users had to swipe 4-5 times to cover the background map.",
     "severity": "medium",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "flutter",
@@ -9628,7 +9628,10 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-11-02T12:26:42.566Z",
-    "updatedAt": "2026-11-02T12:26:42.567Z"
+    "updatedAt": "2026-11-02T12:27:51.368Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-11-02T12:27:51.367Z",
+    "resolutionNote": "TripContentSheet now snaps open after ~16px of upward inner scroll instead of mapping scroll 1:1 over ~350px. Commit 7ebb980 (v3.85.0)."
   },
   {
     "id": "BUG-338",
@@ -9636,7 +9639,7 @@
     "description": "ChatPane only scrolled to the bottom after sending; opening the tab left the list at the top.",
     "severity": "medium",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "flutter",
@@ -9651,7 +9654,10 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-11-02T12:26:44.035Z",
-    "updatedAt": "2026-11-02T12:26:44.036Z"
+    "updatedAt": "2026-11-02T12:27:51.811Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-11-02T12:27:51.810Z",
+    "resolutionNote": "ChatPane jumps to the latest message on first open (re-jumps a few frames for variable row heights) and follows new messages only near the bottom. Commit 7ebb980 (v3.85.0)."
   },
   {
     "id": "BUG-339",
@@ -9659,7 +9665,7 @@
     "description": "The 50-row page cap ran before expenses and settlements were split, so settlements could be pushed behind Load more and never appear on scroll.",
     "severity": "medium",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "flutter",
@@ -9674,6 +9680,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-11-02T12:26:45.537Z",
-    "updatedAt": "2026-11-02T12:26:45.538Z"
+    "updatedAt": "2026-11-02T12:27:52.240Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-11-02T12:27:52.240Z",
+    "resolutionNote": "ExpensesTab applies the 50-row page cap to expenses only; settlements always render. Commit 7ebb980 (v3.85.0). Exact on-device symptom not reproduced; verify on device."
   }
 ]

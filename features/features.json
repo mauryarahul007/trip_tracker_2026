@@ -3109,9 +3109,9 @@
       "platform": "both"
     },
     "createdAt": "2026-11-02T12:27:38.181Z",
-    "updatedAt": "2026-11-02T12:27:38.181Z",
-    "shippedAt": "2026-11-02T12:27:38.181Z",
+    "updatedAt": "2026-11-02T12:27:53.123Z",
+    "shippedAt": "2026-11-02T12:27:53.122Z",
     "shippedBy": "claude-cli",
-    "shippedNote": "Flag enableNavPolish (Core, default ON). Web NavTabs.tsx + index.css and Flutter app_bottom_nav.dart/trip_shell_screen.dart: icon-sized sliding pill, filled active icon, press scale, Flutter blur and numeric Activity badge, re-tap scrolls to top, far-jump crossfade; Compass/Bento docks folded into one dock. Commit pending (v3.85.0)."
+    "shippedNote": "Flag enableNavPolish (Core, default ON). Web + Flutter nav bar polish, Compass/Bento docks folded into one. Commit 7ebb980 (v3.85.0)."
   }
 ]
