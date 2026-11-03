@@ -8,6 +8,7 @@ export type DesktopHotkeysOptions = {
   onSelectTab?: (tabKey: CommandTab) => void;
   onEscape?: () => void;
   onSearchFocus?: () => void;
+  onToggleTimeline?: () => void;
 };
 
 export type KeyboardEventLike = {
@@ -97,6 +98,13 @@ export function handleDesktopCommandCenterKeyDown(
 
     e.preventDefault?.();
     rows[nextIndex]?.focus();
+    return;
+  }
+
+  // 5. 't' or 'T' toggles timeline / ledger view
+  if (e.key === 't' || e.key === 'T') {
+    e.preventDefault?.();
+    options.onToggleTimeline?.();
   }
 }
 
@@ -107,5 +115,5 @@ export function useDesktopCommandCenterHotkeys(options: DesktopHotkeysOptions) {
     const handleKeyDown = (e: KeyboardEvent) => handleDesktopCommandCenterKeyDown(e, options);
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [options.enabled, options.onNewExpense, options.onSelectTab, options.onEscape, options.onSearchFocus]);
+  }, [options.enabled, options.onNewExpense, options.onSelectTab, options.onEscape, options.onSearchFocus, options.onToggleTimeline]);
 }

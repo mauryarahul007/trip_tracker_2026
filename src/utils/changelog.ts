@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.90.0',
+    date: '2026-11-03',
+    changes: [
+      'Desktop Side Inspector: clicking an expense on widescreen displays docks an inspector panel on the right without blocking modal backdrops (Web).',
+      'Receipt Tools: High-contrast filter for faded thermal receipts and 2x zoom toggle on expense review (Web).',
+      'Timeline Hotkey: Press "T" to toggle between Ledger List and Travel Timeline views in Desktop Command Center (Web).',
+      'Settlement Vouchers: mint voucher cards with exchange indicators, confirmed status badges, and role amounts (Flutter).',
+      'Calibrated Sticky Day Headers: single-day expansion stays pinned while multi-day expansion scrolls smoothly without stacking (Flutter).',
+    ],
+  },
+  {
     version: '3.89.2',
     date: '2026-11-03',
     changes: [

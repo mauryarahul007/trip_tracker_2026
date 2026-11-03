@@ -17329,5 +17329,52 @@ body:has([role="dialog"]) .nav-floating-fab-wrap {
   }
 }
 
+/* Desktop Inspector Side Panel & Receipt Tools */
+.desktop-inspector-panel {
+  position: fixed;
+  top: 96px;
+  right: max(16px, calc(50vw - 540px - 440px));
+  width: 420px;
+  max-width: 420px;
+  bottom: 24px;
+  z-index: 65;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: inspectorSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
+.desktop-inspector-sheet {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
 
+@keyframes inspectorSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 1480px) {
+  .desktop-inspector-panel {
+    right: 16px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+  }
+}
+
+.receipt-viewer-card .filter-chip.active {
+  background: var(--primary-accent) !important;
+  color: #fff !important;
+  border-color: var(--primary-accent) !important;
+}

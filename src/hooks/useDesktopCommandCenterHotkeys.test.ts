@@ -80,6 +80,27 @@ describe('useDesktopCommandCenterHotkeys', () => {
     expect(onSearchFocus).toHaveBeenCalledTimes(1);
   });
 
+  it('triggers onToggleTimeline when pressing T', () => {
+    const onToggleTimeline = vi.fn();
+    handleDesktopCommandCenterKeyDown(
+      { key: 't', preventDefault: vi.fn() },
+      {
+        enabled: true,
+        onToggleTimeline,
+      }
+    );
+    expect(onToggleTimeline).toHaveBeenCalledTimes(1);
+
+    handleDesktopCommandCenterKeyDown(
+      { key: 'T', preventDefault: vi.fn() },
+      {
+        enabled: true,
+        onToggleTimeline,
+      }
+    );
+    expect(onToggleTimeline).toHaveBeenCalledTimes(2);
+  });
+
   it('ignores shortcuts when modifier keys like ctrlKey or metaKey are held', () => {
     const onNewExpense = vi.fn();
     handleDesktopCommandCenterKeyDown(

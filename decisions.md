@@ -5689,3 +5689,22 @@ This document logs all meaningful technical decisions, library choices, design p
     - Fixed typing of `required AppLocalizations l10n` and parameter wildcards to pass `flutter analyze` with 0 issues.
 * **Trade-offs Accepted:**
   - Day headers scroll with the feed rather than pinning statically to the top when expanded. This prevents viewport stacking lockouts and ensures 100% of feed items and settlements are reachable on physical devices.
+
+### ADR 285: Desktop Side Inspector, Receipt Polish & Settlement Vouchers (v3.90.0)
+* **Context of the Problem:**
+  - On the Web application, reviewing an expense on desktop and tablet displays (≥1100px) forced a blocking centered modal dialog with an opaque scrim over the whole screen. This interrupted feed reading and prevented side-by-side comparison of receipts and expense shares. Additionally, paper/thermal receipts photographed in dim light were frequently illegible without image filters or magnification.
+  - On the Flutter app, settlement rows at the bottom of the Spend feed appeared as generic cardboard-box expense rows without clear distinction between reimbursements and expenditures, and multi-day expansions previously risked header stacking locks.
+* **Selected Decision & Resolution:**
+  - **Web Widescreen Side Inspector:**
+    - Integrated `isInspectorMode` into `src/components/ExpenseReviewModal.tsx`. When `enableDesktopCommandCenter` is active on viewports ≥1100px, opening an expense docks an **Expense Inspector Side Panel** (`.desktop-inspector-panel`) to the right edge with a slide-in animation.
+    - Preserved background feed scrollability (`useScrollLock` skipped when inspector mode is active) so users can scroll through the ledger while inspecting items.
+    - Preserved full keyboard accessibility (`Esc` closes, `J`/`K` navigates).
+  - **Receipt Inspection Tools:**
+    - Added a floating toolbar in `ExpenseReviewModal.tsx` providing a **High Contrast** filter (`contrast(175%) grayscale(100%) brightness(105%)`) for faded thermal paper and a **2x Zoom** toggle with overflow pan support.
+  - **Timeline Hotkey:**
+    - Added the `T` hotkey to `useDesktopCommandCenterHotkeys.ts` to toggle between Ledger List and Travel Timeline views, with shortcut hint badges updated in `App.tsx`.
+  - **Flutter Settlement Vouchers:**
+    - Implemented `_SettlementFeedTile` in `flutter_app/lib/features/expenses/presentation/expenses_tab.dart` with Bento mint container styling, currency exchange icon (`Icons.swap_horiz_rounded`), green `✔ Confirmed` pill, and clear role subtitles (`you get back` in green vs. `you paid` in muted text).
+    - Calibrated sticky day headers to only pin when a single day is expanded (`_expandedDays.length <= 1`), eliminating header pileup during "Expand all days".
+* **Trade-offs Accepted:**
+  - On narrower viewports (<1100px) or mobile displays, `ExpenseReviewModal` continues to render as a modal popup to ensure comfortable reading without cramped side columns.

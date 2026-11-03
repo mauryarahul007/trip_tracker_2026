@@ -222,6 +222,17 @@ export function ExpenseList({
       /* storage unavailable */
     }
   };
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent<'list' | 'timeline'>;
+      if (customEvent.detail) {
+        setLedgerViewMode(customEvent.detail);
+      }
+    };
+    window.addEventListener('tt-ledger-view-mode-changed', handler);
+    return () => window.removeEventListener('tt-ledger-view-mode-changed', handler);
+  }, []);
   const ptrIndicatorRef = useRef<HTMLDivElement>(null);
   const pullToRefresh = usePullToRefresh(paneRef, ptrIndicatorRef, () => refreshActiveTripExpenses());
   const expensesLoadingTripId = useTripStore((s) => s.expensesLoadingTripId);

@@ -288,6 +288,15 @@ export default function App() {
   const isDesktopRail = isFeatureEnabled('enableDesktopRail', { userId: userId || undefined });
   const isDesktopCommandCenter = isFeatureEnabled('enableDesktopCommandCenter', { tripId: activeTripId || undefined, userId: userId || undefined });
 
+  const [desktopWindowWidth, setDesktopWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1200));
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onResize = () => setDesktopWindowWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  const isDesktopInspector = isDesktopCommandCenter && Boolean(activeTripId) && desktopWindowWidth >= 1100;
+
   useDesktopCommandCenterHotkeys({
     enabled: isDesktopCommandCenter && Boolean(activeTripId),
     onNewExpense: () => handleOpenAddExpense(),
@@ -298,6 +307,16 @@ export default function App() {
       else if (showExpenseFilterDrawer) setShowExpenseFilterDrawer(false);
       else if (showTripActionSheet) setShowTripActionSheet(false);
       else if (showCommandPalette) setShowCommandPalette(false);
+    },
+    onToggleTimeline: () => {
+      const isTimelineFeatureEnabled = isFeatureEnabled('enableVisualTravelTimeline', { tripId: activeTripId || undefined });
+      if (!isTimelineFeatureEnabled) return;
+      const current = localStorage.getItem('tt-ledger-view-mode') === 'timeline' ? 'timeline' : 'list';
+      const next = current === 'timeline' ? 'list' : 'timeline';
+      try {
+        localStorage.setItem('tt-ledger-view-mode', next);
+      } catch {}
+      window.dispatchEvent(new CustomEvent('tt-ledger-view-mode-changed', { detail: next }));
     },
   });
   useEffect(() => {
@@ -1045,7 +1064,7 @@ export default function App() {
   }, [isSuperadmin]);
 
   // Lock background scroll when any modal is active
-  useScrollLock(Boolean(showTripActionSheet || showShareTrip || showTripWrapped || showCloseout || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer || showSmartQuickAdd || showOfflineSnapshot || showMediaGallery || showSplitwiseImport || showDocumentVault));
+  useScrollLock(Boolean(showTripActionSheet || showShareTrip || showTripWrapped || showCloseout || (!isDesktopInspector && selectedReviewExpense) || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer || showSmartQuickAdd || showOfflineSnapshot || showMediaGallery || showSplitwiseImport || showDocumentVault));
 
   const syncQueue = useTripStore((s) => s.syncQueue);
   const dirtyExpenseIds = useMemo(() => collectDirtyExpenseIds(syncQueue), [syncQueue]);
@@ -3600,6 +3619,7 @@ export default function App() {
         return (
         <Suspense fallback={<SheetSkeleton />}>
           <ExpenseReviewModal
+            isInspectorMode={isDesktopInspector}
             expense={liveExpense}
             members={members}
             categories={categories}
@@ -4287,6 +4307,7 @@ export default function App() {
           <span className="dcc-key font-mono">/</span> Search &middot;{' '}
           <span className="dcc-key font-mono">N</span> Add Bill &middot;{' '}
           <span className="dcc-key font-mono">J / K</span> Navigate &middot;{' '}
+          <span className="dcc-key font-mono">T</span> Timeline &middot;{' '}
           <span className="dcc-key font-mono">1-5</span> Tabs &middot;{' '}
           <span className="dcc-key font-mono">Esc</span> Close
         </div>

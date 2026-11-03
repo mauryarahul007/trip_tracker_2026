@@ -32,9 +32,10 @@ type Props = {
   refundable?: number;
   /** enableExpenseExclusion: set to show the "Count in trip totals" toggle. */
   onToggleExcludeFromTotals?: (exclude: boolean) => void;
+  isInspectorMode?: boolean;
 };
 
-export function ExpenseReviewModal({ expense, members, categories, trip, canManage, currentUserId, isTripAdmin, onClose, onEdit, onDelete, onDuplicate, onFlagDispute, onResolveDispute, myMemberId, onConfirmSettlement, settlementConfirmationEnabled, onApproveExpense, onRecordRefund, refunds = [], refundable = 0, onToggleExcludeFromTotals }: Props) {
+export function ExpenseReviewModal({ expense, members, categories, trip, canManage, currentUserId, isTripAdmin, onClose, onEdit, onDelete, onDuplicate, onFlagDispute, onResolveDispute, myMemberId, onConfirmSettlement, settlementConfirmationEnabled, onApproveExpense, onRecordRefund, refunds = [], refundable = 0, onToggleExcludeFromTotals, isInspectorMode = false }: Props) {
   const isSettlement = expense.title.startsWith('Settlement:') || isRefund(expense);
   const [refundOpen, setRefundOpen] = useState(false);
   const [refundText, setRefundText] = useState('');
@@ -42,9 +43,11 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
   const refundValid = refundAmount > 0 && refundAmount <= refundable + 0.001;
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [thermalContrast, setThermalContrast] = useState(false);
+  const [zoomReceipt, setZoomReceipt] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  useFocusTrap(sheetRef, true, false, onClose);
+  useFocusTrap(sheetRef, !isInspectorMode, false, onClose);
 
 
   useEffect(() => {
@@ -59,26 +62,24 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
     return () => { cancelled = true; };
   }, [expense.receiptPath]);
 
-  return (
+  const content = (
     <div
-      className="modal-overlay"
-      onClick={onClose}
+      ref={sheetRef}
+      tabIndex={-1}
+      role="dialog"
+      aria-modal={!isInspectorMode}
+      aria-labelledby="expense-review-title"
+      className={`glass-card fade-in ${isInspectorMode ? 'desktop-inspector-sheet' : 'modal-sheet'}`}
+      style={{
+        maxWidth: isInspectorMode ? '100%' : '460px',
+        height: isInspectorMode ? '100%' : 'auto',
+        background: 'var(--bg-surface)',
+        boxShadow: isInspectorMode ? 'none' : 'var(--glass-shadow)',
+        border: isInspectorMode ? 'none' : '1px solid var(--border-color)',
+        overflowY: isInspectorMode ? 'auto' : undefined,
+      }}
+      onClick={(e) => e.stopPropagation()}
     >
-      <div
-        ref={sheetRef}
-        tabIndex={-1}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="expense-review-title"
-        className="glass-card fade-in modal-sheet"
-        style={{
-          maxWidth: '460px',
-          background: 'var(--bg-surface)',
-          boxShadow: 'var(--glass-shadow)',
-          border: '1px solid var(--border-color)',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '12px' }}>
           <div style={{ minWidth: 0 }}>
             <span style={{
@@ -88,7 +89,7 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
               textTransform: 'uppercase',
               letterSpacing: '0.05em'
             }}>
-              Expense Review
+              {isInspectorMode ? 'Inspector • Expense Details' : 'Expense Review'}
             </span>
             <h3 id="expense-review-title" style={{ fontSize: '22px', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{expense.title}</h3>
           </div>
@@ -362,14 +363,60 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
 
           {/* Receipt image */}
           {receiptUrl && (
-            <a href={receiptUrl} target="_blank" rel="noopener noreferrer">
-              <img
-                src={receiptUrl}
-                alt="Receipt"
-                decoding="async"
-                style={{ width: '100%', maxHeight: '220px', objectFit: 'contain', borderRadius: 'var(--border-radius-md)', border: '1px solid var(--border-color)', background: 'rgba(15,23,42,0.02)' }}
-              />
-            </a>
+            <div className="receipt-viewer-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  🧾 Attached Receipt
+                </span>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    type="button"
+                    className={`filter-chip ${thermalContrast ? 'active' : ''}`}
+                    onClick={() => setThermalContrast((prev) => !prev)}
+                    style={{ fontSize: '11px', padding: '2px 8px', height: '24px' }}
+                    title="Enhance contrast for faded or low-light thermal paper receipts"
+                  >
+                    High Contrast
+                  </button>
+                  <button
+                    type="button"
+                    className={`filter-chip ${zoomReceipt ? 'active' : ''}`}
+                    onClick={() => setZoomReceipt((prev) => !prev)}
+                    style={{ fontSize: '11px', padding: '2px 8px', height: '24px' }}
+                    title="Toggle zoom level"
+                  >
+                    {zoomReceipt ? '1x' : '2x Zoom'}
+                  </button>
+                </div>
+              </div>
+              <div style={{
+                overflow: 'hidden',
+                borderRadius: 'var(--border-radius-md)',
+                border: '1px solid var(--border-color)',
+                background: 'rgba(15,23,42,0.02)',
+                maxHeight: zoomReceipt ? '380px' : '220px',
+                overflowY: zoomReceipt ? 'auto' : 'hidden',
+                textAlign: 'center',
+              }}>
+                <a href={receiptUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
+                  <img
+                    src={receiptUrl}
+                    alt="Receipt"
+                    decoding="async"
+                    style={{
+                      width: '100%',
+                      maxHeight: zoomReceipt ? 'none' : '220px',
+                      objectFit: 'contain',
+                      transform: zoomReceipt ? 'scale(1.4)' : 'none',
+                      transformOrigin: 'top center',
+                      transition: 'transform 0.2s ease, filter 0.2s ease',
+                      filter: thermalContrast ? 'contrast(175%) grayscale(100%) brightness(105%)' : 'none',
+                      display: 'block',
+                    }}
+                  />
+                </a>
+              </div>
+            </div>
           )}
 
           {/* Split details list */}
@@ -505,6 +552,26 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
           )}
         </div>
       </div>
+  );
+
+  if (isInspectorMode) {
+    return (
+      <aside
+        className="desktop-inspector-panel glass-card fade-in"
+        aria-label="Expense Inspector"
+        data-testid="desktop-inspector-panel"
+      >
+        {content}
+      </aside>
+    );
+  }
+
+  return (
+    <div
+      className="modal-overlay"
+      onClick={onClose}
+    >
+      {content}
     </div>
   );
 }

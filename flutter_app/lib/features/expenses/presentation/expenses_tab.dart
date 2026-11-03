@@ -16,6 +16,7 @@ import '../../../domain/logic/refunds.dart';
 import '../../../domain/models/category.dart';
 import '../../../domain/models/expense.dart';
 import '../../../domain/models/member.dart';
+import '../../../domain/models/trip.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
@@ -427,6 +428,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     // Desktop (board 08): rows become table rows with column headers.
     final wide = MediaQuery.sizeOf(context).width >= _kDetailPanelBreakpoint;
 
+    final sticky = _flag(ref, 'enableStickyDayHeaders', id);
+
     // Compass spend uses the flat tile rows and day cards of the redesign (what the tidy flag already draws).
     final tidyOn = _flag(ref, 'enableTidyExpenses', id) || compassSpend;
     final justSaved = _flag(ref, 'enableSaveConfirmation', id) ? ref.watch(justSavedExpenseProvider) : null;
@@ -539,7 +542,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       bool isSettlement = false,
     }) {
       SliverPersistentHeader headerFor(DayGroup g, {required bool expanded}) => SliverPersistentHeader(
-        pinned: false,
+        pinned: sticky && expanded && _expandedDays.length <= 1,
         delegate: _DayHeader(
           textScale: MediaQuery.textScalerOf(context).scale(1),
           date: isSettlement ? 'settlement:${g.date}' : g.date,
@@ -571,7 +574,17 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       SliverList listFor(DayGroup g) => SliverList.builder(
         itemCount: g.expenses.length,
         itemBuilder: (_, i) {
-          final row = rowFor(g.expenses[i], lastInGroup: i == g.expenses.length - 1);
+          final e = g.expenses[i];
+          if (isSettlement && !wide) {
+            return _SettlementFeedTile(
+              expense: e,
+              trip: trip,
+              members: members,
+              myMemberId: myMember,
+              onTap: () => _openDetail(e),
+            );
+          }
+          final row = rowFor(e, lastInGroup: i == g.expenses.length - 1);
           return !isSettlement && i == 0 && g.date == _today(ref) ? KeyedSubtree(key: _todayKey, child: row) : row;
         },
       );
@@ -864,6 +877,19 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                         children: [
                           Row(
                             children: [
+                              Container(
+                                padding: const EdgeInsets.all(5),
+                                decoration: BoxDecoration(
+                                  color: tokens.tones[BentoTone.mint].bg,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.handshake_outlined,
+                                  size: 15,
+                                  color: tokens.tones[BentoTone.mint].accent,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
                               Text(
                                 l10n.expSettlements,
                                 style: TextStyle(
@@ -877,16 +903,16 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: tokens.bgSurface,
+                                  color: tokens.tones[BentoTone.mint].bg,
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: tokens.borderColor),
+                                  border: Border.all(color: tokens.tones[BentoTone.mint].accent.withValues(alpha: 0.2)),
                                 ),
                                 child: Text(
                                   '${settlementGroups.fold<int>(0, (sum, g) => sum + g.expenses.length)}',
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: tokens.textSecondary,
+                                    color: tokens.tones[BentoTone.mint].accent,
                                   ),
                                 ),
                               ),
@@ -1423,6 +1449,171 @@ class _RunwayChip extends StatelessWidget {
                   color: selected ? t.textPrimary : t.textSecondary,
                 ),
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+class _SettlementFeedTile extends StatelessWidget {
+  const _SettlementFeedTile({
+    required this.expense,
+    required this.trip,
+    required this.members,
+    required this.myMemberId,
+    required this.onTap,
+  });
+
+  final Expense expense;
+  final Trip trip;
+  final Map<String, Member> members;
+  final String? myMemberId;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    final isMePayer = myMemberId != null && expense.paidBy == myMemberId;
+    final isMeReceiver = myMemberId != null && expense.splitMemberIds.contains(myMemberId);
+    final payerName = members[expense.paidBy]?.name ?? expense.paidBy;
+
+    final isConfirmed = expense.settlementConfirmedAt != null;
+
+    final mintBg = tokens.tones[BentoTone.mint].bg;
+    final mintAccent = tokens.tones[BentoTone.mint].accent;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Material(
+        color: tokens.bgSurface,
+        borderRadius: BorderRadius.circular(tokens.radiusMd),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(tokens.radiusMd),
+              border: Border.all(color: tokens.borderColor.withValues(alpha: 0.8)),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                // Transfer / Settlement Icon in Mint container
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: mintBg,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: mintAccent.withValues(alpha: 0.2)),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.swap_horiz_rounded,
+                      size: 22,
+                      color: mintAccent,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Title and Payer / Subtitle
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        expense.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: tokens.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          if (isConfirmed) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                              margin: const EdgeInsets.only(right: 6),
+                              decoration: BoxDecoration(
+                                color: tokens.colorSuccess.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.check_circle_rounded, size: 10, color: tokens.colorSuccess),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    'Confirmed',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: tokens.colorSuccess,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          Flexible(
+                            child: Text(
+                              payerName.isNotEmpty ? 'Paid by $payerName' : '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: tokens.textMuted,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Amount + Role subtitle
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      formatMoney(context, expense.amount, expense.currency),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: tokens.textPrimary,
+                      ),
+                    ),
+                    if (isMeReceiver)
+                      Text(
+                        'you get back',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: tokens.colorSuccess,
+                        ),
+                      )
+                    else if (isMePayer)
+                      Text(
+                        'you paid',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: tokens.textMuted,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
