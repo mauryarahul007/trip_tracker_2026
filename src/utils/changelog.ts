@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.89.2',
+    date: '2026-11-03',
+    changes: [
+      'Spend tab scrolling fix: unpinned day headers and flattened sliver groupings so settlements and all expenses remain fully visible when "Expand all days" is selected (Flutter).',
+      'Resolved settlement header text overflow on narrow device viewports (Flutter).',
+      'Increased bottom clearance spacer to 200px to guarantee comfortable clearance over the floating action button and bottom navigation bar (Flutter).',
+    ],
+  },
+  {
     version: '3.89.1',
     date: '2026-11-03',
     changes: [

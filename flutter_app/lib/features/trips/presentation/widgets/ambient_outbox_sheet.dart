@@ -7,6 +7,7 @@ import '../../../../data/providers.dart';
 import '../../../../data/sync/outbox_store.dart';
 import '../../../../data/sync/outbox_types.dart';
 import '../../../../domain/logic/trip_utilities.dart' show describeSyncItem;
+import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_icons.dart';
 import '../../../../shared/theme/app_tokens.dart';
@@ -84,7 +85,7 @@ class AmbientOutboxSheet extends ConsumerWidget {
                       key: const Key('ambient-outbox-list'),
                       shrinkWrap: true,
                       itemCount: items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (context, index) {
                         final item = items[index];
                         final hasError = (item.lastError ?? '').isNotEmpty || item.status == OutboxStatus.poison;
@@ -297,7 +298,7 @@ class AmbientOutboxSheet extends ConsumerWidget {
     required bool inspector,
     required OutboxStore store,
     required AppTokens tokens,
-    required dynamic l10n,
+    required AppLocalizations l10n,
   }) {
     final title = describeSyncItem({'id': item.id, 'type': item.type, 'payload': item.payload});
     final statusColor = hasError
@@ -426,7 +427,7 @@ class AmbientOutboxSheet extends ConsumerWidget {
     required List<OutboxItem> failedItems,
     required OutboxStore store,
     required AppTokens tokens,
-    required dynamic l10n,
+    required AppLocalizations l10n,
   }) {
     return Row(
       children: [

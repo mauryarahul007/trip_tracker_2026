@@ -533,14 +533,13 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       );
     }
 
-    final sticky = _flag(ref, 'enableStickyDayHeaders', id);
     List<Widget> section(
       List<DayGroup> groups, {
       required bool collapsible,
       bool isSettlement = false,
     }) {
       SliverPersistentHeader headerFor(DayGroup g, {required bool expanded}) => SliverPersistentHeader(
-        pinned: sticky && expanded,
+        pinned: false,
         delegate: _DayHeader(
           textScale: MediaQuery.textScalerOf(context).scale(1),
           date: isSettlement ? 'settlement:${g.date}' : g.date,
@@ -578,16 +577,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       );
       return [
         for (final g in groups) ...[
-          if (sticky) ...[
-            headerFor(g, expanded: !collapsible || _expandedDays.contains(g.date)),
-            if (!collapsible || _expandedDays.contains(g.date)) listFor(g),
-          ] else
-            SliverMainAxisGroup(
-              slivers: [
-                headerFor(g, expanded: !collapsible || _expandedDays.contains(g.date)),
-                if (!collapsible || _expandedDays.contains(g.date)) listFor(g),
-              ],
-            ),
+          headerFor(g, expanded: !collapsible || _expandedDays.contains(g.date)),
+          if (!collapsible || _expandedDays.contains(g.date)) listFor(g),
         ],
       ];
     }
@@ -901,16 +892,20 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                               ),
                             ],
                           ),
-                          Text(
-                            '${formatMoney(
-                              context,
-                              settlementGroups.fold<double>(0.0, (sum, g) => sum + g.total),
-                              trip.baseCurrency,
-                            )} settled',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: tokens.textMuted,
+                          Flexible(
+                            child: Text(
+                              '${formatMoney(
+                                context,
+                                settlementGroups.fold<double>(0.0, (sum, g) => sum + g.total),
+                                trip.baseCurrency,
+                              )} settled',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: tokens.textMuted,
+                              ),
                             ),
                           ),
                         ],
@@ -936,7 +931,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                   child: _OtherTrips(tripId: id, query: filters.query.trim()),
                 ),
               SliverToBoxAdapter(
-                child: SizedBox(height: 140.0 + MediaQuery.paddingOf(context).bottom),
+                child: SizedBox(height: 200.0 + MediaQuery.paddingOf(context).bottom),
               ),
             ],
           ),

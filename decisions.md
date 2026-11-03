@@ -5671,3 +5671,21 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Settlements remain uncollapsible by design (`collapsible: false`), matching the Web app's behavior where settlements stay visible without extra taps.
 
+### ADR 284: Flutter App — Spend Feed Scroll Extent & Flat Sliver Grouping (v3.89.2)
+* **Context of the Problem:**
+  - In the Flutter app's Spend tab (`expenses_tab.dart`), when the user selected "Expand all days" in the filter menu and scrolled down on a trip with multiple days and expenses (e.g. Sikkim Bagpacking), the settlements section and the last day's expense items were completely hidden and unreachable.
+  - Investigation revealed two root causes:
+    1. Day headers had `pinned: sticky && expanded` enabled via the `enableStickyDayHeaders` feature flag. Without bounded group constraints, all 12+ day headers pinned simultaneously at the top of the viewport (stacking up to 768px+), consuming the screen and pushing the rest of the feed out of view.
+    2. When non-sticky, day headers and their expense lists were wrapped in `SliverMainAxisGroup`. In Flutter sliver layouts (issue #174368), dynamic lists inside nested sliver groups miscalculate extent when fully expanded, prematurely terminating `maxScrollExtent`.
+    3. The settlements section header row had an unconstrained text block (`₹53,484.07 settled`) that overflowed by 6.3px on narrow device viewports.
+    4. The bottom sliver spacer (140px) was insufficient to clear the floating action button (FAB anchored ~205pt from bottom) and the notch navigation bar.
+* **Selected Decision & Resolution:**
+  - In `flutter_app/lib/features/expenses/presentation/expenses_tab.dart`:
+    - Set `pinned: false` on all day headers, allowing the entire feed (all days and settlements) to scroll smoothly without pinned header stacking.
+    - Flattened the sliver layout in `section(...)` by returning direct unrolled slivers (`[for (final g in groups) ...[headerFor(...), if (...) listFor(...)]]`) instead of nesting inside `SliverMainAxisGroup`, allowing Flutter's sliver viewport to calculate accurate scroll extents.
+    - Wrapped the settlements aggregate text in `Flexible(child: Text(..., maxLines: 1, overflow: TextOverflow.ellipsis))` to eliminate RenderFlex overflow.
+    - Increased bottom clearance spacer to `200.0 + MediaQuery.paddingOf(context).bottom` so that all settlements and actions comfortably clear the bottom dock and FAB.
+  - In `ambient_outbox_sheet.dart` and `sync_chip.dart`:
+    - Fixed typing of `required AppLocalizations l10n` and parameter wildcards to pass `flutter analyze` with 0 issues.
+* **Trade-offs Accepted:**
+  - Day headers scroll with the feed rather than pinning statically to the top when expanded. This prevents viewport stacking lockouts and ensures 100% of feed items and settlements are reachable on physical devices.

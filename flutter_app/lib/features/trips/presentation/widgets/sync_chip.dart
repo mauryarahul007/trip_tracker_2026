@@ -81,7 +81,7 @@ class SyncButton extends ConsumerWidget {
       w.tone == SyncTone.problem ? t.colorDanger : t.textSecondary,
     );
 
-    Widget iconWidget = syncing
+    final Widget iconWidget = syncing
         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
         : (ambientOutbox && (status.pending > 0 || status.issues > 0))
             ? Stack(
