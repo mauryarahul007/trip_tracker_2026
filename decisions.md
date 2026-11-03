@@ -5656,6 +5656,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - When `enableAmbientOutboxDrawer` is disabled, the system gracefully falls back to the classic minimal `_SyncSheet` without changing existing test assertions.
 
-
-
+### ADR 283: Flutter App — Spend Tab Settlements Section & Key Safety (v3.89.1)
+* **Context of the Problem:**
+  - In the Web app's Spend tab, recorded settlements appear at the bottom of the list grouped into their own dedicated section with total counts, aggregate settled amounts, and day-group headers.
+  - In the Flutter app, scrolling down did not cleanly display settlements. Settlements were rendered under a plain title without summary counts or settled totals, and crucially, when a settlement was recorded on the same date as a regular expense, `_todayKey` caused a duplicate `GlobalKey` assertion error in Flutter that prevented slivers from rendering properly. Furthermore, bottom viewport insets did not provide adequate clearance above the bottom dock and floating action button.
+* **Selected Decision & Resolution:**
+  - Updated `flutter_app/lib/features/expenses/presentation/expenses_tab.dart`:
+    - Fixed the `_todayKey` collision by gating `KeyedSubtree(key: _todayKey, child: row)` behind `!isSettlement`, ensuring `GlobalKey` is attached at most once per build.
+    - Updated the settlements section header to show the settlement count pill and total settled money (`SETTLEMENTS · N` and `₹X settled`).
+    - Prefixed settlement day headers with `settlement:$date` to isolate them in their own key namespace.
+    - Updated settlement day headers to format dates cleanly (`_settlementDateLabel`) and display `${g.expenses.length} settled` and `${total} settled`.
+    - Expanded bottom sliver padding to `140.0 + MediaQuery.paddingOf(context).bottom` for comfortable scroll clearance over navigation and action buttons.
+  - Added automated test coverage in `flutter_app/test/features/expenses/expenses_tab_test.dart` verifying settlements and settled badges render cleanly at the bottom without collisions.
+* **Trade-offs Accepted:**
+  - Settlements remain uncollapsible by design (`collapsible: false`), matching the Web app's behavior where settlements stay visible without extra taps.
 

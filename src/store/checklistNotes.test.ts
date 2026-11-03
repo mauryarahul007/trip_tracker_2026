@@ -1,5 +1,14 @@
-import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
 import { useTripStore } from './tripStore';
+
+vi.mock('../services/tripApi', async () => {
+  const actual = await vi.importActual<typeof import('../services/tripApi')>('../services/tripApi');
+  return {
+    ...actual,
+    updateTripChecklist: vi.fn().mockResolvedValue(undefined),
+    updateTripNotes: vi.fn().mockResolvedValue(undefined),
+  };
+});
 import type { Trip } from '../types';
 
 describe('tripStore checklist and notes actions', () => {

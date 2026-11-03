@@ -176,6 +176,8 @@ void main() {
     expect(find.text('Taxi'), findsOneWidget);
     expect(find.text('Settlements'), findsOneWidget);
     expect(find.text('Settlement: Ben → Asha'), findsOneWidget);
+    expect(find.textContaining('settled'), findsWidgets);
+    expect(find.byKey(const Key('day-settlement:2026-10-06')), findsOneWidget);
   });
 
   group('row details', () {

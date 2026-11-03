@@ -534,18 +534,26 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     }
 
     final sticky = _flag(ref, 'enableStickyDayHeaders', id);
-    List<Widget> section(List<DayGroup> groups, {required bool collapsible}) {
+    List<Widget> section(
+      List<DayGroup> groups, {
+      required bool collapsible,
+      bool isSettlement = false,
+    }) {
       SliverPersistentHeader headerFor(DayGroup g, {required bool expanded}) => SliverPersistentHeader(
         pinned: sticky && expanded,
         delegate: _DayHeader(
           textScale: MediaQuery.textScalerOf(context).scale(1),
-          date: g.date,
-          label: _dayLabel(g.date, trip.startDate, l10n.expDayN),
-          total: formatMoney(context, g.total, trip.baseCurrency),
+          date: isSettlement ? 'settlement:${g.date}' : g.date,
+          label: isSettlement ? _settlementDateLabel(g.date) : _dayLabel(g.date, trip.startDate, l10n.expDayN),
+          total: isSettlement
+              ? '${formatMoney(context, g.total, trip.baseCurrency)} settled'
+              : formatMoney(context, g.total, trip.baseCurrency),
           count: g.expenses.length,
           expanded: expanded,
           collapsible: collapsible,
-          semantics: l10n.expDaySemantics(g.date, g.expenses.length, formatMoney(context, g.total, trip.baseCurrency)),
+          semantics: isSettlement
+              ? '${_settlementDateLabel(g.date)}, ${g.expenses.length} settled, ${formatMoney(context, g.total, trip.baseCurrency)}'
+              : l10n.expDaySemantics(g.date, g.expenses.length, formatMoney(context, g.total, trip.baseCurrency)),
           onTap: () =>
               setState(() => _expandedDays.contains(g.date) ? _expandedDays.remove(g.date) : _expandedDays.add(g.date)),
           background: tokens.bgPage,
@@ -554,16 +562,18 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
           tidy: tidyOn,
           surface: tokens.bgSurface,
           border: tokens.borderColor,
-          countText: g.expenses.isNotEmpty && g.expenses.every(isRefund)
-              ? l10n.expDayCountRefund(g.expenses.length)
-              : l10n.expDayCount(g.expenses.length),
+          countText: isSettlement
+              ? '${g.expenses.length} settled'
+              : g.expenses.isNotEmpty && g.expenses.every(isRefund)
+                  ? l10n.expDayCountRefund(g.expenses.length)
+                  : l10n.expDayCount(g.expenses.length),
         ),
       );
       SliverList listFor(DayGroup g) => SliverList.builder(
         itemCount: g.expenses.length,
         itemBuilder: (_, i) {
           final row = rowFor(g.expenses[i], lastInGroup: i == g.expenses.length - 1);
-          return i == 0 && g.date == _today(ref) ? KeyedSubtree(key: _todayKey, child: row) : row;
+          return !isSettlement && i == 0 && g.date == _today(ref) ? KeyedSubtree(key: _todayKey, child: row) : row;
         },
       );
       return [
@@ -857,14 +867,57 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                 if (settlementGroups.isNotEmpty) ...[
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                      child: Text(
-                        l10n.expSettlements,
-                        style: TextStyle(fontWeight: FontWeight.w700, color: tokens.textSecondary),
+                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                l10n.expSettlements,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5,
+                                  color: tokens.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: tokens.bgSurface,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: tokens.borderColor),
+                                ),
+                                child: Text(
+                                  '${settlementGroups.fold<int>(0, (sum, g) => sum + g.expenses.length)}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: tokens.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            '${formatMoney(
+                              context,
+                              settlementGroups.fold<double>(0.0, (sum, g) => sum + g.total),
+                              trip.baseCurrency,
+                            )} settled',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: tokens.textMuted,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  ...section(settlementGroups, collapsible: false),
+                  ...section(settlementGroups, collapsible: false, isSettlement: true),
                 ],
                 if (filteredExpenses.length > _visible)
                   SliverToBoxAdapter(
@@ -882,7 +935,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                 SliverToBoxAdapter(
                   child: _OtherTrips(tripId: id, query: filters.query.trim()),
                 ),
-              const SliverToBoxAdapter(child: SizedBox(height: 96)),
+              SliverToBoxAdapter(
+                child: SizedBox(height: 140.0 + MediaQuery.paddingOf(context).bottom),
+              ),
             ],
           ),
         ),
@@ -1029,6 +1084,12 @@ String _dayLabel(String date, String tripStart, String Function(int) dayN) {
   final n =
       DateTime.utc(d.year, d.month, d.day).difference(DateTime.utc(start.year, start.month, start.day)).inDays + 1;
   return n >= 1 ? '$base · ${dayN(n)}' : base;
+}
+
+String _settlementDateLabel(String date) {
+  final d = DateTime.tryParse(date);
+  if (d == null) return date;
+  return '${_months[d.month - 1]} ${d.day}';
 }
 
 class _DayHeader extends SliverPersistentHeaderDelegate {

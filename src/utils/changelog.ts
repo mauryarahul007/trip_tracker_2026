@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.89.1',
+    date: '2026-11-03',
+    changes: [
+      'Settlements section on Spend tab: settled amounts, count pill, and dedicated day cards now appear when scrolling down (Flutter).',
+      'Fixed a duplicate key collision when settlements and regular expenses occur on the same date (Flutter).',
+      'Increased bottom scroll clearance so settlements and action buttons are not obscured by navigation bars (Flutter).',
+    ],
+  },
+  {
     version: '3.89.0',
     date: '2026-11-02',
     changes: [
