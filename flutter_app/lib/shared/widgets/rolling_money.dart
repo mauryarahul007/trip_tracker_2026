@@ -17,6 +17,29 @@ class RollingMoneyText extends StatefulWidget {
     super.key,
   });
 
+  /// Convenient constructor that automatically separates whole and decimal portions
+  /// from a formatted currency string (e.g. "₹1,240.50" -> whole "₹1,240", decimals ".50").
+  factory RollingMoneyText.fromFormatted({
+    required String formatted,
+    required double fontSize,
+    required Color color,
+    String? memoryKey,
+    Key? key,
+  }) {
+    final dot = formatted.lastIndexOf('.');
+    final hasDecimals = dot >= 0 && (formatted.length - dot) <= 3;
+    final whole = hasDecimals ? formatted.substring(0, dot) : formatted;
+    final decimals = hasDecimals ? formatted.substring(dot) : '';
+    return RollingMoneyText(
+      key: key,
+      whole: whole,
+      decimals: decimals,
+      fontSize: fontSize,
+      color: color,
+      memoryKey: memoryKey,
+    );
+  }
+
   final String whole;
   final String decimals;
   final double fontSize;

@@ -3,7 +3,6 @@ import type { CSSProperties } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { IconSearch, IconEdit, IconAlertCircle, IconClose, IconCalendar, IconChevronRight, IconFilter, IconCamera, IconFlag, IconClock, IconSync, IconMapPin, IconMic } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
-import { QuietStatus } from './QuietStatus';
 import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol, formatAmount, formatMoneyNumber } from '../utils/currency';
 import { convertCurrency } from '../utils/currencyConverter';
@@ -21,6 +20,7 @@ import { useEscapeKey } from '../utils/useEscapeKey';
 import { NextUpTravelCapsule } from './NextUpTravelCapsule';
 import { SettlementHistorySection } from './SettlementHistorySection';
 import { VisualTravelTimeline } from './VisualTravelTimeline';
+import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
 // wrapping the row in it at all when the viewer isn't allowed to delete.
@@ -189,6 +189,8 @@ export function ExpenseList({
   conflictExpenseIds,
   onReviewConflict,
 }: Props) {
+  const animatedTotalSpent = useAnimatedNumber(totalSpent, 280);
+  const animatedAverageCost = useAnimatedNumber(averageCost, 280);
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
   // The real scroll container is the ancestor `.tab-pane` (owned by
@@ -968,7 +970,7 @@ export function ExpenseList({
               {chromeExpanded ? 'Hide stats & quick filters' : 'Stats & quick filters'}
               {hasActiveFilters && <span className="expense-filters-btn-badge" aria-hidden="true" style={{ position: 'static' }} />}
             </span>
-            <span className="expense-chrome-toggle-total money">{formatAmount(totalSpent, currencySymbol)} total</span>
+            <span className="expense-chrome-toggle-total money">{formatAmount(animatedTotalSpent, currencySymbol)} total</span>
           </button>
 
           {chromeExpanded && (
@@ -976,11 +978,11 @@ export function ExpenseList({
               <div className="expense-stat-strip">
                 <div className="expense-stat">
                   <span className="expense-stat-label">Total spent</span>
-                  <span className="expense-stat-value">{formatAmount(totalSpent, currencySymbol)}</span>
+                  <span className="expense-stat-value">{formatAmount(animatedTotalSpent, currencySymbol)}</span>
                 </div>
                 <div className="expense-stat">
                   <span className="expense-stat-label">Daily average</span>
-                  <span className="expense-stat-value">{formatAmount(averageCost, currencySymbol)}</span>
+                  <span className="expense-stat-value">{formatAmount(animatedAverageCost, currencySymbol)}</span>
                 </div>
                 {topCategoryName && (
                   <div className="expense-stat">
@@ -1277,11 +1279,58 @@ export function ExpenseList({
             <div className="ledger-rule" />
           </div>
         ) : (
-          <QuietStatus
-            sentence="No expenses yet. Add one to start splitting this trip."
-            actionLabel="Add expense"
-            onAction={() => onAddExpense?.()}
-          />
+          <div className="empty-spend-accelerator" style={{
+            margin: '24px auto',
+            maxWidth: '440px',
+            padding: '24px 20px',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '20px',
+            textAlign: 'center',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              margin: '0 auto 14px',
+              borderRadius: '50%',
+              background: 'var(--sun-soft, rgba(217, 119, 6, 0.12))',
+              color: 'var(--primary-accent)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '22px'
+            }}>
+              <IconEdit size={22} className="icon-sm" />
+            </div>
+            <h4 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+              No expenses yet
+            </h4>
+            <p style={{ margin: '0 0 18px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+              Add the first expense to start splitting costs across the group.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                className="primary-btn"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontSize: '13px' }}
+                onClick={() => onAddExpense?.()}
+              >
+                <span>Add expense</span>
+              </button>
+              {onOpenSmartQuickAdd && (
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', fontSize: '13px' }}
+                  onClick={() => onOpenSmartQuickAdd(false)}
+                >
+                  <IconMic size={14} className="icon-sm" />
+                  <span>Quick / Voice Add</span>
+                </button>
+              )}
+            </div>
+          </div>
         )
       ) : (
         <>

@@ -13,6 +13,7 @@ import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/app_typography.dart';
 import '../../../../shared/theme/compass.dart';
+import '../../../../shared/widgets/rolling_money.dart';
 import '../../../trip_details/application/trip_nav.dart';
 import '../../application/expenses_providers.dart';
 
@@ -46,6 +47,7 @@ class CompassSpendSummary extends ConsumerWidget {
         ref.watch(tripGroupsProvider(tripId)).value ?? const [],
       ).net;
       return _CalmHeroPair(
+        tripId: tripId,
         spent: money(totals.totalSpent),
         perPerson: money(totals.averageCost),
         net: net,
@@ -76,9 +78,12 @@ class CompassSpendSummary extends ConsumerWidget {
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  money(totals.totalSpent),
-                  style: AppTypography.moneyDisplay(fontSize: 38, color: t.textPrimary),
+                child: RollingMoneyText.fromFormatted(
+                  key: const Key('compass-spend-number'),
+                  formatted: money(totals.totalSpent),
+                  fontSize: 38,
+                  color: t.textPrimary,
+                  memoryKey: 'spend-total-$tripId',
                 ),
               ),
               const SizedBox(height: 10),
@@ -115,6 +120,7 @@ class CompassSpendSummary extends ConsumerWidget {
 /// Calm Passport Spend header: a night-green "group spend" card beside your signed position, with Settle up.
 class _CalmHeroPair extends StatelessWidget {
   const _CalmHeroPair({
+    this.tripId,
     required this.spent,
     required this.perPerson,
     required this.net,
@@ -122,6 +128,7 @@ class _CalmHeroPair extends StatelessWidget {
     required this.onSettle,
   });
 
+  final String? tripId;
   final String spent;
   final String perPerson;
   final double? net;
@@ -173,7 +180,12 @@ class _CalmHeroPair extends StatelessWidget {
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
-                        child: Text(spent, style: AppTypography.moneyDisplay(fontSize: 30, color: Colors.white)),
+                        child: RollingMoneyText.fromFormatted(
+                          formatted: spent,
+                          fontSize: 30,
+                          color: Colors.white,
+                          memoryKey: tripId != null ? 'calm-spent-$tripId' : null,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -222,10 +234,14 @@ class _CalmHeroPair extends StatelessWidget {
                           FittedBox(
                             fit: BoxFit.scaleDown,
                             alignment: Alignment.centerLeft,
-                            child: Text(
-                              net == null ? '–' : (settled ? netText! : '$sign$netText'),
-                              style: AppTypography.moneyDisplay(fontSize: 26, color: color),
-                            ),
+                            child: net == null
+                                ? Text('–', style: AppTypography.moneyDisplay(fontSize: 26, color: color))
+                                : RollingMoneyText.fromFormatted(
+                                    formatted: settled ? netText! : '$sign$netText',
+                                    fontSize: 26,
+                                    color: color,
+                                    memoryKey: tripId != null ? 'calm-net-$tripId' : null,
+                                  ),
                           ),
                           const SizedBox(height: 8),
                           Text(

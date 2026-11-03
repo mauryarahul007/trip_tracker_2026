@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.91.0',
+    date: '2026-11-03',
+    changes: [
+      'Speed Dial Bento Sheet: Tapping the action button presents a 4-action capsule (Quick Add, Detailed Expense, Scan Receipt, Settle Up) with haptics (Flutter).',
+      'Fintech Rolling Odometer Metrics: Rolling number animations on spend summaries, balance cards, and total spend stats (Flutter & Web).',
+      'Empty State Spend Accelerators: Interactive empty cards with quick starter action chips on zero-expense trips (Flutter & Web).',
+    ],
+  },
+  {
     version: '3.90.0',
     date: '2026-11-03',
     changes: [

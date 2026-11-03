@@ -5708,3 +5708,22 @@ This document logs all meaningful technical decisions, library choices, design p
     - Calibrated sticky day headers to only pin when a single day is expanded (`_expandedDays.length <= 1`), eliminating header pileup during "Expand all days".
 * **Trade-offs Accepted:**
   - On narrower viewports (<1100px) or mobile displays, `ExpenseReviewModal` continues to render as a modal popup to ensure comfortable reading without cramped side columns.
+
+### ADR 286: Phase C — Speed Dial Bento Capsule, Rolling Odometer Metrics & Empty State Accelerators (v3.91.0)
+* **Context of the Problem:**
+  - In the Flutter app, logging actions were bifurcated: tapping the Floating Action Button (+) presented a basic two-choice bottom sheet, leaving common mobile actions like scanning a physical receipt or recording a settlement hidden inside sub-tabs or auxiliary menus.
+  - Across both the Flutter app and Web UI, numerical statistics (total trip spend, balance settle-ups, average cost per day) transitioned abruptly with raw text replacements when expenses were updated, lacking tactile feedback.
+  - Furthermore, newly created trips with 0 expenses rendered static, passive empty state messages without immediate contextual acceleration shortcuts.
+* **Selected Decision & Resolution:**
+  - **Flutter Speed Dial Action Bento Capsule:**
+    - Upgraded _chooseAdd in flutter_app/lib/features/expenses/presentation/widgets/add_expense_fab.dart to a 4-action Bento capsule sheet (_SpeedActionCapsuleTile) offering Quick Add, Detailed Expense, Scan Receipt, and Settle Up.
+    - Integrated AppHaptics.selection() on capsule interactions and preserved the speedDialEnabled feature flag toggle.
+  - **Fintech Rolling Odometer Metrics:**
+    - Introduced RollingMoneyText.fromFormatted in flutter_app/lib/shared/widgets/rolling_money.dart to cleanly parse formatted currency strings and drive animated rolling reels for whole and decimal values without duplicate regex handling.
+    - Integrated rolling animations into CompassSpendSummary and _CalmHeroPair in Flutter.
+    - Integrated the useAnimatedNumber hook into src/components/ExpenseList.tsx on Web to animate totalSpent and averageCost across viewports.
+  - **Empty State Accelerators:**
+    - Replaced passive empty states in flutter_app/lib/features/expenses/presentation/expenses_tab.dart with _EmptySpendAccelerator featuring quick starter chips (Add expense, Scan receipt, Members).
+    - Added interactive accelerator chips in src/components/ExpenseList.tsx on Web (Add expense, Quick / Voice Add).
+* **Trade-offs Accepted:**
+  - When the speed dial feature flag is turned off by a user in settings, the FAB continues to navigate directly to the primary expense composer route without presenting the capsule sheet.

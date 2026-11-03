@@ -829,11 +829,13 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     );
 
     final Widget empty = active.isEmpty
-        ? EmptyState(
-            plain: true,
+        ? _EmptySpendAccelerator(
+            tripId: id,
             title: l10n.expNone,
             subtitle: l10n.expNoneBody,
-            action: AppButton(label: l10n.expAdd, onPressed: () => context.push('/trip/$id/expenses/new')),
+            onAddExpense: () => context.push('/trip/$id/expenses/new'),
+            onScanReceipt: () => context.push('/trip/$id/receipts'),
+            onViewMembers: () => context.go('/trip/$id/members'),
           )
         : EmptyState(
             plain: true,
@@ -1611,6 +1613,111 @@ class _SettlementFeedTile extends StatelessWidget {
                           color: tokens.textMuted,
                         ),
                       ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptySpendAccelerator extends StatelessWidget {
+  const _EmptySpendAccelerator({
+    required this.tripId,
+    required this.title,
+    required this.subtitle,
+    required this.onAddExpense,
+    required this.onScanReceipt,
+    required this.onViewMembers,
+  });
+
+  final String tripId;
+  final String title;
+  final String subtitle;
+  final VoidCallback onAddExpense;
+  final VoidCallback onScanReceipt;
+  final VoidCallback onViewMembers;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: tokens.bgSurface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: tokens.borderColor.withValues(alpha: 0.8)),
+              boxShadow: tokens.shadowSm,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: tokens.tones[BentoTone.butter].bg,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.receipt_long_rounded, size: 26, color: Color(0xFFD97706)),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.textPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 13.5, color: tokens.textSecondary, height: 1.35),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    AppButton(
+                      label: context.l10n.expAdd,
+                      icon: AppIcons.add,
+                      onPressed: onAddExpense,
+                    ),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        side: BorderSide(color: tokens.borderColor),
+                      ),
+                      onPressed: onScanReceipt,
+                      icon: const Icon(Icons.document_scanner_rounded, size: 18),
+                      label: const Text('Scan receipt'),
+                    ),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        side: BorderSide(color: tokens.borderColor),
+                      ),
+                      onPressed: onViewMembers,
+                      icon: const Icon(Icons.people_outline_rounded, size: 18),
+                      label: const Text('Members'),
+                    ),
                   ],
                 ),
               ],
