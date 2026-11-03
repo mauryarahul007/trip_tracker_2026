@@ -3,7 +3,6 @@ import '../../../shared/widgets/cached_photo.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -11,8 +10,6 @@ import 'package:intl/intl.dart';
 import '../../../app/auth_state.dart';
 import '../../../core/clock.dart';
 import '../../../core/format/money.dart';
-import '../../../core/storage/prefs.dart';
-import '../../../core/platform/external_launcher.dart';
 import '../../../core/platform/feedback.dart';
 import '../../../core/settings/app_settings.dart' show summaryCollapsePrefProvider;
 import '../../../core/platform/motion.dart';
@@ -29,7 +26,6 @@ import '../../../domain/logic/expense_form_logic.dart';
 import '../../../domain/logic/settle_up.dart';
 import '../../../domain/logic/settle_status.dart';
 import '../../../domain/logic/settlement.dart';
-import '../../../domain/logic/settlement_share_card.dart';
 import '../../../domain/logic/trip_utilities.dart';
 import '../../../domain/models/expense.dart';
 import '../../../domain/models/member.dart';
@@ -48,11 +44,9 @@ import '../../../shared/widgets/boarding_pass_card.dart';
 import '../../../shared/widgets/flight_progress_runway.dart';
 import '../../../shared/widgets/luggage_stub_tile.dart';
 import '../../../shared/widgets/status_stamp.dart';
-import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
-import '../application/money_providers.dart';
 import 'conflict_sheet.dart';
 import 'widgets/balance_bars.dart';
 import 'widgets/compass_balance_widgets.dart';
@@ -79,7 +73,7 @@ import '../../trips/presentation/widgets/trip_card.dart' show tripHeadline;
 import 'closeout_sheet.dart';
 import 'widgets/summary_extras.dart';
 import 'widgets/settlement_card.dart';
-import 'widgets/upi_payment_sheet.dart';
+import 'widgets/settle_sheet.dart';
 import '../../../shared/theme/app_colors.dart';
 
 /// "₹1,200.00" -> ("₹1,200", ".00") so the decimals can be dimmed (MoneyText).
@@ -135,10 +129,12 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
   Future<void> _settle(BuildContext context, Transfer t, {bool focusAmount = false}) async {
     final trip = ref.read(tripProvider(widget.tripId)).value;
     if (trip == null) return;
-    await AppSheet.show<void>(
+    await showSettleSheet(
       context: context,
-      builder: (_) =>
-          _SettleSheet(tripId: widget.tripId, transfer: t, currency: trip.baseCurrency, focusAmount: focusAmount),
+      tripId: widget.tripId,
+      transfer: t,
+      currency: trip.baseCurrency,
+      focusAmount: focusAmount,
     );
   }
 
@@ -2282,414 +2278,6 @@ class _FlightArcPainter extends CustomPainter {
   bool shouldRepaint(_FlightArcPainter old) => false;
 }
 
-class _SettleSheet extends ConsumerStatefulWidget {
-  const _SettleSheet({required this.tripId, required this.transfer, required this.currency, this.focusAmount = false});
-
-  /// Open with the amount selected for typing (the Custom amount action).
-  final bool focusAmount;
-  final String tripId;
-  final Transfer transfer;
-  final String currency;
-
-  @override
-  ConsumerState<_SettleSheet> createState() => _SettleSheetState();
-}
-
-class _SettleSheetState extends ConsumerState<_SettleSheet> {
-  late final _amount = TextEditingController(text: widget.transfer.amount.toStringAsFixed(2))
-    ..selection = widget.focusAmount
-        ? TextSelection(baseOffset: 0, extentOffset: widget.transfer.amount.toStringAsFixed(2).length)
-        : const TextSelection.collapsed(offset: -1);
-  final _note = TextEditingController();
-  late final _upi = TextEditingController(
-    text: ref.read(sharedPreferencesProvider).getString('member_upi:${widget.transfer.toMemberId}') ?? '',
-  );
-  late String _date = todayDateString(ref.read(nowProvider)());
-  String? _error;
-  bool _busy = false;
-
-  @override
-  void dispose() {
-    _amount.dispose();
-    _note.dispose();
-    _upi.dispose();
-    super.dispose();
-  }
-
-  double? get _value => jsParseFloat(_amount.text);
-
-  Future<void> _submit() async {
-    final l10n = context.l10n;
-    final dateNote = ref.read(flagProvider(('enableSettlementDateNote', widget.tripId))).value ?? false;
-    final plan = planSettlement(
-      widget.transfer,
-      amount: _value ?? 0,
-      currency: widget.currency,
-      date: dateNote ? _date : todayDateString(ref.read(nowProvider)()),
-      note: dateNote ? _note.text : '',
-      recorderMemberId: ref.read(myMemberIdProvider(widget.tripId)),
-      groups: ref.read(tripGroupsProvider(widget.tripId)).value ?? const [],
-    );
-    if (plan == null) {
-      setState(() => _error = l10n.ledAmountInvalid);
-      return;
-    }
-    setState(() => _busy = true);
-    final nav = Navigator.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final repo = ref.read(expenseRepositoryProvider);
-    final userId = ref.read(authStateProvider).userId ?? '';
-    final undoOn = ref.read(flagProvider(('enableUndoSettlement', widget.tripId))).value ?? false;
-    final r = await repo.submit(plan.submission, tripId: widget.tripId, userId: userId);
-    if (!mounted) return;
-    if (r.isOk) {
-      AppFeedback.success();
-      nav.pop();
-      showSettleSnack(
-        messenger,
-        l10n.ledSettledToast,
-        undoOn ? () => unawaited(repo.delete(r.expenseId!, userId: userId)) : null,
-      );
-    } else {
-      setState(() {
-        _busy = false;
-        _error = r.error;
-      });
-    }
-  }
-
-  Future<void> _pickDate() async {
-    final now = ref.read(nowProvider)();
-    final d = await showDatePicker(
-      context: context,
-      initialDate: DateTime.tryParse(_date) ?? now,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(now.year + 2),
-    );
-    if (d != null) setState(() => _date = todayDateString(d));
-  }
-
-  Future<void> _share() async {
-    final trip = ref.read(tripProvider(widget.tripId)).value;
-    final amount = _value ?? widget.transfer.amount;
-    final symbol = getCurrencySymbol(widget.currency);
-    final layout = settlementShareCardLayout(
-      SettlementShareCardInput(
-        tripName: trip?.name ?? '',
-        fromLabel: widget.transfer.fromLabel,
-        toLabel: widget.transfer.toLabel,
-        amount: amount,
-        currencySymbol: symbol,
-        upiId: _upi.text.trim().isEmpty ? null : _upi.text.trim(),
-      ),
-    );
-    final bytes = await renderSettlementPng(layout);
-    if (!mounted) return;
-    await ref.read(shareServiceProvider).sharePng(bytes, fileName: layout.fileName, text: layout.caption);
-  }
-
-  Future<void> _payUpi() async {
-    final l10n = context.l10n;
-    final id = _upi.text.trim();
-    if (!isValidUpiId(id)) {
-      setState(() => _error = l10n.upiInvalid);
-      return;
-    }
-    await saveUpiId(ref, widget.transfer.toMemberId, id);
-    final amount = _value ?? widget.transfer.amount;
-    final uri = Uri.parse(
-      generateUpiUri({
-        'payeeUpiId': id,
-        'payeeName': widget.transfer.toLabel,
-        'amount': amount,
-        'note': 'Trip Settlement',
-      }),
-    );
-    final opened = await ref.read(externalLauncherProvider)(uri);
-    if (!mounted) return;
-    if (!opened) {
-      await Clipboard.setData(ClipboardData(text: id));
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.upiUnavailable)));
-    }
-  }
-
-  void _openUpiSheet() {
-    final trip = ref.read(tripProvider(widget.tripId)).value;
-    final amount = _value ?? widget.transfer.amount;
-    UpiPaymentSheet.show(
-      context,
-      fromName: widget.transfer.fromLabel,
-      toName: widget.transfer.toLabel,
-      toMemberId: widget.transfer.toMemberId,
-      initialUpiId: _upi.text.trim(),
-      amount: amount,
-      currency: widget.currency,
-      tripName: trip?.name,
-      onConfirmSettled: () async {
-        await _submit();
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final t = widget.transfer;
-    final v = _value;
-    final partial = v != null && v > 0 && v < t.amount - 0.01;
-    final dateNote = ref.watch(flagProvider(('enableSettlementDateNote', widget.tripId))).value ?? false;
-    ref.watch(flagProvider(('enableUndoSettlement', widget.tripId))); // loaded before Confirm reads it
-    final upiOn = ref.watch(flagProvider(('enableUpiPayments', widget.tripId))).value ?? false;
-    final shareOn = ref.watch(flagProvider(('enableWhatsAppSettlementShare', widget.tripId))).value ?? false;
-    final roundingOn = ref.watch(flagProvider(('enableSettleRounding', widget.tripId))).value ?? true;
-    final round = roundDownToClean(t.amount);
-    final calm = ref.watch(compassFlagProvider((compassTripPagesFlag, widget.tripId)));
-    final tk = context.tokens;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (calm) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _SettlePerson(name: t.fromLabel, caption: 'Pays'),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Icon(Icons.arrow_forward_rounded, color: tk.textMuted),
-                ),
-                _SettlePerson(name: t.toLabel, caption: 'Receives'),
-              ],
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              key: const Key('settle-amount'),
-              controller: _amount,
-              autofocus: widget.focusAmount,
-              textAlign: TextAlign.center,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: AppTypography.moneyDisplay(
-                fontSize: 40,
-                color: tk.textPrimary,
-              ).copyWith(fontWeight: FontWeight.w800),
-              decoration: InputDecoration(
-                prefixText: '${getCurrencySymbol(widget.currency)} ',
-                border: InputBorder.none,
-                helperText: partial
-                    ? l10n.ledRemaining(formatMoney(context, t.amount - v, widget.currency))
-                    : 'Edit to pay part of it',
-                helperStyle: TextStyle(color: tk.textSecondary),
-              ),
-              onChanged: (_) => setState(() => _error = null),
-            ),
-          ] else ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AppAvatar(name: t.fromLabel, size: 44),
-                const SizedBox(width: 12),
-                Icon(Icons.arrow_forward_rounded, color: context.tokens.textMuted),
-                const SizedBox(width: 12),
-                AppAvatar(name: t.toLabel, size: 44),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              partial ? l10n.ledSettlePartialTitle : l10n.ledSettleTitle,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 4),
-            Text(l10n.ledTransfer(t.fromLabel, t.toLabel), textAlign: TextAlign.center),
-            Text(partial ? l10n.ledSettlePartialBody : l10n.ledSettleBody, key: const Key('settle-body')),
-            const SizedBox(height: 12),
-            AppTextField(
-              key: const Key('settle-amount'),
-              controller: _amount,
-              autofocus: widget.focusAmount,
-              label: l10n.ledAmount,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              onChanged: (_) => setState(() => _error = null),
-            ),
-          ],
-          if (roundingOn && round != null && !(v != null && (v - round).abs() < 0.005))
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                key: const Key('settle-round'),
-                onPressed: () => setState(() {
-                  _amount.text = round == round.roundToDouble() ? round.toInt().toString() : round.toString();
-                  _error = null;
-                }),
-                child: Text(l10n.settleRound(formatMoney(context, round, widget.currency))),
-              ),
-            ),
-          if (partial && !calm)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                l10n.ledRemaining(formatMoney(context, t.amount - v, widget.currency)),
-                key: const Key('settle-remaining'),
-              ),
-            ),
-          if (calm) ...[
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  _error!,
-                  key: const Key('settle-error'),
-                  style: TextStyle(color: context.tokens.colorDanger),
-                ),
-              ),
-            const SizedBox(height: 12),
-            AppButton(
-              key: const Key('settle-confirm'),
-              label: partial ? l10n.ledMarkPartial : l10n.ledMarkSettled,
-              isLoading: _busy,
-              onPressed: _busy ? null : _submit,
-            ),
-            if (dateNote || upiOn || shareOn)
-              Theme(
-                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  key: const Key('settle-more'),
-                  tilePadding: EdgeInsets.zero,
-                  title: const Text('More options'),
-                  children: [
-                    if (dateNote) ...[
-                      const SizedBox(height: 8),
-                      OutlinedButton(
-                        key: const Key('settle-date'),
-                        onPressed: _pickDate,
-                        child: Text('${l10n.ledDate}: $_date'),
-                      ),
-                      const SizedBox(height: 8),
-                      AppTextField(key: const Key('settle-note'), controller: _note, label: l10n.ledNote),
-                    ],
-                    if (upiOn) ...[
-                      const SizedBox(height: 8),
-                      AppTextField(
-                        key: const Key('settle-upi'),
-                        controller: _upi,
-                        label: l10n.upiHint,
-                        onChanged: (_) => setState(() => _error = null),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: AppButton(
-                              key: const Key('settle-upi-pay'),
-                              label: l10n.upiPay,
-                              variant: AppButtonVariant.secondary,
-                              onPressed: _payUpi,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: AppButton(
-                              key: const Key('settle-upi-apps'),
-                              label: 'Apps & QR',
-                              icon: Icons.qr_code_2_rounded,
-                              variant: AppButtonVariant.secondary,
-                              onPressed: _openUpiSheet,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    if (shareOn) ...[
-                      const SizedBox(height: 8),
-                      AppButton(
-                        key: const Key('settle-share'),
-                        label: l10n.shareCard,
-                        variant: AppButtonVariant.secondary,
-                        onPressed: _share,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-          ] else ...[
-            if (dateNote) ...[
-              const SizedBox(height: 8),
-              OutlinedButton(
-                key: const Key('settle-date'),
-                onPressed: _pickDate,
-                child: Text('${l10n.ledDate}: $_date'),
-              ),
-              const SizedBox(height: 8),
-              AppTextField(key: const Key('settle-note'), controller: _note, label: l10n.ledNote),
-            ],
-            if (upiOn) ...[
-              const SizedBox(height: 8),
-              AppTextField(
-                key: const Key('settle-upi'),
-                controller: _upi,
-                label: l10n.upiHint,
-                onChanged: (_) => setState(() => _error = null),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppButton(
-                      key: const Key('settle-upi-pay'),
-                      label: l10n.upiPay,
-                      variant: AppButtonVariant.secondary,
-                      onPressed: _payUpi,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: AppButton(
-                      key: const Key('settle-upi-apps'),
-                      label: 'Apps & QR',
-                      icon: Icons.qr_code_2_rounded,
-                      variant: AppButtonVariant.secondary,
-                      onPressed: _openUpiSheet,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            if (shareOn) ...[
-              const SizedBox(height: 8),
-              AppButton(
-                key: const Key('settle-share'),
-                label: l10n.shareCard,
-                variant: AppButtonVariant.secondary,
-                onPressed: _share,
-              ),
-            ],
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  _error!,
-                  key: const Key('settle-error'),
-                  style: TextStyle(color: context.tokens.colorDanger),
-                ),
-              ),
-            const SizedBox(height: 12),
-            AppButton(
-              key: const Key('settle-confirm'),
-              label: partial ? l10n.ledMarkPartial : l10n.ledMarkSettled,
-              isLoading: _busy,
-              onPressed: _busy ? null : _submit,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 /// The sentence for one tip, in the app language.
 String suggestionText(AppLocalizations l10n, BuildContext context, Suggestion s, String cur) {
   String money(double v) => formatMoney(context, v, cur);
@@ -2785,52 +2373,3 @@ class _DayChartState extends State<_DayChart> {
   }
 }
 
-/// The "payment recorded" toast; with [onUndo] it carries an UNDO that moves the payment to the recycle bin.
-void showSettleSnack(ScaffoldMessengerState messenger, String message, VoidCallback? onUndo) {
-  messenger.hideCurrentSnackBar();
-  messenger.showSnackBar(
-    SnackBar(
-      content: Text(message),
-      persist: false,
-      duration: const Duration(seconds: 6),
-      action: onUndo == null
-          ? null
-          : SnackBarAction(
-              label: 'UNDO',
-              onPressed: () {
-                AppFeedback.tap();
-                onUndo();
-              },
-            ),
-    ),
-  );
-}
-
-/// A person in the Compass settle sheet header: avatar, first name and whether they pay or receive.
-class _SettlePerson extends StatelessWidget {
-  const _SettlePerson({required this.name, required this.caption});
-
-  final String name;
-  final String caption;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.tokens;
-    return SizedBox(
-      width: 110,
-      child: Column(
-        children: [
-          AppAvatar(name: name, size: 52),
-          const SizedBox(height: 6),
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontWeight: FontWeight.w700, color: t.textPrimary),
-          ),
-          Text(caption, style: TextStyle(fontSize: 12, color: t.textSecondary)),
-        ],
-      ),
-    );
-  }
-}

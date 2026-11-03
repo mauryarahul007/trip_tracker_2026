@@ -5727,3 +5727,20 @@ This document logs all meaningful technical decisions, library choices, design p
     - Added interactive accelerator chips in src/components/ExpenseList.tsx on Web (Add expense, Quick / Voice Add).
 * **Trade-offs Accepted:**
   - When the speed dial feature flag is turned off by a user in settings, the FAB continues to navigate directly to the primary expense composer route without presenting the capsule sheet.
+
+### ADR 287: Flutter App — FAB Settlement Direct Workflow & Modular SettleSheet (v3.91.1)
+* **Context of the Problem:**
+  - In the Flutter mobile app (`add_expense_fab.dart`), selecting "Record settlement" from the FAB speed-dial capsule bottom sheet previously attempted to navigate via `await context.push('/trip/$tripId/ledger');`.
+  - In GoRouter, `/trip/:id/ledger` is a `StatefulShellBranch` inside `StatefulShellRoute`. Calling `context.push()` on a branch route throws an internal `GoError` (`context.push() cannot be used to navigate to a route that belongs to a StatefulShellBranch`) and silently aborted navigation.
+  - Furthermore, even if navigated via `context.go('/trip/$tripId/ledger')`, the user was dumped onto the Balances tab and had to manually search through group transfers to record a payment.
+* **Selected Decision & Resolution:**
+  - Extracted `_SettleSheet` from `ledger_tab.dart` into a reusable, modular component: `flutter_app/lib/features/expenses/presentation/widgets/settle_sheet.dart`.
+  - Exported `showSettleSheet`, `showSettleSnack`, and `showSettlementChooserOrSheet`.
+  - In `add_expense_fab.dart`, routed `'settle'` to `showSettlementChooserOrSheet(context: context, ref: ref, tripId: tripId)`:
+    - If 0 open balances/debts exist: displays a snackbar confirming that all balances are settled up.
+    - If exactly 1 balance/debt exists: immediately opens `SettleSheet` pre-filled with the exact balance, payer, payee, date, note, and UPI pay integration.
+    - If multiple debts exist: presents an interactive bottom sheet (`_OpenDebtsList`) showing all open debts with one-tap entry to record that specific settlement, plus a fallback button to view full Balances (`context.go('/trip/$tripId/ledger')`).
+  - Refactored `ledger_tab.dart` to reuse `showSettleSheet`, eliminating duplicate UI code while preserving full functionality.
+* **Trade-offs Accepted:**
+  - Kept strictly scoped to Flutter mobile app as requested before porting to Web.
+

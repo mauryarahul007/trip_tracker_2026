@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.91.1',
+    date: '2026-11-04',
+    changes: [
+      'Settlement FAB direct workflow: Tapping "Record settlement" in the Floating Action Button menu directly launches the payment composer instead of navigating to shell branches (Flutter).',
+      'Smart debt picker: Automatically opens the settlement sheet if one balance exists, or displays open balances if multiple debts exist (Flutter).',
+      'Modular settlement sheet: Extracted and consolidated settlement sheet logic, eliminating redundant code (Flutter).',
+    ],
+  },
+
+  {
     version: '3.91.0',
     date: '2026-11-03',
     changes: [

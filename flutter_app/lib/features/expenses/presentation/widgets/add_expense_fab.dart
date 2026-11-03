@@ -11,6 +11,7 @@ import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_icons.dart';
 import '../../../../shared/widgets/app_sheet.dart';
 import '../quick_add_sheet.dart';
+import 'settle_sheet.dart';
 
 /// The "Add expense" button shown on both the Summary and the Expenses tab. No hero tag: both tabs stay mounted
 /// in the trip pager at once, and two heroes with one tag would clash.
@@ -51,10 +52,10 @@ Future<void> startAddExpense(BuildContext context, WidgetRef ref, String tripId,
     await context.push('/trip/$tripId/expenses/new');
     return;
   }
-  await _chooseAdd(context, tripId);
+  await _chooseAdd(context, ref, tripId);
 }
 
-Future<void> _chooseAdd(BuildContext context, String tripId) async {
+Future<void> _chooseAdd(BuildContext context, WidgetRef ref, String tripId) async {
   final l10n = context.l10n;
   final pick = await AppSheet.show<String>(
     context: context,
@@ -113,7 +114,7 @@ Future<void> _chooseAdd(BuildContext context, String tripId) async {
   } else if (pick == 'scan') {
     await context.push('/trip/$tripId/receipts');
   } else if (pick == 'settle') {
-    await context.push('/trip/$tripId/ledger');
+    await showSettlementChooserOrSheet(context: context, ref: ref, tripId: tripId);
   } else {
     await AppSheet.show<void>(
       context: context,
