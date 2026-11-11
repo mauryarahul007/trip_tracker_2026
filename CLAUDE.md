@@ -109,3 +109,17 @@ flutter run --flavor dev --dart-define-from-file=env/dev.json
 flutter build apk --flavor dev --debug --dart-define-from-file=env/dev.json
 ```
 
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues (`mauryarahul007/trip_tracker_2026`) via `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-label vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: root `GLOSSARY.md` + `docs/adr/`. See `docs/agents/domain.md`.
