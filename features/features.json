@@ -3205,9 +3205,9 @@
       "platform": "web"
     },
     "createdAt": "2026-11-11T12:44:09.311Z",
-    "updatedAt": "2026-11-11T12:44:09.311Z",
-    "shippedAt": "2026-11-11T12:44:09.311Z",
+    "updatedAt": "2026-11-11T13:20:36.282Z",
+    "shippedAt": "2026-11-11T13:20:36.279Z",
     "shippedBy": "agent",
-    "shippedNote": "Shipped"
+    "shippedNote": "Shipped in 86a2af4 (v3.91.2): Core UX parity web+Flutter"
   }
 ]
