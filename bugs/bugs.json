@@ -9814,5 +9814,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-11-02T15:37:45.835Z",
     "resolutionNote": "Finishing or skipping the onboarding carousel now marks the first-run tour done (onboarding_state.dart tourDoneKey), so a new user sees one intro. Commit b0b1816 (v3.87.0)."
+  },
+  {
+    "id": "BUG-348",
+    "title": "Agent skills setup missing: no issue tracker, triage label or domain-doc config for engineering skills",
+    "description": "Agent skills setup missing: no issue tracker, triage label or domain-doc config for engineering skills",
+    "severity": "low",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-11-11T07:59:11.961Z",
+    "updatedAt": "2026-11-11T07:59:16.679Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-11-11T07:59:16.678Z",
+    "resolutionNote": "Added docs/agents/{issue-tracker,triage-labels,domain}.md + Agent skills block in CLAUDE.md; created 4 missing GitHub triage labels. Commit 335b921."
   }
 ]
