@@ -109,3 +109,22 @@ After saving, scroll down to **Balances & Settlements**. The member who paid sho
 | "Sum of percentages must equal 100%" | In Percentage mode, ensure percentages add up to 100 |
 | A member doesn't appear in the split list | They may be archived — check Members & Groups tab |
 | "Could not process that image" | The receipt photo failed to load/decode — try a different file |
+
+---
+
+## Core money-loop UX (web + Flutter)
+
+Traveler beat: **Add → confirm/Undo → Balances → Settle**. Keep this loop light; Pro/Labs stay off unless Superadmin arms them.
+
+| Beat | What the traveler feels | Main flags |
+|------|-------------------------|------------|
+| Add | Short form first; equal split shows each person's share on the member row | `enableCompactExpenseForm`, live equal-share UI (always on the form) |
+| Confirm / Undo | After a **new** expense: “Added …” with Undo (recycle bin); optional row glow | `enableSaveConfirmation` (+ `enableMotionPolish` for glow) |
+| Balances | Outstanding and who-owes-whom first; charts collapsed | `enableCompactSummary` |
+| Settle | Settle Up is primary; UPI / share card / Remind under More | `enableCompactSummary`, `enableUpiPayments`, `enableWhatsAppSettlementShare` |
+| Invite | View-only link + join code from Share | `enableTripShareLink` |
+| Dense ledger | Tighter expense rows | `enableCompactLedgerView` (Trip, default ON) |
+| Empty Spend (Flutter) | Illustrated coach card with Add | `enableCoachEmptyStates` |
+| Install nudge (web) | After first expense, dismissible Install banner (armed deliberately) | `enablePwaInstallNudge` (Core, default OFF) |
+
+**Parity notes:** FX “Edit rate” on the web add-form ticker opens the same rates modal as Settings (`enableCurrencyFx`). Flutter settle sheet folds secondary actions when `enableCompactSummary` is ON (same idea as the web transfer-row More menu).

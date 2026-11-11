@@ -88,6 +88,7 @@ type Props = {
   onCancel: () => void;
   initialTemplate?: ExpenseFormTemplate;
   currentMemberId?: string | null;
+  onOpenFxRates?: () => void;
 };
 
 export function ExpenseForm({
@@ -100,6 +101,7 @@ export function ExpenseForm({
   onCancel,
   initialTemplate,
   currentMemberId = null,
+  onOpenFxRates,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
@@ -1734,31 +1736,53 @@ export function ExpenseForm({
                 <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>{baseCurrency}</span>
               </div>
             </div>
-            <button
-              type="button"
-              className="btn-pill"
-              style={{
-                background: 'var(--primary-accent)',
-                color: '#fff',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontWeight: 700,
-                fontSize: '11px',
-                letterSpacing: '0.02em',
-                boxShadow: '0 2px 8px rgba(47, 111, 237, 0.25)',
-                whiteSpace: 'nowrap'
-              }}
-              onClick={() => {
-                triggerHaptic('medium');
-                setAmount(String(currencyConversion.convertedAmount));
-                setSelectedCurrency(baseCurrency);
-              }}
-              title={`Switch expense directly to ${baseCurrency}`}
-            >
-              Apply {baseCurrency}
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'stretch' }}>
+              <button
+                type="button"
+                className="btn-pill"
+                style={{
+                  background: 'var(--primary-accent)',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '11px',
+                  letterSpacing: '0.02em',
+                  boxShadow: '0 2px 8px rgba(47, 111, 237, 0.25)',
+                  whiteSpace: 'nowrap'
+                }}
+                onClick={() => {
+                  triggerHaptic('medium');
+                  setAmount(String(currencyConversion.convertedAmount));
+                  setSelectedCurrency(baseCurrency);
+                }}
+                title={`Switch expense directly to ${baseCurrency}`}
+              >
+                Apply {baseCurrency}
+              </button>
+              {onOpenFxRates && (
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  style={{
+                    padding: '4px 8px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: 'var(--primary-accent)',
+                    whiteSpace: 'nowrap',
+                  }}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    onOpenFxRates();
+                  }}
+                  title="Edit exchange rate for this trip"
+                >
+                  Edit rate
+                </button>
+              )}
+            </div>
           </div>
         )}
 

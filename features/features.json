@@ -3193,5 +3193,21 @@
     "shippedAt": "2026-11-02T15:37:48.021Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped in commit b0b1816 (v3.87.0); see decisions.md and docs/FEATURE_TEST_STEPS.md."
+  },
+  {
+    "id": "FEAT-201",
+    "title": "Core UX parity + light differentiators (web/Flutter money loop)",
+    "description": "Core UX parity + light differentiators (web/Flutter money loop)",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-11-11T12:44:09.311Z",
+    "updatedAt": "2026-11-11T12:44:09.311Z",
+    "shippedAt": "2026-11-11T12:44:09.311Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped"
   }
 ]

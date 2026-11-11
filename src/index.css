@@ -15991,6 +15991,21 @@ textarea.input-field {
   border-bottom-color: transparent !important;
 }
 
+/* Brief highlight after add (enableSaveConfirmation + enableMotionPolish). */
+@keyframes expenseJustSaved {
+  from { background-color: rgba(47, 111, 237, 0.18); }
+  to { background-color: transparent; }
+}
+:root[data-motion] .expense-item-cascade.is-just-saved {
+  animation: expenseJustSaved 1.8s var(--ease-out, ease) both;
+  border-radius: 10px;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-motion] .expense-item-cascade.is-just-saved {
+    animation: none;
+  }
+}
+
 /* Pull-to-refresh plane (enableMotionPolish). The arrow is kept for flag OFF. */
 .ptr-plane { display: none; }
 :root[data-motion] .ptr-pill .ptr-icon { display: none; }

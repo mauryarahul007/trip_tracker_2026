@@ -6,14 +6,17 @@ import { useEffect, useState } from 'react';
 // stays in localStorage rather than the zustand store. Dispatches a custom
 // event (the `storage` event never fires in the tab that made the change)
 // so every mounted hook instance updates the moment the toggle flips.
-export function createLocalBoolPref(storageKey: string) {
+export function createLocalBoolPref(storageKey: string, opts?: { defaultValue?: boolean }) {
   const changeEvent = `${storageKey}-change`;
+  const defaultValue = opts?.defaultValue ?? false;
 
   const get = (): boolean => {
     try {
-      return localStorage.getItem(storageKey) === '1';
+      const raw = localStorage.getItem(storageKey);
+      if (raw === null) return defaultValue;
+      return raw === '1';
     } catch {
-      return false;
+      return defaultValue;
     }
   };
 

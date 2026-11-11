@@ -181,10 +181,12 @@ function TransferRow({
   const settleAmount = parseFloat(customValue) || t.amount;
   const [showAudit, setShowAudit] = useState(false);
   const showExplainNumber = useTripStore((s) => s.isFeatureEnabled('enableExplainThisNumber', { tripId }));
+  const compactSummaryOn = useTripStore((s) => s.isFeatureEnabled('enableCompactSummary', { tripId }));
   const isDataSaverFlagEnabled = useTripStore((s) => s.isFeatureEnabled('enableDataSaverMode', { tripId }));
   const dataSaverPref = useDataSaverEnabled();
   const dataSaverActive = isDataSaverFlagEnabled && dataSaverPref;
   const [reminderStatus, setReminderStatus] = useState<'idle' | 'sending' | 'sent' | 'rateLimited'>('idle');
+  const [moreOpen, setMoreOpen] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
   const [isTorn, setIsTorn] = useState(false);
   const fireCelebration = () => {
@@ -610,7 +612,7 @@ function TransferRow({
         </div>
       )}
 
-      {/* Auxiliary Action Pill Bar */}
+      {/* Auxiliary Action Pill Bar — compact summary folds UPI / Card / Remind under More */}
       <div
         className="traveler-settlement-actions-bar"
         style={{
@@ -624,7 +626,7 @@ function TransferRow({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          {isUpiEnabled && canSettle && (
+          {!compactSummaryOn && isUpiEnabled && canSettle && (
             <button
               type="button"
               className="traveler-settlement-action-chip upi"
@@ -671,10 +673,34 @@ function TransferRow({
               <span>Custom Amt</span>
             </button>
           )}
+
+          {compactSummaryOn && (
+            <button
+              type="button"
+              className="traveler-settlement-action-chip"
+              aria-expanded={moreOpen}
+              style={{
+                padding: '5px 10px',
+                borderRadius: '9999px',
+                fontSize: '11.5px',
+                fontWeight: 600,
+                background: moreOpen ? 'rgba(47, 111, 237, 0.08)' : 'transparent',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-secondary)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+              }}
+              onClick={() => setMoreOpen((v) => !v)}
+            >
+              More
+            </button>
+          )}
         </div>
 
         <div className="u-row-6">
-          {members[t.fromMemberId]?.linkedUserId && (
+          {(!compactSummaryOn || moreOpen) && members[t.fromMemberId]?.linkedUserId && (
             <button
               type="button"
               className="traveler-settlement-action-chip"
@@ -699,7 +725,7 @@ function TransferRow({
             </button>
           )}
 
-          {isShareCardEnabled && (
+          {(!compactSummaryOn || moreOpen) && isShareCardEnabled && (
             <button
               type="button"
               className="traveler-settlement-action-chip"
@@ -721,6 +747,30 @@ function TransferRow({
             >
               <IconShare size={12} />
               <span>Card</span>
+            </button>
+          )}
+
+          {compactSummaryOn && moreOpen && isUpiEnabled && canSettle && (
+            <button
+              type="button"
+              className="traveler-settlement-action-chip upi"
+              style={{
+                padding: '5px 10px',
+                borderRadius: '9999px',
+                fontSize: '11.5px',
+                fontWeight: 700,
+                background: 'rgba(63, 203, 189, 0.1)',
+                color: 'var(--primary-accent)',
+                border: '1px solid rgba(63, 203, 189, 0.3)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+              }}
+              onClick={() => onOpenUpi?.(t)}
+              title="1-Tap UPI Settlement (GPay, PhonePe, Paytm, or Dynamic QR)"
+            >
+              ⚡ UPI Pay
             </button>
           )}
         </div>

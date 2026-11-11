@@ -260,8 +260,10 @@ class SettleSheetState extends ConsumerState<SettleSheet> {
     final upiOn = ref.watch(flagProvider(('enableUpiPayments', widget.tripId))).value ?? false;
     final shareOn = ref.watch(flagProvider(('enableWhatsAppSettlementShare', widget.tripId))).value ?? false;
     final roundingOn = ref.watch(flagProvider(('enableSettleRounding', widget.tripId))).value ?? true;
+    final compactSummaryOn = ref.watch(flagProvider(('enableCompactSummary', widget.tripId))).value ?? true;
     final round = roundDownToClean(t.amount);
     final calm = ref.watch(compassFlagProvider((compassTripPagesFlag, widget.tripId)));
+    final foldSecondary = calm || compactSummaryOn;
     final tk = context.tokens;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -353,7 +355,7 @@ class SettleSheetState extends ConsumerState<SettleSheet> {
                 key: const Key('settle-remaining'),
               ),
             ),
-          if (calm) ...[
+          if (foldSecondary) ...[
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),

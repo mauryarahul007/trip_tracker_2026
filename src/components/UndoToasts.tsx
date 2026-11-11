@@ -5,6 +5,8 @@ import { IconTrash, IconEdit, IconArchive } from './Icons';
 type Props = {
   pendingDeleteExpense: Expense | null;
   onUndoDeleteExpense: () => void;
+  pendingAddedExpense?: Expense | null;
+  onUndoAddedExpense?: () => void;
   pendingDeleteTrip: Trip | null;
   onUndoDeleteTrip: () => void;
   pendingArchiveTrip?: Trip | null;
@@ -47,6 +49,8 @@ function PostmarkToast({
 export function UndoToasts({
   pendingDeleteExpense,
   onUndoDeleteExpense,
+  pendingAddedExpense,
+  onUndoAddedExpense,
   pendingDeleteTrip,
   onUndoDeleteTrip,
   pendingArchiveTrip,
@@ -59,7 +63,7 @@ export function UndoToasts({
   onUndoExtended,
   durationMs,
 }: Props) {
-  if (!pendingDeleteExpense && !pendingDeleteTrip && !pendingArchiveTrip && !pendingDeleteGroup && !pendingEditExpense && !pendingExtended) return null;
+  if (!pendingDeleteExpense && !pendingAddedExpense && !pendingDeleteTrip && !pendingArchiveTrip && !pendingDeleteGroup && !pendingEditExpense && !pendingExtended) return null;
 
   return (
     <div
@@ -86,6 +90,16 @@ export function UndoToasts({
           message={<><strong>'{truncateForToast(pendingDeleteExpense.title)}'</strong> deleted</>}
           onUndo={onUndoDeleteExpense}
           durationMs={durationMs}
+        />
+      )}
+      {pendingAddedExpense && onUndoAddedExpense && (
+        <PostmarkToast
+          key={`added-${pendingAddedExpense.id}`}
+          message={<>Added <strong>'{truncateForToast(pendingAddedExpense.title)}'</strong></>}
+          onUndo={onUndoAddedExpense}
+          durationMs={durationMs}
+          icon={IconEdit}
+          undoLabel="Undo add"
         />
       )}
       {pendingDeleteTrip && (

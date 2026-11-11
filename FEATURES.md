@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **200** |
+| **Total Tracked** | **201** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **197** |
+| **✅ Shipped** | **198** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -259,6 +259,7 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-198** | UI upgrades batch (notch bubble label, Material You, undo on Activity swipe, tappable donut, empty-state clear, web Total Spent count-up and arrow-key rows) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b0b1816 (v3.87.0); see decisions.md and docs/FEATURE_TEST_STEPS.md. |
 | **FEAT-199** | Select several expenses (Flutter Spend tab) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b0b1816 (v3.87.0); see decisions.md and docs/FEATURE_TEST_STEPS.md. |
 | **FEAT-200** | Desktop side rail (web) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b0b1816 (v3.87.0); see decisions.md and docs/FEATURE_TEST_STEPS.md. |
+| **FEAT-201** | Core UX parity + light differentiators (web/Flutter money loop) | `ui-ux` | `agent` | `agent` | Shipped |
 
 ---
 

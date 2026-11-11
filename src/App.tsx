@@ -765,6 +765,7 @@ export default function App() {
 
   // PWA Install Prompt State
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showPwaNudge, setShowPwaNudge] = useState(false);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -783,7 +784,29 @@ export default function App() {
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
       setDeferredPrompt(null);
+      setShowPwaNudge(false);
+      try { localStorage.setItem('tt-pwa-nudge-dismissed', '1'); } catch { /* storage blocked */ }
     }
+  };
+
+  const dismissPwaNudge = () => {
+    setShowPwaNudge(false);
+    try { localStorage.setItem('tt-pwa-nudge-dismissed', '1'); } catch { /* storage blocked */ }
+  };
+
+  const maybeShowPwaNudge = (tripId: string) => {
+    const nudgeOn = isFeatureEnabled('enablePwaInstallNudge', {
+      tripId,
+      userId: userId || undefined,
+    });
+    if (!nudgeOn || !deferredPrompt) return;
+    try {
+      if (localStorage.getItem('tt-pwa-nudge-dismissed')) return;
+    } catch { /* storage blocked */ }
+    const nonSettlementCount = useTripStore
+      .getState()
+      .expenses.filter((e) => e.tripId === tripId && !e.isSettlement).length;
+    if (nonSettlementCount === 1) setShowPwaNudge(true);
   };
 
 
@@ -889,7 +912,11 @@ export default function App() {
 
   // Undo delete toast state
   const [pendingDeleteExpense, setPendingDeleteExpense] = useState<Expense | null>(null);
+  const [pendingAddedExpense, setPendingAddedExpense] = useState<Expense | null>(null);
+  const [justSavedExpenseId, setJustSavedExpenseId] = useState<string | null>(null);
   const [undoTimer, setUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [addedUndoTimer, setAddedUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [justSavedTimer, setJustSavedTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [pendingDeleteTrip, setPendingDeleteTrip] = useState<Trip | null>(null);
   const [tripUndoTimer, setTripUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [pendingArchiveTrip, setPendingArchiveTrip] = useState<Trip | null>(null);
@@ -1941,7 +1968,32 @@ export default function App() {
           setEditUndoTimer(setTimeout(() => setPendingEditExpense(null), UNDO_DURATION_MS));
         }
       } else {
-        await addExpense(expensePayload);
+        const newId = await addExpense(expensePayload);
+        const saveConfirmOn = isFeatureEnabled('enableSaveConfirmation', {
+          tripId: activeTripId ?? undefined,
+          userId: userId || undefined,
+        });
+        if (newId && saveConfirmOn) {
+          const created = useTripStore.getState().expenses.find((e) => e.id === newId);
+          if (created) {
+            if (addedUndoTimer) clearTimeout(addedUndoTimer);
+            setPendingAddedExpense(created);
+            setAddedUndoTimer(setTimeout(() => setPendingAddedExpense(null), UNDO_DURATION_MS));
+          }
+          const motionOn = isFeatureEnabled('enableMotionPolish', {
+            tripId: activeTripId ?? undefined,
+            userId: userId || undefined,
+          });
+          const reduceMotion =
+            typeof window !== 'undefined' &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (motionOn && !reduceMotion) {
+            if (justSavedTimer) clearTimeout(justSavedTimer);
+            setJustSavedExpenseId(newId);
+            setJustSavedTimer(setTimeout(() => setJustSavedExpenseId(null), UNDO_DURATION_MS));
+          }
+        }
+        if (newId && activeTripId) maybeShowPwaNudge(activeTripId);
       }
       advanceReviewQueueOrClose();
       return { success: true };
@@ -2062,6 +2114,17 @@ export default function App() {
     if (undoTimer) clearTimeout(undoTimer);
     setUndoTimer(null);
     setPendingDeleteExpense(null);
+  };
+
+  const handleUndoAddedExpense = () => {
+    if (addedUndoTimer) clearTimeout(addedUndoTimer);
+    setAddedUndoTimer(null);
+    const exp = pendingAddedExpense;
+    setPendingAddedExpense(null);
+    if (justSavedTimer) clearTimeout(justSavedTimer);
+    setJustSavedTimer(null);
+    setJustSavedExpenseId(null);
+    if (exp) void deleteExpense(exp.id);
   };
 
   const handleUndoEditExpense = () => {
@@ -3155,6 +3218,7 @@ export default function App() {
                   onReviewAffected={handleReviewAffectedExpenses}
                   filteredExpenses={filteredExpenses}
                   pendingDeleteId={pendingDeleteExpense?.id}
+                  justSavedId={justSavedExpenseId ?? undefined}
                   hasActiveFilters={hasActiveExpenseFilters}
                   totalSpent={totalSpent}
                   averageCost={averageCost}
@@ -3520,6 +3584,11 @@ export default function App() {
             initialTemplate={expenseTemplate}
             onSave={handleSaveExpense}
             onCancel={handleCancelExpenseForm}
+            onOpenFxRates={
+              isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip.id, userId: userId || undefined })
+                ? () => setShowFxRates(true)
+                : undefined
+            }
           />
         </Suspense>
       )}
@@ -3779,9 +3848,27 @@ export default function App() {
           {reconnectNote}
         </div>
       )}
+      {showPwaNudge && deferredPrompt && (
+        <div
+          className="reconnect-toast"
+          role="status"
+          aria-live="polite"
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}
+        >
+          <span style={{ flex: 1 }}>Install Trip Tracker for faster access</span>
+          <button type="button" className="gradient-btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => void handleInstallApp()}>
+            Install
+          </button>
+          <button type="button" className="btn-ghost" style={{ padding: '6px 8px', fontSize: '12px' }} onClick={dismissPwaNudge} aria-label="Dismiss install nudge">
+            Not now
+          </button>
+        </div>
+      )}
       <UndoToasts
         pendingDeleteExpense={pendingDeleteExpense}
         onUndoDeleteExpense={handleUndoDelete}
+        pendingAddedExpense={pendingAddedExpense}
+        onUndoAddedExpense={handleUndoAddedExpense}
         pendingDeleteTrip={pendingDeleteTrip}
         onUndoDeleteTrip={handleUndoDeleteTrip}
         pendingArchiveTrip={pendingArchiveTrip}

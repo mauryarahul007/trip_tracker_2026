@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-11 | unreleased | CORE-UX-PARITY | [Core UX parity + light differentiators](#core-ux-parity--core-ux-parity--light-differentiators) |
 | 2026-11-02 | unreleased | MULTI-SELECT | [Select several expenses (Flutter)](#multi-select--select-several-expenses-flutter) |
 | 2026-11-02 | unreleased | UI-UPGRADES-1 | [UI upgrades, phases 1-2](#ui-upgrades-1--ui-upgrades-phases-1-2) |
 | 2026-11-02 | unreleased | NOTCH-NAV | [Notch bottom bar (Flutter)](#notch-nav--notch-bottom-bar-flutter) |
@@ -4140,3 +4141,36 @@ Then add a row to the **Index** table.
 **Flag-OFF negative check (`enableExpenseMultiSelect` OFF):** press and hold does nothing; swiping an expense to edit, mark personal or delete still works.
 
 **Pass criteria:** every action applies to exactly the ticked expenses, each has one Undo that reverses all of them, no amounts or splits change, and a wide window (tablet) is unaffected.
+
+
+## CORE-UX-PARITY — Core UX parity + light differentiators
+
+**Shipped:** unreleased. Reused: `enableSaveConfirmation` (Core, ON — now web + Flutter), `enableCompactSummary` (Core, ON — settle CTA hierarchy), `enableCurrencyFx` (Trip, ON — Edit rate from form), `enableTripShareLink` (Core, ON), `enableCoachEmptyStates` (Trip, ON — Spend empty), `enableCompactLedgerView` (moved Trip, default ON). New: `enablePwaInstallNudge` (Core, default OFF).
+
+**Prep:** Web and Flutter on a throwaway trip with at least two members. Superadmin Ops Deck for flag toggles. For PWA: Chromium with installable criteria and `beforeinstallprompt`.
+
+### Web
+
+1. **Add + Undo:** Add a new expense. Toast “Added '{title}'” with Undo; the Spend row briefly highlights if motion is on. Tap Undo → expense leaves the list (recycle bin). Edit an existing expense → no “Added” toast.
+2. **FX Edit rate:** With a foreign currency on Add, open the ticker → **Edit rate** opens the FX rates modal; Apply {base} still converts the amount.
+3. **Settle hierarchy:** On a transfer row with `enableCompactSummary` ON, Settle Up is primary; UPI / Card / Remind sit behind **More** (Custom Amt stays visible).
+4. **Share:** Invite opens Share; join code is prominent with copy feedback (“Copied — ready to paste”); view-only link still first when share-link is armed.
+5. **Compact ledger:** Expenses rows are denser by default; Settings Compact Ledger still toggles density when the flag is on.
+6. **PWA nudge:** With `enablePwaInstallNudge` ON and an installable browser, add the **first** expense on a trip → Install banner; Not now dismisses for the device. Default OFF → no banner.
+
+### Flutter
+
+7. **Spend coach:** Empty Spend with `enableCoachEmptyStates` ON shows the illustrated card with Add / Scan / Members. Flag OFF → plain empty text, no coach card.
+8. **Settle More:** Open settle with `enableCompactSummary` ON → Mark settled is primary; UPI / share (and date/note when Pro date-note is on) are under **More options**.
+9. **Equal share on rows:** Equal split on Add → each selected member shows `= {share}` under the name while amount/selection change.
+
+### Flag-OFF negatives
+
+- `enableSaveConfirmation` OFF: form closes with no Added toast / no glow (web and Flutter).
+- `enableCompactSummary` OFF: settle transfer row shows UPI / Card / Remind as separate chips (web); Flutter settle shows secondary actions inline (when not already folded by compass calm layout alone — turn compact summary OFF and verify inline UPI/share when calm is also off if testing that path).
+- `enableCurrencyFx` OFF: no Edit rate on the ticker.
+- `enableCoachEmptyStates` OFF: Flutter Spend empty is plain.
+- `enableCompactLedgerView` OFF: normal-size ledger rows; Settings density toggle hidden/inactive per existing Settings wiring.
+- `enablePwaInstallNudge` OFF (default): no post-first-expense Install banner; Settings install still works when `pwaInstallable`.
+
+**Pass criteria:** each ON step matches above; each OFF check removes only that surface; no balance/split math changes. See also [howto-record-expense.md — Core money-loop UX](./howto-record-expense.md#core-money-loop-ux-web--flutter).

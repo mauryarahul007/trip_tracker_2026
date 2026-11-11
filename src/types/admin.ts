@@ -18,6 +18,7 @@ export type FeatureFlagKey =
   | 'enableOnboardingArt'
   | 'enableDockedKeypad'
   | 'enableShapedSkeletons'
+  | 'enablePwaInstallNudge'
   | 'enableQuickTripCreate'
   | 'enableDestinationAutocomplete'
   | 'cycleDestinationCovers'

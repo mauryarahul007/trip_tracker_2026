@@ -828,15 +828,22 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       ),
     );
 
+    final coachEmptyOn = _flag(ref, 'enableCoachEmptyStates', id);
     final Widget empty = active.isEmpty
-        ? _EmptySpendAccelerator(
-            tripId: id,
-            title: l10n.expNone,
-            subtitle: l10n.expNoneBody,
-            onAddExpense: () => context.push('/trip/$id/expenses/new'),
-            onScanReceipt: () => context.push('/trip/$id/receipts'),
-            onViewMembers: () => context.go('/trip/$id/members'),
-          )
+        ? (coachEmptyOn
+              ? _EmptySpendAccelerator(
+                  tripId: id,
+                  title: l10n.expNone,
+                  subtitle: l10n.expNoneBody,
+                  onAddExpense: () => context.push('/trip/$id/expenses/new'),
+                  onScanReceipt: () => context.push('/trip/$id/receipts'),
+                  onViewMembers: () => context.go('/trip/$id/members'),
+                )
+              : EmptyState(
+                  plain: true,
+                  title: l10n.expNone,
+                  subtitle: l10n.expNoneBody,
+                ))
         : EmptyState(
             plain: true,
             title: l10n.expNoMatches,

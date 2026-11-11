@@ -37,12 +37,10 @@ describe('featureFlags', () => {
   });
 
   it('defaults Core and Trip ON so first and last minutes are reachable', () => {
-    // boardingPassLogin is a documented staged-rollout exception: it swaps
-    // the traveler login/home screen app-wide the moment it ships, so it
-    // stays OFF until a superadmin arms it deliberately. See its
-    // FEATURE_FLAGS_META description.
+    // boardingPassLogin and enablePwaInstallNudge are staged-rollout
+    // exceptions: they stay OFF until a superadmin arms them. See meta.
     getPackFlagKeys('core')
-      .filter((key) => key !== 'boardingPassLogin')
+      .filter((key) => key !== 'boardingPassLogin' && key !== 'enablePwaInstallNudge')
       .forEach((key) => {
         expect(DEFAULT_FEATURE_FLAGS[key]).toBe(true);
       });
@@ -50,6 +48,7 @@ describe('featureFlags', () => {
       expect(DEFAULT_FEATURE_FLAGS[key]).toBe(true);
     });
     expect(DEFAULT_FEATURE_FLAGS.boardingPassLogin).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enablePwaInstallNudge).toBe(false);
     expect(getPackStatus('core', DEFAULT_FEATURE_FLAGS).status).toBe('partial');
     expect(getPackStatus('trip', DEFAULT_FEATURE_FLAGS).status).toBe('armed');
   });
@@ -101,7 +100,7 @@ describe('featureFlags', () => {
       allArmed[k] = true;
     });
     expect(getPackStatus('core', allArmed).status).toBe('armed');
-    expect(getPackStatus('core', allArmed).activeCount).toBe(45);
+    expect(getPackStatus('core', allArmed).activeCount).toBe(46);
 
     const allSafed = { ...DEFAULT_FEATURE_FLAGS };
     getPackFlagKeys('core').forEach((k) => {
@@ -191,7 +190,7 @@ describe('featureFlags', () => {
 
   it('verifies that every flag in all packs can be enabled and disabled', () => {
     const allFlagKeys = Object.keys(DEFAULT_FEATURE_FLAGS) as (keyof typeof DEFAULT_FEATURE_FLAGS)[];
-    expect(allFlagKeys.length).toBe(208);
+    expect(allFlagKeys.length).toBe(209);
 
     allFlagKeys.forEach((flagKey) => {
       const disabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: false };

@@ -5744,3 +5744,13 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Kept strictly scoped to Flutter mobile app as requested before porting to Web.
 
+### ADR 288: Core UX Parity + Light Differentiators (v3.91.2)
+* **Context of the Problem:**
+  - Core money-loop polish already shipped on one platform or the other (Flutter save-confirm, web live split preview, settle CTAs, FX rates) without full cross-platform parity. Market comparison pointed at light UX gaps, not new product surfaces.
+* **Selected Decision & Resolution:**
+  - **Web:** Ported `enableSaveConfirmation` (Added toast + Undo via soft-delete; optional ledger glow with `enableMotionPolish`); FX **Edit rate** from the add-form ticker opens existing `FxRatesModal`; settle transfer rows fold UPI/Card/Remind under More when `enableCompactSummary` is ON; Share modal copy/join-code friction pass; compact ledger moved Trip default ON with device pref default true; new Core flag `enablePwaInstallNudge` (default OFF) for post-first-expense Install banner.
+  - **Flutter:** Gate Spend empty coach with `enableCoachEmptyStates`; settle sheet folds secondary actions when `enableCompactSummary` ON; equal-mode per-member `= share` on split rows.
+  - **Shared:** Registry meta + Flutter `flag_defaults.g.dart` regen; Core loop contract in `docs/howto-record-expense.md`; `CORE-UX-PARITY` in `FEATURE_TEST_STEPS.md`.
+* **Trade-offs Accepted:**
+  - No new itinerary/maps/OCR defaults; PWA nudge stays default OFF so production stays light until Superadmin arms it; reuse existing flags where the surface is the same.
+

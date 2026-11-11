@@ -87,6 +87,7 @@ type Props = {
   onReviewAffected: (expenseIds: string[]) => void;
   filteredExpenses: Expense[];
   pendingDeleteId?: string;
+  justSavedId?: string;
   hasActiveFilters: boolean;
 
   // Header stat strip -- same aggregate numbers already computed once in
@@ -149,6 +150,7 @@ export function ExpenseList({
   onReviewAffected,
   filteredExpenses,
   pendingDeleteId,
+  justSavedId,
   hasActiveFilters,
   totalSpent,
   averageCost,
@@ -375,6 +377,7 @@ export function ExpenseList({
   // review markup isn't duplicated between the two sections.
   const renderExpenseRow = (exp: Expense, idx: number, siblingCount: number) => {
     const isPending = exp.id === pendingDeleteId;
+    const isJustSaved = exp.id === justSavedId;
     const isDirty = dirtyExpenseIds?.has(exp.id) ?? false;
     const isConflict = conflictExpenseIds?.has(exp.id) ?? false;
     const canManage = isAdmin || exp.createdByUserId === userId;
@@ -403,7 +406,7 @@ export function ExpenseList({
       <div
         key={exp.id}
         aria-hidden={isPending}
-        className={`expense-item-cascade${isPending ? ' is-collapsing' : ''}`}
+        className={`expense-item-cascade${isPending ? ' is-collapsing' : ''}${isJustSaved ? ' is-just-saved' : ''}`}
         style={{
           borderBottom: idx < siblingCount - 1 ? '1.5px dashed var(--border-color)' : 'none',
           opacity: isPending ? 0.35 : 1,

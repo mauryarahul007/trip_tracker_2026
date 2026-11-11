@@ -10,6 +10,7 @@
     "enableOnboardingArt": true,
     "enableDockedKeypad": true,
     "enableShapedSkeletons": true,
+    "enablePwaInstallNudge": false,
     "enableQuickTripCreate": true,
     "enableDestinationAutocomplete": true,
     "cycleDestinationCovers": true,
@@ -171,7 +172,7 @@
     "enableTodayCard": true,
     "enableSettleNudge": true,
     "enableCloseoutPrompt": true,
-    "enableCompactLedgerView": false,
+    "enableCompactLedgerView": true,
     "enableStickyDayHeaders": false,
     "enableCategoryColorRings": false,
     "enableCategoryReorder": false,
@@ -220,6 +221,7 @@
     "enableOnboardingArt": true,
     "enableDockedKeypad": true,
     "enableShapedSkeletons": true,
+    "enablePwaInstallNudge": false,
     "enableQuickTripCreate": true,
     "enableDestinationAutocomplete": true,
     "cycleDestinationCovers": true,
@@ -381,7 +383,7 @@
     "enableTodayCard": true,
     "enableSettleNudge": true,
     "enableCloseoutPrompt": true,
-    "enableCompactLedgerView": false,
+    "enableCompactLedgerView": true,
     "enableStickyDayHeaders": false,
     "enableCategoryColorRings": false,
     "enableCategoryReorder": false,
@@ -467,7 +469,8 @@
         "enableSaveConfirmation",
         "enableOnboardingArt",
         "enableDockedKeypad",
-        "enableShapedSkeletons"
+        "enableShapedSkeletons",
+        "enablePwaInstallNudge"
       ]
     },
     {
@@ -569,7 +572,8 @@
         "enableCoachEmptyStates",
         "enableSkeletonLoaders",
         "enableHighContrast",
-        "enableHapticsSetting"
+        "enableHapticsSetting",
+        "enableCompactLedgerView"
       ]
     },
     {
@@ -607,7 +611,6 @@
         "enableSettlementConfirmation",
         "enableSplitwiseImport",
         "enableCrossTripSearch",
-        "enableCompactLedgerView",
         "enableStickyDayHeaders",
         "enableCategoryColorRings",
         "enableCategoryReorder",

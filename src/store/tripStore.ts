@@ -255,7 +255,7 @@ interface TripStore extends TripState {
   deleteGroup: (id: string) => Promise<void>;
 
   // Expense Actions
-  addExpense: (expense: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt' | 'isSettlement' | 'createdByUserId'>) => Promise<void>;
+  addExpense: (expense: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt' | 'isSettlement' | 'createdByUserId'>) => Promise<string | undefined>;
   updateExpense: (id: string, expense: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt' | 'isSettlement' | 'createdByUserId'>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   addExpensePhoto: (expenseId: string, dataUrl: string) => Promise<void>;
@@ -2844,20 +2844,20 @@ export const useTripStore = create<TripStore>()(
     addExpense: async (expenseData) => {
       const tripId = get().activeTripId;
       const userId = get().userId;
-      if (!tripId || !userId) return;
+      if (!tripId || !userId) return undefined;
 
       const activeTrip = get().trips.find((t) => t.id === tripId);
       if (activeTrip?.frozen && !get().isSuperadmin) {
         set({ storageError: 'This trip is currently locked / frozen by Superadmin. Modifications are disabled.' });
-        return;
+        return undefined;
       }
       if (activeTrip?.closed) {
         set({ storageError: 'This trip is closed. Reopen it to add expenses.' });
-        return;
+        return undefined;
       }
 
       const participants = expenseData.splitMemberIds.filter((id) => get().members[id] && !get().members[id].archived);
-      if (participants.length === 0) return;
+      if (participants.length === 0) return undefined;
 
       const resolvedShares = resolveShares(expenseData, participants);
       const tempId = newId();
@@ -2945,7 +2945,7 @@ export const useTripStore = create<TripStore>()(
       };
 
       if (isMissingSupabaseEnv) {
-        return;
+        return tempId;
       }
 
       const queueOfflineAdd = async () => {
@@ -2971,6 +2971,7 @@ export const useTripStore = create<TripStore>()(
           await queueOfflineAdd();
         }
       }
+      return tempId;
     },
 
     updateExpense: async (id, expenseData) => {

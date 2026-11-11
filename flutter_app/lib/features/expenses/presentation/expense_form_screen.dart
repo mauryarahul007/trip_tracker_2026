@@ -233,6 +233,10 @@ class _FormBodyState extends ConsumerState<_FormBody> {
     final input = c.toInput();
     final preview = c.preview();
     final amountVal = c.evaluatedAmount;
+    final selectedSplitCount = s.selected.values.where((v) => v).length;
+    final equalShareAmount = s.splitMode == 'equal' && amountVal != null && selectedSplitCount > 0
+        ? amountVal / selectedSplitCount
+        : null;
     final status = splitConfigStatus(input);
     final dup = c.duplicate(_initialExpenseIds);
     final dupShown = dup != null && dup.matchedExpense.id != s.ignoredDuplicateId;
@@ -801,6 +805,9 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                                     mode: s.splitMode,
                                     configText: s.splitConfig[m.id],
                                     epoch: s.epoch,
+                                    equalShareLabel: equalShareAmount != null && s.selected[m.id] == true
+                                        ? '= ${_fmt(context, equalShareAmount, s.currency)}'
+                                        : null,
                                     onToggle: () => c.toggleMember(m.id),
                                     onConfig: (v) => c.setSplitConfig(m.id, v),
                                   ),
@@ -1034,6 +1041,7 @@ class _MemberRow extends StatelessWidget {
     required this.epoch,
     required this.onToggle,
     required this.onConfig,
+    this.equalShareLabel,
     super.key,
   });
   final Member member;
@@ -1043,10 +1051,12 @@ class _MemberRow extends StatelessWidget {
   final int epoch;
   final VoidCallback onToggle;
   final ValueChanged<String> onConfig;
+  final String? equalShareLabel;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final tokens = context.tokens;
     final needsInput = selected && (mode == 'custom' || mode == 'percentage' || mode == 'exact');
     final hint = mode == 'custom'
         ? l10n.formShareHint
@@ -1063,6 +1073,17 @@ class _MemberRow extends StatelessWidget {
             value: selected,
             onChanged: (_) => onToggle(),
             title: Text(member.name),
+            subtitle: equalShareLabel == null
+                ? null
+                : Text(
+                    equalShareLabel!,
+                    key: Key('equal-share-${member.id}'),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: tokens.primaryAccent,
+                    ),
+                  ),
           ),
         ),
         if (needsInput)
