@@ -3209,5 +3209,21 @@
     "shippedAt": "2026-11-11T13:20:36.279Z",
     "shippedBy": "agent",
     "shippedNote": "Shipped in 86a2af4 (v3.91.2): Core UX parity web+Flutter"
+  },
+  {
+    "id": "FEAT-202",
+    "title": "Flutter UI/UX polish: Settings, Trips money glance, Hub/map calm",
+    "description": "Flutter UI/UX polish: Settings, Trips money glance, Hub/map calm",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-12T08:31:39.759Z",
+    "updatedAt": "2026-11-12T08:31:39.759Z",
+    "shippedAt": "2026-11-12T08:31:39.759Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped in 3e0a18c (v3.91.3): Flutter UX polish FLUTTER-UX-POLISH"
   }
 ]
