@@ -154,6 +154,8 @@
     "enableSkeletonLoaders": true,
     "enableHighContrast": true,
     "enableHapticsSetting": true,
+    "enableSettingsSegmentedLists": true,
+    "enableScrollCompressDock": true,
     "enableLastSyncedCaption": true,
     "enableTripSwitcher": true,
     "enableTripPins": true,
@@ -365,6 +367,8 @@
     "enableSkeletonLoaders": true,
     "enableHighContrast": true,
     "enableHapticsSetting": true,
+    "enableSettingsSegmentedLists": true,
+    "enableScrollCompressDock": true,
     "enableLastSyncedCaption": true,
     "enableTripSwitcher": true,
     "enableTripPins": true,
@@ -573,7 +577,9 @@
         "enableSkeletonLoaders",
         "enableHighContrast",
         "enableHapticsSetting",
-        "enableCompactLedgerView"
+        "enableCompactLedgerView",
+        "enableSettingsSegmentedLists",
+        "enableScrollCompressDock"
       ]
     },
     {

@@ -94,6 +94,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   Trip? _stackTop;
   bool _searchOpen = false;
 
+  /// Dock shrinks slightly while scrolling down (`enableScrollCompressDock`).
+  bool _dockCompressed = false;
+
   DateTime get _now => widget.now?.call() ?? ref.read(nowProvider)();
 
   void _open(Trip t) => context.push('/trip/${t.id}/ledger'); // opens on Summary, the first tab
@@ -615,7 +618,19 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                         ),
                       ),
                     Expanded(
-                      child: AppPullToRefresh(
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: (n) {
+                          final compressOn =
+                              _flagOn('enableScrollCompressDock') && !AppMotion.reduce;
+                          if (!compressOn) return false;
+                          updateDockCompress(
+                            n: n,
+                            compressed: _dockCompressed,
+                            setCompressed: (v) => setState(() => _dockCompressed = v),
+                          );
+                          return false;
+                        },
+                        child: AppPullToRefresh(
                         onRefresh: ref.read(refreshTripsProvider),
                         child: lists.when(
                           loading: () => ListView(
@@ -947,6 +962,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                           },
                         ),
                       ),
+                      ),
                     ),
                   ],
                 ),
@@ -971,7 +987,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
             ],
           ),
           // Card view carries its own floating "New Trip | Join" pill, so the dock and the button step aside.
-          bottomNavigationBar: cards ? null : buildHomeDock(context, ref, HomeTab.trips),
+          bottomNavigationBar: cards
+              ? null
+              : buildHomeDock(context, ref, HomeTab.trips, compressed: _dockCompressed),
           // The dock's centre button replaces the FAB on iOS / web; Material 3 keeps it.
           floatingActionButton: tokens.calm && !cards
               ? CalmAddButton(extended: true, label: l10n.tripsNewTrip, onTap: _create)

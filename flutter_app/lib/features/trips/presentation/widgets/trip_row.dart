@@ -933,7 +933,7 @@ class _CalmTripRow extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(left: 8),
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 112),
+                        constraints: const BoxConstraints(maxWidth: 118),
                         child: Text(
                           moneyText!,
                           key: const Key('trip-money'),
@@ -941,8 +941,11 @@ class _CalmTripRow extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
+                            fontFamily: AppTypography.fontMono,
+                            fontFeatures: AppTypography.tabularFigures,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            height: 1.2,
                             color: moneyColor ?? t.textSecondary,
                           ),
                         ),

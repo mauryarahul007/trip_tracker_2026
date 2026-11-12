@@ -5,6 +5,10 @@ import 'package:flutter/widgets.dart';
 ///
 /// Also the app's motion tokens: use [fast] for taps, toggles and chips, [base] for sheets, rows and tab content,
 /// [slow] for hero and page-level moves, with [enter] / [exit] / [standard] curves, so everything moves alike.
+///
+/// Motion budget (Flutter UX polish): keep sheet enter/exit, press scale, tab slide, just-saved glow.
+/// Prefer [fast]/[base] (≈150–320ms). Avoid continuous parallax, new animation libraries, and haptic on every
+/// tab when Haptics is set to Important only ([AppHaptics.selection] already no-ops then).
 class AppMotion {
   static bool reduce = false;
 

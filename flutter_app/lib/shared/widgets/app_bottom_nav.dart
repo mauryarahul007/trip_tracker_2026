@@ -44,6 +44,7 @@ class AppBottomNav extends StatelessWidget {
     this.notch = false,
     this.centerAction,
     this.centerLabel,
+    this.compressed = false,
     super.key,
   });
 
@@ -62,6 +63,9 @@ class AppBottomNav extends StatelessWidget {
   final VoidCallback? centerAction;
   final String? centerLabel;
 
+  /// Flag `enableScrollCompressDock`: shrink the floating dock slightly while the user scrolls down.
+  final bool compressed;
+
   /// The dock is used on every platform.
   static bool get dockByDefault => true;
 
@@ -71,16 +75,49 @@ class AppBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!_useDock) return _M3Bar(this);
     final canNotch = notch && items.length >= 2 && items.length <= 5 && (centerAction == null || context.tokens.calm);
-    if (canNotch) return _NotchDock(items: items, currentIndex: currentIndex, onTap: onTap, labelInBubble: polish);
-    return _Dock(
-      items: items,
-      currentIndex: currentIndex,
-      onTap: onTap,
-      polish: polish,
-      centerAction: context.tokens.calm ? null : centerAction,
-      centerLabel: centerLabel,
+    final Widget dock = canNotch
+        ? _NotchDock(items: items, currentIndex: currentIndex, onTap: onTap, labelInBubble: polish)
+        : _Dock(
+            items: items,
+            currentIndex: currentIndex,
+            onTap: onTap,
+            polish: polish,
+            centerAction: context.tokens.calm ? null : centerAction,
+            centerLabel: centerLabel,
+          );
+    if (!compressed) return dock;
+    final reduce = MediaQuery.disableAnimationsOf(context);
+    return AnimatedScale(
+      scale: 0.92,
+      alignment: Alignment.bottomCenter,
+      duration: reduce ? Duration.zero : const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      child: AnimatedOpacity(
+        opacity: 0.92,
+        duration: reduce ? Duration.zero : const Duration(milliseconds: 180),
+        child: dock,
+      ),
     );
   }
+}
+
+/// Updates [compressed] from scroll notifications for `enableScrollCompressDock`.
+bool updateDockCompress({
+  required ScrollNotification n,
+  required bool compressed,
+  required ValueChanged<bool> setCompressed,
+}) {
+  if (n is! ScrollUpdateNotification) return false;
+  final dy = n.scrollDelta ?? 0;
+  if (dy > 2 && !compressed) {
+    setCompressed(true);
+    return true;
+  }
+  if (dy < -2 && compressed) {
+    setCompressed(false);
+    return true;
+  }
+  return false;
 }
 
 Widget _icon(AppNavItem it, {Color? color, IconData? icon}) {

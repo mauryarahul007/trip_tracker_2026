@@ -33,24 +33,42 @@ class SyncChip extends ConsumerWidget {
     final issue = status.issues > 0;
     final color = issue ? tokens.colorDanger : tokens.primaryAccent;
 
+    final onPressed = ambientOutbox
+        ? () {
+            AppHaptics.selection();
+            showAmbientOutboxSheet(context);
+          }
+        : (issue || inspector ? () => showSyncReviewSheet(context) : null);
+
+    // Healthy pending queue: icon-only so the home list stays travel-first. Issues expand to a labeled chip.
+    if (!issue) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 16, 0),
+          child: IconButton(
+            key: const Key('sync-chip-icon'),
+            tooltip: l10n.syncPending(status.pending),
+            icon: Icon(AppIcons.sync, size: 18, color: color),
+            onPressed: onPressed,
+          ),
+        ),
+      );
+    }
+
     return Align(
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
         child: ActionChip(
-          avatar: Icon(issue ? AppIcons.alert : AppIcons.sync, size: 16, color: color),
+          avatar: Icon(AppIcons.alert, size: 16, color: color),
           label: Text(
-            issue ? l10n.syncLineIssue(status.issues) : l10n.syncPending(status.pending),
+            l10n.syncLineIssue(status.issues),
             style: TextStyle(color: color, fontSize: 12),
           ),
           side: BorderSide(color: color.withValues(alpha: 0.4)),
           backgroundColor: color.withValues(alpha: 0.08),
-          onPressed: ambientOutbox
-              ? () {
-                  AppHaptics.selection();
-                  showAmbientOutboxSheet(context);
-                }
-              : (issue || inspector ? () => showSyncReviewSheet(context) : null),
+          onPressed: onPressed,
         ),
       ),
     );

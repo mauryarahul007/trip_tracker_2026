@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/widgets/section_label.dart';
 
 /// Tinted rounded icon tile shown at the start of a settings row (Horizon `.tile.sm`).
@@ -22,39 +23,166 @@ class SettingsIcon extends StatelessWidget {
   }
 }
 
-class SettingsSection extends StatelessWidget {
-  const SettingsSection({required this.title, required this.children, super.key});
-
-  final String title;
-  final List<Widget> children;
+/// Section heading above a grouped settings card.
+class SettingsHeader extends StatelessWidget {
+  const SettingsHeader(this.label, {super.key});
+  final String label;
 
   @override
   Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 6),
+      child: Text(label.toUpperCase(), style: sectionLabelStyle(context)),
+    );
+  }
+}
+
+/// WhatsApp / M3-style grouped card. When [segmented] is true (flag `enableSettingsSegmentedLists`),
+/// first/last rows clip to matching corner radii so ink highlights match WhatsApp settings.
+class SettingsSection extends StatelessWidget {
+  const SettingsSection({
+    required this.title,
+    required this.children,
+    this.segmented = true,
+    super.key,
+  });
+
+  final String title;
+  final List<Widget> children;
+  final bool segmented;
+
+  @override
+  Widget build(BuildContext context) {
+    if (children.isEmpty) return const SizedBox.shrink();
     final tokens = context.tokens;
+    final radius = tokens.radiusMd;
+
+    final body = Column(
+      children: [
+        for (var i = 0; i < children.length; i++) ...[
+          if (i > 0) Divider(height: 1, indent: 68, color: tokens.borderColor.withValues(alpha: 0.6)),
+          if (segmented)
+            _SegmentedRowShell(
+              isFirst: i == 0,
+              isLast: i == children.length - 1,
+              radius: radius,
+              child: children[i],
+            )
+          else
+            children[i],
+        ],
+      ],
+    );
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 6),
-            child: Text(title.toUpperCase(), style: sectionLabelStyle(context)),
-          ),
-          // Material (not DecoratedBox) so the rows' ink ripples are visible on the card.
+          SettingsHeader(title),
           Material(
             color: tokens.bgSurface,
             clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(tokens.radiusMd)),
-            child: Column(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(radius),
+              side: BorderSide(color: tokens.borderColor),
+            ),
+            child: body,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SegmentedRowShell extends StatelessWidget {
+  const _SegmentedRowShell({
+    required this.isFirst,
+    required this.isLast,
+    required this.radius,
+    required this.child,
+  });
+  final bool isFirst;
+  final bool isLast;
+  final double radius;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final r = Radius.circular(radius);
+    return ClipRRect(
+      borderRadius: BorderRadius.only(
+        topLeft: isFirst ? r : Radius.zero,
+        topRight: isFirst ? r : Radius.zero,
+        bottomLeft: isLast ? r : Radius.zero,
+        bottomRight: isLast ? r : Radius.zero,
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Profile strip at the top of Settings / You — avatar, name, quiet status line.
+class SettingsProfileHeader extends StatelessWidget {
+  const SettingsProfileHeader({
+    required this.name,
+    required this.subtitle,
+    required this.onTap,
+    super.key,
+  });
+
+  final String name;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Material(
+        color: t.bgSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(t.radiusMd),
+          side: BorderSide(color: t.borderColor),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: const Key('settings-profile'),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+            child: Row(
               children: [
-                for (var i = 0; i < children.length; i++) ...[
-                  if (i > 0) Divider(height: 1, indent: 68, color: tokens.borderColor.withValues(alpha: 0.6)),
-                  children[i],
-                ],
+                AppAvatar(name: name, size: 56),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: t.textPrimary),
+                      ),
+                      if (subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 13, color: t.textSecondary),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: t.textMuted),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -71,7 +199,6 @@ class SettingsTile extends StatelessWidget {
     super.key,
   });
 
-  /// Optional leading icon tile (red when [danger]).
   final IconData? icon;
   final String title;
   final String? subtitle;
@@ -122,7 +249,7 @@ class SettingsSwitchTile extends StatelessWidget {
   );
 }
 
-/// Row with a title/subtitle on the left and a compact segmented control on the right (web `Appearance` / `Haptics`).
+/// Row with a title/subtitle on the left and a compact segmented control on the right.
 class SettingsSegmentedTile<T> extends StatelessWidget {
   const SettingsSegmentedTile({
     required this.title,
@@ -137,8 +264,6 @@ class SettingsSegmentedTile<T> extends StatelessWidget {
   final IconData? icon;
   final String title;
   final String? subtitle;
-
-  /// Value, label (null for icon-only), icon (null for text-only).
   final List<(T, String?, IconData?)> options;
   final T value;
   final ValueChanged<T> onChanged;
@@ -177,7 +302,7 @@ class SettingsSegmentedTile<T> extends StatelessWidget {
                       borderRadius: BorderRadius.circular(9),
                       onTap: () => onChanged(o.$1),
                       child: Container(
-                        constraints: const BoxConstraints(minWidth: 48, minHeight: 48), // 48dp tap target
+                        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(

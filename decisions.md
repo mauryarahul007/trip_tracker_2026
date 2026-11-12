@@ -5754,3 +5754,16 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - No new itinerary/maps/OCR defaults; PWA nudge stays default OFF so production stays light until Superadmin arms it; reuse existing flags where the surface is the same.
 
+### ADR 289: Flutter UI/UX Polish — Settings, Trips, Money, Hub (v3.91.3)
+* **Context of the Problem:**
+  - Flutter presentation still lagged WhatsApp-style settings scanability and Splitwise money-at-a-glance clarity on home/Wallet, while Hub/map chrome felt heavier than the Calm Passport money loop.
+* **Selected Decision & Resolution:**
+  - **Flags (Trip, default ON):** `enableSettingsSegmentedLists`, `enableScrollCompressDock`; reuse `enableTripListMoney` / `enableCompactSummary` / map-collapse / skeleton / motion flags.
+  - **Settings:** M3 segmented cards, profile strip, rename via AppSheet when segmented ON.
+  - **Trips home:** Stronger money glance, sync icon-only when healthy, localized dock labels, dock compress on scroll-down (respects Reduce motion).
+  - **Money:** Stronger Spend day headers; Trip numbers folded under compact summary; settle payer→payee always visible; cross-trip Wallet green/red parity.
+  - **Hub/map:** Quiet 2-col grid with More for rare tools; static cover until map expanded; Hub skeleton on load.
+  - **Docs:** `FLUTTER-UX-POLISH` in `FEATURE_TEST_STEPS.md`.
+* **Trade-offs Accepted:**
+  - Flutter-only; no new Labs/Pro defaults, no map engines as Core, card stack stays opt-in.
+

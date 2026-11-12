@@ -17,6 +17,7 @@ import '../../../shared/theme/compass.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/compass_cover.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../../expenses/presentation/trip_tools_sheet.dart';
 import '../../travel/presentation/live_location_share_modal.dart';
@@ -65,7 +66,8 @@ class TripHubScreen extends ConsumerWidget {
     final t = context.tokens;
     final isBento = ref.watch(flagProvider(('enableBentoHub', tripId))).value ?? false;
     final trip = ref.watch(tripProvider(tripId)).value;
-    final cover = trip == null ? null : ref.watch(tripCoverProvider(tripCoverKey(trip))).value;
+    if (trip == null) return const SkeletonPage(shape: SkeletonShape.list);
+    final cover = ref.watch(tripCoverProvider(tripCoverKey(trip))).value;
     final members = ref.watch(tripMembersProvider(tripId)).value?.length ?? 0;
     final hasNotes = ref.watch(visibleTabsProvider(tripId)).contains(TripNavTab.notes);
     final mapOpen = ref.watch(tripMapOpenProvider(tripId));
@@ -136,7 +138,7 @@ class TripHubScreen extends ConsumerWidget {
         'hub-invite',
         AppIcons.share,
         'Invite',
-        (trip?.joinCode ?? '').isEmpty ? 'Code, link, QR' : 'Code ${trip!.joinCode}',
+        trip.joinCode.isEmpty ? 'Code, link, QR' : 'Code ${trip.joinCode}',
         () {
           AppSheet.show<void>(
             context: context,
@@ -261,13 +263,13 @@ class TripHubScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                trip?.name ?? '',
+                trip.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white),
               ),
-              if ((trip?.destination ?? '').isNotEmpty)
-                Text(trip!.destination!, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+              if ((trip.destination ?? '').isNotEmpty)
+                Text(trip.destination!, style: const TextStyle(color: Colors.white70, fontSize: 13)),
             ],
           ),
         ),
@@ -275,7 +277,8 @@ class TripHubScreen extends ConsumerWidget {
         LayoutBuilder(
           builder: (context, c) {
             final isWideScreen = c.maxWidth >= 560;
-            final cols = isWideScreen ? 3 : 2;
+            // Calm Hub stays 2-column max so tiles stay thumb-sized; Bento may use 3 on wide.
+            final cols = isBento && isWideScreen ? 3 : 2;
             final gap = isBento ? 12.0 : 10.0;
             final regularWidth = (c.maxWidth - gap * (cols - 1)) / cols;
 
@@ -426,61 +429,89 @@ class TripHubScreen extends ConsumerWidget {
               );
             }
 
-            // Fallback classic wrap
-            return Wrap(
-              spacing: gap,
-              runSpacing: gap,
-              children: [
-                for (final tile in tiles)
-                  SizedBox(
-                    width: regularWidth,
-                    child: Semantics(
-                      button: true,
-                      label: '${tile.title}. ${tile.subtitle}',
-                      child: Material(
-                        color: t.bgSurface,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: BorderSide(color: t.borderColor),
-                        ),
-                        child: InkWell(
-                          key: Key(tile.key),
-                          borderRadius: BorderRadius.circular(20),
-                          onTap: () => triggerTileTap(tile),
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(minHeight: 104),
-                            child: Padding(
-                              padding: const EdgeInsets.all(14),
-                              child: ExcludeSemantics(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width: 36,
-                                      height: 36,
-                                      decoration: BoxDecoration(
-                                        color: t.primarySoft,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(tile.icon, size: 20, color: t.primaryAccent),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(tile.title, style: const TextStyle(fontWeight: FontWeight.w700)),
-                                    Text(
-                                      tile.subtitle,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: 12, color: t.textMuted),
-                                    ),
-                                  ],
-                                ),
+            // Quiet 2-col grid: daily tools first; rare utilities under More.
+            const primaryKeys = {
+              'hub-people',
+              'hub-plans',
+              'hub-notes',
+              'hub-invite',
+              'hub-receipts',
+            };
+            final primary = [for (final tile in tiles) if (primaryKeys.contains(tile.key)) tile];
+            final more = [for (final tile in tiles) if (!primaryKeys.contains(tile.key)) tile];
+
+            Widget tileCard(_HubTile tile) => SizedBox(
+              width: regularWidth,
+              child: Semantics(
+                button: true,
+                label: '${tile.title}. ${tile.subtitle}',
+                child: Material(
+                  color: t.bgSurface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: t.borderColor),
+                  ),
+                  child: InkWell(
+                    key: Key(tile.key),
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => triggerTileTap(tile),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 96),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: ExcludeSemantics(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(tile.icon, size: 22, color: t.textSecondary),
+                              const SizedBox(height: 10),
+                              Text(tile.title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                              Text(
+                                tile.subtitle,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 12, color: t.textMuted),
                               ),
-                            ),
+                            ],
                           ),
                         ),
                       ),
                     ),
                   ),
+                ),
+              ),
+            );
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  children: [for (final tile in primary) tileCard(tile)],
+                ),
+                if (more.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Theme(
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      key: const Key('hub-more'),
+                      initiallyExpanded: false,
+                      tilePadding: EdgeInsets.zero,
+                      title: Text(
+                        'More',
+                        style: TextStyle(fontWeight: FontWeight.w700, color: t.textSecondary),
+                      ),
+                      children: [
+                        Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          children: [for (final tile in more) tileCard(tile)],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             );
           },

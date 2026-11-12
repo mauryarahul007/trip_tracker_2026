@@ -153,7 +153,8 @@ class _NetRow extends StatelessWidget {
     final tokens = context.tokens;
     final owed = net.net > 0;
     final amount = formatMoney(context, net.net.abs(), net.currency);
-    // Ink on pastel tiles for every figure; the sign and the words carry meaning, not colour.
+    // Match in-trip Balances: green owed-to-you / red you-owe (Splitwise convention).
+    final moneyColor = owed ? tokens.colorSuccess : tokens.colorDanger;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Text.rich(
@@ -162,11 +163,12 @@ class _NetRow extends StatelessWidget {
             TextSpan(
               text: '${owed ? '+' : '-'}$amount',
               style: TextStyle(
-                fontFamily: AppTypography.fontTitle,
-                fontSize: light ? 36 : 17,
+                fontFamily: AppTypography.fontMono,
+                fontFeatures: AppTypography.tabularFigures,
+                fontSize: light ? 32 : 16,
                 fontWeight: FontWeight.w800,
-                letterSpacing: light ? -1 : 0,
-                color: tokens.textPrimary,
+                letterSpacing: light ? -0.5 : 0,
+                color: moneyColor,
               ),
             ),
             TextSpan(

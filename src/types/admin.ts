@@ -118,6 +118,8 @@ export type FeatureFlagKey =
   | 'enableDailyTimeline'
   | 'enableChecklistCategoryProgress'
   | 'enableSettingsSearch'
+  | 'enableSettingsSegmentedLists'
+  | 'enableScrollCompressDock'
   | 'enableSettingsDataHub'
   | 'enableTripHeaderActions'
   | 'enableSummaryUpgrades'

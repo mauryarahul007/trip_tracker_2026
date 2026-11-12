@@ -222,10 +222,15 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     if (!_collapseChecked) {
       final collapseFlag = ref.watch(flagProvider(('enableSummaryCollapse', null))).value;
       final focusFlag = ref.watch(flagProvider(('enableSummaryFocus', id))).value;
-      if (collapseFlag != null && focusFlag != null) {
+      final compactSummary = ref.watch(flagProvider(('enableCompactSummary', id))).value;
+      if (collapseFlag != null && focusFlag != null && compactSummary != null) {
         _collapseChecked = true;
-        // Focus mode folds Trip numbers away until asked for; the Settings switch does the same for people who set it.
-        if (focusFlag || (collapseFlag && ref.read(summaryCollapsePrefProvider))) _open.remove('analytics');
+        // Hero + who-owes first; Trip numbers stay folded until tapped (focus / compact / prefs).
+        if (focusFlag ||
+            compactSummary ||
+            (collapseFlag && ref.read(summaryCollapsePrefProvider))) {
+          _open.remove('analytics');
+        }
       }
     }
     final trip = ref.watch(tripProvider(id)).value;

@@ -16,6 +16,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navTrips => 'Trips';
 
   @override
+  String get navAlerts => 'Alerts';
+
+  @override
+  String get navYou => 'You';
+
+  @override
+  String get navWallet => 'Wallet';
+
+  @override
+  String get navActivity => 'Activity';
+
+  @override
+  String get navMe => 'Me';
+
+  @override
   String get navChat => 'Chat';
 
   @override

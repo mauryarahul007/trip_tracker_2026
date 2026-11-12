@@ -18,7 +18,16 @@ class DeferredTripMapHero extends ConsumerStatefulWidget {
   final ValueChanged<String>? onToneChange;
   final double height;
 
-  const DeferredTripMapHero({super.key, required this.trip, this.onToneChange, this.height = 220});
+  /// When false (collapsed sheet / map closed), keep the static cover only — never mount the map engine.
+  final bool mountMap;
+
+  const DeferredTripMapHero({
+    super.key,
+    required this.trip,
+    this.onToneChange,
+    this.height = 220,
+    this.mountMap = true,
+  });
 
   @override
   ConsumerState<DeferredTripMapHero> createState() => _DeferredTripMapHeroState();
@@ -43,9 +52,22 @@ class _DeferredTripMapHeroState extends ConsumerState<DeferredTripMapHero> {
   @override
   void didUpdateWidget(covariant DeferredTripMapHero oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!widget.mountMap) {
+      _idleTimer?.cancel();
+      _minPhotoTimer?.cancel();
+      if (_mapReady || _mapDrawn) {
+        setState(() {
+          _mapReady = false;
+          _mapDrawn = false;
+          _mapSignalsReady = false;
+        });
+      }
+      return;
+    }
     if (oldWidget.trip.id != widget.trip.id ||
         oldWidget.trip.destination != widget.trip.destination ||
-        oldWidget.trip.stops != widget.trip.stops) {
+        oldWidget.trip.stops != widget.trip.stops ||
+        (!oldWidget.mountMap && widget.mountMap)) {
       _mapReady = false;
       _mapDrawn = false;
       _mapSignalsReady = false;
@@ -64,10 +86,11 @@ class _DeferredTripMapHeroState extends ConsumerState<DeferredTripMapHero> {
   void _startPresentationCycle() {
     _idleTimer?.cancel();
     _minPhotoTimer?.cancel();
+    if (!widget.mountMap) return;
 
     // 1. Minimum photo presentation timer: user sees the destination image for 1.8s
     _minPhotoTimer = Timer(_minPhotoDuration, () {
-      if (!mounted) return;
+      if (!mounted || !widget.mountMap) return;
       _photoMinElapsed = true;
       if (_mapSignalsReady) {
         setState(() => _mapDrawn = true);
@@ -76,7 +99,7 @@ class _DeferredTripMapHeroState extends ConsumerState<DeferredTripMapHero> {
 
     // 2. Defer map mount by 250ms so tab swipe and navigation animations settle cleanly
     _idleTimer = Timer(const Duration(milliseconds: 250), () {
-      if (mounted) {
+      if (mounted && widget.mountMap) {
         setState(() => _mapReady = true);
       }
     });
@@ -104,7 +127,7 @@ class _DeferredTripMapHeroState extends ConsumerState<DeferredTripMapHero> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (_mapReady && hasValidStops)
+          if (widget.mountMap && _mapReady && hasValidStops)
             TripMapHero(
               trip: widget.trip,
               stops: resolvedStops,
@@ -117,7 +140,7 @@ class _DeferredTripMapHeroState extends ConsumerState<DeferredTripMapHero> {
             tripName: widget.trip.name,
             coverImageUrl: widget.trip.coverImageUrl,
             height: widget.height,
-            isHidden: _mapDrawn,
+            isHidden: widget.mountMap && _mapDrawn,
           ),
         ],
       ),

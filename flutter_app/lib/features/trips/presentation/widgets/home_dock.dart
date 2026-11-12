@@ -44,26 +44,25 @@ List<AppNavItem> _homeItems(BuildContext context, {bool compass = false}) {
     // Calm Passport: Trips, Balances, Alerts, You (same four places, travel words).
     return [
       AppNavItem(icon: Icons.flight_rounded, label: l10n.navTrips),
-      const AppNavItem(icon: Icons.swap_horiz_rounded, label: 'Balances'),
-      const AppNavItem(icon: AppIcons.bell, label: 'Alerts'),
-      const AppNavItem(icon: Icons.person_outline_rounded, label: 'You'),
+      AppNavItem(icon: Icons.swap_horiz_rounded, label: l10n.navBalances),
+      AppNavItem(icon: AppIcons.bell, label: l10n.navAlerts),
+      AppNavItem(icon: Icons.person_outline_rounded, label: l10n.navYou),
     ];
   }
   if (compass) {
     // Compass keeps the same four places; Balances is called Wallet because it spans every trip.
     return [
       AppNavItem(icon: AppIcons.expenses, label: l10n.navTrips),
-      const AppNavItem(icon: Icons.account_balance_wallet_outlined, label: 'Wallet'),
-      const AppNavItem(icon: AppIcons.bell, label: 'Activity'),
-      const AppNavItem(icon: Icons.person_outline_rounded, label: 'Me'),
+      AppNavItem(icon: Icons.account_balance_wallet_outlined, label: l10n.navWallet),
+      AppNavItem(icon: AppIcons.bell, label: l10n.navActivity),
+      AppNavItem(icon: Icons.person_outline_rounded, label: l10n.navMe),
     ];
   }
-  // ponytail: Activity / Me labels are English-only until the ARB files are regenerated.
   return [
     AppNavItem(icon: AppIcons.expenses, label: l10n.navTrips),
     AppNavItem(icon: AppIcons.ledger, label: l10n.navBalances),
-    const AppNavItem(icon: AppIcons.bell, label: 'Activity'),
-    const AppNavItem(icon: Icons.person_outline_rounded, label: 'Me'),
+    AppNavItem(icon: AppIcons.bell, label: l10n.navActivity),
+    AppNavItem(icon: Icons.person_outline_rounded, label: l10n.navMe),
   ];
 }
 
@@ -74,7 +73,9 @@ void _goTab(BuildContext context, HomeTab current, int i) {
 
 /// Bottom dock for the four top-level screens, or null while `enableHorizonNav` is off (so the
 /// scaffold keeps its normal safe-area handling) and on wide windows (see [wrapHomeBody]).
-Widget? buildHomeDock(BuildContext context, WidgetRef ref, HomeTab current) {
+///
+/// Pass [compressed] when `enableScrollCompressDock` is on and the list is scrolling down.
+Widget? buildHomeDock(BuildContext context, WidgetRef ref, HomeTab current, {bool compressed = false}) {
   if (!ref.watch(horizonNavProvider) || isWideHome(context)) return null;
   final l10n = context.l10n;
   final compass = ref.watch(compassNavProvider);
@@ -83,11 +84,13 @@ Widget? buildHomeDock(BuildContext context, WidgetRef ref, HomeTab current) {
     centerLabel: l10n.tripsNewTrip,
     polish: ref.watch(compassFlagProvider((navPolishFlag, null))),
     notch: ref.watch(compassFlagProvider((notchNavFlag, null))),
+    compressed: compressed,
     items: _homeItems(context, compass: compass),
     currentIndex: current.index,
     onTap: (i) => _goTab(context, current, i),
   );
 }
+
 
 /// Desktop shell (board 08): on wide windows the four top-level screens get the same left rail
 /// as the trip workspace, with a New trip button on top. Narrow windows get [body] unchanged.

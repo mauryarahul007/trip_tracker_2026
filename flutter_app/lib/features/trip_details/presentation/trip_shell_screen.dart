@@ -129,6 +129,7 @@ class TripShellScreen extends ConsumerStatefulWidget {
 class _TripShellScreenState extends ConsumerState<TripShellScreen> {
   var _trail = <int>[];
   late int _current;
+  bool _dockCompressed = false;
 
   RealtimeManager? _realtime;
   final _sheetKey = GlobalKey<TripContentSheetState>();
@@ -371,7 +372,12 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
             left: 0,
             right: 0,
             height: backdropHeight,
-            child: DeferredTripMapHero(trip: trip, height: backdropHeight),
+            child: DeferredTripMapHero(
+              trip: trip,
+              height: backdropHeight,
+              // Collapsed-by-default / map closed: static cover only — no map engine until expanded.
+              mountMap: mapExpanded || !mapCollapsedByDefault,
+            ),
           ),
 
         // 1. Draggable Content Sheet (snaps 50% peek <-> 100% full screen)
@@ -437,24 +443,38 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
       child: AppScaffold(
         maxContentWidth: null,
         safeTop: false,
-        body: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (wide)
-              AppSideNav(
-                items: navItems,
-                currentIndex: dockActive < 0 ? 0 : dockActive,
-                onTap: (i) => _goTab(dock[i].index),
-                extended: MediaQuery.sizeOf(context).width >= kSideNavExtendedBreakpoint,
+        body: NotificationListener<ScrollNotification>(
+          onNotification: (n) {
+            final compressOn =
+                (ref.read(flagProvider(('enableScrollCompressDock', widget.tripId))).value ?? true) &&
+                !AppMotion.reduce;
+            if (!compressOn) return false;
+            updateDockCompress(
+              n: n,
+              compressed: _dockCompressed,
+              setCompressed: (v) => setState(() => _dockCompressed = v),
+            );
+            return false;
+          },
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (wide)
+                AppSideNav(
+                  items: navItems,
+                  currentIndex: dockActive < 0 ? 0 : dockActive,
+                  onTap: (i) => _goTab(dock[i].index),
+                  extended: MediaQuery.sizeOf(context).width >= kSideNavExtendedBreakpoint,
+                ),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 1040), child: dashboardStack),
+                ),
               ),
-            Expanded(
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 1040), child: dashboardStack),
-              ),
-            ),
-            if (compassWebRail && currentTab == TripNavTab.expenses) CompassBalancesRail(tripId: widget.tripId),
-          ],
+              if (compassWebRail && currentTab == TripNavTab.expenses) CompassBalancesRail(tripId: widget.tripId),
+            ],
+          ),
         ),
         // Calm Passport: one floating Add expense button over the content, Balances and Spend only —
         // other tabs have their own primary action (Add person on Members, Plans' own add per pane).
@@ -471,6 +491,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 child: AppBottomNav(
                   polish: polish,
                   notch: ref.watch(compassFlagProvider((notchNavFlag, widget.tripId))),
+                  compressed: _dockCompressed,
                   currentIndex: dockActive < 0 ? 0 : dockActive,
                   onTap: (i) => _goTab(dock[i].index, polish: polish),
                   items: navItems,

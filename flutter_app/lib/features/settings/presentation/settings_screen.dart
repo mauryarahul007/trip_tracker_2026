@@ -75,27 +75,60 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _rename() async {
     final auth = ref.read(authStateProvider);
     final c = TextEditingController(text: auth.user?.displayName ?? '');
-    final name = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Your name'),
-        content: TextField(
-          key: const Key('profile-name-field'),
-          controller: c,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          TextButton(
-            key: const Key('profile-name-save'),
-            onPressed: () => Navigator.pop(ctx, c.text.trim()),
-            child: const Text('Save'),
+    final segmented =
+        ref.read(flagProvider(('enableSettingsSegmentedLists', null))).value ?? true;
+    final String? name;
+    if (segmented) {
+      name = await AppSheet.show<String>(
+        context: context,
+        title: 'Your name',
+        builder: (ctx) => Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                key: const Key('profile-name-field'),
+                controller: c,
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(hintText: 'Display name'),
+                onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                key: const Key('profile-name-save'),
+                onPressed: () => Navigator.pop(ctx, c.text.trim()),
+                child: const Text('Save'),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-    // No c.dispose(): the dialog is still animating out and would read a disposed controller.
+        ),
+      );
+    } else {
+      name = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Your name'),
+          content: TextField(
+            key: const Key('profile-name-field'),
+            controller: c,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+              key: const Key('profile-name-save'),
+              onPressed: () => Navigator.pop(ctx, c.text.trim()),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      );
+    }
+    // No c.dispose(): the sheet/dialog is still animating out and would read a disposed controller.
     if (name == null || name.isEmpty) return;
     try {
       await ref.read(authRepositoryProvider).updateDisplayName(name);
@@ -598,11 +631,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authStateProvider);
     final searchOn = ref.watch(flagProvider(('enableSettingsSearch', null))).value ?? false;
+    final segmented = ref.watch(flagProvider(('enableSettingsSegmentedLists', null))).value ?? true;
     final biometricFlag = ref.watch(flagProvider(('enableBiometricAuth', null))).value ?? false;
     final version = ref.watch(appVersionProvider).value;
     final isLocal = auth.isLocalOnly;
     final tripId = latestTripId(ref.watch(tripsProvider).value ?? const [], ref.watch(nowProvider)());
     final tokens = context.tokens;
+    final profileName = auth.user?.displayName ?? 'Traveler';
+    final profileSub = auth.userEmail?.trim().isNotEmpty == true
+        ? auth.userEmail!
+        : (isLocal ? 'Saved on this device only' : 'Signed in');
 
     final horizon = ref.watch(horizonNavProvider);
     return wrapHomeBody(
@@ -612,7 +650,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       AppScaffold(
         backgroundColor: tokens.bgSurface,
         appBar: AppBar(
-          title: Text(horizon ? 'Me' : 'Settings'),
+          title: Text(horizon ? 'You' : 'Settings'),
           // Under the Horizon dock this is a top-level tab, so there is nothing to go back to.
           automaticallyImplyLeading: false,
           leading: horizon
@@ -631,43 +669,50 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: ListView(
               padding: const EdgeInsets.only(bottom: 32),
               children: [
-                InkWell(
-                  key: const Key('settings-profile'),
-                  onTap: _rename,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                    child: Row(
-                      children: [
-                        AppAvatar(name: auth.user?.displayName ?? 'Traveler', size: 64),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                auth.user?.displayName ?? 'Traveler',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                auth.userEmail ?? (isLocal ? 'Saved on this device only' : ''),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(color: tokens.textSecondary),
-                              ),
-                            ],
+                if (segmented)
+                  SettingsProfileHeader(
+                    name: profileName,
+                    subtitle: profileSub,
+                    onTap: _rename,
+                  )
+                else
+                  InkWell(
+                    key: const Key('settings-profile'),
+                    onTap: _rename,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                      child: Row(
+                        children: [
+                          AppAvatar(name: profileName, size: 64),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  profileName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  profileSub,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(color: tokens.textSecondary),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Icon(Icons.edit_outlined, color: tokens.textMuted),
-                      ],
+                          Icon(Icons.edit_outlined, color: tokens.textMuted),
+                        ],
+                      ),
                     ),
                   ),
-                ),
                 if (searchOn)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                     child: TextField(
                       key: const Key('settings-search'),
                       controller: _search,
@@ -693,7 +738,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                   ),
-                Divider(height: 1, color: tokens.borderColor),
+                if (!segmented) Divider(height: 1, color: tokens.borderColor),
                 if (searchOn && _query.isNotEmpty) ...[
                   ..._matches(_query, biometricFlag),
                   if (_matches(_query, biometricFlag).isEmpty)
@@ -707,9 +752,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                 ] else ...[
-                  if (tripId != null) SettingsSection(title: 'This Trip', children: _tripRows(ref, tripId)),
+                  if (tripId != null)
+                    SettingsSection(
+                      title: 'This Trip',
+                      segmented: segmented,
+                      children: _tripRows(ref, tripId),
+                    ),
                   SettingsSection(
                     title: 'Appearance',
+                    segmented: segmented,
                     children: [
                       ..._appearanceRows(ref),
                       SettingsTile(
@@ -721,11 +772,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ],
                   ),
-                  SettingsSection(title: 'Notifications', children: _notificationRows(ref)),
-                  if (biometricFlag) SettingsSection(title: 'Privacy and security', children: _securityRows(ref)),
-                  SettingsSection(title: 'Data', children: _dataSectionRows(ref)),
+                  SettingsSection(
+                    title: 'Notifications',
+                    segmented: segmented,
+                    children: _notificationRows(ref),
+                  ),
+                  if (biometricFlag)
+                    SettingsSection(
+                      title: 'Privacy and security',
+                      segmented: segmented,
+                      children: _securityRows(ref),
+                    ),
+                  SettingsSection(
+                    title: 'Data',
+                    segmented: segmented,
+                    children: _dataSectionRows(ref),
+                  ),
                   SettingsSection(
                     title: 'Help & About',
+                    segmented: segmented,
                     children: [
                       ..._helpRows(ref),
                       SettingsTile(
@@ -742,6 +807,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ],
                 SettingsSection(
                   title: 'Account',
+                  segmented: segmented,
                   children: [
                     SettingsTile(
                       key: const Key('settings-signout'),

@@ -306,14 +306,17 @@ class SettleSheetState extends ConsumerState<SettleSheet> {
               onChanged: (_) => setState(() => _error = null),
             ),
           ] else ...[
+            // Always keep payer→payee mapping visible (avatars + arrow); never replace with a list picker.
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppAvatar(name: t.fromLabel, size: 44),
-                const SizedBox(width: 12),
-                Icon(Icons.arrow_forward_rounded, color: context.tokens.textMuted),
-                const SizedBox(width: 12),
-                AppAvatar(name: t.toLabel, size: 44),
+                SettlePerson(name: t.fromLabel, caption: 'Pays'),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Icon(Icons.arrow_forward_rounded, color: context.tokens.textMuted),
+                ),
+                SettlePerson(name: t.toLabel, caption: 'Receives'),
               ],
             ),
             const SizedBox(height: 12),
@@ -323,7 +326,6 @@ class SettleSheetState extends ConsumerState<SettleSheet> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 4),
-            Text(l10n.ledTransfer(t.fromLabel, t.toLabel), textAlign: TextAlign.center),
             Text(partial ? l10n.ledSettlePartialBody : l10n.ledSettleBody, key: const Key('settle-body')),
             const SizedBox(height: 12),
             AppTextField(

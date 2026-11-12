@@ -1197,9 +1197,10 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 13,
+                            fontFamily: AppTypography.fontMono,
+                            fontSize: 12,
                             fontWeight: FontWeight.w800,
-                            letterSpacing: 0.6,
+                            letterSpacing: 0.8,
                             color: textColor,
                           ),
                         ),
@@ -1218,9 +1219,13 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
                     total,
                     key: Key('day-total-$date'),
                     style: AppTypography.moneyDisplay(
-                      fontSize: 18,
+                      fontSize: 20,
                       color: textColor,
-                    ).copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.2),
+                    ).copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                      fontFeatures: AppTypography.tabularFigures,
+                    ),
                   ),
                   if (collapsible) ...[
                     const SizedBox(width: 6),

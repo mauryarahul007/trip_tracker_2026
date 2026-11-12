@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-12 | unreleased | FLUTTER-UX-POLISH | [Flutter UI/UX polish (Settings, Trips, money, Hub)](#flutter-ux-polish--flutter-uiux-polish-settings-trips-money-hub) |
 | 2026-11-11 | unreleased | CORE-UX-PARITY | [Core UX parity + light differentiators](#core-ux-parity--core-ux-parity--light-differentiators) |
 | 2026-11-02 | unreleased | MULTI-SELECT | [Select several expenses (Flutter)](#multi-select--select-several-expenses-flutter) |
 | 2026-11-02 | unreleased | UI-UPGRADES-1 | [UI upgrades, phases 1-2](#ui-upgrades-1--ui-upgrades-phases-1-2) |
@@ -4174,3 +4175,44 @@ Then add a row to the **Index** table.
 - `enablePwaInstallNudge` OFF (default): no post-first-expense Install banner; Settings install still works when `pwaInstallable`.
 
 **Pass criteria:** each ON step matches above; each OFF check removes only that surface; no balance/split math changes. See also [howto-record-expense.md — Core money-loop UX](./howto-record-expense.md#core-money-loop-ux-web--flutter).
+
+
+## FLUTTER-UX-POLISH — Flutter UI/UX polish (Settings, Trips, money, Hub)
+
+**Shipped:** unreleased. Flutter-only presentation polish. New flags (Trip, default ON): `enableSettingsSegmentedLists`, `enableScrollCompressDock`. Reused: `enableTripListMoney`, `enableCompactSummary`, `enableSummaryFocus`, `enableMapCollapsedByDefault`, `enableSkeletonLoaders` / `enableShapedSkeletons`, `enableMotionPolish`, `enableReduceMotion`, Haptics setting.
+
+**Prep:** Flutter app signed in, at least one trip with members and balances, Horizon / Calm Passport dock on. Ops Deck for flag toggles.
+
+### Phase A — Settings
+1. Open You / Settings with `enableSettingsSegmentedLists` ON: groups (This Trip, Appearance, Notifications, Data, Help, Account) are rounded cards; first/last rows clip to the card corners.
+2. Profile strip shows avatar, name, and email or “Signed in” / device-only line. Tap it → rename opens a bottom sheet (not AlertDialog); Save updates the name.
+3. Rows still show value-forward subtitles (e.g. theme / haptics state). Search still works when `enableSettingsSearch` is on.
+
+### Phase B — Trips home
+4. With `enableTripListMoney` ON, each trip row shows right-aligned money glance in owe/owed colors (green owed / red you owe / muted Settled).
+5. Sync with a healthy pending queue: icon-only sync control (tooltip shows pending). Force a sync issue → labeled danger chip appears.
+6. Home dock labels are localized (Trips / Balances / Alerts / You on Calm).
+7. With `enableScrollCompressDock` ON, scroll Trips list down → dock shrinks slightly; scroll up → expands. With Reduce motion / `enableReduceMotion` ON, compress is skipped.
+
+### Phase C — Money surfaces
+8. Spend day headers: mono day label + larger tabular day total.
+9. Balances (in-trip): hero and who-owes first; with `enableCompactSummary` (or focus/collapse prefs) Trip numbers starts folded — tap to expand charts/insights.
+10. Settle sheet: payer→payee avatars + arrow always visible; Mark settled primary; secondary under More when compact/calm.
+11. Cross-trip Wallet (home Balances): same green/red money colors and density as in-trip.
+
+### Phase D — Hub + map
+12. Hub (non-bento): 2-column quiet icon+label grid; People / Plans / Invite / Receipts primary; Map, Live location, Tools, Settings under **More**. Trip loading shows skeleton.
+13. With `enableMapCollapsedByDefault` ON and map closed: hero shows static cover only (no map engine). Open/expand map → map may mount. Flag OFF or map open → previous deferred map behavior.
+
+### Phase E — Motion
+14. Sheets / tab slide / just-saved glow still use `AppMotion` tokens. Haptics set to Important only → tab switches stay quiet; save/settle still buzz.
+
+### Flag-OFF negative checks
+- `enableSettingsSegmentedLists` OFF: flatter settings card + AlertDialog rename; no profile card chrome.
+- `enableScrollCompressDock` OFF: dock never shrinks on scroll.
+- `enableTripListMoney` OFF: no money glance on trip rows.
+- `enableCompactSummary` OFF (and focus/collapse prefs not folding): Trip numbers can start open per existing focus rules.
+- `enableMapCollapsedByDefault` OFF: map may mount when hero is shown without requiring map-open toggle.
+- `enableSkeletonLoaders` OFF: Hub loading uses spinner, not skeleton blocks.
+
+**Pass criteria:** each ON step matches; each OFF check removes only that surface; no balance, split, or sync math changes; no new map/chat product weight.
