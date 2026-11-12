@@ -5780,6 +5780,14 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Flutter-only; no math/schema changes; Pro/Labs stay default OFF.
 
+### ADR 292: Restore boarding Staff › control (v3.91.6)
+* **Context of the Problem:**
+  - FEAT-204 / ADR 291 buried Staff behind a 2s barcode long-press; travelers and staff could not find superadmin sign-in on the boarding login sheet.
+* **Selected Decision & Resolution:**
+  - Restore permanent **Staff ›** TextButton bottom-right next to the ticket barcode (tap toggles the form). Update boarding login test and `FLUTTER-UI-ROADMAP` steps. Logged as BUG-349.
+* **Trade-offs Accepted:**
+  - Staff remains visible on the traveler gate (quiet styling) rather than a secret gesture; discoverability beats burial for this ops entry point.
+
 ### ADR 291: Flutter UI polish roadmap Phases 1–4 (v3.91.5)
 * **Context of the Problem:**
   - Full-app Flutter UI audit found competing visual languages (boarding vs classic login, notch vs polish dock, Material sheets vs AppSheet), Spend chrome density, sheet-vs-list scroll fights, and uneven Settings/feedback/legal chrome that kept the app feeling prototype-like despite a strong Calm Passport foundation.

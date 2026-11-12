@@ -82,10 +82,8 @@ void main() {
     final app = await pumpApp(tester, boardingLogin: true);
     expect(key('superadmin-form'), findsNothing);
     await tester.ensureVisible(key('superadmin-toggle'));
-    // Staff entry is buried behind a 2-second hold on the ticket barcode.
-    final hold = await tester.startGesture(tester.getCenter(key('superadmin-toggle')));
-    await tester.pump(const Duration(milliseconds: 2100));
-    await hold.up();
+    expect(find.text('Staff ›'), findsOneWidget);
+    await tester.tap(key('superadmin-toggle'));
     await tester.pumpAndSettle();
     expect(key('superadmin-form'), findsOneWidget);
     final fields = find.descendant(of: key('superadmin-form'), matching: find.byType(TextField));

@@ -9840,5 +9840,32 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-11-11T07:59:16.678Z",
     "resolutionNote": "Added docs/agents/{issue-tracker,triage-labels,domain}.md + Agent skills block in CLAUDE.md; created 4 missing GitHub triage labels. Commit 335b921."
+  },
+  {
+    "id": "BUG-349",
+    "title": "Flutter boarding login hid Staff toggle behind barcode long-press",
+    "description": "FEAT-204 buried the Staff › control behind a 2s barcode hold, so staff/superadmin sign-in was not discoverable on the boarding login sheet. Staff › must stay permanently visible bottom-right.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "native",
+      "isOnline": true,
+      "appVersion": "3.91.5"
+    },
+    "reproSteps": [
+      "Install Flutter v3.91.5 boarding login",
+      "Open signed-out login boarding sheet",
+      "Look for Staff › at bottom right"
+    ],
+    "expectedBehavior": "Staff › is always visible bottom-right on the boarding ticket sheet; tap toggles the staff form.",
+    "actualBehavior": "No Staff control visible; only a barcode long-press (undocumented) revealed the form.",
+    "diagnostics": {},
+    "createdAt": "2026-11-12T14:17:23.875Z",
+    "updatedAt": "2026-11-12T14:17:23.875Z",
+    "resolvedAt": "2026-11-12T14:17:23.875Z",
+    "resolvedBy": "agent",
+    "resolutionNote": "Restored permanent Staff › TextButton bottom-right next to the ticket barcode; updated boarding_login_test and FEATURE_TEST_STEPS. Pending commit hash."
   }
 ]

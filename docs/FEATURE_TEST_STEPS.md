@@ -4275,7 +4275,7 @@ Then add a row to the **Index** table.
 **Prep:** Flutter app. Signed-out for login/splash/onboarding; a trip with expenses for Spend/Balances/Settle; Settings; public share link optional.
 
 ### Phase 1 — First impression and trust
-1. Signed-out login always shows boarding-pass layout (classic only via non-prod flag force-off). Google uses the Google glyph. Staff form opens only after a 2s hold on the ticket barcode (not a visible Staff button).
+1. Signed-out login always shows boarding-pass layout (classic only via non-prod flag force-off). Google uses the Google glyph. Staff › stays visible at the bottom right; tap opens the staff form.
 2. Trips empty state shows title + subtitle hierarchy (and icon/CTAs when no trips). Filter chips and syncing line are localized.
 3. Open a trip, peek the content sheet: scrolling the expense list upward does **not** auto-expand the sheet; expand via the handle or overscroll-at-top only.
 4. Calm or Compass: only one Add affordance (Calm FAB or dock center) — no second tab FAB on Spend/Balances/Members.
