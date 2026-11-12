@@ -125,6 +125,8 @@ void main() {
     final id = await tripOn(tester, 'Later Trip', 10, 14);
     await home(tester);
     expect(find.byType(TripTile), findsOneWidget);
+    await tester.tap(key('trips-view-menu')); // the diet moves layout / view / sort into one overflow menu
+    await settle(tester);
     await tester.tap(key('trips-layout-toggle'));
     await settle(tester, rounds: 6);
     expect(find.byType(TripTile), findsNothing);

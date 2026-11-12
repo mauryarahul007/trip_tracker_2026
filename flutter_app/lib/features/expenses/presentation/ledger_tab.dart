@@ -97,7 +97,8 @@ class LedgerTab extends ConsumerStatefulWidget {
 class _LedgerTabState extends ConsumerState<LedgerTab> {
   // History (flagged) starts folded away. Trip numbers fold too when the traveller chose to collapse them: applied
   // once, as soon as the flag has resolved (a loading flag must not count as permission), so later taps stay in charge.
-  final _open = <String>{'transfers', 'analytics'};
+  // Trip numbers start folded (no first-paint flash of analytics); opened below once the flags say so.
+  final _open = <String>{'transfers'};
   var _collapseChecked = false;
   var _numbersTab = 'categories';
   var _allCats = false;
@@ -230,6 +231,8 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             compactSummary ||
             (collapseFlag && ref.read(summaryCollapsePrefProvider))) {
           _open.remove('analytics');
+        } else {
+          _open.add('analytics');
         }
       }
     }
@@ -509,12 +512,10 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
               value,
               maxLines: 1,
               textAlign: align == CrossAxisAlignment.end ? TextAlign.end : TextAlign.start,
-              style: TextStyle(
-                fontFamily: AppTypography.fontTitle,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
+              style: AppTypography.moneyInline(
                 color: tokens.textPrimary,
-              ),
+                fontSize: 16,
+              ).copyWith(fontWeight: FontWeight.w800),
             ),
           ),
         ],
@@ -990,6 +991,46 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         ),
     ];
 
+    // Compact summary: the "all square" celebration sits under Who pays whom, not above it.
+    final compactSummaryOn = ref.watch(flagProvider(('enableCompactSummary', id))).value ?? true;
+    final Widget? celebration = celebrateOn && totals.totalSpent > 0 && !calm
+        ? Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: BentoTile(
+        key: const Key('settled-celebration'),
+        tone: BentoTone.mint,
+        padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+        child: Row(
+          children: [
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: AppMotion.of(context, const Duration(milliseconds: 700)),
+              curve: Curves.elasticOut,
+              builder: (_, v, child) => Transform.scale(scale: v, child: child),
+              child: Icon(Icons.verified_rounded, size: 40, color: tokens.colorSuccess),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.celebrateTitle, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                  Text(l10n.celebrateBody, style: TextStyle(fontSize: 13, color: tokens.textSecondary)),
+                ],
+              ),
+            ),
+            IconButton(
+              key: const Key('celebrate-share'),
+              tooltip: l10n.ledShareSummary,
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              icon: const Icon(Icons.ios_share_rounded),
+              onPressed: () => _shareSummary(trip, totals.totalSpent, totals.averageCost, transfers),
+            ),
+          ],
+        ),
+      ),
+    )
+        : null;
     // The Summary in two lists so a wide screen can show them side by side (flag `enableSummaryTwoPane`).
     final topChildren = <Widget>[
       const LastSyncedCaption(),
@@ -1125,43 +1166,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             ),
           ),
         ),
-      if (celebrateOn && totals.totalSpent > 0 && !calm)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: BentoTile(
-            key: const Key('settled-celebration'),
-            tone: BentoTone.mint,
-            padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
-            child: Row(
-              children: [
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
-                  duration: AppMotion.of(context, const Duration(milliseconds: 700)),
-                  curve: Curves.elasticOut,
-                  builder: (_, v, child) => Transform.scale(scale: v, child: child),
-                  child: Icon(Icons.verified_rounded, size: 40, color: tokens.colorSuccess),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(l10n.celebrateTitle, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-                      Text(l10n.celebrateBody, style: TextStyle(fontSize: 13, color: tokens.textSecondary)),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  key: const Key('celebrate-share'),
-                  tooltip: l10n.ledShareSummary,
-                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                  icon: const Icon(Icons.ios_share_rounded),
-                  onPressed: () => _shareSummary(trip, totals.totalSpent, totals.averageCost, transfers),
-                ),
-              ],
-            ),
-          ),
-        ),
+      if (celebration != null && !compactSummaryOn) celebration,
       if (nextOn && (nextPay != null || owedToMe.isNotEmpty))
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
@@ -1582,6 +1587,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         ],
         bare: true,
       ),
+      if (celebration != null && compactSummaryOn) celebration,
       // 3. Trip analytics: totals, where the money went, who paid, and each person's balance.
       section(
         'analytics',
@@ -1796,12 +1802,13 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                               key: cell.$3,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontTitle,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: tokens.textPrimary,
-                              ),
+                              // Money in mono; the top-category cell is a name + percent, so it keeps the title face.
+                              style: cell.$3 == const Key('stat-top')
+                                  ? AppTypography.tripTitle(color: tokens.textPrimary, fontSize: 16)
+                                  : AppTypography.moneyInline(
+                                      color: tokens.textPrimary,
+                                      fontSize: 16,
+                                    ).copyWith(fontWeight: FontWeight.w800),
                             ),
                           ],
                         ),
@@ -2214,13 +2221,9 @@ class _PassBanner extends StatelessWidget {
                         eyebrow.toUpperCase(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: AppTypography.fontMono,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.6,
+                        style: AppTypography.eyebrowMono(
                           color: Colors.white70,
-                        ),
+                        ).copyWith(fontWeight: FontWeight.w800, letterSpacing: 1.6),
                       ),
                     ),
                   ],

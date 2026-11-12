@@ -39,6 +39,13 @@ Future<void> tap(WidgetTester t, Finder f) async {
   await settle(t, rounds: 2);
 }
 
+/// Compact form folds split modes, the payer-half preset and group chips under this tile.
+Future<void> openMoreSplit(WidgetTester t) async {
+  if (key('more-split-options').evaluate().isEmpty || key('split-modes').evaluate().isNotEmpty) return;
+  await tap(t, key('more-split-options'));
+  await settle(t, rounds: 6);
+}
+
 Future<void> tapKey(WidgetTester t, Object k) async {
   final f = k is Finder ? k : find.byKey(k is Key ? k : Key(k as String));
   await t.ensureVisible(f);
@@ -246,6 +253,7 @@ void main() {
 
     testApp('percent: live sum, mismatch message, then a valid split saves its config', (tester) async {
       final s = await open(tester);
+      await openMoreSplit(tester);
       await tap(tester, key('mode-percentage'));
       await tester.enterText(find.byKey(ValueKey('cfg-${s.me}-percentage-0')), '60');
       await tester.enterText(find.byKey(ValueKey('cfg-${s.ben}-percentage-0')), '30');
@@ -264,6 +272,7 @@ void main() {
 
     testApp('exact amounts must equal the total', (tester) async {
       final s = await open(tester);
+      await openMoreSplit(tester);
       await tap(tester, key('mode-exact'));
       for (final m in [s.me, s.ben, s.cara]) {
         await tester.enterText(find.byKey(ValueKey('cfg-$m-exact-0')), m == s.cara ? '20' : '40');
@@ -277,6 +286,7 @@ void main() {
 
     testApp('shares (weights) save as weights, not as an equal split', (tester) async {
       final s = await open(tester);
+      await openMoreSplit(tester);
       await tap(tester, key('mode-custom'));
       await tester.enterText(find.byKey(ValueKey('cfg-${s.me}-custom-0')), '2');
       await tester.enterText(find.byKey(ValueKey('cfg-${s.ben}-custom-0')), '1');
@@ -291,11 +301,50 @@ void main() {
 
     testApp('payer 50% preset fills percentages that total 100', (tester) async {
       final s = await open(tester);
+      await openMoreSplit(tester);
       await tap(tester, key('preset-half'));
       expect(tester.widget<Text>(key('sum-status')).data, '100.0% of 100%');
       await save(tester);
       final e = (await expensesOf(tester, s)).single as Expense;
       expect(e.resolvedShares[s.me], 50);
+    });
+  });
+
+  group('compact split (progressive disclosure)', () {
+    testApp('compact form folds modes, payer-half and groups under More split options; Equal path stays', (
+      tester,
+    ) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await openForm(tester, s);
+      expect(key('more-split-options'), findsOneWidget);
+      expect(key('preset-everyone'), findsOneWidget);
+      expect(key('split-${s.me}'), findsOneWidget);
+      expect(key('mode-exact'), findsNothing);
+      expect(key('preset-half'), findsNothing);
+      await openMoreSplit(tester);
+      expect(key('mode-exact'), findsOneWidget);
+      expect(key('preset-half'), findsOneWidget);
+    });
+
+    testApp('compact off keeps the full split controls in view', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableCompactExpenseForm'});
+      final s = await seedTrip(tester);
+      await openForm(tester, s);
+      expect(key('more-split-options'), findsNothing);
+      expect(key('mode-exact'), findsOneWidget);
+      expect(key('preset-half'), findsOneWidget);
+      expect(s.me, isNotEmpty);
+    });
+
+    testApp('a mode set while folded opens the fold (Shares inputs stay reachable)', (tester) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await openForm(tester, s);
+      expect(key('mode-exact'), findsNothing);
+      containerOf(tester).read(expenseFormProvider(ExpenseFormArgs(s.tripId)).notifier).presetPayerHalf();
+      await settle(tester, rounds: 6);
+      expect(key('mode-exact'), findsOneWidget); // percentage mode expanded the tile
     });
   });
 
@@ -323,6 +372,7 @@ void main() {
       );
       await openForm(tester, s);
       await tap(tester, key('preset-only-payer'));
+      await openMoreSplit(tester);
       await tap(tester, key('group-$g'));
       expect(tester.widget<CheckboxListTile>(key('split-${s.me}')).value, isFalse);
       expect(tester.widget<CheckboxListTile>(key('split-${s.ben}')).value, isTrue);
@@ -692,6 +742,7 @@ void main() {
       final s = await seedTrip(tester);
       await openForm(tester, s);
       await typeTitle(tester, 'Dinner receipt');
+      await openMoreSplit(tester);
       await tap(tester, key('mode-itemized'));
       await tester.ensureVisible(key('add-item'));
       await tap(tester, key('add-item'));
@@ -715,6 +766,7 @@ void main() {
       await openForm(tester, s);
       await typeAmount(tester, '40');
       await typeTitle(tester, 'x');
+      await openMoreSplit(tester);
       await tap(tester, key('mode-itemized'));
       await save(tester);
       expect(errorText(tester), 'Please add at least one item to the itemized receipt breakdown.');

@@ -1165,6 +1165,12 @@ abstract class AppLocalizations {
   /// **'Send Reset Link'**
   String get resetSendLink;
 
+  /// No description provided for @resetRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot your password?'**
+  String get resetRequestTitle;
+
   /// No description provided for @resetCheckEmail.
   ///
   /// In en, this message translates to:
@@ -1320,6 +1326,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Name (A–Z)'**
   String get tripsSortName;
+
+  /// No description provided for @tripsViewOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'View and sort'**
+  String get tripsViewOptions;
 
   /// No description provided for @tripsNewTrip.
   ///
@@ -1573,6 +1585,24 @@ abstract class AppLocalizations {
   /// **'Create Trip'**
   String get createTripTitle;
 
+  /// No description provided for @createTripSectionWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Where'**
+  String get createTripSectionWhere;
+
+  /// No description provided for @createTripSectionWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'When'**
+  String get createTripSectionWhen;
+
+  /// No description provided for @createTripSectionMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Money'**
+  String get createTripSectionMoney;
+
   /// No description provided for @fieldTripName.
   ///
   /// In en, this message translates to:
@@ -1660,7 +1690,7 @@ abstract class AppLocalizations {
   /// No description provided for @joinGuestsCantJoin.
   ///
   /// In en, this message translates to:
-  /// **'Guest mode can\'t join shared trips. Sign in with an account to continue.'**
+  /// **'Guest mode can\'t join shared trips. Sign in to continue.'**
   String get joinGuestsCantJoin;
 
   /// No description provided for @joinGuestCta.
@@ -2773,6 +2803,18 @@ abstract class AppLocalizations {
   /// **'More details'**
   String get formMoreDetails;
 
+  /// No description provided for @formMoreSplitOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More split options'**
+  String get formMoreSplitOptions;
+
+  /// No description provided for @rowSettleFromSpend.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle {amount}'**
+  String rowSettleFromSpend(String amount);
+
   /// No description provided for @formDraftRestored.
   ///
   /// In en, this message translates to:
@@ -3678,6 +3720,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add what to bring or book, and tick things off together. Tap Add item to begin.'**
   String get coachChecklistBody;
+
+  /// No description provided for @coachMembersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring your travel crew'**
+  String get coachMembersTitle;
+
+  /// No description provided for @coachMembersBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite the people you are travelling with so every expense can be split between you.'**
+  String get coachMembersBody;
+
+  /// No description provided for @coachMembersCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite travelers'**
+  String get coachMembersCta;
+
+  /// No description provided for @memEmptyPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'No one is on this trip yet.'**
+  String get memEmptyPlain;
+
+  /// No description provided for @chatSayHi.
+  ///
+  /// In en, this message translates to:
+  /// **'Say hi'**
+  String get chatSayHi;
+
+  /// No description provided for @chatSayHiMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi everyone! 👋'**
+  String get chatSayHiMessage;
+
+  /// No description provided for @expNoMatchesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try removing a filter or searching for something else.'**
+  String get expNoMatchesHint;
 
   /// No description provided for @expJumpToday.
   ///
@@ -5040,6 +5124,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More activity actions'**
   String get activityMore;
+
+  /// No description provided for @settleCoachRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial payment recorded. {amount} still to settle.'**
+  String settleCoachRemaining(String amount);
+
+  /// No description provided for @settleCoachAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle rest'**
+  String get settleCoachAction;
+
+  /// No description provided for @balLargestDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe most on {trip}'**
+  String balLargestDebt(String trip);
+
+  /// No description provided for @balLargestOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'Most owed to you on {trip}'**
+  String balLargestOwed(String trip);
+
+  /// No description provided for @balSettleLargest.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle up'**
+  String get balSettleLargest;
+
+  /// No description provided for @balOpenTripBalances.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {trip} balances'**
+  String balOpenTripBalances(String trip);
+
+  /// No description provided for @expCloneLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Clone last'**
+  String get expCloneLast;
+
+  /// No description provided for @expCloneLastHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy {title} ({amount}) with today\'s date'**
+  String expCloneLastHint(String title, String amount);
+
+  /// No description provided for @approvalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval threshold'**
+  String get approvalTitle;
+
+  /// No description provided for @approvalOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get approvalOff;
+
+  /// No description provided for @approvalOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses above {amount} need approval'**
+  String approvalOn(String amount);
+
+  /// No description provided for @approvalPreviewOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty means no limit: every expense is added without approval.'**
+  String get approvalPreviewOff;
+
+  /// No description provided for @approvalInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount greater than 0, or clear the field to turn this off.'**
+  String get approvalInvalid;
+
+  /// No description provided for @approvalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'0.00'**
+  String get approvalHint;
+
+  /// No description provided for @approvalTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get approvalTurnOff;
+
+  /// No description provided for @binRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored {title}'**
+  String binRestored(String title);
+
+  /// No description provided for @binMoreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get binMoreActions;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

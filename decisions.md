@@ -5780,6 +5780,20 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Flutter-only; no math/schema changes; Pro/Labs stay default OFF.
 
+### ADR 293: Flutter enhancements S1–S5 — all 20 items (v3.91.7)
+* **Context of the Problem:**
+  - After the polish roadmap, travelers still hit form density, Balances chrome noise, no settle shortcut from Spend, weak empty/sync honesty, inconsistent visual language, and missing logic/search/live refinements.
+* **Selected Decision & Resolution:**
+  - **S1 Money:** Compact form “More split options”; Balances first paint under `enableCompactSummary`; Settle-from-Spend (`enableSettleFromSpend`, Trip ON).
+  - **S2 Empty/sync:** Coach empties (Members/Chat/Spend filters); sync badge + ambient outbox when pending.
+  - **S3 Visual:** Tidy rows; category vector icons; Trips AppBar diet; create-trip field parity; notification inbox polish; reset-password hierarchy; typography helpers.
+  - **S4 Logic:** Home owe CTA; partial settle coach; Clone last on Add dial; approval threshold AppSheet; recycle swipe-restore.
+  - **S5 Join/live/search:** Guest tertiary; live stale age; search deep-link into trip tabs.
+  - **Flags (7 new):** `enableSettleFromSpend`, `enableCategoryVectorIcons`, `enableTripsAppBarDiet`, `enableNotificationInboxPolish`, `enablePartialSettleCoach`, `enableSearchDeepLink` (Trip ON); `enableLiveLocationStaleAge` (Travel ON). Registry + Flutter goldens + FEAT-206.
+  - **Docs:** `FLUTTER-ENH-S1`…`S5` in `FEATURE_TEST_STEPS.md`.
+* **Trade-offs Accepted:**
+  - Flutter-only; reuse existing Core/Trip flags where the surface already existed; no dock/notch/Labs chrome or Admin polish in this program.
+
 ### ADR 292: Restore boarding Staff › control (v3.91.6)
 * **Context of the Problem:**
   - FEAT-204 / ADR 291 buried Staff behind a 2s barcode long-press; travelers and staff could not find superadmin sign-in on the boarding login sheet.

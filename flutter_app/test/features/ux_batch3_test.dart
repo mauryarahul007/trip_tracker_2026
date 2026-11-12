@@ -549,6 +549,8 @@ void main() {
       await seedTrip(tester);
       await goTo(tester, '/');
       expect(key('trip-pending-dot'), findsOneWidget); // photo tile
+      await tester.tap(key('trips-view-menu'));
+      await settle(tester);
       await tester.tap(key('trips-layout-toggle'));
       await settle(tester, rounds: 6);
       expect(key('trip-pending-dot'), findsOneWidget); // compact row

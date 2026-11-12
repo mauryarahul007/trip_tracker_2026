@@ -187,7 +187,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                           GoRoute(
                             path: 'new',
                             parentNavigatorKey: routerKey,
-                            builder: (context, state) => ExpenseFormScreen(tripId: state.pathParameters['id']!),
+                            builder: (context, state) => ExpenseFormScreen(
+                              tripId: state.pathParameters['id']!,
+                              // "Clone last" from the Add dial: open with the last expense already copied in.
+                              cloneLast: state.uri.queryParameters['clone'] == '1',
+                            ),
                           ),
                           GoRoute(
                             path: ':eid/edit',

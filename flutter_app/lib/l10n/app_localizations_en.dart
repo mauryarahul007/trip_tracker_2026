@@ -615,6 +615,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resetSendLink => 'Send Reset Link';
 
   @override
+  String get resetRequestTitle => 'Forgot your password?';
+
+  @override
   String get resetCheckEmail => 'Check your email';
 
   @override
@@ -694,6 +697,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripsSortName => 'Name (A–Z)';
+
+  @override
+  String get tripsViewOptions => 'View and sort';
 
   @override
   String get tripsNewTrip => 'New Trip';
@@ -859,6 +865,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createTripTitle => 'Create Trip';
 
   @override
+  String get createTripSectionWhere => 'Where';
+
+  @override
+  String get createTripSectionWhen => 'When';
+
+  @override
+  String get createTripSectionMoney => 'Money';
+
+  @override
   String get fieldTripName => 'Trip name';
 
   @override
@@ -907,7 +922,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinSignInPrompt => 'Sign in to join this trip.';
 
   @override
-  String get joinGuestsCantJoin => 'Guest mode can\'t join shared trips. Sign in with an account to continue.';
+  String get joinGuestsCantJoin => 'Guest mode can\'t join shared trips. Sign in to continue.';
 
   @override
   String get joinGuestCta => 'Join with just your name';
@@ -1552,6 +1567,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formMoreDetails => 'More details';
 
   @override
+  String get formMoreSplitOptions => 'More split options';
+
+  @override
+  String rowSettleFromSpend(String amount) {
+    return 'Settle $amount';
+  }
+
+  @override
   String get formDraftRestored => 'Restored your unsent draft';
 
   @override
@@ -2114,6 +2137,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coachChecklistBody => 'Add what to bring or book, and tick things off together. Tap Add item to begin.';
+
+  @override
+  String get coachMembersTitle => 'Bring your travel crew';
+
+  @override
+  String get coachMembersBody => 'Invite the people you are travelling with so every expense can be split between you.';
+
+  @override
+  String get coachMembersCta => 'Invite travelers';
+
+  @override
+  String get memEmptyPlain => 'No one is on this trip yet.';
+
+  @override
+  String get chatSayHi => 'Say hi';
+
+  @override
+  String get chatSayHiMessage => 'Hi everyone! 👋';
+
+  @override
+  String get expNoMatchesHint => 'Try removing a filter or searching for something else.';
 
   @override
   String get expJumpToday => 'Jump to today';
@@ -2858,4 +2902,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activityMore => 'More activity actions';
+
+  @override
+  String settleCoachRemaining(String amount) {
+    return 'Partial payment recorded. $amount still to settle.';
+  }
+
+  @override
+  String get settleCoachAction => 'Settle rest';
+
+  @override
+  String balLargestDebt(String trip) {
+    return 'You owe most on $trip';
+  }
+
+  @override
+  String balLargestOwed(String trip) {
+    return 'Most owed to you on $trip';
+  }
+
+  @override
+  String get balSettleLargest => 'Settle up';
+
+  @override
+  String balOpenTripBalances(String trip) {
+    return 'Open $trip balances';
+  }
+
+  @override
+  String get expCloneLast => 'Clone last';
+
+  @override
+  String expCloneLastHint(String title, String amount) {
+    return 'Copy $title ($amount) with today\'s date';
+  }
+
+  @override
+  String get approvalTitle => 'Approval threshold';
+
+  @override
+  String get approvalOff => 'Off';
+
+  @override
+  String approvalOn(String amount) {
+    return 'Expenses above $amount need approval';
+  }
+
+  @override
+  String get approvalPreviewOff => 'Empty means no limit: every expense is added without approval.';
+
+  @override
+  String get approvalInvalid => 'Enter an amount greater than 0, or clear the field to turn this off.';
+
+  @override
+  String get approvalHint => '0.00';
+
+  @override
+  String get approvalTurnOff => 'Turn off';
+
+  @override
+  String binRestored(String title) {
+    return 'Restored $title';
+  }
+
+  @override
+  String get binMoreActions => 'More actions';
 }

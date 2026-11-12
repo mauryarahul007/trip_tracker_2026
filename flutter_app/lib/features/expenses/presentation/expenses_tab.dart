@@ -9,6 +9,7 @@ import '../../../core/platform/haptics.dart';
 import '../../../core/clock.dart';
 import '../../../core/format/money.dart';
 import '../../../domain/logic/expense_form_logic.dart';
+import '../../../domain/logic/flag_defaults.g.dart' show defaultFeatureFlags;
 import '../../../core/storage/prefs.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/expense_list_logic.dart';
@@ -51,6 +52,7 @@ import 'widgets/compass_spend_summary.dart';
 import 'widgets/expense_row.dart';
 import 'widgets/expense_swipe.dart';
 import 'widgets/expense_selection_bar.dart';
+import 'widgets/settle_sheet.dart' show settleTransferForExpense, showSettleSheet;
 import '../../../core/platform/motion.dart';
 
 const _pageSize = 50;
@@ -457,7 +459,17 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final sticky = _flag(ref, 'enableStickyDayHeaders', id);
 
     // Compass spend uses the flat tile rows and day cards of the redesign (what the tidy flag already draws).
-    final tidyOn = _flag(ref, 'enableTidyExpenses', id) || compassSpend;
+    // One row language: tidy tiles whenever the flag is ON (its default), Compass or not. The boarding-receipt
+    // layout only returns when Superadmin turns the flag OFF. While the flag is loading it reads as its default,
+    // so first paint never flashes the receipt rows.
+    final tidyOn = (ref.watch(flagProvider(('enableTidyExpenses', id))).value ??
+            defaultFeatureFlags['enableTidyExpenses'] ??
+            true) ||
+        compassSpend;
+    final vectorIconsOn = ref.watch(flagProvider(('enableCategoryVectorIcons', id))).value ??
+        defaultFeatureFlags['enableCategoryVectorIcons'] ??
+        true;
+    final settleFromSpendOn = _flag(ref, 'enableSettleFromSpend', id);
     final justSaved = _flag(ref, 'enableSaveConfirmation', id) ? ref.watch(justSavedExpenseProvider) : null;
     Widget rowFor(Expense e, {required bool lastInGroup}) {
       if (wide) {
@@ -471,6 +483,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
           onTap: () => _openDetail(e),
         );
       }
+      // Settle from Spend: only on the tidy / receipt rows, and only while money is still open on this pair.
+      final settleTransfer = settleFromSpendOn && !compactActive && !selecting
+          ? settleTransferForExpense(settlement, myMember, e)
+          : null;
       final row = ExpenseRow(
         expense: e,
         trip: trip,
@@ -481,11 +497,25 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         colorRings:
             _flag(ref, 'enableCategoryColorRings', id) || ref.watch(compassFlagProvider((compassSpendFlag, id))),
         tidy: tidyOn,
+        vectorIcons: vectorIconsOn,
         isDirty: dirty.contains(e.id),
         isConflict: conflicts.contains(e.id),
         onRetrySync: failed.contains(e.id) ? () => ref.read(retryRowSyncProvider)(e.id) : null,
         refunded: refundedIds.contains(e.id),
         onTap: selecting && pickable(e) ? () => _togglePick(e) : () => _openDetail(e),
+        onSettle: settleTransfer == null
+            ? null
+            : () => unawaited(
+                showSettleSheet(
+                  context: context,
+                  tripId: id,
+                  transfer: settleTransfer,
+                  currency: trip.baseCurrency,
+                ),
+              ),
+        settleLabel: settleTransfer == null
+            ? null
+            : l10n.rowSettleFromSpend(formatMoney(context, settleTransfer.amount, trip.baseCurrency)),
       );
       // Bento: each expense is a rounded tile tinted by its category.
       final body = Padding(
@@ -925,7 +955,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         : EmptyState(
             plain: true,
             title: l10n.expNoMatches,
-            subtitle: '',
+            subtitle: coachEmptyOn ? l10n.expNoMatchesHint : '',
             // One tap back to the full list instead of hunting for the chips that are filtering it.
             action: filters.hasActive
                 ? AppButton(

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/providers.dart';
 import '../../../domain/logic/category_color.dart';
+import '../../../shared/theme/category_icons.dart';
+import '../../../domain/logic/flag_defaults.g.dart' show defaultFeatureFlags;
 import '../../../domain/models/category.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -21,6 +23,9 @@ class CategoryScreen extends ConsumerWidget {
     final cats = ref.watch(tripCategoriesProvider(tripId));
     final reorder = ref.watch(flagProvider(('enableCategoryReorder', tripId))).value ?? false;
     final isAdmin = ref.watch(isTripAdminProvider(tripId));
+    final vectorIcons = ref.watch(flagProvider(('enableCategoryVectorIcons', tripId))).value ??
+        defaultFeatureFlags['enableCategoryVectorIcons'] ??
+        true;
     return AppScaffold(
       appBar: AppBar(title: Text(l10n.catTitle)),
       body: Column(
@@ -41,11 +46,13 @@ class CategoryScreen extends ConsumerWidget {
                       next.insert(newIndex, item);
                       ref.read(tripRepositoryProvider).setCategoryOrder(tripId, [for (final c in next) c.id]);
                     },
-                    children: [for (final c in cats) _tile(context, ref, c, isAdmin, key: ValueKey(c.id))],
+                    children: [
+                      for (final c in cats) _tile(context, ref, c, isAdmin, key: ValueKey(c.id), vectorIcons: vectorIcons),
+                    ],
                   )
                 : ListView(
                     key: const Key('cat-list'),
-                    children: [for (final c in cats) _tile(context, ref, c, isAdmin)],
+                    children: [for (final c in cats) _tile(context, ref, c, isAdmin, vectorIcons: vectorIcons)],
                   ),
           ),
         ],
@@ -53,7 +60,7 @@ class CategoryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _tile(BuildContext context, WidgetRef ref, Category c, bool isAdmin, {Key? key}) {
+  Widget _tile(BuildContext context, WidgetRef ref, Category c, bool isAdmin, {Key? key, bool vectorIcons = false}) {
     return ListTile(
       key: key ?? Key('cat-${c.id}'),
       leading: Container(
@@ -64,9 +71,7 @@ class CategoryScreen extends ConsumerWidget {
           color: Color(categoryColorArgb(c.id)).withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(14),
         ),
-        child: c.icon?.isNotEmpty == true && !c.icon!.contains(':')
-            ? Text(c.icon!, style: const TextStyle(fontSize: 20))
-            : Icon(Icons.sell_outlined, size: 20, color: Color(categoryColorArgb(c.id))),
+        child: categoryGlyph(c, 20, Color(categoryColorArgb(c.id)), vector: vectorIcons),
       ),
       title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w600)),
       trailing: isAdmin && c.isCustom

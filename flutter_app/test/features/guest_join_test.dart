@@ -11,6 +11,11 @@ void main() {
   ) async {
     final app = await pumpApp(tester, launchLink: Uri.parse('com.triptracker.app://join/abc123'));
     expect(key('join-guest'), findsOneWidget);
+    expect(tester.widget(key('join-guest')), isA<TextButton>()); // tertiary: below the sign-in buttons, not a button
+    expect(
+      tester.getTopLeft(key('join-guest')).dy,
+      greaterThan(tester.getBottomLeft(find.text('Continue with Google')).dy),
+    );
     await tester.tap(key('join-guest'));
     await settle(tester, rounds: 6);
     expect(key('guest-name-join'), findsOneWidget);

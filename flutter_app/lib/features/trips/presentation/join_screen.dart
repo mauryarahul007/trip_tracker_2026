@@ -10,6 +10,7 @@ import '../../../domain/logic/trip_utilities.dart' show buildAutoGroupName, form
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -112,7 +113,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
     Text title(String t) => Text(
       t,
       textAlign: TextAlign.center,
-      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: tokens.textPrimary),
+      style: AppTypography.tripTitle(color: tokens.textPrimary, fontSize: 22),
     );
     Text body(String t) => Text(
       t,
@@ -204,14 +205,13 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
               onPressed: _busy ? null : () => _social(signInWithApple),
             ),
           ],
+          // Tertiary: after Google and Apple, so signing in stays the obvious path and guest is the quiet way out.
           if (guestJoinOn && !auth.isLocalOnly) ...[
-            gap,
-            AppButton(
+            const SizedBox(height: 4),
+            TextButton.icon(
               key: const Key('join-guest'),
-              label: l10n.joinGuestCta,
-              icon: AppIcons.members,
-              variant: AppButtonVariant.secondary,
-              isFullWidth: true,
+              icon: const Icon(AppIcons.members, size: 18),
+              label: Text(l10n.joinGuestCta),
               onPressed: _busy ? null : _guest,
             ),
           ],

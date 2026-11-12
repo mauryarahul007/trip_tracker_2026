@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../../app/auth_state.dart';
 import '../../../data/providers.dart';
+import '../../../domain/logic/flag_defaults.g.dart' show defaultFeatureFlags;
 import '../../../domain/logic/notification_actions.dart';
 import '../../../domain/logic/notifications.dart';
 import '../../../domain/logic/summary_features.dart';
@@ -120,6 +121,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         if (!_pendingDelete.contains(n.id)) n,
     ];
     final groupingOn = ref.watch(flagProvider(('enableNotificationGrouping', null))).value ?? false;
+    final polish =
+        ref.watch(flagProvider(('enableNotificationInboxPolish', null))).value ??
+        defaultFeatureFlags['enableNotificationInboxPolish'] ??
+        true;
+    Widget chip(Key key, String label, bool selected, VoidCallback onTap) => polish
+        ? _QuietChip(key: key, label: label, selected: selected, onTap: onTap)
+        : ChoiceChip(key: key, label: Text(label), selected: selected, onSelected: (_) => onTap());
     final dayGroups = ref.watch(flagProvider(('enableNotificationDayGroups', null))).value ?? true;
     final nowDt = ref.read(nowProvider)();
     final actionsOn =
@@ -183,32 +191,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 spacing: 8,
                 children: [
                   if (widget.tripId != null) ...[
-                    ChoiceChip(
-                      key: const Key('filter-this-trip'),
-                      label: const Text('This trip'),
-                      selected: _thisTrip,
-                      onSelected: (_) => setState(() => _thisTrip = true),
-                    ),
-                    ChoiceChip(
-                      key: const Key('filter-all-trips'),
-                      label: const Text('All trips'),
-                      selected: !_thisTrip,
-                      onSelected: (_) => setState(() => _thisTrip = false),
-                    ),
+                    chip(const Key('filter-this-trip'), 'This trip', _thisTrip, () => setState(() => _thisTrip = true)),
+                    chip(const Key('filter-all-trips'), 'All trips', !_thisTrip, () => setState(() => _thisTrip = false)),
                   ],
                   if (groupingOn) ...[
-                    ChoiceChip(
-                      key: const Key('filter-kind-all'),
-                      label: const Text('All'),
-                      selected: !_moneyOnly,
-                      onSelected: (_) => setState(() => _moneyOnly = false),
-                    ),
-                    ChoiceChip(
-                      key: const Key('filter-kind-money'),
-                      label: const Text('Money'),
-                      selected: _moneyOnly,
-                      onSelected: (_) => setState(() => _moneyOnly = true),
-                    ),
+                    chip(const Key('filter-kind-all'), 'All', !_moneyOnly, () => setState(() => _moneyOnly = false)),
+                    chip(const Key('filter-kind-money'), 'Money', _moneyOnly, () => setState(() => _moneyOnly = true)),
                   ],
                 ],
               ),
@@ -227,6 +215,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                       dayGroups: dayGroups,
                       dayLabel: dayLabel,
                       dense: dayGroups,
+                      polish: polish,
                       expanded: _expanded,
                       onToggleGroup: (id, fold) => setState(() => fold ? _expanded.add(id) : _expanded.remove(id)),
                       tokens: tokens,
@@ -261,6 +250,7 @@ class _NotificationsScroll extends StatelessWidget {
     required this.dayGroups,
     required this.dayLabel,
     required this.dense,
+    required this.polish,
     required this.expanded,
     required this.onToggleGroup,
     required this.tokens,
@@ -278,6 +268,7 @@ class _NotificationsScroll extends StatelessWidget {
   final bool dayGroups;
   final String? Function(NotificationItem) dayLabel;
   final bool dense;
+  final bool polish;
   final Set<String> expanded;
   final void Function(String id, bool foldOpen) onToggleGroup;
   final AppTokens tokens;
@@ -323,6 +314,7 @@ class _NotificationsScroll extends StatelessWidget {
                   item: n,
                   tokens: tokens,
                   dense: dense,
+                  polish: polish,
                   confirmable: actionsOn && n.data?['type'] == 'settlement_confirmation_requested'
                       ? settlementToConfirm(
                           tripId: n.tripId,
@@ -403,8 +395,13 @@ class _Row extends StatelessWidget {
     required this.confirmable,
     required this.onConfirm,
     this.dense = false,
+    this.polish = false,
     super.key,
   });
+
+  /// Custom row (unread pip, type icon tile, quiet read toggle) instead of the stock ListTile
+  /// (flag `enableNotificationInboxPolish`).
+  final bool polish;
 
   /// The settlement this notification asks you to confirm (null: no button).
   final Expense? confirmable;
@@ -436,6 +433,16 @@ class _Row extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (polish)
+              _PolishedBody(
+                item: item,
+                meta: meta,
+                headline: headline,
+                tokens: tokens,
+                onTap: onTap,
+                onToggleRead: onToggleRead,
+              )
+            else
             ListTile(
               dense: dense,
               visualDensity: dense ? VisualDensity.compact : VisualDensity.standard,
@@ -463,7 +470,7 @@ class _Row extends StatelessWidget {
             ),
             if (confirmable != null)
               Padding(
-                padding: EdgeInsets.fromLTRB(dense ? 56 : 72, 0, 16, dense ? 4 : 8),
+                padding: EdgeInsets.fromLTRB(polish ? 62 : (dense ? 56 : 72), 0, 16, dense ? 4 : 8),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: FilledButton.tonal(
@@ -473,6 +480,144 @@ class _Row extends StatelessWidget {
                   ),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Quiet filter chip: text only, a soft tint when selected, no outline (flag enableNotificationInboxPolish).
+class _QuietChip extends StatelessWidget {
+  const _QuietChip({required this.label, required this.selected, required this.onTap, super.key});
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(99),
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+          child: Container(
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: selected ? t.primaryAccent.withValues(alpha: 0.12) : Colors.transparent,
+              borderRadius: BorderRadius.circular(99),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                color: selected ? t.textPrimary : t.textMuted,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Inbox row: unread pip, type icon tile, headline + body + time, quiet read toggle.
+class _PolishedBody extends StatelessWidget {
+  const _PolishedBody({
+    required this.item,
+    required this.meta,
+    required this.headline,
+    required this.tokens,
+    required this.onTap,
+    required this.onToggleRead,
+  });
+
+  final NotificationItem item;
+  final ({IconData icon, Color color}) meta;
+  final String headline;
+  final AppTokens tokens;
+  final VoidCallback onTap;
+  final VoidCallback onToggleRead;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 10, 4, 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 14,
+              height: 36,
+              child: Center(
+                child: item.read
+                    ? null
+                    : Container(
+                        key: Key('notif-pip-${item.id}'),
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(color: tokens.primaryAccent, shape: BoxShape.circle),
+                      ),
+              ),
+            ),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: meta.color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(meta.icon, size: 18, color: meta.color),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    headline,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: item.read ? FontWeight.w500 : FontWeight.w800,
+                      color: tokens.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    renderNotificationBody(item),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 13, height: 1.3, color: tokens.textSecondary),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    formatRelativeTime(item.createdAt),
+                    style: TextStyle(fontSize: 11.5, color: tokens.textMuted),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              tooltip: item.read ? 'Mark as unread' : 'Mark as read',
+              visualDensity: VisualDensity.compact,
+              onPressed: onToggleRead,
+              icon: Icon(
+                item.read ? Icons.mark_email_unread_outlined : Icons.mark_email_read_outlined,
+                size: 20,
+                color: tokens.textMuted,
+              ),
+            ),
           ],
         ),
       ),

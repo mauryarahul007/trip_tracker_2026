@@ -12,6 +12,7 @@ import 'package:trip_tracker/domain/logic/sync_merge.dart';
 import 'package:trip_tracker/domain/models/expense.dart';
 import 'package:trip_tracker/domain/models/expense_io.dart';
 import 'package:trip_tracker/features/expenses/application/expenses_providers.dart' show tripExpensesProvider;
+import 'package:trip_tracker/features/expenses/presentation/widgets/settle_sheet.dart' show SettleSheet;
 import 'package:trip_tracker/shared/widgets/app_button.dart';
 
 import '../../data/expense_submit_test.dart' show FakeApi;
@@ -210,6 +211,38 @@ void main() {
       await settle(tester);
       expect(find.byKey(const Key('row-amount')), findsOneWidget);
       expect(find.byType(TicketBarcode), findsNothing);
+    });
+
+    testApp('Settle from Spend: shows where I still owe the payer, opens the settle sheet, hides when square', (
+      tester,
+    ) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      final owed = await addExpense(tester, s, title: 'Dinner', amount: 60, paidBy: s.ben);
+      final solo = await addExpense(tester, s, title: 'My coffee', amount: 10, split: [s.me]);
+      await openExpenses(tester, s);
+      await tester.tap(find.byKey(const Key('tab-menu')));
+      await settle(tester);
+      await tester.tap(find.text('Expand all days'));
+      await settle(tester);
+      expect(find.byKey(Key('settle-from-spend-$owed')), findsOneWidget);
+      expect(find.byKey(Key('settle-from-spend-$solo')), findsNothing); // nothing open on that pair
+      await tester.ensureVisible(find.byKey(Key('settle-from-spend-$owed')));
+      await tester.tap(find.byKey(Key('settle-from-spend-$owed')));
+      await settle(tester, rounds: 6);
+      expect(find.byType(SettleSheet), findsOneWidget);
+    });
+
+    testApp('Settle from Spend: no shortcut with its flag off', (tester) async {
+      await pumpApp(tester, user: asha, flagsOff: {'enableSettleFromSpend'});
+      final s = await seedTrip(tester);
+      final owed = await addExpense(tester, s, title: 'Dinner', amount: 60, paidBy: s.ben);
+      await openExpenses(tester, s);
+      await tester.tap(find.byKey(const Key('tab-menu')));
+      await settle(tester);
+      await tester.tap(find.text('Expand all days'));
+      await settle(tester);
+      expect(find.byKey(Key('settle-from-spend-$owed')), findsNothing);
     });
 
     testApp('tidy day header: a card row with a big total and the expense count', (tester) async {
@@ -593,7 +626,10 @@ void main() {
       await settle(tester, rounds: 10);
       expect(find.text('One'), findsOneWidget);
 
-      await tester.tap(button('Delete forever').first);
+      // Delete forever now lives in each row's overflow menu; Restore is the row's one button.
+      await tester.tap(find.byWidgetPredicate((w) => w.key.toString().contains("'bin-more-")).first);
+      await settle(tester);
+      await tester.tap(find.text('Delete forever'));
       await settle(tester);
       expect(find.textContaining('forever? This can'), findsOneWidget);
       await tester.tap(find.text('Cancel'));

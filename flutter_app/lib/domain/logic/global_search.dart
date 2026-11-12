@@ -1,7 +1,7 @@
 import '../models/expense.dart';
 import '../models/trip.dart';
 
-enum HitKind { expense, note }
+enum HitKind { expense, note, message, trip }
 
 /// One match found inside a trip (not the trip itself).
 class SearchHit {
@@ -11,6 +11,7 @@ class SearchHit {
     required this.tripName,
     required this.title,
     required this.detail,
+    this.itemId,
     this.amount,
     this.currency,
   });
@@ -19,6 +20,9 @@ class SearchHit {
   final String tripName;
   final String title;
   final String detail;
+
+  /// Id of the expense / note / message that matched, so a deep link can highlight it. Null for a trip-only hit.
+  final String? itemId;
   final double? amount;
   final String? currency;
 }
@@ -58,6 +62,7 @@ List<SearchHit> searchHits(
           tripName: byId[e.tripId]!.name,
           title: e.title,
           detail: why.isEmpty ? e.date : '${e.date} · $why',
+          itemId: e.id,
           amount: e.amount,
           currency: e.currency,
         ),
@@ -67,9 +72,22 @@ List<SearchHit> searchHits(
   for (final t in trips) {
     for (final n in t.notes) {
       if (n.title.toLowerCase().contains(q) || n.content.toLowerCase().contains(q)) {
-        hits.add(SearchHit(kind: HitKind.note, tripId: t.id, tripName: t.name, title: n.title, detail: ''));
+        hits.add(SearchHit(kind: HitKind.note, tripId: t.id, tripName: t.name, title: n.title, detail: '', itemId: n.id));
       }
     }
   }
   return hits.take(max).toList();
 }
+
+/// Where a search hit opens. [path] is an existing trip route; [focusKind] / [focusId] (when set) name the row the
+/// destination tab should bring into view (same kinds the Activity tab uses: `expense`, `message`, `note`).
+typedef SearchHitTarget = ({String path, String? focusKind, String? focusId});
+
+/// Deep-link target for [h] (`enableSearchDeepLink`): Spend for expenses, Chat for messages, Notes for notes, and the
+/// trip's default tab (bare `/trip/:id`, which the router redirects) for a trip-only hit.
+SearchHitTarget searchHitTarget(SearchHit h) => switch (h.kind) {
+  HitKind.expense => (path: '/trip/${h.tripId}/expenses', focusKind: 'expense', focusId: h.itemId),
+  HitKind.message => (path: '/trip/${h.tripId}/chat', focusKind: 'message', focusId: h.itemId),
+  HitKind.note => (path: '/trip/${h.tripId}/notes', focusKind: 'note', focusId: h.itemId),
+  HitKind.trip => (path: '/trip/${h.tripId}', focusKind: null, focusId: null),
+};

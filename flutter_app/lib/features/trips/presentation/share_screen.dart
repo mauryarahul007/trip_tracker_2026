@@ -99,13 +99,13 @@ class ShareScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(l10n.shareTotalSpend, style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                          Text(l10n.shareTotalSpend.toUpperCase(), style: AppTypography.eyebrowMono(color: Colors.white70)),
                           const SizedBox(height: 6),
                           for (final e in spend)
                             Text(
                               formatAmount(e.value, getCurrencySymbol(e.key)),
                               key: Key('spend-${e.key}'),
-                              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white),
+                              style: AppTypography.moneyDisplay(fontSize: 32, color: Colors.white),
                             ),
                         ],
                       ),
@@ -155,11 +155,11 @@ class _Stat extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
+          Text(label.toUpperCase(), style: AppTypography.eyebrowMono(color: tokens.textMuted)),
           const SizedBox(height: 6),
           Text(
             value,
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: tokens.textPrimary),
+            style: AppTypography.moneyInline(color: tokens.textPrimary, fontSize: 22),
           ),
         ],
       ),

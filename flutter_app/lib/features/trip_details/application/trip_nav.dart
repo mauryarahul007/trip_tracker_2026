@@ -7,7 +7,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/flags/compass_flags.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/flag_defaults.g.dart';
+import '../../../domain/logic/global_search.dart';
 import '../../../domain/models/trip.dart';
+import '../../notifications/application/activity_focus.dart';
 import '../domain/trip_tabs.dart';
 
 /// The trip being viewed, live from local storage (null once deleted).
@@ -58,6 +60,16 @@ List<TripNavTab> _legacyTabs(Ref ref, String tripId, bool Function(String) flag)
       isChatFirstNav: chatFirst,
     ),
   );
+}
+
+/// Opens a global-search hit (`enableSearchDeepLink`): `go` into the trip tab it names (Spend, Chat, Notes) and ask
+/// that tab to bring the matched row into view; a trip-only hit opens the trip's default tab. The focus slot is the
+/// one Activity taps use, and the destination tab reads it once and clears it.
+void openSearchHit(BuildContext context, WidgetRef ref, SearchHit hit) {
+  final t = searchHitTarget(hit);
+  final kind = t.focusKind, id = t.focusId;
+  ref.read(activityFocusProvider.notifier).set(kind != null && id != null ? (kind: kind, id: id) : null);
+  context.go(t.path);
 }
 
 /// Fires each time a trip shell is torn down (the trip page was left).

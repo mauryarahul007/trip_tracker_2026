@@ -50,6 +50,7 @@ import '../../../shared/widgets/swipeable_row.dart';
 import '../../../shared/widgets/undo_snackbar.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../../expenses/application/money_providers.dart' show allTripsProvider;
+import '../../trip_details/application/trip_nav.dart' show openSearchHit;
 import '../application/trips_providers.dart';
 import 'widgets/home_dock.dart';
 import '../application/sample_trip.dart';
@@ -99,7 +100,25 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
 
   DateTime get _now => widget.now?.call() ?? ref.read(nowProvider)();
 
-  void _open(Trip t) => context.push('/trip/${t.id}/ledger'); // opens on Summary, the first tab
+  /// `enableSearchDeepLink` (and global search) is ON; set in build() so tap handlers never watch.
+  var _deepLinkOn = false;
+
+  void _open(Trip t) {
+    // Trip-only search hit with deep links on: the trip's default tab, like every other search hit lands on a tab.
+    if (_deepLinkOn && ref.read(tripSearchProvider).trim().isNotEmpty) {
+      openSearchHit(context, ref, SearchHit(kind: HitKind.trip, tripId: t.id, tripName: t.name, title: t.name, detail: ''));
+      return;
+    }
+    unawaited(context.push('/trip/${t.id}/ledger')); // opens on Summary, the first tab
+  }
+
+  void _openHit(SearchHit h) {
+    if (_deepLinkOn) {
+      openSearchHit(context, ref, h);
+    } else {
+      unawaited(context.push('/trip/${h.tripId}/${h.kind == HitKind.expense ? 'expenses' : 'notes'}'));
+    }
+  }
 
   Future<void> _create() => createTripFlow(context);
 
@@ -409,6 +428,15 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     });
   }
 
+  /// Menu label with a leading tick when it is the current choice (sort in the diet overflow menu).
+  Widget _checkedLabel(String text, bool checked) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      SizedBox(width: 24, child: checked ? const Icon(Icons.check_rounded, size: 18) : null),
+      Text(text),
+    ],
+  );
+
   /// Root back press: exit only on a second press inside the window.
   void _onRootBack() {
     final now = _now;
@@ -447,6 +475,8 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     final overviewOn = _flagOn('enableTripsOverview');
     final gridOn = _flagOn('enableTripGridTiles');
     final searchOn = _flagOn('enableGlobalSearch');
+    _deepLinkOn = searchOn && _flagOn('enableSearchDeepLink');
+    final appBarDiet = _flagOn('enableTripsAppBarDiet');
     _pendingIds = _flagOn('enablePendingDots') ? ref.watch(pendingTripIdsProvider) : const <String>{};
     final pinnedOn = _flagOn('enableTripPins');
     final pinnedIds = pinnedOn ? ref.watch(pinnedTripsProvider) : const <String>{};
@@ -485,6 +515,51 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                   title: Text(l10n.tripsTitle),
                   actions: [
                     const SyncButton(),
+                    if (appBarDiet) ...[
+                      // Diet: Sync and Search stay; layout, view and sort share one overflow menu.
+                      IconButton(
+                        key: const Key('trips-search-toggle'),
+                        tooltip: l10n.tripsSearchHint,
+                        icon: Icon(_searchOpen ? Icons.search_off_rounded : AppIcons.search),
+                        onPressed: () => setState(() {
+                          _searchOpen = !_searchOpen;
+                          if (!_searchOpen) ref.read(tripSearchProvider.notifier).set('');
+                        }),
+                      ),
+                      PopupMenuButton<String>(
+                        key: const Key('trips-view-menu'),
+                        tooltip: l10n.tripsViewOptions,
+                        icon: const Icon(Icons.tune_rounded),
+                        onSelected: (v) {
+                          switch (v) {
+                            case 'layout':
+                              ref.read(tripsLayoutProvider.notifier).set(grid ? TripsLayout.list : TripsLayout.grid);
+                            case 'view':
+                              ref.read(tripsViewProvider.notifier).set(cards ? TripsView.list : TripsView.cards);
+                            case 'sort-date':
+                              ref.read(tripSortProvider.notifier).set(TripSort.date);
+                            case 'sort-name':
+                              ref.read(tripSortProvider.notifier).set(TripSort.name);
+                          }
+                        },
+                        itemBuilder: (_) => [
+                          if (gridOn)
+                            PopupMenuItem(
+                              key: const Key('trips-layout-toggle'),
+                              value: 'layout',
+                              child: Text(grid ? l10n.tripsLayoutList : l10n.tripsLayoutGrid),
+                            ),
+                          if (stackOn)
+                            PopupMenuItem(
+                              key: const Key('trips-view-toggle'),
+                              value: 'view',
+                              child: Text(cards ? l10n.tripsViewList : l10n.tripsViewCards),
+                            ),
+                          PopupMenuItem(value: 'sort-date', child: _checkedLabel(l10n.tripsSortDate, sort == TripSort.date)),
+                          PopupMenuItem(value: 'sort-name', child: _checkedLabel(l10n.tripsSortName, sort == TripSort.name)),
+                        ],
+                      ),
+                    ] else ...[
                     if (!cards && gridOn)
                       IconButton(
                         key: const Key('trips-layout-toggle'),
@@ -521,6 +596,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                         PopupMenuItem(value: TripSort.name, child: Text(l10n.tripsSortName)),
                       ],
                     ),
+                    ],
                     PopupMenuButton<String>(
                       tooltip: horizon ? l10n.tripsJoinWithCode : l10n.navSettings,
                       icon: Icon(horizon ? AppIcons.more : AppIcons.settings),
@@ -939,11 +1015,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                                     formatMoney(context, h.amount!, h.currency ?? 'INR'),
                                                     style: const TextStyle(fontWeight: FontWeight.w700),
                                                   ),
-                                            onTap: () => unawaited(
-                                              context.push(
-                                                '/trip/${h.tripId}/${h.kind == HitKind.expense ? 'expenses' : 'notes'}',
-                                              ),
-                                            ),
+                                            onTap: () => _openHit(h),
                                           ),
                                       ],
                                     ),

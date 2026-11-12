@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,6 +22,7 @@ import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../../expenses/application/money_providers.dart';
+import '../../expenses/presentation/widgets/settle_sheet.dart' show showSettlementChooserOrSheet;
 import 'widgets/home_dock.dart';
 
 /// Top-level Balances tab: what you are owed or owe across every trip (net per currency, never
@@ -56,6 +59,17 @@ class BalancesScreen extends ConsumerWidget {
     );
 
     final total = netsFor(trips);
+    final positions = tripNetPositions(
+      userId: userId,
+      trips: trips,
+      membersByTrip: members,
+      expensesByTrip: expenses,
+      groupsByTrip: groups,
+    );
+    final debt = largestOpenDebt(positions);
+    final owedTo = debt == null ? largestOwedToMe(positions) : null;
+    // Load the settle chooser's trip ledger now so the CTA never opens on an empty "all caught up".
+    if (debt != null) ref.watch(tripSettlementProvider(debt.tripId));
     return wrapHomeBody(
       context,
       ref,
@@ -100,6 +114,75 @@ class BalancesScreen extends ConsumerWidget {
                           )
                         else
                           for (final n in total) _NetRow(n, light: true),
+                        if (debt != null) ...[
+                          const SizedBox(height: 12),
+                          Text.rich(
+                            key: const Key('balances-largest-debt'),
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: l10n.balLargestDebt(debt.tripName),
+                                  style: TextStyle(fontWeight: FontWeight.w600, color: tokens.textSecondary),
+                                ),
+                                TextSpan(
+                                  text: ' -${formatMoney(context, debt.net.abs(), debt.currency)}',
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontMono,
+                                    fontFeatures: AppTypography.tabularFigures,
+                                    fontWeight: FontWeight.w800,
+                                    color: tokens.colorDanger,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          AppButton(
+                            key: const Key('balances-owe-cta'),
+                            label: l10n.balSettleLargest,
+                            icon: Icons.swap_horiz_rounded,
+                            onPressed: () => unawaited(
+                              showSettlementChooserOrSheet(context: context, ref: ref, tripId: debt.tripId),
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton(
+                              key: const Key('balances-owe-open'),
+                              onPressed: () => context.push('/trip/${debt.tripId}/ledger'),
+                              child: Text(l10n.balOpenTripBalances(debt.tripName)),
+                            ),
+                          ),
+                        ] else if (owedTo != null) ...[
+                          const SizedBox(height: 12),
+                          Text.rich(
+                            key: const Key('balances-largest-owed'),
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: l10n.balLargestOwed(owedTo.tripName),
+                                  style: TextStyle(fontWeight: FontWeight.w600, color: tokens.textSecondary),
+                                ),
+                                TextSpan(
+                                  text: ' +${formatMoney(context, owedTo.net, owedTo.currency)}',
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontMono,
+                                    fontFeatures: AppTypography.tabularFigures,
+                                    fontWeight: FontWeight.w800,
+                                    color: tokens.colorSuccess,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          AppButton(
+                            key: const Key('balances-owed-cta'),
+                            label: l10n.balOpenTripBalances(owedTo.tripName),
+                            variant: AppButtonVariant.secondary,
+                            onPressed: () => context.push('/trip/${owedTo.tripId}/ledger'),
+                          ),
+                        ],
                       ],
                     ),
                   ),

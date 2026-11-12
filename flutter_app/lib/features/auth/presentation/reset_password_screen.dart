@@ -9,6 +9,7 @@ import '../../../domain/repositories/repositories.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -79,14 +80,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             const SizedBox(height: 16),
             Text(
               l10n.resetCheckEmail,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: tokens.textPrimary),
+              style: AppTypography.tripTitle(color: tokens.textPrimary, fontSize: 24),
             ),
             const SizedBox(height: 8),
-            Text(
-              l10n.resetSentTo(_email.text.trim()),
-              textAlign: TextAlign.center,
-              style: TextStyle(color: tokens.textSecondary),
-            ),
+            _FeedbackBanner(message: l10n.resetSentTo(_email.text.trim())),
             const SizedBox(height: 24),
             AppButton(label: l10n.actionBack, onPressed: () => context.canPop() ? context.pop() : context.go('/login')),
           ],
@@ -96,16 +93,14 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l10n.resetNewPasswordTitle,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: tokens.textPrimary),
-          ),
-          const SizedBox(height: 24),
+          Text(l10n.resetNewPasswordTitle, style: AppTypography.tripTitle(color: tokens.textPrimary, fontSize: 24)),
+          const SizedBox(height: 20),
+          if (_error != null) ...[_FeedbackBanner(message: _error!, error: true), const SizedBox(height: 16)],
+          // The field's own eye icon is the show / hide password toggle.
           AppTextField(
             controller: _password,
             label: l10n.resetNewPassword,
             obscureText: true,
-            errorText: _error,
             autofillHints: const [AutofillHints.newPassword],
           ),
           const SizedBox(height: 24),
@@ -136,15 +131,17 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Text(l10n.resetRequestTitle, style: AppTypography.tripTitle(color: tokens.textPrimary, fontSize: 24)),
+          const SizedBox(height: 8),
           Text(l10n.resetRequestSubtitle, style: TextStyle(fontSize: 14, color: tokens.textSecondary)),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
+          if (_error != null) ...[_FeedbackBanner(message: _error!, error: true), const SizedBox(height: 16)],
           AppTextField(
             controller: _email,
             label: l10n.authEmail,
             hint: l10n.authEmailHint,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
-            errorText: _error,
           ),
           const SizedBox(height: 24),
           AppButton(
@@ -176,6 +173,43 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         ),
       ),
       body: Padding(padding: const EdgeInsets.all(24), child: body),
+    );
+  }
+}
+
+/// Inline feedback under the screen title: red for a problem, green for good news. Replaces a lone SnackBar.
+class _FeedbackBanner extends StatelessWidget {
+  const _FeedbackBanner({required this.message, this.error = false});
+
+  final String message;
+  final bool error;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final color = error ? t.colorDanger : t.colorSuccess;
+    return Semantics(
+      liveRegion: true,
+      container: true,
+      child: Container(
+        key: Key(error ? 'reset-banner-error' : 'reset-banner-success'),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(t.radiusSm + 4),
+          border: Border.all(color: color.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(error ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded, size: 20, color: color),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(message, style: TextStyle(fontSize: 14, height: 1.3, color: t.textPrimary)),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

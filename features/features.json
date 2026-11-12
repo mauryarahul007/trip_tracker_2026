@@ -3257,5 +3257,21 @@
     "shippedAt": "2026-11-12T13:35:00.000Z",
     "shippedBy": "agent",
     "shippedNote": "Shipped in 6295723 (v3.91.5): FLUTTER-UI-ROADMAP"
+  },
+  {
+    "id": "FEAT-206",
+    "title": "Flutter enhancements S1-S5 (money, empty/sync, visual, logic, search)",
+    "description": "Flutter-only 20-item program: compact expense form + settle-from-Spend; coach empties + sync badge; tidy rows/category icons/AppBar diet/notif polish; home owe CTA/partial settle coach/clone last/recycle swipe; join guest tertiary/live stale age/search deep-link. Seven new Trip/Travel flags.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-12T22:01:48.144Z",
+    "updatedAt": "2026-11-12T22:01:48.144Z",
+    "shippedAt": "2026-11-12T22:01:48.144Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped in v3.91.7: FLUTTER-ENH-S1…S5"
   }
 ]

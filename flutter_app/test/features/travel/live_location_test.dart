@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:trip_tracker/core/clock.dart';
 import 'package:trip_tracker/core/platform/location_gateway.dart';
 import 'package:trip_tracker/core/platform/map_gateway.dart';
+import 'package:trip_tracker/data/providers.dart' show flagsRepositoryProvider;
 import 'package:trip_tracker/data/repositories/supabase_location_share_repository.dart';
 import 'package:trip_tracker/domain/logic/travel_status_service.dart';
 import 'package:trip_tracker/domain/models/location_share.dart';
@@ -12,6 +14,20 @@ import 'package:trip_tracker/features/travel/presentation/live_location_chat_ban
 import 'package:trip_tracker/features/travel/presentation/live_location_share_modal.dart';
 import 'package:trip_tracker/features/travel/presentation/live_screen.dart';
 import 'package:trip_tracker/features/travel/presentation/live_travel_status_modal.dart';
+import 'package:trip_tracker/l10n/app_localizations.dart';
+
+import '../../support/fakes.dart' show FakeFlags;
+
+/// A public-share repo whose polls can be made to fail, like a dropped connection.
+class _FlakyShareRepository extends FakeLocationShareRepository {
+  bool failing = false;
+
+  @override
+  Future<SharedLocation?> getSharedLocation(String token) async {
+    if (failing) throw Exception('offline');
+    return super.getSharedLocation(token);
+  }
+}
 
 void main() {
   group('LocationShare Models', () {
@@ -90,8 +106,12 @@ void main() {
           overrides: [
             locationShareRepositoryProvider.overrideWithValue(fakeRepo),
             mapGatewayProvider.overrideWithValue(const FakeMapGateway()),
+            flagsRepositoryProvider.overrideWithValue(FakeFlags()),
           ],
-          child: const MaterialApp(home: LiveScreen(token: 'valid_token')),
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            home: LiveScreen(token: 'valid_token'),
+          ),
         ),
       );
 
@@ -101,6 +121,53 @@ void main() {
       expect(find.text('LIVE'), findsOneWidget);
       expect(find.byKey(const Key('fake_map_canvas')), findsOneWidget);
       expect(find.textContaining('32.2432°'), findsOneWidget);
+    });
+
+    /// Pumps a live share, then fails every later poll and moves the clock 3 minutes on.
+    Future<void> staleAgeScenario(WidgetTester tester, {required Set<String> flagsOff}) async {
+      final repo = _FlakyShareRepository();
+      repo.publicShares['tok'] = SharedLocation(
+        memberName: 'Priya',
+        tripName: 'Himachal Trek',
+        lat: 32.2432,
+        lng: 77.1892,
+        updatedAt: DateTime.now().toIso8601String(),
+        expiresAt: DateTime.now().add(const Duration(hours: 10)).toIso8601String(),
+      );
+      var now = DateTime(2026, 11, 13, 12);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            locationShareRepositoryProvider.overrideWithValue(repo),
+            mapGatewayProvider.overrideWithValue(const FakeMapGateway()),
+            flagsRepositoryProvider.overrideWithValue(FakeFlags(const {}, flagsOff)),
+            nowProvider.overrideWithValue(() => now),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            home: LiveScreen(token: 'tok'),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      repo.failing = true; // the share is still live, but our polls now fail: the last position stays on screen
+      now = now.add(const Duration(minutes: 3));
+      await tester.pump(const Duration(seconds: 30));
+      expect(find.text('LIVE'), findsOneWidget);
+    }
+
+    testWidgets('stale age flag ON: "Updated Xm ago" counts from the last successful poll', (tester) async {
+      await staleAgeScenario(tester, flagsOff: const {});
+      expect(find.byKey(const Key('live-updated')), findsOneWidget);
+      expect(tester.widget<Text>(find.byKey(const Key('live-updated'))).data, '· Updated 3m ago');
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('stale age flag OFF: no relative age line', (tester) async {
+      await staleAgeScenario(tester, flagsOff: const {'enableLiveLocationStaleAge'});
+      expect(find.byKey(const Key('live-updated')), findsNothing);
+      await tester.pumpWidget(const SizedBox());
     });
 
     testWidgets('renders ended state when token is invalid or expired', (tester) async {

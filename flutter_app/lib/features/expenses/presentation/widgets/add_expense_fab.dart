@@ -6,10 +6,14 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/flags/compass_flags.dart';
 import '../../../../core/platform/haptics.dart';
 import '../../../../shared/theme/app_tokens.dart';
+import '../../../../core/format/money.dart';
 import '../../../../data/providers.dart';
+import '../../../../domain/logic/last_expense.dart';
+import '../../../../domain/models/expense.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_icons.dart';
 import '../../../../shared/widgets/app_sheet.dart';
+import '../../application/expenses_providers.dart';
 import '../quick_add_sheet.dart';
 import 'settle_sheet.dart';
 
@@ -26,6 +30,9 @@ class AddExpenseFab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dial = ref.watch(flagProvider(('enableQuickAddSpeedDial', tripId))).value ?? true;
+    // Loaded before the dial opens, so "Clone last" knows whether it applies without waiting.
+    ref.watch(flagProvider(('enableCloneLastExpense', tripId)));
+    ref.watch(tripExpensesProvider(tripId));
     // Compass nav has its own orange Add button in the trip dock.
     // Calm Passport has the same Add button above its dock.
     if (ref.watch(compassFlagProvider((calmPassportFlag, tripId)))) return const SizedBox.shrink();
@@ -55,8 +62,17 @@ Future<void> startAddExpense(BuildContext context, WidgetRef ref, String tripId,
   await _chooseAdd(context, ref, tripId);
 }
 
+/// The expense "Clone last" would copy, or null when the flag is off or the trip has no expense yet.
+/// Both inputs are kept loaded by [AddExpenseFab] (which stays mounted, even when Compass hides its button).
+Expense? cloneLastCandidate(WidgetRef ref, String tripId) {
+  if (!(ref.read(flagProvider(('enableCloneLastExpense', tripId))).value ?? true)) return null;
+  final all = ref.read(tripExpensesProvider(tripId)).value ?? const <Expense>[];
+  return latestNonSettlementExpense(all, tripId: tripId);
+}
+
 Future<void> _chooseAdd(BuildContext context, WidgetRef ref, String tripId) async {
   final l10n = context.l10n;
+  final last = cloneLastCandidate(ref, tripId);
   final pick = await AppSheet.show<String>(
     context: context,
     title: l10n.expAdd,
@@ -84,6 +100,18 @@ Future<void> _chooseAdd(BuildContext context, WidgetRef ref, String tripId) asyn
             subtitle: l10n.expFullFormHint,
             onTap: () => Navigator.pop(ctx, 'full'),
           ),
+          if (last != null) ...[
+            const SizedBox(height: 8),
+            _SpeedActionCapsuleTile(
+              tileKey: 'fab-clone',
+              icon: Icons.history_rounded,
+              iconColor: const Color(0xFF7C3AED),
+              iconBg: const Color(0xFFEDE9FE),
+              title: l10n.expCloneLast,
+              subtitle: l10n.expCloneLastHint(last.title, formatMoney(ctx, last.amount, last.currency)),
+              onTap: () => Navigator.pop(ctx, 'clone'),
+            ),
+          ],
           const SizedBox(height: 8),
           _SpeedActionCapsuleTile(
             tileKey: 'fab-scan',
@@ -111,6 +139,8 @@ Future<void> _chooseAdd(BuildContext context, WidgetRef ref, String tripId) asyn
   if (!context.mounted || pick == null) return;
   if (pick == 'full') {
     await context.push('/trip/$tripId/expenses/new');
+  } else if (pick == 'clone') {
+    await context.push('/trip/$tripId/expenses/new?clone=1');
   } else if (pick == 'scan') {
     await context.push('/trip/$tripId/receipts');
   } else if (pick == 'settle') {

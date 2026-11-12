@@ -22,6 +22,7 @@ import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/widgets/async_body.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/coach_hint.dart';
+import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/section_label.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
@@ -134,13 +135,30 @@ class _MembersTabState extends ConsumerState<MembersTab> {
             ),
           ),
         if (shown.isEmpty && active.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Text(
-              'No one is on this trip yet.',
-              style: TextStyle(color: context.tokens.textSecondary, fontSize: 14),
-            ),
-          ),
+          (ref.watch(flagProvider(('enableCoachEmptyStates', tripId))).value ?? true)
+              ? EmptyState(
+                  key: const Key('members-empty'),
+                  icon: Icons.group_add_rounded,
+                  title: l10n.coachMembersTitle,
+                  subtitle: l10n.coachMembersBody,
+                  action: AppButton(
+                    key: const Key('members-empty-invite'),
+                    label: l10n.coachMembersCta,
+                    icon: Icons.person_add_alt_1_rounded,
+                    onPressed: () => AppSheet.show<void>(
+                      context: context,
+                      title: l10n.inviteSheetTitle,
+                      builder: (_) => ShareTripSheet(tripId: tripId),
+                    ),
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    l10n.memEmptyPlain,
+                    style: TextStyle(color: context.tokens.textSecondary, fontSize: 14),
+                  ),
+                ),
         for (final m in shown)
           _row(context, ref, m, balances[m.id], money, canManage, trip?.baseCurrency ?? 'INR', tidy: tidy),
         if (archived.isNotEmpty) ...[

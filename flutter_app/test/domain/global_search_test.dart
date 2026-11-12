@@ -28,4 +28,27 @@ void main() {
     expect(searchHits('  ', trips, expenses), isEmpty);
     expect(searchHits('lunch', trips, expenses, max: 1).length, 1);
   });
+
+  test('hits carry the matched row id and map to the trip tab that shows it (enableSearchDeepLink)', () {
+    final trips = [
+      tripOf(
+        't1',
+        'Goa',
+        notes: [const TripNote(id: 'n', title: 'Packing', content: 'bring sunscreen', createdAt: 0, updatedAt: 0)],
+      ),
+    ];
+    final expense = searchHits('lunch', trips, [expenseOf('e1', 't1', 'Beach lunch', date: '2026-10-02')]).single;
+    expect(expense.itemId, 'e1');
+    expect(searchHitTarget(expense), (path: '/trip/t1/expenses', focusKind: 'expense', focusId: 'e1'));
+
+    final note = searchHits('sunscreen', trips, const []).single;
+    expect(searchHitTarget(note), (path: '/trip/t1/notes', focusKind: 'note', focusId: 'n'));
+
+    const message = SearchHit(kind: HitKind.message, tripId: 't1', tripName: 'Goa', title: 'hi', detail: '', itemId: 'm1');
+    expect(searchHitTarget(message), (path: '/trip/t1/chat', focusKind: 'message', focusId: 'm1'));
+
+    // Trip-only hit: bare trip path (router redirect picks the default tab), nothing to highlight.
+    const tripHit = SearchHit(kind: HitKind.trip, tripId: 't1', tripName: 'Goa', title: 'Goa', detail: '');
+    expect(searchHitTarget(tripHit), (path: '/trip/t1', focusKind: null, focusId: null));
+  });
 }

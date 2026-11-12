@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,15 +38,57 @@ String? recycleBinExpiryLabel(int? deletedAtMs, DateTime now) {
 }
 
 /// Deleted expenses, restorable for 24 h (server purges them after that).
-class RecycleBinScreen extends ConsumerWidget {
+class RecycleBinScreen extends ConsumerStatefulWidget {
   const RecycleBinScreen({required this.tripId, super.key});
   final String tripId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RecycleBinScreen> createState() => _RecycleBinScreenState();
+}
+
+class _RecycleBinScreenState extends ConsumerState<RecycleBinScreen> {
+  /// Rows restored by swipe: a dismissed Dismissible must leave the tree at once, before the stream catches up.
+  final _restoring = <String>{};
+
+  String get tripId => widget.tripId;
+
+  Future<void> _restore(Expense e) async {
+    final repo = ref.read(expenseRepositoryProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    setState(() => _restoring.add(e.id));
+    try {
+      await repo.restore(e.id);
+    } catch (_) {
+      if (mounted) setState(() => _restoring.remove(e.id));
+      return;
+    }
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(content: Text(l10n.binRestored(e.title))));
+  }
+
+  Future<void> _deleteForever(Expense e) async {
+    final l10n = context.l10n;
+    final repo = ref.read(expenseRepositoryProvider);
+    final ok = await ConfirmDialog.show(
+      context: context,
+      title: l10n.binDeleteForever,
+      message: l10n.binDeleteConfirm(e.title),
+      confirmLabel: l10n.binDeleteForever,
+      cancelLabel: l10n.actionCancel,
+      isDestructive: true,
+    );
+    if (ok) await repo.permanentlyDelete(e.id);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final tokens = context.tokens;
-    final items = ref.watch(recycledExpensesProvider(tripId)).value ?? const <Expense>[];
+    final items = [
+      for (final e in ref.watch(recycledExpensesProvider(tripId)).value ?? const <Expense>[])
+        if (!_restoring.contains(e.id)) e,
+    ];
     final trip = ref.watch(tripProvider(tripId)).value;
     final repo = ref.read(expenseRepositoryProvider);
     final isAdmin = ref.watch(isTripAdminProvider(tripId));
@@ -105,7 +149,30 @@ class RecycleBinScreen extends ConsumerWidget {
                 for (final e in items)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
-                    child: AppCard(
+                    child: Dismissible(
+                      key: ValueKey('bin-dismiss-${e.id}'),
+                      direction: DismissDirection.startToEnd,
+                      background: Container(
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: tokens.colorSuccess,
+                          borderRadius: BorderRadius.circular(tokens.radiusMd),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.restore_from_trash_rounded, color: Colors.white, size: 22),
+                            const SizedBox(width: 8),
+                            Text(
+                              l10n.binRestore,
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        ),
+                      ),
+                      onDismissed: (_) => unawaited(_restore(e)),
+                      child: AppCard(
                       key: Key('bin-${e.id}'),
                       padding: const EdgeInsets.all(14),
                       child: Column(
@@ -162,35 +229,38 @@ class RecycleBinScreen extends ConsumerWidget {
                             children: [
                               Expanded(
                                 child: AppButton(
+                                  key: Key('bin-restore-${e.id}'),
                                   label: l10n.binRestore,
-                                  variant: AppButtonVariant.secondary,
-                                  onPressed: () => repo.restore(e.id),
+                                  icon: Icons.restore_from_trash_rounded,
+                                  onPressed: () => unawaited(_restore(e)),
                                 ),
                               ),
                               if (canManageExpense(e, isAdmin: isAdmin, userId: uid)) ...[
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: AppButton(
-                                    label: l10n.binDeleteForever,
-                                    variant: AppButtonVariant.danger,
-                                    onPressed: () async {
-                                      final ok = await ConfirmDialog.show(
-                                        context: context,
-                                        title: l10n.binDeleteForever,
-                                        message: l10n.binDeleteConfirm(e.title),
-                                        confirmLabel: l10n.binDeleteForever,
-                                        cancelLabel: l10n.actionCancel,
-                                        isDestructive: true,
-                                      );
-                                      if (ok) await repo.permanentlyDelete(e.id);
-                                    },
-                                  ),
+                                const SizedBox(width: 4),
+                                PopupMenuButton<String>(
+                                  key: Key('bin-more-${e.id}'),
+                                  tooltip: l10n.binMoreActions,
+                                  icon: Icon(Icons.more_vert_rounded, color: tokens.textSecondary),
+                                  onSelected: (v) {
+                                    if (v == 'delete') unawaited(_deleteForever(e));
+                                  },
+                                  itemBuilder: (_) => [
+                                    PopupMenuItem<String>(
+                                      key: Key('bin-delete-${e.id}'),
+                                      value: 'delete',
+                                      child: Text(
+                                        l10n.binDeleteForever,
+                                        style: TextStyle(color: tokens.colorDanger, fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ],
                           ),
                         ],
                       ),
+                    ),
                     ),
                   ),
               ],

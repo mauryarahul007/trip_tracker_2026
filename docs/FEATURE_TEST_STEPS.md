@@ -21,6 +21,11 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-12 | 3.91.7 | FLUTTER-ENH-S5 | [Flutter enhancements S5: Join / live / search](#flutter-enh-s5--flutter-enhancements-s5-join--live--search) |
+| 2026-11-12 | 3.91.7 | FLUTTER-ENH-S4 | [Flutter enhancements S4: Logic features](#flutter-enh-s4--flutter-enhancements-s4-logic-features) |
+| 2026-11-12 | 3.91.7 | FLUTTER-ENH-S3 | [Flutter enhancements S3: Visual system](#flutter-enh-s3--flutter-enhancements-s3-visual-system) |
+| 2026-11-12 | 3.91.7 | FLUTTER-ENH-S2 | [Flutter enhancements S2: Empty states + sync](#flutter-enh-s2--flutter-enhancements-s2-empty-states--sync) |
+| 2026-11-12 | 3.91.7 | FLUTTER-ENH-S1 | [Flutter enhancements S1: Money loop](#flutter-enh-s1--flutter-enhancements-s1-money-loop) |
 | 2026-11-12 | 3.91.5 | FLUTTER-UI-ROADMAP | [Flutter UI polish roadmap (Phases 1–4)](#flutter-ui-roadmap--flutter-ui-polish-roadmap-phases-14) |
 | 2026-11-12 | 3.91.4 | FLUTTER-UX-UPGRADES | [Flutter UX upgrades: Spend chips, login, Activity, Balances](#flutter-ux-upgrades--flutter-ux-upgrades-spend-chips-login-activity-balances) |
 | 2026-11-12 | 3.91.4 | SPEND-EXPAND-LOGIN | [Spend Expand All + login Status alignment](#spend-expand-login--spend-expand-all--login-status-alignment) |
@@ -4305,3 +4310,148 @@ Then add a row to the **Index** table.
 - `enableOnboardingArt` ON → custom art, not icon fallback.
 
 **Pass criteria:** boarding is the default signed-out identity; Spend/Balances stay scannable; sheet no longer fights list scroll; Settings/feedback/legal share one chrome language; no balance/split/sync math changes.
+## FLUTTER-ENH-S1 — Flutter enhancements S1: Money loop
+
+**Shipped:** v3.91.7 / FEAT-206. Flutter-only. New flag: `enableSettleFromSpend` (Trip, default ON). Reused: `enableCompactExpenseForm`, `enableCompactSummary`.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Compact expense form + More split options | `enableCompactExpenseForm` | ON (Core) |
+| Balances first-paint fold | `enableCompactSummary` | ON |
+| Settle action on Spend rows | `enableSettleFromSpend` | ON (Trip) |
+
+### Prep
+Flutter app. Trip with ≥2 members and at least one unequal-split expense; another equal-split expense. Open Balances and Spend.
+
+### Steps
+1. Add expense with `enableCompactExpenseForm` ON: first paint shows amount, title, paid-by, equal split. Exact / % / Shares stay behind **More split options** (collapsed). Expand it → modes appear. Edit a non-equal expense → More split options starts expanded.
+2. Balances with `enableCompactSummary` ON: hero + next settle + transfers visible first. Trip numbers / analytics start folded. Celebration / tips do not outrank who-pays-whom.
+3. Spend with `enableSettleFromSpend` ON and a non-zero net vs the payer/payee: quiet Settle on the row opens settle sheet with that person and outstanding amount prefilled; amount editable for partial.
+
+### Negative checks
+- `enableCompactExpenseForm` OFF → prior form density (split modes not behind More split options).
+- `enableCompactSummary` OFF → Trip numbers / analytics not forced folded by this path.
+- `enableSettleFromSpend` OFF → no Settle shortcut on Spend rows.
+
+### Pass
+- Progressive disclosure works; Balances first paint prioritizes settle; Settle-from-Spend prefills outstanding without changing settlement math.
+
+
+## FLUTTER-ENH-S2 — Flutter enhancements S2: Empty states + sync
+
+**Shipped:** v3.91.7 / FEAT-206. Flutter-only. No new flags. Reused: `enableCoachEmptyStates`, `enableRowSyncRetry`, sync header / outbox.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Coach empty states | `enableCoachEmptyStates` | ON |
+| Row sync Retry | `enableRowSyncRetry` | ON |
+
+### Prep
+Empty Members / Chat trip; Spend with filters that match nothing; a pending or failed outbox item.
+
+### Steps
+1. Members empty + `enableCoachEmptyStates` ON: card with Invite travelers CTA (opens invite). Flag OFF → plain empty line.
+2. Chat empty + flag ON: Say hi CTA sends a first message. Flag OFF → plain "No messages yet."
+3. Notes empty already has Add note / Add item coach cards — confirm still present.
+4. Spend filter-empty: Clear filters still works; with coach ON, hint under "No expenses match…" appears.
+5. Failed expense/chat row + `enableRowSyncRetry` ON: red Sync failed / Retry still works.
+6. Header Sync / Trips pending chip: when outbox has pending/stuck items, badge shows count (capped 99+); tap opens ambient outbox sheet. Empty outbox → tap still syncs now.
+
+### Negative checks
+- `enableCoachEmptyStates` OFF → plain empties (no Invite / Say hi coach cards).
+- No pending outbox → no count badge; Sync still runs on tap.
+
+### Pass
+- Empties coach toward next action; sync chrome shows honest pending count without a new sync engine.
+
+
+## FLUTTER-ENH-S3 — Flutter enhancements S3: Visual system
+
+**Shipped:** v3.91.7 / FEAT-206. Flutter-only. New flags: `enableCategoryVectorIcons`, `enableTripsAppBarDiet`, `enableNotificationInboxPolish` (Trip, default ON). Reused: `enableTidyExpenses`.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Tidy expense rows | `enableTidyExpenses` | ON |
+| Category vector icons | `enableCategoryVectorIcons` | ON |
+| Trips AppBar diet | `enableTripsAppBarDiet` | ON |
+| Notification inbox polish | `enableNotificationInboxPolish` | ON |
+
+### Prep
+Trips list; create-trip sheet; Spend with categorized expenses; Alerts inbox; reset-password flow.
+
+### Steps
+1. Spend with `enableTidyExpenses` ON (non-Compass too): tidy rows. Flag OFF → receipt/barcode layout path may show.
+2. `enableCategoryVectorIcons` ON: known categories use Material icons on rows / category screen; unknown falls back to emoji then sell icon.
+3. Trips AppBar with `enableTripsAppBarDiet` ON: sync + search stay; layout / view / sort live under overflow (`trips-view-menu`). Flag OFF → prior inline icons.
+4. Create trip: currency field matches AppTextField decoration; Where / When / Money section labels.
+5. Alerts with `enableNotificationInboxPolish` ON: unread pip + type icon; quieter filter chips (≥48px). Flag OFF → prior rows/chips.
+6. Reset password: body title, show-password toggle, success/error banners (not only SnackBar).
+7. Join / Share / ledger hero / trip header use AppTypography eyebrowMono / tripTitle / moneyInline where wired.
+
+### Negative checks
+- Each new flag OFF removes only that surface (icons / AppBar overflow / inbox polish).
+- Create-trip / reset-password / typography have no flag — always on.
+
+### Pass
+- One tidy row language; AppBar quieter; notifications denser; form/typography parity without math changes.
+
+
+## FLUTTER-ENH-S4 — Flutter enhancements S4: Logic features
+
+**Shipped:** v3.91.7 / FEAT-206. Flutter-only. New flag: `enablePartialSettleCoach` (Trip, default ON). Reused: `enableCloneLastExpense`, `enableRecycleBin`.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Partial settle coach | `enablePartialSettleCoach` | ON |
+| Clone last expense | `enableCloneLastExpense` | ON |
+| Recycle bin | `enableRecycleBin` | ON |
+
+### Prep
+Cross-trip home Balances with open debts; trip with expenses; approval threshold in trip settings; recycle bin with a deleted expense.
+
+### Steps
+1. Home Balances mint card: shows largest owe (or most owed-to-you) trip; **Settle up** opens settle chooser/sheet; **Open … balances** opens that trip Balances.
+2. Partial settle with `enablePartialSettleCoach` ON: snack shows remaining + **Settle rest** reopening sheet prefilled. Full settle → no coach. Flag OFF → prior settle snack only.
+3. Add FAB dial with `enableCloneLastExpense` ON and a prior non-settlement expense: **Clone last** opens form copied with today's date. Flag OFF / no last expense → tile absent.
+4. Trip Settings approval threshold: AppSheet with currency + live "Expenses above … need approval" preview; empty / Turn off clears; Save disabled for zero/invalid.
+5. Recycle bin: swipe right restores; Restore is primary; Delete forever under overflow with confirm; expiry copy unchanged.
+
+### Negative checks
+- `enablePartialSettleCoach` OFF → no Settle rest coach.
+- `enableCloneLastExpense` OFF → no Clone last dial tile.
+- Home mint CTA and threshold sheet have no new flags.
+
+### Pass
+- Owe CTA routes correctly; partial settle coaches remainder; clone/threshold/recycle UX match without changing settle math.
+
+
+## FLUTTER-ENH-S5 — Flutter enhancements S5: Join / live / search
+
+**Shipped:** v3.91.7 / FEAT-206. Flutter-only. New flags: `enableLiveLocationStaleAge` (Travel, default ON), `enableSearchDeepLink` (Trip, default ON).
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Live location stale age | `enableLiveLocationStaleAge` | ON (Travel) |
+| Search deep-link | `enableSearchDeepLink` | ON |
+
+### Prep
+Join screen signed-out; a live location share token; Trips search with expense and note hits.
+
+### Steps
+1. Join: Guest is tertiary TextButton below Google/Apple; copy clarifies guest cannot join shared trips.
+2. Live share with `enableLiveLocationStaleAge` ON: "Updated Xm ago" from last successful poll; warning colour after ~90s without a good poll. Retry vs Ended unchanged.
+3. Trips search with `enableSearchDeepLink` ON: expense hit → Spend and focus/detail; note hit → Notes with scroll + brief ring; trip-only hit → default trip tab via `context.go`.
+
+### Negative checks
+- `enableLiveLocationStaleAge` OFF → no relative age line on the live card.
+- `enableSearchDeepLink` OFF → prior push into expenses/notes (no go deep-link path).
+- Join guest demotion has no flag.
+
+### Pass
+- Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+

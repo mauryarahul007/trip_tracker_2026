@@ -13,7 +13,9 @@ import '../../../../core/settings/app_settings.dart';
 import '../../../../domain/logic/trip_utilities.dart' show formatDateRange, guessTripCurrency, suggestTripName;
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/widgets/app_button.dart';
+import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../../../shared/widgets/section_label.dart';
 import '../../application/trips_providers.dart' show tripsProvider;
 import 'destination_field.dart';
 import '../../../../shared/widgets/discard_guard.dart';
@@ -186,6 +188,7 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
                 ),
                 const SizedBox(height: 12),
               ],
+              SectionLabel(l10n.createTripSectionWhere),
               DestinationField(
                 controller: _destination,
                 label: l10n.fieldDestination,
@@ -207,7 +210,8 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
                 onChanged: (v) => _nameTouched = v.trim().isNotEmpty,
                 textInputAction: TextInputAction.next,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+              SectionLabel(l10n.createTripSectionWhen),
               OutlinedButton.icon(
                 onPressed: _pickDates,
                 icon: const Icon(Icons.date_range_rounded),
@@ -223,11 +227,15 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
                   padding: const EdgeInsets.only(top: 6, left: 4),
                   child: Text(_dateError!, style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12)),
                 ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+              SectionLabel(l10n.createTripSectionMoney),
+              AppFieldLabel(l10n.fieldCurrency),
+              const SizedBox(height: 6),
               DropdownButtonFormField<String>(
                 isExpanded: true,
                 initialValue: _currency,
-                decoration: InputDecoration(labelText: l10n.fieldCurrency),
+                borderRadius: BorderRadius.circular(context.tokens.radiusSm + 4),
+                decoration: appFieldDecoration(context.tokens),
                 items: [for (final c in defaultExchangeRates.keys) DropdownMenuItem(value: c, child: Text(c))],
                 onChanged: (v) => setState(() {
                   _currency = v ?? _currency;

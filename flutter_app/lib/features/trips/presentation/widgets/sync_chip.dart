@@ -33,7 +33,8 @@ class SyncChip extends ConsumerWidget {
     final issue = status.issues > 0;
     final color = issue ? tokens.colorDanger : tokens.primaryAccent;
 
-    final onPressed = ambientOutbox
+    // Pending changes always open the outbox sheet so the count shown is also inspectable.
+    final onPressed = ambientOutbox || !issue
         ? () {
             AppHaptics.selection();
             showAmbientOutboxSheet(context);
@@ -49,7 +50,12 @@ class SyncChip extends ConsumerWidget {
           child: IconButton(
             key: const Key('sync-chip-icon'),
             tooltip: l10n.syncPending(status.pending),
-            icon: Icon(AppIcons.sync, size: 18, color: color),
+            icon: Badge(
+              key: const Key('sync-chip-count'),
+              label: Text(status.pending > 99 ? '99+' : '${status.pending}'),
+              backgroundColor: color,
+              child: Icon(AppIcons.sync, size: 18, color: color),
+            ),
             onPressed: onPressed,
           ),
         ),
@@ -99,52 +105,36 @@ class SyncButton extends ConsumerWidget {
       w.tone == SyncTone.problem ? t.colorDanger : t.textSecondary,
     );
 
-    final Widget iconWidget = syncing
+    // Honest count of changes still waiting (pending + stuck), so "saved" is never implied while the queue is not empty.
+    final waiting = status.pending + status.issues;
+    final Widget base = syncing
         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-        : (ambientOutbox && (status.pending > 0 || status.issues > 0))
-            ? Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  Icon(state.$2, color: state.$3),
-                  Positioned(
-                    right: -2,
-                    top: -2,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: status.issues > 0 ? t.colorDanger : t.tones.sky.accent,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: t.bgSurface, width: 1.5),
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : Icon(state.$2, color: state.$3);
+        : Icon(state.$2, color: state.$3);
+    final Widget iconWidget = waiting > 0
+        ? Badge(
+            key: const Key('sync-count'),
+            label: Text(waiting > 99 ? '99+' : '$waiting'),
+            backgroundColor: status.issues > 0 ? t.colorDanger : t.primaryAccent,
+            child: base,
+          )
+        : base;
 
     return IconButton(
       key: const Key('sync-action'),
       tooltip: state.$1,
       icon: iconWidget,
-      onPressed: syncing
+      // Anything waiting (or offline with the drawer flag on) opens the existing outbox sheet; otherwise tap = sync now.
+      onPressed: waiting > 0 || (ambientOutbox && !online)
+          ? () async {
+              await AppHaptics.selection();
+              if (context.mounted) showAmbientOutboxSheet(context);
+            }
+          : syncing
           ? null
-          : ambientOutbox
-              ? () async {
-                  await AppHaptics.selection();
-                  if (status.issues > 0 || status.pending > 0 || !online) {
-                    if (context.mounted) showAmbientOutboxSheet(context);
-                  } else {
-                    await ref.read(syncCoordinatorProvider).syncNow();
-                  }
-                }
-              : (status.issues > 0
-                  ? () => showSyncReviewSheet(context)
-                  : () async {
-                      await AppHaptics.light();
-                      await ref.read(syncCoordinatorProvider).syncNow();
-                    }),
+          : () async {
+              await AppHaptics.light();
+              await ref.read(syncCoordinatorProvider).syncNow();
+            },
     );
   }
 }

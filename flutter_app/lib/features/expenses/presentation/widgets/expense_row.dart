@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/format/money.dart';
 import '../../../../domain/logic/category_color.dart';
+import '../../../../shared/theme/category_icons.dart';
 import '../../../../domain/logic/currency.dart';
 import '../../../../domain/logic/expense_list_logic.dart';
 import '../../../../domain/logic/refunds.dart';
@@ -31,10 +32,13 @@ class ExpenseRow extends StatefulWidget {
     this.compact = false,
     this.colorRings = false,
     this.tidy = false,
+    this.vectorIcons = false,
     this.isDirty = false,
     this.isConflict = false,
     this.onRetrySync,
     this.refunded = false,
+    this.onSettle,
+    this.settleLabel,
     super.key,
   });
 
@@ -49,6 +53,9 @@ class ExpenseRow extends StatefulWidget {
 
   /// Flat list tile instead of the boarding-receipt card (enableTidyExpenses).
   final bool tidy;
+
+  /// Material icons for known categories (flag `enableCategoryVectorIcons`); emoji / tag icon otherwise.
+  final bool vectorIcons;
   final bool isDirty;
   final bool isConflict;
 
@@ -57,6 +64,10 @@ class ExpenseRow extends StatefulWidget {
 
   /// This expense has at least one refund recorded against it: shows a small Refunded mark.
   final bool refunded;
+
+  /// Quiet Settle shortcut (flag `enableSettleFromSpend`); set only when money is still open on this expense's pair.
+  final VoidCallback? onSettle;
+  final String? settleLabel;
 
   @override
   State<ExpenseRow> createState() => _ExpenseRowState();
@@ -158,7 +169,7 @@ class _ExpenseRowState extends State<ExpenseRow> {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: glow.withValues(alpha: 0.5), width: widget.colorRings ? 2 : 1),
                       ),
-                      child: _categoryGlyph(cat, 20, glow),
+                      child: categoryGlyph(cat, 20, glow, vector: widget.vectorIcons),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -218,6 +229,7 @@ class _ExpenseRowState extends State<ExpenseRow> {
                     style: TextStyle(fontSize: 12, color: tokens.colorWarning, height: 1.3),
                   ),
                 ],
+                if (widget.onSettle != null) _settleAction(tokens),
               ],
             ),
             footer: pill == null
@@ -298,7 +310,7 @@ class _ExpenseRowState extends State<ExpenseRow> {
                         borderRadius: BorderRadius.circular(10),
                         border: widget.colorRings ? Border.all(color: tile, width: 1.5) : null,
                       ),
-                      child: _categoryGlyph(cat, 19, tile),
+                      child: categoryGlyph(cat, 19, tile, vector: widget.vectorIcons),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -373,6 +385,7 @@ class _ExpenseRowState extends State<ExpenseRow> {
                     style: TextStyle(fontSize: 12, color: tokens.colorWarning, height: 1.3),
                   ),
                 ],
+                if (widget.onSettle != null) _settleAction(tokens),
               ],
             ),
           ),
@@ -380,6 +393,23 @@ class _ExpenseRowState extends State<ExpenseRow> {
       ),
     );
   }
+
+  /// Quiet text action under the row; opens the settle sheet for the open payment on this expense's pair.
+  Widget _settleAction(AppTokens tokens) => Align(
+    alignment: Alignment.centerRight,
+    child: TextButton(
+      key: Key('settle-from-spend-${widget.expense.id}'),
+      onPressed: widget.onSettle,
+      style: TextButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        minimumSize: const Size(48, 40),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        foregroundColor: tokens.primaryAccent,
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+      ),
+      child: Text(widget.settleLabel ?? context.l10n.ledSettle),
+    ),
+  );
 
   List<Widget> _badges(AppLocalizations l10n, AppTokens tokens, Expense e) => [
     if (_isRefund) const Padding(padding: EdgeInsets.only(right: 4), child: RefundChip()),
@@ -507,7 +537,7 @@ class _ExpenseRowState extends State<ExpenseRow> {
                         borderRadius: BorderRadius.circular(widget.compact ? 10 : 14),
                         border: widget.colorRings ? Border.all(color: accent, width: 2) : null,
                       ),
-                      child: _categoryGlyph(cat, widget.compact ? 13 : 20, accent),
+                      child: categoryGlyph(cat, widget.compact ? 13 : 20, accent, vector: widget.vectorIcons),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -660,13 +690,4 @@ class RefundChip extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Category tile glyph: the category's own emoji when it has one, else a neutral tag icon (no stock emoji).
-Widget _categoryGlyph(Category? cat, double size, Color color) {
-  final icon = cat?.icon;
-  if (icon != null && icon.isNotEmpty && !icon.contains(':')) {
-    return Text(icon, style: TextStyle(fontSize: size));
-  }
-  return Icon(Icons.sell_outlined, size: size, color: color);
 }

@@ -157,6 +157,13 @@
     "enableSettingsSegmentedLists": true,
     "enableScrollCompressDock": true,
     "enableSpendSectionChips": true,
+    "enableSettleFromSpend": true,
+    "enableCategoryVectorIcons": true,
+    "enableTripsAppBarDiet": true,
+    "enableNotificationInboxPolish": true,
+    "enablePartialSettleCoach": true,
+    "enableSearchDeepLink": true,
+    "enableLiveLocationStaleAge": true,
     "enableLastSyncedCaption": true,
     "enableTripSwitcher": true,
     "enableTripPins": true,
@@ -371,6 +378,13 @@
     "enableSettingsSegmentedLists": true,
     "enableScrollCompressDock": true,
     "enableSpendSectionChips": true,
+    "enableSettleFromSpend": true,
+    "enableCategoryVectorIcons": true,
+    "enableTripsAppBarDiet": true,
+    "enableNotificationInboxPolish": true,
+    "enablePartialSettleCoach": true,
+    "enableSearchDeepLink": true,
+    "enableLiveLocationStaleAge": true,
     "enableLastSyncedCaption": true,
     "enableTripSwitcher": true,
     "enableTripPins": true,
@@ -582,7 +596,13 @@
         "enableCompactLedgerView",
         "enableSettingsSegmentedLists",
         "enableScrollCompressDock",
-        "enableSpendSectionChips"
+        "enableSpendSectionChips",
+        "enableSettleFromSpend",
+        "enableCategoryVectorIcons",
+        "enableTripsAppBarDiet",
+        "enableNotificationInboxPolish",
+        "enablePartialSettleCoach",
+        "enableSearchDeepLink"
       ]
     },
     {
@@ -598,7 +618,8 @@
         "enableRouteStops",
         "enableOfflineMapTiles",
         "enableDataSaverMode",
-        "enableLifecycleNudges"
+        "enableLifecycleNudges",
+        "enableLiveLocationStaleAge"
       ]
     },
     {

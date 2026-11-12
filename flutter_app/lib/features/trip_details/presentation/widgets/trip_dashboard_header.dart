@@ -189,12 +189,7 @@ class TripDashboardHeader extends ConsumerWidget {
                                             trip?.name ?? '',
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontFamily: AppTypography.fontTitle,
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: titleFontSize,
-                                              letterSpacing: -0.3,
-                                              color: titleColor,
+                                            style: AppTypography.tripTitle(color: titleColor, fontSize: titleFontSize).copyWith(
                                               shadows: clampedProgress < 0.5
                                                   ? [
                                                       Shadow(
@@ -235,13 +230,7 @@ class TripDashboardHeader extends ConsumerWidget {
                                           trip?.name ?? '',
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontFamily: AppTypography.fontTitle,
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: titleFontSize,
-                                            letterSpacing: -0.3,
-                                            color: titleColor,
-                                          ),
+                                          style: AppTypography.tripTitle(color: titleColor, fontSize: titleFontSize),
                                         ),
                                       ),
                                     ),

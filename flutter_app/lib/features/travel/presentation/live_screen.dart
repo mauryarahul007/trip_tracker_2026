@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/clock.dart';
 import '../../../core/platform/motion.dart';
+import '../../../data/providers.dart' show flagProvider;
+import '../../../domain/logic/flag_defaults.g.dart' show defaultFeatureFlags;
+import '../../../l10n/l10n_ext.dart';
 
 import '../../../core/platform/external_launcher.dart';
 import '../../../core/platform/haptics.dart';
@@ -34,9 +38,17 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
   bool _isEnded = false;
   bool _loadError = false;
   Timer? _pollTimer;
+  Timer? _ageTimer;
+
+  /// When the last poll succeeded (`enableLiveLocationStaleAge`). A failed poll leaves it alone, so the age keeps
+  /// growing while we show the last known position.
+  DateTime? _lastPollAt;
   late final AnimationController _pulseController;
 
   static const Duration _pollInterval = Duration(seconds: 20);
+
+  /// Past this without a successful poll the age is shown as a warning (two missed polls plus a margin).
+  static const Duration _staleAfter = Duration(seconds: 90);
 
   @override
   void initState() {
@@ -44,6 +56,10 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
     _pulseController = AnimationController(vsync: this, duration: const Duration(seconds: 2), value: 1);
     _fetch();
     _pollTimer = Timer.periodic(_pollInterval, (_) => _fetch());
+    // Re-render the relative age between polls ("just now" becoming "1m ago").
+    _ageTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted && _lastPollAt != null) setState(() {});
+    });
   }
 
   @override
@@ -62,6 +78,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _ageTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
@@ -82,6 +99,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
       if (!mounted) {
         return;
       }
+      _lastPollAt = ref.read(nowProvider)();
       if (loc == null || loc.isExpired) {
         setState(() {
           _location = null;
@@ -270,7 +288,18 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
 
     final loc = _location!;
     final mapGateway = ref.watch(mapGatewayProvider);
-    final relativeTime = formatRelativeTime(loc.updatedAt);
+    // Flag ON: "Updated Xm ago" from last successful poll (warns when polls go stale). Flag OFF: no age line.
+    final staleAgeOn =
+        ref.watch(flagProvider(('enableLiveLocationStaleAge', null))).value ??
+        (defaultFeatureFlags['enableLiveLocationStaleAge'] ?? false);
+    final now = ref.read(nowProvider)();
+    final polledAt = _lastPollAt;
+    final showPollAge = staleAgeOn && polledAt != null;
+    final pollAge = showPollAge ? now.difference(polledAt) : Duration.zero;
+    final relativeTime = showPollAge
+        ? formatRelativeTime(polledAt.millisecondsSinceEpoch, now.millisecondsSinceEpoch)
+        : null;
+    final isStale = showPollAge && pollAge >= _staleAfter;
 
     return Stack(
       children: [
@@ -351,8 +380,21 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
                               letterSpacing: 0.8,
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          Text('· Updated $relativeTime', style: TextStyle(fontSize: 12, color: tokens.textSecondary)),
+                          if (showPollAge && relativeTime != null) ...[
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                '· Updated $relativeTime',
+                                key: const Key('live-updated'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isStale ? tokens.colorWarning : tokens.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                       Text(

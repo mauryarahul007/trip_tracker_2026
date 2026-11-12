@@ -57,20 +57,7 @@ class _AppTextFieldState extends State<AppTextField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (widget.label != null) ...[
-          // .form-label: mono, uppercase, 11px, 0.08em tracking.
-          Text(
-            widget.label!.toUpperCase(),
-            style: TextStyle(
-              fontFamily: AppTypography.fontMono,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.88,
-              color: tokens.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 6),
-        ],
+        if (widget.label != null) ...[AppFieldLabel(widget.label!), const SizedBox(height: 6)],
         TextField(
           controller: widget.controller,
           obscureText: widget.obscureText && _hidden,
@@ -91,11 +78,10 @@ class _AppTextFieldState extends State<AppTextField> {
           onChanged: widget.onChanged,
           onSubmitted: widget.onSubmitted,
           style: TextStyle(fontSize: 16, color: tokens.textPrimary),
-          decoration: InputDecoration(
-            hintText: widget.hintText ?? widget.hint,
-            hintStyle: TextStyle(color: tokens.textMuted, fontSize: 16),
+          decoration: appFieldDecoration(
+            tokens,
+            hint: widget.hintText ?? widget.hint,
             errorText: widget.errorText,
-            errorStyle: TextStyle(color: tokens.colorDanger, fontSize: 12),
             prefixIcon: widget.prefixIcon,
             suffixIcon: widget.obscureText
                 ? IconButton(
@@ -105,28 +91,56 @@ class _AppTextFieldState extends State<AppTextField> {
                     onPressed: () => setState(() => _hidden = !_hidden),
                   )
                 : widget.suffixIcon,
-            filled: true,
-            fillColor: tokens.bgSurface,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(tokens.radiusSm + 4),
-              borderSide: BorderSide(color: tokens.borderColor),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(tokens.radiusSm + 4),
-              borderSide: BorderSide(color: tokens.borderColor),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(tokens.radiusSm + 4),
-              borderSide: BorderSide(color: tokens.primaryAccent, width: 1.5),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(tokens.radiusSm + 4),
-              borderSide: BorderSide(color: tokens.colorDanger),
-            ),
           ),
         ),
       ],
     );
   }
+}
+
+/// Mono uppercase label above a field (`.form-label`: 11px, 0.08em tracking). Shared by text fields and dropdowns.
+class AppFieldLabel extends StatelessWidget {
+  const AppFieldLabel(this.text, {super.key});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    text.toUpperCase(),
+    style: TextStyle(
+      fontFamily: AppTypography.fontMono,
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.88,
+      color: context.tokens.textSecondary,
+    ),
+  );
+}
+
+/// The filled, rounded input look of [AppTextField]; reuse it for dropdowns so every field reads the same.
+InputDecoration appFieldDecoration(
+  AppTokens tokens, {
+  String? hint,
+  String? errorText,
+  Widget? prefixIcon,
+  Widget? suffixIcon,
+}) {
+  OutlineInputBorder border(Color color, [double width = 1]) => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(tokens.radiusSm + 4),
+    borderSide: BorderSide(color: color, width: width),
+  );
+  return InputDecoration(
+    hintText: hint,
+    hintStyle: TextStyle(color: tokens.textMuted, fontSize: 16),
+    errorText: errorText,
+    errorStyle: TextStyle(color: tokens.colorDanger, fontSize: 12),
+    prefixIcon: prefixIcon,
+    suffixIcon: suffixIcon,
+    filled: true,
+    fillColor: tokens.bgSurface,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    border: border(tokens.borderColor),
+    enabledBorder: border(tokens.borderColor),
+    focusedBorder: border(tokens.primaryAccent, 1.5),
+    errorBorder: border(tokens.colorDanger),
+  );
 }

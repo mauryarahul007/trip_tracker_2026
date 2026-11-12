@@ -22,6 +22,7 @@ import '../../../../domain/logic/settlement.dart';
 import '../../../../domain/logic/settlement_share_card.dart';
 import '../../../../domain/logic/summary_features.dart';
 import '../../../../domain/logic/trip_utilities.dart';
+import '../../../../domain/models/expense.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/app_typography.dart';
@@ -36,17 +37,52 @@ import 'settlement_card.dart' show renderSettlementPng;
 import 'upi_payment_sheet.dart';
 
 /// Shows a snackbar after recording a settlement, with an optional undo action.
-void showSettleSnack(ScaffoldMessengerState messenger, String message, VoidCallback? onUndo) {
+///
+/// Partial settle coach (`enablePartialSettleCoach`): pass [onSettleRest] + [settleRestLabel] and the snack's
+/// action becomes "Settle rest" (reopens the sheet for the remainder); Undo, when allowed, moves inline.
+void showSettleSnack(
+  ScaffoldMessengerState messenger,
+  String message,
+  VoidCallback? onUndo, {
+  VoidCallback? onSettleRest,
+  String? settleRestLabel,
+  String undoLabel = 'UNDO',
+}) {
   messenger.hideCurrentSnackBar();
+  final coach = onSettleRest != null;
   messenger.showSnackBar(
     SnackBar(
-      content: Text(message),
+      content: coach && onUndo != null
+          ? Row(
+              children: [
+                Expanded(child: Text(message, key: const Key('settle-coach-message'))),
+                TextButton(
+                  key: const Key('settle-coach-undo'),
+                  onPressed: () {
+                    AppFeedback.tap();
+                    messenger.hideCurrentSnackBar();
+                    onUndo();
+                  },
+                  child: Text(undoLabel),
+                ),
+              ],
+            )
+          : Text(message, key: coach ? const Key('settle-coach-message') : null),
       persist: false,
-      duration: const Duration(seconds: 6),
-      action: onUndo == null
+      duration: Duration(seconds: coach ? 10 : 6),
+      action: coach
+          ? SnackBarAction(
+              key: const Key('settle-rest'),
+              label: settleRestLabel ?? 'Settle rest',
+              onPressed: () {
+                AppFeedback.tap();
+                onSettleRest();
+              },
+            )
+          : onUndo == null
           ? null
           : SnackBarAction(
-              label: 'UNDO',
+              label: undoLabel,
               onPressed: () {
                 AppFeedback.tap();
                 onUndo();
@@ -160,15 +196,49 @@ class SettleSheetState extends ConsumerState<SettleSheet> {
     final repo = ref.read(expenseRepositoryProvider);
     final userId = ref.read(authStateProvider).userId ?? '';
     final undoOn = ref.read(flagProvider(('enableUndoSettlement', widget.tripId))).value ?? false;
+    final coachOn = ref.read(flagProvider(('enablePartialSettleCoach', widget.tripId))).value ?? true;
+    // Partial = less than the full open amount (same threshold the sheet's partial wording uses).
+    final paid = _value ?? 0;
+    final isPartial = paid > 0 && paid < widget.transfer.amount - 0.01;
+    final remaining = double.parse((widget.transfer.amount - paid).toStringAsFixed(2));
+    final remainingLabel = isPartial ? formatMoney(context, remaining, widget.currency) : '';
+    final tripId = widget.tripId;
+    final currency = widget.currency;
+    final transfer = widget.transfer;
     final r = await repo.submit(plan.submission, tripId: widget.tripId, userId: userId);
     if (!mounted) return;
     if (r.isOk) {
       AppFeedback.success();
+      // The sheet is about to close; its own context dies with it. The root overlay outlives it.
+      final reopenContext = nav.overlay?.context;
       nav.pop();
+      final settleRest = coachOn && isPartial && reopenContext != null
+          ? () {
+              if (!reopenContext.mounted) return;
+              unawaited(
+                showSettleSheet(
+                  context: reopenContext,
+                  tripId: tripId,
+                  currency: currency,
+                  transfer: Transfer(
+                    from: transfer.from,
+                    to: transfer.to,
+                    fromLabel: transfer.fromLabel,
+                    toLabel: transfer.toLabel,
+                    fromMemberId: transfer.fromMemberId,
+                    toMemberId: transfer.toMemberId,
+                    amount: remaining,
+                  ),
+                ),
+              );
+            }
+          : null;
       showSettleSnack(
         messenger,
-        l10n.ledSettledToast,
+        settleRest != null ? l10n.settleCoachRemaining(remainingLabel) : l10n.ledSettledToast,
         undoOn ? () => unawaited(repo.delete(r.expenseId!, userId: userId)) : null,
+        onSettleRest: settleRest,
+        settleRestLabel: l10n.settleCoachAction,
       );
     } else {
       setState(() {
@@ -260,6 +330,7 @@ class SettleSheetState extends ConsumerState<SettleSheet> {
     final partial = v != null && v > 0 && v < t.amount - 0.01;
     final dateNote = ref.watch(flagProvider(('enableSettlementDateNote', widget.tripId))).value ?? false;
     ref.watch(flagProvider(('enableUndoSettlement', widget.tripId))); // loaded before Confirm reads it
+    ref.watch(flagProvider(('enablePartialSettleCoach', widget.tripId)));
     final upiOn = ref.watch(flagProvider(('enableUpiPayments', widget.tripId))).value ?? false;
     final shareOn = ref.watch(flagProvider(('enableWhatsAppSettlementShare', widget.tripId))).value ?? false;
     final roundingOn = ref.watch(flagProvider(('enableSettleRounding', widget.tripId))).value ?? true;
@@ -533,6 +604,36 @@ Future<void> showSettleSheet({
     context: context,
     builder: (_) => SettleSheet(tripId: tripId, transfer: transfer, currency: currency, focusAmount: focusAmount),
   );
+}
+
+/// The open payment between [me] and one other person from the trip's own balances, or null when square.
+/// Reads the same transfers the Balances tab lists, so the sheet it opens records exactly what Balances shows.
+Transfer? openTransferBetween(SettlementResult? result, String? me, String other) {
+  if (result == null || me == null || me.isEmpty || other.isEmpty || other == me) return null;
+  for (final t in result.transfers) {
+    final pair =
+        (t.fromMemberId == me && t.toMemberId == other) || (t.fromMemberId == other && t.toMemberId == me);
+    if (pair && t.amount >= 0.01) return t;
+  }
+  return null;
+}
+
+/// The settle shortcut for one Spend row (flag `enableSettleFromSpend`): the open payment between me and the
+/// expense's payer (when someone else paid) or, when I paid, the biggest open payment from anyone I split it with.
+/// Null when I am not on the expense, it is a refund / personal / settlement, or that pair is already square.
+Transfer? settleTransferForExpense(SettlementResult? result, String? me, Expense e) {
+  if (result == null || me == null || me.isEmpty) return null;
+  if (e.isSettlement || e.excludeFromTotals || e.refundOfExpenseId != null || e.deletedAt != null) return null;
+  if (e.paidBy != me) {
+    if (!e.splitMemberIds.contains(me)) return null;
+    return openTransferBetween(result, me, e.paidBy);
+  }
+  Transfer? best;
+  for (final other in e.splitMemberIds) {
+    final t = openTransferBetween(result, me, other);
+    if (t != null && (best == null || t.amount > best.amount)) best = t;
+  }
+  return best;
 }
 
 /// Main entry point for recording settlements anywhere in the app (e.g. from FAB).

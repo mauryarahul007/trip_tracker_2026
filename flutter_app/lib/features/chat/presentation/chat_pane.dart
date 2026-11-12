@@ -21,6 +21,7 @@ import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_avatar.dart';
+import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/ask_text.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -205,13 +206,24 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
           ),
         Expanded(
           child: messages.isEmpty
-              ? EmptyState(
-                  title: l10n.chatEmpty,
-                  subtitle: (ref.watch(flagProvider(('enableCoachEmptyStates', widget.tripId))).value ?? true)
-                      ? l10n.chatEmptyHint
-                      : '',
-                  plain: true,
-                )
+              ? ((ref.watch(flagProvider(('enableCoachEmptyStates', widget.tripId))).value ?? true)
+                    ? EmptyState(
+                        key: const Key('chat-empty'),
+                        icon: Icons.chat_bubble_outline_rounded,
+                        title: l10n.chatEmpty,
+                        subtitle: l10n.chatEmptyHint,
+                        // One tap sends a friendly first message; typing your own works just the same.
+                        action: AppButton(
+                          key: const Key('chat-say-hi'),
+                          label: l10n.chatSayHi,
+                          icon: Icons.waving_hand_outlined,
+                          onPressed: () {
+                            _input.text = l10n.chatSayHiMessage;
+                            unawaited(_send());
+                          },
+                        ),
+                      )
+                    : EmptyState(title: l10n.chatEmpty, subtitle: '', plain: true))
               : ListView.builder(
                   key: const Key('chat-list'),
                   controller: _scroll,

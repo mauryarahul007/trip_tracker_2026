@@ -37,6 +37,7 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../chat/application/chat_providers.dart';
 import '../../chat/presentation/chat_pane.dart';
 import '../../expenses/application/expenses_providers.dart';
+import '../../notifications/application/activity_focus.dart';
 import '../../travel/presentation/live_travel_status_modal.dart';
 import '../../travel/presentation/next_up_capsule.dart';
 import '../../travel/presentation/pass_scanner_modal.dart';
@@ -68,10 +69,34 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   var _doneOpen = false; // Compass: the Done section of the checklist starts folded
   final _quick = TextEditingController();
 
+  /// A search hit (`enableSearchDeepLink`) asked for this note: shown briefly highlighted and scrolled into view.
+  String? _focusNoteId;
+  final _focusNoteKey = GlobalKey();
+  Timer? _focusTimer;
+
   @override
   void dispose() {
+    _focusTimer?.cancel();
     _quick.dispose();
     super.dispose();
+  }
+
+  /// Opens the Notes pane on [id], scrolls it into view, and drops the highlight after a moment.
+  void _focusNote(String id) {
+    if (!mounted || ref.read(activityFocusProvider)?.id != id) return;
+    ref.read(activityFocusProvider.notifier).set(null);
+    setState(() {
+      _pane = 'notes';
+      _focusNoteId = id;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _focusNoteKey.currentContext;
+      if (ctx != null && ctx.mounted) unawaited(Scrollable.ensureVisible(ctx, duration: AppMotion.base, alignment: 0.15));
+    });
+    _focusTimer?.cancel();
+    _focusTimer = Timer(const Duration(milliseconds: 2500), () {
+      if (mounted) setState(() => _focusNoteId = null);
+    });
   }
 
   /// "Passes (2)": the name stays its own Text so it can still be found by label.
@@ -106,6 +131,12 @@ class _NotesTabState extends ConsumerState<NotesTab> {
       if (showChat) ('chat', l10n.notesChat),
     ];
     if (!panes.any((p) => p.$1 == _pane)) _pane = 'checklist';
+
+    final focus = ref.watch(activityFocusProvider);
+    if (focus != null && focus.kind == 'note' && trip.notes.any((n) => n.id == focus.id)) {
+      final id = focus.id;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _focusNote(id));
+    }
 
     final content = Column(
       key: const Key('tab-notes'),
@@ -817,15 +848,24 @@ class _NotesTabState extends ConsumerState<NotesTab> {
       children: [
         if (quick) _quickCapture(notes),
         for (final n in tidy ? [...notes.where((x) => x.isPinned), ...notes.where((x) => !x.isPinned)] : notes)
-          _NoteCard(
-            key: Key('note-${n.id}'),
-            note: n,
-            tidy: tidy,
-            onPin: () => _saveNotes([for (final x in notes) x.id == n.id ? x.copyWith(isPinned: !x.isPinned) : x]),
-            onDelete: () => _deleteNote(context, notes, n),
-            onContent: (text) =>
-                _saveNotes([for (final x in notes) x.id == n.id ? x.copyWith(content: text, updatedAt: _now()) : x]),
-            onOpen: _flag(compassTripPagesFlag) ? () => _editNote(context, notes, n) : null,
+          Container(
+            key: n.id == _focusNoteId ? _focusNoteKey : null,
+            decoration: n.id == _focusNoteId
+                ? BoxDecoration(
+                    borderRadius: BorderRadius.circular(context.tokens.radiusLg),
+                    border: Border.all(color: context.tokens.primaryAccent, width: 2),
+                  )
+                : null,
+            child: _NoteCard(
+              key: Key('note-${n.id}'),
+              note: n,
+              tidy: tidy,
+              onPin: () => _saveNotes([for (final x in notes) x.id == n.id ? x.copyWith(isPinned: !x.isPinned) : x]),
+              onDelete: () => _deleteNote(context, notes, n),
+              onContent: (text) =>
+                  _saveNotes([for (final x in notes) x.id == n.id ? x.copyWith(content: text, updatedAt: _now()) : x]),
+              onOpen: _flag(compassTripPagesFlag) ? () => _editNote(context, notes, n) : null,
+            ),
           ),
         if (!fab)
           AppButton(key: const Key('note-add'), label: l10n.notesAddNote, onPressed: () => _addNote(context, notes)),

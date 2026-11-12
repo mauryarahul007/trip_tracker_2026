@@ -52,9 +52,12 @@ String _fmt(BuildContext c, double v, String code) => formatMoney(c, v, code);
 /// Add / edit an expense. Waits for trip, members, expenses and flags so the
 /// form never starts with the wrong controls.
 class ExpenseFormScreen extends ConsumerWidget {
-  const ExpenseFormScreen({required this.tripId, this.expenseId, super.key});
+  const ExpenseFormScreen({required this.tripId, this.expenseId, this.cloneLast = false, super.key});
   final String tripId;
   final String? expenseId;
+
+  /// Open a new expense with the trip's last expense already copied in (the Add dial's "Clone last").
+  final bool cloneLast;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -67,7 +70,7 @@ class ExpenseFormScreen extends ConsumerWidget {
     // Desktop (board 08): the form floats as a centred card instead of a stretched page.
     final wide = MediaQuery.sizeOf(context).width >= 900;
     final form = ready
-        ? _FormBody(args: ExpenseFormArgs(tripId, expenseId))
+        ? _FormBody(args: ExpenseFormArgs(tripId, expenseId), cloneLast: cloneLast)
         : const Center(child: CircularProgressIndicator());
     return AppScaffold(
       maxContentWidth: wide ? 760 : 960,
@@ -93,8 +96,9 @@ class ExpenseFormScreen extends ConsumerWidget {
 }
 
 class _FormBody extends ConsumerStatefulWidget {
-  const _FormBody({required this.args});
+  const _FormBody({required this.args, this.cloneLast = false});
   final ExpenseFormArgs args;
+  final bool cloneLast;
 
   @override
   ConsumerState<_FormBody> createState() => _FormBodyState();
@@ -108,6 +112,8 @@ class _FormBodyState extends ConsumerState<_FormBody> {
   bool _docked = false;
   bool _dockInit = false;
   bool _quickOpen = false;
+  final _splitMoreCtl = ExpansibleController();
+  bool _splitTileShown = false; // controller is only attached while the tile is in the tree
   String? _quickError;
   late final Set<String> _initialExpenseIds;
   final _amountFocus = FocusNode();
@@ -125,6 +131,12 @@ class _FormBodyState extends ConsumerState<_FormBody> {
     _amount = TextEditingController(text: s.amount);
     // Duplicate detection only compares with what existed when the form opened.
     _initialExpenseIds = {for (final e in ref.read(tripExpensesProvider(args.tripId)).value ?? const <Expense>[]) e.id};
+    if (widget.cloneLast && args.editingId == null) {
+      // Provider state can't change while the tree builds; the form's own listener then fills the text fields.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _c.flags.cloneLast) _c.applyLast();
+      });
+    }
   }
 
   @override
@@ -216,6 +228,12 @@ class _FormBodyState extends ConsumerState<_FormBody> {
 
     // Programmatic changes (clone, chips, quick fill, draft discard) must reach the text fields.
     ref.listen(expenseFormProvider(args), (prev, next) {
+      // A mode set from outside the fold (clone last, quick fill, draft) must not hide its own inputs' controls.
+      if (next.splitMode != 'equal' && prev?.splitMode != next.splitMode) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _splitTileShown && !_splitMoreCtl.isExpanded) _splitMoreCtl.expand();
+        });
+      }
       if (next.title != _title.text) {
         _title.value = TextEditingValue(
           text: next.title,
@@ -327,6 +345,58 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                   ),
           )
         : const SizedBox.shrink();
+
+    // Split controls. Compact form keeps Everyone / Only payer / Everyone-but-payer and the member rows in
+    // view (Equal path); mode switch, payer-half preset and group chips fold under "More split options".
+    final basicPresets = <Widget>[
+      ActionChip(
+        key: const Key('preset-everyone'),
+        label: Text(l10n.formEveryone),
+        onPressed: c.presetEveryone,
+      ),
+      ActionChip(
+        key: const Key('preset-only-payer'),
+        label: Text(l10n.formOnlyPayer),
+        onPressed: c.presetOnlyPayer,
+      ),
+      ActionChip(
+        key: const Key('preset-exclude-payer'),
+        label: Text(l10n.formExcludePayer),
+        onPressed: c.presetExcludePayer,
+      ),
+    ];
+    final advancedPresets = <Widget>[
+      if (flags.advancedSplits)
+        ActionChip(
+          key: const Key('preset-half'),
+          label: Text(l10n.formPayerHalf),
+          onPressed: c.presetPayerHalf,
+        ),
+      for (final g in groups.where((g) => g.memberIds.length > 1))
+        FilterChip(
+          key: Key('group-${g.id}'),
+          label: Text(g.name),
+          selected: g.memberIds.every((m) => s.selected[m] == true),
+          onSelected: (on) => c.applyGroup(g.memberIds, checked: on),
+        ),
+    ];
+    final modeButton = SegmentedButton<String>(
+      key: const Key('split-modes'),
+      showSelectedIcon: false,
+      segments: [
+        for (final m in modes)
+          ButtonSegment(
+            value: m.$1,
+            label: Text(m.$2, key: Key('mode-${m.$1}')),
+          ),
+      ],
+      selected: {s.splitMode},
+      onSelectionChanged: (v) => c.setSplitMode(v.first),
+    );
+    final itemizedEditor = _Itemized(state: s, controller: c, members: members, currency: s.currency);
+    // Nothing beyond Equal to fold away (no advanced modes, no groups): keep the plain layout.
+    final foldSplitExtras = flags.compactForm && (modes.length > 1 || advancedPresets.isNotEmpty);
+    _splitTileShown = foldSplitExtras;
 
     final moreDetails = flags.compactForm
         ? ExpansionTile(
@@ -748,54 +818,38 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                           : Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 4,
-                                  children: [
-                                    ActionChip(
-                                      key: const Key('preset-everyone'),
-                                      label: Text(l10n.formEveryone),
-                                      onPressed: c.presetEveryone,
-                                    ),
-                                    ActionChip(
-                                      key: const Key('preset-only-payer'),
-                                      label: Text(l10n.formOnlyPayer),
-                                      onPressed: c.presetOnlyPayer,
-                                    ),
-                                    ActionChip(
-                                      key: const Key('preset-exclude-payer'),
-                                      label: Text(l10n.formExcludePayer),
-                                      onPressed: c.presetExcludePayer,
-                                    ),
-                                    if (flags.advancedSplits)
-                                      ActionChip(
-                                        key: const Key('preset-half'),
-                                        label: Text(l10n.formPayerHalf),
-                                        onPressed: c.presetPayerHalf,
-                                      ),
-                                    for (final g in groups.where((g) => g.memberIds.length > 1))
-                                      FilterChip(
-                                        key: Key('group-${g.id}'),
-                                        label: Text(g.name),
-                                        selected: g.memberIds.every((m) => s.selected[m] == true),
-                                        onSelected: (on) => c.applyGroup(g.memberIds, checked: on),
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                SegmentedButton<String>(
-                                  key: const Key('split-modes'),
-                                  showSelectedIcon: false,
-                                  segments: [
-                                    for (final m in modes)
-                                      ButtonSegment(
-                                        value: m.$1,
-                                        label: Text(m.$2, key: Key('mode-${m.$1}')),
-                                      ),
-                                  ],
-                                  selected: {s.splitMode},
-                                  onSelectionChanged: (v) => c.setSplitMode(v.first),
-                                ),
+                                if (foldSplitExtras) ...[
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 4,
+                                    children: basicPresets,
+                                  ),
+                                  ExpansionTile(
+                                    key: const Key('more-split-options'),
+                                    controller: _splitMoreCtl,
+                                    tilePadding: EdgeInsets.zero,
+                                    childrenPadding: const EdgeInsets.only(bottom: 8),
+                                    initiallyExpanded: s.splitMode != 'equal',
+                                    title: Text(l10n.formMoreSplitOptions),
+                                    children: [
+                                      if (advancedPresets.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(bottom: 8),
+                                          child: Wrap(spacing: 8, runSpacing: 4, children: advancedPresets),
+                                        ),
+                                      modeButton,
+                                      if (s.splitMode == 'itemized') itemizedEditor,
+                                    ],
+                                  ),
+                                ] else ...[
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 4,
+                                    children: [...basicPresets, ...advancedPresets],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  modeButton,
+                                ],
                                 const SizedBox(height: 8),
                                 for (final m in members)
                                   _MemberRow(
@@ -830,8 +884,7 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                                   ),
                                 if (s.splitMode == 'custom')
                                   Text(l10n.formSharesWeights, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
-                                if (s.splitMode == 'itemized')
-                                  _Itemized(state: s, controller: c, members: members, currency: s.currency),
+                                if (s.splitMode == 'itemized' && !foldSplitExtras) itemizedEditor,
                               ],
                             ),
                     ),

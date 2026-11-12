@@ -352,6 +352,8 @@ void main() {
       await settle(tester);
 
       expect(find.byKey(const Key('trip-stack')), findsNothing); // the list is the default
+      await tester.tap(find.byKey(const Key('trips-view-menu'))); // overflow menu (enableTripsAppBarDiet)
+      await settle(tester);
       await tester.tap(find.byKey(const Key('trips-view-toggle')));
       await settle(tester);
       expect(find.byKey(const Key('trip-stack')), findsOneWidget);

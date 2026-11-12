@@ -5,8 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/auth_state.dart';
+import '../../../core/format/money.dart';
 import '../../../data/providers.dart';
+import '../../../domain/logic/currency.dart' show getCurrencySymbol;
 import '../../../domain/models/trip.dart';
+import '../../../l10n/l10n_ext.dart';
+import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -23,31 +30,16 @@ class TripSettingsScreen extends ConsumerWidget {
   final String tripId;
 
   Future<void> _threshold(BuildContext context, WidgetRef ref, Trip trip) async {
-    final c = TextEditingController(text: trip.approvalThreshold?.toString() ?? '');
-    final v = await showDialog<String>(
+    final picked = await AppSheet.show<ApprovalThresholdResult>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Approval threshold'),
-        content: TextField(
-          key: const Key('threshold-field'),
-          controller: c,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(hintText: 'Amount in ${trip.baseCurrency}, empty to turn off'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          TextButton(
-            key: const Key('threshold-save'),
-            onPressed: () => Navigator.pop(ctx, c.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
+      title: context.l10n.approvalTitle,
+      builder: (_) => ApprovalThresholdSheet(
+        currency: trip.baseCurrency.isEmpty ? 'INR' : trip.baseCurrency,
+        initial: trip.approvalThreshold,
       ),
     );
-    // No c.dispose(): the dialog is still animating out and would read a disposed controller.
-    if (v == null) return;
-    await ref.read(tripRepositoryProvider).setApprovalThreshold(tripId, double.tryParse(v));
+    if (picked == null) return;
+    await ref.read(tripRepositoryProvider).setApprovalThreshold(tripId, picked.value);
   }
 
   /// Applies the change at once and offers UNDO, instead of asking first: every one of these can be flipped back.
@@ -120,10 +112,16 @@ class TripSettingsScreen extends ConsumerWidget {
                       SettingsTile(
                         key: const Key('trip-approval'),
                         icon: Icons.verified_user_outlined,
-                        title: 'Approval threshold',
+                        title: context.l10n.approvalTitle,
                         subtitle: trip.approvalThreshold == null
-                            ? 'Off'
-                            : 'Expenses above ${trip.approvalThreshold} ${trip.baseCurrency} need approval',
+                            ? context.l10n.approvalOff
+                            : context.l10n.approvalOn(
+                                formatMoney(
+                                  context,
+                                  trip.approvalThreshold!,
+                                  trip.baseCurrency.isEmpty ? 'INR' : trip.baseCurrency,
+                                ),
+                              ),
                         onTap: isOwner ? () => _threshold(context, ref, trip) : null,
                       ),
                     SettingsTile(
@@ -172,6 +170,111 @@ class TripSettingsScreen extends ConsumerWidget {
                   ),
               ],
             ),
+    );
+  }
+}
+
+/// What the approval-threshold sheet returns: [value] null means "turn the threshold off".
+class ApprovalThresholdResult {
+  const ApprovalThresholdResult(this.value);
+  final double? value;
+}
+
+/// Body of the approval-threshold sheet: currency-prefixed amount field with a live "Expenses above ?X need
+/// approval" preview. Empty field = off; zero, negative or non-numeric input is refused.
+class ApprovalThresholdSheet extends StatefulWidget {
+  const ApprovalThresholdSheet({required this.currency, this.initial, super.key});
+
+  final String currency;
+  final double? initial;
+
+  @override
+  State<ApprovalThresholdSheet> createState() => _ApprovalThresholdSheetState();
+}
+
+class _ApprovalThresholdSheetState extends State<ApprovalThresholdSheet> {
+  late final TextEditingController _c = TextEditingController(
+    text: widget.initial == null
+        ? ''
+        : (widget.initial == widget.initial!.roundToDouble()
+              ? widget.initial!.toInt().toString()
+              : widget.initial!.toString()),
+  );
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  /// null = empty (off); NaN = invalid; otherwise the positive amount.
+  double? get _parsed {
+    final t = _c.text.trim().replaceAll(',', '');
+    if (t.isEmpty) return null;
+    final v = double.tryParse(t);
+    if (v == null || !v.isFinite || v <= 0) return double.nan;
+    return v;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final tk = context.tokens;
+    final v = _parsed;
+    final invalid = v != null && v.isNaN;
+    final preview = invalid
+        ? l10n.approvalInvalid
+        : v == null
+        ? l10n.approvalPreviewOff
+        : l10n.approvalOn(formatMoney(context, v, widget.currency));
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            key: const Key('threshold-field'),
+            controller: _c,
+            autofocus: true,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: AppTypography.moneyDisplay(fontSize: 28, color: tk.textPrimary).copyWith(
+              fontWeight: FontWeight.w800,
+              fontFeatures: AppTypography.tabularFigures,
+            ),
+            decoration: InputDecoration(
+              prefixText: '${getCurrencySymbol(widget.currency)} ',
+              suffixText: widget.currency,
+              hintText: l10n.approvalHint,
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            preview,
+            key: const Key('threshold-preview'),
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: invalid ? tk.colorDanger : tk.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          AppButton(
+            key: const Key('threshold-save'),
+            label: l10n.actionSave,
+            onPressed: invalid ? null : () => Navigator.pop(context, ApprovalThresholdResult(v)),
+          ),
+          if (widget.initial != null)
+            Align(
+              alignment: Alignment.center,
+              child: TextButton(
+                key: const Key('threshold-off'),
+                onPressed: () => Navigator.pop(context, const ApprovalThresholdResult(null)),
+                child: Text(l10n.approvalTurnOff),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

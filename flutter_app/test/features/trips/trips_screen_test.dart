@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trip_tracker/shared/widgets/app_bottom_nav.dart';
 import 'package:trip_tracker/data/providers.dart';
+import 'package:trip_tracker/features/trips/application/trips_providers.dart';
 import 'package:trip_tracker/data/sync/outbox_types.dart';
 import 'package:trip_tracker/shared/widgets/app_button.dart';
 
@@ -60,11 +61,13 @@ void main() {
         .toList();
     expect(order(), ['Alps Ski', 'Goa Weekend', 'Beach Break']);
 
-    await tester.tap(find.byTooltip('Newest first'));
+    await tester.tap(find.byKey(const Key('trips-view-menu'))); // sort lives in the overflow menu
     await settle(tester);
     await tester.tap(find.text('Name (A–Z)'));
     await settle(tester);
-    expect(order(), ['Alps Ski', 'Beach Break', 'Goa Weekend']);
+    // Sections (Upcoming / Past) are on by default, so the chosen sort only reorders inside each group.
+    expect(containerOf(tester).read(tripSortProvider), TripSort.name);
+    expect(order(), ['Alps Ski', 'Goa Weekend', 'Beach Break']);
 
     await tester.tap(find.byKey(const Key('trips-search-toggle'))); // search is an icon until opened
     await settle(tester);
