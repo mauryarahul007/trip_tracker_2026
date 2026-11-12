@@ -3269,9 +3269,9 @@
       "platform": "native"
     },
     "createdAt": "2026-11-12T22:01:48.144Z",
-    "updatedAt": "2026-11-12T22:01:48.144Z",
-    "shippedAt": "2026-11-12T22:01:48.144Z",
+    "updatedAt": "2026-11-12T22:03:04.748Z",
+    "shippedAt": "2026-11-12T22:03:04.747Z",
     "shippedBy": "agent",
-    "shippedNote": "Shipped in v3.91.7: FLUTTER-ENH-S1…S5"
+    "shippedNote": "Shipped in 70afc31 (v3.91.7): FLUTTER-ENH-S1…S5"
   }
 ]

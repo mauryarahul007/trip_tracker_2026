@@ -263,7 +263,7 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-202** | Flutter UI/UX polish: Settings, Trips money glance, Hub/map calm | `ui-ux` | `agent` | `agent` | Shipped in 3e0a18c (v3.91.3): Flutter UX polish FLUTTER-UX-POLISH |
 | **FEAT-203** | Flutter UX upgrades: Spend chips, login, Activity, Balances | `ui-ux` | `agent` | `agent` | Shipped in 19e699b (v3.91.4): FLUTTER-UX-UPGRADES + SPEND-EXPAND-LOGIN |
 | **FEAT-204** | Flutter UI polish roadmap (Phases 1–4) | `ui-ux` | `agent` | `agent` | Shipped in 6295723 (v3.91.5): FLUTTER-UI-ROADMAP |
-| **FEAT-206** | Flutter enhancements S1-S5 (money, empty/sync, visual, logic, search) | `ui-ux` | `agent` | `agent` | Shipped in v3.91.7: FLUTTER-ENH-S1…S5 |
+| **FEAT-206** | Flutter enhancements S1-S5 (money, empty/sync, visual, logic, search) | `ui-ux` | `agent` | `agent` | Shipped in 70afc31 (v3.91.7): FLUTTER-ENH-S1…S5 |
 
 ---
 
