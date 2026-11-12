@@ -3225,5 +3225,21 @@
     "shippedAt": "2026-11-12T08:31:39.759Z",
     "shippedBy": "agent",
     "shippedNote": "Shipped in 3e0a18c (v3.91.3): Flutter UX polish FLUTTER-UX-POLISH"
+  },
+  {
+    "id": "FEAT-203",
+    "title": "Flutter UX upgrades: Spend chips, login, Activity, Balances",
+    "description": "Flutter UX upgrades: Spend chips, login, Activity, Balances",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-12T09:03:48.180Z",
+    "updatedAt": "2026-11-12T09:03:48.180Z",
+    "shippedAt": "2026-11-12T09:03:48.180Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped in 19e699b (v3.91.4): FLUTTER-UX-UPGRADES + SPEND-EXPAND-LOGIN"
   }
 ]
