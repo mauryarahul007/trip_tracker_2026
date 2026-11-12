@@ -156,6 +156,7 @@
     "enableHapticsSetting": true,
     "enableSettingsSegmentedLists": true,
     "enableScrollCompressDock": true,
+    "enableSpendSectionChips": true,
     "enableLastSyncedCaption": true,
     "enableTripSwitcher": true,
     "enableTripPins": true,
@@ -369,6 +370,7 @@
     "enableHapticsSetting": true,
     "enableSettingsSegmentedLists": true,
     "enableScrollCompressDock": true,
+    "enableSpendSectionChips": true,
     "enableLastSyncedCaption": true,
     "enableTripSwitcher": true,
     "enableTripPins": true,
@@ -579,7 +581,8 @@
         "enableHapticsSetting",
         "enableCompactLedgerView",
         "enableSettingsSegmentedLists",
-        "enableScrollCompressDock"
+        "enableScrollCompressDock",
+        "enableSpendSectionChips"
       ]
     },
     {

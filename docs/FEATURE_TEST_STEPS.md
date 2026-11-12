@@ -21,6 +21,8 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-12 | 3.91.4 | FLUTTER-UX-UPGRADES | [Flutter UX upgrades: Spend chips, login, Activity, Balances](#flutter-ux-upgrades--flutter-ux-upgrades-spend-chips-login-activity-balances) |
+| 2026-11-12 | 3.91.4 | SPEND-EXPAND-LOGIN | [Spend Expand All + login Status alignment](#spend-expand-login--spend-expand-all--login-status-alignment) |
 | 2026-11-12 | unreleased | FLUTTER-UX-POLISH | [Flutter UI/UX polish (Settings, Trips, money, Hub)](#flutter-ux-polish--flutter-uiux-polish-settings-trips-money-hub) |
 | 2026-11-11 | unreleased | CORE-UX-PARITY | [Core UX parity + light differentiators](#core-ux-parity--core-ux-parity--light-differentiators) |
 | 2026-11-02 | unreleased | MULTI-SELECT | [Select several expenses (Flutter)](#multi-select--select-several-expenses-flutter) |
@@ -4216,3 +4218,50 @@ Then add a row to the **Index** table.
 - `enableSkeletonLoaders` OFF: Hub loading uses spinner, not skeleton blocks.
 
 **Pass criteria:** each ON step matches; each OFF check removes only that surface; no balance, split, or sync math changes; no new map/chat product weight.
+
+
+## SPEND-EXPAND-LOGIN — Spend Expand All + login Status alignment
+
+**Shipped:** v3.91.4. Flutter-only bug fixes. No new flags.
+
+**Prep:** Flutter app. A trip with at least one expense day, one settlement, and ideally a refund. Signed-out login screen (boarding pass).
+
+### Spend Expand / Collapse All
+1. Open Spend. Settlement groups appear under Settlements and start expanded (same as before).
+2. Menu → Expand All: every expense day (including refund-only days) and every settlement day opens.
+3. Menu → Collapse All: every expense day and every settlement day closes; headers remain tappable.
+4. Tap a settlement day header alone: that settlement group toggles without affecting expense days (keys are prefixed `settlement:…`).
+
+### Login Status alignment
+5. Open the signed-out login boarding sheet: left shows PASSENGER / You; right shows STATUS / Not signed in flush to the right edge (not centered in the middle of the sheet).
+
+**Pass criteria:** Expand/Collapse All covers expenses, refunds-in-day-groups, and settlements; settlement and expense days toggle independently; login Status sits on the right.
+
+
+## FLUTTER-UX-UPGRADES — Flutter UX upgrades: Spend chips, login, Activity, Balances
+
+**Shipped:** v3.91.4. Flutter-only. New flag: `enableSpendSectionChips` (Trip, default ON). Reused: `enableCoachEmptyStates`, `enableNotificationDayGroups`.
+
+**Prep:** Flutter app signed out for login; a trip with expenses, refunds, and settlements; empty Balances (no trips) for coach empty.
+
+### Spend section chips
+1. Spend with `enableSpendSectionChips` ON: quiet All / Expenses / Refunds / Settlements row under the search bar.
+2. Expenses → only expense days (no Settlements block). Refunds → refund days. Settlements → Settlements block only. All → previous combined list.
+3. Flag OFF → no section chip row; Settlements still appear below as before.
+
+### Login boarding
+4. Signed-out boarding login: Trip Tracker brand is the hero focus; one capability chip (Splits); Google/Apple stay on the ticket stub. STATUS / Not signed in remains right-aligned.
+
+### Settle amount
+5. Open settle: amount uses tabular mono digits; payer→payee mapping stays visible above the field.
+
+### Home Balances empty
+6. With no trips and `enableCoachEmptyStates` ON: Balances empty copy coaches creating a trip; Create trip still works. Flag OFF → prior empty subtitle.
+
+### Activity / Alerts day headers
+7. Alerts (home) and trip Activity with `enableNotificationDayGroups` ON: sticky day headers, denser rows. Flag OFF → continuous list without day headers.
+
+### Sync chrome
+8. Trips list (non-card): header SyncButton only — no duplicate SyncChip under OfflineBanner. Card stack still may show SyncChip.
+
+**Pass criteria:** each ON step matches; flag-OFF removes only that surface; no balance/split math changes.

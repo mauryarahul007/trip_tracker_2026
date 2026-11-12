@@ -21,7 +21,6 @@ import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
-import '../../../shared/widgets/section_label.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../../trips/application/trips_providers.dart';
 import '../../trips/presentation/widgets/home_dock.dart';
@@ -223,60 +222,29 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                           ? 'Switch back to All to see everything.'
                           : 'Updates from your trips will show up here.',
                     )
-                  : ListView.builder(
-                      key: const Key('notifications-list'),
-                      itemCount: groups.length,
-                      itemBuilder: (context, i) {
-                        final g = groups[i];
-                        final lead = g.first;
-                        final folded = g.length > 1 && !_expanded.contains(lead.id);
-                        final rows = folded ? [lead] : g;
-                        final label = dayGroups ? dayLabel(lead) : null;
-                        final prevLabel = dayGroups && i > 0 ? dayLabel(groups[i - 1].first) : null;
-                        return Column(
-                          children: [
-                            if (label != null && label != prevLabel)
-                              Align(
-                                key: Key('notif-day-$label'),
-                                alignment: Alignment.centerLeft,
-                                child: SectionLabel(label, padding: const EdgeInsets.fromLTRB(16, 12, 16, 4)),
-                              ),
-                            for (final n in rows)
-                              _Row(
-                                key: ValueKey('notif-${n.id}'),
-                                item: n,
-                                tokens: tokens,
-                                confirmable: actionsOn && n.data?['type'] == 'settlement_confirmation_requested'
-                                    ? settlementToConfirm(
-                                        tripId: n.tripId,
-                                        expenseTitle: n.data?['expenseTitle'] as String?,
-                                        userId: userId,
-                                        expenses: allExpenses,
-                                        members: allMembers,
-                                      )
-                                    : null,
-                                onConfirm: (e) => _confirm(n, e),
-                                onTap: () => _open(n),
-                                onToggleRead: () => repo.setRead(n.id, !n.read),
-                                onDelete: () => deleteNotificationWithUndo(
-                                  context,
-                                  repo: repo,
-                                  id: n.id,
-                                  undoOn: ref.read(flagProvider(('enableExtendedUndo', widget.tripId))).value ?? true,
-                                  hide: () => setState(() => _pendingDelete.add(n.id)),
-                                  show: () => setState(() => _pendingDelete.remove(n.id)),
-                                ),
-                              ),
-                            if (g.length > 1)
-                              TextButton(
-                                key: Key('group-toggle-${lead.id}'),
-                                onPressed: () =>
-                                    setState(() => folded ? _expanded.add(lead.id) : _expanded.remove(lead.id)),
-                                child: Text(folded ? 'Show ${g.length - 1} more' : 'Show less'),
-                              ),
-                          ],
-                        );
-                      },
+                  : _NotificationsScroll(
+                      groups: groups,
+                      dayGroups: dayGroups,
+                      dayLabel: dayLabel,
+                      dense: dayGroups,
+                      expanded: _expanded,
+                      onToggleGroup: (id, fold) => setState(() => fold ? _expanded.add(id) : _expanded.remove(id)),
+                      tokens: tokens,
+                      actionsOn: actionsOn,
+                      userId: userId,
+                      allExpenses: allExpenses,
+                      allMembers: allMembers,
+                      onConfirm: _confirm,
+                      onOpen: _open,
+                      onToggleRead: (n) => repo.setRead(n.id, !n.read),
+                      onDelete: (n) => deleteNotificationWithUndo(
+                        context,
+                        repo: repo,
+                        id: n.id,
+                        undoOn: ref.read(flagProvider(('enableExtendedUndo', widget.tripId))).value ?? true,
+                        hide: () => setState(() => _pendingDelete.add(n.id)),
+                        show: () => setState(() => _pendingDelete.remove(n.id)),
+                      ),
                     ),
             ),
           ],
@@ -284,6 +252,145 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       ),
     );
   }
+}
+
+/// Sticky day sections + denser rows when `enableNotificationDayGroups` is on.
+class _NotificationsScroll extends StatelessWidget {
+  const _NotificationsScroll({
+    required this.groups,
+    required this.dayGroups,
+    required this.dayLabel,
+    required this.dense,
+    required this.expanded,
+    required this.onToggleGroup,
+    required this.tokens,
+    required this.actionsOn,
+    required this.userId,
+    required this.allExpenses,
+    required this.allMembers,
+    required this.onConfirm,
+    required this.onOpen,
+    required this.onToggleRead,
+    required this.onDelete,
+  });
+
+  final List<List<NotificationItem>> groups;
+  final bool dayGroups;
+  final String? Function(NotificationItem) dayLabel;
+  final bool dense;
+  final Set<String> expanded;
+  final void Function(String id, bool foldOpen) onToggleGroup;
+  final AppTokens tokens;
+  final bool actionsOn;
+  final String? userId;
+  final List<Expense> allExpenses;
+  final List<Member> allMembers;
+  final void Function(NotificationItem, Expense) onConfirm;
+  final void Function(NotificationItem) onOpen;
+  final void Function(NotificationItem) onToggleRead;
+  final void Function(NotificationItem) onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final slivers = <Widget>[];
+    String? lastLabel;
+    for (final g in groups) {
+      final lead = g.first;
+      final label = dayGroups ? dayLabel(lead) : null;
+      if (label != null && label != lastLabel) {
+        lastLabel = label;
+        slivers.add(
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _DayStickyHeader(
+              label: label,
+              background: tokens.bgPage,
+              foreground: tokens.textMuted,
+            ),
+          ),
+        );
+      }
+      final folded = g.length > 1 && !expanded.contains(lead.id);
+      final rows = folded ? [lead] : g;
+      slivers.add(
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, i) {
+              if (i < rows.length) {
+                final n = rows[i];
+                return _Row(
+                  key: ValueKey('notif-${n.id}'),
+                  item: n,
+                  tokens: tokens,
+                  dense: dense,
+                  confirmable: actionsOn && n.data?['type'] == 'settlement_confirmation_requested'
+                      ? settlementToConfirm(
+                          tripId: n.tripId,
+                          expenseTitle: n.data?['expenseTitle'] as String?,
+                          userId: userId,
+                          expenses: allExpenses,
+                          members: allMembers,
+                        )
+                      : null,
+                  onConfirm: (e) => onConfirm(n, e),
+                  onTap: () => onOpen(n),
+                  onToggleRead: () => onToggleRead(n),
+                  onDelete: () => onDelete(n),
+                );
+              }
+              return TextButton(
+                key: Key('group-toggle-${lead.id}'),
+                onPressed: () => onToggleGroup(lead.id, folded),
+                child: Text(folded ? 'Show ${g.length - 1} more' : 'Show less'),
+              );
+            },
+            childCount: rows.length + (g.length > 1 ? 1 : 0),
+          ),
+        ),
+      );
+    }
+    return CustomScrollView(key: const Key('notifications-list'), slivers: slivers);
+  }
+}
+
+class _DayStickyHeader extends SliverPersistentHeaderDelegate {
+  _DayStickyHeader({required this.label, required this.background, required this.foreground});
+
+  final String label;
+  final Color background;
+  final Color foreground;
+
+  @override
+  double get minExtent => 28;
+  @override
+  double get maxExtent => 28;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Material(
+      color: background,
+      child: Align(
+        key: Key('notif-day-$label'),
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 2),
+          child: Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.6,
+              color: foreground,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _DayStickyHeader old) =>
+      old.label != label || old.background != background || old.foreground != foreground;
 }
 
 class _Row extends StatelessWidget {
@@ -295,6 +402,7 @@ class _Row extends StatelessWidget {
     required this.onDelete,
     required this.confirmable,
     required this.onConfirm,
+    this.dense = false,
     super.key,
   });
 
@@ -306,6 +414,7 @@ class _Row extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onToggleRead;
   final VoidCallback onDelete;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -328,18 +437,24 @@ class _Row extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
+              dense: dense,
+              visualDensity: dense ? VisualDensity.compact : VisualDensity.standard,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: dense ? 0 : 4),
               onTap: onTap,
               leading: CircleAvatar(
+                radius: dense ? 16 : 20,
                 backgroundColor: meta.color.withValues(alpha: 0.15),
-                child: Icon(meta.icon, size: 18, color: meta.color),
+                child: Icon(meta.icon, size: dense ? 16 : 18, color: meta.color),
               ),
               title: Text(headline, style: TextStyle(fontWeight: item.read ? FontWeight.w500 : FontWeight.w800)),
               subtitle: Text(
-                '${renderNotificationBody(item)}\n${formatRelativeTime(item.createdAt)}',
-                maxLines: 3,
+                dense
+                    ? '${renderNotificationBody(item)} · ${formatRelativeTime(item.createdAt)}'
+                    : '${renderNotificationBody(item)}\n${formatRelativeTime(item.createdAt)}',
+                maxLines: dense ? 2 : 3,
                 overflow: TextOverflow.ellipsis,
               ),
-              isThreeLine: true,
+              isThreeLine: !dense,
               trailing: IconButton(
                 tooltip: item.read ? 'Mark as unread' : 'Mark as read',
                 onPressed: onToggleRead,
@@ -348,7 +463,7 @@ class _Row extends StatelessWidget {
             ),
             if (confirmable != null)
               Padding(
-                padding: const EdgeInsets.fromLTRB(72, 0, 16, 8),
+                padding: EdgeInsets.fromLTRB(dense ? 56 : 72, 0, 16, dense ? 4 : 8),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: FilledButton.tonal(

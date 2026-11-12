@@ -103,6 +103,24 @@ abstract class AppLocalizations {
   /// **'Trips'**
   String get navTrips;
 
+  /// No description provided for @navChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get navChat;
+
+  /// No description provided for @navExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get navExpenses;
+
+  /// No description provided for @navSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get navSummary;
+
   /// No description provided for @navAlerts.
   ///
   /// In en, this message translates to:
@@ -132,24 +150,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Me'**
   String get navMe;
-
-  /// No description provided for @navChat.
-  ///
-  /// In en, this message translates to:
-  /// **'Chat'**
-  String get navChat;
-
-  /// No description provided for @navExpenses.
-  ///
-  /// In en, this message translates to:
-  /// **'Expenses'**
-  String get navExpenses;
-
-  /// No description provided for @navSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Summary'**
-  String get navSummary;
 
   /// No description provided for @ledHeroYouOwed.
   ///

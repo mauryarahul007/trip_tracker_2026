@@ -305,62 +305,71 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
                         )
                       : null,
                 )
-              : ListView.builder(
-                  key: const Key('activity-list'),
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
-                  itemCount: shown.length,
-                  itemBuilder: (context, i) {
-                    final n = shown[i];
-                    final label = dayLabel(n);
-                    final first = i == 0 || dayLabel(shown[i - 1]) != label;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (first)
-                          Padding(
-                            key: Key('activity-day-$label'),
-                            padding: const EdgeInsets.fromLTRB(4, 14, 4, 6),
-                            child: Text(
-                              label,
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: t.textPrimary),
+              : Builder(
+                  builder: (context) {
+                    final slivers = <Widget>[];
+                    String? lastLabel;
+                    for (var i = 0; i < shown.length; i++) {
+                      final n = shown[i];
+                      final label = dayLabel(n);
+                      if (i == 0 || lastLabel != label) {
+                        lastLabel = label;
+                        slivers.add(
+                          SliverPersistentHeader(
+                            pinned: true,
+                            delegate: _ActivityDaySticky(
+                              label: label,
+                              background: t.bgPage,
+                              foreground: t.textMuted,
                             ),
                           ),
-                        _ActivityRow(
-                          key: ValueKey('activity-${n.id}'),
-                          item: n,
-                          selectMode: _selectMode,
-                          selected: _selectedIds.contains(n.id),
-                          onToggleSelect: () {
-                            setState(() {
-                              if (_selectedIds.contains(n.id)) {
-                                _selectedIds.remove(n.id);
-                              } else {
-                                _selectedIds.add(n.id);
-                              }
-                            });
-                          },
-                          onTap: () => unawaited(_open(n)),
-                          onDelete: () => deleteNotificationWithUndo(
-                            context,
-                            repo: repo,
-                            id: n.id,
-                            undoOn: ref.read(flagProvider(('enableExtendedUndo', widget.tripId))).value ?? true,
-                            hide: () => setState(() => _dismissedLogIds.add(n.id)),
-                            show: () => setState(() => _dismissedLogIds.remove(n.id)),
+                        );
+                      }
+                      slivers.add(
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: _ActivityRow(
+                              key: ValueKey('activity-${n.id}'),
+                              item: n,
+                              selectMode: _selectMode,
+                              selected: _selectedIds.contains(n.id),
+                              dense: true,
+                              onToggleSelect: () {
+                                setState(() {
+                                  if (_selectedIds.contains(n.id)) {
+                                    _selectedIds.remove(n.id);
+                                  } else {
+                                    _selectedIds.add(n.id);
+                                  }
+                                });
+                              },
+                              onTap: () => unawaited(_open(n)),
+                              onDelete: () => deleteNotificationWithUndo(
+                                context,
+                                repo: repo,
+                                id: n.id,
+                                undoOn: ref.read(flagProvider(('enableExtendedUndo', widget.tripId))).value ?? true,
+                                hide: () => setState(() => _dismissedLogIds.add(n.id)),
+                                show: () => setState(() => _dismissedLogIds.remove(n.id)),
+                              ),
+                              confirmable: n.data?['type'] == 'settlement_confirmation_requested'
+                                  ? settlementToConfirm(
+                                      tripId: n.tripId,
+                                      expenseTitle: n.data?['expenseTitle'] as String?,
+                                      userId: userId,
+                                      expenses: allExpenses,
+                                      members: allMembers,
+                                    )
+                                  : null,
+                              onConfirm: _confirm,
+                            ),
                           ),
-                          confirmable: n.data?['type'] == 'settlement_confirmation_requested'
-                              ? settlementToConfirm(
-                                  tripId: n.tripId,
-                                  expenseTitle: n.data?['expenseTitle'] as String?,
-                                  userId: userId,
-                                  expenses: allExpenses,
-                                  members: allMembers,
-                                )
-                              : null,
-                          onConfirm: _confirm,
                         ),
-                      ],
-                    );
+                      );
+                    }
+                    slivers.add(const SliverToBoxAdapter(child: SizedBox(height: 120)));
+                    return CustomScrollView(key: const Key('activity-list'), slivers: slivers);
                   },
                 ),
         ),
@@ -374,6 +383,41 @@ String _fmtDay(DateTime d) {
   return '${d.day} ${m[d.month - 1]}';
 }
 
+class _ActivityDaySticky extends SliverPersistentHeaderDelegate {
+  _ActivityDaySticky({required this.label, required this.background, required this.foreground});
+
+  final String label;
+  final Color background;
+  final Color foreground;
+
+  @override
+  double get minExtent => 28;
+  @override
+  double get maxExtent => 28;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Material(
+      color: background,
+      child: Align(
+        key: Key('activity-day-$label'),
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 6, 16, 2),
+          child: Text(
+            label.toUpperCase(),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.6, color: foreground),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _ActivityDaySticky old) =>
+      old.label != label || old.background != background || old.foreground != foreground;
+}
+
 class _ActivityRow extends StatelessWidget {
   const _ActivityRow({
     required this.item,
@@ -384,6 +428,7 @@ class _ActivityRow extends StatelessWidget {
     this.selectMode = false,
     this.selected = false,
     this.onToggleSelect,
+    this.dense = false,
     super.key,
   });
 
@@ -395,6 +440,7 @@ class _ActivityRow extends StatelessWidget {
   final bool selectMode;
   final bool selected;
   final VoidCallback? onToggleSelect;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -403,7 +449,7 @@ class _ActivityRow extends StatelessWidget {
     final meta = notificationMeta(type);
     final headline = getNotificationHeadline(type);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.only(bottom: dense ? 4 : 8),
       child: Dismissible(
         key: ValueKey('dismiss-${item.id}'),
         direction: (selectMode || item.id.startsWith('log-')) ? DismissDirection.none : DismissDirection.endToStart,

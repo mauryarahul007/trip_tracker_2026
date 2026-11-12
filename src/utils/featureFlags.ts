@@ -167,6 +167,7 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
       'enableCompactLedgerView',
       'enableSettingsSegmentedLists',
       'enableScrollCompressDock',
+      'enableSpendSectionChips',
     ],
   },
   {
@@ -1210,6 +1211,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     pack: 'trip',
     defaultEnabledForUsers: true,
   },
+  enableSpendSectionChips: {
+    key: 'enableSpendSectionChips',
+    label: 'Spend Section Chips (Flutter)',
+    description: 'Flutter app: ON: Spend shows a quiet All / Expenses / Refunds / Settlements chip row that filters which sections appear. OFF: no section chip row; Settlements still list below expenses as before. Does not change amounts or add a new tab.',
+    category: 'core',
+    pack: 'trip',
+    defaultEnabledForUsers: true,
+  },
   enableSettingsSearch: {
     key: 'enableSettingsSearch',
     label: 'Settings Search (Flutter)',
@@ -1501,7 +1510,7 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
   enableNotificationDayGroups: {
     key: 'enableNotificationDayGroups',
     label: 'Notifications Grouped by Day (Flutter)',
-    description: 'Flutter app: ON: the notification list is grouped under Today, Yesterday and older dates. OFF: one continuous list. Does not change what is notified or read/unread state.',
+    description: 'Flutter app: ON: Alerts/Activity lists use sticky day headers (Today, Yesterday, older) with denser rows. OFF: one continuous list without day headers. Does not change what is notified or read/unread state.',
     category: 'core',
     pack: 'trip',
     defaultEnabledForUsers: true,
@@ -2166,6 +2175,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableHapticsSetting: true,
   enableSettingsSegmentedLists: true,
   enableScrollCompressDock: true,
+  enableSpendSectionChips: true,
   enableLastSyncedCaption: true,
   enableTripSwitcher: true,
   enableTripPins: true,

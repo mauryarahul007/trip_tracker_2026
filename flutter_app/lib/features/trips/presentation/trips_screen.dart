@@ -571,7 +571,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                         onList: () => ref.read(tripsViewProvider.notifier).set(TripsView.list),
                       ),
                     const OfflineBanner(),
-                    const SyncChip(),
+                    // Sync lives as the header SyncButton (icon-only when healthy); SyncChip only when
+                    // there is no app bar (card stack) so we do not double the sync chrome.
+                    if (cards) const SyncChip(),
                     if (_searchOpen)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),

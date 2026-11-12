@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/auth_state.dart';
 import '../../../core/format/money.dart';
+import '../../../data/providers.dart';
 import '../../../domain/logic/cross_trip_balances.dart';
 import '../../../domain/models/expense.dart';
 import '../../../domain/models/group.dart';
@@ -66,7 +67,9 @@ class BalancesScreen extends ConsumerWidget {
             ? EmptyState(
                 icon: Icons.account_balance_wallet_outlined,
                 title: l10n.emptyTripsTitle,
-                subtitle: l10n.emptyTripsSubtitle,
+                subtitle: (ref.watch(flagProvider(('enableCoachEmptyStates', null))).value ?? true)
+                    ? 'Create a trip to see what you owe and are owed across journeys.'
+                    : l10n.emptyTripsSubtitle,
                 action: AppButton(
                   key: const Key('balances-create-trip'),
                   label: l10n.actionCreateTrip,

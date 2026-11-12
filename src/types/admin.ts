@@ -120,6 +120,7 @@ export type FeatureFlagKey =
   | 'enableSettingsSearch'
   | 'enableSettingsSegmentedLists'
   | 'enableScrollCompressDock'
+  | 'enableSpendSectionChips'
   | 'enableSettingsDataHub'
   | 'enableTripHeaderActions'
   | 'enableSummaryUpgrades'

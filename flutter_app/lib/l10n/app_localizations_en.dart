@@ -16,6 +16,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navTrips => 'Trips';
 
   @override
+  String get navChat => 'Chat';
+
+  @override
+  String get navExpenses => 'Expenses';
+
+  @override
+  String get navSummary => 'Summary';
+
+  @override
   String get navAlerts => 'Alerts';
 
   @override
@@ -29,15 +38,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navMe => 'Me';
-
-  @override
-  String get navChat => 'Chat';
-
-  @override
-  String get navExpenses => 'Expenses';
-
-  @override
-  String get navSummary => 'Summary';
 
   @override
   String get ledHeroYouOwed => 'You are owed';

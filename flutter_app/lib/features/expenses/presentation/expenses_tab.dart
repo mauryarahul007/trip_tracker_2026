@@ -91,6 +91,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
   final _todayKey = GlobalKey();
   bool _away = false; // scrolled well below the top: offer Jump to today
 
+  /// Quiet All / Expenses / Refunds / Settlements row (`enableSpendSectionChips`).
+  _SpendSection _section = _SpendSection.all;
+
   void _onScroll() {
     final away = _scroll.hasClients && _scroll.offset > 500;
     if (away != _away) setState(() => _away = away);
@@ -382,15 +385,34 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         if (isRefund(r) && r.deletedAt == null) r.refundOfExpenseId!,
     };
     final compassSpend = ref.watch(compassFlagProvider((compassSpendFlag, id)));
-    final dayGroups = groupByDay(shown.where(isActualExpense).toList());
-    final settlementGroups = groupByDay(shown.where((e) => !isActualExpense(e)).toList());
+    final sectionChipsOn = _flag(ref, 'enableSpendSectionChips', id);
+    final showExpenseDays = !sectionChipsOn || _section != _SpendSection.settlements;
+    final showSettlements = !sectionChipsOn || _section == _SpendSection.all || _section == _SpendSection.settlements;
+    final dayGroups = showExpenseDays
+        ? groupByDay(shown.where(isActualExpense).toList())
+        : const <DayGroup>[];
+    final settlementGroups = showSettlements
+        ? groupByDay(shown.where((e) => !isActualExpense(e)).toList())
+        : const <DayGroup>[];
+    String dayKey(DayGroup g, {required bool settlement}) =>
+        settlement ? 'settlement:${g.date}' : g.date;
     // Only once the flag has really loaded: while it loads it reads as its default (ON) and would open every day.
     if (ref.watch(flagProvider((compassSpendFlag, id))).value == true) {
       for (final g in dayGroups) {
-        if (_seenDays.add(g.date)) _expandedDays.add(g.date);
+        if (_seenDays.add(g.date)) _expandedDays.add(dayKey(g, settlement: false));
       }
     }
-    final allExpanded = dayGroups.isNotEmpty && dayGroups.every((g) => _expandedDays.contains(g.date));
+    // Settlements were always open before; seed each settlement day once so first paint stays expanded
+    // but Collapse All / per-header toggle can fold them.
+    for (final g in settlementGroups) {
+      final key = dayKey(g, settlement: true);
+      if (_seenDays.add(key)) _expandedDays.add(key);
+    }
+    final expenseKeys = [for (final g in dayGroups) dayKey(g, settlement: false)];
+    final settlementKeys = [for (final g in settlementGroups) dayKey(g, settlement: true)];
+    final allKeys = [...expenseKeys, ...settlementKeys];
+    final allExpanded =
+        allKeys.isNotEmpty && allKeys.every((k) => _expandedDays.contains(k));
 
     final settlement = ref.watch(tripSettlementProvider(id));
     final chips = attentionChips(
@@ -541,36 +563,41 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       required bool collapsible,
       bool isSettlement = false,
     }) {
-      SliverPersistentHeader headerFor(DayGroup g, {required bool expanded}) => SliverPersistentHeader(
-        pinned: sticky && expanded && _expandedDays.length <= 1,
-        delegate: _DayHeader(
-          textScale: MediaQuery.textScalerOf(context).scale(1),
-          date: isSettlement ? 'settlement:${g.date}' : g.date,
-          label: isSettlement ? _settlementDateLabel(g.date) : _dayLabel(g.date, trip.startDate, l10n.expDayN),
-          total: isSettlement
-              ? '${formatMoney(context, g.total, trip.baseCurrency)} settled'
-              : formatMoney(context, g.total, trip.baseCurrency),
-          count: g.expenses.length,
-          expanded: expanded,
-          collapsible: collapsible,
-          semantics: isSettlement
-              ? '${_settlementDateLabel(g.date)}, ${g.expenses.length} settled, ${formatMoney(context, g.total, trip.baseCurrency)}'
-              : l10n.expDaySemantics(g.date, g.expenses.length, formatMoney(context, g.total, trip.baseCurrency)),
-          onTap: () =>
-              setState(() => _expandedDays.contains(g.date) ? _expandedDays.remove(g.date) : _expandedDays.add(g.date)),
-          background: tokens.bgPage,
-          textColor: tokens.textPrimary,
-          mutedColor: tokens.textMuted,
-          tidy: tidyOn,
-          surface: tokens.bgSurface,
-          border: tokens.borderColor,
-          countText: isSettlement
-              ? '${g.expenses.length} settled'
-              : g.expenses.isNotEmpty && g.expenses.every(isRefund)
-                  ? l10n.expDayCountRefund(g.expenses.length)
-                  : l10n.expDayCount(g.expenses.length),
-        ),
-      );
+      SliverPersistentHeader headerFor(DayGroup g, {required bool expanded}) {
+        final key = dayKey(g, settlement: isSettlement);
+        return SliverPersistentHeader(
+          pinned: sticky && expanded && _expandedDays.length <= 1,
+          delegate: _DayHeader(
+            textScale: MediaQuery.textScalerOf(context).scale(1),
+            date: key,
+            label: isSettlement ? _settlementDateLabel(g.date) : _dayLabel(g.date, trip.startDate, l10n.expDayN),
+            total: isSettlement
+                ? '${formatMoney(context, g.total, trip.baseCurrency)} settled'
+                : formatMoney(context, g.total, trip.baseCurrency),
+            count: g.expenses.length,
+            expanded: expanded,
+            collapsible: collapsible,
+            semantics: isSettlement
+                ? '${_settlementDateLabel(g.date)}, ${g.expenses.length} settled, ${formatMoney(context, g.total, trip.baseCurrency)}'
+                : l10n.expDaySemantics(g.date, g.expenses.length, formatMoney(context, g.total, trip.baseCurrency)),
+            onTap: () => setState(
+              () => _expandedDays.contains(key) ? _expandedDays.remove(key) : _expandedDays.add(key),
+            ),
+            background: tokens.bgPage,
+            textColor: tokens.textPrimary,
+            mutedColor: tokens.textMuted,
+            tidy: tidyOn,
+            surface: tokens.bgSurface,
+            border: tokens.borderColor,
+            countText: isSettlement
+                ? '${g.expenses.length} settled'
+                : g.expenses.isNotEmpty && g.expenses.every(isRefund)
+                    ? l10n.expDayCountRefund(g.expenses.length)
+                    : l10n.expDayCount(g.expenses.length),
+          ),
+        );
+      }
+
       SliverList listFor(DayGroup g) => SliverList.builder(
         itemCount: g.expenses.length,
         itemBuilder: (_, i) {
@@ -590,8 +617,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       );
       return [
         for (final g in groups) ...[
-          headerFor(g, expanded: !collapsible || _expandedDays.contains(g.date)),
-          if (!collapsible || _expandedDays.contains(g.date)) listFor(g),
+          headerFor(g, expanded: !collapsible || _expandedDays.contains(dayKey(g, settlement: isSettlement))),
+          if (!collapsible || _expandedDays.contains(dayKey(g, settlement: isSettlement))) listFor(g),
         ],
       ];
     }
@@ -688,9 +715,13 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                     if (v == 'expand') {
                       setState(() {
                         if (allExpanded) {
-                          _expandedDays.clear();
+                          _expandedDays
+                            ..removeAll(expenseKeys)
+                            ..removeAll(settlementKeys);
                         } else {
-                          _expandedDays.addAll(dayGroups.map((g) => g.date));
+                          _expandedDays
+                            ..addAll(expenseKeys)
+                            ..addAll(settlementKeys);
                         }
                       });
                     }
@@ -714,7 +745,42 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
               ],
             ),
           ),
-          if (categories.isNotEmpty)
+          if (sectionChipsOn)
+            SizedBox(
+              key: const Key('spend-section-chips'),
+              height: 48,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
+                children: [
+                  for (final s in _SpendSection.values)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: _RunwayChip(
+                        key: Key('spend-section-${s.name}'),
+                        label: switch (s) {
+                          _SpendSection.all => l10n.expAll,
+                          _SpendSection.expenses => 'Expenses',
+                          _SpendSection.refunds => 'Refunds',
+                          _SpendSection.settlements => l10n.expSettlements,
+                        },
+                        selected: _section == s,
+                        onTap: () {
+                          setState(() => _section = s);
+                          final next = switch (s) {
+                            _SpendSection.expenses => filters.copyWith(entryKind: EntryKind.expense),
+                            _SpendSection.refunds => filters.copyWith(entryKind: EntryKind.refund),
+                            _SpendSection.all || _SpendSection.settlements =>
+                              filters.copyWith(clearEntryKind: true),
+                          };
+                          _setFilters(next);
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          if (categories.isNotEmpty && _section != _SpendSection.settlements)
             SizedBox(
               key: const Key('category-runway'),
               height: 52,
@@ -947,7 +1013,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                       ),
                     ),
                   ),
-                  ...section(settlementGroups, collapsible: false, isSettlement: true),
+                  ...section(settlementGroups, collapsible: true, isSettlement: true),
                 ],
                 if (filteredExpenses.length > _visible)
                   SliverToBoxAdapter(
@@ -1740,3 +1806,6 @@ class _EmptySpendAccelerator extends StatelessWidget {
     );
   }
 }
+
+/// Quiet Spend chip row (`enableSpendSectionChips`): which ledger sections to show.
+enum _SpendSection { all, expenses, refunds, settlements }

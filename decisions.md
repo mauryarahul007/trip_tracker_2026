@@ -5767,3 +5767,16 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Flutter-only; no new Labs/Pro defaults, no map engines as Core, card stack stays opt-in.
 
+### ADR 290: Flutter UX upgrades — Spend chips, login, Activity, Balances (v3.91.4)
+* **Context of the Problem:**
+  - Follow-on Flutter polish after ADR 289: Spend needed quieter section filtering; boarding login hierarchy was soft; Activity/Alerts day groups were not sticky; Balances empty lacked coach copy; Trips sync chrome duplicated SyncChip under the header SyncButton.
+* **Selected Decision & Resolution:**
+  - **Flag (Trip, default ON):** `enableSpendSectionChips`; reuse `enableCoachEmptyStates`, `enableNotificationDayGroups`.
+  - **Spend:** Quiet All / Expenses / Refunds / Settlements chip row; Expand/Collapse All includes settlements (`settlement:` keys).
+  - **Login:** Stronger boarding hierarchy; Status/Not signed in right-aligned; single Splits capability chip.
+  - **Settle / Balances / Activity:** Tabular mono amount; coach empty on Balances; sticky denser day headers on Alerts + trip Activity.
+  - **Sync:** SyncChip only on trip card stack; header SyncButton elsewhere.
+  - **Docs:** `FLUTTER-UX-UPGRADES` + `SPEND-EXPAND-LOGIN` in `FEATURE_TEST_STEPS.md`.
+* **Trade-offs Accepted:**
+  - Flutter-only; no math/schema changes; Pro/Labs stay default OFF.
+

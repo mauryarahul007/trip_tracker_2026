@@ -175,37 +175,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 18),
+            const Spacer(),
             const Text(
               'Trip Tracker',
               key: Key('boarding-title'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: AppTypography.fontSerif,
-                fontSize: 44,
+                fontSize: 48,
                 fontWeight: FontWeight.w800,
                 height: 1.05,
                 color: white,
                 shadows: [Shadow(color: Color(0x66000000), blurRadius: 16)],
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Text(
               l10n.loginTagline,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14.5, height: 1.4, color: Colors.white70),
+              style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.white70),
             ),
-            const SizedBox(height: 18),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                chip(Icons.bolt_rounded, l10n.loginChipOffline),
-                chip(Icons.balance_rounded, l10n.loginChipSplits),
-                chip(Icons.public_rounded, l10n.loginChipSync),
-              ],
-            ),
+            const SizedBox(height: 16),
+            // One quiet capability chip — ticket stub below owns Google/Apple.
+            chip(Icons.balance_rounded, l10n.loginChipSplits),
+            const Spacer(),
           ],
         ),
       ),
@@ -248,29 +241,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ],
                         ),
                       ),
-                      Flexible(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              l10n.loginStatus.toUpperCase(),
-                              style: const TextStyle(
-                                fontFamily: AppTypography.fontMono,
-                                fontSize: 11,
-                                letterSpacing: 1.4,
-                                color: Colors.white54,
-                              ),
+                      const SizedBox(width: 12),
+                      // Non-flex so STATUS / Not signed in hug the right edge (not a 50/50 Flexible half).
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            l10n.loginStatus.toUpperCase(),
+                            textAlign: TextAlign.end,
+                            style: const TextStyle(
+                              fontFamily: AppTypography.fontMono,
+                              fontSize: 11,
+                              letterSpacing: 1.4,
+                              color: Colors.white54,
                             ),
-                            Text(
-                              l10n.loginNotSignedIn,
-                              style: const TextStyle(
-                                fontFamily: AppTypography.fontMono,
-                                fontSize: 12.5,
-                                color: Colors.white60,
-                              ),
+                          ),
+                          Text(
+                            l10n.loginNotSignedIn,
+                            textAlign: TextAlign.end,
+                            style: const TextStyle(
+                              fontFamily: AppTypography.fontMono,
+                              fontSize: 12.5,
+                              color: Colors.white60,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

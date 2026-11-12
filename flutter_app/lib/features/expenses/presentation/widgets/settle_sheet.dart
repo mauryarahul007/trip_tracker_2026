@@ -294,7 +294,11 @@ class SettleSheetState extends ConsumerState<SettleSheet> {
               style: AppTypography.moneyDisplay(
                 fontSize: 40,
                 color: tk.textPrimary,
-              ).copyWith(fontWeight: FontWeight.w800),
+              ).copyWith(
+                fontWeight: FontWeight.w800,
+                fontFeatures: AppTypography.tabularFigures,
+                fontFamily: AppTypography.fontMono,
+              ),
               decoration: InputDecoration(
                 prefixText: '${getCurrencySymbol(widget.currency)} ',
                 border: InputBorder.none,
