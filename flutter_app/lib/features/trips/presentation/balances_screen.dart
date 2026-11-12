@@ -89,7 +89,7 @@ class BalancesScreen extends ConsumerWidget {
                         const SizedBox(height: 12),
                         if (total.isEmpty)
                           Text(
-                            'All settled up',
+                            l10n.ledAllSettled,
                             key: const Key('balances-even'),
                             style: TextStyle(
                               fontFamily: AppTypography.fontTitle,
@@ -125,7 +125,7 @@ class BalancesScreen extends ConsumerWidget {
                               child: Builder(
                                 builder: (_) {
                                   final nets = netsFor([t]);
-                                  if (nets.isEmpty) return Text('Settled', style: TextStyle(color: tokens.textMuted));
+                                  if (nets.isEmpty) return Text(l10n.ledStubSettled, style: TextStyle(color: tokens.textMuted));
                                   return Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [for (final n in nets) _NetRow(n)],
@@ -154,6 +154,7 @@ class _NetRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
+    final l10n = context.l10n;
     final owed = net.net > 0;
     final amount = formatMoney(context, net.net.abs(), net.currency);
     // Match in-trip Balances: green owed-to-you / red you-owe (Splitwise convention).
@@ -175,7 +176,7 @@ class _NetRow extends StatelessWidget {
               ),
             ),
             TextSpan(
-              text: owed ? '  you are owed' : '  you owe',
+              text: '  ${owed ? l10n.balYouAreOwed : l10n.balYouOwe}',
               style: TextStyle(fontSize: light ? 14 : 12, fontWeight: FontWeight.w600, color: tokens.textSecondary),
             ),
           ],

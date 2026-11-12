@@ -23,6 +23,9 @@ class AppButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final AppButtonVariant variant;
   final IconData? icon;
+
+  /// Custom leading widget (e.g. a brand glyph); takes precedence over [icon].
+  final Widget? leading;
   final bool isLoading;
   final bool isFullWidth;
 
@@ -32,6 +35,7 @@ class AppButton extends StatelessWidget {
     this.onPressed,
     this.variant = AppButtonVariant.primary,
     this.icon,
+    this.leading,
     this.isLoading = false,
     this.isFullWidth = false,
   });
@@ -77,6 +81,9 @@ class AppButton extends StatelessWidget {
             height: 18,
             child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(fg)),
           ),
+          const SizedBox(width: 8),
+        ] else if (leading != null) ...[
+          leading!,
           const SizedBox(width: 8),
         ] else if (icon != null) ...[
           Icon(icon, size: 18, color: fg),

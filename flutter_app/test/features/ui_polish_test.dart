@@ -63,7 +63,9 @@ void main() {
       await settle(tester, rounds: 6);
       expect(find.text('Add note'), findsWidgets);
       await goTo(tester, '/trip/${s.tripId}/members');
-      expect(key('members-fab'), findsOneWidget);
+      // One Add per screen: Members keeps its top Add / Invite row, no floating button on top of it.
+      expect(key('members-fab'), findsNothing);
+      expect(key('member-add'), findsOneWidget);
     });
 
     testApp('flag off: no floating buttons on Notes or Members', (tester) async {

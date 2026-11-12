@@ -117,9 +117,10 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
             ),
             const PendingFeedbackNote(),
             if (!signedIn)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
-                child: Text('Sign in with an account to send ideas.'),
+              const FeedbackBanner(
+                tone: FeedbackBannerTone.info,
+                message: 'Sign in with an account to send ideas.',
+                textKey: Key('feature-signin-note'),
               ),
             AppTextField(
               key: const Key('feature-title'),
@@ -147,27 +148,17 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
                   ),
               ],
             ),
+            const SizedBox(height: 12),
             if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  _error!,
-                  key: const Key('feature-error'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
+              FeedbackBanner(tone: FeedbackBannerTone.error, message: _error!, textKey: const Key('feature-error')),
             if (_sent != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(_sent!, key: const Key('feature-sent')),
-              ),
-            const SizedBox(height: 16),
+              FeedbackBanner(tone: FeedbackBannerTone.success, message: _sent!, textKey: const Key('feature-sent')),
             AppButton(
               key: const Key('feature-submit'),
               label: 'Send idea',
               isLoading: _busy,
               isFullWidth: true,
-              onPressed: _busy ? null : _submit,
+              onPressed: _busy || !signedIn ? null : _submit,
             ),
           ],
         ),
@@ -180,12 +171,6 @@ Widget _chipLabel(BuildContext context, String text) => Padding(
   padding: const EdgeInsets.only(bottom: 8),
   child: Text(
     text.toUpperCase(),
-    style: TextStyle(
-      fontFamily: AppTypography.fontMono,
-      fontSize: 10.5,
-      fontWeight: FontWeight.w600,
-      letterSpacing: 1.1,
-      color: context.tokens.textMuted,
-    ),
+    style: AppTypography.eyebrowMono(color: context.tokens.textMuted, fontSize: 10.5),
   ),
 );

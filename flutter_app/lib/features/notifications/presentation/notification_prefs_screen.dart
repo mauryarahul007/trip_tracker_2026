@@ -8,6 +8,7 @@ import '../../../shared/theme/app_icons.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../settings/presentation/settings_widgets.dart';
 import '../../trips/application/trips_providers.dart';
+import '../../../core/platform/location_gateway.dart' show locationGatewayProvider;
 import '../../../core/platform/push_gateway.dart' show PushPermission;
 import '../application/notification_prefs_providers.dart';
 import '../application/push_providers.dart';
@@ -146,11 +147,19 @@ class _PushTile extends ConsumerWidget {
       PushPermission.unavailable => ('Not available in this build', false),
       _ => ('Off. Tap to turn on.', true),
     };
+    final denied = status == PushPermission.denied;
     return SettingsTile(
       key: const Key('push-tile'),
       icon: Icons.notifications_none_rounded,
       title: 'Alerts on this device',
       subtitle: subtitle,
+      trailing: denied
+          ? TextButton(
+              key: const Key('push-open-settings'),
+              onPressed: () => ref.read(locationGatewayProvider).openAppSettings(),
+              child: const Text('Open settings'),
+            )
+          : null,
       onTap: canEnable ? () => ref.read(pushControllerProvider.notifier).enable() : null,
     );
   }

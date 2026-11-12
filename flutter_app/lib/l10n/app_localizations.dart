@@ -1663,6 +1663,42 @@ abstract class AppLocalizations {
   /// **'Guest mode can\'t join shared trips. Sign in with an account to continue.'**
   String get joinGuestsCantJoin;
 
+  /// No description provided for @joinGuestCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Join with just your name'**
+  String get joinGuestCta;
+
+  /// No description provided for @joinGuestNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What should we call you?'**
+  String get joinGuestNameTitle;
+
+  /// No description provided for @joinGuestNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get joinGuestNameHint;
+
+  /// No description provided for @joinGuestNameHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'No account needed. Sign in later to keep this trip on any phone.'**
+  String get joinGuestNameHelp;
+
+  /// No description provided for @joinCheckingInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your invite…'**
+  String get joinCheckingInvite;
+
+  /// No description provided for @joinJoiningTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Joining the trip…'**
+  String get joinJoiningTrip;
+
   /// No description provided for @joinMoreSignIn.
   ///
   /// In en, this message translates to:
@@ -3054,6 +3090,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Past'**
   String get tripSectionPast;
+
+  /// No description provided for @tripsFilterActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get tripsFilterActive;
+
+  /// No description provided for @tripsSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing your trips…'**
+  String get tripsSyncing;
+
+  /// No description provided for @tripLiveNow.
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE NOW'**
+  String get tripLiveNow;
+
+  /// No description provided for @tripLiveNowDay.
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE NOW · DAY {day} OF {total}'**
+  String tripLiveNowDay(int day, int total);
+
+  /// No description provided for @balYouAreOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'you are owed'**
+  String get balYouAreOwed;
+
+  /// No description provided for @balYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'you owe'**
+  String get balYouOwe;
 
   /// No description provided for @hintSwipeTrip.
   ///
@@ -4890,6 +4962,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Say hi to the crew. Messages stay inside this trip.'**
   String get chatEmptyHint;
+
+  /// No description provided for @getStartedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get this trip rolling'**
+  String get getStartedTitle;
+
+  /// No description provided for @getStartedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite your group, then add the first expense. Balances and settle-up show up as soon as there is something to split.'**
+  String get getStartedBody;
+
+  /// No description provided for @getStartedInviteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite your group'**
+  String get getStartedInviteTitle;
+
+  /// No description provided for @getStartedInviteSolo.
+  ///
+  /// In en, this message translates to:
+  /// **'Just you so far. Send the link and they join in one tap.'**
+  String get getStartedInviteSolo;
+
+  /// No description provided for @getStartedInviteMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} travelers so far.'**
+  String getStartedInviteMany(int count);
+
+  /// No description provided for @getStartedShareLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Share invite link'**
+  String get getStartedShareLink;
+
+  /// No description provided for @getStartedCodeQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Code and QR'**
+  String get getStartedCodeQr;
+
+  /// No description provided for @getStartedLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link copied'**
+  String get getStartedLinkCopied;
+
+  /// No description provided for @getStartedFirstExpenseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first expense'**
+  String get getStartedFirstExpenseTitle;
+
+  /// No description provided for @getStartedFirstExpenseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Log what you paid and who shares it.'**
+  String get getStartedFirstExpenseBody;
+
+  /// No description provided for @formScanItemize.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan & Itemize'**
+  String get formScanItemize;
+
+  /// No description provided for @settleEditToPayPart.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit to pay part of it'**
+  String get settleEditToPayPart;
+
+  /// No description provided for @activityMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More activity actions'**
+  String get activityMore;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

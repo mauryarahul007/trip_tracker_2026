@@ -910,6 +910,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinGuestsCantJoin => 'Guest mode can\'t join shared trips. Sign in with an account to continue.';
 
   @override
+  String get joinGuestCta => 'Join with just your name';
+
+  @override
+  String get joinGuestNameTitle => 'What should we call you?';
+
+  @override
+  String get joinGuestNameHint => 'Your name';
+
+  @override
+  String get joinGuestNameHelp => 'No account needed. Sign in later to keep this trip on any phone.';
+
+  @override
+  String get joinCheckingInvite => 'Checking your invite…';
+
+  @override
+  String get joinJoiningTrip => 'Joining the trip…';
+
+  @override
   String get joinMoreSignIn => 'More sign-in options';
 
   @override
@@ -1723,6 +1741,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripSectionPast => 'Past';
+
+  @override
+  String get tripsFilterActive => 'Active';
+
+  @override
+  String get tripsSyncing => 'Syncing your trips…';
+
+  @override
+  String get tripLiveNow => 'LIVE NOW';
+
+  @override
+  String tripLiveNowDay(int day, int total) {
+    return 'LIVE NOW · DAY $day OF $total';
+  }
+
+  @override
+  String get balYouAreOwed => 'you are owed';
+
+  @override
+  String get balYouOwe => 'you owe';
 
   @override
   String get hintSwipeTrip => 'Tip: press and hold a trip for more. In the list, swipe a row to archive it.';
@@ -2778,4 +2816,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatEmptyHint => 'Say hi to the crew. Messages stay inside this trip.';
+
+  @override
+  String get getStartedTitle => 'Get this trip rolling';
+
+  @override
+  String get getStartedBody =>
+      'Invite your group, then add the first expense. Balances and settle-up show up as soon as there is something to split.';
+
+  @override
+  String get getStartedInviteTitle => 'Invite your group';
+
+  @override
+  String get getStartedInviteSolo => 'Just you so far. Send the link and they join in one tap.';
+
+  @override
+  String getStartedInviteMany(int count) {
+    return '$count travelers so far.';
+  }
+
+  @override
+  String get getStartedShareLink => 'Share invite link';
+
+  @override
+  String get getStartedCodeQr => 'Code and QR';
+
+  @override
+  String get getStartedLinkCopied => 'Invite link copied';
+
+  @override
+  String get getStartedFirstExpenseTitle => 'Add your first expense';
+
+  @override
+  String get getStartedFirstExpenseBody => 'Log what you paid and who shares it.';
+
+  @override
+  String get formScanItemize => 'Scan & Itemize';
+
+  @override
+  String get settleEditToPayPart => 'Edit to pay part of it';
+
+  @override
+  String get activityMore => 'More activity actions';
 }

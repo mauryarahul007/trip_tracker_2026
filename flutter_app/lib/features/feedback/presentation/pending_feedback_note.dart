@@ -35,3 +35,48 @@ class PendingFeedbackNote extends ConsumerWidget {
     );
   }
 }
+
+enum FeedbackBannerTone { info, success, error }
+
+/// Small tinted card for a feedback form's sign-in note, success and error messages (shared by the bug and
+/// feature screens). [textKey] sits on the message [Text] so tests and screen readers find the copy itself.
+class FeedbackBanner extends StatelessWidget {
+  const FeedbackBanner({required this.message, required this.tone, this.textKey, super.key});
+
+  final String message;
+  final FeedbackBannerTone tone;
+  final Key? textKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final (Color color, IconData icon) = switch (tone) {
+      FeedbackBannerTone.success => (t.successColor, Icons.check_circle_outline_rounded),
+      FeedbackBannerTone.error => (t.dangerColor, Icons.error_outline_rounded),
+      FeedbackBannerTone.info => (t.primaryAccent, Icons.info_outline_rounded),
+    };
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              key: textKey,
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: t.textPrimary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

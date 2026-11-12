@@ -201,7 +201,10 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   /// One floating Add per pane: Ops Deck `enableContextFab`, and always under Calm Passport.
   bool get _calm => ref.watch(compassFlagProvider((calmPassportFlag, widget.tripId)));
 
-  bool get _contextFab => _flag('enableContextFab') || _calm;
+  /// The Compass dock owns the one primary Add (centre button), so no pane FAB on top of it.
+  bool get _compassDockAdd => !_calm && ref.watch(compassFlagProvider((compassNavFlag, widget.tripId)));
+
+  bool get _contextFab => !_compassDockAdd && (_flag('enableContextFab') || _calm);
 
   bool _flag(String key) => ref.watch(flagProvider((key, widget.tripId))).value ?? (defaultFeatureFlags[key] ?? false);
 

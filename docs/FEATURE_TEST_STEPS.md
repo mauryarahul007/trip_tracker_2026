@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-12 | 3.91.5 | FLUTTER-UI-ROADMAP | [Flutter UI polish roadmap (Phases 1–4)](#flutter-ui-roadmap--flutter-ui-polish-roadmap-phases-14) |
 | 2026-11-12 | 3.91.4 | FLUTTER-UX-UPGRADES | [Flutter UX upgrades: Spend chips, login, Activity, Balances](#flutter-ux-upgrades--flutter-ux-upgrades-spend-chips-login-activity-balances) |
 | 2026-11-12 | 3.91.4 | SPEND-EXPAND-LOGIN | [Spend Expand All + login Status alignment](#spend-expand-login--spend-expand-all--login-status-alignment) |
 | 2026-11-12 | unreleased | FLUTTER-UX-POLISH | [Flutter UI/UX polish (Settings, Trips, money, Hub)](#flutter-ux-polish--flutter-uiux-polish-settings-trips-money-hub) |
@@ -4265,3 +4266,42 @@ Then add a row to the **Index** table.
 8. Trips list (non-card): header SyncButton only — no duplicate SyncChip under OfflineBanner. Card stack still may show SyncChip.
 
 **Pass criteria:** each ON step matches; flag-OFF removes only that surface; no balance/split math changes.
+
+
+## FLUTTER-UI-ROADMAP — Flutter UI polish roadmap (Phases 1–4)
+
+**Shipped:** v3.91.5. Flutter-only visual/UX polish. No new flags. Reused: `enableNavPolish`, `enableNotchNav`, `enableInviteConversion`, `enableOnboardingArt`, `enableInsightsV2`, boarding login identity.
+
+**Prep:** Flutter app. Signed-out for login/splash/onboarding; a trip with expenses for Spend/Balances/Settle; Settings; public share link optional.
+
+### Phase 1 — First impression and trust
+1. Signed-out login always shows boarding-pass layout (classic only via non-prod flag force-off). Google uses the Google glyph. Staff form opens only after a 2s hold on the ticket barcode (not a visible Staff button).
+2. Trips empty state shows title + subtitle hierarchy (and icon/CTAs when no trips). Filter chips and syncing line are localized.
+3. Open a trip, peek the content sheet: scrolling the expense list upward does **not** auto-expand the sheet; expand via the handle or overscroll-at-top only.
+4. Calm or Compass: only one Add affordance (Calm FAB or dock center) — no second tab FAB on Spend/Balances/Members.
+5. Spend first paint: summary + day list; Voice / category runway / relation chips appear after Filters (or while a filter is active).
+6. Insights uses the app theme (no forced dark fork). Diagnostics log pane is readable in light mode. Notification prefs when push is denied offers Open settings. Archived permanent delete confirm is destructive-styled.
+
+### Phase 2 — Money loop density
+7. Hub Bento eyebrows are sentence case; quiet grid keeps ~4 primary tiles with App settings / All trips under More.
+8. Get Started: Share is primary; Code/QR secondary; Copy is quiet text.
+9. Settle sheet: big centered amount on calm and non-calm; cannot dismiss while submit is busy. Activity “Delete all” lives under overflow menu.
+
+### Phase 3 — Design system
+10. Settings → Default currency and Release notes open via AppSheet (scrollable lists).
+11. Bug report / Feature request: submit disabled when signed out; status uses tinted banners.
+12. Privacy / Terms: single title (AppBar), AppButton for full doc, max width ~640. Delete account DELETE field uses AppTextField.
+13. Onboarding with `enableOnboardingArt` OFF shows icons, not emoji. Expense rows without a category emoji use a sell/tag icon, not the tag emoji.
+
+### Phase 4 — Delight
+14. Splash: single background, brand fade-in (skipped under Reduce motion), loading-session semantics.
+15. Share page: empty spend copy; Open in Trip Tracker when `enableInviteConversion` is ON.
+16. Recycle bin shows relative expiry. Amount keypad uses token-styled keys. Avatars have semantics + contrasting initials. Live location separates load-error (Retry) from ended.
+
+### Flag-OFF / negative checks
+- Force `boardingPassLogin` OFF in non-prod QA overrides → classic login returns (Google glyph still).
+- `enableNavPolish` ON + `enableNotchNav` ON → polished dock wins (notch only when polish is OFF).
+- `enableInviteConversion` OFF → no Open in Trip Tracker on share.
+- `enableOnboardingArt` ON → custom art, not icon fallback.
+
+**Pass criteria:** boarding is the default signed-out identity; Spend/Balances stay scannable; sheet no longer fights list scroll; Settings/feedback/legal share one chrome language; no balance/split/sync math changes.

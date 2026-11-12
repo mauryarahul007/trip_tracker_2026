@@ -104,7 +104,7 @@ class _ExpenseRowState extends State<ExpenseRow> {
 
   bool get _hasSyncMark => widget.isConflict || widget.onRetrySync != null || widget.isDirty;
 
-  /// Boarding-receipt layout (non-compact): glow category icon, "Paid by X · Split with N", amount,
+  /// Boarding-receipt layout (non-compact): category icon, "Paid by X · Split with N", amount,
   /// then a perforated footer with the personal-share pill and a micro barcode.
   Widget _receipt(
     BuildContext context,
@@ -156,13 +156,9 @@ class _ExpenseRowState extends State<ExpenseRow> {
                       decoration: BoxDecoration(
                         color: glow.withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: glow.withValues(alpha: 0.7), width: widget.colorRings ? 2 : 1.2),
-                        boxShadow: [BoxShadow(color: glow.withValues(alpha: 0.35), blurRadius: 10)],
+                        border: Border.all(color: glow.withValues(alpha: 0.5), width: widget.colorRings ? 2 : 1),
                       ),
-                      child: Text(
-                        cat?.icon?.isNotEmpty == true && !cat!.icon!.contains(':') ? cat.icon! : '🏷️',
-                        style: const TextStyle(fontSize: 20),
-                      ),
+                      child: _categoryGlyph(cat, 20, glow),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -302,10 +298,7 @@ class _ExpenseRowState extends State<ExpenseRow> {
                         borderRadius: BorderRadius.circular(10),
                         border: widget.colorRings ? Border.all(color: tile, width: 1.5) : null,
                       ),
-                      child: Text(
-                        cat?.icon?.isNotEmpty == true && !cat!.icon!.contains(':') ? cat.icon! : '🏷️',
-                        style: const TextStyle(fontSize: 19),
-                      ),
+                      child: _categoryGlyph(cat, 19, tile),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -514,10 +507,7 @@ class _ExpenseRowState extends State<ExpenseRow> {
                         borderRadius: BorderRadius.circular(widget.compact ? 10 : 14),
                         border: widget.colorRings ? Border.all(color: accent, width: 2) : null,
                       ),
-                      child: Text(
-                        cat?.icon?.isNotEmpty == true && !cat!.icon!.contains(':') ? cat.icon! : '🏷️',
-                        style: TextStyle(fontSize: widget.compact ? 13 : 20),
-                      ),
+                      child: _categoryGlyph(cat, widget.compact ? 13 : 20, accent),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -670,4 +660,13 @@ class RefundChip extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Category tile glyph: the category's own emoji when it has one, else a neutral tag icon (no stock emoji).
+Widget _categoryGlyph(Category? cat, double size, Color color) {
+  final icon = cat?.icon;
+  if (icon != null && icon.isNotEmpty && !icon.contains(':')) {
+    return Text(icon, style: TextStyle(fontSize: size));
+  }
+  return Icon(Icons.sell_outlined, size: size, color: color);
 }

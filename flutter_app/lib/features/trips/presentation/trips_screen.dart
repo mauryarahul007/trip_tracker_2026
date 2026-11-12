@@ -598,11 +598,11 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                           children: [
-                            for (final f in const [
-                              ('all', 'All'),
-                              ('active', 'Active'),
-                              ('upcoming', 'Upcoming'),
-                              ('past', 'Past'),
+                            for (final f in [
+                              ('all', l10n.expAll),
+                              ('active', l10n.tripsFilterActive),
+                              ('upcoming', l10n.tripSectionUpcoming),
+                              ('past', l10n.tripSectionPast),
                             ])
                               Padding(
                                 padding: const EdgeInsets.only(right: 8),
@@ -705,10 +705,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                 physics: const AlwaysScrollableScrollPhysics(),
                                 padding: const EdgeInsets.all(16),
                                 children: [
-                                  // ponytail: English-only until the ARB files are regenerated.
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 12),
-                                    child: Text('Syncing your trips…', style: TextStyle(color: tokens.textSecondary)),
+                                    child: Text(l10n.tripsSyncing, style: TextStyle(color: tokens.textSecondary)),
                                   ),
                                   for (var i = 0; i < 3; i++)
                                     Padding(
@@ -730,29 +729,34 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                               return ListView(
                                 physics: const AlwaysScrollableScrollPhysics(),
                                 children: [
-                                  EmptyState(
-                                    plain: true,
-                                    title: l10n.emptyTripsTitle,
-                                    subtitle: l10n.emptyTripsSubtitle,
-                                    action: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        AppButton(label: l10n.actionCreateTrip, onPressed: _create),
-                                        const SizedBox(height: 8),
-                                        AppButton(
-                                          label: l10n.tripsJoinWithCode,
-                                          variant: AppButtonVariant.secondary,
-                                          onPressed: () => showJoinCodeSheet(context),
-                                        ),
-                                        if (_flagOn('enableFirstRunTour') && auth.isAuthenticated) ...[
+                                  // Full hierarchy (icon, title, body, Create CTA); the box gives it a bounded
+                                  // height inside the pull-to-refresh list.
+                                  SizedBox(
+                                    height: math.max(420.0, MediaQuery.sizeOf(context).height * 0.6),
+                                    child: EmptyState(
+                                      icon: Icons.luggage_rounded,
+                                      title: l10n.emptyTripsTitle,
+                                      subtitle: l10n.emptyTripsSubtitle,
+                                      action: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          AppButton(label: l10n.actionCreateTrip, onPressed: _create),
                                           const SizedBox(height: 8),
-                                          TextButton(
-                                            key: const Key('try-sample-trip'),
-                                            onPressed: _trySample,
-                                            child: Text(l10n.trySampleTrip),
+                                          AppButton(
+                                            label: l10n.tripsJoinWithCode,
+                                            variant: AppButtonVariant.secondary,
+                                            onPressed: () => showJoinCodeSheet(context),
                                           ),
+                                          if (_flagOn('enableFirstRunTour') && auth.isAuthenticated) ...[
+                                            const SizedBox(height: 8),
+                                            TextButton(
+                                              key: const Key('try-sample-trip'),
+                                              onPressed: _trySample,
+                                              child: Text(l10n.trySampleTrip),
+                                            ),
+                                          ],
                                         ],
-                                      ],
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -1173,11 +1177,12 @@ class _FilterPills extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final l10n = context.l10n;
     final items = [
-      ('all', 'All', counts.all),
-      ('active', 'Active', counts.active),
-      ('upcoming', 'Upcoming', counts.upcoming),
-      ('past', 'Past', counts.past),
+      ('all', l10n.expAll, counts.all),
+      ('active', l10n.tripsFilterActive, counts.active),
+      ('upcoming', l10n.tripSectionUpcoming, counts.upcoming),
+      ('past', l10n.tripSectionPast, counts.past),
     ];
     return SizedBox(
       key: const Key('trip-filters'),

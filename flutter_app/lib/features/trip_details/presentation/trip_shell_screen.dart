@@ -490,7 +490,8 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                 enabled: polish,
                 child: AppBottomNav(
                   polish: polish,
-                  notch: ref.watch(compassFlagProvider((notchNavFlag, widget.tripId))),
+                  // Shipping chrome is the polished dock. Notch stays Labs: only when polish is off.
+                  notch: !polish && ref.watch(compassFlagProvider((notchNavFlag, widget.tripId))),
                   compressed: _dockCompressed,
                   currentIndex: dockActive < 0 ? 0 : dockActive,
                   onTap: (i) => _goTab(dock[i].index, polish: polish),

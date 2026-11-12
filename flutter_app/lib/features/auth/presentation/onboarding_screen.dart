@@ -36,9 +36,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final l10n = context.l10n;
     final tokens = context.tokens;
     final steps = [
-      ('🧳', l10n.onboardingWelcomeTitle, l10n.onboardingWelcomeBody),
-      ('🗺️', l10n.onboardingTripTitle, l10n.onboardingTripBody),
-      ('🧾', l10n.onboardingExpenseTitle, l10n.onboardingExpenseBody),
+      (Icons.luggage_outlined, l10n.onboardingWelcomeTitle, l10n.onboardingWelcomeBody),
+      (Icons.map_outlined, l10n.onboardingTripTitle, l10n.onboardingTripBody),
+      (Icons.receipt_long_outlined, l10n.onboardingExpenseTitle, l10n.onboardingExpenseBody),
     ];
     final last = _index == steps.length - 1;
     final art = ref.watch(flagProvider(('enableOnboardingArt', null))).value ?? true;
@@ -65,49 +65,56 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   controller: _controller,
                   itemCount: steps.length,
                   onPageChanged: (i) => setState(() => _index = i),
-                  itemBuilder: (_, i) => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 148,
-                          height: 148,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: tokens.tones[stepTones[i]].bg,
-                            borderRadius: BorderRadius.circular(48),
+                  // Light cross-fade: the page you leave dims while the one you land on brightens, on top of the
+                  // PageView slide. Reduce motion makes the duration zero, so it just snaps.
+                  itemBuilder: (_, i) => AnimatedOpacity(
+                    opacity: i == _index ? 1 : 0.35,
+                    duration: AppMotion.of(context, AppMotion.base),
+                    curve: AppMotion.standard,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 148,
+                            height: 148,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: tokens.tones[stepTones[i]].bg,
+                              borderRadius: BorderRadius.circular(48),
+                            ),
+                            child: art
+                                ? OnboardingArt(
+                                    const [
+                                      OnboardingArtKind.stamp,
+                                      OnboardingArtKind.route,
+                                      OnboardingArtKind.receipt,
+                                    ][i],
+                                    size: 116,
+                                  )
+                                : Icon(steps[i].$1, size: 64, color: tokens.tones[stepTones[i]].accent),
                           ),
-                          child: art
-                              ? OnboardingArt(
-                                  const [
-                                    OnboardingArtKind.stamp,
-                                    OnboardingArtKind.route,
-                                    OnboardingArtKind.receipt,
-                                  ][i],
-                                  size: 116,
-                                )
-                              : Text(steps[i].$1, style: const TextStyle(fontSize: 64)),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          steps[i].$2,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontTitle,
-                            fontSize: 30,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.8,
-                            color: onDark,
+                          const SizedBox(height: 24),
+                          Text(
+                            steps[i].$2,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontTitle,
+                              fontSize: 30,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.8,
+                              color: onDark,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          steps[i].$3,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, color: tokens.textSecondary, height: 1.45),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          Text(
+                            steps[i].$3,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 16, color: tokens.textSecondary, height: 1.45),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

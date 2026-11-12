@@ -38,7 +38,7 @@ class TripGetStarted extends ConsumerWidget {
     Future<void> copyLink() async {
       await ref.read(shareServiceProvider).copy(link);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invite link copied')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.getStartedLinkCopied)));
       }
     }
 
@@ -78,43 +78,42 @@ class TripGetStarted extends ConsumerWidget {
       key: const Key('trip-get-started'),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
       children: [
-        Text('Get this trip rolling', style: Theme.of(context).textTheme.headlineSmall),
+        Text(l10n.getStartedTitle, style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 4),
-        Text(
-          'Invite your group, then add the first expense. Balances and settle-up show up as soon as there is something to split.',
-          style: TextStyle(color: t.textSecondary),
-        ),
+        Text(l10n.getStartedBody, style: TextStyle(color: t.textSecondary)),
         const SizedBox(height: 16),
         step(
           Icons.group_add_outlined,
-          'Invite your group',
-          members <= 1 ? 'Just you so far. Send the link and they join in one tap.' : '$members travelers so far.',
+          l10n.getStartedInviteTitle,
+          members <= 1 ? l10n.getStartedInviteSolo : l10n.getStartedInviteMany(members),
           [
+            // One primary (Share), one secondary (Code and QR), Copy link as a quiet text action.
             FilledButton.icon(
               key: const Key('started-share-link'),
               onPressed: link.isEmpty ? null : shareLink,
               icon: const Icon(Icons.share_outlined),
-              label: const Text('Share invite link'),
+              label: Text(l10n.getStartedShareLink),
             ),
             OutlinedButton.icon(
-              key: const Key('started-copy-link'),
-              onPressed: link.isEmpty ? null : copyLink,
-              icon: const Icon(Icons.link_rounded),
-              label: const Text('Copy link'),
-            ),
-            TextButton(
               key: const Key('started-code-qr'),
               onPressed: () => AppSheet.show<void>(
                 context: context,
                 title: l10n.inviteSheetTitle,
                 builder: (_) => ShareTripSheet(tripId: tripId),
               ),
-              child: const Text('Code and QR'),
+              icon: const Icon(Icons.qr_code_2_rounded),
+              label: Text(l10n.getStartedCodeQr),
+            ),
+            TextButton.icon(
+              key: const Key('started-copy-link'),
+              onPressed: link.isEmpty ? null : copyLink,
+              icon: const Icon(Icons.link_rounded),
+              label: Text(l10n.inviteCopyLink),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        step(Icons.receipt_long_outlined, 'Add your first expense', 'Log what you paid and who shares it.', [
+        step(Icons.receipt_long_outlined, l10n.getStartedFirstExpenseTitle, l10n.getStartedFirstExpenseBody, [
           FilledButton.icon(
             key: const Key('started-add-expense'),
             style: compass ? FilledButton.styleFrom(backgroundColor: t.sun, foregroundColor: t.onSun) : null,

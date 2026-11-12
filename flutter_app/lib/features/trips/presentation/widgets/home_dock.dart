@@ -79,11 +79,13 @@ Widget? buildHomeDock(BuildContext context, WidgetRef ref, HomeTab current, {boo
   if (!ref.watch(horizonNavProvider) || isWideHome(context)) return null;
   final l10n = context.l10n;
   final compass = ref.watch(compassNavProvider);
+  final polish = ref.watch(compassFlagProvider((navPolishFlag, null)));
   return AppBottomNav(
     centerAction: () => unawaited(createTripFlow(context)),
     centerLabel: l10n.tripsNewTrip,
-    polish: ref.watch(compassFlagProvider((navPolishFlag, null))),
-    notch: ref.watch(compassFlagProvider((notchNavFlag, null))),
+    polish: polish,
+    // Shipping chrome is the polished dock. Notch stays Labs: only when polish is off.
+    notch: !polish && ref.watch(compassFlagProvider((notchNavFlag, null))),
     compressed: compressed,
     items: _homeItems(context, compass: compass),
     currentIndex: current.index,

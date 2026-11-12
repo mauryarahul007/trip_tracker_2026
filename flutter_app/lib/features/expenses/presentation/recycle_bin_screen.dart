@@ -19,6 +19,22 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
 
+/// How long a deleted expense stays restorable (server purges it after that).
+const recycleBinWindow = Duration(hours: 24);
+
+/// "Expires in 5h 12m" for a soft-deleted expense, or null when its delete time is unknown.
+@visibleForTesting
+String? recycleBinExpiryLabel(int? deletedAtMs, DateTime now) {
+  if (deletedAtMs == null) return null;
+  final left = DateTime.fromMillisecondsSinceEpoch(deletedAtMs).add(recycleBinWindow).difference(now);
+  if (left.inMinutes < 1) return 'Expiring soon';
+  if (left.inHours >= 1) {
+    final m = left.inMinutes % 60;
+    return m == 0 ? 'Expires in ${left.inHours}h' : 'Expires in ${left.inHours}h ${m}m';
+  }
+  return 'Expires in ${left.inMinutes}m';
+}
+
 /// Deleted expenses, restorable for 24 h (server purges them after that).
 class RecycleBinScreen extends ConsumerWidget {
   const RecycleBinScreen({required this.tripId, super.key});
@@ -34,6 +50,7 @@ class RecycleBinScreen extends ConsumerWidget {
     final isAdmin = ref.watch(isTripAdminProvider(tripId));
     final uid = ref.watch(authStateProvider).userId;
     final base = trip?.baseCurrency ?? '';
+    final now = DateTime.now();
 
     return AppScaffold(
       appBar: AppBar(
@@ -122,6 +139,19 @@ class RecycleBinScreen extends ConsumerWidget {
                                       '${formatMoney(context, e.amount, base)} · ${e.date}',
                                       style: TextStyle(fontSize: 12.5, color: tokens.textSecondary),
                                     ),
+                                    if (recycleBinExpiryLabel(e.deletedAt, now) case final expiry?)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 2),
+                                        child: Text(
+                                          expiry,
+                                          key: Key('bin-expiry-${e.id}'),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: tokens.colorWarning,
+                                          ),
+                                        ),
+                                      ),
                                   ],
                                 ),
                               ),

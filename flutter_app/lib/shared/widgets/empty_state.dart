@@ -25,17 +25,24 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     if (plain) {
-      final sentence = subtitle.trim().isEmpty ? title : '$title $subtitle';
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              sentence,
+              title,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, height: 1.4, color: tokens.textSecondary),
+              style: TextStyle(fontSize: 15, height: 1.4, fontWeight: FontWeight.w700, color: tokens.textPrimary),
             ),
+            if (subtitle.trim().isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, height: 1.4, color: tokens.textSecondary),
+              ),
+            ],
             if (action != null) ...[const SizedBox(height: 14), action!],
           ],
         ),

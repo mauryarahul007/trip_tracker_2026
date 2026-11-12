@@ -48,8 +48,9 @@ class AppAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Widget avatar;
     if (avatarUrl != null && avatarUrl!.isNotEmpty) {
-      return ClipOval(
+      avatar = ClipOval(
         child: Image(
           image: cachedPhotoSized(context, avatarUrl!, logicalWidth: size),
           width: size,
@@ -58,9 +59,22 @@ class AppAvatar extends StatelessWidget {
           errorBuilder: (_, _, _) => _buildInitials(),
         ),
       );
+    } else {
+      avatar = _buildInitials();
+    }
+    // Screen readers say the person's name once, not the initials or the photo.
+    return Semantics(label: name, image: true, excludeSemantics: true, child: avatar);
+  }
+
+  /// Initials colour with the better WCAG contrast on [bg]: white on the dark palette, near-black on light fills.
+  static Color textColorFor(Color bg) {
+    double ratio(Color a, Color b) {
+      final l1 = a.computeLuminance(), l2 = b.computeLuminance();
+      return (l1 > l2 ? l1 + 0.05 : l2 + 0.05) / (l1 > l2 ? l2 + 0.05 : l1 + 0.05);
     }
 
-    return _buildInitials();
+    const dark = Color(0xFF1A1A1A);
+    return ratio(bg, Colors.white) >= ratio(bg, dark) ? Colors.white : dark;
   }
 
   Widget _buildInitials() {
@@ -74,7 +88,12 @@ class AppAvatar extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         initials,
-        style: TextStyle(color: Colors.white, fontSize: size * 0.4, fontWeight: FontWeight.w700, letterSpacing: -0.5),
+        style: TextStyle(
+          color: textColorFor(bgColor),
+          fontSize: size * 0.4,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.5,
+        ),
       ),
     );
   }

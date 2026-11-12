@@ -54,9 +54,10 @@ void main() {
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 90);
     await openTab(tester, s, 'expenses');
-    expect(key('voice-add'), findsOneWidget);
+    expect(key('voice-add'), findsNothing); // first paint is summary + day list
     await tester.tap(key('open-filters'));
     await settle(tester, rounds: 6);
+    expect(key('voice-add'), findsOneWidget); // opening Filters reveals Voice and the quick chips
     expect(key('filters-title'), findsOneWidget);
     for (final t in ['MY EXPENSES', 'CATEGORY', 'PAID BY', 'DATE RANGE', 'AMOUNT RANGE']) {
       expect(find.text(t), findsOneWidget, reason: t);
@@ -70,6 +71,8 @@ void main() {
     await pumpApp(tester, user: asha, flagsOff: {'enableVoiceInput'});
     final s = await seedTrip(tester);
     await openTab(tester, s, 'expenses');
+    await tester.tap(key('open-filters'));
+    await settle(tester, rounds: 6);
     expect(key('voice-add'), findsNothing);
   });
 

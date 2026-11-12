@@ -6,6 +6,7 @@ import '../../../../shared/theme/app_icons.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
+import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/confirm_dialog.dart';
 import '../../../data/providers.dart';
 
@@ -128,11 +129,12 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 ),
               ),
             const SizedBox(height: 24),
-            TextField(
+            // Case-insensitive match (see _confirmed), so no forced capitals are needed.
+            AppTextField(
               key: const Key('delete-confirm'),
               controller: _confirm,
-              textCapitalization: TextCapitalization.characters,
-              decoration: const InputDecoration(labelText: 'Type DELETE to confirm'),
+              label: 'Type DELETE to confirm',
+              hintText: 'DELETE',
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 32),

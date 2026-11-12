@@ -139,11 +139,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _pickCurrency() async {
     final codes = defaultExchangeRates.keys.toList()..sort();
-    final picked = await showModalBottomSheet<String>(
+    final picked = await AppSheet.show<String>(
       context: context,
-      isScrollControlled: true,
-      showDragHandle: true, // same grab handle as every AppSheet
-      builder: (ctx) => SafeArea(
+      title: 'Default currency',
+      builder: (ctx) => ConstrainedBox(
+        // Long list: cap at half the screen so it scrolls instead of filling it.
+        constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(ctx).height * 0.5),
         child: ListView(
           shrinkWrap: true,
           children: [
@@ -864,15 +865,14 @@ class _SettingsPage extends StatelessWidget {
 }
 
 void _showChangelog(BuildContext context) {
-  showModalBottomSheet<void>(
+  AppSheet.show<void>(
     context: context,
-    isScrollControlled: true,
-    showDragHandle: true, // same grab handle as every AppSheet
-    builder: (ctx) => DraggableScrollableSheet(
-      expand: false,
-      builder: (_, controller) => ListView(
+    title: 'Release notes',
+    builder: (ctx) => ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(ctx).height * 0.7),
+      child: ListView(
         key: const Key('changelog-list'),
-        controller: controller,
+        shrinkWrap: true,
         padding: const EdgeInsets.all(20),
         children: [
           BentoTile(

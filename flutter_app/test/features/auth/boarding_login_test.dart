@@ -12,9 +12,8 @@ void main() {
     await pumpApp(tester, boardingLogin: true);
     expect(find.text('Trip Tracker'), findsOneWidget);
     expect(find.textContaining('Split costs effortlessly'), findsOneWidget);
-    for (final chip in ['100% Offline-First', 'Smart Splits', 'Instant Sync']) {
-      expect(find.text(chip), findsOneWidget, reason: chip);
-    }
+    // One capability chip on the boarding hero; Google/Apple live on the ticket stub.
+    expect(find.text('Smart Splits'), findsOneWidget);
     expect(find.text('PARADISE EDITION · 2026'), findsOneWidget);
     expect(find.text('PASSENGER'), findsOneWidget);
     expect(find.text('Not signed in'), findsOneWidget);
@@ -83,7 +82,10 @@ void main() {
     final app = await pumpApp(tester, boardingLogin: true);
     expect(key('superadmin-form'), findsNothing);
     await tester.ensureVisible(key('superadmin-toggle'));
-    await tester.tap(key('superadmin-toggle'));
+    // Staff entry is buried behind a 2-second hold on the ticket barcode.
+    final hold = await tester.startGesture(tester.getCenter(key('superadmin-toggle')));
+    await tester.pump(const Duration(milliseconds: 2100));
+    await hold.up();
     await tester.pumpAndSettle();
     expect(key('superadmin-form'), findsOneWidget);
     final fields = find.descendant(of: key('superadmin-form'), matching: find.byType(TextField));

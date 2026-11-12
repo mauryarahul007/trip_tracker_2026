@@ -6,7 +6,9 @@ import '../../../domain/logic/category_color.dart';
 import '../../../domain/models/category.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/confirm_dialog.dart';
 import '../application/expenses_providers.dart';
 
 class CategoryScreen extends ConsumerWidget {
@@ -19,7 +21,7 @@ class CategoryScreen extends ConsumerWidget {
     final cats = ref.watch(tripCategoriesProvider(tripId));
     final reorder = ref.watch(flagProvider(('enableCategoryReorder', tripId))).value ?? false;
     final isAdmin = ref.watch(isTripAdminProvider(tripId));
-    return Scaffold(
+    return AppScaffold(
       appBar: AppBar(title: Text(l10n.catTitle)),
       body: Column(
         children: [
@@ -62,10 +64,9 @@ class CategoryScreen extends ConsumerWidget {
           color: Color(categoryColorArgb(c.id)).withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(14),
         ),
-        child: Text(
-          c.icon?.isNotEmpty == true && !c.icon!.contains(':') ? c.icon! : '🏷️',
-          style: const TextStyle(fontSize: 20),
-        ),
+        child: c.icon?.isNotEmpty == true && !c.icon!.contains(':')
+            ? Text(c.icon!, style: const TextStyle(fontSize: 20))
+            : Icon(Icons.sell_outlined, size: 20, color: Color(categoryColorArgb(c.id))),
       ),
       title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w600)),
       trailing: isAdmin && c.isCustom
@@ -82,7 +83,7 @@ class CategoryScreen extends ConsumerWidget {
                   tooltip: 'Delete',
                   key: Key('cat-delete-${c.id}'),
                   icon: const Icon(Icons.delete_outline),
-                  onPressed: () => ref.read(categoryRepositoryProvider).delete(c.id),
+                  onPressed: () => _delete(context, ref, c),
                 ),
               ],
             )
@@ -100,6 +101,18 @@ class CategoryScreen extends ConsumerWidget {
     final name = await _ask(context, context.l10n.catName, initial: c.name);
     if (name == null || name.trim().isEmpty) return;
     await ref.read(categoryRepositoryProvider).rename(c.id, name.trim());
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref, Category c) async {
+    final ok = await ConfirmDialog.show(
+      context: context,
+      title: 'Delete "${c.name}"?',
+      message: 'This removes the category from the trip and cannot be undone.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
+    );
+    if (!ok) return;
+    await ref.read(categoryRepositoryProvider).delete(c.id);
   }
 
   Future<String?> _ask(BuildContext context, String label, {String? initial}) {

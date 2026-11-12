@@ -10,11 +10,11 @@ import '../../../domain/logic/burn_rate.dart';
 import '../../../domain/logic/category_color.dart';
 import '../../../domain/logic/spend_insights.dart';
 import '../../../domain/models/expense.dart';
-import '../../../shared/theme/app_theme.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_surface.dart';
 import '../../../shared/widgets/bento_tile.dart';
+import '../../../shared/widgets/empty_state.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
 import 'spend_insights_v2.dart';
@@ -49,12 +49,7 @@ class SpendInsightsScreen extends ConsumerWidget {
         ),
       );
     }
-    return Theme(
-      data: AppTheme.dark(),
-      child: Builder(
-        builder: (ctx) => _Body(tripId: tripId, ref: ref),
-      ),
-    );
+    return _Body(tripId: tripId, ref: ref);
   }
 }
 
@@ -97,9 +92,7 @@ class _Body extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 960),
             child: SafeArea(
               child: days.isEmpty
-                  ? Center(
-                      child: Text('Add some expenses to see insights.', style: TextStyle(color: tokens.textSecondary)),
-                    )
+                  ? const Center(child: EmptyState(plain: true, title: 'Add some expenses to see insights.', subtitle: ''))
                   : ListView(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                       children: [

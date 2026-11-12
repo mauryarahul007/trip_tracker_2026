@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/app_typography.dart';
-import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_sheet.dart';
 import '../../../../core/platform/haptics.dart';
 
@@ -120,10 +119,12 @@ class _AmountKeypadState extends State<AmountKeypad> {
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: SizedBox(
                           height: keyHeight,
-                          child: FilledButton.tonal(
+                          child: _KeypadKey(
                             key: Key('key-$k'),
-                            onPressed: () => _key(k),
-                            child: Text(k, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+                            label: k,
+                            // Operators and delete read as secondary to the digits.
+                            isDigit: !'÷×-+⌫'.contains(k),
+                            onTap: () => _key(k),
                           ),
                         ),
                       ),
@@ -132,12 +133,103 @@ class _AmountKeypadState extends State<AmountKeypad> {
               ),
             ),
           const SizedBox(height: 4),
-          AppButton(
+          _KeypadDone(
             key: const Key('keypad-done'),
             label: context.l10n.keypadDone,
-            onPressed: widget.onDone ?? () => Navigator.pop(context),
+            onTap: widget.onDone ?? () => Navigator.pop(context),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Token-styled key: bgSurface fill, borderColor outline, 48dp+ target (replaces the stock tonal FilledButton).
+class _KeypadKey extends StatelessWidget {
+  const _KeypadKey({required this.label, required this.isDigit, required this.onTap, super.key});
+
+  final String label;
+  final bool isDigit;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final radius = BorderRadius.circular(t.radiusMd);
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: isDigit ? t.bgSurface : t.bgSurfaceHover,
+        shape: RoundedRectangleBorder(
+          borderRadius: radius,
+          side: BorderSide(color: t.borderColor),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontFamily: AppTypography.fontTitle,
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: t.textPrimary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Done: primaryAccent fill with whichever of white / textPrimary reads better on it.
+class _KeypadDone extends StatelessWidget {
+  const _KeypadDone({required this.label, required this.onTap, super.key});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final bg = t.primaryAccent;
+    // Pick the label colour with the higher WCAG contrast against the accent.
+    double ratio(Color a, Color b) {
+      final l1 = a.computeLuminance(), l2 = b.computeLuminance();
+      return (l1 > l2 ? l1 + 0.05 : l2 + 0.05) / (l1 > l2 ? l2 + 0.05 : l1 + 0.05);
+    }
+
+    final fg = ratio(bg, Colors.white) >= ratio(bg, t.textPrimary) ? Colors.white : t.textPrimary;
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Material(
+          color: bg,
+          shape: const StadiumBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: Center(
+                child: Text(
+                  label,
+                  style: TextStyle(color: fg, fontSize: 16, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

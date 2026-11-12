@@ -66,6 +66,7 @@ class ArchivedTripsScreen extends ConsumerWidget {
                                     message:
                                         'This removes the trip and all its expenses for everyone. It cannot be undone.',
                                     confirmLabel: 'Delete',
+                                    isDestructive: true,
                                   );
                                   if (ok) await repo.deleteTrip(t.id);
                                 },

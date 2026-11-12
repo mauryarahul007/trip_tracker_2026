@@ -170,6 +170,8 @@ void main() {
       await note(tester, 'b', 'chat_message', s.tripId);
       await note(tester, 'z', 'expense_added', other);
       await openActivity(tester, s.tripId);
+      await tester.tap(key('activity-more')); // Delete all lives in the overflow menu
+      await settle(tester);
       await tester.tap(key('activity-delete-all'));
       await settle(tester);
       expect(find.text('Delete all activity?'), findsOneWidget);

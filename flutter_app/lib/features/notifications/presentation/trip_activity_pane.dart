@@ -189,16 +189,23 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
                           : () => unawaited(repo.markAllRead(userId, tripId: widget.tripId)),
                       icon: const Icon(Icons.done_all_rounded),
                     ),
-                    IconButton(
-                      key: const Key('activity-delete-all'),
-                      tooltip: 'Delete all activity',
-                      onPressed: shown.isEmpty
-                          ? null
-                          : () => unawaited(
-                              _deleteAll(shown.length, shown.where((n) => n.id.startsWith('log-')).map((n) => n.id)),
-                            ),
-                      icon: const Icon(AppIcons.delete),
-                    ),
+                    // Delete all is rare and destructive: it lives in the overflow, not as a top-row icon.
+                    if (shown.isNotEmpty)
+                      PopupMenuButton<String>(
+                        key: const Key('activity-more'),
+                        tooltip: context.l10n.activityMore,
+                        icon: const Icon(Icons.more_vert_rounded),
+                        onSelected: (_) => unawaited(
+                          _deleteAll(shown.length, shown.where((n) => n.id.startsWith('log-')).map((n) => n.id)),
+                        ),
+                        itemBuilder: (_) => [
+                          PopupMenuItem<String>(
+                            key: const Key('activity-delete-all'),
+                            value: 'delete-all',
+                            child: Text('Delete all activity', style: TextStyle(color: t.dangerColor)),
+                          ),
+                        ],
+                      ),
                   ],
                 )
               : Row(

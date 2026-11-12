@@ -94,6 +94,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
   /// Quiet All / Expenses / Refunds / Settlements row (`enableSpendSectionChips`).
   _SpendSection _section = _SpendSection.all;
 
+  /// First paint is summary + day list. Voice, the category runway and the relation chips appear once the user
+  /// opens Filters (or while a filter is active) and fold away again on Clear filters.
+  bool _showAdvanced = false;
+
   void _onScroll() {
     final away = _scroll.hasClients && _scroll.offset > 500;
     if (away != _away) setState(() => _away = away);
@@ -623,6 +627,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       ];
     }
 
+    final advancedOn = _showAdvanced || filters.hasActive;
+
     final header = SliverToBoxAdapter(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -670,7 +676,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                     onChanged: _onSearch,
                   ),
                 ),
-                if (_flag(ref, 'enableVoiceInput', id))
+                if (advancedOn && _flag(ref, 'enableVoiceInput', id))
                   Padding(
                     padding: const EdgeInsets.only(right: 4),
                     child: ActionChip(
@@ -689,7 +695,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                   tooltip: l10n.expFilters,
                   constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                   icon: Badge(isLabelVisible: filters.hasActive, child: const Icon(AppIcons.filter)),
-                  onPressed: _openFilters,
+                  onPressed: () {
+                    setState(() => _showAdvanced = true);
+                    unawaited(_openFilters());
+                  },
                 ),
                 PopupMenuButton<String>(
                   key: const Key('tab-menu'),
@@ -780,7 +789,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                 ],
               ),
             ),
-          if (categories.isNotEmpty && _section != _SpendSection.settlements)
+          if (advancedOn && categories.isNotEmpty && _section != _SpendSection.settlements)
             SizedBox(
               key: const Key('category-runway'),
               height: 52,
@@ -804,7 +813,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                 ],
               ),
             ),
-          if (quickChips && myMember != null)
+          if (advancedOn && quickChips && myMember != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
               child: Wrap(
@@ -884,7 +893,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                 onPressed: () {
                   _search.clear();
                   ref.read(expenseFiltersProvider(id).notifier).clear();
-                  setState(() => _visible = _pageSize);
+                  setState(() {
+                    _visible = _pageSize;
+                    _showAdvanced = false;
+                  });
                 },
                 child: Text(l10n.expClearFilters),
               ),
@@ -923,11 +935,22 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                     onPressed: () {
                       _search.clear();
                       ref.read(expenseFiltersProvider(id).notifier).clear();
-                      setState(() => _visible = _pageSize);
+                      setState(() {
+                        _visible = _pageSize;
+                        _showAdvanced = false;
+                      });
                     },
                   )
                 : null,
           );
+
+    // Room under the last row for whichever Add is floating: the legacy tab FAB needs the most, Calm's shell
+    // button a little less, and the Compass dock's centre Add floats over nothing.
+    final bottomClear = ref.watch(compassFlagProvider((calmPassportFlag, id)))
+        ? 96.0
+        : ref.watch(compassFlagProvider((compassNavFlag, id)))
+        ? 24.0
+        : 200.0;
 
     final list = Stack(
       children: [
@@ -1032,7 +1055,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                   child: _OtherTrips(tripId: id, query: filters.query.trim()),
                 ),
               SliverToBoxAdapter(
-                child: SizedBox(height: 200.0 + MediaQuery.paddingOf(context).bottom),
+                child: SizedBox(height: bottomClear + MediaQuery.paddingOf(context).bottom),
               ),
             ],
           ),
@@ -1519,7 +1542,6 @@ class _RunwayChip extends StatelessWidget {
                 color: selected ? t.primaryAccent.withValues(alpha: 0.16) : t.bgSurface,
                 borderRadius: BorderRadius.circular(99),
                 border: Border.all(color: selected ? t.primaryAccent : t.borderColor),
-                boxShadow: selected ? [BoxShadow(color: t.primaryAccent.withValues(alpha: 0.4), blurRadius: 10)] : null,
               ),
               child: Text(
                 label,

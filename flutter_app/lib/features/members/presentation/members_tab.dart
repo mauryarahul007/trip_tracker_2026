@@ -90,7 +90,6 @@ class _MembersTabState extends ConsumerState<MembersTab> {
       ref.watch(tripGroupsProvider(tripId)).value ?? const <Group>[],
     );
 
-    final fabOn = (ref.watch(flagProvider(('enableContextFab', tripId))).value ?? true) && canManage;
     final list = ListView(
       key: const Key('tab-members'),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -186,23 +185,8 @@ class _MembersTabState extends ConsumerState<MembersTab> {
           ),
       ],
     );
-    if (!fabOn) return list;
-    return Stack(
-      children: [
-        list,
-        Positioned(
-          right: 16,
-          bottom: 16,
-          child: FloatingActionButton.extended(
-            key: const Key('members-fab'),
-            heroTag: null,
-            onPressed: () => _add(context, ref),
-            icon: const Icon(Icons.person_add_alt_1_rounded),
-            label: Text(l10n.memAdd),
-          ),
-        ),
-      ],
-    );
+    // One Add per screen: the top Add / Invite row is the primary action, so no floating button on top of it.
+    return list;
   }
 
   static TextStyle _sectionStyle(BuildContext context) => sectionLabelStyle(context);

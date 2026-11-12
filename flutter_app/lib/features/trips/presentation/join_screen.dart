@@ -12,6 +12,7 @@ import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
+import '../../../shared/widgets/app_text_field.dart';
 import '../../auth/application/auth_messages.dart';
 import '../../auth/application/social_sign_in.dart';
 import '../../../domain/repositories/repositories.dart';
@@ -124,7 +125,21 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
     final homeLabel = auth.isAuthenticated ? l10n.joinGoToTrips : l10n.joinBackToSignIn;
 
     final Widget content = switch (state.status) {
-      JoinStatus.loading || JoinStatus.claiming => const Center(child: CircularProgressIndicator()),
+      // Loading sits inside the same card shell as every other join state, so the screen doesn't jump on load.
+      JoinStatus.loading || JoinStatus.claiming => card([
+        Center(
+          child: SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(strokeWidth: 3, color: tokens.primaryAccent),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Semantics(
+          liveRegion: true,
+          child: body(state.status == JoinStatus.claiming ? l10n.joinJoiningTrip : l10n.joinCheckingInvite),
+        ),
+      ]),
       JoinStatus.invalid => card([
         title(l10n.joinInvalidTitle),
         gap,
@@ -180,17 +195,6 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
             isLoading: _busy,
             onPressed: _busy ? null : () => _social(signInWithGoogle),
           ),
-          if (guestJoinOn && !auth.isLocalOnly) ...[
-            gap,
-            AppButton(
-              key: const Key('join-guest'),
-              label: 'Join with just your name',
-              icon: AppIcons.members,
-              variant: AppButtonVariant.secondary,
-              isFullWidth: true,
-              onPressed: _busy ? null : _guest,
-            ),
-          ],
           if (apple) ...[
             gap,
             AppButton(
@@ -198,6 +202,17 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
               isFullWidth: true,
               variant: AppButtonVariant.secondary,
               onPressed: _busy ? null : () => _social(signInWithApple),
+            ),
+          ],
+          if (guestJoinOn && !auth.isLocalOnly) ...[
+            gap,
+            AppButton(
+              key: const Key('join-guest'),
+              label: l10n.joinGuestCta,
+              icon: AppIcons.members,
+              variant: AppButtonVariant.secondary,
+              isFullWidth: true,
+              onPressed: _busy ? null : _guest,
             ),
           ],
           TextButton(
@@ -295,34 +310,32 @@ class _GuestNameDialogState extends State<_GuestNameDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return AlertDialog(
-      title: const Text('What should we call you?'),
+      title: Text(l10n.joinGuestNameTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
+          AppTextField(
             key: const Key('guest-name'),
             controller: _name,
             autofocus: true,
-            maxLength: 40,
-            textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(hintText: 'Your name'),
+            hint: l10n.joinGuestNameHint,
+            textInputAction: TextInputAction.done,
             onChanged: (_) => setState(() {}),
             onSubmitted: (v) => v.trim().isEmpty ? null : Navigator.pop(context, v.trim()),
           ),
-          const Text(
-            'No account needed. Sign in later to keep this trip on any phone.',
-            style: TextStyle(fontSize: 12.5),
-          ),
+          const SizedBox(height: 8),
+          Text(l10n.joinGuestNameHelp, style: const TextStyle(fontSize: 12.5)),
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.actionCancel)),
         FilledButton(
           key: const Key('guest-name-join'),
           onPressed: _name.text.trim().isEmpty ? null : () => Navigator.pop(context, _name.text.trim()),
-          child: const Text('Join'),
+          child: Text(l10n.joinEnterCodeAction),
         ),
       ],
     );

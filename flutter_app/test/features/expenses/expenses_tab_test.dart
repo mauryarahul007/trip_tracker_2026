@@ -524,6 +524,11 @@ void main() {
 
     testApp('quick chips (Pro flag): Paid by me / Involves me', (tester) async {
       await setup(tester, flags: {'enableExpenseQuickFilterChips'});
+      expect(find.text('Paid by me'), findsNothing); // first paint stays summary + days
+      await tester.tap(find.byKey(const Key('open-filters')));
+      await settle(tester);
+      await tester.tapAt(const Offset(10, 10)); // dismiss the sheet; the quick chips stay revealed
+      await settle(tester);
       await tester.tap(find.text('Paid by me'));
       await settle(tester);
       expect(find.text('Beach lunch'), findsOneWidget);

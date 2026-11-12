@@ -58,8 +58,8 @@ class TripContentSheetState extends State<TripContentSheet> with TickerProviderS
   double _lastMoveFraction = 1.0;
   double _velocity = 0.0;
 
-  /// Upward inner-scroll pixels after which a collapsed sheet snaps to full in one gesture.
-  static const double _expandScrollThreshold = 16.0;
+  /// Upward overscroll pixels (at the list's top edge only) after which a collapsed sheet snaps to full.
+  static const double _expandScrollThreshold = 48.0;
   double _scrollUpAccum = 0.0;
   bool _autoExpanding = false;
 
@@ -288,23 +288,16 @@ class TripContentSheetState extends State<TripContentSheet> with TickerProviderS
                         if (notification is ScrollStartNotification) {
                           _scrollUpAccum = 0.0;
                           _autoExpanding = false;
-                        } else if (notification is ScrollUpdateNotification || notification is OverscrollNotification) {
-                          // Scrolling forward (finger up), or pushing past the end of a short list.
-                          final delta = switch (notification) {
-                            ScrollUpdateNotification(:final scrollDelta) => scrollDelta ?? 0.0,
-                            OverscrollNotification(:final overscroll) => overscroll,
-                            _ => 0.0,
-                          };
-                          if (_fraction > 0.02 && delta > 0 && !_autoExpanding) {
-                            _scrollUpAccum += delta;
+                        } else if (notification is OverscrollNotification) {
+                          // Only a deliberate upward push while the list sits at its top edge (e.g. a short list that
+                          // cannot scroll) expands the sheet. Normal browsing scrolls never move it.
+                          final atTop = notification.metrics.pixels <= notification.metrics.minScrollExtent;
+                          if (_fraction > 0.02 && atTop && notification.overscroll > 0 && !_autoExpanding) {
+                            _scrollUpAccum += notification.overscroll;
                             if (_scrollUpAccum >= _expandScrollThreshold) {
                               _autoExpanding = true;
                               animateTo(0.0);
                             }
-                          }
-                        } else if (notification is ScrollEndNotification) {
-                          if (!_autoExpanding && _fraction > 0.01 && _fraction < 0.95) {
-                            animateTo(0.0);
                           }
                         }
                         return false;

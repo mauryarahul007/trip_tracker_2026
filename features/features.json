@@ -3241,5 +3241,21 @@
     "shippedAt": "2026-11-12T09:03:48.180Z",
     "shippedBy": "agent",
     "shippedNote": "Shipped in 19e699b (v3.91.4): FLUTTER-UX-UPGRADES + SPEND-EXPAND-LOGIN"
+  },
+  {
+    "id": "FEAT-204",
+    "title": "Flutter UI polish roadmap (Phases 1–4)",
+    "description": "Full Flutter UI polish: boarding login identity, Spend chrome diet, sheet gesture, one Add path, AppSheet/Settings/feedback/legal consistency, splash/share/recycle/keypad/avatar delight.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-12T13:35:00.000Z",
+    "updatedAt": "2026-11-12T13:35:00.000Z",
+    "shippedAt": "2026-11-12T13:35:00.000Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped in pending (v3.91.5): FLUTTER-UI-ROADMAP — commit hash filled after push"
   }
 ]

@@ -5,19 +5,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/env/app_env.dart';
 import '../../../data/providers.dart';
-import '../../../domain/logic/flag_defaults.g.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../trips/application/trips_providers.dart';
 import '../../../core/platform/motion.dart';
 import '../../../shared/theme/app_colors.dart';
 
-/// Whether the login shows the boarding-gate design. It follows the staged `boardingPassLogin` flag; development
-/// and staging builds always show it so it can be reviewed before a superadmin arms the flag for everyone.
+/// Whether the login shows the boarding-gate design.
+///
+/// Flutter ships boarding as the product identity (classic is Labs). The shared
+/// web default stays staged-off; ignoring it here avoids classic flash in prod.
+/// Non-prod QA can still force classic via [FlagOverrideStore].
 final boardingLoginProvider = Provider<bool>((ref) {
-  if (!AppEnv.current.isProd) return true;
-  return ref.watch(flagProvider(('boardingPassLogin', null))).value ??
-      (defaultFeatureFlags['boardingPassLogin'] ?? false);
+  if (!AppEnv.current.isProd) {
+    final forced = ref.watch(flagOverrideStoreProvider).all['boardingPassLogin'];
+    if (forced != null) return forced;
+  }
+  return true;
 });
 
 /// Places the login rotates through (a different one each day). Looked up from Wikipedia like trip covers.

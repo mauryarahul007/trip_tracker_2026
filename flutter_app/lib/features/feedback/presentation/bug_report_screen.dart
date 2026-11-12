@@ -131,9 +131,10 @@ class _BugReportScreenState extends ConsumerState<BugReportScreen> {
           children: [
             const PendingFeedbackNote(),
             if (!signedIn)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
-                child: Text('Sign in with an account to send reports.', key: Key('bug-signin-note')),
+              const FeedbackBanner(
+                tone: FeedbackBannerTone.info,
+                message: 'Sign in with an account to send reports.',
+                textKey: Key('bug-signin-note'),
               ),
             AppTextField(
               key: const Key('bug-title'),
@@ -194,20 +195,17 @@ class _BugReportScreenState extends ConsumerState<BugReportScreen> {
               value: _logs,
               onChanged: (v) => setState(() => _logs = v),
             ),
+            const SizedBox(height: 8),
             if (_error != null)
-              Text(
-                _error!,
-                key: const Key('bug-error'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            if (_sent != null) Text(_sent!, key: const Key('bug-sent')),
-            const SizedBox(height: 12),
+              FeedbackBanner(tone: FeedbackBannerTone.error, message: _error!, textKey: const Key('bug-error')),
+            if (_sent != null)
+              FeedbackBanner(tone: FeedbackBannerTone.success, message: _sent!, textKey: const Key('bug-sent')),
             AppButton(
               key: const Key('bug-submit'),
               label: 'Send report',
               isLoading: _busy,
               isFullWidth: true,
-              onPressed: _busy ? null : _submit,
+              onPressed: _busy || !signedIn ? null : _submit,
             ),
             if (mine.isNotEmpty) ...[
               const SizedBox(height: 24),
@@ -231,12 +229,6 @@ Widget _chipLabel(BuildContext context, String text) => Padding(
   padding: const EdgeInsets.only(bottom: 8),
   child: Text(
     text.toUpperCase(),
-    style: TextStyle(
-      fontFamily: AppTypography.fontMono,
-      fontSize: 10.5,
-      fontWeight: FontWeight.w600,
-      letterSpacing: 1.1,
-      color: context.tokens.textMuted,
-    ),
+    style: AppTypography.eyebrowMono(color: context.tokens.textMuted, fontSize: 10.5),
   ),
 );

@@ -28,6 +28,12 @@ import '../domain/trip_tabs.dart';
 
 enum _HubHaptic { selection, medium, light }
 
+/// Sentence-case tile label (the shared Eyebrow shouts in ALL CAPS, which is noisy on the Hub).
+Widget _hubEyebrow(BuildContext context, BentoTone tone, String text) => Text(
+  text,
+  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.tokens.tones[tone].accent),
+);
+
 class _HubTile {
   const _HubTile(
     this.key,
@@ -95,7 +101,7 @@ class TripHubScreen extends ConsumerWidget {
         'All trips',
         'Back to your trips',
         () => context.go('/'),
-        eyebrow: 'NAVIGATE',
+        eyebrow: 'Navigate',
         hapticType: _HubHaptic.selection,
       ),
       _HubTile(
@@ -105,7 +111,7 @@ class TripHubScreen extends ConsumerWidget {
         '$members traveler${members == 1 ? '' : 's'}',
         () => context.go('/trip/$tripId/members'),
         tone: BentoTone.sky,
-        eyebrow: 'PEOPLE',
+        eyebrow: 'People',
         hapticType: _HubHaptic.selection,
       ),
       // Calm Passport keeps Chat in the dock and Plans (checklist, notes, passes) here.
@@ -121,7 +127,7 @@ class TripHubScreen extends ConsumerWidget {
               : 'Notes, chat, passes',
           () => context.go('/trip/$tripId/notes'),
           tone: BentoTone.butter,
-          eyebrow: 'PLANS',
+          eyebrow: 'Plans',
           hapticType: _HubHaptic.selection,
         ),
       _HubTile(
@@ -131,7 +137,7 @@ class TripHubScreen extends ConsumerWidget {
         receiptsFact,
         () => context.push('/trip/$tripId/receipts'),
         tone: BentoTone.peach,
-        eyebrow: 'VAULT',
+        eyebrow: 'Receipts',
         hapticType: _HubHaptic.selection,
       ),
       _HubTile(
@@ -147,7 +153,7 @@ class TripHubScreen extends ConsumerWidget {
           );
         },
         tone: BentoTone.lilac,
-        eyebrow: 'SHARE',
+        eyebrow: 'Share',
         hapticType: _HubHaptic.medium,
       ),
       _HubTile(
@@ -163,7 +169,7 @@ class TripHubScreen extends ConsumerWidget {
           );
         },
         tone: BentoTone.sky,
-        eyebrow: 'MANAGE',
+        eyebrow: 'Manage',
         hapticType: _HubHaptic.medium,
       ),
       _HubTile(
@@ -176,7 +182,7 @@ class TripHubScreen extends ConsumerWidget {
         },
         tone: BentoTone.mint,
         isWide: true,
-        eyebrow: 'ROUTE',
+        eyebrow: 'Route',
         hapticType: _HubHaptic.light,
       ),
       _HubTile(
@@ -189,7 +195,7 @@ class TripHubScreen extends ConsumerWidget {
           ref.invalidate(tripMutedProvider(tripId));
         },
         tone: BentoTone.peach,
-        eyebrow: 'ALERTS',
+        eyebrow: 'Alerts',
         hapticType: _HubHaptic.light,
       ),
       _HubTile(
@@ -199,7 +205,7 @@ class TripHubScreen extends ConsumerWidget {
         'Share where you are',
         live,
         tone: BentoTone.mint,
-        eyebrow: 'SAFETY',
+        eyebrow: 'Safety',
         hapticType: _HubHaptic.medium,
       ),
       _HubTile(
@@ -214,7 +220,7 @@ class TripHubScreen extends ConsumerWidget {
           );
         },
         tone: BentoTone.lilac,
-        eyebrow: 'UTILITIES',
+        eyebrow: 'Utilities',
         hapticType: _HubHaptic.medium,
       ),
       _HubTile(
@@ -223,7 +229,7 @@ class TripHubScreen extends ConsumerWidget {
         l10n.tripSettingsMenu,
         'Currency, rules, members',
         () => context.push('/trip/$tripId/settings'),
-        eyebrow: 'PREFERENCES',
+        eyebrow: 'Preferences',
         hapticType: _HubHaptic.selection,
       ),
       _HubTile(
@@ -232,7 +238,7 @@ class TripHubScreen extends ConsumerWidget {
         l10n.tripAppSettings,
         'Theme, language, account',
         () => context.push('/settings'),
-        eyebrow: 'SYSTEM',
+        eyebrow: 'App',
         hapticType: _HubHaptic.selection,
       ),
     ];
@@ -338,7 +344,7 @@ class TripHubScreen extends ConsumerWidget {
                                                     mainAxisSize: MainAxisSize.min,
                                                     children: [
                                                       if (tile.eyebrow != null && tone != null)
-                                                        BentoTile.eyebrow(context, tone, tile.eyebrow!),
+                                                        _hubEyebrow(context, tone, tile.eyebrow!),
                                                       Text(
                                                         tile.title,
                                                         style: const TextStyle(
@@ -396,7 +402,7 @@ class TripHubScreen extends ConsumerWidget {
                                                       ),
                                                     ),
                                                     if (tile.eyebrow != null && tone != null)
-                                                      BentoTile.eyebrow(context, tone, tile.eyebrow!),
+                                                      _hubEyebrow(context, tone, tile.eyebrow!),
                                                   ],
                                                 ),
                                                 const SizedBox(height: 12),
@@ -429,7 +435,8 @@ class TripHubScreen extends ConsumerWidget {
               );
             }
 
-            // Quiet 2-col grid: daily tools first; rare utilities under More.
+            // Quiet 2-col grid: 4 daily trip actions up front (People, Plans/Notes, Receipts, Invite);
+            // everything else, including All trips and App settings, sits under More.
             const primaryKeys = {
               'hub-people',
               'hub-plans',

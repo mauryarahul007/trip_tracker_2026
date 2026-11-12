@@ -181,13 +181,7 @@ class TripRow extends ConsumerWidget {
                                         key: Key('trip-eyebrow-${trip.id}'),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontFamily: AppTypography.fontMono,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 0.8,
-                                          color: t.textMuted,
-                                        ),
+                                        style: AppTypography.eyebrowMono(color: t.textMuted),
                                       ),
                                     Hero(
                                       tag: 'trip-title-${trip.id}',
@@ -197,13 +191,7 @@ class TripRow extends ConsumerWidget {
                                           trip.name,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontFamily: AppTypography.fontTitle,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w800,
-                                            letterSpacing: -0.3,
-                                            color: t.textPrimary,
-                                          ),
+                                          style: AppTypography.tripTitle(color: t.textPrimary),
                                         ),
                                       ),
                                     ),
@@ -247,13 +235,7 @@ class TripRow extends ConsumerWidget {
                                     textAlign: TextAlign.end,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontFamily: AppTypography.fontMono,
-                                      fontFeatures: AppTypography.tabularFigures,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: moneyColor ?? t.textSecondary,
-                                    ),
+                                    style: AppTypography.moneyInline(fontSize: 13, color: moneyColor ?? t.textSecondary),
                                   ),
                                 ),
                               Icon(Icons.chevron_right_rounded, color: t.textMuted),
@@ -985,7 +967,10 @@ class _CalmHero extends StatelessWidget {
   Widget build(BuildContext context) {
     const teal = AppColors.calmDarkTeal;
     final dest = (trip.destination ?? '').trim();
-    final eyebrow = status.totalDays > 0 ? 'LIVE NOW · DAY ${status.dayNumber} OF ${status.totalDays}' : 'LIVE NOW';
+    final l10n = context.l10n;
+    final eyebrow = status.totalDays > 0
+        ? l10n.tripLiveNowDay(status.dayNumber, status.totalDays)
+        : l10n.tripLiveNow;
     return Semantics(
       button: true,
       label: '${trip.name}. $headline${moneyText == null ? '' : '. $moneyText'}',

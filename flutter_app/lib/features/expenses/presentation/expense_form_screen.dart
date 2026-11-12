@@ -321,7 +321,7 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                             defaultMemberIds: s.selected.entries.where((e) => e.value).map((e) => e.key).toList(),
                           ),
                           icon: const Icon(AppIcons.receipt),
-                          label: const Text('Scan & Itemize'),
+                          label: Text(l10n.formScanItemize),
                         ),
                     ],
                   ),

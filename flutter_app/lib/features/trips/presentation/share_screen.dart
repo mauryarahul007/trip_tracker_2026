@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/auth_state.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/currency.dart';
 import '../../../domain/logic/trip_utilities.dart' show formatDateRange;
@@ -9,6 +10,8 @@ import '../../../domain/models/join_share.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/async_body.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -32,6 +35,9 @@ class ShareScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final tokens = context.tokens;
     final async = ref.watch(tripShareSummaryProvider(token));
+    final signedIn = ref.watch(authStateProvider).isAuthenticated;
+    // Existing "Invite & Share Signup Conversion" flag covers the share page's app CTA.
+    final inviteConversion = ref.watch(flagProvider(('enableInviteConversion', null))).value ?? true;
 
     final Widget body = AsyncBody<TripShareSummary?>(
       value: async,
@@ -50,12 +56,12 @@ class ShareScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(l10n.shareEyebrow, style: TextStyle(fontSize: 12, letterSpacing: 0.6, color: tokens.textMuted)),
-                  const SizedBox(height: 8),
                   Text(
-                    s.tripName,
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: tokens.textPrimary),
+                    l10n.shareEyebrow.toUpperCase(),
+                    style: AppTypography.eyebrowMono(color: tokens.textMuted, fontSize: 12),
                   ),
+                  const SizedBox(height: 8),
+                  Text(s.tripName, style: AppTypography.tripTitle(color: tokens.textPrimary, fontSize: 26)),
                   const SizedBox(height: 4),
                   Text(
                     [
@@ -78,22 +84,43 @@ class ShareScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   // Money lives on the Ember surface, same as the in-app summary.
-                  HeroSurface(
-                    kind: SurfaceKind.ember,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(l10n.shareTotalSpend, style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                        const SizedBox(height: 6),
-                        for (final e in spend)
-                          Text(
-                            formatAmount(e.value, getCurrencySymbol(e.key)),
-                            key: Key('spend-${e.key}'),
-                            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white),
-                          ),
-                      ],
+                  if (spend.isEmpty)
+                    const AppCard(
+                      key: Key('share-no-spend'),
+                      child: EmptyState(
+                        plain: true,
+                        title: 'No expenses yet',
+                        subtitle: 'Spending will show up here once the group logs its first expense.',
+                      ),
+                    )
+                  else
+                    HeroSurface(
+                      kind: SurfaceKind.ember,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.shareTotalSpend, style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                          const SizedBox(height: 6),
+                          for (final e in spend)
+                            Text(
+                              formatAmount(e.value, getCurrencySymbol(e.key)),
+                              key: Key('spend-${e.key}'),
+                              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
+                  if (inviteConversion) ...[
+                    const SizedBox(height: 20),
+                    // Conversion only: the page stays read-only; this just hands a viewer to the app.
+                    AppButton(
+                      key: const Key('share-open-app'),
+                      label: 'Open in Trip Tracker',
+                      icon: AppIcons.share,
+                      isFullWidth: true,
+                      onPressed: () => context.go(signedIn ? '/' : '/login'),
+                    ),
+                  ],
                 ],
               ),
             ),

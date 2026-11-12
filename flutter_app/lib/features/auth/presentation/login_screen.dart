@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/gestures.dart' show LongPressGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -346,21 +347,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   Row(
                     children: [
-                      const SizedBox(width: 86, child: TicketBarcode(seed: 'trip-tracker-gate', height: 22)),
-                      const Spacer(),
-                      TextButton(
+                      // Staff entry is buried: hold the barcode for 2 seconds to reveal / hide the staff form.
+                      RawGestureDetector(
                         key: const Key('superadmin-toggle'),
-                        onPressed: _busy
-                            ? null
-                            : () => setState(() {
-                                _showAdmin = !_showAdmin;
-                                _error = null;
-                              }),
-                        child: Text(
-                          '${l10n.loginStaff} ›',
-                          style: const TextStyle(color: Colors.white60, fontSize: 13, fontWeight: FontWeight.w600),
-                        ),
+                        behavior: HitTestBehavior.opaque,
+                        gestures: {
+                          LongPressGestureRecognizer: GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+                            () => LongPressGestureRecognizer(duration: const Duration(seconds: 2)),
+                            (r) => r.onLongPress = _busy
+                                ? null
+                                : () => setState(() {
+                                    _showAdmin = !_showAdmin;
+                                    _error = null;
+                                  }),
+                          ),
+                        },
+                        child: const SizedBox(width: 86, child: TicketBarcode(seed: 'trip-tracker-gate', height: 22)),
                       ),
+                      const Spacer(),
                     ],
                   ),
                 ],
@@ -448,7 +452,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 AppButton(
                   label: l10n.authContinueGoogle,
-                  icon: Icons.g_mobiledata_rounded,
+                  leading: const GoogleGlyph(size: 20),
                   isFullWidth: true,
                   onPressed: (paused || _busy) ? null : _google,
                 ),

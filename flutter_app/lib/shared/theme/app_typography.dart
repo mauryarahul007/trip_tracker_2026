@@ -76,5 +76,27 @@ class AppTypography {
     fontFeatures: tabularFigures,
   );
 
+  /// Small mono label above a title or section (`DESTINATION`, `TRIP`). Callers pass `.toUpperCase()` text.
+  static TextStyle eyebrowMono({Color? color, double fontSize = 11}) => TextStyle(
+    fontFamily: fontMono,
+    fontSize: fontSize,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 1.1,
+    color: color,
+  );
+
+  /// Trip name in lists and headers (Bricolage 800, slightly tight tracking).
+  static TextStyle tripTitle({Color? color, double fontSize = 18}) => TextStyle(
+    fontFamily: fontTitle,
+    fontSize: fontSize,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.3,
+    color: color,
+  );
+
+  /// Inline money figure inside a row or sentence: mono, bold, tabular.
+  static TextStyle moneyInline({Color? color, double fontSize = 15}) =>
+      monoNumber(fontSize: fontSize, fontWeight: FontWeight.w700, color: color);
+
   static const List<FontFeature> tabularFigures = [FontFeature.tabularFigures()];
 }

@@ -32,6 +32,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
   SharedLocation? _location;
   bool _isLoading = true;
   bool _isEnded = false;
+  bool _loadError = false;
   Timer? _pollTimer;
   late final AnimationController _pulseController;
 
@@ -92,16 +93,27 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
           _location = loc;
           _isLoading = false;
           _isEnded = false;
+          _loadError = false;
         });
       }
     } catch (_) {
+      // A failed fetch is not "ended": keep the last known position if we have one, otherwise offer a retry.
       if (mounted && _location == null) {
         setState(() {
           _isLoading = false;
-          _isEnded = true;
+          _isEnded = false;
+          _loadError = true;
         });
       }
     }
+  }
+
+  void _retry() {
+    setState(() {
+      _isLoading = true;
+      _loadError = false;
+    });
+    _fetch();
   }
 
   Future<void> _openExternalMap(double lat, double lng, String label) async {
@@ -180,6 +192,46 @@ class _LiveScreenState extends ConsumerState<LiveScreen> with SingleTickerProvid
             const SizedBox(height: 16),
             Text('Connecting to live radar...', style: TextStyle(fontSize: 14, color: tokens.textSecondary)),
           ],
+        ),
+      );
+    }
+
+    // Network / server failure: not the same as an ended share, so say so and let the viewer retry.
+    if (_loadError && !_isEnded && _location == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(color: tokens.colorWarning.withValues(alpha: 0.12), shape: BoxShape.circle),
+                child: Icon(Icons.wifi_off_rounded, size: 36, color: tokens.colorWarning),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                "Couldn't load live location",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: tokens.textPrimary),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Check your connection and try again. The share may still be live.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: tokens.textSecondary, height: 1.4),
+              ),
+              const SizedBox(height: 24),
+              AppButton(
+                key: const Key('live-retry'),
+                label: 'Retry',
+                icon: Icons.refresh_rounded,
+                variant: AppButtonVariant.primary,
+                onPressed: _retry,
+              ),
+            ],
+          ),
         ),
       );
     }

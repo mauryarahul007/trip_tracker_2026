@@ -5780,3 +5780,15 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Flutter-only; no math/schema changes; Pro/Labs stay default OFF.
 
+### ADR 291: Flutter UI polish roadmap Phases 1–4 (v3.91.5)
+* **Context of the Problem:**
+  - Full-app Flutter UI audit found competing visual languages (boarding vs classic login, notch vs polish dock, Material sheets vs AppSheet), Spend chrome density, sheet-vs-list scroll fights, and uneven Settings/feedback/legal chrome that kept the app feeling prototype-like despite a strong Calm Passport foundation.
+* **Selected Decision & Resolution:**
+  - **Phase 1:** Boarding as Flutter shipping login; staff via 2s barcode hold; empty-state hierarchy; Spend chrome diet; sheet expand only from handle/overscroll-at-top; one Add path under Calm/Compass; Insights uses app theme; diagnostics/push-denied/archived trust fixes; polish dock wins over notch when both flags ON.
+  - **Phase 2:** Hub sentence-case eyebrows; Get Started CTA hierarchy; settle amount consistency + busy dismiss block; Activity Delete-all in overflow.
+  - **Phase 3:** Named typography helpers; currency/changelog via AppSheet; feedback banners + signed-out submit gate; shared legal shell; emoji fallbacks → icons.
+  - **Phase 4:** Splash motion/semantics; share conversion CTA; recycle expiry; token keypad; avatar a11y; live error vs ended; join branded loading.
+  - **Docs:** `FLUTTER-UI-ROADMAP` in `FEATURE_TEST_STEPS.md`; feature log FEAT-204.
+* **Trade-offs Accepted:**
+  - Flutter-only; no new flags; shared web `boardingPassLogin` default stays staged-off while Flutter provider ships boarding; notch remains available only when polish is OFF.
+
