@@ -9863,9 +9863,9 @@
     "actualBehavior": "No Staff control visible; only a barcode long-press (undocumented) revealed the form.",
     "diagnostics": {},
     "createdAt": "2026-11-12T14:17:23.875Z",
-    "updatedAt": "2026-11-12T14:17:23.875Z",
+    "updatedAt": "2026-11-12T14:18:09.426Z",
     "resolvedAt": "2026-11-12T14:17:23.875Z",
     "resolvedBy": "agent",
-    "resolutionNote": "Restored permanent Staff › TextButton bottom-right next to the ticket barcode; updated boarding_login_test and FEATURE_TEST_STEPS. Pending commit hash."
+    "resolutionNote": "Restored permanent Staff › TextButton bottom-right next to the ticket barcode; updated boarding_login_test and FEATURE_TEST_STEPS. Commit c15f274 (v3.91.6)."
   }
 ]
