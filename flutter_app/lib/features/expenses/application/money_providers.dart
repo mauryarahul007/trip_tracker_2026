@@ -29,12 +29,19 @@ final liveUsdRatesProvider = FutureProvider<Map<String, double>>((ref) async {
 Map<String, double> liveRatesOf(WidgetRef ref) => ref.watch(liveUsdRatesProvider).value ?? defaultExchangeRates;
 
 const _upiPrefix = 'member_upi:';
+const _railPrefix = 'member_rail:';
 
 String? savedUpiId(WidgetRef ref, String memberId) =>
     ref.watch(sharedPreferencesProvider).getString('$_upiPrefix$memberId');
 
 Future<void> saveUpiId(WidgetRef ref, String memberId, String upiId) =>
     ref.read(sharedPreferencesProvider).setString('$_upiPrefix$memberId', upiId.trim());
+
+String? savedRailHandle(WidgetRef ref, String memberId, String rail) =>
+    ref.watch(sharedPreferencesProvider).getString('$_railPrefix${memberId}_$rail');
+
+Future<void> saveRailHandle(WidgetRef ref, String memberId, String rail, String handle) =>
+    ref.read(sharedPreferencesProvider).setString('$_railPrefix${memberId}_$rail', handle.trim());
 
 /// Local file path, or an https URL, for a receipt preview. Null when neither exists.
 final receiptPreviewProvider = FutureProvider.family<String?, (String, String?)>((ref, key) async {

@@ -3278,6 +3278,10 @@ export default function App() {
                   <ChecklistNotesTab
                     trip={activeTrip}
                     members={visibleMembers}
+                    categories={categories}
+                    expenses={expenses}
+                    myMemberId={myMemberId}
+                    userId={userId}
                     isAdmin={isAdmin}
                     initialViewMode={pendingNotesView}
                     onInitialViewModeConsumed={() => setPendingNotesView(null)}
@@ -3293,6 +3297,10 @@ export default function App() {
                       const exp = expenses.find((e) => e.id === expenseId);
                       if (exp) setSelectedReviewExpense(exp);
                     }}
+                    onReviewExpense={setSelectedReviewExpense}
+                    onEditExpense={handleStartEditExpense}
+                    onDeleteExpense={handleDeleteExpense}
+                    onAddExpenseForDate={(date, tpl) => handleOpenAddExpense({ date, ...tpl })}
                     chatHasUnread={chatHasUnread}
                   />
                   </Suspense>

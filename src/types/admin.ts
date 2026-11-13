@@ -42,6 +42,7 @@ export type FeatureFlagKey =
   | 'enableTravelPasses'
   | 'enableVisualTravelTimeline'
   | 'enableItineraryPlanner'
+  | 'enableGlobalPaymentRails'
   | 'enablePassSorting'
   | 'enableNextUpCapsule'
   | 'enableProgressiveNextUp'

@@ -19,7 +19,7 @@ void main() {
     test('Dart flag key set equals the TS registry (CI drift check)', () {
       final ts = (fx['defaults'] as Map<String, dynamic>).keys.toSet();
       expect(defaultFeatureFlags.keys.toSet(), ts);
-      expect(ts.length, 219);
+      expect(ts.length, 221);
     });
 
     test('defaults and pack membership match the TS registry', () {

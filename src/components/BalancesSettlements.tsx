@@ -64,6 +64,8 @@ type TransferRowProps = {
   onSettle: (fromMemberId: string, toMemberId: string, amount: number, fromLabel: string, toLabel: string, totalDebt?: number) => void;
   onOpenUpi?: (transfer: Transfer) => void;
   isUpiEnabled?: boolean;
+  isGlobalRailsEnabled?: boolean;
+  baseCurrency?: string;
   balances: MemberBalance[];
   groups: Group[];
   activeTripExpenses: Expense[];
@@ -171,6 +173,8 @@ function TransferRow({
   onSettle,
   onOpenUpi,
   isUpiEnabled,
+  isGlobalRailsEnabled,
+  baseCurrency,
   balances,
   groups,
   activeTripExpenses,
@@ -626,7 +630,7 @@ function TransferRow({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          {!compactSummaryOn && isUpiEnabled && canSettle && (
+          {!compactSummaryOn && (isUpiEnabled || isGlobalRailsEnabled) && canSettle && (
             <button
               type="button"
               className="traveler-settlement-action-chip upi"
@@ -644,9 +648,9 @@ function TransferRow({
                 cursor: 'pointer',
               }}
               onClick={() => onOpenUpi?.(t)}
-              title="1-Tap UPI Settlement (GPay, PhonePe, Paytm, or Dynamic QR)"
+              title={isGlobalRailsEnabled ? "1-Tap Settlement Rails (Revolut, Venmo, Cash App, PayPal, UPI, IBAN)" : "1-Tap UPI Settlement (GPay, PhonePe, Paytm, or Dynamic QR)"}
             >
-              ⚡ UPI Pay
+              {isGlobalRailsEnabled && baseCurrency?.toUpperCase() !== 'INR' ? '⚡ Pay Rails' : '⚡ UPI Pay'}
             </button>
           )}
 
@@ -750,7 +754,7 @@ function TransferRow({
             </button>
           )}
 
-          {compactSummaryOn && moreOpen && isUpiEnabled && canSettle && (
+          {compactSummaryOn && moreOpen && (isUpiEnabled || isGlobalRailsEnabled) && canSettle && (
             <button
               type="button"
               className="traveler-settlement-action-chip upi"
@@ -768,9 +772,9 @@ function TransferRow({
                 cursor: 'pointer',
               }}
               onClick={() => onOpenUpi?.(t)}
-              title="1-Tap UPI Settlement (GPay, PhonePe, Paytm, or Dynamic QR)"
+              title={isGlobalRailsEnabled ? "1-Tap Settlement Rails (Revolut, Venmo, Cash App, PayPal, UPI, IBAN)" : "1-Tap UPI Settlement (GPay, PhonePe, Paytm, or Dynamic QR)"}
             >
-              ⚡ UPI Pay
+              {isGlobalRailsEnabled && baseCurrency?.toUpperCase() !== 'INR' ? '⚡ Pay Rails' : '⚡ UPI Pay'}
             </button>
           )}
         </div>
@@ -923,6 +927,7 @@ export function BalancesSettlements({
   // UpiPaymentModal owns its own Back/Escape stack — do not double-register here
 
   const isUpiEnabled = useTripStore((s) => s.isFeatureEnabled('enableUpiPayments', { tripId: trip.id }));
+  const isGlobalRailsEnabled = useTripStore((s) => s.isFeatureEnabled('enableGlobalPaymentRails', { tripId: trip.id }));
   const isShareCardEnabled = useTripStore((s) => s.isFeatureEnabled('enableWhatsAppSettlementShare', { tripId: trip.id }));
   // With the new pass back on, it owns the settled-travelers bar (so this section drops its copy) and the labels that separate your balance from the group total.
   const passBackOn = useTripStore((s) => s.isFeatureEnabled('enableTravelerPassBack'));
@@ -1400,6 +1405,8 @@ export function BalancesSettlements({
                           onSettle={onSettle}
                           onOpenUpi={(t) => setUpiTargetTransfer(t)}
                           isUpiEnabled={isUpiEnabled}
+                          isGlobalRailsEnabled={isGlobalRailsEnabled}
+                          baseCurrency={trip.baseCurrency}
                           balances={balances}
                           groups={groups}
                           activeTripExpenses={activeTripExpenses}
@@ -1440,6 +1447,8 @@ export function BalancesSettlements({
                           onSettle={onSettle}
                           onOpenUpi={(t) => setUpiTargetTransfer(t)}
                           isUpiEnabled={isUpiEnabled}
+                          isGlobalRailsEnabled={isGlobalRailsEnabled}
+                          baseCurrency={trip.baseCurrency}
                           balances={balances}
                           groups={groups}
                           activeTripExpenses={activeTripExpenses}

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import type { ItineraryCategory, ItineraryItem } from '../types';
 import { triggerHaptic } from '../utils/haptics';
+import { useEscapeKey } from '../utils/useEscapeKey';
+import { useHistoryBack } from '../utils/useHistoryBack';
 import { IconMapPin, IconPlus, IconX } from './Icons';
 
 interface Props {
@@ -44,6 +46,9 @@ export const ItineraryActivityModal: React.FC<Props> = ({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEscapeKey(isOpen, onClose);
+  useHistoryBack(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -106,8 +111,7 @@ export const ItineraryActivityModal: React.FC<Props> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(4px)',
+        backgroundColor: 'rgba(15, 23, 42, 0.65)',
         zIndex: 9999,
         display: 'flex',
         alignItems: 'center',
@@ -119,24 +123,27 @@ export const ItineraryActivityModal: React.FC<Props> = ({
       }}
     >
       <div
-        className="card-surface"
+        className="modal-card fade-in"
         style={{
           width: '100%',
           maxWidth: '480px',
           maxHeight: '90vh',
           overflowY: 'auto',
-          borderRadius: '20px',
+          backgroundColor: 'var(--bg-surface, #ffffff)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '16px',
           padding: '24px',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+          boxShadow: '0 24px 48px -12px rgba(15, 23, 42, 0.25)',
           display: 'flex',
           flexDirection: 'column',
           gap: '16px',
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '20px' }}>🗓️</span>
-            <h3 id="itinerary-modal-title" style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>
+            <h3 id="itinerary-modal-title" style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>
               {initialItem ? 'Edit Itinerary Activity' : 'Add Itinerary Activity'}
             </h3>
           </div>
@@ -151,6 +158,7 @@ export const ItineraryActivityModal: React.FC<Props> = ({
               cursor: 'pointer',
               display: 'flex',
               padding: '6px',
+              borderRadius: '8px',
             }}
             aria-label="Close"
           >
@@ -162,7 +170,7 @@ export const ItineraryActivityModal: React.FC<Props> = ({
           <div
             style={{
               padding: '10px 14px',
-              borderRadius: '10px',
+              borderRadius: '8px',
               backgroundColor: 'rgba(239, 68, 68, 0.1)',
               border: '1px solid var(--color-danger, #ef4444)',
               color: 'var(--color-danger, #ef4444)',
@@ -176,54 +184,76 @@ export const ItineraryActivityModal: React.FC<Props> = ({
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px', letterSpacing: '0.4px' }}>
               ACTIVITY TITLE *
             </label>
             <input
               type="text"
-              className="text-input"
               placeholder="e.g. Colosseum Tour, Dinner at Roscioli"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              style={{ width: '100%', borderRadius: '12px', padding: '10px 14px', fontSize: '15px' }}
+              style={{
+                width: '100%',
+                borderRadius: '10px',
+                padding: '10px 14px',
+                fontSize: '14px',
+                backgroundColor: 'var(--bg-secondary, #f8fafc)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
+                outline: 'none',
+              }}
               autoFocus
             />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px', letterSpacing: '0.4px' }}>
                 DATE *
               </label>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <input
-                  type="date"
-                  className="text-input"
-                  min={tripStartDate}
-                  max={tripEndDate}
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  style={{ width: '100%', borderRadius: '12px', padding: '10px 12px', fontSize: '14px' }}
-                />
-              </div>
+              <input
+                type="date"
+                min={tripStartDate}
+                max={tripEndDate}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                style={{
+                  width: '100%',
+                  borderRadius: '10px',
+                  padding: '10px 12px',
+                  fontSize: '14px',
+                  backgroundColor: 'var(--bg-secondary, #f8fafc)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-primary)',
+                  outline: 'none',
+                }}
+              />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px', letterSpacing: '0.4px' }}>
                 TIME (OPTIONAL)
               </label>
               <input
                 type="time"
-                className="text-input"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                style={{ width: '100%', borderRadius: '12px', padding: '10px 12px', fontSize: '14px' }}
+                style={{
+                  width: '100%',
+                  borderRadius: '10px',
+                  padding: '10px 12px',
+                  fontSize: '14px',
+                  backgroundColor: 'var(--bg-secondary, #f8fafc)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-primary)',
+                  outline: 'none',
+                }}
               />
             </div>
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px', letterSpacing: '0.4px' }}>
               CATEGORY
             </label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -241,7 +271,7 @@ export const ItineraryActivityModal: React.FC<Props> = ({
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px',
-                      padding: '6px 12px',
+                      padding: '6px 14px',
                       borderRadius: '999px',
                       fontSize: '12px',
                       fontWeight: 600,
@@ -250,9 +280,9 @@ export const ItineraryActivityModal: React.FC<Props> = ({
                         ? '1.5px solid var(--primary-accent)'
                         : '1px solid var(--border-color)',
                       backgroundColor: isSelected
-                        ? 'rgba(var(--primary-accent-rgb, 59, 130, 246), 0.15)'
-                        : 'var(--bg-surface)',
-                      color: isSelected ? 'var(--primary-accent)' : 'var(--text-primary)',
+                        ? 'var(--primary-accent)'
+                        : 'var(--bg-secondary, #f1f5f9)',
+                      color: isSelected ? '#ffffff' : 'var(--text-primary)',
                       transition: 'all 0.15s ease',
                     }}
                   >
@@ -265,64 +295,90 @@ export const ItineraryActivityModal: React.FC<Props> = ({
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px', letterSpacing: '0.4px' }}>
               LOCATION / VENUE
             </label>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <IconMapPin size={16} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)' }} />
               <input
                 type="text"
-                className="text-input"
                 placeholder="Address or Google Maps landmark"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                style={{ width: '100%', borderRadius: '12px', padding: '10px 12px 10px 36px', fontSize: '14px' }}
+                style={{
+                  width: '100%',
+                  borderRadius: '10px',
+                  padding: '10px 12px 10px 36px',
+                  fontSize: '14px',
+                  backgroundColor: 'var(--bg-secondary, #f8fafc)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-primary)',
+                  outline: 'none',
+                }}
               />
             </div>
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px', letterSpacing: '0.4px' }}>
               NOTES & RESERVATIONS
             </label>
             <textarea
-              className="text-input"
               rows={2}
               placeholder="Booking refs, dress code, confirmation codes..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              style={{ width: '100%', borderRadius: '12px', padding: '10px 14px', fontSize: '14px', resize: 'vertical' }}
+              style={{
+                width: '100%',
+                borderRadius: '10px',
+                padding: '10px 14px',
+                fontSize: '14px',
+                resize: 'vertical',
+                backgroundColor: 'var(--bg-secondary, #f8fafc)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
+                outline: 'none',
+                fontFamily: 'inherit',
+              }}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px', letterSpacing: '0.4px' }}>
               ESTIMATED COST (OPTIONAL)
             </label>
             <input
               type="number"
-              className="text-input"
               placeholder="Estimated budget amount"
               value={costEstimate}
               onChange={(e) => setCostEstimate(e.target.value)}
-              style={{ width: '100%', borderRadius: '12px', padding: '10px 14px', fontSize: '14px' }}
+              style={{
+                width: '100%',
+                borderRadius: '10px',
+                padding: '10px 14px',
+                fontSize: '14px',
+                backgroundColor: 'var(--bg-secondary, #f8fafc)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
+                outline: 'none',
+              }}
               min="0"
               step="any"
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
             {initialItem && onDelete && (
               <button
                 type="button"
                 onClick={handleDelete}
                 disabled={isSubmitting}
-                className="btn btn-secondary"
+                className="secondary-btn"
                 style={{
                   color: 'var(--color-danger, #ef4444)',
                   borderColor: 'rgba(239, 68, 68, 0.3)',
                   padding: '10px 16px',
-                  borderRadius: '12px',
+                  borderRadius: '10px',
                   fontWeight: 600,
                   cursor: 'pointer',
                 }}
@@ -334,23 +390,33 @@ export const ItineraryActivityModal: React.FC<Props> = ({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="btn btn-secondary"
-              style={{ flex: 1, padding: '10px', borderRadius: '12px', fontWeight: 600, cursor: 'pointer' }}
+              className="secondary-btn"
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: '10px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
+              }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="btn btn-primary"
+              className="primary-btn"
               style={{
                 flex: 2,
                 padding: '10px',
-                borderRadius: '12px',
+                borderRadius: '10px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 backgroundColor: 'var(--primary-accent)',
-                color: '#fff',
+                color: '#ffffff',
+                border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

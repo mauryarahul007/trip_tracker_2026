@@ -7,6 +7,11 @@ class Member {
   final String? linkedUserId;
   final String? avatarUrl;
   final String? upiId;
+  final String? revolutHandle;
+  final String? venmoHandle;
+  final String? cashAppHandle;
+  final String? paypalHandle;
+  final String? iban;
   final String? joinDate;
   final String? leaveDate;
 
@@ -19,6 +24,11 @@ class Member {
     this.linkedUserId,
     this.avatarUrl,
     this.upiId,
+    this.revolutHandle,
+    this.venmoHandle,
+    this.cashAppHandle,
+    this.paypalHandle,
+    this.iban,
     this.joinDate,
     this.leaveDate,
   });
@@ -32,6 +42,11 @@ class Member {
     String? linkedUserId,
     String? avatarUrl,
     String? upiId,
+    String? revolutHandle,
+    String? venmoHandle,
+    String? cashAppHandle,
+    String? paypalHandle,
+    String? iban,
     String? joinDate,
     String? leaveDate,
   }) {
@@ -44,6 +59,11 @@ class Member {
       linkedUserId: linkedUserId ?? this.linkedUserId,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       upiId: upiId ?? this.upiId,
+      revolutHandle: revolutHandle ?? this.revolutHandle,
+      venmoHandle: venmoHandle ?? this.venmoHandle,
+      cashAppHandle: cashAppHandle ?? this.cashAppHandle,
+      paypalHandle: paypalHandle ?? this.paypalHandle,
+      iban: iban ?? this.iban,
       joinDate: joinDate ?? this.joinDate,
       leaveDate: leaveDate ?? this.leaveDate,
     );
@@ -59,6 +79,11 @@ class Member {
       if (linkedUserId != null) 'linkedUserId': linkedUserId,
       if (avatarUrl != null) 'avatarUrl': avatarUrl,
       if (upiId != null) 'upiId': upiId,
+      if (revolutHandle != null) 'revolutHandle': revolutHandle,
+      if (venmoHandle != null) 'venmoHandle': venmoHandle,
+      if (cashAppHandle != null) 'cashAppHandle': cashAppHandle,
+      if (paypalHandle != null) 'paypalHandle': paypalHandle,
+      if (iban != null) 'iban': iban,
       if (joinDate != null) 'joinDate': joinDate,
       if (leaveDate != null) 'leaveDate': leaveDate,
     };
@@ -74,6 +99,11 @@ class Member {
       linkedUserId: (json['linkedUserId'] ?? json['linked_user_id']) as String?,
       avatarUrl: (json['avatarUrl'] ?? json['avatar_url']) as String?,
       upiId: (json['upiId'] ?? json['upi_id']) as String?,
+      revolutHandle: (json['revolutHandle'] ?? json['revolut_handle']) as String?,
+      venmoHandle: (json['venmoHandle'] ?? json['venmo_handle']) as String?,
+      cashAppHandle: (json['cashAppHandle'] ?? json['cash_app_handle']) as String?,
+      paypalHandle: (json['paypalHandle'] ?? json['paypal_handle']) as String?,
+      iban: json['iban'] as String?,
       joinDate: (json['joinDate'] ?? json['join_date']) as String?,
       leaveDate: (json['leaveDate'] ?? json['leave_date']) as String?,
     );

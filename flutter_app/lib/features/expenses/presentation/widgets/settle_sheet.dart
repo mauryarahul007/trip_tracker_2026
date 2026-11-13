@@ -332,6 +332,8 @@ class SettleSheetState extends ConsumerState<SettleSheet> {
     ref.watch(flagProvider(('enableUndoSettlement', widget.tripId))); // loaded before Confirm reads it
     ref.watch(flagProvider(('enablePartialSettleCoach', widget.tripId)));
     final upiOn = ref.watch(flagProvider(('enableUpiPayments', widget.tripId))).value ?? false;
+    final globalRailsOn = ref.watch(flagProvider(('enableGlobalPaymentRails', widget.tripId))).value ?? true;
+    final payRailsOn = upiOn || globalRailsOn;
     final shareOn = ref.watch(flagProvider(('enableWhatsAppSettlementShare', widget.tripId))).value ?? false;
     final roundingOn = ref.watch(flagProvider(('enableSettleRounding', widget.tripId))).value ?? true;
     final compactSummaryOn = ref.watch(flagProvider(('enableCompactSummary', widget.tripId))).value ?? true;
@@ -472,7 +474,7 @@ class SettleSheetState extends ConsumerState<SettleSheet> {
                         const SizedBox(height: 8),
                         AppTextField(key: const Key('settle-note'), controller: _note, label: l10n.ledNote),
                       ],
-                      if (upiOn) ...[
+                      if (payRailsOn) ...[
                         const SizedBox(height: 8),
                         AppTextField(
                           key: const Key('settle-upi'),
@@ -495,7 +497,7 @@ class SettleSheetState extends ConsumerState<SettleSheet> {
                             Expanded(
                               child: AppButton(
                                 key: const Key('settle-upi-apps'),
-                                label: 'Apps & QR',
+                                label: (globalRailsOn && widget.currency.toUpperCase() != 'INR') ? 'Pay Rails' : 'Apps & QR',
                                 icon: Icons.qr_code_2_rounded,
                                 variant: AppButtonVariant.secondary,
                                 onPressed: _openUpiSheet,
@@ -527,7 +529,7 @@ class SettleSheetState extends ConsumerState<SettleSheet> {
                 const SizedBox(height: 8),
                 AppTextField(key: const Key('settle-note'), controller: _note, label: l10n.ledNote),
               ],
-              if (upiOn) ...[
+              if (payRailsOn) ...[
                 const SizedBox(height: 8),
                 AppTextField(
                   key: const Key('settle-upi'),
@@ -550,7 +552,7 @@ class SettleSheetState extends ConsumerState<SettleSheet> {
                     Expanded(
                       child: AppButton(
                         key: const Key('settle-upi-apps'),
-                        label: 'Apps & QR',
+                        label: (globalRailsOn && widget.currency.toUpperCase() != 'INR') ? 'Pay Rails' : 'Apps & QR',
                         icon: Icons.qr_code_2_rounded,
                         variant: AppButtonVariant.secondary,
                         onPressed: _openUpiSheet,

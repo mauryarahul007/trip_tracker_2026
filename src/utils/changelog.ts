@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.93.0',
+    date: '2026-11-13',
+    changes: [
+      'Global Payment Rails: 1-tap debt settlement via Revolut, Venmo, Cash App, PayPal, and bank wire IBAN instructions alongside Indian UPI (Web & Flutter).',
+      'Smart Currency Auto-Routing: Automatically prioritizes settlement rails matching trip base currency with prefilled transfer amounts and recipient tags.',
+      'Visual Itinerary Modal Polish: Upgraded activity popups to solid high-contrast surfaces and added Itinerary view tabs to Notes & Plans on both Web and Flutter.',
+    ],
+  },
+  {
     version: '3.92.0',
     date: '2026-11-13',
     changes: [

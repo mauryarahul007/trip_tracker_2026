@@ -62,7 +62,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   PassSort _passSort = PassSort.time;
   var _selecting = false; // pass multi-select (needs enablePassEditDelete)
   final _picked = <String>{};
-  var _pane = 'checklist';
+  var _pane = 'itinerary';
 
   /// Ticks the user just made, shown at once and cleared when the stored list agrees. Keeps the checklist
   /// responsive (and later taps correct) even if a sync round-trip is slow or briefly sends an older copy back.

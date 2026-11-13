@@ -1,6 +1,9 @@
 import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { useTripStore } from '../store/tripStore';
-import type { Trip, Member, TripNote, ChecklistItem } from '../types';
+import type { Trip, Member, TripNote, ChecklistItem, Category, Expense } from '../types';
+import { VisualTravelTimeline } from './VisualTravelTimeline';
+import { getCatColor } from '../utils/categoryColor';
+import { getCurrencySymbol } from '../utils/currency';
 import { getDestinationWeatherRealtime, type WeatherData } from '../services/weatherService';
 import {
   IconPin,
@@ -30,11 +33,15 @@ const TripChatPanel = lazy(lazyImport(() =>
   import('./TripChatPanel').then((m) => ({ default: m.TripChatPanel }))
 ));
 
-type ViewMode = 'passes' | 'notes' | 'checklist' | 'chat';
+type ViewMode = 'itinerary' | 'passes' | 'notes' | 'checklist' | 'chat';
 
 type Props = {
   trip: Trip;
   members: Member[];
+  categories?: Category[];
+  expenses?: Expense[];
+  myMemberId?: string | null;
+  userId?: string | null;
   isAdmin?: boolean;
   // Set by App.tsx when a notification (e.g. a chat message) should land the
   // traveler directly on a specific sub-tab instead of whatever they last
@@ -49,6 +56,10 @@ type Props = {
   onRequestConfirm: (request: ConfirmRequest) => void;
   onOpenLiveLocationShare?: () => void;
   onOpenExpenseFromChat?: (expenseId: string) => void;
+  onReviewExpense?: (expense: Expense) => void;
+  onEditExpense?: (expense: Expense) => void;
+  onDeleteExpense?: (expense: Expense) => void;
+  onAddExpenseForDate?: (date: string, template?: { title?: string; category?: string }) => void;
   chatHasUnread?: boolean;
 };
 
@@ -395,7 +406,27 @@ function NoteContentView({ content, category }: { content: string; category?: st
   return <StandardNoteRenderer content={content} category={category} />;
 }
 
-export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onInitialViewModeConsumed, onChatViewActiveChange, onChatComposerFocusChange, onRequestConfirm, onOpenLiveLocationShare, onOpenExpenseFromChat, chatHasUnread }: Props) {
+export function ChecklistNotesTab({
+  trip,
+  members,
+  categories,
+  expenses,
+  myMemberId,
+  userId,
+  isAdmin,
+  initialViewMode,
+  onInitialViewModeConsumed,
+  onChatViewActiveChange,
+  onChatComposerFocusChange,
+  onRequestConfirm,
+  onOpenLiveLocationShare,
+  onOpenExpenseFromChat,
+  onReviewExpense,
+  onEditExpense,
+  onDeleteExpense,
+  onAddExpenseForDate,
+  chatHasUnread,
+}: Props) {
   // Always select live trip from store to react to changes
   const liveTrip = useTripStore((s) => s.trips.find((t) => t.id === trip.id)) || trip;
   const {
@@ -426,10 +457,24 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
   const isCalmPassportUi = isFeatureEnabled('enableCalmPassportUi', { tripId: liveTrip.id });
   const isChatSubTabEnabled = isChatEnabled && !isChatFirstNav && !isCalmPassportUi;
   const isTalkPackPass = isFeatureEnabled('enableNotesTalkPackPass', { tripId: liveTrip.id });
+  const isItineraryEnabled = isFeatureEnabled('enableItineraryPlanner', { tripId: liveTrip.id });
+
+  const membersMap = useMemo(() => {
+    const map: Record<string, Member> = {};
+    members.forEach((m) => {
+      map[m.id] = m;
+    });
+    return map;
+  }, [members]);
+
+  const currencySymbol = useMemo(() => getCurrencySymbol(liveTrip.baseCurrency), [liveTrip.baseCurrency]);
 
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    if (isChatSubTabEnabled && !isNotesEnabled && !isPassesEnabled) return 'chat';
+    if (initialViewMode) return initialViewMode;
+    if (isItineraryEnabled && (liveTrip.itinerary?.length || 0) > 0) return 'itinerary';
+    if (isChatSubTabEnabled && !isNotesEnabled && !isPassesEnabled && !isItineraryEnabled) return 'chat';
     if (isPassesEnabled && liveTrip.passes && liveTrip.passes.length > 0) return 'passes';
+    if (isItineraryEnabled) return 'itinerary';
     if (isNotesEnabled) return 'checklist';
     if (isChatSubTabEnabled) return 'chat';
     if (isPassesEnabled) return 'passes';
@@ -438,14 +483,17 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
 
   useEffect(() => {
     if (!isPassesEnabled && viewMode === 'passes') {
-      setViewMode(isNotesEnabled ? 'checklist' : isChatSubTabEnabled ? 'chat' : 'notes');
+      setViewMode(isItineraryEnabled ? 'itinerary' : isNotesEnabled ? 'checklist' : isChatSubTabEnabled ? 'chat' : 'notes');
+    } else if (!isItineraryEnabled && viewMode === 'itinerary') {
+      setViewMode(isNotesEnabled ? 'checklist' : isPassesEnabled ? 'passes' : 'notes');
     } else if (!isNotesEnabled && (viewMode === 'notes' || viewMode === 'checklist')) {
-      if (isChatSubTabEnabled) setViewMode('chat');
+      if (isItineraryEnabled) setViewMode('itinerary');
+      else if (isChatSubTabEnabled) setViewMode('chat');
       else if (isPassesEnabled) setViewMode('passes');
     } else if (!isChatSubTabEnabled && viewMode === 'chat') {
-      setViewMode(isNotesEnabled ? 'checklist' : isPassesEnabled ? 'passes' : 'notes');
+      setViewMode(isItineraryEnabled ? 'itinerary' : isNotesEnabled ? 'checklist' : isPassesEnabled ? 'passes' : 'notes');
     }
-  }, [isPassesEnabled, isNotesEnabled, isChatSubTabEnabled, viewMode]);
+  }, [isPassesEnabled, isNotesEnabled, isChatSubTabEnabled, isItineraryEnabled, viewMode]);
 
   useEffect(() => {
     if (!initialViewMode) return;
@@ -861,10 +909,12 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
               badge: chatHasUnread && viewMode !== 'chat' ? 'unread' : '',
             });
           }
+          if (isItineraryEnabled) segments.push({ id: 'itinerary', label: 'Itinerary', badge: String((liveTrip.itinerary || []).length) });
           if (isNotesEnabled) segments.push({ id: 'checklist', label: 'Pack', badge: totalCount > 0 ? `${completedCount}/${totalCount}` : '0' });
           if (isPassesEnabled) segments.push({ id: 'passes', label: 'Pass', badge: String(passes.length) });
           if (isNotesEnabled) segments.push({ id: 'notes', label: 'Notes', badge: String(notes.length) });
         } else {
+          if (isItineraryEnabled) segments.push({ id: 'itinerary', label: 'Itinerary', badge: String((liveTrip.itinerary || []).length) });
           if (isPassesEnabled) segments.push({ id: 'passes', label: 'Passes', badge: String(passes.length) });
           if (isNotesEnabled) segments.push({ id: 'notes', label: 'Notes', badge: String(notes.length) });
           if (isNotesEnabled) segments.push({ id: 'checklist', label: 'Checklist', badge: totalCount > 0 ? `${completedCount}/${totalCount}` : '0' });
@@ -914,6 +964,29 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
         );
       })()}
 
+      {/* ITINERARY & SCHEDULE VIEW */}
+      {viewMode === 'itinerary' && isItineraryEnabled && (
+        <div className="tab-pane-fade-in" style={{ padding: '0 4px 24px' }}>
+          <VisualTravelTimeline
+            trip={liveTrip}
+            members={membersMap}
+            categories={categories || []}
+            expenses={expenses || []}
+            passes={liveTrip.passes || []}
+            itinerary={liveTrip.itinerary || []}
+            currencySymbol={currencySymbol}
+            myMemberId={myMemberId || null}
+            isAdmin={Boolean(isAdmin)}
+            userId={userId || null}
+            onReviewExpense={onReviewExpense || (() => {})}
+            onEditExpense={onEditExpense || (() => {})}
+            onDeleteExpense={onDeleteExpense || (() => {})}
+            onAddExpenseForDate={onAddExpenseForDate}
+            getCatColor={getCatColor}
+          />
+        </div>
+      )}
+
       {/* 0. TRAVEL PASSES & TICKET WALLET VIEW */}
       {viewMode === 'passes' && isPassesEnabled && (
         <TravelPassWalletView
@@ -953,7 +1026,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
       )}
 
       {/* Instant In-Tab Search Bar (for Checklist & Notes) */}
-      {viewMode !== 'passes' && viewMode !== 'chat' && isNotesEnabled && (checklist.length > 0 || notes.length > 0) && (
+      {viewMode !== 'passes' && viewMode !== 'chat' && viewMode !== 'itinerary' && isNotesEnabled && (checklist.length > 0 || notes.length > 0) && (
         <div style={{ marginBottom: '12px' }}>
           <div className="input-icon-wrap" style={{ position: 'relative', width: '100%' }}>
             <IconSearch

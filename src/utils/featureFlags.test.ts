@@ -100,7 +100,7 @@ describe('featureFlags', () => {
       allArmed[k] = true;
     });
     expect(getPackStatus('core', allArmed).status).toBe('armed');
-    expect(getPackStatus('core', allArmed).activeCount).toBe(46);
+    expect(getPackStatus('core', allArmed).activeCount).toBe(47);
 
     const allSafed = { ...DEFAULT_FEATURE_FLAGS };
     getPackFlagKeys('core').forEach((k) => {
@@ -190,7 +190,7 @@ describe('featureFlags', () => {
 
   it('verifies that every flag in all packs can be enabled and disabled', () => {
     const allFlagKeys = Object.keys(DEFAULT_FEATURE_FLAGS) as (keyof typeof DEFAULT_FEATURE_FLAGS)[];
-    expect(allFlagKeys.length).toBe(220);
+    expect(allFlagKeys.length).toBe(221);
 
     allFlagKeys.forEach((flagKey) => {
       const disabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: false };

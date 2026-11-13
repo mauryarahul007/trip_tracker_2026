@@ -5850,3 +5850,32 @@ This document logs all meaningful technical decisions, library choices, design p
     - Wired into `notes_tab.dart` as an 'Itinerary' segment with live badge counters.
 * **Trade-offs Accepted:**
   - Itinerary activities are stored locally per device (`localStorage` and `SharedPreferences`) alongside trip data to enable zero-latency offline itinerary planning without requiring backend database schema migrations.
+
+
+---
+
+## 291. Global Payment Rails Expansion & Multi-Currency Settlement (Web & Flutter)
+* **Context:** In multi-currency trips and international travel squads, settlement was previously limited to Indian UPI (`upi://pay`), while global travelers using Revolut, Venmo, Cash App, PayPal, or SEPA/SWIFT bank wire transfers had to manually exchange handles and calculate conversions outside the app.
+* **Decision:**
+  - **Payment Rails Engine:**
+    - Implemented `PaymentRail` specifications and deep link builders in `src/utils/paymentRails.ts` (Web) and `flutter_app/lib/domain/logic/payment_rails_logic.dart` (Flutter).
+    - Supports:
+      1. **UPI:** `upi://pay?pa=...` with Google Pay, PhonePe, Paytm, CRED deep links + dynamic high-contrast QR code generation.
+      2. **Revolut:** `https://revolut.me/{handle}?amount={amount}&currency={curr}` with prefilled amount/currency.
+      3. **Venmo:** `venmo://paycharge?txn=pay&recipients={handle}&amount={amount}&note={note}` with web fallback.
+      4. **Cash App:** `https://cash.app/${handle}/{amount}` direct cashtag payment launcher.
+      5. **PayPal:** `https://paypal.me/{handle}/{amount}{curr}` global paypal.me link.
+      6. **Bank Wire / IBAN:** Formatted wire instructions generator with 1-tap clipboard copying.
+    - Currency auto-detection: Rails are prioritized automatically based on trip base currency (e.g., INR → UPI, EUR/GBP/CHF → Revolut, USD → Venmo/Cash App, etc.).
+  - **Ops Deck Feature Flag:**
+    - Registered `enableGlobalPaymentRails` (default `true`, 'core' pack) in `src/utils/featureFlags.ts` and `flutter_app/lib/domain/logic/flag_defaults.g.dart`.
+  - **Web Settlement UI Upgrade:**
+    - Upgraded `UpiPaymentModal.tsx` (`PaymentSettlementModal`) with segmented rail picker, handle sanitization, deep linking, dynamic QR generation, and non-custodial legal notices.
+    - Upgraded `BalancesSettlements.tsx` to detect `enableGlobalPaymentRails` and display "⚡ Pay Rails" / "⚡ UPI Pay" dynamic action chips on who-owes-whom transfer cards.
+    - Persistent handle storage via `localStorage` with `saveMemberPaymentHandles` and `getSavedMemberPaymentHandles`.
+  - **Flutter Settlement Sheet Upgrade:**
+    - Added `revolutHandle`, `venmoHandle`, `cashAppHandle`, `paypalHandle`, `iban` to `Member` in `flutter_app/lib/domain/models/member.dart`.
+    - Upgraded `UpiPaymentSheet.dart` with horizontal choice chips for rails, app launchers, wire instructions preview card, and SharedPreferences handle caching via `savedRailHandle` and `saveRailHandle`.
+    - Upgraded `settle_sheet.dart` to support `enableGlobalPaymentRails`.
+* **Trade-offs Accepted:**
+  - Non-custodial settlement: Trip Tracker does not touch user funds or act as an intermediary payment processor; deep links hand off directly to native banking/payment apps or official web portals. Handles are securely cached locally per member.

@@ -23,6 +23,7 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
       'enableTripCloseout',
       'enableWhatsAppSettlementShare',
       'enableUpiPayments',
+      'enableGlobalPaymentRails',
       'enableTripShareLink',
       'enableInviteConversion',
       'enableExtendedUndo',
@@ -627,7 +628,16 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
       'ON: Shows a toggle in the expense ledger allowing travelers to switch to an interactive Day-by-Day Journey Timeline combining expenses, flights, trains, stays, and daily running totals. OFF: Ledger stays in standard day-grouped list.',
     category: 'transit',
     pack: 'travel',
-    defaultEnabledForUsers: false,
+    defaultEnabledForUsers: true,
+  },
+  enableGlobalPaymentRails: {
+    key: 'enableGlobalPaymentRails',
+    label: 'Global Payment Rails (Revolut, Venmo, Cash App, PayPal, IBAN)',
+    description:
+      'ON: Unlocks 1-tap international debt settlement via Revolut, Venmo, Cash App, PayPal, and bank wire IBAN copying alongside UPI. OFF: Settlement defaults to local UPI and cash.',
+    category: 'fintech',
+    pack: 'core',
+    defaultEnabledForUsers: true,
   },
   enableItineraryPlanner: {
     key: 'enableItineraryPlanner',
@@ -636,7 +646,7 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
       'ON: Unlocks interactive day-by-day itinerary planning with scheduled activities, transit/passes, Google Maps directions, and 1-tap expense logging. OFF: Itinerary planner controls are hidden.',
     category: 'transit',
     pack: 'travel',
-    defaultEnabledForUsers: false,
+    defaultEnabledForUsers: true,
   },
   enablePassSorting: {
     key: 'enablePassSorting',
@@ -2117,6 +2127,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableTripCloseout: true,
   enableWhatsAppSettlementShare: true,
   enableUpiPayments: true,
+  enableGlobalPaymentRails: true,
   enableTripShareLink: true,
   enableInviteConversion: true,
   enableExtendedUndo: true,
@@ -2140,8 +2151,8 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
 
   // Travel — pass holders (chrome gated; route stops / tiles / data-saver OFF)
   enableTravelPasses: true,
-  enableVisualTravelTimeline: false,
-  enableItineraryPlanner: false,
+  enableVisualTravelTimeline: true,
+  enableItineraryPlanner: true,
   enablePassSorting: true,
   enableNextUpCapsule: true,
   enableGateScanner: true,

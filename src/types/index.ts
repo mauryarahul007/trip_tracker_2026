@@ -201,6 +201,15 @@ export interface TripFxConfig {
   markupPercent?: number;
 }
 
+export interface MemberPaymentHandles {
+  upiId?: string;
+  revolutHandle?: string;
+  venmoHandle?: string;
+  cashAppHandle?: string;
+  paypalHandle?: string;
+  iban?: string;
+}
+
 export interface Member {
   id: string;
   name: string;
@@ -209,6 +218,7 @@ export interface Member {
   linkedUserId?: string | null; // set once this member "claims" their identity via /join
   avatarUrl?: string | null; // from the linked account's Google profile, if any
   upiId?: string | null; // optional UPI ID / VPA for 1-tap debt settlement
+  paymentHandles?: MemberPaymentHandles; // global payment rails (Revolut, Venmo, Cash App, PayPal, IBAN)
   joinDate?: string | null; // ISO date -- member only present in the trip from this date (inclusive)
   leaveDate?: string | null; // ISO date -- member only present in the trip through this date (inclusive)
 }
