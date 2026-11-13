@@ -1207,7 +1207,36 @@ class _Itemized extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Text(l10n.formItemSharedBy, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
+                  Row(
+                    children: [
+                      Text(l10n.formItemSharedBy, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: () => controller.updateItem(item.id, assigned: [for (final m in members) m.id]),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Text('All', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: tokens.primaryAccent)),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      InkWell(
+                        onTap: () => controller.updateItem(item.id, assigned: const []),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Text('Clear', style: TextStyle(fontSize: 11, color: tokens.textMuted)),
+                        ),
+                      ),
+                      const Spacer(),
+                      if (item.assignedMemberIds.length > 1 && item.amount > 0)
+                        Flexible(
+                          child: Text(
+                            '${formatMoney(context, item.amount / item.assignedMemberIds.length, currency)} ea',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: tokens.primaryAccent),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                  ),
                   Wrap(
                     spacing: 6,
                     children: [
@@ -1268,6 +1297,62 @@ class _Itemized extends StatelessWidget {
               onPressed: controller.syncItemizedTotal,
               child: Text(l10n.formUseTotal(formatMoney(context, total, currency))),
             ),
+          ),
+        if (total > 0 && state.items.isNotEmpty)
+          Builder(
+            builder: (context) {
+              final shares = controller.preview();
+              if (shares.isEmpty) return const SizedBox.shrink();
+              return Container(
+                margin: const EdgeInsets.only(top: 8, bottom: 4),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: tokens.primaryAccent.withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: tokens.primaryAccent.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Member Shares (incl. tax/tip)',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: tokens.textPrimary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(formatMoney(context, total, currency), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: tokens.primaryAccent)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        for (final m in members)
+                          if (shares.containsKey(m.id) && (shares[m.id] ?? 0) > 0)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: tokens.bgSurface,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: tokens.primaryAccent.withValues(alpha: 0.3)),
+                              ),
+                              child: Text(
+                                '${m.name}: ${formatMoney(context, shares[m.id]!, currency)}',
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: tokens.textPrimary),
+                              ),
+                            ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
       ],
     );

@@ -17044,6 +17044,57 @@ body:has([role="dialog"]) .nav-floating-fab-wrap {
   color: #f59e0b;
 }
 
+/* Activity Card Style */
+.vtt-activity-card {
+  border-left: 3.5px solid #8b5cf6;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, var(--bg-surface) 100%);
+}
+.vtt-activity-card.completed {
+  opacity: 0.72;
+}
+.vtt-activity-card.completed .vtt-item-title {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+.vtt-activity-icon-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(139, 92, 246, 0.12);
+  color: #8b5cf6;
+  font-size: 15px;
+}
+.vtt-activity-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  accent-color: var(--primary-accent);
+  cursor: pointer;
+}
+.vtt-action-btn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.vtt-action-btn-pill:hover {
+  background: var(--bg-surface-hover);
+  color: var(--primary-accent);
+  border-color: var(--primary-accent);
+}
+
 /* Expense Card Style */
 .vtt-expense-cat-badge {
   width: 30px;

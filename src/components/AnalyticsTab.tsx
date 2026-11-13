@@ -6,6 +6,7 @@ import { getCurrencySymbol, formatAmount } from '../utils/currency';
 import { computeBurnRateInsight } from '../utils/burnRate';
 import { useTripStore } from '../store/tripStore';
 import { RollingNumber } from './common/RollingNumber';
+import { BudgetPacingCard } from './BudgetPacingCard';
 
 type CategoryDatum = { id: string; name: string; icon: string; amount: number; percentage: number };
 type MemberSpend = { id: string; name: string; amount: number; percentage: number };
@@ -118,6 +119,8 @@ export function AnalyticsTab({
       )}
 
       <h3 style={{ fontSize: '18px', marginBottom: '20px' }}>At a Glance</h3>
+
+      {trip && <BudgetPacingCard trip={trip} expenses={expenses} />}
 
       {/* 1. Key Statistics Cards Grid */}
       {/* minmax(0, 1fr), not plain 1fr — a bare 1fr track's minimum size

@@ -3273,5 +3273,39 @@
     "shippedAt": "2026-11-12T22:03:04.747Z",
     "shippedBy": "agent",
     "shippedNote": "Shipped in 70afc31 (v3.91.7): FLUTTER-ENH-S1…S5"
+  },
+  {
+    "id": "FEAT-207",
+    "title": "Daily Budget Pacing Dial & Itemized Receipt Bill Splitter (Web & Flutter)",
+    "description": " FinTech burn-rate velocity dial with live variance forecasting, pro-rata tax/tip itemized bill splitting with per-item member selectors and real-time cost previews on Web and Flutter.",
+    "category": "fintech",
+    "status": "shipped",
+    "linkedFlag": "enableDailyBudgetPacing",
+    "requestedBy": "user",
+    "environment": {
+      "platform": "cross-platform"
+    },
+    "createdAt": "2026-11-13T13:34:40.253Z",
+    "updatedAt": "2026-11-13T13:34:40.253Z",
+    "shippedAt": "2026-11-13T13:34:40.253Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped in v3.92.0: Option A Fintech & Pacing"
+  },
+  {
+    "id": "FEAT-208",
+    "title": "Day-by-Day Visual Itinerary & Schedule Planner (Web & Flutter)",
+    "description": "Interactive chronological schedule combining planned activities, travel passes, and expenses with Google Maps directions navigation, completion checkboxes, and 1-tap bill creation.",
+    "category": "travel",
+    "status": "shipped",
+    "linkedFlag": "enableItineraryPlanner",
+    "requestedBy": "user",
+    "environment": {
+      "platform": "cross-platform"
+    },
+    "createdAt": "2026-11-13T13:34:40.253Z",
+    "updatedAt": "2026-11-13T13:34:40.253Z",
+    "shippedAt": "2026-11-13T13:34:40.253Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped in v3.92.0: Option B Day-by-Day Itinerary"
   }
 ]

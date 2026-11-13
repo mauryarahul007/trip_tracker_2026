@@ -5814,3 +5814,39 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Flutter-only; no new flags; shared web `boardingPassLogin` default stays staged-off while Flutter provider ships boarding; notch remains available only when polish is OFF.
 
+
+
+---
+
+## 289. Daily Budget Pacing Dial & Itemized Receipt Bill Splitter (Web & Flutter) (v3.91.7)
+* **Context:** Following the competitive analysis against Splitwise, Wanderlog, and TravelSpend, travelers lacked: (1) an immediate, live burn-rate dial showing today's spend versus recommended daily allowance, and (2) frictionless itemized bill splitting with per-item "All"/"Clear" quick toggles and live member cost preview including proportional tax/tip allocations.
+* **Decision:**
+  - **Budget Pacing Engine:** Built unified mathematical logic in `src/utils/budgetPacing.ts` (Web) and `flutter_app/lib/domain/logic/budget_pacing_logic.dart` (Flutter). Calculates elapsed/remaining days, planned vs dynamic adjusted daily budget, today's burn ratio, and forecast variance status (`onTrack`, `warning` when exceeding pace by >25%, `overBudget`).
+  - **Budget Pacing UI:**
+    - Web: Implemented `BudgetPacingCard.tsx` mounted inside `AnalyticsTab.tsx`, featuring radial/linear progress bars, three-column metric summary (Total Spent, Remaining, Burn Rate), dynamic status pill badges, and an interactive Set/Edit Budget modal.
+    - Flutter: Implemented `DailyBudgetPacingCard.dart` in the Calm Passport design language inside `spend_insights_v2.dart`, with persistent preference storage via SharedPreferences (`trip.budget.$tripId`).
+  - **Enhanced Line-Item Receipt Splitter:**
+    - Web: Implemented `src/utils/itemizedSplit.ts` with comprehensive unit tests for pro-rata tax, tip, and discount calculation. Upgraded `ExpenseForm.tsx` with one-tap "All" and "Clear" member selectors per item, per-item share badges, and a live member cost preview table with proportional visual bars.
+    - Flutter: Added "All" and "Clear" quick action buttons to item chips, per-member cost badges, and a responsive live member share preview card under `_Itemized` in `expense_form_screen.dart`.
+* **Trade-offs Accepted:**
+  - Trip budget preferences are cached locally per device (`localStorage` and `SharedPreferences`) alongside the `Trip` data model to ensure instantaneous zero-latency loads and offline editing without requiring Supabase schema migrations.
+
+---
+
+## 290. Day-by-Day Visual Itinerary & Schedule Planner (Web & Flutter)
+* **Context:** Following the competitive analysis against Wanderlog and TripIt, travelers lacked a unified day-by-day chronological view combining scheduled activities, transit passes (flights, trains, buses), and expenses with directions and one-tap expense logging.
+* **Decision:**
+  - **Domain Model & Chronological Engine:**
+    - Built `ItineraryItem` and timeline aggregation engine in `src/utils/itineraryTimeline.ts` (Web) and `flutter_app/lib/domain/logic/itinerary_timeline_logic.dart` (Flutter). Aggregates activities, passes, and expenses chronologically into day groups with Google Maps navigation URLs and 12-hour AM/PM time formatting.
+  - **Ops Deck Feature Flag:**
+    - Registered `enableItineraryPlanner` in `src/utils/featureFlags.ts` and `flutter_app/lib/domain/logic/flag_defaults.g.dart` under the 'travel' consumer pack.
+  - **Web Visual Timeline Upgrade:**
+    - Added activity cards to `VisualTravelTimeline.tsx` with completion checkboxes, category pills, location directions launcher, and '+ Bill' bridge to log an expense directly from an activity with prefilled title and date.
+    - Created `ItineraryActivityModal.tsx` and state actions (`addItineraryItem`, `updateItineraryItem`, `deleteItineraryItem`, `toggleItineraryItem`) in `tripStore.ts` with localStorage persistence.
+  - **Flutter Day-by-Day Itinerary View:**
+    - Created `tripItineraryProvider` in `itinerary_providers.dart` with SharedPreferences persistence under `trip.itinerary.$tripId`.
+    - Implemented `DayItineraryView.dart` with horizontal day filter chips, activity completion toggles, Google Maps launcher, and '+ Bill' bridge to `ExpenseFormScreen`.
+    - Implemented `ItineraryActivitySheet.dart` in Calm Passport design language.
+    - Wired into `notes_tab.dart` as an 'Itinerary' segment with live badge counters.
+* **Trade-offs Accepted:**
+  - Itinerary activities are stored locally per device (`localStorage` and `SharedPreferences`) alongside trip data to enable zero-latency offline itinerary planning without requiring backend database schema migrations.

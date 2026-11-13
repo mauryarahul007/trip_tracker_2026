@@ -8,7 +8,6 @@ import '../../../core/clock.dart';
 import '../../../core/platform/motion.dart';
 import '../../../data/providers.dart' show flagProvider;
 import '../../../domain/logic/flag_defaults.g.dart' show defaultFeatureFlags;
-import '../../../l10n/l10n_ext.dart';
 
 import '../../../core/platform/external_launcher.dart';
 import '../../../core/platform/haptics.dart';

@@ -23,6 +23,7 @@ import { splitConfigForSave } from '../utils/splitConfigForSave';
 import { triggerHaptic } from '../utils/haptics';
 import { convertCurrency, POPULAR_CURRENCIES } from '../utils/currencyConverter';
 import { parseReceiptText, type ExtractedReceiptData } from '../utils/receiptOcr';
+import { calculateItemizedBreakdown } from '../utils/itemizedSplit';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { ReceiptScannerModal } from './ReceiptScannerModal';
 import { getReceiptSignedUrl } from '../services/tripApi';
@@ -666,6 +667,10 @@ export function ExpenseForm({
     (sum, id) => sum + (parseFloat(splitConfig[id] || '') || 0),
     0
   );
+
+  const itemizedBreakdownResult = useMemo(() => {
+    return calculateItemizedBreakdown(receiptItems, receiptTax, receiptTip, receiptDiscount, splitSelectedIds);
+  }, [receiptItems, receiptTax, receiptTip, receiptDiscount, splitSelectedIds]);
 
   const splitConfigTarget = splitMode === 'percentage' ? 100 : splitMode === 'exact' ? (parseFloat(amount) || 0) : null;
   const splitConfigMatches = splitConfigTarget === null || Math.abs(splitConfigSum - splitConfigTarget) < 0.02;
@@ -2514,28 +2519,55 @@ export function ExpenseForm({
 
                     {/* Member Assignees Selector for this Item */}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginRight: '4px' }}>Shared by:</span>
-                      {visibleMembers.map((m) => {
-                        const isAssigned = item.assignedMemberIds.includes(m.id);
-                        return (
-                          <button
-                            key={m.id}
-                            type="button"
-                            onClick={() => handleToggleMemberOnItem(item.id, m.id)}
-                            style={{
-                              padding: '2px 8px',
-                              borderRadius: '999px',
-                              fontSize: '11px',
-                              border: isAssigned ? '1px solid var(--primary-accent)' : '1px solid var(--border-color)',
-                              background: isAssigned ? 'rgba(15, 169, 143, 0.12)' : 'transparent',
-                              color: isAssigned ? 'var(--primary-accent)' : 'var(--text-muted)',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            {isAssigned ? '✓ ' : '+ '}{m.name}
-                          </button>
-                        );
-                      })}
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginRight: '2px' }}>Shared by:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          handleUpdateReceiptItem(item.id, { assignedMemberIds: visibleMembers.map((m) => m.id) });
+                        }}
+                        style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                      >
+                        All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          handleUpdateReceiptItem(item.id, { assignedMemberIds: [] });
+                        }}
+                        style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                      >
+                        Clear
+                      </button>
+                      {item.assignedMemberIds.length > 1 && item.amount > 0 && (
+                        <span style={{ fontSize: '11px', color: 'var(--primary-accent)', fontWeight: 600, marginLeft: 'auto' }}>
+                          {currencySymbol}{(item.amount / item.assignedMemberIds.length).toFixed(2)} ea
+                        </span>
+                      )}
+                      <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '2px' }}>
+                        {visibleMembers.map((m) => {
+                          const isAssigned = item.assignedMemberIds.includes(m.id);
+                          return (
+                            <button
+                              key={m.id}
+                              type="button"
+                              onClick={() => handleToggleMemberOnItem(item.id, m.id)}
+                              style={{
+                                padding: '2px 8px',
+                                borderRadius: '999px',
+                                fontSize: '11px',
+                                border: isAssigned ? '1px solid var(--primary-accent)' : '1px solid var(--border-color)',
+                                background: isAssigned ? 'rgba(15, 169, 143, 0.12)' : 'transparent',
+                                color: isAssigned ? 'var(--primary-accent)' : 'var(--text-muted)',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {isAssigned ? '✓ ' : '+ '}{m.name}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -2607,6 +2639,67 @@ export function ExpenseForm({
                 Sync Total
               </button>
             </div>
+
+            {/* Live Member Share Breakdown */}
+            {receiptItems.length > 0 && splitSelectedIds.length > 0 && (
+              <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px dashed var(--border-color)' }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Member Shares (incl. pro-rata tax & tip):</span>
+                  <span style={{ color: 'var(--primary-accent)' }}>{currencySymbol}{formatMoneyNumber(itemizedBreakdownResult.calculatedTotal, currencySymbol)}</span>
+                </div>
+
+                {/* Segmented Proportion Bar */}
+                <div className="split-proportion-bar" style={{ height: '6px', borderRadius: '3px', overflow: 'hidden', display: 'flex', marginBottom: '8px', background: 'var(--border-color)' }}>
+                  {splitSelectedIds.map((id) => {
+                    const member = visibleMembers.find((m) => m.id === id);
+                    const brk = itemizedBreakdownResult.memberBreakdowns[id];
+                    const memberOwed = brk?.totalOwed || 0;
+                    const pct = itemizedBreakdownResult.calculatedTotal > 0 ? (memberOwed / itemizedBreakdownResult.calculatedTotal) * 100 : 0;
+                    return (
+                      <div
+                        key={id}
+                        className="split-proportion-segment"
+                        style={{
+                          width: `${Math.max(0, Math.min(100, pct))}%`,
+                          backgroundColor: avatarColorForName(member?.name || id),
+                        }}
+                        title={`${member?.name || id}: ${currencySymbol}${memberOwed.toFixed(2)} (${pct.toFixed(1)}%)`}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Member breakdown pills */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '6px' }}>
+                  {splitSelectedIds.map((id) => {
+                    const member = visibleMembers.find((m) => m.id === id);
+                    const brk = itemizedBreakdownResult.memberBreakdowns[id];
+                    const memberOwed = brk?.totalOwed || 0;
+                    return (
+                      <div
+                        key={id}
+                        style={{
+                          padding: '6px 8px',
+                          borderRadius: '8px',
+                          background: 'var(--bg-surface, #fff)',
+                          border: '1px solid var(--border-color)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '75px' }}>
+                          {member?.name || 'Member'}
+                        </span>
+                        <span style={{ fontSize: '11.5px', fontWeight: 700, color: memberOwed > 0 ? 'var(--primary-accent)' : 'var(--text-muted)' }}>
+                          {currencySymbol}{formatMoneyNumber(memberOwed, currencySymbol)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

@@ -45,6 +45,8 @@ import '../../travel/presentation/weather_badge.dart';
 import '../../members/presentation/members_tab.dart';
 import '../../trip_details/application/trip_nav.dart';
 import 'pass_card.dart';
+import '../application/itinerary_providers.dart';
+import 'widgets/day_itinerary_view.dart';
 
 const _categories = ['packing', 'prep', 'documents', 'medical', 'general'];
 
@@ -118,6 +120,8 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     // Calm Passport gives Chat its own trip tab, so Plans does not repeat it.
     final calm = ref.watch(compassFlagProvider((calmPassportFlag, widget.tripId)));
     final showChat = chatOn && !chatFirst && !calm;
+    final itineraryOn = _flag('enableItineraryPlanner');
+    final itineraryItems = ref.watch(tripItineraryProvider(widget.tripId));
     final passesOn = _flag('enableTravelPasses');
     final tidyOn = _flag('enableTidyNotes');
     final packing = _flag('enablePackingAssistant');
@@ -125,6 +129,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     if (!showChat && _pane == 'chat') _pane = 'checklist';
 
     final panes = [
+      if (itineraryOn) ('itinerary', 'Itinerary'),
       if (passesOn) ('passes', l10n.notesPasses),
       ('checklist', l10n.notesCheck),
       ('notes', l10n.notesNotes),
@@ -152,6 +157,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
                   label: p.$1 == 'chat' && unread
                       ? Text(p.$2, key: const Key('notes-chat-unread'), maxLines: 1)
                       : switch (p.$1) {
+                          'itinerary' => _countLabel(p.$2, itineraryItems.length),
                           'passes' => _countLabel(p.$2, trip.passes.length),
                           'checklist' => _countLabel(p.$2, trip.checklist.length),
                           'notes' when tidyOn => _countLabel(p.$2, trip.notes.length),
@@ -174,6 +180,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
         ),
         Expanded(
           child: switch (_pane) {
+            'itinerary' => DayItineraryView(tripId: widget.tripId),
             'passes' => _passesPane(context, trip),
             'notes' => _notes(context, trip.notes),
             'chat' => ChatPane(tripId: widget.tripId),

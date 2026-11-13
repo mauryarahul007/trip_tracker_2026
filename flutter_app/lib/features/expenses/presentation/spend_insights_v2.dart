@@ -22,6 +22,9 @@ import '../../../shared/widgets/app_surface.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
 import '../application/trip_budget.dart';
+import '../../../l10n/l10n_ext.dart';
+import '../../../shared/widgets/ask_text.dart';
+import '../../../shared/widgets/daily_budget_pacing_card.dart';
 import 'widgets/expense_detail_sheet.dart';
 
 /// Flag `enableInsightsV2`: the upgraded Insights page in the Calm Passport look. Hero total, budget pace, daily
@@ -94,6 +97,25 @@ class SpendInsightsV2Body extends ConsumerWidget {
                 avg: money(avg),
                 projected: burn == null ? null : money(burn.projectedTotal),
                 budget: budget > 0 ? (spent: total, budget: budget, label: money) : null,
+              ),
+              if (budgetOn && trip != null)
+                DailyBudgetPacingCard(
+                  startDate: trip.startDate,
+                  endDate: trip.endDate,
+                  budget: budget,
+                  expenses: expenses,
+                  currency: currency,
+                  onSetBudget: () async {
+                    final text = await askText(
+                      context,
+                      context.l10n.ledBudgetPrompt,
+                      initial: budget > 0 ? '${budget.round()}' : '',
+                    );
+                    if (text == null) return;
+                    final parsed = double.tryParse(text.trim()) ?? 0.0;
+                    final v = parsed.isFinite ? parsed : 0.0;
+                    await ref.read(tripBudgetProvider(tripId).notifier).set(v < 0 ? 0 : v);
+                  },
               ),
               section(
                 'Daily spend',

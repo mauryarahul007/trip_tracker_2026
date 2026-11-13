@@ -3585,7 +3585,7 @@ export default function App() {
             onSave={handleSaveExpense}
             onCancel={handleCancelExpenseForm}
             onOpenFxRates={
-              isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip.id, userId: userId || undefined })
+              activeTrip && isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip.id, userId: userId || undefined })
                 ? () => setShowFxRates(true)
                 : undefined
             }

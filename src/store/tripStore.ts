@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip, TripStop, ChecklistItem, TripNote, MemberRole, ItemizedReceiptConfig, TravelPass, TripFxConfig } from '../types';
+import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip, TripStop, ChecklistItem, TripNote, MemberRole, ItemizedReceiptConfig, TravelPass, TripFxConfig, ItineraryItem } from '../types';
 import type { FeatureFlagKey, ConsumerPackId } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive, getPackFlagKeys } from '../utils/featureFlags';
 import { trackGrowthEvent } from '../utils/growthTelemetry';
@@ -80,6 +80,61 @@ import { saveOfflineReceipt, getOfflineReceipt, deleteOfflineReceipt } from '../
 import { savePassAttachment, deletePassAttachment } from '../services/passAttachmentStore';
 import { schedulePassReminders, cancelPassReminders, rescheduleTripPassReminders } from '../utils/passReminders';
 import { validateAndSanitizeBackup } from '../utils/backupValidation';
+
+export function getStoredTripBudget(tripId: string): number | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const raw = localStorage.getItem(`trip.budget.${tripId}`) || localStorage.getItem(`trip_budget_${tripId}`);
+    if (!raw) return undefined;
+    const val = parseFloat(raw);
+    return Number.isFinite(val) && val > 0 ? val : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function setStoredTripBudget(tripId: string, budget: number | undefined): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (!budget || budget <= 0) {
+      localStorage.removeItem(`trip.budget.${tripId}`);
+      localStorage.removeItem(`trip_budget_${tripId}`);
+    } else {
+      localStorage.setItem(`trip.budget.${tripId}`, String(budget));
+      localStorage.setItem(`trip_budget_${tripId}`, String(budget));
+    }
+  } catch (e) {
+    console.warn('Failed to store trip budget:', e);
+  }
+}
+
+export function getStoredTripItinerary(tripId: string): ItineraryItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(`trip.itinerary.${tripId}`) || localStorage.getItem(`trip_itinerary_${tripId}`);
+    if (!raw) return [];
+    const items = JSON.parse(raw);
+    return Array.isArray(items) ? items : [];
+  } catch {
+    return [];
+  }
+}
+
+export function setStoredTripItinerary(tripId: string, items: ItineraryItem[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (!items || items.length === 0) {
+      localStorage.removeItem(`trip.itinerary.${tripId}`);
+      localStorage.removeItem(`trip_itinerary_${tripId}`);
+    } else {
+      const serialized = JSON.stringify(items);
+      localStorage.setItem(`trip.itinerary.${tripId}`, serialized);
+      localStorage.setItem(`trip_itinerary_${tripId}`, serialized);
+    }
+  } catch (e) {
+    console.warn('Failed to store trip itinerary:', e);
+  }
+}
 
 // Offline capture falls back to a raw-coordinate placeName (see geolocation.ts).
 // Once we're syncing (guaranteed online), upgrade it to a real place name.
@@ -212,6 +267,13 @@ interface TripStore extends TripState {
   recordSplitwiseImport: (id: string, count: number) => Promise<void>;
   deleteTrip: (id: string) => Promise<void>;
   duplicateTrip: (tripId: string) => Promise<void>;
+  setTripBudget: (tripId: string, budget: number | undefined) => Promise<void>;
+
+  // Itinerary Actions
+  addItineraryItem: (tripId: string, item: Omit<ItineraryItem, 'id' | 'tripId' | 'createdAt' | 'updatedAt'>) => Promise<ItineraryItem>;
+  updateItineraryItem: (tripId: string, itemId: string, patch: Partial<Omit<ItineraryItem, 'id' | 'createdAt'>>) => Promise<void>;
+  deleteItineraryItem: (tripId: string, itemId: string) => Promise<void>;
+  toggleItineraryItem: (tripId: string, itemId: string) => Promise<void>;
 
   // Checklist & Notes Actions
   addChecklistItem: (tripId: string, item: Omit<ChecklistItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -709,15 +771,20 @@ export function sanitizeTripsPasses(trips: Trip[]): { sanitizedTrips: Trip[]; ha
       }
       return p;
     });
+    const storedBudget = getStoredTripBudget(t.id);
+    const enrichedBudget = t.budget ?? storedBudget;
+    const storedItinerary = getStoredTripItinerary(t.id);
+    const enrichedItinerary = t.itinerary && t.itinerary.length > 0 ? t.itinerary : (storedItinerary.length > 0 ? storedItinerary : t.itinerary);
     if (modified) {
       if (!isMissingSupabaseEnv) {
         updateTripPasses(t.id, passes).catch((err) => {
           console.warn('Background Supabase pass sanitization error:', err);
         });
       }
-      return { ...t, passes };
+      return { ...t, passes, budget: enrichedBudget, itinerary: enrichedItinerary };
     }
-    return t;
+    const needsUpdate = t.budget !== enrichedBudget || t.itinerary !== enrichedItinerary;
+    return needsUpdate ? { ...t, budget: enrichedBudget, itinerary: enrichedItinerary } : t;
   });
   return { sanitizedTrips, hadDataUrls };
 }
@@ -2125,6 +2192,74 @@ export const useTripStore = create<TripStore>()(
           queueExtras();
         }
       }
+    },
+
+    setTripBudget: async (tripId, budget) => {
+      const clean = typeof budget === 'number' && Number.isFinite(budget) && budget > 0 ? Math.round(budget) : undefined;
+      setStoredTripBudget(tripId, clean);
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, budget: clean } : t)),
+      }));
+    },
+
+    addItineraryItem: async (tripId, itemData) => {
+      const id = newId();
+      const now = Date.now();
+      const newItem: ItineraryItem = {
+        ...itemData,
+        id,
+        tripId,
+        createdAt: now,
+        updatedAt: now,
+      };
+      set((state) => {
+        const trip = state.trips.find((t) => t.id === tripId);
+        const updated = [...(trip?.itinerary || []), newItem];
+        setStoredTripItinerary(tripId, updated);
+        return {
+          trips: state.trips.map((t) => (t.id === tripId ? { ...t, itinerary: updated } : t)),
+        };
+      });
+      return newItem;
+    },
+
+    updateItineraryItem: async (tripId, itemId, patch) => {
+      const now = Date.now();
+      set((state) => {
+        const trip = state.trips.find((t) => t.id === tripId);
+        const updated = (trip?.itinerary || []).map((i) =>
+          i.id === itemId ? { ...i, ...patch, updatedAt: now } : i
+        );
+        setStoredTripItinerary(tripId, updated);
+        return {
+          trips: state.trips.map((t) => (t.id === tripId ? { ...t, itinerary: updated } : t)),
+        };
+      });
+    },
+
+    deleteItineraryItem: async (tripId, itemId) => {
+      set((state) => {
+        const trip = state.trips.find((t) => t.id === tripId);
+        const updated = (trip?.itinerary || []).filter((i) => i.id !== itemId);
+        setStoredTripItinerary(tripId, updated);
+        return {
+          trips: state.trips.map((t) => (t.id === tripId ? { ...t, itinerary: updated } : t)),
+        };
+      });
+    },
+
+    toggleItineraryItem: async (tripId, itemId) => {
+      const now = Date.now();
+      set((state) => {
+        const trip = state.trips.find((t) => t.id === tripId);
+        const updated = (trip?.itinerary || []).map((i) =>
+          i.id === itemId ? { ...i, completed: !i.completed, updatedAt: now } : i
+        );
+        setStoredTripItinerary(tripId, updated);
+        return {
+          trips: state.trips.map((t) => (t.id === tripId ? { ...t, itinerary: updated } : t)),
+        };
+      });
     },
 
     addChecklistItem: async (tripId, itemData) => {

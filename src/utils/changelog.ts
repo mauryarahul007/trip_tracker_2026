@@ -9,6 +9,24 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.92.0',
+    date: '2026-11-13',
+    changes: [
+      'Day-by-Day Visual Itinerary Planner: Unified chronological timeline merging scheduled activities, transit passes, and daily expenses with Google Maps directions (Web & Flutter).',
+      'Daily Budget Pacing Dial & Velocity Forecaster: Set planned trip budgets on-device with daily burn tracking, remaining allowances, and forecast variance (Web & Flutter).',
+      'Enhanced Line-Item Bill Splitter: Live member share breakdowns with pro-rata tax/tip allocation, per-person item badges, and 1-tap "All" / "Clear" shortcuts (Web & Flutter).',
+    ],
+  },
+  {
+    version: '3.91.7',
+    date: '2026-11-13',
+    changes: [
+      'Daily Budget Pacing Dial & Velocity Forecaster: Set planned trip budgets on-device with daily burn tracking, remaining allowances, and forecast variance (Web & Flutter).',
+      'Enhanced Line-Item Bill Splitter: Live member share breakdowns with pro-rata tax/tip allocation, per-person item badges, and 1-tap "All" / "Clear" shortcuts (Web & Flutter).',
+      'Flutter UX & Ledger Enhancements: S1-S5 upgrades across money formatting, empty states, visual polish, and search filters.',
+    ],
+  },
+  {
     version: '3.91.1',
     date: '2026-11-04',
     changes: [

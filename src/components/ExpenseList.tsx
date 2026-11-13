@@ -1240,6 +1240,7 @@ export function ExpenseList({
           categories={categories}
           expenses={filteredExpenses}
           passes={trip?.passes || []}
+          itinerary={trip?.itinerary || []}
           currencySymbol={currencySymbol}
           myMemberId={myMemberId}
           isAdmin={isAdmin}
@@ -1247,7 +1248,7 @@ export function ExpenseList({
           onReviewExpense={onReview}
           onEditExpense={onEdit}
           onDeleteExpense={onDelete}
-          onAddExpenseForDate={(date) => onAddExpense?.({ date })}
+          onAddExpenseForDate={(date, tpl) => onAddExpense?.({ date, ...tpl })}
           getCatColor={getCatColor}
         />
       ) : (

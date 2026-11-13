@@ -187,6 +187,7 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
     flagKeys: [
       'enableTravelPasses',
       'enableVisualTravelTimeline',
+      'enableItineraryPlanner',
       'enablePassSorting',
       'enableNextUpCapsule',
       'enableGateScanner',
@@ -624,6 +625,15 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     label: 'Visual Travel Timeline',
     description:
       'ON: Shows a toggle in the expense ledger allowing travelers to switch to an interactive Day-by-Day Journey Timeline combining expenses, flights, trains, stays, and daily running totals. OFF: Ledger stays in standard day-grouped list.',
+    category: 'transit',
+    pack: 'travel',
+    defaultEnabledForUsers: false,
+  },
+  enableItineraryPlanner: {
+    key: 'enableItineraryPlanner',
+    label: 'Day-by-Day Visual Itinerary & Schedule Planner',
+    description:
+      'ON: Unlocks interactive day-by-day itinerary planning with scheduled activities, transit/passes, Google Maps directions, and 1-tap expense logging. OFF: Itinerary planner controls are hidden.',
     category: 'transit',
     pack: 'travel',
     defaultEnabledForUsers: false,
@@ -2131,6 +2141,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   // Travel — pass holders (chrome gated; route stops / tiles / data-saver OFF)
   enableTravelPasses: true,
   enableVisualTravelTimeline: false,
+  enableItineraryPlanner: false,
   enablePassSorting: true,
   enableNextUpCapsule: true,
   enableGateScanner: true,

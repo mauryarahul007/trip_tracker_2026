@@ -5,6 +5,24 @@ export interface TripStop {
   lng?: number;
 }
 
+export type ItineraryCategory = 'activity' | 'food' | 'transport' | 'lodging' | 'sightseeing' | 'other';
+
+export interface ItineraryItem {
+  id: string;
+  tripId: string;
+  date: string; // YYYY-MM-DD
+  time?: string; // HH:mm
+  title: string;
+  category?: ItineraryCategory;
+  location?: string;
+  notes?: string;
+  completed?: boolean;
+  costEstimate?: number;
+  linkedExpenseId?: string;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
 export type TripMessageKind =
   | 'text'
   | 'expense_added'
@@ -146,6 +164,8 @@ export interface Trip {
   splitwiseImportedAt?: number | null;
   splitwiseImportCount?: number;
   approvalThreshold?: number | null; // enableExpenseApprovalThreshold; in baseCurrency, null/undefined = feature off for this trip
+  budget?: number; // Total planned trip spending budget
+  itinerary?: ItineraryItem[]; // Day-by-day scheduled activities and stops
 }
 
 export type TravelPassType = 'flight' | 'train' | 'stay' | 'activity' | 'transit';

@@ -41,6 +41,7 @@ export type FeatureFlagKey =
   // Phase 3: Smart Travel Navigator & Pass Hub
   | 'enableTravelPasses'
   | 'enableVisualTravelTimeline'
+  | 'enableItineraryPlanner'
   | 'enablePassSorting'
   | 'enableNextUpCapsule'
   | 'enableProgressiveNextUp'

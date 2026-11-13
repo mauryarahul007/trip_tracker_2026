@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef } from 'react';
 import type { CSSProperties } from 'react';
-import type { Category, Expense, Member, TravelPass, Trip } from '../types';
+import type { Category, Expense, Member, TravelPass, Trip, ItineraryItem } from '../types';
 import {
   IconPlus,
   IconMapPin,
@@ -13,10 +13,16 @@ import {
 } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol, formatAmount } from '../utils/currency';
-import { tripDayNumber } from '../utils/dateRange';
 import { triggerHaptic } from '../utils/haptics';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
+import {
+  buildItineraryTimeline,
+  formatTimeDisplay,
+  getDirectionsUrl,
+} from '../utils/itineraryTimeline';
+import { useTripStore } from '../store/tripStore';
+import { ItineraryActivityModal } from './ItineraryActivityModal';
 
 export type VisualTravelTimelineProps = {
   trip: Trip | undefined;
@@ -24,6 +30,7 @@ export type VisualTravelTimelineProps = {
   categories: Category[];
   expenses: Expense[];
   passes?: TravelPass[];
+  itinerary?: ItineraryItem[];
   currencySymbol?: string;
   myMemberId: string | null;
   isAdmin: boolean;
@@ -31,47 +38,10 @@ export type VisualTravelTimelineProps = {
   onReviewExpense: (expense: Expense) => void;
   onEditExpense: (expense: Expense) => void;
   onDeleteExpense: (expense: Expense) => void;
-  onAddExpenseForDate?: (date: string) => void;
+  onAddExpenseForDate?: (date: string, template?: { title?: string; category?: string }) => void;
   onOpenPassDetails?: (pass: TravelPass) => void;
   getCatColor: (id: string, idx: number) => string;
 };
-
-type TimelineItem =
-  | { kind: 'expense'; date: string; time: string; data: Expense }
-  | { kind: 'pass'; date: string; time: string; data: TravelPass };
-
-type DayTimelineGroup = {
-  date: string;
-  dayNumber: number | null;
-  dateLabel: string;
-  totalSpend: number;
-  expenses: Expense[];
-  passes: TravelPass[];
-  items: TimelineItem[];
-};
-
-function formatIsoDate(dateStr: string): string {
-  if (!dateStr) return '';
-  const d = new Date(`${dateStr}T00:00:00`);
-  if (Number.isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-function extractPassDate(pass: TravelPass): { date: string; time: string } {
-  if (pass.startDateTime) {
-    const raw = pass.startDateTime;
-    if (raw.includes('T')) {
-      const [d, t] = raw.split('T');
-      return { date: d, time: t.slice(0, 5) };
-    }
-    return { date: raw.slice(0, 10), time: '12:00' };
-  }
-  return { date: '', time: '' };
-}
 
 function MemberAvatarBadge({
   member,
@@ -120,10 +90,19 @@ function MemberAvatarBadge({
         fontSize: Math.round(size * 0.44),
       }}
     >
-      {member ? initial(label) : '?'}
+      {initial(label)}
     </div>
   );
 }
+
+const CATEGORY_EMOJIS: Record<string, string> = {
+  activity: '🎟️',
+  food: '🍝',
+  sightseeing: '🏛️',
+  transport: '🚕',
+  lodging: '🏨',
+  other: '✨',
+};
 
 export function VisualTravelTimeline({
   trip,
@@ -131,110 +110,52 @@ export function VisualTravelTimeline({
   categories,
   expenses,
   passes = [],
-  currencySymbol: passedSymbol,
+  itinerary,
+  currencySymbol,
   myMemberId,
   onReviewExpense,
   onAddExpenseForDate,
   onOpenPassDetails,
   getCatColor,
 }: VisualTravelTimelineProps) {
-  const symbol = passedSymbol || getCurrencySymbol(trip?.baseCurrency || '') || '$';
-  const [filterKind, setFilterKind] = useState<'all' | 'expenses' | 'passes'>('all');
+  const [filterKind, setFilterKind] = useState<'all' | 'activities' | 'expenses' | 'passes'>('all');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [activityModalState, setActivityModalState] = useState<{
+    isOpen: boolean;
+    date?: string;
+    item?: ItineraryItem | null;
+  }>({ isOpen: false });
+
   const dayRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Filter actual expenses (exclude settlements)
+  const symbol = currencySymbol || getCurrencySymbol(trip?.baseCurrency || '');
+
+  // Filter out soft-deleted expenses
   const actualExpenses = useMemo(
-    () => expenses.filter((e) => !e.isSettlement && !e.title.startsWith('Settlement:')),
+    () => expenses.filter((e) => !e.deletedAt && !e.isSettlement),
     [expenses]
   );
 
-  // Group all items into a unified Day-by-Day timeline
-  const dayGroups = useMemo<DayTimelineGroup[]>(() => {
-    const dateMap = new Map<string, { expenses: Expense[]; passes: TravelPass[] }>();
+  const addItineraryItem = useTripStore((s) => s.addItineraryItem);
+  const updateItineraryItem = useTripStore((s) => s.updateItineraryItem);
+  const deleteItineraryItem = useTripStore((s) => s.deleteItineraryItem);
+  const toggleItineraryItem = useTripStore((s) => s.toggleItineraryItem);
 
-    // 1. Gather dates from trip range if defined
-    if (trip?.startDate) {
-      const s = new Date(`${trip.startDate}T00:00:00`);
-      const e = trip.endDate ? new Date(`${trip.endDate}T00:00:00`) : s;
-      if (!Number.isNaN(s.getTime()) && !Number.isNaN(e.getTime())) {
-        const cur = new Date(s);
-        // Safety cap at 45 days so wide pending dates don't stall rendering
-        let count = 0;
-        while (cur <= e && count < 45) {
-          const iso = cur.toISOString().split('T')[0];
-          if (!dateMap.has(iso)) {
-            dateMap.set(iso, { expenses: [], passes: [] });
-          }
-          cur.setDate(cur.getDate() + 1);
-          count++;
-        }
-      }
-    }
+  const activeActivities = useMemo(() => {
+    return itinerary || trip?.itinerary || [];
+  }, [itinerary, trip?.itinerary]);
 
-    // 2. Map expenses into dateMap
-    actualExpenses.forEach((exp) => {
-      const d = exp.date;
-      if (!d) return;
-      if (!dateMap.has(d)) {
-        dateMap.set(d, { expenses: [], passes: [] });
-      }
-      dateMap.get(d)!.expenses.push(exp);
+  // Build unified Day-by-Day timeline
+  const dayGroups = useMemo(() => {
+    return buildItineraryTimeline({
+      tripStartDate: trip?.startDate,
+      tripEndDate: trip?.endDate,
+      activities: activeActivities,
+      passes,
+      expenses: actualExpenses,
+      sortOrder,
     });
-
-    // 3. Map travel passes into dateMap
-    passes.forEach((pass) => {
-      const { date } = extractPassDate(pass);
-      if (!date) return;
-      if (!dateMap.has(date)) {
-        dateMap.set(date, { expenses: [], passes: [] });
-      }
-      dateMap.get(date)!.passes.push(pass);
-    });
-
-    // 4. Sort dates according to chosen sort order
-    const sortedDates = Array.from(dateMap.keys()).sort((a, b) =>
-      sortOrder === 'asc' ? a.localeCompare(b) : b.localeCompare(a)
-    );
-
-    // 5. Build timeline day groups
-    return sortedDates.map((date) => {
-      const data = dateMap.get(date)!;
-      const dayNum = trip?.startDate ? tripDayNumber(trip.startDate, date) : null;
-      const dateLabel = formatIsoDate(date);
-      const dayExpenses = data.expenses;
-      const dayPasses = data.passes;
-
-      const totalSpend = dayExpenses
-        .filter((e) => !e.excludeFromTotals)
-        .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-
-      // Merge into unified chronological stream for the day
-      const items: TimelineItem[] = [];
-
-      dayPasses.forEach((p) => {
-        const { time } = extractPassDate(p);
-        items.push({ kind: 'pass', date, time: time || '09:00', data: p });
-      });
-
-      dayExpenses.forEach((e) => {
-        items.push({ kind: 'expense', date, time: '12:00', data: e });
-      });
-
-      // Sort items within day by time
-      items.sort((a, b) => a.time.localeCompare(b.time));
-
-      return {
-        date,
-        dayNumber: dayNum,
-        dateLabel,
-        totalSpend,
-        expenses: dayExpenses,
-        passes: dayPasses,
-        items,
-      };
-    });
-  }, [trip?.startDate, trip?.endDate, actualExpenses, passes, sortOrder]);
+  }, [trip?.startDate, trip?.endDate, activeActivities, passes, actualExpenses, sortOrder]);
 
   // Overall Timeline Spend Average
   const avgDailySpend = useMemo(() => {
@@ -252,6 +173,22 @@ export function VisualTravelTimeline({
     }
   };
 
+  const handleSaveActivity = async (
+    data: Omit<ItineraryItem, 'id' | 'createdAt' | 'updatedAt' | 'tripId'>
+  ) => {
+    if (!trip?.id) return;
+    if (activityModalState.item) {
+      await updateItineraryItem(trip.id, activityModalState.item.id, data);
+    } else {
+      await addItineraryItem(trip.id, data);
+    }
+  };
+
+  const handleDeleteActivity = async () => {
+    if (!trip?.id || !activityModalState.item) return;
+    await deleteItineraryItem(trip.id, activityModalState.item.id);
+  };
+
   return (
     <div className="vtt-container" data-testid="visual-travel-timeline">
       {/* Timeline Controls Header */}
@@ -261,7 +198,7 @@ export function VisualTravelTimeline({
           <div className="vtt-day-scrubber" role="navigation" aria-label="Timeline days">
             {dayGroups.map((group) => {
               const label = group.dayNumber ? `Day ${group.dayNumber}` : group.date.slice(5);
-              const hasActivity = group.expenses.length > 0 || group.passes.length > 0;
+              const hasActivity = group.items.length > 0;
               return (
                 <button
                   key={group.date}
@@ -271,9 +208,7 @@ export function VisualTravelTimeline({
                   title={`${label} · ${group.dateLabel} (${formatAmount(group.totalSpend, symbol)})`}
                 >
                   <span className="vtt-scrubber-label">{label}</span>
-                  {group.totalSpend > 0 && (
-                    <span className="vtt-scrubber-dot" />
-                  )}
+                  {group.totalSpend > 0 && <span className="vtt-scrubber-dot" />}
                 </button>
               );
             })}
@@ -291,8 +226,20 @@ export function VisualTravelTimeline({
                 setFilterKind('all');
               }}
             >
-              All Events ({actualExpenses.length + passes.length})
+              All Events ({actualExpenses.length + passes.length + activeActivities.length})
             </button>
+            {activeActivities.length > 0 && (
+              <button
+                type="button"
+                className={`vtt-filter-pill${filterKind === 'activities' ? ' active' : ''}`}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setFilterKind('activities');
+                }}
+              >
+                Activities ({activeActivities.length})
+              </button>
+            )}
             <button
               type="button"
               className={`vtt-filter-pill${filterKind === 'expenses' ? ' active' : ''}`}
@@ -340,8 +287,13 @@ export function VisualTravelTimeline({
           </div>
         ) : (
           dayGroups.map((group, groupIdx) => {
-            const isHighBurn = avgDailySpend > 0 && group.totalSpend > avgDailySpend * 1.5 && group.expenses.length > 1;
+            const isHighBurn =
+              avgDailySpend > 0 &&
+              group.totalSpend > avgDailySpend * 1.5 &&
+              group.expenses.length > 1;
+
             const visibleItems = group.items.filter((item) => {
+              if (filterKind === 'activities') return item.kind === 'activity';
               if (filterKind === 'expenses') return item.kind === 'expense';
               if (filterKind === 'passes') return item.kind === 'pass';
               return true;
@@ -375,7 +327,10 @@ export function VisualTravelTimeline({
                             {formatAmount(group.totalSpend, symbol)}
                           </span>
                           {isHighBurn && (
-                            <span className="vtt-burn-pill" title="Spending was >50% above daily average">
+                            <span
+                              className="vtt-burn-pill"
+                              title="Spending was >50% above daily average"
+                            >
                               High Burn 🔥
                             </span>
                           )}
@@ -384,43 +339,171 @@ export function VisualTravelTimeline({
                     </div>
                   </div>
 
-                  {onAddExpenseForDate && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <button
                       type="button"
                       className="vtt-add-bill-btn"
                       onClick={() => {
                         triggerHaptic('medium');
-                        onAddExpenseForDate(group.date);
+                        setActivityModalState({ isOpen: true, date: group.date, item: null });
                       }}
-                      title={`Add expense for ${group.dateLabel}`}
-                      aria-label={`Add expense for ${group.dateLabel}`}
+                      title={`Add activity for ${group.dateLabel}`}
+                      style={{ backgroundColor: 'rgba(139, 92, 246, 0.12)', color: '#8b5cf6', borderColor: 'rgba(139, 92, 246, 0.3)' }}
                     >
                       <IconPlus size={14} />
-                      <span className="vtt-add-bill-label">Add bill</span>
+                      <span className="vtt-add-bill-label">Activity</span>
                     </button>
-                  )}
+
+                    {onAddExpenseForDate && (
+                      <button
+                        type="button"
+                        className="vtt-add-bill-btn"
+                        onClick={() => {
+                          triggerHaptic('medium');
+                          onAddExpenseForDate(group.date);
+                        }}
+                        title={`Add expense for ${group.dateLabel}`}
+                        aria-label={`Add expense for ${group.dateLabel}`}
+                      >
+                        <IconPlus size={14} />
+                        <span className="vtt-add-bill-label">Add bill</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Day Content Track */}
                 <div className="vtt-day-items">
                   {visibleItems.length === 0 ? (
                     <div className="vtt-empty-day-stub">
-                      <span>No {filterKind === 'all' ? 'events' : filterKind} logged for this day</span>
-                      {onAddExpenseForDate && (
+                      <span>No {filterKind === 'all' ? 'events' : filterKind} scheduled for this day</span>
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                         <button
                           type="button"
                           className="vtt-empty-add-btn"
                           onClick={() => {
                             triggerHaptic('light');
-                            onAddExpenseForDate(group.date);
+                            setActivityModalState({ isOpen: true, date: group.date, item: null });
                           }}
                         >
-                          + Log bill for Day {group.dayNumber || groupIdx + 1}
+                          + Add Activity
                         </button>
-                      )}
+                        {onAddExpenseForDate && (
+                          <button
+                            type="button"
+                            className="vtt-empty-add-btn"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              onAddExpenseForDate(group.date);
+                            }}
+                          >
+                            + Log Bill
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     visibleItems.map((item) => {
+                      // Activity Item Card
+                      if (item.kind === 'activity') {
+                        const act = item.data;
+                        const emoji = CATEGORY_EMOJIS[act.category || 'activity'] || '🎟️';
+
+                        return (
+                          <div
+                            key={`act-${act.id}`}
+                            className={`vtt-item-card vtt-activity-card${act.completed ? ' completed' : ''}`}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setActivityModalState({ isOpen: true, date: act.date, item: act });
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setActivityModalState({ isOpen: true, date: act.date, item: act });
+                              }
+                            }}
+                          >
+                            <div className="vtt-item-left" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="checkbox"
+                                checked={!!act.completed}
+                                onChange={async () => {
+                                  triggerHaptic('light');
+                                  if (trip?.id) {
+                                    await toggleItineraryItem(trip.id, act.id);
+                                  }
+                                }}
+                                className="vtt-activity-checkbox"
+                                title={act.completed ? 'Mark as pending' : 'Mark as completed'}
+                              />
+                            </div>
+
+                            <div className="vtt-item-body">
+                              <div className="vtt-item-headline">
+                                <span style={{ fontSize: '15px' }}>{emoji}</span>
+                                <h4 className="vtt-item-title">{act.title}</h4>
+                                {act.time && (
+                                  <span className="vtt-meta-pill font-mono">
+                                    {formatTimeDisplay(act.time)}
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="vtt-item-subline" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                {act.location && (
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                    <IconMapPin size={12} style={{ color: 'var(--text-muted)' }} />
+                                    {act.location}
+                                  </span>
+                                )}
+                                {act.notes && (
+                                  <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
+                                    {act.notes}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="vtt-item-right" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
+                              {act.location && (
+                                <a
+                                  href={getDirectionsUrl(act.location)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="vtt-action-btn-pill"
+                                  title="Open in Google Maps"
+                                >
+                                  <IconMapPin size={11} /> Directions
+                                </a>
+                              )}
+                              {onAddExpenseForDate && (
+                                <button
+                                  type="button"
+                                  className="vtt-action-btn-pill"
+                                  onClick={() => {
+                                    triggerHaptic('medium');
+                                    onAddExpenseForDate(act.date, {
+                                      title: act.title,
+                                      category: act.category === 'food' ? 'Food & Drinks' : undefined,
+                                    });
+                                  }}
+                                  title="Log an expense for this activity"
+                                >
+                                  + Bill
+                                </button>
+                              )}
+                              <span className="vtt-card-action-hint" style={{ marginLeft: '4px' }}>
+                                Edit <IconChevronRight size={12} />
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // Pass Item Card
                       if (item.kind === 'pass') {
                         const pass = item.data;
                         const isFlight = pass.type === 'flight';
@@ -501,7 +584,8 @@ export function VisualTravelTimeline({
                       const catColor = getCatColor(exp.category, 0);
                       const payerMember = members[exp.paidBy];
                       const myShare = myMemberId ? exp.resolvedShares[myMemberId] : undefined;
-                      const showMyShare = typeof myShare === 'number' && Math.abs(myShare - exp.amount) > 0.01;
+                      const showMyShare =
+                        typeof myShare === 'number' && Math.abs(myShare - exp.amount) > 0.01;
 
                       return (
                         <div
@@ -563,7 +647,8 @@ export function VisualTravelTimeline({
                                 <span>{payerMember?.name || 'Removed member'}</span>
                               </div>
                               <span className="vtt-split-summary">
-                                · {exp.splitMemberIds.length} {exp.splitMemberIds.length === 1 ? 'person' : 'people'}
+                                · {exp.splitMemberIds.length}{' '}
+                                {exp.splitMemberIds.length === 1 ? 'person' : 'people'}
                               </span>
                               {showMyShare && (
                                 <span className="vtt-my-share">
@@ -591,6 +676,19 @@ export function VisualTravelTimeline({
           })
         )}
       </div>
+
+      {activityModalState.isOpen && (
+        <ItineraryActivityModal
+          isOpen={activityModalState.isOpen}
+          onClose={() => setActivityModalState({ isOpen: false, item: null })}
+          onSave={handleSaveActivity}
+          onDelete={activityModalState.item ? handleDeleteActivity : undefined}
+          initialDate={activityModalState.date}
+          initialItem={activityModalState.item}
+          tripStartDate={trip?.startDate}
+          tripEndDate={trip?.endDate}
+        />
+      )}
     </div>
   );
 }
