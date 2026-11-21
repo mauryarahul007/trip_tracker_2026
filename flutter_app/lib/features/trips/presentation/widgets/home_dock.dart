@@ -38,31 +38,15 @@ Future<void> createTripFlow(BuildContext context) async {
 /// True when the window is wide enough for the desktop shell (left rail, no bottom dock).
 bool isWideHome(BuildContext context) => MediaQuery.sizeOf(context).width >= kSideNavBreakpoint;
 
-List<AppNavItem> _homeItems(BuildContext context, {bool compass = false}) {
+/// Traveler-facing home dock language is always Calm Passport (Trips / Balances / Alerts / You).
+/// Compass/legacy label variants stay retired so Superadmin nav experiments do not confuse travelers.
+List<AppNavItem> _homeItems(BuildContext context) {
   final l10n = context.l10n;
-  if (context.tokens.calm) {
-    // Calm Passport: Trips, Balances, Alerts, You (same four places, travel words).
-    return [
-      AppNavItem(icon: Icons.flight_rounded, label: l10n.navTrips),
-      AppNavItem(icon: Icons.swap_horiz_rounded, label: l10n.navBalances),
-      AppNavItem(icon: AppIcons.bell, label: l10n.navAlerts),
-      AppNavItem(icon: Icons.person_outline_rounded, label: l10n.navYou),
-    ];
-  }
-  if (compass) {
-    // Compass keeps the same four places; Balances is called Wallet because it spans every trip.
-    return [
-      AppNavItem(icon: AppIcons.expenses, label: l10n.navTrips),
-      AppNavItem(icon: Icons.account_balance_wallet_outlined, label: l10n.navWallet),
-      AppNavItem(icon: AppIcons.bell, label: l10n.navActivity),
-      AppNavItem(icon: Icons.person_outline_rounded, label: l10n.navMe),
-    ];
-  }
   return [
-    AppNavItem(icon: AppIcons.expenses, label: l10n.navTrips),
-    AppNavItem(icon: AppIcons.ledger, label: l10n.navBalances),
-    AppNavItem(icon: AppIcons.bell, label: l10n.navActivity),
-    AppNavItem(icon: Icons.person_outline_rounded, label: l10n.navMe),
+    AppNavItem(icon: Icons.flight_rounded, label: l10n.navTrips),
+    AppNavItem(icon: Icons.swap_horiz_rounded, label: l10n.navBalances),
+    AppNavItem(icon: AppIcons.bell, label: l10n.navAlerts),
+    AppNavItem(icon: Icons.person_outline_rounded, label: l10n.navYou),
   ];
 }
 
@@ -78,7 +62,6 @@ void _goTab(BuildContext context, HomeTab current, int i) {
 Widget? buildHomeDock(BuildContext context, WidgetRef ref, HomeTab current, {bool compressed = false}) {
   if (!ref.watch(horizonNavProvider) || isWideHome(context)) return null;
   final l10n = context.l10n;
-  final compass = ref.watch(compassNavProvider);
   final polish = ref.watch(compassFlagProvider((navPolishFlag, null)));
   return AppBottomNav(
     centerAction: () => unawaited(createTripFlow(context)),
@@ -87,7 +70,7 @@ Widget? buildHomeDock(BuildContext context, WidgetRef ref, HomeTab current, {boo
     // Shipping chrome is the polished dock. Notch stays Labs: only when polish is off.
     notch: !polish && ref.watch(compassFlagProvider((notchNavFlag, null))),
     compressed: compressed,
-    items: _homeItems(context, compass: compass),
+    items: _homeItems(context),
     currentIndex: current.index,
     onTap: (i) => _goTab(context, current, i),
   );
@@ -119,7 +102,7 @@ Widget wrapHomeBody(BuildContext context, WidgetRef ref, HomeTab current, Widget
     child: Row(
       children: [
         AppSideNav(
-          items: _homeItems(context, compass: ref.watch(compassNavProvider)),
+          items: _homeItems(context),
           currentIndex: current.index,
           extended: extended,
           onTap: (i) => _goTab(context, current, i),

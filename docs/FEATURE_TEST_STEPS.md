@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-21 | 3.93.1 | FLUTTER-UX-10 | [Flutter UX polish 10: motion, skeletons, images, nav](#flutter-ux-10--flutter-ux-polish-10-motion-skeletons-images-nav) |
 | 2026-11-12 | 3.91.7 | FLUTTER-ENH-S5 | [Flutter enhancements S5: Join / live / search](#flutter-enh-s5--flutter-enhancements-s5-join--live--search) |
 | 2026-11-12 | 3.91.7 | FLUTTER-ENH-S4 | [Flutter enhancements S4: Logic features](#flutter-enh-s4--flutter-enhancements-s4-logic-features) |
 | 2026-11-12 | 3.91.7 | FLUTTER-ENH-S3 | [Flutter enhancements S3: Visual system](#flutter-enh-s3--flutter-enhancements-s3-visual-system) |
@@ -4427,6 +4428,41 @@ Cross-trip home Balances with open debts; trip with expenses; approval threshold
 
 ### Pass
 - Owe CTA routes correctly; partial settle coaches remainder; clone/threshold/recycle UX match without changing settle math.
+
+
+## FLUTTER-UX-10 — Flutter UX polish 10: motion, skeletons, images, nav
+
+**Shipped:** v3.93.1 / FEAT-209. Flutter-only. Reuses existing Core flags (no new flags). Closes motion-polish wiring + Phase 2 speed polish items.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Press scale, sheet drag, trip Heroes | `enableMotionPolish` | ON (Core) |
+| Compact Summary first paint | `enableCompactSummary` | ON (Core) |
+| Form / list skeletons | `enableSkeletonLoaders` / `enableShapedSkeletons` | ON |
+| Pending sync tick on rows | `enableRowSyncRetry` (retry mark) + outbox dirty | ON |
+| Reduce motion override | `enableReduceMotion` + Settings | ON |
+
+### Prep
+Flutter app on a trip with a cover photo; expenses list; add-expense form; Horizon home dock.
+
+### Steps
+1. `enableMotionPolish` ON: primary buttons and polished dock tabs shrink slightly on press; bottom sheets can be dragged down; opening a trip morphs title/photo Heroes into the header.
+2. Flag OFF (or Reduce motion ON): no press shrink, sheets only close via X/backdrop, Heroes are plain (no morph).
+3. Add expense while providers load: form-shaped skeleton (not a centered spinner). Flag `enableSkeletonLoaders` OFF → spinner.
+4. Trip covers / avatars / stack photos decode at display size (no full-res decode jank on scroll).
+5. Summary opens with settle hero + who-owes; charts stay folded under Spending breakdown until tapped (`enableCompactSummary`).
+6. Save a new expense: row appears immediately with pending sync mark + save pulse; Undo snack still works.
+7. Home dock labels are always Trips / Balances / Alerts / You (Calm language), not Wallet/Me/Activity.
+8. Tap a trip card: Summary paints quickly (prefetch); cold start still reaches first frame before sync/realtime kick off.
+
+### Negative checks
+- `enableMotionPolish` OFF → no press scale / no sheet drag / no Hero morph.
+- `enableCompactSummary` OFF → analytics section can start open (after flags resolve).
+- `enableSkeletonLoaders` OFF → expense form shows spinner again.
+
+### Pass
+- Interactions feel smooth; first paint on form/Summary is calm; money screens stay readable; no new flags required.
 
 
 ## FLUTTER-ENH-S5 — Flutter enhancements S5: Join / live / search

@@ -498,7 +498,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             _flag(ref, 'enableCategoryColorRings', id) || ref.watch(compassFlagProvider((compassSpendFlag, id))),
         tidy: tidyOn,
         vectorIcons: vectorIconsOn,
-        isDirty: dirty.contains(e.id),
+        // Optimistic: just-saved rows show the pending tick immediately, before the outbox stream catches up.
+        isDirty: dirty.contains(e.id) || e.id == justSaved,
         isConflict: conflicts.contains(e.id),
         onRetrySync: failed.contains(e.id) ? () => ref.read(retryRowSyncProvider)(e.id) : null,
         refunded: refundedIds.contains(e.id),

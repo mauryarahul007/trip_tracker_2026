@@ -14,10 +14,12 @@ class AnimatedMoneyText extends StatelessWidget {
   final TextAlign? textAlign;
 
   @override
-  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
-    tween: Tween<double>(end: value),
-    duration: AppMotion.of(context, AppMotion.slow),
-    curve: Curves.easeOutCubic,
-    builder: (_, v, _) => Text(format(v), style: style, textAlign: textAlign),
+  Widget build(BuildContext context) => RepaintBoundary(
+    child: TweenAnimationBuilder<double>(
+      tween: Tween<double>(end: value),
+      duration: AppMotion.of(context, AppMotion.slow),
+      curve: Curves.easeOutCubic,
+      builder: (_, v, _) => Text(format(v), style: style, textAlign: textAlign),
+    ),
   );
 }

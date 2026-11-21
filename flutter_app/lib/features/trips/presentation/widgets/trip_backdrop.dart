@@ -33,7 +33,7 @@ class TripBackdrop extends ConsumerWidget {
                   key: ValueKey(url),
                   imageFilter: ImageFilter.blur(sigmaX: 28, sigmaY: 28, tileMode: TileMode.mirror),
                   child: Image(
-                    image: CachedPhotoProvider(url),
+                    image: cachedPhotoSized(context, url, logicalWidth: MediaQuery.sizeOf(context).width),
                     key: const Key('stack-backdrop-photo'),
                     fit: BoxFit.cover,
                     width: double.infinity,

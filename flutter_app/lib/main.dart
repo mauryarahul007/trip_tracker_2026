@@ -110,6 +110,7 @@ class TripTrackerApp extends ConsumerWidget {
     final accent = ref.watch(dynamicAccentProvider);
     AppMotion.reduce =
         ref.watch(reduceMotionPrefProvider) && (ref.watch(flagProvider(('enableReduceMotion', null))).value ?? true);
+    AppMotion.polish = ref.watch(flagProvider(('enableMotionPolish', null))).value ?? true;
 
     return MaterialApp.router(
       title: 'Trip Tracker',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/platform/motion.dart';
 import '../theme/app_tokens.dart';
 import '../theme/app_colors.dart';
 
@@ -18,7 +19,7 @@ Color _readableOn(Color bg) {
 
 enum AppButtonVariant { primary, secondary, danger, ghost }
 
-class AppButton extends StatelessWidget {
+class AppButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final AppButtonVariant variant;
@@ -41,8 +42,27 @@ class AppButton extends StatelessWidget {
   });
 
   @override
+  State<AppButton> createState() => _AppButtonState();
+}
+
+class _AppButtonState extends State<AppButton> {
+  bool _pressed = false;
+
+  void _setPressed(bool v) {
+    if (!mounted || _pressed == v) return;
+    setState(() => _pressed = v);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
+    final label = widget.label;
+    final onPressed = widget.onPressed;
+    final variant = widget.variant;
+    final icon = widget.icon;
+    final leading = widget.leading;
+    final isLoading = widget.isLoading;
+    final isFullWidth = widget.isFullWidth;
 
     Color bg;
     Color fg;
@@ -70,6 +90,7 @@ class AppButton extends StatelessWidget {
     }
 
     final isEnabled = onPressed != null && !isLoading;
+    final gap = tokens.spaceSm;
 
     final Widget content = Row(
       mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
@@ -81,13 +102,13 @@ class AppButton extends StatelessWidget {
             height: 18,
             child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(fg)),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: gap),
         ] else if (leading != null) ...[
-          leading!,
-          const SizedBox(width: 8),
+          leading,
+          SizedBox(width: gap),
         ] else if (icon != null) ...[
           Icon(icon, size: 18, color: fg),
-          const SizedBox(width: 8),
+          SizedBox(width: gap),
         ],
         // Flexible so long labels / 200% text scale wrap instead of overflowing.
         Flexible(
@@ -111,10 +132,18 @@ class AppButton extends StatelessWidget {
         disabledForegroundColor: fg.withValues(alpha: 0.5),
         shadowColor: Colors.transparent,
         shape: StadiumBorder(side: border),
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: 22, vertical: tokens.spaceMd),
         elevation: 0,
       ),
       child: content,
+    );
+
+    final animate = AppMotion.shouldAnimate(context) && isEnabled;
+    final scaled = AnimatedScale(
+      scale: animate && _pressed ? AppMotion.pressScale : 1,
+      duration: AppMotion.of(context, AppMotion.fast),
+      curve: AppMotion.standard,
+      child: button,
     );
 
     return Semantics(
@@ -123,7 +152,15 @@ class AppButton extends StatelessWidget {
       label: label,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
-        child: SizedBox(width: isFullWidth ? double.infinity : null, child: button),
+        child: SizedBox(
+          width: isFullWidth ? double.infinity : null,
+          child: Listener(
+            onPointerDown: animate ? (_) => _setPressed(true) : null,
+            onPointerUp: animate ? (_) => _setPressed(false) : null,
+            onPointerCancel: animate ? (_) => _setPressed(false) : null,
+            child: scaled,
+          ),
+        ),
       ),
     );
   }

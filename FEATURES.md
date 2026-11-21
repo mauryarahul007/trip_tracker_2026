@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **205** |
+| **Total Tracked** | **208** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **202** |
+| **✅ Shipped** | **205** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -264,6 +264,9 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-203** | Flutter UX upgrades: Spend chips, login, Activity, Balances | `ui-ux` | `agent` | `agent` | Shipped in 19e699b (v3.91.4): FLUTTER-UX-UPGRADES + SPEND-EXPAND-LOGIN |
 | **FEAT-204** | Flutter UI polish roadmap (Phases 1–4) | `ui-ux` | `agent` | `agent` | Shipped in 6295723 (v3.91.5): FLUTTER-UI-ROADMAP |
 | **FEAT-206** | Flutter enhancements S1-S5 (money, empty/sync, visual, logic, search) | `ui-ux` | `agent` | `agent` | Shipped in 70afc31 (v3.91.7): FLUTTER-ENH-S1…S5 |
+| **FEAT-207** | Daily Budget Pacing Dial & Itemized Receipt Bill Splitter (Web & Flutter) | `fintech` | `user` | `agent` | Shipped in v3.92.0: Option A Fintech & Pacing |
+| **FEAT-208** | Day-by-Day Visual Itinerary & Schedule Planner (Web & Flutter) | `travel` | `user` | `agent` | Shipped in v3.92.0: Option B Day-by-Day Itinerary |
+| **FEAT-209** | Flutter UX polish 10: motion, skeletons, images, nav | `ui-ux` | `agent` | `agent` | Shipped in v3.93.1: FLUTTER-UX-10 |
 
 ---
 

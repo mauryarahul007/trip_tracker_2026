@@ -106,6 +106,13 @@ class AppTokens extends ThemeExtension<AppTokens> {
   final double radiusLg;
   final double radiusFull;
 
+  /// Spacing scale (4 / 8 / 12 / 16 / 24). Prefer these over ad-hoc SizedBox/EdgeInsets gaps.
+  double get spaceXs => 4;
+  double get spaceSm => 8;
+  double get spaceMd => 12;
+  double get spaceLg => 16;
+  double get spaceXl => 24;
+
   // Durations
   final Duration dur1;
   final Duration dur2;

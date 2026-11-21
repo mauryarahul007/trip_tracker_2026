@@ -5879,3 +5879,15 @@ This document logs all meaningful technical decisions, library choices, design p
     - Upgraded `settle_sheet.dart` to support `enableGlobalPaymentRails`.
 * **Trade-offs Accepted:**
   - Non-custodial settlement: Trip Tracker does not touch user funds or act as an intermediary payment processor; deep links hand off directly to native banking/payment apps or official web portals. Handles are securely cached locally per member.
+
+---
+
+## 292. Flutter UX polish 10 — motion, skeletons, images, nav (v3.93.1)
+* **Context:** Flutter already had Calm Passport tokens, skeletons, and haptics, but `enableMotionPolish` was largely unwired, first paint on the expense form/Summary still felt unfinished, and Phase 2 speed items (image decode, RepaintBoundary, prefetch, optimistic pending ticks) were open.
+* **Decision:**
+  - Wire `AppMotion.polish` from the Core flag: press-scale on `AppButton`/dock, sheet drag-dismiss gated, trip card→header Heroes via `AppMotion.hero` (skipped under reduce-motion).
+  - Form-shaped skeleton; `cachedPhotoSized` on covers/avatars/stack/boarding/receipts; RepaintBoundary on rolling/animated money and spend donut.
+  - Calm Summary first paint (charts stay folded while flags load); spacing scale 4/8/12/16/24 on tokens; just-saved rows show pending sync tick immediately; home dock always Calm labels; prefetch trip streams on card tap; defer sync start to post-first-frame with dedupe.
+  - Docs: `FLUTTER-UX-10` in `FEATURE_TEST_STEPS.md`; FEAT-209; backlog B-135 closed. No new flags.
+* **Trade-offs Accepted:**
+  - Flutter-only; reuse existing Core flags rather than adding polish flags; Supabase still initializes before `runApp` (providers need it) while sync/realtime wait for the first frame.

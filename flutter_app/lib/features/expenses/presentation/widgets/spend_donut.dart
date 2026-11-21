@@ -52,44 +52,46 @@ class SpendDonut extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final tap = onSegmentTap;
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapUp: tap == null ? null : (d) => tap(segmentAt(d.localPosition, size, values)),
-            child: CustomPaint(
-              size: Size(size, size),
-              painter: _DonutPainter(values, colors, t.borderColor, selectedIndex),
-            ),
-          ),
-          IgnorePointer(
-            child: Padding(
-              padding: EdgeInsets.all(size * 0.22),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    centerLabel,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: t.textSecondary),
-                  ),
-                  const SizedBox(height: 2),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(centerValue, style: AppTypography.moneyDisplay(fontSize: 22, color: t.textPrimary)),
-                  ),
-                ],
+    return RepaintBoundary(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapUp: tap == null ? null : (d) => tap(segmentAt(d.localPosition, size, values)),
+              child: CustomPaint(
+                size: Size(size, size),
+                painter: _DonutPainter(values, colors, t.borderColor, selectedIndex),
               ),
             ),
-          ),
-        ],
+            IgnorePointer(
+              child: Padding(
+                padding: EdgeInsets.all(size * 0.22),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      centerLabel,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: t.textSecondary),
+                    ),
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(centerValue, style: AppTypography.moneyDisplay(fontSize: 22, color: t.textPrimary)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

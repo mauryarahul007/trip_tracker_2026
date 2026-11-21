@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/flags/compass_flags.dart';
+import '../../../../core/platform/motion.dart';
 import '../../../../data/providers.dart';
 import '../../../../domain/logic/expense_list_logic.dart' show isActualExpense;
 import '../../../../domain/logic/trip_status.dart';
@@ -181,7 +182,8 @@ class TripDashboardHeader extends ConsumerWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Flexible(
-                                      child: Hero(
+                                      child: AppMotion.hero(
+                                        context: context,
                                         tag: 'trip-title-${trip?.id ?? ""}',
                                         child: Material(
                                           type: MaterialType.transparency,
@@ -222,7 +224,8 @@ class TripDashboardHeader extends ConsumerWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Flexible(
-                                    child: Hero(
+                                    child: AppMotion.hero(
+                                      context: context,
                                       tag: 'trip-title-${trip?.id ?? ""}',
                                       child: Material(
                                         type: MaterialType.transparency,

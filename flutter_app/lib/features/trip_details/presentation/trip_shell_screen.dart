@@ -759,7 +759,8 @@ class _TripStrip extends ConsumerWidget {
               const DecoratedBox(
                 decoration: BoxDecoration(gradient: LinearGradient(colors: [AppColors.heroNavy, AppColors.heroTeal])),
               ),
-              Hero(
+              AppMotion.hero(
+                context: context,
                 tag: 'trip-photo-$tripId',
                 child: Image(
                   image: cachedPhotoSized(context, cover, logicalWidth: MediaQuery.sizeOf(context).width),

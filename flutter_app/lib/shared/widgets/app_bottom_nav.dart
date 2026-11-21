@@ -3,6 +3,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/platform/motion.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
 
@@ -485,7 +486,7 @@ class _PolishItemState extends State<_PolishItem> {
     final item = widget.item;
     final selected = widget.selected;
     final color = selected ? t.primaryAccent : t.textMuted;
-    final reduce = MediaQuery.disableAnimationsOf(context);
+    final animate = AppMotion.shouldAnimate(context);
     final glyph = selected ? (item.selectedIcon ?? item.icon) : item.icon;
     return Semantics(
       button: true,
@@ -494,12 +495,12 @@ class _PolishItemState extends State<_PolishItem> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
-        onTapDown: (_) => _press(true),
-        onTapUp: (_) => _press(false),
-        onTapCancel: () => _press(false),
+        onTapDown: animate ? (_) => _press(true) : null,
+        onTapUp: animate ? (_) => _press(false) : null,
+        onTapCancel: animate ? () => _press(false) : null,
         child: AnimatedScale(
-          scale: _pressed && !reduce ? 0.94 : 1,
-          duration: const Duration(milliseconds: 90),
+          scale: _pressed && animate ? AppMotion.pressScale : 1,
+          duration: AppMotion.of(context, const Duration(milliseconds: 90)),
           child: ExcludeSemantics(
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 56),
@@ -513,7 +514,7 @@ class _PolishItemState extends State<_PolishItem> {
                       child: IconTheme(
                         data: IconThemeData(color: color, size: 24),
                         child: AnimatedSwitcher(
-                          duration: reduce ? Duration.zero : const Duration(milliseconds: 180),
+                          duration: animate ? const Duration(milliseconds: 180) : Duration.zero,
                           transitionBuilder: (child, anim) => ScaleTransition(
                             scale: Tween<double>(begin: 0.8, end: 1).animate(anim),
                             child: FadeTransition(opacity: anim, child: child),

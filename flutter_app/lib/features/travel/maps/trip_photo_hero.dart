@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../places/place_image_service.dart';
 import '../../../core/platform/motion.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/cached_photo.dart';
 
 class TripPhotoHero extends StatefulWidget {
   final String? destination;
@@ -90,7 +91,11 @@ class _TripPhotoHeroState extends State<TripPhotoHero> {
             color: AppColors.calmInk,
             image: _resolvedUrl != null
                 ? DecorationImage(
-                    image: NetworkImage(_resolvedUrl!),
+                    image: cachedPhotoSized(
+                      context,
+                      _resolvedUrl!,
+                      logicalWidth: MediaQuery.sizeOf(context).width,
+                    ),
                     fit: BoxFit.cover,
                     onError: (_, _) {},
                     colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.35), BlendMode.darken),

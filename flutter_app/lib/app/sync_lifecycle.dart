@@ -32,6 +32,9 @@ class SyncLifecycle extends ConsumerStatefulWidget {
 }
 
 class _SyncLifecycleState extends ConsumerState<SyncLifecycle> with WidgetsBindingObserver {
+  /// Dedupes the post-frame cold start against a same-user auth listen so sync is not started twice.
+  String? _startedKey;
+
   bool get _syncing {
     final a = ref.read(authStateProvider);
     return AppEnv.current.hasBackend && a.isAuthenticated && !a.isLocalOnly;
@@ -41,6 +44,10 @@ class _SyncLifecycleState extends ConsumerState<SyncLifecycle> with WidgetsBindi
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // B4: let the first frame paint, then start sync / realtime / flag refresh (avoids blocking cold start).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _start(ref.read(authStateProvider));
+    });
   }
 
   @override
@@ -104,6 +111,12 @@ class _SyncLifecycleState extends ConsumerState<SyncLifecycle> with WidgetsBindi
   }
 
   void _start(AuthState a) {
+    final key = (AppEnv.current.hasBackend && a.isAuthenticated && !a.isLocalOnly) ? a.userId : 'local';
+    if (key == _startedKey) {
+      _identify(a); // keep crash/telemetry identity fresh without re-pulling
+      return;
+    }
+    _startedKey = key;
     _identify(a);
     if (!(AppEnv.current.hasBackend && a.isAuthenticated && !a.isLocalOnly)) return;
     unawaited(ref.read(syncCoordinatorProvider).start().whenComplete(() => ref.invalidate(tripsProvider)));

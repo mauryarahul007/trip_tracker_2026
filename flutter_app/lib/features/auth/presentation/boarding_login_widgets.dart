@@ -64,7 +64,7 @@ class BoardingBackdrop extends ConsumerWidget {
           child: url == null
               ? const SizedBox.expand(key: ValueKey('no-photo'))
               : Image(
-                  image: CachedPhotoProvider(url),
+                  image: cachedPhotoSized(context, url, logicalWidth: MediaQuery.sizeOf(context).width),
                   key: const Key('boarding-photo'),
                   fit: BoxFit.cover,
                   width: double.infinity,

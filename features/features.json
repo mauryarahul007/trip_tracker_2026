@@ -3307,5 +3307,21 @@
     "shippedAt": "2026-11-13T13:34:40.253Z",
     "shippedBy": "agent",
     "shippedNote": "Shipped in v3.92.0: Option B Day-by-Day Itinerary"
+  },
+  {
+    "id": "FEAT-209",
+    "title": "Flutter UX polish 10: motion, skeletons, images, nav",
+    "description": "Flutter-only polish: wire enableMotionPolish (press scale, sheet drag, Heroes), form skeleton, display-size image decode, RepaintBoundary on money/donut, compact Summary first paint, spacing scale, optimistic pending ticks, Calm home dock labels, trip prefetch + deferred sync start. Reuses Core flags; FLUTTER-UX-10.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-21T10:59:40.099Z",
+    "updatedAt": "2026-11-21T10:59:40.099Z",
+    "shippedAt": "2026-11-21T10:59:40.099Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped in v3.93.1: FLUTTER-UX-10"
   }
 ]

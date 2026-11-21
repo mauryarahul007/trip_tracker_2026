@@ -224,12 +224,13 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
       final collapseFlag = ref.watch(flagProvider(('enableSummaryCollapse', null))).value;
       final focusFlag = ref.watch(flagProvider(('enableSummaryFocus', id))).value;
       final compactSummary = ref.watch(flagProvider(('enableCompactSummary', id))).value;
-      if (collapseFlag != null && focusFlag != null && compactSummary != null) {
+      // While flags load, keep charts folded (calm first paint) without locking the traveler's real preference.
+      if (collapseFlag == null || focusFlag == null || compactSummary == null) {
+        _open.remove('analytics');
+      } else {
         _collapseChecked = true;
         // Hero + who-owes first; Trip numbers stay folded until tapped (focus / compact / prefs).
-        if (focusFlag ||
-            compactSummary ||
-            (collapseFlag && ref.read(summaryCollapsePrefProvider))) {
+        if (focusFlag || compactSummary || (collapseFlag && ref.read(summaryCollapsePrefProvider))) {
           _open.remove('analytics');
         } else {
           _open.add('analytics');

@@ -367,7 +367,7 @@ class _StackCard extends ConsumerWidget {
           children: [
             if (cover != null && cover.isNotEmpty)
               Image(
-                image: CachedPhotoProvider(cover),
+                image: cachedPhotoSized(context, cover, logicalWidth: MediaQuery.sizeOf(context).width),
                 key: Key('stack-photo-${trip.id}'),
                 fit: BoxFit.cover,
                 frameBuilder: (_, child, frame, sync) => AnimatedOpacity(

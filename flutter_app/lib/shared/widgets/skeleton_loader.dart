@@ -89,7 +89,7 @@ class SkeletonCircle extends StatelessWidget {
 }
 
 /// What the loading page should look like, so the skeleton matches the screen that replaces it.
-enum SkeletonShape { list, balances, spend, people }
+enum SkeletonShape { list, balances, spend, people, form }
 
 /// A whole page of soft placeholder blocks shown while a tab loads. With `enableShapedSkeletons` on, [shape] draws
 /// the real layout (Balances hero and people, Spend summary and day rows, People rows); off, a summary card and
@@ -120,7 +120,7 @@ class SkeletonPage extends ConsumerWidget {
       child: ListView(
         key: const Key('skeleton-page'),
         physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(t.spaceLg),
         children: [
           if (shaped && shape != SkeletonShape.list) SizedBox.shrink(key: Key('skeleton-${shape.name}')),
           ...children,
@@ -138,8 +138,8 @@ class SkeletonPage extends ConsumerWidget {
     );
     Widget row({required bool round, bool amount = true}) => Container(
       height: 64,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      margin: EdgeInsets.only(bottom: t.spaceSm),
+      padding: EdgeInsets.symmetric(horizontal: t.spaceMd + 2),
       decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(t.radiusMd)),
       child: Row(
         children: [
@@ -151,12 +151,12 @@ class SkeletonPage extends ConsumerWidget {
               borderRadius: BorderRadius.circular(round ? 18 : t.radiusSm),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: t.spaceMd),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [bar(140, 12), const SizedBox(height: 8), bar(90, 10)],
+              children: [bar(140, 12), SizedBox(height: t.spaceSm), bar(90, 10)],
             ),
           ),
           if (amount) bar(56, 14),
@@ -165,26 +165,49 @@ class SkeletonPage extends ConsumerWidget {
     );
     Widget hero(double h) => Container(
       height: h,
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(18),
+      margin: EdgeInsets.only(bottom: t.spaceLg),
+      padding: EdgeInsets.all(t.spaceLg + 2),
       decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(t.radiusLg)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [bar(80, 10), const SizedBox(height: 12), bar(160, 28), const SizedBox(height: 12), bar(120, 10)],
+        children: [
+          bar(80, 10),
+          SizedBox(height: t.spaceMd),
+          bar(160, 28),
+          SizedBox(height: t.spaceMd),
+          bar(120, 10),
+        ],
       ),
+    );
+    Widget field() => Container(
+      height: 52,
+      margin: EdgeInsets.only(bottom: t.spaceMd),
+      decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(t.radiusMd)),
     );
     return switch (shape) {
       SkeletonShape.balances => [hero(150), for (var i = 0; i < rows; i++) row(round: true)],
       SkeletonShape.spend => [
         hero(110),
         Padding(
-          padding: const EdgeInsets.only(bottom: 10, left: 4),
+          padding: EdgeInsets.only(bottom: t.spaceMd - 2, left: t.spaceXs),
           child: Align(alignment: Alignment.centerLeft, child: bar(70, 10)),
         ),
         for (var i = 0; i < rows; i++) row(round: false),
       ],
       SkeletonShape.people => [for (var i = 0; i < rows + 1; i++) row(round: true, amount: false)],
+      // Amount keypad hero + title/payer/split fields so the add-expense form does not flash a spinner.
+      SkeletonShape.form => [
+        hero(120),
+        field(),
+        field(),
+        field(),
+        SizedBox(height: t.spaceSm),
+        Container(
+          height: 48,
+          decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(999)),
+        ),
+      ],
       SkeletonShape.list => const [],
     };
   }

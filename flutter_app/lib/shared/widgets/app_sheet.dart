@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/platform/motion.dart';
 import '../theme/app_tokens.dart';
 import '../theme/app_typography.dart';
 
@@ -18,6 +19,8 @@ class AppSheet extends StatelessWidget {
     bool enableDrag = true,
   }) {
     final tokens = context.tokens;
+    // enableMotionPolish OFF / reduce-motion: sheets close via X or backdrop only (no drag-to-dismiss).
+    final drag = enableDrag && AppMotion.shouldAnimate(context);
 
     return showModalBottomSheet<T>(
       context: context,
@@ -25,7 +28,7 @@ class AppSheet extends StatelessWidget {
       // otherwise paints on top of a sheet opened on the branch's nested go_router Navigator.
       useRootNavigator: true,
       isDismissible: isDismissible,
-      enableDrag: enableDrag,
+      enableDrag: drag,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Padding(
@@ -62,7 +65,7 @@ class AppSheet extends StatelessWidget {
         // Drag Handle
         Center(
           child: Container(
-            margin: const EdgeInsets.only(top: 10, bottom: 8),
+            margin: EdgeInsets.only(top: tokens.spaceMd - 2, bottom: tokens.spaceSm),
             width: 40,
             height: 4,
             decoration: BoxDecoration(color: tokens.borderColor, borderRadius: BorderRadius.circular(2)),
@@ -70,7 +73,7 @@ class AppSheet extends StatelessWidget {
         ),
         if (title != null) ...[
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: tokens.spaceXl - 4, vertical: tokens.spaceSm),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

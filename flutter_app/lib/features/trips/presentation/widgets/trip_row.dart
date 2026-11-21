@@ -3,6 +3,7 @@ import '../../../../shared/widgets/cached_photo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/platform/motion.dart';
 import '../../../../domain/logic/trip_status.dart';
 import '../../../../domain/logic/trip_utilities.dart' show formatDateRange;
 import '../../../../domain/models/trip.dart';
@@ -183,7 +184,8 @@ class TripRow extends ConsumerWidget {
                                         overflow: TextOverflow.ellipsis,
                                         style: AppTypography.eyebrowMono(color: t.textMuted),
                                       ),
-                                    Hero(
+                                    AppMotion.hero(
+                                      context: context,
                                       tag: 'trip-title-${trip.id}',
                                       child: Material(
                                         type: MaterialType.transparency,
@@ -464,7 +466,7 @@ class TripHeroCard extends ConsumerWidget {
               if (cover != null && cover.isNotEmpty)
                 Positioned.fill(
                   child: Image(
-                    image: CachedPhotoProvider(cover),
+                    image: cachedPhotoSized(context, cover, logicalWidth: MediaQuery.sizeOf(context).width),
                     key: Key('trip-thumb-${trip.id}'),
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => const SizedBox.shrink(),
@@ -506,7 +508,8 @@ class TripHeroCard extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 22),
-                    Hero(
+                    AppMotion.hero(
+                                      context: context,
                       tag: 'trip-title-${trip.id}',
                       child: Material(
                         type: MaterialType.transparency,
@@ -639,10 +642,11 @@ class TripTile extends ConsumerWidget {
                     ),
                   )
                 else
-                  Hero(
+                  AppMotion.hero(
+                    context: context,
                     tag: 'trip-photo-${trip.id}',
                     child: Image(
-                      image: CachedPhotoProvider(cover),
+                      image: cachedPhotoSized(context, cover, logicalWidth: MediaQuery.sizeOf(context).width),
                       key: Key('trip-thumb-${trip.id}'),
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) => const SizedBox.shrink(),
@@ -689,7 +693,8 @@ class TripTile extends ConsumerWidget {
                         ],
                       ),
                       const Spacer(),
-                      Hero(
+                      AppMotion.hero(
+                                      context: context,
                         tag: 'trip-title-${trip.id}',
                         child: Material(
                           type: MaterialType.transparency,
@@ -882,7 +887,8 @@ class _CalmTripRow extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Hero(
+                        AppMotion.hero(
+                                      context: context,
                           tag: 'trip-title-${trip.id}',
                           child: Material(
                             type: MaterialType.transparency,
@@ -1027,7 +1033,8 @@ class _CalmHero extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 14),
-                Hero(
+                AppMotion.hero(
+                                      context: context,
                   tag: 'trip-title-${trip.id}',
                   child: Material(
                     type: MaterialType.transparency,

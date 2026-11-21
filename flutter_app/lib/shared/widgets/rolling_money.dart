@@ -101,21 +101,24 @@ class _RollingMoneyTextState extends State<RollingMoneyText> {
       label: widget.text,
       excludeSemantics: true,
       // Large text sizes shrink the figure to the card instead of overflowing it.
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Row(
-          key: const Key('rolling-money'),
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final (i, ch) in chars.indexed)
-              _Slot(
-                char: ch,
-                fromRight: chars.length - 1 - i,
-                up: _up,
-                style: chars.length - 1 - i < decimalCount ? dim : base,
-                duration: duration,
-              ),
-          ],
+      // Isolate digit rolls so scrolling lists do not repaint the whole ledger.
+      child: RepaintBoundary(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            key: const Key('rolling-money'),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final (i, ch) in chars.indexed)
+                _Slot(
+                  char: ch,
+                  fromRight: chars.length - 1 - i,
+                  up: _up,
+                  style: chars.length - 1 - i < decimalCount ? dim : base,
+                  duration: duration,
+                ),
+            ],
+          ),
         ),
       ),
     );

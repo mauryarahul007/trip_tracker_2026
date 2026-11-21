@@ -66,7 +66,7 @@ Living list of everything that was **deferred, skipped, or built but never verif
 | B-055 | ~~Push for expense added / settlement confirmation requested~~ | **closed (P10 slice E)** | The request rides the outbox payload (`push`) and is sent after the server write. Unverified against a real project | 10 |
 | B-056 | Divergence: saving a split with no active members returns an error ("Select at least one active traveler to split with."); the web silently does nothing | accepted | Intentional UX fix; revisit if strict parity is required | 7 |
 | B-057 | Cross-trip expense search (`enableCrossTripSearch`) and the web's collapsible stats "chrome" are not ported; Flutter always shows the summary card | done | Search (flag OFF) lists matches from other local trips. Compact summary is flag-gated | 7 |
-| B-058 | `enableCompactSummary`, `enableCategoryColorRings`, `enableMotionPolish` presentation flags are not honoured by the new rows | done | Compact summary, color rings, and compact ledger are gated. Motion polish stays a later visual pass | 12 |
+| B-058 | `enableCompactSummary`, `enableCategoryColorRings`, `enableMotionPolish` presentation flags are not honoured by the new rows | done | Compact summary, color rings, and compact ledger are gated. Motion polish wired in B-135 | 12 |
 | B-059 | Dispute / approve / confirm-settlement are online-only (parity with the web): they fail with "You're offline" instead of queueing | accepted | Queue them via the outbox if offline use becomes a requirement (the RPCs are replay-safe, 0115) | 7 |
 | B-060 | Conflict badge only appears after a pull reports a conflict; the resolver UI (B-024) is not built | done | Ledger sheet: keep mine dismisses; keep theirs calls `adoptServerCopy` | 7 |
 | B-061 | Test harness note: Drift streams created under `FakeAsync` can stall a following transaction. Widget tests must use `real()`/`settle()` from `test/support/pump_app.dart`; two writes in one `real()` block can hang | known | Document for new tests (done in HANDOFF) | n/a |
@@ -144,7 +144,7 @@ Settings, notifications, push, flags in the UI, feedback, and profile. Pieces al
 | B-132 | Demo data seeding (`enableDemoSeeding`) | open | Labs. Ops-style seed, not a traveler default | 10 |
 | B-133 | Trip stack alphabetical sort (`enableTripStackSort`) | open | Pro. The 3D stack itself is B-030 | 10 |
 | B-134 | Extended undo (`enableExtendedUndo`) | open | Core flag default on; the longer undo window is not ported | 10 |
-| B-135 | Motion polish (`enableMotionPolish`) | deferred | B-058 shipped the other presentation flags. This visual pass was left | 12 |
+| B-135 | Motion polish (`enableMotionPolish`) | done | Press scale on AppButton/dock, sheet drag gated, Heroes via AppMotion.hero; wired from TripTrackerApp | 12 |
 
 ### Added by Phase 10
 

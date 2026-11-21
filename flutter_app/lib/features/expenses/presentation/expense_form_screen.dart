@@ -37,6 +37,7 @@ import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../../trips/presentation/widgets/create_trip_sheet.dart' show dateRangePickerProvider;
 import '../application/expense_form_controller.dart';
@@ -71,7 +72,7 @@ class ExpenseFormScreen extends ConsumerWidget {
     final wide = MediaQuery.sizeOf(context).width >= 900;
     final form = ready
         ? _FormBody(args: ExpenseFormArgs(tripId, expenseId), cloneLast: cloneLast)
-        : const Center(child: CircularProgressIndicator());
+        : const SkeletonPage(shape: SkeletonShape.form, rows: 3);
     return AppScaffold(
       maxContentWidth: wide ? 760 : 960,
       appBar: AppBar(
@@ -1388,7 +1389,7 @@ class _FormReceiptThumbnail extends ConsumerWidget {
     Widget imageWidget;
     if (resolved != null && (resolved.startsWith('http://') || resolved.startsWith('https://'))) {
       imageWidget = Image(
-        image: CachedPhotoProvider(resolved),
+        image: cachedPhotoSized(context, resolved, logicalWidth: 64),
         key: const Key('receipt-preview'),
         width: 64,
         height: 64,

@@ -50,6 +50,7 @@ import '../../../shared/widgets/swipeable_row.dart';
 import '../../../shared/widgets/undo_snackbar.dart';
 import '../../expenses/application/expenses_providers.dart';
 import '../../expenses/application/money_providers.dart' show allTripsProvider;
+import '../../trip_details/application/prefetch_trip.dart';
 import '../../trip_details/application/trip_nav.dart' show openSearchHit;
 import '../application/trips_providers.dart';
 import 'widgets/home_dock.dart';
@@ -104,6 +105,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   var _deepLinkOn = false;
 
   void _open(Trip t) {
+    prefetchTrip(ref, t.id);
     // Trip-only search hit with deep links on: the trip's default tab, like every other search hit lands on a tab.
     if (_deepLinkOn && ref.read(tripSearchProvider).trim().isNotEmpty) {
       openSearchHit(context, ref, SearchHit(kind: HitKind.trip, tripId: t.id, tripName: t.name, title: t.name, detail: ''));
