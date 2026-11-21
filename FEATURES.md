@@ -266,7 +266,7 @@ Automatic Android APK build from main (Flutter merged into main)
 | **FEAT-206** | Flutter enhancements S1-S5 (money, empty/sync, visual, logic, search) | `ui-ux` | `agent` | `agent` | Shipped in 70afc31 (v3.91.7): FLUTTER-ENH-S1…S5 |
 | **FEAT-207** | Daily Budget Pacing Dial & Itemized Receipt Bill Splitter (Web & Flutter) | `fintech` | `user` | `agent` | Shipped in v3.92.0: Option A Fintech & Pacing |
 | **FEAT-208** | Day-by-Day Visual Itinerary & Schedule Planner (Web & Flutter) | `travel` | `user` | `agent` | Shipped in v3.92.0: Option B Day-by-Day Itinerary |
-| **FEAT-209** | Flutter UX polish 10: motion, skeletons, images, nav | `ui-ux` | `agent` | `agent` | Shipped in v3.93.1: FLUTTER-UX-10 |
+| **FEAT-209** | Flutter UX polish 10: motion, skeletons, images, nav | `ui-ux` | `agent` | `agent` | Shipped in 8026442 (v3.93.1): FLUTTER-UX-10 |
 
 ---
 
