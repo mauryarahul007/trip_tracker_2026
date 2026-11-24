@@ -53,6 +53,7 @@ import '../../expenses/application/money_providers.dart' show allTripsProvider;
 import '../../trip_details/application/prefetch_trip.dart';
 import '../../trip_details/application/trip_nav.dart' show openSearchHit;
 import '../application/trips_providers.dart';
+import 'widgets/horizon_home_hero.dart';
 import 'widgets/home_dock.dart';
 import '../application/sample_trip.dart';
 import 'widgets/first_run_tour.dart';
@@ -353,6 +354,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
       groupsByTrip: _groupsByTrip,
     );
     final t = context.tokens;
+    if (t.horizon) {
+      return HorizonBalanceHero(nets: nets, tripCount: live.length, onTap: () => context.go('/balances'));
+    }
     final String text;
     final Color color;
     if (nets.isEmpty) {
@@ -950,7 +954,52 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                     child: Column(
                                       children: [
                                         const LastSyncedCaption(),
+                                        if (tokens.horizon && auth.isAuthenticated)
+                                          Padding(
+                                            padding: const EdgeInsets.only(bottom: 12),
+                                            child: Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: HorizonGreeting(
+                                                name: auth.user?.displayName ?? auth.userEmail ?? '',
+                                                now: _now,
+                                              ),
+                                            ),
+                                          ),
                                         ?overview,
+                                        if (tokens.horizon)
+                                          HorizonQuickActions(
+                                            actions: [
+                                              HorizonQuickAction(
+                                                'new',
+                                                BentoTone.sky,
+                                                AppIcons.add,
+                                                l10n.horizonActionNewTrip,
+                                                _create,
+                                              ),
+                                              HorizonQuickAction(
+                                                'join',
+                                                BentoTone.peach,
+                                                Icons.confirmation_number_outlined,
+                                                l10n.horizonActionJoin,
+                                                () => showJoinCodeSheet(context),
+                                              ),
+                                              if (heroId != null)
+                                                HorizonQuickAction(
+                                                  'quick-add',
+                                                  BentoTone.mint,
+                                                  Icons.bolt_rounded,
+                                                  l10n.horizonActionQuickAdd,
+                                                  () => context.push('/trip/$heroId/expenses/new'),
+                                                ),
+                                              HorizonQuickAction(
+                                                'settle',
+                                                BentoTone.lilac,
+                                                Icons.balance_rounded,
+                                                l10n.horizonActionSettle,
+                                                () => context.go('/balances'),
+                                              ),
+                                            ],
+                                          ),
                                         if (active.isNotEmpty)
                                           CoachHint(hintKey: 'trips-swipe', text: l10n.hintSwipeTrip),
                                       ],

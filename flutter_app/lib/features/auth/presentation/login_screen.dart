@@ -418,13 +418,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const _TileCollage(),
-                const SizedBox(height: 28),
+                if (tokens.horizon) const _HorizonAppTile() else const _TileCollage(),
+                SizedBox(height: tokens.horizon ? 20 : 28),
                 Text(
                   l10n.authWelcome,
                   style: TextStyle(
                     fontFamily: AppTypography.fontTitle,
-                    fontSize: 36,
+                    fontSize: tokens.horizon ? 32 : 36,
                     height: 1.05,
                     fontWeight: FontWeight.w800,
                     color: tokens.textPrimary,
@@ -475,13 +475,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   onSubmit: _submitSuperadmin,
                 ),
                 const SizedBox(height: 20),
-                AppTextField(
-                  controller: _code,
-                  hint: l10n.authTripCodeHint,
-                  textInputAction: TextInputAction.go,
-                  onSubmitted: _goJoin,
-                  prefixIcon: const Icon(Icons.confirmation_number_outlined),
-                ),
+                if (tokens.horizon)
+                  _HorizonTripCodeCard(controller: _code, onSubmitted: _goJoin)
+                else
+                  AppTextField(
+                    controller: _code,
+                    hint: l10n.authTripCodeHint,
+                    textInputAction: TextInputAction.go,
+                    onSubmitted: _goJoin,
+                    prefixIcon: const Icon(Icons.confirmation_number_outlined),
+                  ),
                 const SizedBox(height: 16),
                 Text(
                   l10n.authLegal,
@@ -505,6 +508,76 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Horizon sign-in mark: the blue rounded-square app tile.
+class _HorizonAppTile extends StatelessWidget {
+  const _HorizonAppTile();
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerLeft,
+    child: Container(
+      key: const Key('horizon-login-tile'),
+      width: 64,
+      height: 64,
+      decoration: BoxDecoration(color: context.tokens.primaryAccent, borderRadius: BorderRadius.circular(18)),
+      child: const Icon(Icons.explore_outlined, size: 32, color: Colors.white),
+    ),
+  );
+}
+
+/// Horizon join-by-code card: a sunset-tinted card so guests see they can skip sign-up.
+class _HorizonTripCodeCard extends StatelessWidget {
+  const _HorizonTripCodeCard({required this.controller, required this.onSubmitted});
+  final TextEditingController controller;
+  final ValueChanged<String> onSubmitted;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final l10n = context.l10n;
+    return Container(
+      key: const Key('horizon-trip-code'),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: t.tones.peach.bg, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(color: t.accentOrange, borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.confirmation_number_outlined, size: 22, color: Colors.white),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.horizonTripCodeTitle,
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: t.textPrimary),
+                    ),
+                    Text(l10n.horizonTripCodeSubtitle, style: TextStyle(fontSize: 13, color: t.tones.peach.accent)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          AppTextField(
+            controller: controller,
+            hint: l10n.authTripCodeHint,
+            textInputAction: TextInputAction.go,
+            onSubmitted: onSubmitted,
+          ),
+        ],
       ),
     );
   }

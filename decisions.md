@@ -5914,3 +5914,15 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Activity is one tap further for people who used the bar item; the bell badge covers it.
   - Phase 3 (per-screen layouts) still to come on the same flag.
+
+## 295. Horizon look for the Flutter app, phase 3a: Start and Home (v3.96.0)
+* **Context:** Phase 3 applies the approved Horizon mockups screen by screen (see #293, #294). 3a covers the Start section (splash, onboarding, sign-in, reset password) and Home (Trips home, join code, All balances).
+* **Decision:**
+  - Same flag `enableHorizonUi`; every change branches on `tokens.horizon`, so OFF is the Calm layout untouched.
+  - New `horizon_home_hero.dart`: `HorizonGreeting`, `HorizonBalanceHero` (reuses `crossTripNets`, never blends currencies) and `HorizonQuickActions`.
+  - Splash, onboarding, login and reset password get Horizon branches; `AppButton` gains `trailingIcon`.
+  - All balances adds owed / owe stat cards from `tripNetPositions`, hidden when trips use more than one currency.
+  - Changelog entry for 3.96.0, which also clears the long-red changelog CI check.
+* **Trade-offs Accepted:**
+  - The mockup's per-person balances list and the create-trip cover colours need new data, so they wait; the current by-trip list stays.
+  - Sign-in keeps Google-first with no email password field for travellers, as today.

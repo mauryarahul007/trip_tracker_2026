@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-24 | 3.96.0 | HORIZON-UI | [Horizon look, phase 3a: Start and Home (Flutter)](#horizon-ui--horizon-look-phase-3a-start-and-home-flutter) |
 | 2026-11-24 | 3.95.0 | HORIZON-UI | [Horizon look, phase 2: shared parts and bottom bars (Flutter)](#horizon-ui--horizon-look-phase-2-shared-parts-and-bottom-bars-flutter) |
 | 2026-11-24 | 3.94.0 | HORIZON-UI | [Horizon look, phase 1: colours and theme (Flutter)](#horizon-ui--horizon-look-phase-1-colours-and-theme-flutter) |
 | 2026-11-21 | 3.93.1 | FLUTTER-UX-10 | [Flutter UX polish 10: motion, skeletons, images, nav](#flutter-ux-10--flutter-ux-polish-10-motion-skeletons-images-nav) |
@@ -4492,6 +4493,39 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## HORIZON-UI — Horizon look, phase 3a: Start and Home (Flutter)
+
+**Shipped:** v3.96.0. Flutter-only. Same flag `enableHorizonUi` (Core pack, default ON). Builds on phases 1 and 2 below.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Horizon Start and Home layouts | `enableHorizonUi` | ON (Core) |
+| Balance hero on Trips home | `enableTripsOverview` | per registry |
+
+### Prep
+Flutter app, a fresh install (or cleared data) for splash and onboarding. A signed-in user with one trip happening today where they are owed money, and one past trip.
+
+### Steps
+1. Cold start: the splash is night navy with a sunset glow at the bottom, a blue app tile, "Trip Tracker", "SPLIT · TRAVEL · SETTLE" and "Syncing your trips…".
+2. First run: each onboarding card shows a big navy picture card, then a left-aligned title and text. Dots are blue. The Next button has an arrow. Skip still works.
+3. Sign-in screen: a blue app tile at the top-left (no tile collage), the welcome title, then Google. Below sits a peach "Got a trip code?" card with the code field; a 6-letter code opens the join page.
+4. Settings > Forgot password (or the reset link): a blue lock tile sits above the title.
+5. Trips home: under the "My Trips" bar, a line reads "Good morning/afternoon/evening" over your first name.
+6. Under it, a navy balance card reads "ACROSS N TRIPS" and "+₹… owed to you" in green. Tap it: All balances opens.
+7. Owing money instead: the amount is red with a minus and says "you owe". Trips in two currencies show "2 currencies", never a blended sum.
+8. Four quick actions sit under the card: New trip, Join code, Quick add, Settle. Quick add only shows when a trip is happening today, and opens Add expense on it.
+9. Join code sheet: six filled grey boxes, mono letters, the active box outlined.
+10. All balances: two cards at the top read "OWED TO YOU" and "YOU OWE" with the totals.
+
+### Negative checks
+- `enableHorizonUi` OFF, restart: the old splash, onboarding, tile collage sign-in, "Trips" title and overview line come back.
+- `enableTripsOverview` OFF: no balance card on Trips home; quick actions still show.
+- No balance, split, total or sync result changes between ON and OFF.
+
+### Pass
+- Start and Home match the Horizon mockups (Start and Home sections) and every action still reaches the same place as before.
 
 ## HORIZON-UI — Horizon look, phase 2: shared parts and bottom bars (Flutter)
 

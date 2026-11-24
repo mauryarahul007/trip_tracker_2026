@@ -93,6 +93,7 @@ class BalancesScreen extends ConsumerWidget {
             : ListView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
                 children: [
+                  if (tokens.horizon) ?_horizonStats(context, positions),
                   BentoTile(
                     tone: BentoTone.mint,
                     padding: const EdgeInsets.all(20),
@@ -267,4 +268,89 @@ class _NetRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Horizon "Owed to you" and "You owe" stat cards, summed across trips. Hidden when trips use more than one
+/// currency, so nothing is blended.
+Widget? _horizonStats(BuildContext context, List<TripNetPosition> positions) {
+  final open = [
+    for (final p in positions)
+      if (p.net != 0) p,
+  ];
+  final currencies = {for (final p in open) p.currency};
+  if (currencies.length > 1) return null;
+  final currency = currencies.isEmpty ? null : currencies.first;
+  var owed = 0.0;
+  var owe = 0.0;
+  for (final p in open) {
+    if (p.net > 0) {
+      owed += p.net;
+    } else {
+      owe -= p.net;
+    }
+  }
+  final t = context.tokens;
+  String fmt(double v) => currency == null ? '0' : formatMoney(context, v, currency);
+  Widget card(String key, String label, String amount, Color color) => Expanded(
+    child: Container(
+      key: Key(key),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: t.bgSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: t.cardEdge),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontFamily: AppTypography.fontMono,
+              fontSize: 11,
+              letterSpacing: 1.4,
+              fontWeight: FontWeight.w600,
+              color: t.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              amount,
+              style: TextStyle(
+                fontFamily: AppTypography.fontMono,
+                fontFeatures: AppTypography.tabularFigures,
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+  final l10n = context.l10n;
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Row(
+      children: [
+        card(
+          'horizon-stat-owed',
+          l10n.horizonOwedToYou,
+          owed > 0 ? '+${fmt(owed)}' : fmt(0),
+          owed > 0 ? t.colorSuccess : t.textPrimary,
+        ),
+        const SizedBox(width: 10),
+        card(
+          'horizon-stat-owe',
+          l10n.horizonYouOwe,
+          owe > 0 ? '−${fmt(owe)}' : fmt(0),
+          owe > 0 ? t.colorDanger : t.textPrimary,
+        ),
+      ],
+    ),
+  );
 }

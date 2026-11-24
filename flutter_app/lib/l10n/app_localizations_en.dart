@@ -2967,4 +2967,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get binMoreActions => 'More actions';
+
+  @override
+  String get horizonSplashTagline => 'Split · Travel · Settle';
+
+  @override
+  String get horizonSplashSyncing => 'Syncing your trips…';
+
+  @override
+  String get horizonTripCodeTitle => 'Got a trip code?';
+
+  @override
+  String get horizonTripCodeSubtitle => 'Join without an account';
+
+  @override
+  String get horizonGreetingMorning => 'Good morning';
+
+  @override
+  String get horizonGreetingAfternoon => 'Good afternoon';
+
+  @override
+  String get horizonGreetingEvening => 'Good evening';
+
+  @override
+  String horizonAcrossTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count trips', one: '1 trip');
+    return 'Across $_temp0';
+  }
+
+  @override
+  String get horizonOwedToYou => 'owed to you';
+
+  @override
+  String get horizonYouOwe => 'you owe';
+
+  @override
+  String get horizonAllSquare => 'All square';
+
+  @override
+  String horizonCurrencies(int count) {
+    return '$count currencies';
+  }
+
+  @override
+  String get horizonActionNewTrip => 'New trip';
+
+  @override
+  String get horizonActionJoin => 'Join code';
+
+  @override
+  String get horizonActionQuickAdd => 'Quick add';
+
+  @override
+  String get horizonActionSettle => 'Settle';
 }
