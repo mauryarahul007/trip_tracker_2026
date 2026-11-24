@@ -154,10 +154,7 @@ class _MembersTabState extends ConsumerState<MembersTab> {
                 )
               : Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Text(
-                    l10n.memEmptyPlain,
-                    style: TextStyle(color: context.tokens.textSecondary, fontSize: 14),
-                  ),
+                  child: Text(l10n.memEmptyPlain, style: TextStyle(color: context.tokens.textSecondary, fontSize: 14)),
                 ),
         for (final m in shown)
           _row(context, ref, m, balances[m.id], money, canManage, trip?.baseCurrency ?? 'INR', tidy: tidy),

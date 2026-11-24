@@ -221,7 +221,9 @@ class BalancesScreen extends ConsumerWidget {
                               child: Builder(
                                 builder: (_) {
                                   final nets = netsFor([t]);
-                                  if (nets.isEmpty) return Text(l10n.ledStubSettled, style: TextStyle(color: tokens.textMuted));
+                                  if (nets.isEmpty) {
+                                    return Text(l10n.ledStubSettled, style: TextStyle(color: tokens.textMuted));
+                                  }
                                   return Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [for (final n in nets) _NetRow(n)],

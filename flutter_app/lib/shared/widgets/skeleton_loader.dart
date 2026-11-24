@@ -156,7 +156,11 @@ class SkeletonPage extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [bar(140, 12), SizedBox(height: t.spaceSm), bar(90, 10)],
+              children: [
+                bar(140, 12),
+                SizedBox(height: t.spaceSm),
+                bar(90, 10),
+              ],
             ),
           ),
           if (amount) bar(56, 14),

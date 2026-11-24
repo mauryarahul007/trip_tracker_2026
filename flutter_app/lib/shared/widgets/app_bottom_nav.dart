@@ -90,16 +90,13 @@ class AppBottomNav extends StatelessWidget {
           );
     if (!compressed) return dock;
     final reduce = MediaQuery.disableAnimationsOf(context);
+    // Scale only: fading the dock as well dropped the idle labels under WCAG AA contrast (4.17:1).
     return AnimatedScale(
       scale: 0.92,
       alignment: Alignment.bottomCenter,
       duration: reduce ? Duration.zero : const Duration(milliseconds: 180),
       curve: Curves.easeOutCubic,
-      child: AnimatedOpacity(
-        opacity: 0.92,
-        duration: reduce ? Duration.zero : const Duration(milliseconds: 180),
-        child: dock,
-      ),
+      child: dock,
     );
   }
 }
@@ -400,7 +397,9 @@ class _DockCenter extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 5),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: t.primaryAccent.withValues(alpha: 0.45), blurRadius: 16, offset: const Offset(0, 6))],
+              boxShadow: [
+                BoxShadow(color: t.primaryAccent.withValues(alpha: 0.45), blurRadius: 16, offset: const Offset(0, 6)),
+              ],
             ),
             child: Material(
               color: t.ctaBg,

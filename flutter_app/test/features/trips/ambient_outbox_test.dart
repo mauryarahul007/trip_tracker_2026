@@ -32,13 +32,10 @@ Future<void> openTrip(WidgetTester tester, String id) async {
 }
 
 void main() {
-  testApp('Ambient Outbox Sheet opens when offline and sync button is tapped with enableAmbientOutboxDrawer ON', (tester) async {
-    await pumpApp(
-      tester,
-      user: asha,
-      online: false,
-      flagsOn: {'enableAmbientOutboxDrawer', 'enableSyncLine'},
-    );
+  testApp('Ambient Outbox Sheet opens when offline and sync button is tapped with enableAmbientOutboxDrawer ON', (
+    tester,
+  ) async {
+    await pumpApp(tester, user: asha, online: false, flagsOn: {'enableAmbientOutboxDrawer', 'enableSyncLine'});
     final tripId = await createTestTrip(tester);
     await openTrip(tester, tripId);
 
@@ -58,28 +55,15 @@ void main() {
   });
 
   testApp('Ambient Outbox Sheet displays queued items and metrics when items exist in outbox', (tester) async {
-    await pumpApp(
-      tester,
-      user: asha,
-      online: false,
-      flagsOn: {'enableAmbientOutboxDrawer', 'enableSyncLine'},
-    );
+    await pumpApp(tester, user: asha, online: false, flagsOn: {'enableAmbientOutboxDrawer', 'enableSyncLine'});
     final tripId = await createTestTrip(tester);
 
     // Manually enqueue an outbox item
     final outbox = containerOf(tester).read(outboxStoreProvider);
-    await outbox.enqueue(
-      OutboxType.addExpense,
-      {
-        'tripId': tripId,
-        'expenseData': {
-          'title': 'Monastery Entry Tickets',
-          'amount': 600.0,
-          'currency': 'INR',
-        },
-      },
-      tripId: tripId,
-    );
+    await outbox.enqueue(OutboxType.addExpense, {
+      'tripId': tripId,
+      'expenseData': {'title': 'Monastery Entry Tickets', 'amount': 600.0, 'currency': 'INR'},
+    }, tripId: tripId);
 
     await openTrip(tester, tripId);
 
@@ -95,12 +79,7 @@ void main() {
   });
 
   testApp('Ambient Outbox Sheet displays empty state when outbox is completely clear', (tester) async {
-    await pumpApp(
-      tester,
-      user: asha,
-      online: false,
-      flagsOn: {'enableAmbientOutboxDrawer', 'enableSyncLine'},
-    );
+    await pumpApp(tester, user: asha, online: false, flagsOn: {'enableAmbientOutboxDrawer', 'enableSyncLine'});
     final tripId = await createTestTrip(tester);
 
     // Clear all outbox items to simulate a clean/synced outbox

@@ -127,7 +127,8 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
           creatorName: user.displayName ?? user.email?.split('@').first ?? 'Me',
           destination: destination.isEmpty ? null : destination,
         );
-    if (_cover != null && context.mounted && context.tokens.horizon) {
+    // Only the Horizon sheet shows the picker, so a picked colour means Horizon is on.
+    if (_cover != null) {
       ref.read(tripColorsProvider.notifier).set(id, _cover!.name);
     }
     if (_template != null && (ref.read(flagProvider(('enableTripTemplates', null))).value ?? true)) {
@@ -302,10 +303,7 @@ class _CoverPicker extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: t.tones[tone].accent,
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: value == tone ? t.textPrimary : Colors.transparent,
-                        width: 3,
-                      ),
+                      border: Border.all(color: value == tone ? t.textPrimary : Colors.transparent, width: 3),
                     ),
                     child: value == tone ? const Icon(Icons.check_rounded, color: Colors.white, size: 22) : null,
                   ),

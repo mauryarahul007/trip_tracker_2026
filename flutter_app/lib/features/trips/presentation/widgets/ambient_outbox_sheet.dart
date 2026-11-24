@@ -16,11 +16,7 @@ import '../../application/trips_providers.dart';
 
 /// Opens the ambient Material 3 offline outbox drawer / sheet.
 void showAmbientOutboxSheet(BuildContext context) {
-  AppSheet.show<void>(
-    context: context,
-    title: 'Trip Outbox & Sync',
-    builder: (_) => const AmbientOutboxSheet(),
-  );
+  AppSheet.show<void>(context: context, title: 'Trip Outbox & Sync', builder: (_) => const AmbientOutboxSheet());
 }
 
 /// Rich Material 3 offline outbox drawer displaying queued mutations, connection banner,
@@ -127,7 +123,11 @@ class AmbientOutboxSheet extends ConsumerWidget {
     required SyncStatus status,
     required AppTokens tokens,
   }) {
-    final (Color bg, Color border, Color fg, IconData icon, String title, String subtitle) = switch ((online, syncing, status.issues > 0)) {
+    final (Color bg, Color border, Color fg, IconData icon, String title, String subtitle) = switch ((
+      online,
+      syncing,
+      status.issues > 0,
+    )) {
       (false, _, _) => (
         tokens.colorWarning.withValues(alpha: 0.12),
         tokens.colorWarning.withValues(alpha: 0.35),
@@ -180,21 +180,10 @@ class AmbientOutboxSheet extends ConsumerWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    color: tokens.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(color: tokens.textPrimary, fontSize: 13, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: tokens.textSecondary,
-                    fontSize: 11.5,
-                    height: 1.3,
-                  ),
-                ),
+                Text(subtitle, style: TextStyle(color: tokens.textSecondary, fontSize: 11.5, height: 1.3)),
               ],
             ),
           ),
@@ -236,30 +225,18 @@ class AmbientOutboxSheet extends ConsumerWidget {
       children: [
         Text(
           value,
-          style: TextStyle(
-            color: color,
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-          ),
+          style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.w800),
         ),
         Text(
           label,
-          style: TextStyle(
-            color: tokens.textMuted,
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(color: tokens.textMuted, fontSize: 11, fontWeight: FontWeight.w500),
         ),
       ],
     );
   }
 
   Widget _divider(AppTokens tokens) {
-    return Container(
-      width: 1,
-      height: 24,
-      color: tokens.borderColor.withValues(alpha: 0.5),
-    );
+    return Container(width: 1, height: 24, color: tokens.borderColor.withValues(alpha: 0.5));
   }
 
   Widget _buildEmptyState(BuildContext context, {required AppTokens tokens}) {
@@ -274,11 +251,7 @@ class AmbientOutboxSheet extends ConsumerWidget {
           const SizedBox(height: 10),
           Text(
             'Outbox is completely clear',
-            style: TextStyle(
-              color: tokens.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-            ),
+            style: TextStyle(color: tokens.textPrimary, fontSize: 15, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
@@ -304,8 +277,8 @@ class AmbientOutboxSheet extends ConsumerWidget {
     final statusColor = hasError
         ? tokens.colorDanger
         : item.status == OutboxStatus.inFlight
-            ? tokens.tones.sky.accent
-            : tokens.textMuted;
+        ? tokens.tones.sky.accent
+        : tokens.textMuted;
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -341,11 +314,7 @@ class AmbientOutboxSheet extends ConsumerWidget {
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
-                        color: tokens.textPrimary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: TextStyle(color: tokens.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -358,11 +327,7 @@ class AmbientOutboxSheet extends ConsumerWidget {
                 ),
               ),
               if (item.status == OutboxStatus.inFlight)
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
+                const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
             ],
           ),
           if (item.lastError != null) ...[
@@ -468,10 +433,7 @@ class AmbientOutboxSheet extends ConsumerWidget {
                   )
                 : const Icon(Icons.sync_rounded, size: 16),
             label: Text(syncing ? 'Syncing...' : (!online ? 'Offline' : l10n.syncNow)),
-            style: FilledButton.styleFrom(
-              backgroundColor: tokens.ctaBg,
-              foregroundColor: tokens.ctaFg,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: tokens.ctaBg, foregroundColor: tokens.ctaFg),
           ),
         ),
       ],

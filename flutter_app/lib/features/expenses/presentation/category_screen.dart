@@ -23,7 +23,8 @@ class CategoryScreen extends ConsumerWidget {
     final cats = ref.watch(tripCategoriesProvider(tripId));
     final reorder = ref.watch(flagProvider(('enableCategoryReorder', tripId))).value ?? false;
     final isAdmin = ref.watch(isTripAdminProvider(tripId));
-    final vectorIcons = ref.watch(flagProvider(('enableCategoryVectorIcons', tripId))).value ??
+    final vectorIcons =
+        ref.watch(flagProvider(('enableCategoryVectorIcons', tripId))).value ??
         defaultFeatureFlags['enableCategoryVectorIcons'] ??
         true;
     return AppScaffold(
@@ -47,7 +48,8 @@ class CategoryScreen extends ConsumerWidget {
                       ref.read(tripRepositoryProvider).setCategoryOrder(tripId, [for (final c in next) c.id]);
                     },
                     children: [
-                      for (final c in cats) _tile(context, ref, c, isAdmin, key: ValueKey(c.id), vectorIcons: vectorIcons),
+                      for (final c in cats)
+                        _tile(context, ref, c, isAdmin, key: ValueKey(c.id), vectorIcons: vectorIcons),
                     ],
                   )
                 : ListView(

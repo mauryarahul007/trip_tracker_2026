@@ -9867,5 +9867,59 @@
     "resolvedAt": "2026-11-12T14:17:23.875Z",
     "resolvedBy": "agent",
     "resolutionNote": "Restored permanent Staff › TextButton bottom-right next to the ticket barcode; updated boarding_login_test and FEATURE_TEST_STEPS. Commit c15f274 (v3.91.6)."
+  },
+  {
+    "id": "BUG-350",
+    "title": "Flutter trip sheet stopped halfway on a slow handle drag",
+    "description": "TripContentSheet inserted its darkening scrim into the Stack once progress passed 1%, which shifted the sheet's slot, rebuilt the drag handle and cancelled the drag, so no snap ran.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "agent",
+    "environment": {
+      "platform": "native",
+      "isOnline": true,
+      "appVersion": "3.99.0"
+    },
+    "reproSteps": [
+      "Open a trip with the half-open sheet",
+      "Drag the handle up slowly over about a second",
+      "Release"
+    ],
+    "expectedBehavior": "The sheet snaps fully open (or back to the peek).",
+    "actualBehavior": "The sheet stays where the finger left it, half open.",
+    "diagnostics": {},
+    "createdAt": "2026-11-24T18:35:00.000Z",
+    "updatedAt": "2026-11-24T18:35:00.000Z",
+    "resolvedAt": "2026-11-24T18:35:00.000Z",
+    "resolvedBy": "agent",
+    "resolutionNote": "Scrim always stays in the tree (transparent until the sheet moves); regression test with a timed drag. Commit 1e32a4c (v3.99.1)."
+  },
+  {
+    "id": "BUG-351",
+    "title": "Flutter overflows and small touch targets on Notes, Spend and Balances",
+    "description": "Itinerary empty-day row overflowed; Notes pane labels overflowed with many passes; Spend section chips were 44px tall; Set Budget was 40px; the dock faded on scroll below AA contrast; the hub More header had no Material for its ink.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "agent",
+    "environment": {
+      "platform": "native",
+      "isOnline": true,
+      "appVersion": "3.99.0"
+    },
+    "reproSteps": [
+      "Notes > Itinerary on a day with nothing logged",
+      "Spend section chips row",
+      "Balances with no budget"
+    ],
+    "expectedBehavior": "No overflow; all touch targets at least 48px; labels at AA contrast.",
+    "actualBehavior": "Overflow stripes, 40-44px targets and 4.17:1 dock labels.",
+    "diagnostics": {},
+    "createdAt": "2026-11-24T18:35:00.000Z",
+    "updatedAt": "2026-11-24T18:35:00.000Z",
+    "resolvedAt": "2026-11-24T18:35:00.000Z",
+    "resolvedBy": "agent",
+    "resolutionNote": "Expanded text, FittedBox labels, 48px rows, minimumSize on Set Budget, scale-only dock, transparent Material on More. Commit 1e32a4c (v3.99.1)."
   }
 ]

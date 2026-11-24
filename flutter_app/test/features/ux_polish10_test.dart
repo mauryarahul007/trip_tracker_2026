@@ -8,7 +8,10 @@ import 'package:trip_tracker/shared/widgets/app_button.dart';
 import 'package:trip_tracker/shared/widgets/rolling_money.dart';
 import 'package:trip_tracker/shared/widgets/skeleton_loader.dart';
 
-Widget _theme(Widget child) => MaterialApp(theme: AppTheme.light(), home: Scaffold(body: child));
+Widget _theme(Widget child) => MaterialApp(
+  theme: AppTheme.light(),
+  home: Scaffold(body: child),
+);
 
 void main() {
   tearDown(() {
@@ -47,11 +50,7 @@ void main() {
     await tester.pumpWidget(
       _theme(
         Builder(
-          builder: (context) => AppMotion.hero(
-            context: context,
-            tag: 'trip-title-y',
-            child: const Text('Manali'),
-          ),
+          builder: (context) => AppMotion.hero(context: context, tag: 'trip-title-y', child: const Text('Manali')),
         ),
       ),
     );
@@ -67,7 +66,7 @@ void main() {
       _theme(
         Column(
           children: [
-            RollingMoneyText(whole: '₹100', decimals: '', fontSize: 24, color: Colors.black),
+            const RollingMoneyText(whole: '₹100', decimals: '', fontSize: 24, color: Colors.black),
             AnimatedMoneyText(value: 42, format: (v) => v.toStringAsFixed(0)),
           ],
         ),

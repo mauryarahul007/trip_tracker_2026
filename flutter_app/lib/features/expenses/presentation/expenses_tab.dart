@@ -394,14 +394,11 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final sectionChipsOn = _flag(ref, 'enableSpendSectionChips', id);
     final showExpenseDays = !sectionChipsOn || _section != _SpendSection.settlements;
     final showSettlements = !sectionChipsOn || _section == _SpendSection.all || _section == _SpendSection.settlements;
-    final dayGroups = showExpenseDays
-        ? groupByDay(shown.where(isActualExpense).toList())
-        : const <DayGroup>[];
+    final dayGroups = showExpenseDays ? groupByDay(shown.where(isActualExpense).toList()) : const <DayGroup>[];
     final settlementGroups = showSettlements
         ? groupByDay(shown.where((e) => !isActualExpense(e)).toList())
         : const <DayGroup>[];
-    String dayKey(DayGroup g, {required bool settlement}) =>
-        settlement ? 'settlement:${g.date}' : g.date;
+    String dayKey(DayGroup g, {required bool settlement}) => settlement ? 'settlement:${g.date}' : g.date;
     // Only once the flag has really loaded: while it loads it reads as its default (ON) and would open every day.
     if (ref.watch(flagProvider((compassSpendFlag, id))).value == true) {
       for (final g in dayGroups) {
@@ -417,8 +414,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     final expenseKeys = [for (final g in dayGroups) dayKey(g, settlement: false)];
     final settlementKeys = [for (final g in settlementGroups) dayKey(g, settlement: true)];
     final allKeys = [...expenseKeys, ...settlementKeys];
-    final allExpanded =
-        allKeys.isNotEmpty && allKeys.every((k) => _expandedDays.contains(k));
+    final allExpanded = allKeys.isNotEmpty && allKeys.every((k) => _expandedDays.contains(k));
 
     final settlement = ref.watch(tripSettlementProvider(id));
     final chips = attentionChips(
@@ -462,11 +458,13 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     // One row language: tidy tiles whenever the flag is ON (its default), Compass or not. The boarding-receipt
     // layout only returns when Superadmin turns the flag OFF. While the flag is loading it reads as its default,
     // so first paint never flashes the receipt rows.
-    final tidyOn = (ref.watch(flagProvider(('enableTidyExpenses', id))).value ??
+    final tidyOn =
+        (ref.watch(flagProvider(('enableTidyExpenses', id))).value ??
             defaultFeatureFlags['enableTidyExpenses'] ??
             true) ||
         compassSpend;
-    final vectorIconsOn = ref.watch(flagProvider(('enableCategoryVectorIcons', id))).value ??
+    final vectorIconsOn =
+        ref.watch(flagProvider(('enableCategoryVectorIcons', id))).value ??
         defaultFeatureFlags['enableCategoryVectorIcons'] ??
         true;
     final settleFromSpendOn = _flag(ref, 'enableSettleFromSpend', id);
@@ -507,12 +505,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         onSettle: settleTransfer == null
             ? null
             : () => unawaited(
-                showSettleSheet(
-                  context: context,
-                  tripId: id,
-                  transfer: settleTransfer,
-                  currency: trip.baseCurrency,
-                ),
+                showSettleSheet(context: context, tripId: id, transfer: settleTransfer, currency: trip.baseCurrency),
               ),
         settleLabel: settleTransfer == null
             ? null
@@ -593,11 +586,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       );
     }
 
-    List<Widget> section(
-      List<DayGroup> groups, {
-      required bool collapsible,
-      bool isSettlement = false,
-    }) {
+    List<Widget> section(List<DayGroup> groups, {required bool collapsible, bool isSettlement = false}) {
       SliverPersistentHeader headerFor(DayGroup g, {required bool expanded}) {
         final key = dayKey(g, settlement: isSettlement);
         return SliverPersistentHeader(
@@ -615,9 +604,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             semantics: isSettlement
                 ? '${_settlementDateLabel(g.date)}, ${g.expenses.length} settled, ${formatMoney(context, g.total, trip.baseCurrency)}'
                 : l10n.expDaySemantics(g.date, g.expenses.length, formatMoney(context, g.total, trip.baseCurrency)),
-            onTap: () => setState(
-              () => _expandedDays.contains(key) ? _expandedDays.remove(key) : _expandedDays.add(key),
-            ),
+            onTap: () =>
+                setState(() => _expandedDays.contains(key) ? _expandedDays.remove(key) : _expandedDays.add(key)),
             background: tokens.bgPage,
             textColor: tokens.textPrimary,
             mutedColor: tokens.textMuted,
@@ -627,8 +615,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             countText: isSettlement
                 ? '${g.expenses.length} settled'
                 : g.expenses.isNotEmpty && g.expenses.every(isRefund)
-                    ? l10n.expDayCountRefund(g.expenses.length)
-                    : l10n.expDayCount(g.expenses.length),
+                ? l10n.expDayCountRefund(g.expenses.length)
+                : l10n.expDayCount(g.expenses.length),
           ),
         );
       }
@@ -791,7 +779,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
               height: 48,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
+                // No vertical padding: each chip's touch area is the full 48 px row.
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   for (final s in _SpendSection.values)
                     Padding(
@@ -810,8 +799,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                           final next = switch (s) {
                             _SpendSection.expenses => filters.copyWith(entryKind: EntryKind.expense),
                             _SpendSection.refunds => filters.copyWith(entryKind: EntryKind.refund),
-                            _SpendSection.all || _SpendSection.settlements =>
-                              filters.copyWith(clearEntryKind: true),
+                            _SpendSection.all || _SpendSection.settlements => filters.copyWith(clearEntryKind: true),
                           };
                           _setFilters(next);
                         },
@@ -948,11 +936,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                   onScanReceipt: () => context.push('/trip/$id/receipts'),
                   onViewMembers: () => context.go('/trip/$id/members'),
                 )
-              : EmptyState(
-                  plain: true,
-                  title: l10n.expNone,
-                  subtitle: l10n.expNoneBody,
-                ))
+              : EmptyState(plain: true, title: l10n.expNone, subtitle: l10n.expNoneBody))
         : EmptyState(
             plain: true,
             title: l10n.expNoMatches,
@@ -1049,18 +1033,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                           ),
                           Flexible(
                             child: Text(
-                              '${formatMoney(
-                                context,
-                                settlementGroups.fold<double>(0.0, (sum, g) => sum + g.total),
-                                trip.baseCurrency,
-                              )} settled',
+                              '${formatMoney(context, settlementGroups.fold<double>(0.0, (sum, g) => sum + g.total), trip.baseCurrency)} settled',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: tokens.textMuted,
-                              ),
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: tokens.textMuted),
                             ),
                           ),
                         ],
@@ -1085,9 +1061,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                 SliverToBoxAdapter(
                   child: _OtherTrips(tripId: id, query: filters.query.trim()),
                 ),
-              SliverToBoxAdapter(
-                child: SizedBox(height: bottomClear + MediaQuery.paddingOf(context).bottom),
-              ),
+              SliverToBoxAdapter(child: SizedBox(height: bottomClear + MediaQuery.paddingOf(context).bottom)),
             ],
           ),
         ),
@@ -1338,10 +1312,7 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
                   Text(
                     total,
                     key: Key('day-total-$date'),
-                    style: AppTypography.moneyDisplay(
-                      fontSize: 20,
-                      color: textColor,
-                    ).copyWith(
+                    style: AppTypography.moneyDisplay(fontSize: 20, color: textColor).copyWith(
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.3,
                       fontFeatures: AppTypography.tabularFigures,
@@ -1590,7 +1561,6 @@ class _RunwayChip extends StatelessWidget {
   }
 }
 
-
 class _SettlementFeedTile extends StatelessWidget {
   const _SettlementFeedTile({
     required this.expense,
@@ -1643,13 +1613,7 @@ class _SettlementFeedTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: mintAccent.withValues(alpha: 0.2)),
                   ),
-                  child: Center(
-                    child: Icon(
-                      Icons.swap_horiz_rounded,
-                      size: 22,
-                      color: mintAccent,
-                    ),
-                  ),
+                  child: Center(child: Icon(Icons.swap_horiz_rounded, size: 22, color: mintAccent)),
                 ),
                 const SizedBox(width: 12),
                 // Title and Payer / Subtitle
@@ -1662,11 +1626,7 @@ class _SettlementFeedTile extends StatelessWidget {
                         expense.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: tokens.textPrimary,
-                        ),
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                       ),
                       const SizedBox(height: 3),
                       Row(
@@ -1701,10 +1661,7 @@ class _SettlementFeedTile extends StatelessWidget {
                               payerName.isNotEmpty ? 'Paid by $payerName' : '',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: tokens.textMuted,
-                              ),
+                              style: TextStyle(fontSize: 12, color: tokens.textMuted),
                             ),
                           ),
                         ],
@@ -1720,29 +1677,17 @@ class _SettlementFeedTile extends StatelessWidget {
                   children: [
                     Text(
                       formatMoney(context, expense.amount, expense.currency),
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: tokens.textPrimary,
-                      ),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: tokens.textPrimary),
                     ),
                     if (isMeReceiver)
                       Text(
                         'you get back',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: tokens.colorSuccess,
-                        ),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: tokens.colorSuccess),
                       )
                     else if (isMePayer)
                       Text(
                         'you paid',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: tokens.textMuted,
-                        ),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: tokens.textMuted),
                       ),
                   ],
                 ),
@@ -1794,10 +1739,7 @@ class _EmptySpendAccelerator extends StatelessWidget {
                 Container(
                   width: 54,
                   height: 54,
-                  decoration: BoxDecoration(
-                    color: tokens.tones[BentoTone.butter].bg,
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: BoxDecoration(color: tokens.tones[BentoTone.butter].bg, shape: BoxShape.circle),
                   alignment: Alignment.center,
                   child: const Icon(Icons.receipt_long_rounded, size: 26, color: Color(0xFFD97706)),
                 ),
@@ -1824,11 +1766,7 @@ class _EmptySpendAccelerator extends StatelessWidget {
                   runSpacing: 10,
                   alignment: WrapAlignment.center,
                   children: [
-                    AppButton(
-                      label: context.l10n.expAdd,
-                      icon: AppIcons.add,
-                      onPressed: onAddExpense,
-                    ),
+                    AppButton(label: context.l10n.expAdd, icon: AppIcons.add, onPressed: onAddExpense),
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

@@ -198,9 +198,10 @@ void main() {
       return s;
     }
 
-    Future<double?> savedThreshold(WidgetTester tester, Seed s) async =>
-        (await real(tester, () => containerOf(tester).read(tripRepositoryProvider).watchTrip(s.tripId).first))!
-            .approvalThreshold;
+    Future<double?> savedThreshold(WidgetTester tester, Seed s) async => (await real(
+      tester,
+      () => containerOf(tester).read(tripRepositoryProvider).watchTrip(s.tripId).first,
+    ))!.approvalThreshold;
 
     testApp('a sheet, not a dialog: live money preview in the trip currency, then Save', (tester) async {
       final s = await openThreshold(tester);

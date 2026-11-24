@@ -93,7 +93,9 @@ class _NotesTabState extends ConsumerState<NotesTab> {
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = _focusNoteKey.currentContext;
-      if (ctx != null && ctx.mounted) unawaited(Scrollable.ensureVisible(ctx, duration: AppMotion.base, alignment: 0.15));
+      if (ctx != null && ctx.mounted) {
+        unawaited(Scrollable.ensureVisible(ctx, duration: AppMotion.base, alignment: 0.15));
+      }
     });
     _focusTimer?.cancel();
     _focusTimer = Timer(const Duration(milliseconds: 2500), () {
@@ -102,12 +104,13 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   }
 
   /// "Passes (2)": the name stays its own Text so it can still be found by label.
-  Widget _countLabel(String name, int n) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Flexible(child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis)),
-      if (n > 0) Text(' ($n)', maxLines: 1),
-    ],
+  /// Scales down instead of overflowing when four panes share a narrow phone.
+  Widget _countLabel(String name, int n) => FittedBox(
+    fit: BoxFit.scaleDown,
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [Text(name, maxLines: 1), if (n > 0) Text(' ($n)', maxLines: 1)],
+    ),
   );
 
   @override

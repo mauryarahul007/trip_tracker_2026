@@ -105,6 +105,8 @@ const _compassFlags = [
   'enableTripGetStarted', // new-trip start card; tests of blank trips expect the older empty screens
   'enableDockedKeypad', // older form tests type into the amount field; the docked keypad has its own tests
   'enableHorizonUi', // Horizon redesign; the older tests assert the Calm layouts, Horizon tests opt in
+  'enableCompactSummary', // folds Trip numbers and settle extras; the older Summary tests expect them open
+  'enableItineraryPlanner', // opens Notes on the Itinerary pane; the older Notes tests start on the checklist
 ];
 
 /// Boots the real app with every platform/backend seam faked.

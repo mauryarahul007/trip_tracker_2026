@@ -82,9 +82,9 @@ void main() {
 
       // Header and amount display
       expect(find.byKey(const Key('upi-payment-sheet')), findsOneWidget);
-      expect(find.text('1-TAP UPI SETTLEMENT'), findsOneWidget);
+      expect(find.text('1-TAP SETTLEMENT RAILS'), findsOneWidget); // the sheet now covers every payment rail
       expect(find.text('Pay Sneha'), findsOneWidget);
-      expect(find.text('₹1450.00'), findsOneWidget);
+      expect(tester.widget<Text>(find.byKey(const Key('upi-amount-display'))).data, 'INR 1450.00');
       expect(find.text('From Rahul to Sneha'), findsOneWidget);
 
       // UPI ID input with initial value

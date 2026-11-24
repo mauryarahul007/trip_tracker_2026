@@ -408,10 +408,7 @@ class TripHubScreen extends ConsumerWidget {
                                                 const SizedBox(height: 12),
                                                 Text(
                                                   tile.title,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w700,
-                                                    fontSize: 14.5,
-                                                  ),
+                                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5),
                                                 ),
                                                 const SizedBox(height: 2),
                                                 Text(
@@ -437,15 +434,15 @@ class TripHubScreen extends ConsumerWidget {
 
             // Quiet 2-col grid: 4 daily trip actions up front (People, Plans/Notes, Receipts, Invite);
             // everything else, including All trips and App settings, sits under More.
-            const primaryKeys = {
-              'hub-people',
-              'hub-plans',
-              'hub-notes',
-              'hub-invite',
-              'hub-receipts',
-            };
-            final primary = [for (final tile in tiles) if (primaryKeys.contains(tile.key)) tile];
-            final more = [for (final tile in tiles) if (!primaryKeys.contains(tile.key)) tile];
+            const primaryKeys = {'hub-people', 'hub-plans', 'hub-notes', 'hub-invite', 'hub-receipts'};
+            final primary = [
+              for (final tile in tiles)
+                if (primaryKeys.contains(tile.key)) tile,
+            ];
+            final more = [
+              for (final tile in tiles)
+                if (!primaryKeys.contains(tile.key)) tile,
+            ];
 
             Widget tileCard(_HubTile tile) => SizedBox(
               width: regularWidth,
@@ -492,30 +489,27 @@ class TripHubScreen extends ConsumerWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Wrap(
-                  spacing: gap,
-                  runSpacing: gap,
-                  children: [for (final tile in primary) tileCard(tile)],
-                ),
+                Wrap(spacing: gap, runSpacing: gap, children: [for (final tile in primary) tileCard(tile)]),
                 if (more.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                    child: ExpansionTile(
-                      key: const Key('hub-more'),
-                      initiallyExpanded: false,
-                      tilePadding: EdgeInsets.zero,
-                      title: Text(
-                        'More',
-                        style: TextStyle(fontWeight: FontWeight.w700, color: t.textSecondary),
-                      ),
-                      children: [
-                        Wrap(
-                          spacing: gap,
-                          runSpacing: gap,
-                          children: [for (final tile in more) tileCard(tile)],
+                  // Its own transparent Material: the trip sheet behind it paints a colour, which would hide the
+                  // header's ink splash (and trips the ListTile debug check).
+                  Material(
+                    type: MaterialType.transparency,
+                    child: Theme(
+                      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                      child: ExpansionTile(
+                        key: const Key('hub-more'),
+                        initiallyExpanded: false,
+                        tilePadding: EdgeInsets.zero,
+                        title: Text(
+                          'More',
+                          style: TextStyle(fontWeight: FontWeight.w700, color: t.textSecondary),
                         ),
-                      ],
+                        children: [
+                          Wrap(spacing: gap, runSpacing: gap, children: [for (final tile in more) tileCard(tile)]),
+                        ],
+                      ),
                     ),
                   ),
                 ],

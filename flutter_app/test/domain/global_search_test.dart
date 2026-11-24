@@ -44,7 +44,14 @@ void main() {
     final note = searchHits('sunscreen', trips, const []).single;
     expect(searchHitTarget(note), (path: '/trip/t1/notes', focusKind: 'note', focusId: 'n'));
 
-    const message = SearchHit(kind: HitKind.message, tripId: 't1', tripName: 'Goa', title: 'hi', detail: '', itemId: 'm1');
+    const message = SearchHit(
+      kind: HitKind.message,
+      tripId: 't1',
+      tripName: 'Goa',
+      title: 'hi',
+      detail: '',
+      itemId: 'm1',
+    );
     expect(searchHitTarget(message), (path: '/trip/t1/chat', focusKind: 'message', focusId: 'm1'));
 
     // Trip-only hit: bare trip path (router redirect picks the default tab), nothing to highlight.

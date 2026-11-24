@@ -109,7 +109,11 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     prefetchTrip(ref, t.id);
     // Trip-only search hit with deep links on: the trip's default tab, like every other search hit lands on a tab.
     if (_deepLinkOn && ref.read(tripSearchProvider).trim().isNotEmpty) {
-      openSearchHit(context, ref, SearchHit(kind: HitKind.trip, tripId: t.id, tripName: t.name, title: t.name, detail: ''));
+      openSearchHit(
+        context,
+        ref,
+        SearchHit(kind: HitKind.trip, tripId: t.id, tripName: t.name, title: t.name, detail: ''),
+      );
       return;
     }
     unawaited(context.push('/trip/${t.id}/ledger')); // opens on Summary, the first tab
@@ -561,47 +565,53 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                               value: 'view',
                               child: Text(cards ? l10n.tripsViewList : l10n.tripsViewCards),
                             ),
-                          PopupMenuItem(value: 'sort-date', child: _checkedLabel(l10n.tripsSortDate, sort == TripSort.date)),
-                          PopupMenuItem(value: 'sort-name', child: _checkedLabel(l10n.tripsSortName, sort == TripSort.name)),
+                          PopupMenuItem(
+                            value: 'sort-date',
+                            child: _checkedLabel(l10n.tripsSortDate, sort == TripSort.date),
+                          ),
+                          PopupMenuItem(
+                            value: 'sort-name',
+                            child: _checkedLabel(l10n.tripsSortName, sort == TripSort.name),
+                          ),
                         ],
                       ),
                     ] else ...[
-                    if (!cards && gridOn)
-                      IconButton(
-                        key: const Key('trips-layout-toggle'),
-                        tooltip: grid ? l10n.tripsLayoutList : l10n.tripsLayoutGrid,
-                        icon: Icon(grid ? Icons.view_agenda_outlined : Icons.grid_view_rounded),
-                        onPressed: () =>
-                            ref.read(tripsLayoutProvider.notifier).set(grid ? TripsLayout.list : TripsLayout.grid),
+                      if (!cards && gridOn)
+                        IconButton(
+                          key: const Key('trips-layout-toggle'),
+                          tooltip: grid ? l10n.tripsLayoutList : l10n.tripsLayoutGrid,
+                          icon: Icon(grid ? Icons.view_agenda_outlined : Icons.grid_view_rounded),
+                          onPressed: () =>
+                              ref.read(tripsLayoutProvider.notifier).set(grid ? TripsLayout.list : TripsLayout.grid),
+                        ),
+                      if (!cards)
+                        IconButton(
+                          key: const Key('trips-search-toggle'),
+                          tooltip: l10n.tripsSearchHint,
+                          icon: Icon(_searchOpen ? Icons.search_off_rounded : AppIcons.search),
+                          onPressed: () => setState(() {
+                            _searchOpen = !_searchOpen;
+                            if (!_searchOpen) ref.read(tripSearchProvider.notifier).set('');
+                          }),
+                        ),
+                      if (stackOn)
+                        IconButton(
+                          key: const Key('trips-view-toggle'),
+                          tooltip: cards ? l10n.tripsViewList : l10n.tripsViewCards,
+                          icon: Icon(cards ? Icons.view_list_rounded : Icons.view_carousel_rounded),
+                          onPressed: () =>
+                              ref.read(tripsViewProvider.notifier).set(cards ? TripsView.list : TripsView.cards),
+                        ),
+                      PopupMenuButton<TripSort>(
+                        tooltip: l10n.tripsSortDate,
+                        icon: const Icon(AppIcons.filter),
+                        initialValue: sort,
+                        onSelected: ref.read(tripSortProvider.notifier).set,
+                        itemBuilder: (_) => [
+                          PopupMenuItem(value: TripSort.date, child: Text(l10n.tripsSortDate)),
+                          PopupMenuItem(value: TripSort.name, child: Text(l10n.tripsSortName)),
+                        ],
                       ),
-                    if (!cards)
-                      IconButton(
-                        key: const Key('trips-search-toggle'),
-                        tooltip: l10n.tripsSearchHint,
-                        icon: Icon(_searchOpen ? Icons.search_off_rounded : AppIcons.search),
-                        onPressed: () => setState(() {
-                          _searchOpen = !_searchOpen;
-                          if (!_searchOpen) ref.read(tripSearchProvider.notifier).set('');
-                        }),
-                      ),
-                    if (stackOn)
-                      IconButton(
-                        key: const Key('trips-view-toggle'),
-                        tooltip: cards ? l10n.tripsViewList : l10n.tripsViewCards,
-                        icon: Icon(cards ? Icons.view_list_rounded : Icons.view_carousel_rounded),
-                        onPressed: () =>
-                            ref.read(tripsViewProvider.notifier).set(cards ? TripsView.list : TripsView.cards),
-                      ),
-                    PopupMenuButton<TripSort>(
-                      tooltip: l10n.tripsSortDate,
-                      icon: const Icon(AppIcons.filter),
-                      initialValue: sort,
-                      onSelected: ref.read(tripSortProvider.notifier).set,
-                      itemBuilder: (_) => [
-                        PopupMenuItem(value: TripSort.date, child: Text(l10n.tripsSortDate)),
-                        PopupMenuItem(value: TripSort.name, child: Text(l10n.tripsSortName)),
-                      ],
-                    ),
                     ],
                     PopupMenuButton<String>(
                       tooltip: horizon ? l10n.tripsJoinWithCode : l10n.navSettings,
@@ -704,8 +714,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                     Expanded(
                       child: NotificationListener<ScrollNotification>(
                         onNotification: (n) {
-                          final compressOn =
-                              _flagOn('enableScrollCompressDock') && !AppMotion.reduce;
+                          final compressOn = _flagOn('enableScrollCompressDock') && !AppMotion.reduce;
                           if (!compressOn) return false;
                           updateDockCompress(
                             n: n,
@@ -715,382 +724,382 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                           return false;
                         },
                         child: AppPullToRefresh(
-                        onRefresh: ref.read(refreshTripsProvider),
-                        child: lists.when(
-                          loading: () => ListView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.all(16),
-                            children: [
-                              for (var i = 0; i < 3; i++)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: SkeletonLoader(
-                                    child: Container(
-                                      height: 96,
-                                      decoration: BoxDecoration(
-                                        color: tokens.bgSurface,
-                                        borderRadius: BorderRadius.circular(tokens.radiusMd),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          error: (e, _) => ListView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            children: [
-                              EmptyState(
-                                plain: true,
-                                title: l10n.tripsLoadError,
-                                subtitle: friendlyError(
-                                  l10n,
-                                  e,
-                                  online: ref.watch(isOnlineProvider).value ?? true,
-                                  clear: _flagOn('enableClearErrorStates'),
-                                ).message,
-                                action: AppButton(
-                                  label: l10n.actionRetry,
-                                  onPressed: () => ref.invalidate(tripsProvider),
-                                ),
-                              ),
-                            ],
-                          ),
-                          data: (data) {
-                            final unsorted = data.active
-                                .where((t) => !_hidden.contains(t.id) && _matchesFilter(t))
-                                .toList();
-                            // Grouped view: Happening now, then Upcoming, then Past; the chosen sort holds inside each group.
-                            final active = sectionsOn && _filter == 'all'
-                                ? [
-                                    for (final (_, t) in ([
-                                      for (final (i, t) in unsorted.indexed) (_sectionOf(t).index * 100000 + i, t),
-                                    ]..sort((a, b) => a.$1.compareTo(b.$1))))
-                                      t,
-                                  ]
-                                : unsorted;
-                            final archived = data.archived.where((t) => !_hidden.contains(t.id)).toList();
-                            final hits = searchOn && query.trim().isNotEmpty
-                                ? searchHits(
-                                    query,
-                                    ref.watch(allTripsProvider).value ?? const <Trip>[],
-                                    [for (final list in _expensesByTrip.values) ...list],
-                                    rich: true,
-                                    memberNames: {
-                                      for (final list in _membersByTrip.values)
-                                        for (final m in list) m.id: m.name,
-                                    },
-                                  )
-                                : const <SearchHit>[];
-                            if (data.total == 0 && syncing) {
-                              return ListView(
-                                key: const Key('trips-syncing'),
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                padding: const EdgeInsets.all(16),
-                                children: [
+                          onRefresh: ref.read(refreshTripsProvider),
+                          child: lists.when(
+                            loading: () => ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(16),
+                              children: [
+                                for (var i = 0; i < 3; i++)
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 12),
-                                    child: Text(l10n.tripsSyncing, style: TextStyle(color: tokens.textSecondary)),
-                                  ),
-                                  for (var i = 0; i < 3; i++)
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 12),
-                                      child: SkeletonLoader(
-                                        child: Container(
-                                          height: 96,
-                                          decoration: BoxDecoration(
-                                            color: tokens.bgSurface,
-                                            borderRadius: BorderRadius.circular(tokens.radiusMd),
-                                          ),
+                                    child: SkeletonLoader(
+                                      child: Container(
+                                        height: 96,
+                                        decoration: BoxDecoration(
+                                          color: tokens.bgSurface,
+                                          borderRadius: BorderRadius.circular(tokens.radiusMd),
                                         ),
                                       ),
                                     ),
-                                ],
-                              );
-                            }
-                            if (data.total == 0) {
-                              return ListView(
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                children: [
-                                  // Full hierarchy (icon, title, body, Create CTA); the box gives it a bounded
-                                  // height inside the pull-to-refresh list.
-                                  SizedBox(
-                                    height: math.max(420.0, MediaQuery.sizeOf(context).height * 0.6),
-                                    child: EmptyState(
-                                      icon: Icons.luggage_rounded,
-                                      title: l10n.emptyTripsTitle,
-                                      subtitle: l10n.emptyTripsSubtitle,
-                                      action: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          AppButton(label: l10n.actionCreateTrip, onPressed: _create),
-                                          const SizedBox(height: 8),
-                                          AppButton(
-                                            label: l10n.tripsJoinWithCode,
-                                            variant: AppButtonVariant.secondary,
-                                            onPressed: () => showJoinCodeSheet(context),
-                                          ),
-                                          if (_flagOn('enableFirstRunTour') && auth.isAuthenticated) ...[
-                                            const SizedBox(height: 8),
-                                            TextButton(
-                                              key: const Key('try-sample-trip'),
-                                              onPressed: _trySample,
-                                              child: Text(l10n.trySampleTrip),
+                                  ),
+                              ],
+                            ),
+                            error: (e, _) => ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                EmptyState(
+                                  plain: true,
+                                  title: l10n.tripsLoadError,
+                                  subtitle: friendlyError(
+                                    l10n,
+                                    e,
+                                    online: ref.watch(isOnlineProvider).value ?? true,
+                                    clear: _flagOn('enableClearErrorStates'),
+                                  ).message,
+                                  action: AppButton(
+                                    label: l10n.actionRetry,
+                                    onPressed: () => ref.invalidate(tripsProvider),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            data: (data) {
+                              final unsorted = data.active
+                                  .where((t) => !_hidden.contains(t.id) && _matchesFilter(t))
+                                  .toList();
+                              // Grouped view: Happening now, then Upcoming, then Past; the chosen sort holds inside each group.
+                              final active = sectionsOn && _filter == 'all'
+                                  ? [
+                                      for (final (_, t) in ([
+                                        for (final (i, t) in unsorted.indexed) (_sectionOf(t).index * 100000 + i, t),
+                                      ]..sort((a, b) => a.$1.compareTo(b.$1))))
+                                        t,
+                                    ]
+                                  : unsorted;
+                              final archived = data.archived.where((t) => !_hidden.contains(t.id)).toList();
+                              final hits = searchOn && query.trim().isNotEmpty
+                                  ? searchHits(
+                                      query,
+                                      ref.watch(allTripsProvider).value ?? const <Trip>[],
+                                      [for (final list in _expensesByTrip.values) ...list],
+                                      rich: true,
+                                      memberNames: {
+                                        for (final list in _membersByTrip.values)
+                                          for (final m in list) m.id: m.name,
+                                      },
+                                    )
+                                  : const <SearchHit>[];
+                              if (data.total == 0 && syncing) {
+                                return ListView(
+                                  key: const Key('trips-syncing'),
+                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  padding: const EdgeInsets.all(16),
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 12),
+                                      child: Text(l10n.tripsSyncing, style: TextStyle(color: tokens.textSecondary)),
+                                    ),
+                                    for (var i = 0; i < 3; i++)
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 12),
+                                        child: SkeletonLoader(
+                                          child: Container(
+                                            height: 96,
+                                            decoration: BoxDecoration(
+                                              color: tokens.bgSurface,
+                                              borderRadius: BorderRadius.circular(tokens.radiusMd),
                                             ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                );
+                              }
+                              if (data.total == 0) {
+                                return ListView(
+                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  children: [
+                                    // Full hierarchy (icon, title, body, Create CTA); the box gives it a bounded
+                                    // height inside the pull-to-refresh list.
+                                    SizedBox(
+                                      height: math.max(420.0, MediaQuery.sizeOf(context).height * 0.6),
+                                      child: EmptyState(
+                                        icon: Icons.luggage_rounded,
+                                        title: l10n.emptyTripsTitle,
+                                        subtitle: l10n.emptyTripsSubtitle,
+                                        action: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            AppButton(label: l10n.actionCreateTrip, onPressed: _create),
+                                            const SizedBox(height: 8),
+                                            AppButton(
+                                              label: l10n.tripsJoinWithCode,
+                                              variant: AppButtonVariant.secondary,
+                                              onPressed: () => showJoinCodeSheet(context),
+                                            ),
+                                            if (_flagOn('enableFirstRunTour') && auth.isAuthenticated) ...[
+                                              const SizedBox(height: 8),
+                                              TextButton(
+                                                key: const Key('try-sample-trip'),
+                                                onPressed: _trySample,
+                                                child: Text(l10n.trySampleTrip),
+                                              ),
+                                            ],
                                           ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+                              if (active.isEmpty && archived.isEmpty && hits.isEmpty) {
+                                return ListView(
+                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(32),
+                                      child: Center(child: Text(l10n.tripsNoMatches)),
+                                    ),
+                                  ],
+                                );
+                              }
+                              bool owner(Trip t) => t.ownerId == auth.userId;
+                              if (cards) {
+                                // Every trip, any state: current ones first, archived ones at the back.
+                                return TripCardStack(
+                                  key: const Key('trip-stack'),
+                                  trips: [...active, ...archived],
+                                  now: _now,
+                                  onOpen: _open,
+                                  onLongPress: (t) => _tripMenu(t, owner(t)),
+                                  onTopChanged: (t) => setState(() => _stackTop = t),
+                                  onAddExpense: _flagOn('enableTripCardQuickAdd')
+                                      ? (t) => context.push('/trip/${t.id}/expenses/new')
+                                      : null,
+                                );
+                              }
+                              // The first trip happening today becomes the Night Sky hero.
+                              final heroId = active
+                                  .where((t) => tripStatus(t.startDate, t.endDate, _now).phase == TripPhase.active)
+                                  .map((t) => t.id)
+                                  .firstOrNull;
+                              final grouped = sectionsOn && _filter == 'all';
+                              // Pinned trips lead the list (device-only); the rest keep their phase and sort order.
+                              final pinnedTrips = [
+                                for (final t in active)
+                                  if (pinnedIds.contains(t.id)) t,
+                              ];
+                              final unpinned = [
+                                for (final t in active)
+                                  if (!pinnedIds.contains(t.id)) t,
+                              ];
+                              final sections = [
+                                for (final sec in TripSection.values)
+                                  (
+                                    sec,
+                                    [
+                                      for (final t in unpinned)
+                                        if (_sectionOf(t) == sec) t,
+                                    ],
+                                  ),
+                              ];
+                              var n = 0;
+                              Widget rowFor(Trip t) => BentoEntrance(
+                                index: n++,
+                                child: _card(t, owner(t), featured: t.id == heroId),
+                              );
+                              Widget list(List<Trip> trips) {
+                                if (!grid) {
+                                  return SliverPadding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    sliver: SliverList.builder(
+                                      itemCount: trips.length,
+                                      itemBuilder: (_, i) => rowFor(trips[i]),
+                                    ),
+                                  );
+                                }
+                                // Photo tiles: the trip happening now is a wide hero, the rest a square grid.
+                                final hero = trips.where((t) => t.id == heroId).firstOrNull;
+                                final rest = [
+                                  for (final t in trips)
+                                    if (t != hero) t,
+                                ];
+                                return SliverPadding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  sliver: SliverMainAxisGroup(
+                                    slivers: [
+                                      if (hero != null)
+                                        SliverToBoxAdapter(child: _card(hero, owner(hero), featured: true)),
+                                      SliverGrid.builder(
+                                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                          maxCrossAxisExtent: 240,
+                                          mainAxisSpacing: 10,
+                                          crossAxisSpacing: 10,
+                                        ),
+                                        itemCount: rest.length,
+                                        itemBuilder: (_, i) => _tile(rest[i], owner(rest[i])),
+                                      ),
+                                      const SliverToBoxAdapter(child: SizedBox(height: 10)),
+                                    ],
+                                  ),
+                                );
+                              }
+
+                              String label(TripSection sec) => switch (sec) {
+                                TripSection.now => l10n.tripSectionNow,
+                                TripSection.upcoming => l10n.tripSectionUpcoming,
+                                TripSection.past => l10n.tripSectionPast,
+                              };
+                              final overview = overviewOn
+                                  ? _overviewLine(data.active.where((t) => !_hidden.contains(t.id)).toList())
+                                  : null;
+                              return CustomScrollView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                slivers: [
+                                  SliverPadding(
+                                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                                    sliver: SliverToBoxAdapter(
+                                      child: Column(
+                                        children: [
+                                          const LastSyncedCaption(),
+                                          if (tokens.horizon && auth.isAuthenticated)
+                                            Padding(
+                                              padding: const EdgeInsets.only(bottom: 12),
+                                              child: Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: HorizonGreeting(
+                                                  name: auth.user?.displayName ?? auth.userEmail ?? '',
+                                                  now: _now,
+                                                ),
+                                              ),
+                                            ),
+                                          ?overview,
+                                          if (tokens.horizon)
+                                            HorizonQuickActions(
+                                              actions: [
+                                                HorizonQuickAction(
+                                                  'new',
+                                                  BentoTone.sky,
+                                                  AppIcons.add,
+                                                  l10n.horizonActionNewTrip,
+                                                  _create,
+                                                ),
+                                                HorizonQuickAction(
+                                                  'join',
+                                                  BentoTone.peach,
+                                                  Icons.confirmation_number_outlined,
+                                                  l10n.horizonActionJoin,
+                                                  () => showJoinCodeSheet(context),
+                                                ),
+                                                if (heroId != null)
+                                                  HorizonQuickAction(
+                                                    'quick-add',
+                                                    BentoTone.mint,
+                                                    Icons.bolt_rounded,
+                                                    l10n.horizonActionQuickAdd,
+                                                    () => context.push('/trip/$heroId/expenses/new'),
+                                                  ),
+                                                HorizonQuickAction(
+                                                  'settle',
+                                                  BentoTone.lilac,
+                                                  Icons.balance_rounded,
+                                                  l10n.horizonActionSettle,
+                                                  () => context.go('/balances'),
+                                                ),
+                                              ],
+                                            ),
+                                          if (active.isNotEmpty)
+                                            CoachHint(hintKey: 'trips-swipe', text: l10n.hintSwipeTrip),
                                         ],
                                       ),
                                     ),
                                   ),
-                                ],
-                              );
-                            }
-                            if (active.isEmpty && archived.isEmpty && hits.isEmpty) {
-                              return ListView(
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(32),
-                                    child: Center(child: Text(l10n.tripsNoMatches)),
-                                  ),
-                                ],
-                              );
-                            }
-                            bool owner(Trip t) => t.ownerId == auth.userId;
-                            if (cards) {
-                              // Every trip, any state: current ones first, archived ones at the back.
-                              return TripCardStack(
-                                key: const Key('trip-stack'),
-                                trips: [...active, ...archived],
-                                now: _now,
-                                onOpen: _open,
-                                onLongPress: (t) => _tripMenu(t, owner(t)),
-                                onTopChanged: (t) => setState(() => _stackTop = t),
-                                onAddExpense: _flagOn('enableTripCardQuickAdd')
-                                    ? (t) => context.push('/trip/${t.id}/expenses/new')
-                                    : null,
-                              );
-                            }
-                            // The first trip happening today becomes the Night Sky hero.
-                            final heroId = active
-                                .where((t) => tripStatus(t.startDate, t.endDate, _now).phase == TripPhase.active)
-                                .map((t) => t.id)
-                                .firstOrNull;
-                            final grouped = sectionsOn && _filter == 'all';
-                            // Pinned trips lead the list (device-only); the rest keep their phase and sort order.
-                            final pinnedTrips = [
-                              for (final t in active)
-                                if (pinnedIds.contains(t.id)) t,
-                            ];
-                            final unpinned = [
-                              for (final t in active)
-                                if (!pinnedIds.contains(t.id)) t,
-                            ];
-                            final sections = [
-                              for (final sec in TripSection.values)
-                                (
-                                  sec,
-                                  [
-                                    for (final t in unpinned)
-                                      if (_sectionOf(t) == sec) t,
-                                  ],
-                                ),
-                            ];
-                            var n = 0;
-                            Widget rowFor(Trip t) => BentoEntrance(
-                              index: n++,
-                              child: _card(t, owner(t), featured: t.id == heroId),
-                            );
-                            Widget list(List<Trip> trips) {
-                              if (!grid) {
-                                return SliverPadding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  sliver: SliverList.builder(
-                                    itemCount: trips.length,
-                                    itemBuilder: (_, i) => rowFor(trips[i]),
-                                  ),
-                                );
-                              }
-                              // Photo tiles: the trip happening now is a wide hero, the rest a square grid.
-                              final hero = trips.where((t) => t.id == heroId).firstOrNull;
-                              final rest = [
-                                for (final t in trips)
-                                  if (t != hero) t,
-                              ];
-                              return SliverPadding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                sliver: SliverMainAxisGroup(
-                                  slivers: [
-                                    if (hero != null)
-                                      SliverToBoxAdapter(child: _card(hero, owner(hero), featured: true)),
-                                    SliverGrid.builder(
-                                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                                        maxCrossAxisExtent: 240,
-                                        mainAxisSpacing: 10,
-                                        crossAxisSpacing: 10,
-                                      ),
-                                      itemCount: rest.length,
-                                      itemBuilder: (_, i) => _tile(rest[i], owner(rest[i])),
-                                    ),
-                                    const SliverToBoxAdapter(child: SizedBox(height: 10)),
-                                  ],
-                                ),
-                              );
-                            }
-
-                            String label(TripSection sec) => switch (sec) {
-                              TripSection.now => l10n.tripSectionNow,
-                              TripSection.upcoming => l10n.tripSectionUpcoming,
-                              TripSection.past => l10n.tripSectionPast,
-                            };
-                            final overview = overviewOn
-                                ? _overviewLine(data.active.where((t) => !_hidden.contains(t.id)).toList())
-                                : null;
-                            return CustomScrollView(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              slivers: [
-                                SliverPadding(
-                                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                                  sliver: SliverToBoxAdapter(
-                                    child: Column(
-                                      children: [
-                                        const LastSyncedCaption(),
-                                        if (tokens.horizon && auth.isAuthenticated)
-                                          Padding(
-                                            padding: const EdgeInsets.only(bottom: 12),
-                                            child: Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: HorizonGreeting(
-                                                name: auth.user?.displayName ?? auth.userEmail ?? '',
-                                                now: _now,
-                                              ),
-                                            ),
-                                          ),
-                                        ?overview,
-                                        if (tokens.horizon)
-                                          HorizonQuickActions(
-                                            actions: [
-                                              HorizonQuickAction(
-                                                'new',
-                                                BentoTone.sky,
-                                                AppIcons.add,
-                                                l10n.horizonActionNewTrip,
-                                                _create,
-                                              ),
-                                              HorizonQuickAction(
-                                                'join',
-                                                BentoTone.peach,
-                                                Icons.confirmation_number_outlined,
-                                                l10n.horizonActionJoin,
-                                                () => showJoinCodeSheet(context),
-                                              ),
-                                              if (heroId != null)
-                                                HorizonQuickAction(
-                                                  'quick-add',
-                                                  BentoTone.mint,
-                                                  Icons.bolt_rounded,
-                                                  l10n.horizonActionQuickAdd,
-                                                  () => context.push('/trip/$heroId/expenses/new'),
-                                                ),
-                                              HorizonQuickAction(
-                                                'settle',
-                                                BentoTone.lilac,
-                                                Icons.balance_rounded,
-                                                l10n.horizonActionSettle,
-                                                () => context.go('/balances'),
-                                              ),
-                                            ],
-                                          ),
-                                        if (active.isNotEmpty)
-                                          CoachHint(hintKey: 'trips-swipe', text: l10n.hintSwipeTrip),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                if (grouped) ...[
-                                  if (pinnedTrips.isNotEmpty) ...[
-                                    SliverPersistentHeader(
-                                      pinned: true,
-                                      delegate: _SectionHeaderDelegate(
-                                        label: l10n.tripSectionPinned,
-                                        count: pinnedTrips.length,
-                                        folded: false,
-                                        foldable: false,
-                                        onTap: () {},
-                                        background: tokens.bgPage,
-                                      ),
-                                    ),
-                                    list(pinnedTrips),
-                                  ],
-                                  for (final (sec, trips) in sections)
-                                    if (trips.isNotEmpty) ...[
+                                  if (grouped) ...[
+                                    if (pinnedTrips.isNotEmpty) ...[
                                       SliverPersistentHeader(
                                         pinned: true,
                                         delegate: _SectionHeaderDelegate(
-                                          label: label(sec),
-                                          count: trips.length,
-                                          folded: sec == TripSection.past && _pastFolded,
-                                          foldable: sec == TripSection.past,
-                                          onTap: () => setState(() => _pastFolded = !_pastFolded),
+                                          label: l10n.tripSectionPinned,
+                                          count: pinnedTrips.length,
+                                          folded: false,
+                                          foldable: false,
+                                          onTap: () {},
                                           background: tokens.bgPage,
                                         ),
                                       ),
-                                      if (!(sec == TripSection.past && _pastFolded)) list(trips),
+                                      list(pinnedTrips),
                                     ],
-                                ] else
-                                  list([...pinnedTrips, ...unpinned]),
-                                if (hits.isNotEmpty)
-                                  SliverPadding(
-                                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                                    sliver: SliverList.list(
-                                      key: const Key('search-hits'),
-                                      children: [
-                                        SectionLabel(l10n.searchHitsTitle(hits.length)),
-                                        for (final h in hits)
-                                          ListTile(
-                                            key: Key('hit-${h.kind.name}-${h.tripId}-${h.title}'),
-                                            contentPadding: EdgeInsets.zero,
-                                            leading: Icon(
-                                              h.kind == HitKind.expense
-                                                  ? Icons.receipt_long_outlined
-                                                  : Icons.sticky_note_2_outlined,
-                                            ),
-                                            title: Text(h.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                            subtitle: Text(
-                                              [h.tripName, if (h.detail.isNotEmpty) h.detail].join(' · '),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            trailing: h.amount == null
-                                                ? null
-                                                : Text(
-                                                    formatMoney(context, h.amount!, h.currency ?? 'INR'),
-                                                    style: const TextStyle(fontWeight: FontWeight.w700),
-                                                  ),
-                                            onTap: () => _openHit(h),
+                                    for (final (sec, trips) in sections)
+                                      if (trips.isNotEmpty) ...[
+                                        SliverPersistentHeader(
+                                          pinned: true,
+                                          delegate: _SectionHeaderDelegate(
+                                            label: label(sec),
+                                            count: trips.length,
+                                            folded: sec == TripSection.past && _pastFolded,
+                                            foldable: sec == TripSection.past,
+                                            onTap: () => setState(() => _pastFolded = !_pastFolded),
+                                            background: tokens.bgPage,
                                           ),
-                                      ],
-                                    ),
-                                  ),
-                                if (archived.isNotEmpty)
-                                  SliverPadding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                                    sliver: SliverToBoxAdapter(
-                                      child: ExpansionTile(
-                                        tilePadding: EdgeInsets.zero,
-                                        title: Text(
-                                          l10n.tripsArchivedSection(archived.length),
-                                          style: TextStyle(color: tokens.textSecondary),
                                         ),
-                                        children: [for (final t in archived) _card(t, owner(t))],
+                                        if (!(sec == TripSection.past && _pastFolded)) list(trips),
+                                      ],
+                                  ] else
+                                    list([...pinnedTrips, ...unpinned]),
+                                  if (hits.isNotEmpty)
+                                    SliverPadding(
+                                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                                      sliver: SliverList.list(
+                                        key: const Key('search-hits'),
+                                        children: [
+                                          SectionLabel(l10n.searchHitsTitle(hits.length)),
+                                          for (final h in hits)
+                                            ListTile(
+                                              key: Key('hit-${h.kind.name}-${h.tripId}-${h.title}'),
+                                              contentPadding: EdgeInsets.zero,
+                                              leading: Icon(
+                                                h.kind == HitKind.expense
+                                                    ? Icons.receipt_long_outlined
+                                                    : Icons.sticky_note_2_outlined,
+                                              ),
+                                              title: Text(h.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                              subtitle: Text(
+                                                [h.tripName, if (h.detail.isNotEmpty) h.detail].join(' · '),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              trailing: h.amount == null
+                                                  ? null
+                                                  : Text(
+                                                      formatMoney(context, h.amount!, h.currency ?? 'INR'),
+                                                      style: const TextStyle(fontWeight: FontWeight.w700),
+                                                    ),
+                                              onTap: () => _openHit(h),
+                                            ),
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                const SliverToBoxAdapter(child: SizedBox(height: 96)),
-                              ],
-                            );
-                          },
+                                  if (archived.isNotEmpty)
+                                    SliverPadding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                                      sliver: SliverToBoxAdapter(
+                                        child: ExpansionTile(
+                                          tilePadding: EdgeInsets.zero,
+                                          title: Text(
+                                            l10n.tripsArchivedSection(archived.length),
+                                            style: TextStyle(color: tokens.textSecondary),
+                                          ),
+                                          children: [for (final t in archived) _card(t, owner(t))],
+                                        ),
+                                      ),
+                                    ),
+                                  const SliverToBoxAdapter(child: SizedBox(height: 96)),
+                                ],
+                              );
+                            },
+                          ),
                         ),
-                      ),
                       ),
                     ),
                   ],
@@ -1116,9 +1125,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
             ],
           ),
           // Card view carries its own floating "New Trip | Join" pill, so the dock and the button step aside.
-          bottomNavigationBar: cards
-              ? null
-              : buildHomeDock(context, ref, HomeTab.trips, compressed: _dockCompressed),
+          bottomNavigationBar: cards ? null : buildHomeDock(context, ref, HomeTab.trips, compressed: _dockCompressed),
           // The dock's centre button replaces the FAB on iOS / web; Material 3 keeps it.
           // Horizon (enableHorizonUi): New trip is the dock's centre button, so no floating button.
           floatingActionButton: tokens.calm && !tokens.horizon && !cards

@@ -99,7 +99,10 @@ class ShareScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(l10n.shareTotalSpend.toUpperCase(), style: AppTypography.eyebrowMono(color: Colors.white70)),
+                          Text(
+                            l10n.shareTotalSpend.toUpperCase(),
+                            style: AppTypography.eyebrowMono(color: Colors.white70),
+                          ),
                           const SizedBox(height: 6),
                           for (final e in spend)
                             Text(
@@ -157,10 +160,7 @@ class _Stat extends StatelessWidget {
         children: [
           Text(label.toUpperCase(), style: AppTypography.eyebrowMono(color: tokens.textMuted)),
           const SizedBox(height: 6),
-          Text(
-            value,
-            style: AppTypography.moneyInline(color: tokens.textPrimary, fontSize: 22),
-          ),
+          Text(value, style: AppTypography.moneyInline(color: tokens.textPrimary, fontSize: 22)),
         ],
       ),
     );

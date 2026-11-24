@@ -997,41 +997,41 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
     final compactSummaryOn = ref.watch(flagProvider(('enableCompactSummary', id))).value ?? true;
     final Widget? celebration = celebrateOn && totals.totalSpent > 0 && !calm
         ? Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: BentoTile(
-        key: const Key('settled-celebration'),
-        tone: BentoTone.mint,
-        padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
-        child: Row(
-          children: [
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: 1),
-              duration: AppMotion.of(context, const Duration(milliseconds: 700)),
-              curve: Curves.elasticOut,
-              builder: (_, v, child) => Transform.scale(scale: v, child: child),
-              child: Icon(Icons.verified_rounded, size: 40, color: tokens.colorSuccess),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.only(bottom: 16),
+            child: BentoTile(
+              key: const Key('settled-celebration'),
+              tone: BentoTone.mint,
+              padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+              child: Row(
                 children: [
-                  Text(l10n.celebrateTitle, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-                  Text(l10n.celebrateBody, style: TextStyle(fontSize: 13, color: tokens.textSecondary)),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: 1),
+                    duration: AppMotion.of(context, const Duration(milliseconds: 700)),
+                    curve: Curves.elasticOut,
+                    builder: (_, v, child) => Transform.scale(scale: v, child: child),
+                    child: Icon(Icons.verified_rounded, size: 40, color: tokens.colorSuccess),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.celebrateTitle, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                        Text(l10n.celebrateBody, style: TextStyle(fontSize: 13, color: tokens.textSecondary)),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    key: const Key('celebrate-share'),
+                    tooltip: l10n.ledShareSummary,
+                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    icon: const Icon(Icons.ios_share_rounded),
+                    onPressed: () => _shareSummary(trip, totals.totalSpent, totals.averageCost, transfers),
+                  ),
                 ],
               ),
             ),
-            IconButton(
-              key: const Key('celebrate-share'),
-              tooltip: l10n.ledShareSummary,
-              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-              icon: const Icon(Icons.ios_share_rounded),
-              onPressed: () => _shareSummary(trip, totals.totalSpent, totals.averageCost, transfers),
-            ),
-          ],
-        ),
-      ),
-    )
+          )
         : null;
     // The Summary in two lists so a wide screen can show them side by side (flag `enableSummaryTwoPane`).
     final topChildren = <Widget>[
@@ -1236,197 +1236,200 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
               : null,
         )
       else
-      Padding(
-        key: const Key('sticky-balance'),
-        padding: const EdgeInsets.only(bottom: 20),
-        child: _flipWrap(
-          on: flipOn,
-          back: () {
-            if (statusPassOn) {
-              final status = settleStatus(
-                ref.read(tripExpensesProvider(id)).value ?? const <Expense>[],
-                outstanding: outstanding,
-                me: mine,
-                confirmationOn: _flag(ref, 'enableSettlementConfirmation', id),
-                recentCount: null,
-              );
-              final shown = status.recent.take(3).toList();
-              String day(String d) {
-                final p = DateTime.tryParse(d);
-                return p == null ? d : DateFormat('d MMM').format(p);
-              }
+        Padding(
+          key: const Key('sticky-balance'),
+          padding: const EdgeInsets.only(bottom: 20),
+          child: _flipWrap(
+            on: flipOn,
+            back: () {
+              if (statusPassOn) {
+                final status = settleStatus(
+                  ref.read(tripExpensesProvider(id)).value ?? const <Expense>[],
+                  outstanding: outstanding,
+                  me: mine,
+                  confirmationOn: _flag(ref, 'enableSettlementConfirmation', id),
+                  recentCount: null,
+                );
+                final shown = status.recent.take(3).toList();
+                String day(String d) {
+                  final p = DateTime.tryParse(d);
+                  return p == null ? d : DateFormat('d MMM').format(p);
+                }
 
-              return SettleStatusBack(
-                title: trip.name,
-                chipLabel: l10n.ledPassTitle,
-                fraction: status.fraction,
-                headline: tripSettled
-                    ? l10n.ledAllSquare
-                    : l10n.ledSettledOf(
-                        formatMoney(context, status.settled, cur),
-                        formatMoney(context, status.settled + status.outstanding, cur),
+                return SettleStatusBack(
+                  title: trip.name,
+                  chipLabel: l10n.ledPassTitle,
+                  fraction: status.fraction,
+                  headline: tripSettled
+                      ? l10n.ledAllSquare
+                      : l10n.ledSettledOf(
+                          formatMoney(context, status.settled, cur),
+                          formatMoney(context, status.settled + status.outstanding, cur),
+                        ),
+                  subline: tripSettled
+                      ? l10n.ledPaymentsRecorded(status.payments)
+                      : l10n.ledStillToMove(formatMoney(context, status.outstanding, cur)),
+                  counts: _flag(ref, 'enableSettlementConfirmation', id) && status.payments > 0
+                      ? [
+                          (label: l10n.ledConfirmedCount(status.confirmed), attention: false),
+                          if (status.waitingOnMe > 0)
+                            (label: l10n.ledWaitingOnYou(status.waitingOnMe), attention: true),
+                          if (status.waitingOnOthers > 0)
+                            (label: l10n.ledWaitingOnOthers(status.waitingOnOthers), attention: false),
+                        ]
+                      : [
+                          if (!tripSettled && status.payments > 0)
+                            (label: l10n.ledPaymentsRecorded(status.payments), attention: false),
+                        ],
+                  rows: [
+                    for (final r in shown)
+                      (
+                        key: r.id,
+                        who: r.sent
+                            ? l10n.ledYouPaidName(names[r.otherMemberId] ?? '?')
+                            : l10n.ledNamePaidYou(names[r.otherMemberId] ?? '?'),
+                        date: day(r.date),
+                        amount: formatMoney(context, r.amount, cur),
+                        sent: r.sent,
+                        confirmed: r.confirmed,
                       ),
-                subline: tripSettled
-                    ? l10n.ledPaymentsRecorded(status.payments)
-                    : l10n.ledStillToMove(formatMoney(context, status.outstanding, cur)),
-                counts: _flag(ref, 'enableSettlementConfirmation', id) && status.payments > 0
-                    ? [
-                        (label: l10n.ledConfirmedCount(status.confirmed), attention: false),
-                        if (status.waitingOnMe > 0) (label: l10n.ledWaitingOnYou(status.waitingOnMe), attention: true),
-                        if (status.waitingOnOthers > 0)
-                          (label: l10n.ledWaitingOnOthers(status.waitingOnOthers), attention: false),
-                      ]
-                    : [
-                        if (!tripSettled && status.payments > 0)
-                          (label: l10n.ledPaymentsRecorded(status.payments), attention: false),
-                      ],
-                rows: [
-                  for (final r in shown)
-                    (
-                      key: r.id,
-                      who: r.sent
-                          ? l10n.ledYouPaidName(names[r.otherMemberId] ?? '?')
-                          : l10n.ledNamePaidYou(names[r.otherMemberId] ?? '?'),
-                      date: day(r.date),
-                      amount: formatMoney(context, r.amount, cur),
-                      sent: r.sent,
-                      confirmed: r.confirmed,
-                    ),
-                ],
-                emptyLabel: l10n.ledNoPaymentsYet,
-                confirmedLabel: l10n.ledStatusConfirmed,
-                pendingLabel: l10n.ledStatusPending,
-                moreLabel: status.recent.length > shown.length
-                    ? l10n.ledMorePayments(status.recent.length - shown.length)
+                  ],
+                  emptyLabel: l10n.ledNoPaymentsYet,
+                  confirmedLabel: l10n.ledStatusConfirmed,
+                  pendingLabel: l10n.ledStatusPending,
+                  moreLabel: status.recent.length > shown.length
+                      ? l10n.ledMorePayments(status.recent.length - shown.length)
+                      : null,
+                );
+              }
+              final paid = spend.paid[mine] ?? 0.0, share = spend.share[mine] ?? 0.0;
+              final before = double.parse((paid - share).toStringAsFixed(2));
+              // Calm pages: the third cell is what is really still due (recorded payments included), in plain words.
+              final net = calm ? double.parse(myNet.toStringAsFixed(2)) : before;
+              final shown = calm ? net : before;
+              final even = shown.abs() < 0.01;
+              final moved = double.parse((net - before).toStringAsFixed(2));
+              final groupDiff = myGroup?.balance ?? 0.0;
+              return PassBack(
+                title: trip.name,
+                eyebrow: l10n.ledYourShare,
+                chipLabel: l10n.ledPassTitle,
+                paid: formatMoney(context, paid, cur),
+                share: formatMoney(context, share, cur),
+                diff: '${shown > 0.005 ? '+' : (shown < -0.005 ? '-' : '')}${formatMoney(context, shown.abs(), cur)}',
+                diffColor: even ? tokens.textPrimary : (shown > 0 ? tokens.colorSuccess : tokens.colorDanger),
+                why: even ? l10n.ledPaidEven : (before > 0 ? l10n.ledPaidMore : l10n.ledPaidLess),
+                labels: (
+                  l10n.ledYouPaid,
+                  l10n.ledYourShare,
+                  calm
+                      ? (even ? l10n.ledNetSquare : (shown > 0 ? l10n.ledNetOwed : l10n.ledNetOwe))
+                      : l10n.ledDifference,
+                ),
+                explainLabel: calm ? l10n.ledHowWorked : l10n.ledExplainTitle,
+                settlementsNote: calm && moved.abs() >= 0.01
+                    ? l10n.ledSettlementsSoFar('${moved > 0 ? '+' : '-'}${formatMoney(context, moved.abs(), cur)}')
+                    : null,
+                groupNote: calm && myGroup != null && groupDiff.abs() >= 0.01
+                    ? (groupDiff > 0 ? l10n.ledGroupNoteOwed : l10n.ledGroupNoteOwes)(
+                        myGroup.name,
+                        formatMoney(context, groupDiff.abs(), cur),
+                      )
+                    : null,
+                onExplain: _flag(ref, 'enableBalanceExplainer', id)
+                    ? () => _showBalanceExplainer(
+                        context,
+                        l10n,
+                        cur,
+                        myBalanceLines(ref.read(tripExpensesProvider(id)).value ?? const <Expense>[], mine!),
+                      )
                     : null,
               );
-            }
-            final paid = spend.paid[mine] ?? 0.0, share = spend.share[mine] ?? 0.0;
-            final before = double.parse((paid - share).toStringAsFixed(2));
-            // Calm pages: the third cell is what is really still due (recorded payments included), in plain words.
-            final net = calm ? double.parse(myNet.toStringAsFixed(2)) : before;
-            final shown = calm ? net : before;
-            final even = shown.abs() < 0.01;
-            final moved = double.parse((net - before).toStringAsFixed(2));
-            final groupDiff = myGroup?.balance ?? 0.0;
-            return PassBack(
-              title: trip.name,
-              eyebrow: l10n.ledYourShare,
-              chipLabel: l10n.ledPassTitle,
-              paid: formatMoney(context, paid, cur),
-              share: formatMoney(context, share, cur),
-              diff: '${shown > 0.005 ? '+' : (shown < -0.005 ? '-' : '')}${formatMoney(context, shown.abs(), cur)}',
-              diffColor: even ? tokens.textPrimary : (shown > 0 ? tokens.colorSuccess : tokens.colorDanger),
-              why: even ? l10n.ledPaidEven : (before > 0 ? l10n.ledPaidMore : l10n.ledPaidLess),
-              labels: (
-                l10n.ledYouPaid,
-                l10n.ledYourShare,
-                calm ? (even ? l10n.ledNetSquare : (shown > 0 ? l10n.ledNetOwed : l10n.ledNetOwe)) : l10n.ledDifference,
+            },
+            chipLabel: statusPassOn ? l10n.ledSettleStatus : l10n.ledYourShare,
+            flipLabel: _flipped ? l10n.ledPassTitle : (statusPassOn ? l10n.ledSettleStatus : l10n.ledYourShare),
+            front: BoardingPassCard(
+              tone: heroTone,
+              banner: _PassBanner(
+                coverUrl: trip.coverImageUrl,
+                title: trip.name,
+                dates: tripDates,
+                eyebrow: l10n.ledPassTitle,
               ),
-              explainLabel: calm ? l10n.ledHowWorked : l10n.ledExplainTitle,
-              settlementsNote: calm && moved.abs() >= 0.01
-                  ? l10n.ledSettlementsSoFar('${moved > 0 ? '+' : '-'}${formatMoney(context, moved.abs(), cur)}')
-                  : null,
-              groupNote: calm && myGroup != null && groupDiff.abs() >= 0.01
-                  ? (groupDiff > 0 ? l10n.ledGroupNoteOwed : l10n.ledGroupNoteOwes)(
-                      myGroup.name,
-                      formatMoney(context, groupDiff.abs(), cur),
-                    )
-                  : null,
-              onExplain: _flag(ref, 'enableBalanceExplainer', id)
-                  ? () => _showBalanceExplainer(
-                      context,
-                      l10n,
-                      cur,
-                      myBalanceLines(ref.read(tripExpensesProvider(id)).value ?? const <Expense>[], mine!),
-                    )
-                  : null,
-            );
-          },
-          chipLabel: statusPassOn ? l10n.ledSettleStatus : l10n.ledYourShare,
-          flipLabel: _flipped ? l10n.ledPassTitle : (statusPassOn ? l10n.ledSettleStatus : l10n.ledYourShare),
-          front: BoardingPassCard(
-            tone: heroTone,
-            banner: _PassBanner(
-              coverUrl: trip.coverImageUrl,
-              title: trip.name,
-              dates: tripDates,
-              eyebrow: l10n.ledPassTitle,
-            ),
-            top: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                BentoTile.eyebrow(context, heroTone, heroLabel),
-                const SizedBox(height: 4),
-                // The digits roll like an odometer when an expense or a settlement changes the balance,
-                // also when you come back to this page after adding one (the last shown figure is remembered).
-                Builder(
-                  builder: (_) {
-                    final sp = _splitMoney(formatMoney(context, heroBalance.abs(), cur));
-                    return RollingMoneyText(
-                      key: const Key('hero-amount'),
-                      memoryKey: 'hero-$id',
-                      whole: sp.$1,
-                      decimals: sp.$2 ?? '',
-                      fontSize: compact ? 38 : 46,
-                      color: heroColor,
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    StatusStamp(
-                      key: const Key('settle-stamp'),
-                      settled: tripSettled,
-                      text: tripSettled ? l10n.ledStampSettled : l10n.ledStampNotSettled,
-                      tone: heroTone,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        '${trip.memberIds.length} ${l10n.ledHeroTravellers}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.end,
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: tokens.textSecondary),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            stub: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: Row(
+              top: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  BentoTile.eyebrow(context, heroTone, heroLabel),
+                  const SizedBox(height: 4),
+                  // The digits roll like an odometer when an expense or a settlement changes the balance,
+                  // also when you come back to this page after adding one (the last shown figure is remembered).
+                  Builder(
+                    builder: (_) {
+                      final sp = _splitMoney(formatMoney(context, heroBalance.abs(), cur));
+                      return RollingMoneyText(
+                        key: const Key('hero-amount'),
+                        memoryKey: 'hero-$id',
+                        whole: sp.$1,
+                        decimals: sp.$2 ?? '',
+                        fontSize: compact ? 38 : 46,
+                        color: heroColor,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
                     children: [
-                      if (calm) ...[
-                        // Three questions: how big, how far along, what is left. Whole rupees; paise stay on the hero.
-                        field(l10n.ledStubSpent, stubMoney(totals.totalSpent)),
-                        const SizedBox(width: 12),
-                        field(l10n.ledStubSettled, stubMoney(settledSoFar)),
-                        const SizedBox(width: 12),
-                        field(l10n.ledStubPending, l10n.ledStubPayments(result.transfers.length)),
-                      ] else ...[
-                        field(l10n.expTotalSpent, formatMoney(context, totals.totalSpent, cur)),
-                        const SizedBox(width: 12),
-                        field(l10n.expPerPerson, formatMoney(context, totals.averageCost, cur)),
-                        const SizedBox(width: 12),
-                        field(l10n.ledHeroOpen, '${result.transfers.length}'),
-                      ],
+                      StatusStamp(
+                        key: const Key('settle-stamp'),
+                        settled: tripSettled,
+                        text: tripSettled ? l10n.ledStampSettled : l10n.ledStampNotSettled,
+                        tone: heroTone,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          '${trip.memberIds.length} ${l10n.ledHeroTravellers}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: tokens.textSecondary),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(flex: 3, child: TicketBarcode(seed: trip.id, height: 44)),
-              ],
+                ],
+              ),
+              stub: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: Row(
+                      children: [
+                        if (calm) ...[
+                          // Three questions: how big, how far along, what is left. Whole rupees; paise stay on the hero.
+                          field(l10n.ledStubSpent, stubMoney(totals.totalSpent)),
+                          const SizedBox(width: 12),
+                          field(l10n.ledStubSettled, stubMoney(settledSoFar)),
+                          const SizedBox(width: 12),
+                          field(l10n.ledStubPending, l10n.ledStubPayments(result.transfers.length)),
+                        ] else ...[
+                          field(l10n.expTotalSpent, formatMoney(context, totals.totalSpent, cur)),
+                          const SizedBox(width: 12),
+                          field(l10n.expPerPerson, formatMoney(context, totals.averageCost, cur)),
+                          const SizedBox(width: 12),
+                          field(l10n.ledHeroOpen, '${result.transfers.length}'),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(flex: 3, child: TicketBarcode(seed: trip.id, height: 44)),
+                ],
+              ),
             ),
           ),
         ),
-      ),
       // Your money: what I still receive and what I still pay (people on the trip only).
       // Horizon puts You paid / Your share inside the position hero.
       if (tokens.horizon)
@@ -2251,9 +2254,8 @@ class _PassBanner extends StatelessWidget {
                         eyebrow.toUpperCase(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTypography.eyebrowMono(
-                          color: Colors.white70,
-                        ).copyWith(fontWeight: FontWeight.w800, letterSpacing: 1.6),
+                        style: AppTypography.eyebrowMono(color: Colors.white70)
+                            .copyWith(fontWeight: FontWeight.w800, letterSpacing: 1.6),
                       ),
                     ),
                   ],
@@ -2410,4 +2412,3 @@ class _DayChartState extends State<_DayChart> {
     );
   }
 }
-

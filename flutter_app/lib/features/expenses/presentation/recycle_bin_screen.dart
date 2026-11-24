@@ -173,94 +173,94 @@ class _RecycleBinScreenState extends ConsumerState<RecycleBinScreen> {
                       ),
                       onDismissed: (_) => unawaited(_restore(e)),
                       child: AppCard(
-                      key: Key('bin-${e.id}'),
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 42,
-                                height: 42,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: Color(categoryColorArgb(e.category)).withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(14),
+                        key: Key('bin-${e.id}'),
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 42,
+                                  height: 42,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: Color(categoryColorArgb(e.category)).withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: Icon(AppIcons.delete, size: 20, color: Color(categoryColorArgb(e.category))),
                                 ),
-                                child: Icon(AppIcons.delete, size: 20, color: Color(categoryColorArgb(e.category))),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      e.title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontWeight: FontWeight.w700),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '${formatMoney(context, e.amount, base)} · ${e.date}',
-                                      style: TextStyle(fontSize: 12.5, color: tokens.textSecondary),
-                                    ),
-                                    if (recycleBinExpiryLabel(e.deletedAt, now) case final expiry?)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 2),
-                                        child: Text(
-                                          expiry,
-                                          key: Key('bin-expiry-${e.id}'),
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: tokens.colorWarning,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        e.title,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontWeight: FontWeight.w700),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${formatMoney(context, e.amount, base)} · ${e.date}',
+                                        style: TextStyle(fontSize: 12.5, color: tokens.textSecondary),
+                                      ),
+                                      if (recycleBinExpiryLabel(e.deletedAt, now) case final expiry?)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 2),
+                                          child: Text(
+                                            expiry,
+                                            key: Key('bin-expiry-${e.id}'),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: tokens.colorWarning,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: AppButton(
-                                  key: Key('bin-restore-${e.id}'),
-                                  label: l10n.binRestore,
-                                  icon: Icons.restore_from_trash_rounded,
-                                  onPressed: () => unawaited(_restore(e)),
-                                ),
-                              ),
-                              if (canManageExpense(e, isAdmin: isAdmin, userId: uid)) ...[
-                                const SizedBox(width: 4),
-                                PopupMenuButton<String>(
-                                  key: Key('bin-more-${e.id}'),
-                                  tooltip: l10n.binMoreActions,
-                                  icon: Icon(Icons.more_vert_rounded, color: tokens.textSecondary),
-                                  onSelected: (v) {
-                                    if (v == 'delete') unawaited(_deleteForever(e));
-                                  },
-                                  itemBuilder: (_) => [
-                                    PopupMenuItem<String>(
-                                      key: Key('bin-delete-${e.id}'),
-                                      value: 'delete',
-                                      child: Text(
-                                        l10n.binDeleteForever,
-                                        style: TextStyle(color: tokens.colorDanger, fontWeight: FontWeight.w600),
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
-                            ],
-                          ),
-                        ],
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: AppButton(
+                                    key: Key('bin-restore-${e.id}'),
+                                    label: l10n.binRestore,
+                                    icon: Icons.restore_from_trash_rounded,
+                                    onPressed: () => unawaited(_restore(e)),
+                                  ),
+                                ),
+                                if (canManageExpense(e, isAdmin: isAdmin, userId: uid)) ...[
+                                  const SizedBox(width: 4),
+                                  PopupMenuButton<String>(
+                                    key: Key('bin-more-${e.id}'),
+                                    tooltip: l10n.binMoreActions,
+                                    icon: Icon(Icons.more_vert_rounded, color: tokens.textSecondary),
+                                    onSelected: (v) {
+                                      if (v == 'delete') unawaited(_deleteForever(e));
+                                    },
+                                    itemBuilder: (_) => [
+                                      PopupMenuItem<String>(
+                                        key: Key('bin-delete-${e.id}'),
+                                        value: 'delete',
+                                        child: Text(
+                                          l10n.binDeleteForever,
+                                          style: TextStyle(color: tokens.colorDanger, fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
                     ),
                   ),
               ],

@@ -75,8 +75,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _rename() async {
     final auth = ref.read(authStateProvider);
     final c = TextEditingController(text: auth.user?.displayName ?? '');
-    final segmented =
-        ref.read(flagProvider(('enableSettingsSegmentedLists', null))).value ?? true;
+    final segmented = ref.read(flagProvider(('enableSettingsSegmentedLists', null))).value ?? true;
     final String? name;
     if (segmented) {
       name = await AppSheet.show<String>(
@@ -244,28 +243,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final themeMode = r.watch(themeModePrefProvider);
     return [
       if (context.tokens.horizon)
-        HorizonThemePicker(
-          value: themeMode,
-          onChanged: (v) => r.read(themeModePrefProvider.notifier).set(v),
-        )
+        HorizonThemePicker(value: themeMode, onChanged: (v) => r.read(themeModePrefProvider.notifier).set(v))
       else
-      SettingsSegmentedTile<String>(
-        key: const Key('settings-theme'),
-        icon: Icons.wb_sunny_outlined,
-        title: 'Appearance',
-        subtitle: switch (themeMode) {
-          'light' => 'Light',
-          'dark' => 'Dark',
-          _ => 'Follows your phone',
-        },
-        value: themeMode,
-        options: const [
-          ('light', 'Light', Icons.wb_sunny_outlined),
-          ('dark', 'Dark', Icons.nightlight_outlined),
-          ('system', 'Auto', Icons.smartphone_rounded),
-        ],
-        onChanged: (v) => r.read(themeModePrefProvider.notifier).set(v),
-      ),
+        SettingsSegmentedTile<String>(
+          key: const Key('settings-theme'),
+          icon: Icons.wb_sunny_outlined,
+          title: 'Appearance',
+          subtitle: switch (themeMode) {
+            'light' => 'Light',
+            'dark' => 'Dark',
+            _ => 'Follows your phone',
+          },
+          value: themeMode,
+          options: const [
+            ('light', 'Light', Icons.wb_sunny_outlined),
+            ('dark', 'Dark', Icons.nightlight_outlined),
+            ('system', 'Auto', Icons.smartphone_rounded),
+          ],
+          onChanged: (v) => r.read(themeModePrefProvider.notifier).set(v),
+        ),
       if (r.watch(flagProvider(('enableHapticsSetting', null))).value ?? true)
         SettingsSegmentedTile<HapticsLevel>(
           key: const Key('settings-haptics'),
@@ -677,11 +673,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               padding: const EdgeInsets.only(bottom: 32),
               children: [
                 if (segmented)
-                  SettingsProfileHeader(
-                    name: profileName,
-                    subtitle: profileSub,
-                    onTap: _rename,
-                  )
+                  SettingsProfileHeader(name: profileName, subtitle: profileSub, onTap: _rename)
                 else
                   InkWell(
                     key: const Key('settings-profile'),
@@ -760,11 +752,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                 ] else ...[
                   if (tripId != null)
-                    SettingsSection(
-                      title: 'This Trip',
-                      segmented: segmented,
-                      children: _tripRows(ref, tripId),
-                    ),
+                    SettingsSection(title: 'This Trip', segmented: segmented, children: _tripRows(ref, tripId)),
                   SettingsSection(
                     title: 'Appearance',
                     segmented: segmented,
@@ -779,22 +767,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ],
                   ),
-                  SettingsSection(
-                    title: 'Notifications',
-                    segmented: segmented,
-                    children: _notificationRows(ref),
-                  ),
+                  SettingsSection(title: 'Notifications', segmented: segmented, children: _notificationRows(ref)),
                   if (biometricFlag)
-                    SettingsSection(
-                      title: 'Privacy and security',
-                      segmented: segmented,
-                      children: _securityRows(ref),
-                    ),
-                  SettingsSection(
-                    title: 'Data',
-                    segmented: segmented,
-                    children: _dataSectionRows(ref),
-                  ),
+                    SettingsSection(title: 'Privacy and security', segmented: segmented, children: _securityRows(ref)),
+                  SettingsSection(title: 'Data', segmented: segmented, children: _dataSectionRows(ref)),
                   SettingsSection(
                     title: 'Help & About',
                     segmented: segmented,

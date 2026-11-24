@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -83,9 +84,7 @@ class _DayItineraryViewState extends ConsumerState<DayItineraryView> {
       );
     }
 
-    final visibleDays = _selectedDateFilter == null
-        ? days
-        : days.where((d) => d.date == _selectedDateFilter).toList();
+    final visibleDays = _selectedDateFilter == null ? days : days.where((d) => d.date == _selectedDateFilter).toList();
 
     return Column(
       children: [
@@ -122,10 +121,7 @@ class _DayItineraryViewState extends ConsumerState<DayItineraryView> {
                           ? Container(
                               width: 6,
                               height: 6,
-                              decoration: BoxDecoration(
-                                color: tokens.primaryAccent,
-                                shape: BoxShape.circle,
-                              ),
+                              decoration: BoxDecoration(color: tokens.primaryAccent, shape: BoxShape.circle),
                             )
                           : null,
                       onSelected: (_) {
@@ -208,11 +204,7 @@ class _DaySection extends ConsumerWidget {
               Expanded(
                 child: Text(
                   group.dateLabel,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: tokens.textPrimary,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                 ),
               ),
               if (group.totalSpend > 0)
@@ -225,11 +217,7 @@ class _DaySection extends ConsumerWidget {
                   ),
                   child: Text(
                     formatMoney(context, group.totalSpend, currency),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: tokens.textPrimary,
-                    ),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                   ),
                 ),
               const SizedBox(width: 6),
@@ -265,11 +253,12 @@ class _DaySection extends ConsumerWidget {
                 children: [
                   Icon(AppIcons.notes, size: 16, color: tokens.textMuted),
                   const SizedBox(width: 8),
-                  Text(
-                    'No activities or bills logged for this day',
-                    style: TextStyle(fontSize: 12, color: tokens.textMuted),
+                  Expanded(
+                    child: Text(
+                      'No activities or bills logged for this day',
+                      style: TextStyle(fontSize: 12, color: tokens.textMuted),
+                    ),
                   ),
-                  const Spacer(),
                   InkWell(
                     onTap: () {
                       ItineraryActivitySheet.show(
@@ -321,12 +310,7 @@ class _ActivityCard extends ConsumerWidget {
   final String? tripStartDate;
   final String? tripEndDate;
 
-  const _ActivityCard({
-    required this.item,
-    required this.tripId,
-    this.tripStartDate,
-    this.tripEndDate,
-  });
+  const _ActivityCard({required this.item, required this.tripId, this.tripStartDate, this.tripEndDate});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

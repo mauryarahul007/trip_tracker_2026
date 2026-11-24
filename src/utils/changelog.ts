@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.99.1',
+    date: '2026-11-24',
+    changes: [
+      'Fixed: dragging the trip sheet slowly by its handle could stop halfway instead of opening fully (Flutter).',
+      'Fixed: small layout and accessibility issues: the empty-day itinerary row and Notes tab labels no longer overflow, the Spend chips and Set Budget button have full-size touch targets, and the bottom bar keeps readable labels while scrolling (Flutter).',
+    ],
+  },
+  {
     version: '3.99.0',
     date: '2026-11-24',
     changes: [

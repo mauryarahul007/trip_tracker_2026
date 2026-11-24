@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -221,10 +222,7 @@ class _SpeedActionCapsuleTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: tokens.textMuted,
-                      ),
+                      style: TextStyle(fontSize: 12.5, color: tokens.textMuted),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

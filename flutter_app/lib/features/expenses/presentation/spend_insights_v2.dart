@@ -116,7 +116,7 @@ class SpendInsightsV2Body extends ConsumerWidget {
                     final v = parsed.isFinite ? parsed : 0.0;
                     await ref.read(tripBudgetProvider(tripId).notifier).set(v < 0 ? 0 : v);
                   },
-              ),
+                ),
               section(
                 'Daily spend',
                 'Tap a bar to see that day. The dashed line is your daily average.',

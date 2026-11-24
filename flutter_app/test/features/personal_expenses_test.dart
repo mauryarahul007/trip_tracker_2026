@@ -20,6 +20,14 @@ Future<void> goTo(WidgetTester tester, String path) async {
   await settle(tester, rounds: 14);
 }
 
+/// The quick chips sit behind the Filters button: open it, then dismiss the sheet so the chips stay revealed.
+Future<void> revealChips(WidgetTester tester) async {
+  await tester.tap(key('open-filters'));
+  await settle(tester);
+  await tester.tapAt(const Offset(10, 10));
+  await settle(tester);
+}
+
 Future<List<Expense>> stored(WidgetTester tester, Seed s) =>
     real(tester, () => containerOf(tester).read(expenseRepositoryProvider).watchActive(s.tripId).first);
 
@@ -158,6 +166,7 @@ void main() {
       await settle(tester);
       await tester.tap(find.text('Expand all days'));
       await settle(tester);
+      await revealChips(tester);
       await tester.tap(key('chip-personal'));
       await settle(tester, rounds: 6);
       expect(find.text('My gift'), findsOneWidget);
@@ -177,6 +186,7 @@ void main() {
       await tester.tap(find.text('Expand all days'));
       await settle(tester);
       expect(key('save-filter'), findsNothing); // nothing to save yet
+      await revealChips(tester);
       await tester.tap(key('chip-personal'));
       await settle(tester, rounds: 4);
       await tester.tap(key('save-filter'));
@@ -201,6 +211,7 @@ void main() {
       final s = await seedTrip(tester);
       await addExpense(tester, s);
       await goTo(tester, '/trip/${s.tripId}/expenses');
+      await revealChips(tester);
       await tester.tap(key('chip-personal'));
       await settle(tester, rounds: 4);
       expect(key('save-filter'), findsNothing);

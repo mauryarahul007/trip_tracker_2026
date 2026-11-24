@@ -9,11 +9,12 @@ import '../../support/pump_app.dart';
 import '../../support/seed.dart';
 
 void main() {
+  // Far in the future so the status badge reads "Upcoming" whatever today is.
   const sampleTrip = Trip(
     id: 't_sikkim',
     name: 'Sikkim Backpacking',
-    startDate: '2026-11-10',
-    endDate: '2026-11-20',
+    startDate: '2099-11-10',
+    endDate: '2099-11-20',
     baseCurrency: 'INR',
     ownerId: 'u1',
     joinCode: 'sikkim26',
@@ -173,7 +174,28 @@ void main() {
       expect(progressNotifier.value, 1.0);
     });
 
-    testWidgets('expands to full screen when scrolling child list from collapsed state', (tester) async {
+    testWidgets('a slow drag on the handle over several frames still snaps open (scrim no longer cancels it)', (
+      tester,
+    ) async {
+      final progressNotifier = ValueNotifier<double>(0.0);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TripContentSheet(progressNotifier: progressNotifier, child: const Text('Sheet Drag Target')),
+          ),
+        ),
+      );
+      await tester.timedDrag(
+        find.byKey(const Key('trip_content_sheet_drag_handle')),
+        const Offset(0, -60),
+        const Duration(milliseconds: 300),
+      );
+      await tester.pumpAndSettle();
+      expect(progressNotifier.value, 1.0);
+    });
+
+    // Since v3.91.5 browsing a long list never moves the sheet; only a push up on a list that cannot scroll does.
+    testWidgets('scrolling a long child list leaves the sheet where it is', (tester) async {
       final progressNotifier = ValueNotifier<double>(0.0);
 
       await tester.pumpWidget(
@@ -193,15 +215,14 @@ void main() {
 
       expect(progressNotifier.value, 0.0);
 
-      // Dragging on the list scroll area upward pulls the drawer up
       await tester.drag(find.text('Item 2'), const Offset(0, -60));
       await tester.pumpAndSettle();
-
-      // Drawer must snap fully open
-      expect(progressNotifier.value, 1.0);
+      expect(progressNotifier.value, 0.0);
     });
 
-    testWidgets('a list nested inside a pager (like the trip tabs) also opens the sheet in one swipe', (tester) async {
+    testWidgets('a short list nested inside a pager (like the trip tabs) opens the sheet with one push up', (
+      tester,
+    ) async {
       final progressNotifier = ValueNotifier<double>(0.0);
 
       await tester.pumpWidget(
@@ -212,10 +233,7 @@ void main() {
               collapsedFraction: 0.50,
               child: PageView(
                 children: [
-                  ListView.builder(
-                    itemCount: 50,
-                    itemBuilder: (context, index) => ListTile(title: Text('Item $index')),
-                  ),
+                  ListView.builder(itemCount: 2, itemBuilder: (context, index) => ListTile(title: Text('Item $index'))),
                 ],
               ),
             ),
@@ -223,7 +241,7 @@ void main() {
         ),
       );
 
-      await tester.drag(find.text('Item 2'), const Offset(0, -40));
+      await tester.drag(find.text('Item 1'), const Offset(0, -120));
       await tester.pumpAndSettle();
 
       expect(progressNotifier.value, 1.0);
@@ -248,7 +266,7 @@ void main() {
         ),
       );
 
-      await tester.fling(find.text('Item 2'), const Offset(0, -200), 1500);
+      await tester.fling(find.byKey(const Key('trip_content_sheet_drag_handle')), const Offset(0, -200), 1500);
       await tester.pumpAndSettle();
       expect(progressNotifier.value, 1.0);
 
@@ -283,7 +301,7 @@ void main() {
       expect(progressNotifier.value, 0.0);
     });
 
-    testWidgets('a short single swipe on the child list is enough to open fully', (tester) async {
+    testWidgets('one push up on a short list that cannot scroll is enough to open fully', (tester) async {
       final progressNotifier = ValueNotifier<double>(0.0);
 
       await tester.pumpWidget(
@@ -293,7 +311,7 @@ void main() {
               progressNotifier: progressNotifier,
               collapsedFraction: 0.50,
               child: ListView.builder(
-                itemCount: 50,
+                itemCount: 3,
                 itemBuilder: (context, index) => ListTile(title: Text('Item $index')),
               ),
             ),
@@ -301,7 +319,7 @@ void main() {
         ),
       );
 
-      await tester.drag(find.text('Item 2'), const Offset(0, -30));
+      await tester.drag(find.text('Item 2'), const Offset(0, -120));
       await tester.pumpAndSettle();
 
       expect(progressNotifier.value, 1.0);

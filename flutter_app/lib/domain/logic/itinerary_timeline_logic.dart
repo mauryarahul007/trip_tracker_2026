@@ -172,8 +172,7 @@ List<DayItineraryGroup> buildItineraryTimeline({
     dateMap[exp.date]!.expenses.add(exp);
   }
 
-  final sortedDates = dateMap.keys.toList()
-    ..sort((a, b) => sortAscending ? a.compareTo(b) : b.compareTo(a));
+  final sortedDates = dateMap.keys.toList()..sort((a, b) => sortAscending ? a.compareTo(b) : b.compareTo(a));
 
   return sortedDates.map((date) {
     final data = dateMap[date]!;
@@ -181,9 +180,7 @@ List<DayItineraryGroup> buildItineraryTimeline({
     final dateLabel = formatIsoDateLabel(date);
     final isToday = date == currentIso;
 
-    final totalSpend = data.expenses
-        .where((e) => !e.excludeFromTotals)
-        .fold<double>(0.0, (sum, e) => sum + e.amount);
+    final totalSpend = data.expenses.where((e) => !e.excludeFromTotals).fold<double>(0.0, (sum, e) => sum + e.amount);
 
     final items = <ItineraryTimelineItem>[];
 
@@ -240,11 +237,7 @@ List<DayItineraryGroup> buildItineraryTimeline({
     items.sort((a, b) {
       final tDiff = a.time.compareTo(b.time);
       if (tDiff != 0) return tDiff;
-      const priority = {
-        ItineraryItemKind.pass: 1,
-        ItineraryItemKind.activity: 2,
-        ItineraryItemKind.expense: 3,
-      };
+      const priority = {ItineraryItemKind.pass: 1, ItineraryItemKind.activity: 2, ItineraryItemKind.expense: 3};
       return priority[a.kind]!.compareTo(priority[b.kind]!);
     });
 

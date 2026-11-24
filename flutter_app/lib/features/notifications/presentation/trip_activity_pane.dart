@@ -324,11 +324,7 @@ class _TripActivityPaneState extends ConsumerState<TripActivityPane> {
                         slivers.add(
                           SliverPersistentHeader(
                             pinned: true,
-                            delegate: _ActivityDaySticky(
-                              label: label,
-                              background: t.bgPage,
-                              foreground: t.textMuted,
-                            ),
+                            delegate: _ActivityDaySticky(label: label, background: t.bgPage, foreground: t.textMuted),
                           ),
                         );
                       }

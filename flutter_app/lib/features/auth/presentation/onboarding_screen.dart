@@ -88,50 +88,50 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 : Icon(steps[i].$1, size: 72, color: Colors.white),
                           )
                         : Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 148,
-                            height: 148,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: tokens.tones[stepTones[i]].bg,
-                              borderRadius: BorderRadius.circular(48),
+                            padding: const EdgeInsets.symmetric(horizontal: 32),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 148,
+                                  height: 148,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: tokens.tones[stepTones[i]].bg,
+                                    borderRadius: BorderRadius.circular(48),
+                                  ),
+                                  child: art
+                                      ? OnboardingArt(
+                                          const [
+                                            OnboardingArtKind.stamp,
+                                            OnboardingArtKind.route,
+                                            OnboardingArtKind.receipt,
+                                          ][i],
+                                          size: 116,
+                                        )
+                                      : Icon(steps[i].$1, size: 64, color: tokens.tones[stepTones[i]].accent),
+                                ),
+                                const SizedBox(height: 24),
+                                Text(
+                                  steps[i].$2,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontTitle,
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.8,
+                                    color: onDark,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  steps[i].$3,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 16, color: tokens.textSecondary, height: 1.45),
+                                ),
+                              ],
                             ),
-                            child: art
-                                ? OnboardingArt(
-                                    const [
-                                      OnboardingArtKind.stamp,
-                                      OnboardingArtKind.route,
-                                      OnboardingArtKind.receipt,
-                                    ][i],
-                                    size: 116,
-                                  )
-                                : Icon(steps[i].$1, size: 64, color: tokens.tones[stepTones[i]].accent),
                           ),
-                          const SizedBox(height: 24),
-                          Text(
-                            steps[i].$2,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: AppTypography.fontTitle,
-                              fontSize: 30,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.8,
-                              color: onDark,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            steps[i].$3,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 16, color: tokens.textSecondary, height: 1.45),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
               ),

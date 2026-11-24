@@ -97,7 +97,13 @@ TripNetPosition? largestOwedToMe(List<TripNetPosition> positions) {
 
 /// One person's net with me across trips, in one currency (> 0: they owe me, < 0: I owe them).
 class PersonNet {
-  const PersonNet({required this.key, required this.name, required this.currency, required this.net, required this.trips});
+  const PersonNet({
+    required this.key,
+    required this.name,
+    required this.currency,
+    required this.net,
+    required this.trips,
+  });
   final String key;
   final String name;
   final String currency;
