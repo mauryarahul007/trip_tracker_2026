@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-25 | 3.101.0 | HORIZON-HOME | [Horizon Trips home is the only view after sign-in (Flutter)](#horizon-home--horizon-trips-home-is-the-only-view-after-sign-in-flutter) |
 | 2026-11-25 | 3.100.0 | MEAL-NUDGE | [Meal-time expense nudges on Spend (Flutter)](#meal-nudge--meal-time-expense-nudges-on-spend-flutter) |
 | 2026-11-24 | 3.99.1 | FLUTTER-FIXES | [Trip sheet drag and small layout / accessibility fixes (Flutter)](#flutter-fixes--trip-sheet-drag-and-small-layout--accessibility-fixes-flutter) |
 | 2026-11-24 | 3.99.0 | HORIZON-UI | [Horizon follow-ups: by person, header avatars, cover colour (Flutter)](#horizon-ui--horizon-follow-ups-by-person-header-avatars-cover-colour-flutter) |
@@ -4498,6 +4499,38 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## HORIZON-HOME — Horizon Trips home is the only view after sign-in (Flutter)
+
+**Shipped:** v3.101.0. Flutter-only. Matches the "Trips home" and "Trips home, empty" mockups.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Horizon Trips home, no card stack, no list/grid or view switch, no filter chips | `enableHorizonUi` | ON (Core) |
+
+### Prep
+Flutter app signed in. One trip whose dates include today, one past trip, ideally one upcoming trip. Add an expense you paid for others.
+
+### Steps
+1. Open the app: the top bar shows "Good morning/afternoon/evening" over your first name, with round search and bell buttons on the right.
+2. The night-blue hero reads "ACROSS N TRIPS", your net (green "owed to you" or red "you owe"), and two pills "↓ Get ₹…" and "↑ Pay ₹…".
+3. Four quick actions follow: New trip, Join code, Quick add, Settle. Each opens its flow; Quick add opens a new expense on the live trip.
+4. "Live now" lists the trip happening today: coloured band with name and "Day x/y", then "₹spent of ₹budget" (or "₹spent spent" without a budget), your +/− position, a progress bar, crew avatars and "Synced … ago".
+5. With two or more live trips, "See all" shows them all; "Show less" folds them back.
+6. "Upcoming" rows read "In N days · N people". "Past trips" rows read "Mon · N people · settled", with the trip total and a "Settled" pill (or your +/− amount when not settled).
+7. Tap search: a search box opens; type a word to see matching trips and expenses.
+8. Press and hold any trip: the trip menu (pin, archive, delete) opens.
+9. Sign in with an account with no trips: "Your trips" title, the "Where to first?" screen with "Start a trip", "Join with code", and "or try a demo trip".
+
+### Negative checks
+- No card-stack (swipe) view, no list/grid toggle, no view menu and no All/Active/Upcoming/Past chips anywhere on Trips.
+- `enableHorizonUi` OFF: the Calm list returns with its chips, toggles and card stack, unchanged.
+
+### Pass
+- The home matches the mockup top to bottom and is the only Trips view after sign-in.
+
+---
 
 ## MEAL-NUDGE — Meal-time expense nudges on Spend (Flutter)
 

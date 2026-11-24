@@ -3050,6 +3050,96 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String horizonGet(String amount) {
+    return 'Get $amount';
+  }
+
+  @override
+  String horizonPay(String amount) {
+    return 'Pay $amount';
+  }
+
+  @override
+  String get horizonLiveNow => 'Live now';
+
+  @override
+  String get horizonSeeAll => 'See all';
+
+  @override
+  String get horizonShowLess => 'Show less';
+
+  @override
+  String get horizonUpcoming => 'Upcoming';
+
+  @override
+  String get horizonPastTrips => 'Past trips';
+
+  @override
+  String horizonDayOf(int day, int total) {
+    return 'Day $day/$total';
+  }
+
+  @override
+  String horizonSpentOf(String spent, String budget) {
+    return '$spent of $budget';
+  }
+
+  @override
+  String horizonSpent(String amount) {
+    return '$amount spent';
+  }
+
+  @override
+  String horizonSynced(String when) {
+    return 'Synced $when';
+  }
+
+  @override
+  String horizonPeople(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count people', one: '1 person');
+    return '$_temp0';
+  }
+
+  @override
+  String horizonInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'In $count days',
+      one: 'Starts tomorrow',
+      zero: 'Starts today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get horizonSettledLower => 'settled';
+
+  @override
+  String get horizonSettled => 'Settled';
+
+  @override
+  String get horizonYourTrips => 'Your trips';
+
+  @override
+  String get horizonEmptyTitle => 'Where to first?';
+
+  @override
+  String get horizonEmptyBody => 'Start a trip and invite your crew, or join one with a 6-letter code.';
+
+  @override
+  String get horizonStartTrip => 'Start a trip';
+
+  @override
+  String get horizonJoinWithCode => 'Join with code';
+
+  @override
+  String get horizonTryDemoPrefix => 'or try a ';
+
+  @override
+  String get horizonTryDemoLink => 'demo trip';
+
+  @override
   String get horizonCoverColour => 'Cover colour';
 
   @override
