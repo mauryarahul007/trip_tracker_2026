@@ -5995,3 +5995,14 @@ This document logs all meaningful technical decisions, library choices, design p
   - Horizon Spend days cannot be collapsed. The Hub no longer folds tiles under More.
   - Remaining screens (Add expense, Split, People, Plans, account pages, sheets, states) follow in later steps.
 
+## 303. Horizon Add expense, itinerary timeline, Quick add picker (v3.103.0)
+* **Context:** Step 3 of carrying the Horizon mockups into the app (Add expense, Split). The user also asked for a more intuitive itinerary and for Quick add to make its target trip clear.
+* **Decision:**
+  - `HorizonAmountFirst`: a new expense opens on the amount with a 4x3 pad, "What for?", and chips (category and payer pickers, split, receipt). Save reads "Save · ₹X each" for equal splits. "More details" (or the split chip) opens the existing full form; edits always use the full form. The app bar shows "New expense", "to <trip>" and "Repeat last".
+  - Exact splits show "₹X left to assign" (or "too much") in a warning chip.
+  - `HorizonItineraryDays`: date pills (opening on today), one day at a time, Anytime stops first, then a timeline by the activity's own time with the next stop outlined. Tapping a stop opens an actions sheet. Add bill pushes the form with `?meal=<title>`, reusing `applyMeal` to title it and guess the category. That day's bills fold into one row.
+  - Home Quick add: the live trip if any, else a "Add to which trip?" sheet (upcoming, then past).
+  - Reuses `enableHorizonUi`. The notes pane tabs now use the body font (they fell back to the platform font).
+* **Trade-offs Accepted:**
+  - Add bill uses today's date, not the stop's date. Itinerary strings are English-only like the older itinerary view.
+

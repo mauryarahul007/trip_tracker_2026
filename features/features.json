@@ -3387,5 +3387,21 @@
     "shippedAt": "2026-11-25T00:00:00.000Z",
     "shippedBy": "agent",
     "shippedNote": "Commit 82accd3 (v3.102.0)."
+  },
+  {
+    "id": "FEAT-214",
+    "title": "Horizon Add expense, itinerary timeline and Quick add trip picker (Flutter)",
+    "description": "Under Core flag enableHorizonUi: amount-first Add expense (number pad, What for?, category/payer/split/receipt chips, Save each, Repeat last, trip name in the bar), exact split left-to-assign chip, itinerary as date strip + one-day timeline with next-up highlight and stop actions sheet (directions, add bill, done, edit, delete), bills folded per day, and a trip picker for home Quick add when no trip is live. HORIZON-ADD.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "human",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-25T00:00:00.000Z",
+    "updatedAt": "2026-11-25T00:00:00.000Z",
+    "shippedAt": "2026-11-25T00:00:00.000Z",
+    "shippedBy": "agent",
+    "shippedNote": "Commit 499b176 (v3.103.0)."
   }
 ]

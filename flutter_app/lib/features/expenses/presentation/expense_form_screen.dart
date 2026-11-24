@@ -9,6 +9,9 @@ import '../../../core/platform/feedback.dart';
 
 import '../../notifications/presentation/push_prompt.dart';
 import 'widgets/amount_keypad.dart';
+import 'widgets/horizon_amount_first.dart';
+import '../../../shared/theme/category_icons.dart' show categoryGlyph;
+import '../../../shared/widgets/app_avatar.dart';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -73,18 +76,50 @@ class ExpenseFormScreen extends ConsumerWidget {
     final ready = trip != null && expenses.hasValue && flags.hasValue && membersReady;
     // Desktop (board 08): the form floats as a centred card instead of a stretched page.
     final wide = MediaQuery.sizeOf(context).width >= 900;
+    final horizon = context.tokens.horizon;
     final form = ready
         ? _FormBody(args: ExpenseFormArgs(tripId, expenseId), cloneLast: cloneLast, mealTitle: mealTitle)
         : const SkeletonPage(shape: SkeletonShape.form, rows: 3);
     return AppScaffold(
       maxContentWidth: wide ? 760 : 960,
       appBar: AppBar(
-        title: Text(expenseId == null ? l10n.formTitleAdd : l10n.formTitleEdit),
+        title: horizon && expenseId == null && trip != null
+            // Horizon: the trip name under the title, so you always see where the expense goes.
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(l10n.horizonNewExpense),
+                  Text(
+                    l10n.horizonAddingTo(trip.name),
+                    key: const Key('form-trip-name'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontBody,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: context.tokens.textSecondary,
+                    ),
+                  ),
+                ],
+              )
+            : Text(expenseId == null ? (horizon ? l10n.horizonNewExpense : l10n.formTitleAdd) : l10n.formTitleEdit),
         leading: IconButton(
           tooltip: l10n.actionClose,
           icon: const Icon(AppIcons.close),
           onPressed: () => context.pop(),
         ),
+        actions: [
+          // Horizon: "Repeat last" copies the trip's last expense in one tap (mockup: Add expense, amount).
+          if (horizon && expenseId == null && ready && flags.value?.cloneLast == true)
+            TextButton.icon(
+              key: const Key('horizon-repeat-last'),
+              icon: const Icon(Icons.copy_rounded, size: 16),
+              label: Text(l10n.horizonRepeatLast),
+              onPressed: () => ref.read(expenseFormProvider(ExpenseFormArgs(tripId, expenseId)).notifier).applyLast(),
+            ),
+        ],
       ),
       body: wide
           ? Padding(
@@ -117,6 +152,8 @@ class _FormBodyState extends ConsumerState<_FormBody> {
   bool _docked = false;
   bool _dockInit = false;
   bool _quickOpen = false;
+  // Horizon: a new expense opens amount-first; "More details" or the split chip opens the full form.
+  bool _horizonDetails = false;
   final _splitMoreCtl = ExpansibleController();
   bool _splitTileShown = false; // controller is only attached while the tile is in the tree
   String? _quickError;
@@ -284,6 +321,18 @@ class _FormBodyState extends ConsumerState<_FormBody> {
       ],
     ];
 
+    if (tokens.horizon && !c.editing && !_horizonDetails) {
+      return _horizonAmountFirst(
+        s: s,
+        members: members,
+        categories: categories,
+        base: base,
+        equalShare: equalShareAmount,
+        splitCount: selectedSplitCount,
+        converted: conversion == null ? null : '≈ ${_fmt(context, conversion.convertedAmount, base)}',
+      );
+    }
+
     Widget section(String title, Widget child) => Padding(
       padding: const EdgeInsets.only(top: 18),
       child: Column(
@@ -442,7 +491,8 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                     Wrap(
                       spacing: 8,
                       children: [
-                        if (flags.cloneLast && c.lastExpense != null)
+                        // Horizon has "Repeat last" in the top bar instead.
+                        if (flags.cloneLast && c.lastExpense != null && !tokens.horizon)
                           ActionChip(
                             key: const Key('same-as-last'),
                             avatar: const Icon(Icons.history_rounded, size: 16),
@@ -856,6 +906,38 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                                     onToggle: () => c.toggleMember(m.id),
                                     onConfig: (v) => c.setSplitConfig(m.id, v),
                                   ),
+                                if (tokens.horizon && s.splitMode == 'exact' && !status.matches)
+                                  Container(
+                                    key: const Key('horizon-left-to-assign'),
+                                    margin: const EdgeInsets.only(top: 8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: tokens.colorWarning.withValues(alpha: 0.14),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.warning_amber_rounded, size: 18, color: tokens.colorWarning),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            (status.target ?? 0) >= status.sum
+                                                ? l10n.horizonLeftToAssign(
+                                                    _fmt(context, (status.target ?? 0) - status.sum, s.currency),
+                                                  )
+                                                : l10n.horizonOverAssigned(
+                                                    _fmt(context, status.sum - (status.target ?? 0), s.currency),
+                                                  ),
+                                            style: TextStyle(
+                                              fontFamily: AppTypography.fontBody,
+                                              fontWeight: FontWeight.w600,
+                                              color: tokens.colorWarning,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 if (s.splitMode == 'percentage' || s.splitMode == 'exact')
                                   Padding(
                                     padding: const EdgeInsets.only(top: 4),
@@ -1046,6 +1128,147 @@ class _FormBodyState extends ConsumerState<_FormBody> {
       ),
     );
   }
+
+  /// Leaves the amount pad for the full form, which opens on its fields rather than the docked keys.
+  void _openHorizonDetails() => setState(() {
+    _horizonDetails = true;
+    _docked = false;
+  });
+
+  /// Horizon number pad: digits, one ".", two decimals at most, and backspace.
+  void _horizonKey(String k) {
+    var v = _amount.text;
+    if (k == 'back') {
+      if (v.isEmpty) return;
+      v = v.substring(0, v.length - 1);
+    } else if (k == '.') {
+      if (v.contains('.')) return;
+      v = v.isEmpty ? '0.' : '$v.';
+    } else {
+      if (v.contains('.') && v.split('.').last.length >= 2) return;
+      v = v == '0' ? k : '$v$k';
+    }
+    _amount.value = TextEditingValue(
+      text: v,
+      selection: TextSelection.collapsed(offset: v.length),
+    );
+    _c.setAmount(v);
+  }
+
+  Widget _horizonAmountFirst({
+    required ExpenseFormState s,
+    required List<Member> members,
+    required List<Category> categories,
+    required String base,
+    required double? equalShare,
+    required int splitCount,
+    String? converted,
+  }) {
+    final l10n = context.l10n;
+    final c = _c;
+    final uid = ref.read(authStateProvider).userId;
+    final cat = categories.where((x) => x.id == s.category).firstOrNull;
+    final payer = members.where((m) => m.id == s.payer).firstOrNull;
+    final payerIsMe = payer != null && uid != null && payer.linkedUserId == uid;
+    final tone = cat == null ? null : toneFor(cat.id);
+    final accent = tone == null ? context.tokens.primaryAccent : context.tokens.tones[tone].accent;
+    final multi = s.payerMode == PayerMode.multiple;
+    final chips = [
+      HorizonFormChip(
+        'horizon-chip-category',
+        categoryGlyph(cat, 16, accent, vector: true),
+        cat?.name ?? l10n.horizonPickCategory,
+        () => _horizonPickCategory(categories),
+        tone: tone,
+      ),
+      HorizonFormChip(
+        'horizon-chip-payer',
+        const Icon(Icons.person_outline_rounded, size: 16),
+        multi
+            ? l10n.formMultiplePayers
+            : payer == null
+            ? l10n.horizonWhoPaid
+            : payerIsMe
+            ? l10n.horizonYouPaid
+            : l10n.horizonNamePaid(payer.name),
+        multi ? _openHorizonDetails : () => _horizonPickPayer(members, uid),
+      ),
+      HorizonFormChip(
+        'horizon-chip-split',
+        const Icon(Icons.call_split_rounded, size: 16),
+        s.splitMode == 'equal' ? l10n.horizonEqualCount(splitCount) : l10n.formSplitBetween,
+        _openHorizonDetails,
+      ),
+      if (c.flags.receiptUpload)
+        HorizonFormChip(
+          'horizon-chip-receipt',
+          Icon(s.receiptPath != null ? Icons.check_rounded : Icons.photo_camera_outlined, size: 16),
+          s.receiptPath != null ? l10n.formReceiptAttached : l10n.formReceipt,
+          () => c.pickReceipt(ReceiptSource.camera),
+        ),
+    ];
+    return HorizonAmountFirst(
+      amountText: s.amount,
+      symbol: getCurrencySymbol(s.currency),
+      subLine: converted,
+      error: s.error,
+      titleController: _title,
+      onTitleChanged: c.setTitle,
+      chips: chips,
+      onKey: _horizonKey,
+      saveLabel: s.submitting
+          ? l10n.formSaving
+          : equalShare != null && splitCount > 1
+          ? l10n.horizonSaveEach(_fmt(context, equalShare, s.currency))
+          : l10n.formSave,
+      onSave: s.submitting ? null : () => _save(),
+      onMore: _openHorizonDetails,
+    );
+  }
+
+  Future<void> _horizonPickCategory(List<Category> categories) => AppSheet.show<void>(
+    context: context,
+    title: context.l10n.horizonPickCategory,
+    builder: (ctx) => Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final cat in categories)
+            _CategoryChip(
+              category: cat,
+              selected: cat.id == ref.read(expenseFormProvider(args)).category,
+              onTap: () {
+                _c.setCategory(cat.id);
+                Navigator.of(ctx).pop();
+              },
+            ),
+        ],
+      ),
+    ),
+  );
+
+  Future<void> _horizonPickPayer(List<Member> members, String? uid) => AppSheet.show<void>(
+    context: context,
+    title: context.l10n.horizonWhoPaid,
+    builder: (ctx) => Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final m in members)
+          ListTile(
+            key: Key('horizon-payer-${m.id}'),
+            leading: AppAvatar(name: m.name, avatarUrl: m.avatarUrl, size: 32),
+            title: Text(uid != null && m.linkedUserId == uid ? context.l10n.horizonYou : m.name),
+            trailing: m.id == ref.read(expenseFormProvider(args)).payer ? const Icon(Icons.check_rounded) : null,
+            onTap: () {
+              _c.setPayer(m.id);
+              Navigator.of(ctx).pop();
+            },
+          ),
+      ],
+    ),
+  );
 
   /// The web keeps the picker in the original category order unless reorder is enabled.
   List<Category> _unordered(List<Category> c) => c;

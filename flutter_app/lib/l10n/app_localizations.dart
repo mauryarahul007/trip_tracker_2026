@@ -5664,6 +5664,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not today'**
   String get mealNudgeNotToday;
+
+  /// No description provided for @horizonWhatFor.
+  ///
+  /// In en, this message translates to:
+  /// **'What for?'**
+  String get horizonWhatFor;
+
+  /// No description provided for @horizonNewExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'New expense'**
+  String get horizonNewExpense;
+
+  /// No description provided for @horizonRepeatLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat last'**
+  String get horizonRepeatLast;
+
+  /// No description provided for @horizonSaveEach.
+  ///
+  /// In en, this message translates to:
+  /// **'Save · {amount} each'**
+  String horizonSaveEach(String amount);
+
+  /// No description provided for @horizonYouPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'You paid'**
+  String get horizonYouPaid;
+
+  /// No description provided for @horizonNamePaid.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} paid'**
+  String horizonNamePaid(String name);
+
+  /// No description provided for @horizonEqualCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Equal · {count}'**
+  String horizonEqualCount(int count);
+
+  /// No description provided for @horizonLeftToAssign.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} left to assign'**
+  String horizonLeftToAssign(String amount);
+
+  /// No description provided for @horizonOverAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} too much assigned'**
+  String horizonOverAssigned(String amount);
+
+  /// No description provided for @horizonPickCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get horizonPickCategory;
+
+  /// No description provided for @horizonWhoPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Who paid?'**
+  String get horizonWhoPaid;
+
+  /// No description provided for @horizonAddingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'to {trip}'**
+  String horizonAddingTo(String trip);
+
+  /// No description provided for @horizonQuickAddWhich.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to which trip?'**
+  String get horizonQuickAddWhich;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

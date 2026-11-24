@@ -612,7 +612,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                     () => heroId != null
                         ? context.push('/trip/$heroId/expenses/new')
                         : active.isNotEmpty
-                        ? context.push('/trip/${active.first.id}/expenses/new')
+                        ? _pickQuickAddTrip([...upcoming, ...past])
                         : _create(),
                   ),
                   HorizonQuickAction(
@@ -766,6 +766,32 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
         ],
       ],
     );
+  }
+
+  /// Quick add with no trip happening today: ask which trip the expense goes to (upcoming first, then past).
+  Future<void> _pickQuickAddTrip(List<Trip> trips) async {
+    final l10n = context.l10n;
+    final picked = await AppSheet.show<String>(
+      context: context,
+      title: l10n.horizonQuickAddWhich,
+      builder: (ctx) => ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(ctx).height * 0.6),
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            for (final t in trips)
+              ListTile(
+                key: Key('quick-add-trip-${t.id}'),
+                leading: Icon(Icons.near_me_outlined, color: ctx.tokens.tones[_horizonTone(t)].accent),
+                title: Text(t.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                subtitle: Text('${t.startDate} – ${t.endDate}'),
+                onTap: () => Navigator.of(ctx).pop(t.id),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked != null && mounted) unawaited(context.push('/trip/$picked/expenses/new'));
   }
 
   TripSection _sectionOf(Trip t) => switch (tripStatus(t.startDate, t.endDate, _now).phase) {
