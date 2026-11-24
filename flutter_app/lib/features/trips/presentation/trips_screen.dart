@@ -1071,9 +1071,10 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
               ? null
               : buildHomeDock(context, ref, HomeTab.trips, compressed: _dockCompressed),
           // The dock's centre button replaces the FAB on iOS / web; Material 3 keeps it.
-          floatingActionButton: tokens.calm && !cards
+          // Horizon (enableHorizonUi): New trip is the dock's centre button, so no floating button.
+          floatingActionButton: tokens.calm && !tokens.horizon && !cards
               ? CalmAddButton(extended: true, label: l10n.tripsNewTrip, onTap: _create)
-              : cards || (horizon && AppBottomNav.dockByDefault)
+              : cards || tokens.horizon || (horizon && AppBottomNav.dockByDefault)
               ? null
               : FloatingActionButton.extended(
                   onPressed: _create,

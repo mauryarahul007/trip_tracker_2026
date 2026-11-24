@@ -16,6 +16,7 @@ AppTokens tintTokens(AppTokens base, Color? accent, Brightness brightness) {
 
 /// Calm chips: outlined surface pills; the selected chip fills with ink and its label flips to the ground.
 ChipThemeData _chipTheme(AppTokens t) {
+  if (t.horizon) return _horizonChipTheme(t);
   final calmLabel = TextStyle(
     color: WidgetStateColor.resolveWith((s) => s.contains(WidgetState.selected) ? t.bgPage : t.textPrimary),
     fontSize: 14,
@@ -34,8 +35,28 @@ ChipThemeData _chipTheme(AppTokens t) {
   );
 }
 
+/// Horizon chips: soft 8px squares on the second surface; the selected chip takes the blue tint with blue-ink text.
+ChipThemeData _horizonChipTheme(AppTokens t) {
+  final label = TextStyle(
+    color: WidgetStateColor.resolveWith((s) => s.contains(WidgetState.selected) ? t.primaryAccent : t.textSecondary),
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+  );
+  return ChipThemeData(
+    backgroundColor: t.bgSurfaceHover,
+    selectedColor: t.primaryAccentLight,
+    side: WidgetStateBorderSide.resolveWith(
+      (s) => BorderSide(color: s.contains(WidgetState.selected) ? t.primaryAccentLight : t.bgSurfaceHover),
+    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    labelStyle: label,
+    secondaryLabelStyle: label,
+    checkmarkColor: t.primaryAccent,
+  );
+}
+
 OutlineInputBorder _inputBorder(AppTokens t, Color color, [double width = 1]) => OutlineInputBorder(
-  borderRadius: BorderRadius.circular(t.radiusSm + 4), // 18, Horizon field radius
+  borderRadius: BorderRadius.circular(t.horizon ? 12 : t.radiusSm + 4), // Calm 20; Horizon (enableHorizonUi) 12
   borderSide: BorderSide(color: color, width: width),
 );
 
@@ -104,7 +125,7 @@ ThemeData _build(AppTokens t, Brightness brightness) {
       centerTitle: false,
       titleTextStyle: TextStyle(
         fontFamily: AppTypography.fontTitle,
-        fontSize: 26,
+        fontSize: t.horizon ? 22 : 26,
         fontWeight: FontWeight.w800,
         letterSpacing: -0.6,
         color: t.textPrimary,
@@ -119,7 +140,7 @@ ThemeData _build(AppTokens t, Brightness brightness) {
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(t.radiusMd),
-        side: BorderSide(color: t.borderColor.withValues(alpha: 0.6)),
+        side: BorderSide(color: t.cardEdge),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
@@ -138,15 +159,15 @@ ThemeData _build(AppTokens t, Brightness brightness) {
       style: OutlinedButton.styleFrom(
         foregroundColor: t.textPrimary,
         side: BorderSide(color: t.borderColor),
-        shape: const StadiumBorder(),
+        shape: t.horizon ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)) : const StadiumBorder(),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         textStyle: const TextStyle(fontWeight: FontWeight.w600),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: t.primaryAccent,
-        shape: const StadiumBorder(),
+        foregroundColor: t.actionInk,
+        shape: t.horizon ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)) : const StadiumBorder(),
         textStyle: const TextStyle(fontWeight: FontWeight.w600),
       ),
     ),
@@ -156,14 +177,14 @@ ThemeData _build(AppTokens t, Brightness brightness) {
       foregroundColor: t.ctaFg,
       elevation: 4,
       // A soft square (20px) like the mockup's ink "+" key.
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(t.horizon ? 16 : 20)),
       extendedPadding: const EdgeInsets.symmetric(horizontal: 20),
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: t.bgSurface.withValues(alpha: 0.96),
       surfaceTintColor: Colors.transparent,
       shadowColor: t.shadowBase,
-      indicatorColor: t.primaryAccent.withValues(alpha: 0.12),
+      indicatorColor: t.horizon ? t.primaryAccentLight : t.primaryAccent.withValues(alpha: 0.12),
       indicatorShape: const StadiumBorder(),
       labelTextStyle: WidgetStateProperty.resolveWith(
         (s) => TextStyle(
@@ -188,8 +209,18 @@ ThemeData _build(AppTokens t, Brightness brightness) {
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: t.bgSurface,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(t.radiusLg))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(t.horizon ? 24 : t.radiusLg))),
     ),
+    snackBarTheme: t.horizon
+        ? SnackBarThemeData(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: t.textPrimary,
+            contentTextStyle: TextStyle(color: t.bgPage, fontSize: 14, fontWeight: FontWeight.w600),
+            actionTextColor: t.actionOnInverse,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 0,
+          )
+        : null,
     dialogTheme: DialogThemeData(
       backgroundColor: t.bgSurface,
       surfaceTintColor: Colors.transparent,

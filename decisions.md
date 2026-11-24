@@ -5904,3 +5904,13 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - A few pure-logic colours with no BuildContext (QR export, next-up badge, button contrast helper, avatar palette, confetti) keep Calm constants for now.
   - Web app untouched; the flag is Flutter-only.
+
+## 294. Horizon look for the Flutter app, phase 2: shared parts and bottom bars (v3.95.0)
+* **Context:** Phase 2 of the approved Horizon redesign (see #293). Mockups put a raised Add button in the centre of both bottom bars and slim the trip bar to Balances, Spend, Add, Chat, Hub.
+* **Decision:**
+  - Same flag `enableHorizonUi`. `AppTheme` gives Horizon chips, inputs, buttons, FAB, sheets, cards and a floating snackbar their Horizon shapes; `AppButton`, `AppCard`, `HeroSurface`, `AppSheet` and `CategoryChip` follow `tokens.horizon`.
+  - `horizonDockTabs` / `horizonPagerTabs` / `horizonDockTabFor` in `trip_tabs.dart`; `trip_nav.dart` returns them when the flag is on. Activity leaves the bar (header bell opens it) but stays a pager page, so links keep working.
+  - `AppBottomNav` draws a 52px raised centre button when Horizon is on; the Calm floating Add button is hidden on Trips home and in trips.
+* **Trade-offs Accepted:**
+  - Activity is one tap further for people who used the bar item; the bell badge covers it.
+  - Phase 3 (per-screen layouts) still to come on the same flag.

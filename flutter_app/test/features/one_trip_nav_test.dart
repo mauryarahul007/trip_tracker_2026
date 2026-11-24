@@ -14,13 +14,31 @@ void main() {
     final s = await seedTrip(tester);
     final c = containerOf(tester);
     final dock = c.read(dockTabsProvider(s.tripId));
-    expect(dock.take(3), [TripNavTab.ledger, TripNavTab.expenses, TripNavTab.activity]);
-    expect(dock.last, TripNavTab.hub);
+    // Horizon (default ON): Balances, Spend, Chat, Hub; Activity moves to the header bell.
+    expect(dock, [TripNavTab.ledger, TripNavTab.expenses, TripNavTab.chat, TripNavTab.hub]);
     expect(c.read(visibleTabsProvider(s.tripId)), contains(TripNavTab.chat));
     expect(c.read(visibleTabsProvider(s.tripId)).first, TripNavTab.ledger); // chat-first no longer moves Chat
     c.read(routerProvider).go('/trip/${s.tripId}/ledger');
     await settle(tester, rounds: 10);
     expect(find.byKey(const Key('calm-dock')), findsOneWidget);
+  });
+
+  testApp('Horizon off keeps the Calm dock with Activity', (tester) async {
+    await pumpApp(tester, user: asha, legacyNav: false, flagsOn: {'enableTripChat'}, flagsOff: {'enableHorizonUi'});
+    final s = await seedTrip(tester);
+    final c = containerOf(tester);
+    final sub = c.listen(dockTabsProvider(s.tripId), (_, _) {}); // let the trip-scoped flag stream land
+    await settle(tester, rounds: 3);
+    final dock = c.read(dockTabsProvider(s.tripId));
+    sub.close();
+    expect(dock.take(3), [TripNavTab.ledger, TripNavTab.expenses, TripNavTab.activity]);
+    expect(dock.last, TripNavTab.hub);
+  });
+
+  test('Horizon dock drops Activity and keeps Chat', () {
+    expect(horizonDockTabs(chatEnabled: true), [TripNavTab.ledger, TripNavTab.expenses, TripNavTab.chat, TripNavTab.hub]);
+    expect(horizonDockTabs(chatEnabled: false), [TripNavTab.ledger, TripNavTab.expenses, TripNavTab.hub]);
+    expect(horizonDockTabFor(TripNavTab.activity), TripNavTab.hub);
   });
 
   test('Calm dock keeps Chat and moves Plans into the Hub', () {

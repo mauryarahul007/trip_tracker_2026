@@ -22,7 +22,14 @@ class HeroSurface extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final double? radius;
 
-  LinearGradient _gradient() => switch (kind) {
+  LinearGradient _gradient(AppTokens t) => switch (kind) {
+    // Horizon (enableHorizonUi): night navy instead of night green.
+    SurfaceKind.night when t.horizon => LinearGradient(
+      begin: const Alignment(-0.3, -1),
+      end: const Alignment(0.3, 1),
+      colors: [t.heroEnd, t.heroMid, t.heroDeep],
+      stops: const [0, 0.52, 1],
+    ),
     SurfaceKind.night => AppTokens.nightSkyGradient,
     SurfaceKind.ember => AppTokens.emberGradient,
     SurfaceKind.slate => AppTokens.slateGradient,
@@ -34,7 +41,7 @@ class HeroSurface extends StatelessWidget {
     final t = context.tokens;
     final r = BorderRadius.circular(radius ?? t.radiusLg);
     return DecoratedBox(
-      decoration: BoxDecoration(gradient: _gradient(), borderRadius: r, boxShadow: t.shadowLg),
+      decoration: BoxDecoration(gradient: _gradient(t), borderRadius: r, boxShadow: t.shadowLg),
       child: Padding(
         padding: padding,
         child: DefaultTextStyle.merge(
@@ -68,7 +75,9 @@ class AppCard extends StatelessWidget {
       decoration: BoxDecoration(borderRadius: r, boxShadow: t.shadowSm),
       child: Material(
         color: color ?? t.bgSurface,
-        borderRadius: r,
+        borderRadius: t.horizon ? null : r,
+        // Horizon cards carry one 1px line so white cards read on the grey ground.
+        shape: t.horizon ? RoundedRectangleBorder(borderRadius: r, side: BorderSide(color: t.cardEdge)) : null,
         clipBehavior: Clip.antiAlias,
         child: onTap == null ? body : InkWell(onTap: onTap, child: body),
       ),
