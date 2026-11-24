@@ -6006,3 +6006,15 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Add bill uses today's date, not the stop's date. Itinerary strings are English-only like the older itinerary view.
 
+## 304. Horizon trip pages: People, Activity, Insights, Categories, Checklist, Recycle bin (v3.104.0)
+* **Context:** Step 4 of carrying the Horizon mockups into the Flutter app.
+* **Decision:**
+  - People: `_horizonBody` in members_tab with a Members/Groups `SegmentedButton`, one card of people (role · paid, net on the right, "You" for me) and tinted Add a person / Invite rows. Paid sums base-currency expenses (payer shares when set).
+  - Activity: rows show the rendered body first, then "headline · time"; day headers in mono.
+  - Insights: `_HorizonDonut` (category donut, total, legend shares) and a tip card replace the hero and By category section.
+  - Categories: + in the app bar, built-ins in one card with expense counts, custom under "Your own" with a ⋮ menu (rename, delete).
+  - Checklist: title + done/total over a linear bar. Recycle bin: Restore pill on the row. Receipts: count in the title.
+  - Fixed the Set Budget button font (it fell back to the platform font). Reuses `enableHorizonUi`.
+* **Trade-offs Accepted:**
+  - Left out: "Couples count as 2" and "Most trips like this spend…" (no data). People paid ignores foreign-currency expenses.
+

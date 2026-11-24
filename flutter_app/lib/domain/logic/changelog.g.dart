@@ -8,6 +8,11 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.104.0', '2026-11-25', [
+    'People shows what each person paid and their net, with a Members and Groups switch and clear Add a person and Invite rows (Flutter).',
+    'Insights opens with a category donut and a daily tip; Activity rows lead with what happened; Categories show expense counts with your own ones listed apart; the checklist has a simple progress bar; the recycle bin has a Restore button on each row (Flutter).',
+    'Fixed: the Set Budget button on Insights showed unreadable text (Flutter).',
+  ]),
   ChangelogEntry('3.103.0', '2026-11-25', [
     'Add expense opens on the amount: a big number pad, "What for?", and quick chips for category, who paid, the split and a receipt. Save shows each person\'s share. "More details" opens the full form (Flutter).',
     'Itinerary redesign: pick a day from a date strip, see stops on a timeline with the next one highlighted, and tap a stop for directions, add bill, done, edit or delete. The day\'s bills fold into one Spent row (Flutter).',
@@ -53,10 +58,5 @@ const List<ChangelogEntry> changelogEntries = [
     'Day-by-Day Visual Itinerary Planner: Unified chronological timeline merging scheduled activities, transit passes, and daily expenses with Google Maps directions (Web & Flutter).',
     'Daily Budget Pacing Dial & Velocity Forecaster: Set planned trip budgets on-device with daily burn tracking, remaining allowances, and forecast variance (Web & Flutter).',
     'Enhanced Line-Item Bill Splitter: Live member share breakdowns with pro-rata tax/tip allocation, per-person item badges, and 1-tap "All" / "Clear" shortcuts (Web & Flutter).',
-  ]),
-  ChangelogEntry('3.91.7', '2026-11-13', [
-    'Daily Budget Pacing Dial & Velocity Forecaster: Set planned trip budgets on-device with daily burn tracking, remaining allowances, and forecast variance (Web & Flutter).',
-    'Enhanced Line-Item Bill Splitter: Live member share breakdowns with pro-rata tax/tip allocation, per-person item badges, and 1-tap "All" / "Clear" shortcuts (Web & Flutter).',
-    'Flutter UX & Ledger Enhancements: S1-S5 upgrades across money formatting, empty states, visual polish, and search filters.',
   ]),
 ];

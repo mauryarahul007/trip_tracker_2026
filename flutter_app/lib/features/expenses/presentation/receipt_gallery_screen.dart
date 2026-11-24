@@ -35,7 +35,14 @@ class ReceiptGalleryScreen extends ConsumerWidget {
     ]..sort((a, b) => b.date.compareTo(a.date));
 
     return AppScaffold(
-      appBar: AppBar(title: Text(l10n.receiptsTitle)),
+      appBar: AppBar(
+        // Horizon: "Receipts · 17", like the mockup.
+        title: Text(
+          context.tokens.horizon && on && expenses.isNotEmpty
+              ? '${l10n.receiptsTitle} · ${expenses.length}'
+              : l10n.receiptsTitle,
+        ),
+      ),
       body: !on || expenses.isEmpty
           ? EmptyState(
               key: const Key('receipts-empty'),

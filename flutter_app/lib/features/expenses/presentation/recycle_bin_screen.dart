@@ -13,6 +13,7 @@ import '../../../domain/logic/expense_list_logic.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_surface.dart';
 import '../../../shared/widgets/app_scaffold.dart';
@@ -222,42 +223,84 @@ class _RecycleBinScreenState extends ConsumerState<RecycleBinScreen> {
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: AppButton(
+                                if (tokens.horizon) ...[
+                                  const SizedBox(width: 8),
+                                  // Horizon ("Recycle bin" mockup): a small Restore pill on the row.
+                                  FilledButton.tonalIcon(
                                     key: Key('bin-restore-${e.id}'),
-                                    label: l10n.binRestore,
-                                    icon: Icons.restore_from_trash_rounded,
-                                    onPressed: () => unawaited(_restore(e)),
-                                  ),
-                                ),
-                                if (canManageExpense(e, isAdmin: isAdmin, userId: uid)) ...[
-                                  const SizedBox(width: 4),
-                                  PopupMenuButton<String>(
-                                    key: Key('bin-more-${e.id}'),
-                                    tooltip: l10n.binMoreActions,
-                                    icon: Icon(Icons.more_vert_rounded, color: tokens.textSecondary),
-                                    onSelected: (v) {
-                                      if (v == 'delete') unawaited(_deleteForever(e));
-                                    },
-                                    itemBuilder: (_) => [
-                                      PopupMenuItem<String>(
-                                        key: Key('bin-delete-${e.id}'),
-                                        value: 'delete',
-                                        child: Text(
-                                          l10n.binDeleteForever,
-                                          style: TextStyle(color: tokens.colorDanger, fontWeight: FontWeight.w600),
-                                        ),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: tokens.primaryAccentLight,
+                                      foregroundColor: tokens.primaryAccent,
+                                      minimumSize: const Size(48, 40),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      textStyle: const TextStyle(
+                                        fontFamily: AppTypography.fontBody,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
                                       ),
-                                    ],
+                                    ),
+                                    onPressed: () => unawaited(_restore(e)),
+                                    icon: const Icon(Icons.restore_rounded, size: 16),
+                                    label: Text(l10n.horizonRestore),
                                   ),
+                                  if (canManageExpense(e, isAdmin: isAdmin, userId: uid))
+                                    PopupMenuButton<String>(
+                                      key: Key('bin-more-${e.id}'),
+                                      tooltip: l10n.binMoreActions,
+                                      icon: Icon(Icons.more_vert_rounded, color: tokens.textSecondary),
+                                      onSelected: (v) {
+                                        if (v == 'delete') unawaited(_deleteForever(e));
+                                      },
+                                      itemBuilder: (_) => [
+                                        PopupMenuItem<String>(
+                                          key: Key('bin-delete-${e.id}'),
+                                          value: 'delete',
+                                          child: Text(
+                                            l10n.binDeleteForever,
+                                            style: TextStyle(color: tokens.colorDanger, fontWeight: FontWeight.w600),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                 ],
                               ],
                             ),
+                            if (!tokens.horizon) ...[
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: AppButton(
+                                      key: Key('bin-restore-${e.id}'),
+                                      label: l10n.binRestore,
+                                      icon: Icons.restore_from_trash_rounded,
+                                      onPressed: () => unawaited(_restore(e)),
+                                    ),
+                                  ),
+                                  if (canManageExpense(e, isAdmin: isAdmin, userId: uid)) ...[
+                                    const SizedBox(width: 4),
+                                    PopupMenuButton<String>(
+                                      key: Key('bin-more-${e.id}'),
+                                      tooltip: l10n.binMoreActions,
+                                      icon: Icon(Icons.more_vert_rounded, color: tokens.textSecondary),
+                                      onSelected: (v) {
+                                        if (v == 'delete') unawaited(_deleteForever(e));
+                                      },
+                                      itemBuilder: (_) => [
+                                        PopupMenuItem<String>(
+                                          key: Key('bin-delete-${e.id}'),
+                                          value: 'delete',
+                                          child: Text(
+                                            l10n.binDeleteForever,
+                                            style: TextStyle(color: tokens.colorDanger, fontWeight: FontWeight.w600),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),

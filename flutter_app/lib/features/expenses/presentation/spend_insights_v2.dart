@@ -89,15 +89,61 @@ class SpendInsightsV2Body extends ConsumerWidget {
             key: const Key('insights-v2'),
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             children: [
-              _HeroTotal(
-                total: money(total),
-                eyebrow: burn == null
-                    ? 'Spent · ${days.length} ${days.length == 1 ? 'day' : 'days'}'
-                    : 'Spent · day ${burn.daysElapsed} of ${burn.daysTotal}',
-                avg: money(avg),
-                projected: burn == null ? null : money(burn.projectedTotal),
-                budget: budget > 0 ? (spent: total, budget: budget, label: money) : null,
-              ),
+              if (tokens.horizon) ...[
+                _HorizonDonut(
+                  rows: [
+                    for (final c in cats)
+                      (
+                        name: categories[c.categoryId]?.name ?? c.categoryId,
+                        color: Color(categoryColorArgb(c.categoryId)),
+                        total: c.total,
+                      ),
+                  ],
+                  total: total,
+                  centre: money(total),
+                  caption: '${days.length} ${days.length == 1 ? 'day' : 'days'}',
+                ),
+                if (cats.isNotEmpty && days.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Container(
+                      key: const Key('insight-tip'),
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                      decoration: BoxDecoration(
+                        color: tokens.primaryAccentLight,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.auto_awesome_outlined, size: 18, color: tokens.primaryAccent),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              '${categories[cats.first.categoryId]?.name ?? cats.first.categoryId} is '
+                              '${money(cats.first.total / days.length)} a day, '
+                              '${total <= 0 ? 0 : (cats.first.total / total * 100).round()}% of the trip so far.',
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontBody,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: tokens.primaryAccent,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ] else
+                _HeroTotal(
+                  total: money(total),
+                  eyebrow: burn == null
+                      ? 'Spent · ${days.length} ${days.length == 1 ? 'day' : 'days'}'
+                      : 'Spent · day ${burn.daysElapsed} of ${burn.daysTotal}',
+                  avg: money(avg),
+                  projected: burn == null ? null : money(burn.projectedTotal),
+                  budget: budget > 0 ? (spent: total, budget: budget, label: money) : null,
+                ),
               if (budgetOn && trip != null)
                 DailyBudgetPacingCard(
                   startDate: trip.startDate,
@@ -142,23 +188,24 @@ class SpendInsightsV2Body extends ConsumerWidget {
                     ),
                   ),
                 ),
-              section(
-                'By category',
-                null,
-                _CategoryBars(
-                  rows: [
-                    for (final c in cats)
-                      (
-                        name: categories[c.categoryId]?.name ?? c.categoryId,
-                        color: Color(categoryColorArgb(c.categoryId)),
-                        total: c.total,
-                      ),
-                  ],
-                  total: total,
-                  money: money,
+              if (!tokens.horizon)
+                section(
+                  'By category',
+                  null,
+                  _CategoryBars(
+                    rows: [
+                      for (final c in cats)
+                        (
+                          name: categories[c.categoryId]?.name ?? c.categoryId,
+                          color: Color(categoryColorArgb(c.categoryId)),
+                          total: c.total,
+                        ),
+                    ],
+                    total: total,
+                    money: money,
+                  ),
+                  key: const Key('insight-categories'),
                 ),
-                key: const Key('insight-categories'),
-              ),
               if (people.length >= 2)
                 section(
                   'Paid vs share',
@@ -525,6 +572,135 @@ class _RunningPainter extends CustomPainter {
 }
 
 /// Ranked category bars: name, amount and share of the total. Past six, the rest fold into "Other".
+/// Horizon Insights ("Insights" mockup): category donut with the total in the middle and a legend with shares.
+class _HorizonDonut extends StatelessWidget {
+  const _HorizonDonut({required this.rows, required this.total, required this.centre, required this.caption});
+
+  final List<({String name, Color color, double total})> rows;
+  final double total;
+  final String centre;
+  final String caption;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final shown = rows.length <= 5
+        ? rows
+        : [
+            ...rows.take(4),
+            (name: 'Other', color: t.textMuted, total: rows.skip(4).fold<double>(0, (s, r) => s + r.total)),
+          ];
+    return AppCard(
+      key: const Key('insight-donut'),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 128,
+            height: 128,
+            child: CustomPaint(
+              painter: _DonutPainter([for (final r in shown) (r.color, r.total)], t.borderColor),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FittedBox(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 22),
+                        child: Text(
+                          centre,
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontMono,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: t.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      caption,
+                      style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 11, color: t.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              children: [
+                for (final r in shown)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 9,
+                          height: 9,
+                          decoration: BoxDecoration(shape: BoxShape.circle, color: r.color),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            r.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 13, color: t.textPrimary),
+                          ),
+                        ),
+                        Text(
+                          total <= 0 ? '' : '${(r.total / total * 100).round()}%',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontMono,
+                            fontFeatures: AppTypography.tabularFigures,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: t.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DonutPainter extends CustomPainter {
+  _DonutPainter(this.parts, this.track);
+  final List<(Color, double)> parts;
+  final Color track;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const stroke = 16.0;
+    final rect = Offset.zero & size;
+    final arc = rect.deflate(stroke / 2);
+    final sum = parts.fold<double>(0, (s, p) => s + p.$2);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke;
+    if (sum <= 0) {
+      canvas.drawArc(arc, 0, math.pi * 2, false, paint..color = track);
+      return;
+    }
+    var start = -math.pi / 2;
+    for (final (color, v) in parts) {
+      final sweep = v / sum * math.pi * 2;
+      canvas.drawArc(arc, start, math.max(0, sweep - 0.03), false, paint..color = color);
+      start += sweep;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DonutPainter old) => old.parts != parts || old.track != track;
+}
+
 class _CategoryBars extends StatelessWidget {
   const _CategoryBars({required this.rows, required this.total, required this.money});
 
