@@ -71,7 +71,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     opacity: i == _index ? 1 : 0.35,
                     duration: AppMotion.of(context, AppMotion.base),
                     curve: AppMotion.standard,
-                    child: Padding(
+                    child: tokens.horizon
+                        ? _HorizonStep(
+                            index: i,
+                            title: steps[i].$2,
+                            body: steps[i].$3,
+                            art: art
+                                ? OnboardingArt(
+                                    const [
+                                      OnboardingArtKind.stamp,
+                                      OnboardingArtKind.route,
+                                      OnboardingArtKind.receipt,
+                                    ][i],
+                                    size: 148,
+                                  )
+                                : Icon(steps[i].$1, size: 72, color: Colors.white),
+                          )
+                        : Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 32),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -129,7 +145,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       width: i == _index ? 22 : 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: i == _index ? tokens.textPrimary : tokens.textPrimary.withValues(alpha: 0.25),
+                        color: tokens.horizon
+                            ? (i == _index ? tokens.primaryAccent : tokens.textMuted.withValues(alpha: 0.35))
+                            : (i == _index ? tokens.textPrimary : tokens.textPrimary.withValues(alpha: 0.25)),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -139,6 +157,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 padding: const EdgeInsets.all(24),
                 child: AppButton(
                   label: last ? l10n.onboardingGetStarted : l10n.onboardingNext,
+                  trailingIcon: tokens.horizon ? Icons.arrow_forward_rounded : null,
                   isFullWidth: true,
                   onPressed: last
                       ? _finish
@@ -148,6 +167,78 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Horizon onboarding card: a night-navy hero with the art and a sunset glow, then a left-aligned title and body.
+class _HorizonStep extends StatelessWidget {
+  const _HorizonStep({required this.index, required this.title, required this.body, required this.art});
+  final int index;
+  final String title;
+  final String body;
+  final Widget art;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Padding(
+      key: Key('horizon-onboarding-$index'),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [t.heroDeep, t.heroMid],
+                ),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned(
+                    right: -40,
+                    top: -40,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [t.accentOrange.withValues(alpha: 0.45), t.accentOrange.withValues(alpha: 0)],
+                        ),
+                      ),
+                    ),
+                  ),
+                  art,
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: AppTypography.fontTitle,
+              fontSize: 30,
+              height: 1.1,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.8,
+              color: t.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(body, style: TextStyle(fontSize: 16, color: t.textSecondary, height: 1.45)),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }

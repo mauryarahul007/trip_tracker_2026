@@ -64,7 +64,7 @@ Automatic Android APK build from main (Flutter merged into main)
 - **Category**: `ui-ux` | **Status**: `in_progress`
 - **Requested By**: `agent` on 11/24/2026 (native)
 
-Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blue action, sunset accent, night-navy hero, new category tints, new shapes, 5-slot bottom bars and all 55 screens from design/horizon. Ships in phases; OFF keeps Calm Passport. HORIZON-UI. Phase 1 d917630 (v3.94.0), phase 2 3eb97c6 (v3.95.0).
+Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blue action, sunset accent, night-navy hero, new category tints, new shapes, 5-slot bottom bars and all 55 screens from design/horizon. Ships in phases; OFF keeps Calm Passport. HORIZON-UI. Phase 1 d917630 (v3.94.0), phase 2 3eb97c6 (v3.95.0), phase 3a f8a2536 (v3.96.0).
 
 ---
 

@@ -131,7 +131,23 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.resetRequestTitle, style: AppTypography.tripTitle(color: tokens.textPrimary, fontSize: 24)),
+          if (tokens.horizon) ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                key: const Key('reset-lock-tile'),
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(color: tokens.tones.sky.bg, borderRadius: BorderRadius.circular(16)),
+                child: Icon(Icons.lock_outline_rounded, size: 26, color: tokens.primaryAccent),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          Text(
+            l10n.resetRequestTitle,
+            style: AppTypography.tripTitle(color: tokens.textPrimary, fontSize: tokens.horizon ? 28 : 24),
+          ),
           const SizedBox(height: 8),
           Text(l10n.resetRequestSubtitle, style: TextStyle(fontSize: 14, color: tokens.textSecondary)),
           const SizedBox(height: 20),

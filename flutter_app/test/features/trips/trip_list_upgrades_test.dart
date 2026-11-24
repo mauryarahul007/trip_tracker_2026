@@ -76,7 +76,8 @@ void main() {
   }
 
   testApp('overview line sums your position across trips and opens balances; off with its flag', (tester) async {
-    await pumpApp(tester, user: asha);
+    // The Calm overview line; Horizon replaces it with the balance hero (next test).
+    await pumpApp(tester, user: asha, flagsOff: {'enableHorizonUi'});
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 90);
     await home(tester);
@@ -84,6 +85,16 @@ void main() {
       tester.widget<Text>(find.descendant(of: key('trips-overview'), matching: find.byType(Text)).first).data,
       "You're owed ₹60.00 across 1 trip",
     );
+  });
+
+  testApp('Horizon: the balance hero shows the same position, with quick actions under it', (tester) async {
+    await pumpApp(tester, user: asha);
+    final s = await seedTrip(tester);
+    await addExpense(tester, s, amount: 90);
+    await home(tester);
+    expect(key('trips-overview'), findsNothing);
+    expect(tester.widget<Text>(key('horizon-hero-amount')).data, '+₹60.00');
+    expect(key('horizon-quick-actions'), findsOneWidget);
   });
 
   testApp('overview line is absent with its flag off', (tester) async {

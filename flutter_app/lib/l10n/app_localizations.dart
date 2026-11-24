@@ -5226,6 +5226,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More actions'**
   String get binMoreActions;
+
+  /// No description provided for @horizonSplashTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Split · Travel · Settle'**
+  String get horizonSplashTagline;
+
+  /// No description provided for @horizonSplashSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing your trips…'**
+  String get horizonSplashSyncing;
+
+  /// No description provided for @horizonTripCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Got a trip code?'**
+  String get horizonTripCodeTitle;
+
+  /// No description provided for @horizonTripCodeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join without an account'**
+  String get horizonTripCodeSubtitle;
+
+  /// No description provided for @horizonGreetingMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get horizonGreetingMorning;
+
+  /// No description provided for @horizonGreetingAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon'**
+  String get horizonGreetingAfternoon;
+
+  /// No description provided for @horizonGreetingEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get horizonGreetingEvening;
+
+  /// No description provided for @horizonAcrossTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'Across {count, plural, =1{1 trip} other{{count} trips}}'**
+  String horizonAcrossTrips(int count);
+
+  /// No description provided for @horizonOwedToYou.
+  ///
+  /// In en, this message translates to:
+  /// **'owed to you'**
+  String get horizonOwedToYou;
+
+  /// No description provided for @horizonYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'you owe'**
+  String get horizonYouOwe;
+
+  /// No description provided for @horizonAllSquare.
+  ///
+  /// In en, this message translates to:
+  /// **'All square'**
+  String get horizonAllSquare;
+
+  /// No description provided for @horizonCurrencies.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} currencies'**
+  String horizonCurrencies(int count);
+
+  /// No description provided for @horizonActionNewTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'New trip'**
+  String get horizonActionNewTrip;
+
+  /// No description provided for @horizonActionJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join code'**
+  String get horizonActionJoin;
+
+  /// No description provided for @horizonActionQuickAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick add'**
+  String get horizonActionQuickAdd;
+
+  /// No description provided for @horizonActionSettle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle'**
+  String get horizonActionSettle;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

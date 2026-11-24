@@ -27,6 +27,9 @@ class AppButton extends StatefulWidget {
 
   /// Custom leading widget (e.g. a brand glyph); takes precedence over [icon].
   final Widget? leading;
+
+  /// Icon after the label (e.g. a forward arrow on a "Next" button).
+  final IconData? trailingIcon;
   final bool isLoading;
   final bool isFullWidth;
 
@@ -37,6 +40,7 @@ class AppButton extends StatefulWidget {
     this.variant = AppButtonVariant.primary,
     this.icon,
     this.leading,
+    this.trailingIcon,
     this.isLoading = false,
     this.isFullWidth = false,
   });
@@ -122,6 +126,10 @@ class _AppButtonState extends State<AppButton> {
             style: TextStyle(color: fg, fontSize: 16, fontWeight: FontWeight.w700),
           ),
         ),
+        if (widget.trailingIcon != null && !isLoading) ...[
+          SizedBox(width: gap),
+          Icon(widget.trailingIcon, size: 18, color: fg),
+        ],
       ],
     );
 

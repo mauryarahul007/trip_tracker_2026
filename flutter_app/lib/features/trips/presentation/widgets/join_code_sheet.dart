@@ -5,6 +5,7 @@ import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_sheet.dart';
 import '../../../../shared/theme/app_tokens.dart';
+import '../../../../shared/theme/app_typography.dart';
 
 final _codeShape = RegExp(r'^[A-Za-z0-9]{6}$');
 
@@ -71,8 +72,9 @@ class _JoinCodeFormState extends State<_JoinCodeForm> {
                           margin: const EdgeInsets.symmetric(horizontal: 4),
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: t.bgSurface,
-                            borderRadius: BorderRadius.circular(16),
+                            // Horizon: filled grey boxes, 12px corners, the active one outlined in ink.
+                            color: t.horizon && i != chars.length.clamp(0, 5) ? t.bgPage : t.bgSurface,
+                            borderRadius: BorderRadius.circular(t.horizon ? 12 : 16),
                             border: Border.all(
                               color: i == chars.length.clamp(0, 5) ? t.primaryAccent : t.borderColor,
                               width: i == chars.length.clamp(0, 5) ? 2 : 1,
@@ -80,7 +82,12 @@ class _JoinCodeFormState extends State<_JoinCodeForm> {
                           ),
                           child: Text(
                             i < chars.length ? chars[i] : '',
-                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: t.primaryAccent),
+                            style: TextStyle(
+                              fontFamily: t.horizon ? AppTypography.fontMono : null,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              color: t.horizon ? t.textPrimary : t.primaryAccent,
+                            ),
                           ),
                         ),
                     ],

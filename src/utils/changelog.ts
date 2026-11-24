@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.96.0',
+    date: '2026-11-24',
+    changes: [
+      'Horizon look for the Flutter app: a new blue and night-navy colour scheme with a sunset accent, in light, dark and pure black.',
+      'New bottom bars with a raised Add button in the centre; the trip bar is now Balances, Spend, Add, Chat and Hub.',
+      'Redesigned splash, onboarding, sign-in and Trips home: your balance across all trips up top, with New trip, Join code, Quick add and Settle one tap away.',
+    ],
+  },
+  {
     version: '3.93.0',
     date: '2026-11-13',
     changes: [
