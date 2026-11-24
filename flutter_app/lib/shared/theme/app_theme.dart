@@ -201,20 +201,27 @@ ThemeData _build(AppTokens t, Brightness brightness) {
 }
 
 class AppTheme {
-  /// All looks share the Calm Passport colours. [calm] only picks the layout: false keeps the pre-Calm dock and
+  /// [horizon] (flag `enableHorizonUi`) swaps in the Horizon colours and shapes; false keeps Calm Passport.
+  /// All other looks share the Calm Passport colours. [calm] only picks the layout: false keeps the pre-Calm dock and
   /// tab bar (Ops Deck flag `enableCalmPassportUi` OFF).
   ///
   /// [accent] (Material You, flag `enableDynamicColor`) recolours only the accent tokens; null keeps the Calm teal.
-  static ThemeData light({bool calm = true, Color? accent}) =>
-      _build(tintTokens(AppTokens.light.copyWith(calm: calm), accent, Brightness.light), Brightness.light);
-  static ThemeData dark({bool calm = true, Color? accent}) =>
-      _build(tintTokens(AppTokens.dark.copyWith(calm: calm), accent, Brightness.dark), Brightness.dark);
-  static ThemeData amoled({bool calm = true, Color? accent}) =>
-      _build(tintTokens(AppTokens.amoled.copyWith(calm: calm), accent, Brightness.dark), Brightness.dark);
+  static ThemeData light({bool calm = true, Color? accent, bool horizon = false}) => _build(
+    tintTokens((horizon ? AppTokens.horizonLight : AppTokens.light).copyWith(calm: calm), accent, Brightness.light),
+    Brightness.light,
+  );
+  static ThemeData dark({bool calm = true, Color? accent, bool horizon = false}) => _build(
+    tintTokens((horizon ? AppTokens.horizonDark : AppTokens.dark).copyWith(calm: calm), accent, Brightness.dark),
+    Brightness.dark,
+  );
+  static ThemeData amoled({bool calm = true, Color? accent, bool horizon = false}) => _build(
+    tintTokens((horizon ? AppTokens.horizonAmoled : AppTokens.amoled).copyWith(calm: calm), accent, Brightness.dark),
+    Brightness.dark,
+  );
 
   /// Darker text and stronger borders on the same surfaces (Settings > Appearance > High contrast).
-  static ThemeData highContrastLight({bool calm = true}) => _build(
-    AppTokens.light.copyWith(
+  static ThemeData highContrastLight({bool calm = true, bool horizon = false}) => _build(
+    (horizon ? AppTokens.horizonLight : AppTokens.light).copyWith(
       calm: calm,
       textPrimary: const Color(0xFF000000),
       textSecondary: const Color(0xFF1F2933),
@@ -223,8 +230,8 @@ class AppTheme {
     ),
     Brightness.light,
   );
-  static ThemeData highContrastDark({bool calm = true}) => _build(
-    AppTokens.dark.copyWith(
+  static ThemeData highContrastDark({bool calm = true, bool horizon = false}) => _build(
+    (horizon ? AppTokens.horizonDark : AppTokens.dark).copyWith(
       calm: calm,
       textPrimary: const Color(0xFFFFFFFF),
       textSecondary: const Color(0xFFE5E7EB),

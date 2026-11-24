@@ -162,7 +162,7 @@ class AdminSectionLabel extends StatelessWidget {
 }
 
 Color adminSeverityColor(AppTokens t, String severity) => switch (severity) {
-  'critical' => AppColors.calmOwe,
+  'critical' => t.colorDanger,
   'high' => AppColors.calmRunwayDeep,
   'medium' => t.colorWarning,
   _ => t.textMuted,
@@ -170,7 +170,7 @@ Color adminSeverityColor(AppTokens t, String severity) => switch (severity) {
 
 Color adminStatusColor(AppTokens t, String status) => switch (status) {
   'resolved' || 'active' => t.colorSuccess,
-  'in_progress' || 'closed' => AppColors.calmTeal,
+  'in_progress' || 'closed' => t.primaryAccent,
   'open' || 'grounded' => t.colorDanger,
   _ => t.textMuted,
 };

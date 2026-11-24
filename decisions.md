@@ -5891,3 +5891,16 @@ This document logs all meaningful technical decisions, library choices, design p
   - Docs: `FLUTTER-UX-10` in `FEATURE_TEST_STEPS.md`; FEAT-209; backlog B-135 closed. No new flags.
 * **Trade-offs Accepted:**
   - Flutter-only; reuse existing Core flags rather than adding polish flags; Supabase still initializes before `runApp` (providers need it) while sync/realtime wait for the first frame.
+
+---
+
+## 293. Horizon look for the Flutter app, phase 1: colours and theme (v3.94.0)
+* **Context:** The user found the shipped Calm Passport look flat and approved the Horizon mockups (55 screens, `design/horizon/`). Rival research (Splitwise, Tricount, Settle Up, TripIt, Wanderlog, ixigo) informed the palette and layouts.
+* **Decision:**
+  - New Core flag `enableHorizonUi` (default ON). `AppTheme.light/dark/amoled/highContrast*` take `horizon:`; `main.dart` reads `horizonUiProvider`.
+  - New token sets `AppTokens.horizonLight/horizonDark/horizonAmoled` and `BentoTones.horizonLight/horizonDark`; radii 12/16/20. A `horizon` bool on `AppTokens` lets later phases branch on shape and layout.
+  - Dark hero getters on `AppTokens` (`heroDeep/heroMid/heroEnd`, `accentOnDark`, `mutedOnDark`, `oweOnDark`, `inkOnLight`) replace hard-coded Calm constants in 30 screens and widgets, so both looks stay correct.
+  - Phases 2-3 (shared parts, bottom bars, per-screen layouts) follow on the same flag.
+* **Trade-offs Accepted:**
+  - A few pure-logic colours with no BuildContext (QR export, next-up badge, button contrast helper, avatar palette, confetti) keep Calm constants for now.
+  - Web app untouched; the flag is Flutter-only.

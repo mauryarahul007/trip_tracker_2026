@@ -77,4 +77,52 @@ class AppColors {
   static const List<Color> calmDarkTilePeach = [Color(0xFF3D2418), Color(0xFFF5A882)];
   static const List<Color> calmDarkTileSky = [Color(0xFF1A2C3D), Color(0xFF9CC8EC)];
   static const List<Color> calmDarkTileLilac = [Color(0xFF2A2340), Color(0xFFC3AEF5)];
+
+  // Horizon (flag `enableHorizonUi`): cool grey ground, one Horizon blue action, sunset accent, night-navy hero.
+  // Owe / owed keep a sign and an arrow, never colour alone.
+  static const Color horizonGround = Color(0xFFF5F6FA);
+  static const Color horizonSurface2 = Color(0xFFEDF0F7);
+  static const Color horizonLine = Color(0xFFE1E5EE);
+  static const Color horizonInk = Color(0xFF131A2E);
+  static const Color horizonInk2 = Color(0xFF3D4663);
+  static const Color horizonMute = Color(0xFF687089);
+  static const Color horizonBlue = Color(0xFF2950E8); // white text 6.2:1
+  static const Color horizonBlueTint = Color(0xFFE8EEFF);
+  static const Color horizonBlueInk = Color(0xFF1F3FBF);
+  static const Color horizonSunset = Color(0xFFFF7A45); // fills and badges only, never small text
+  static const Color horizonSunsetTint = Color(0xFFFFEDE4);
+  static const Color horizonSunsetInk = Color(0xFFA3400F);
+  static const Color horizonHero = Color(0xFF14204A);
+  static const Color horizonHero2 = Color(0xFF1E2F6E);
+  static const Color horizonOwed = Color(0xFF0E7A43);
+  static const Color horizonOwe = Color(0xFFC62F2A);
+  static const Color horizonWarn = Color(0xFF9A5300);
+
+  static const Color horizonDarkGround = Color(0xFF0A0E1A);
+  static const Color horizonDarkSurface = Color(0xFF131A2B);
+  static const Color horizonDarkSurface2 = Color(0xFF1B2338);
+  static const Color horizonDarkLine = Color(0xFF26304A);
+  static const Color horizonDarkInk = Color(0xFFEEF1FA);
+  static const Color horizonDarkInk2 = Color(0xFFC3CADC);
+  static const Color horizonDarkMute = Color(0xFF8C96B0);
+  static const Color horizonDarkBlue = Color(0xFF7D9BFF); // dark ink text on it 7.3:1
+  static const Color horizonDarkBlueTint = Color(0xFF1E2A55);
+  static const Color horizonDarkBlueInk = Color(0xFFA9BCFF);
+  static const Color horizonDarkSunset = Color(0xFFFF9466);
+  static const Color horizonDarkHero = Color(0xFF0F1736);
+  static const Color horizonDarkOwed = Color(0xFF3FD68C);
+  static const Color horizonDarkOwe = Color(0xFFFF7B73);
+  static const Color horizonDarkWarn = Color(0xFFF5B544);
+
+  // Horizon category tints [tile, icon]: mint = transport, butter = shopping, peach = food, sky = stay, lilac = fun.
+  static const List<Color> horizonTileMint = [Color(0xFFD9F3EE), Color(0xFF11685A)];
+  static const List<Color> horizonTileButter = [Color(0xFFFFF2C2), Color(0xFF7A5800)];
+  static const List<Color> horizonTilePeach = [Color(0xFFFFE7D6), Color(0xFF9A3E12)];
+  static const List<Color> horizonTileSky = [Color(0xFFE3E9FF), Color(0xFF2D45A8)];
+  static const List<Color> horizonTileLilac = [Color(0xFFF1E4FF), Color(0xFF6B3AA8)];
+  static const List<Color> horizonDarkTileMint = [Color(0xFF0F302B), Color(0xFF6FDCC6)];
+  static const List<Color> horizonDarkTileButter = [Color(0xFF352B0E), Color(0xFFF2CF62)];
+  static const List<Color> horizonDarkTilePeach = [Color(0xFF3A2416), Color(0xFFFFB48F)];
+  static const List<Color> horizonDarkTileSky = [Color(0xFF1E2A55), Color(0xFFA9BCFF)];
+  static const List<Color> horizonDarkTileLilac = [Color(0xFF2C1F45), Color(0xFFCDB0FF)];
 }

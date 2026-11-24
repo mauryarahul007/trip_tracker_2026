@@ -12,7 +12,7 @@ import 'core/platform/haptics.dart';
 import 'core/platform/motion.dart';
 import 'core/settings/app_settings.dart';
 import 'core/version/version_gate.dart';
-import 'core/flags/compass_flags.dart' show calmPassportProvider;
+import 'core/flags/compass_flags.dart' show calmPassportProvider, horizonUiProvider;
 import 'data/providers.dart';
 import 'app/router.dart';
 import 'core/storage/prefs.dart';
@@ -107,6 +107,7 @@ class TripTrackerApp extends ConsumerWidget {
     AppFeedback.packOn = ref.watch(flagProvider(('enableFeedbackPack', null))).value ?? true;
     // Calm Passport colours are the one theme; the flag only picks the Calm layout (dock, 5-tab bar).
     final calm = ref.watch(calmPassportProvider);
+    final horizon = ref.watch(horizonUiProvider);
     final accent = ref.watch(dynamicAccentProvider);
     AppMotion.reduce =
         ref.watch(reduceMotionPrefProvider) && (ref.watch(flagProvider(('enableReduceMotion', null))).value ?? true);
@@ -115,10 +116,14 @@ class TripTrackerApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Trip Tracker',
       debugShowCheckedModeBanner: false,
-      theme: contrast ? AppTheme.highContrastLight(calm: calm) : AppTheme.light(calm: calm, accent: accent),
+      theme: contrast
+          ? AppTheme.highContrastLight(calm: calm, horizon: horizon)
+          : AppTheme.light(calm: calm, accent: accent, horizon: horizon),
       darkTheme: contrast
-          ? AppTheme.highContrastDark(calm: calm)
-          : (amoled ? AppTheme.amoled(calm: calm, accent: accent) : AppTheme.dark(calm: calm, accent: accent)),
+          ? AppTheme.highContrastDark(calm: calm, horizon: horizon)
+          : (amoled
+                ? AppTheme.amoled(calm: calm, accent: accent, horizon: horizon)
+                : AppTheme.dark(calm: calm, accent: accent, horizon: horizon)),
       themeMode: themeMode,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

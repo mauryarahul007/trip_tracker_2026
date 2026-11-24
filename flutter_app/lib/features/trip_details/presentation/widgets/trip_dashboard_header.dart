@@ -12,7 +12,6 @@ import '../../../../domain/logic/trip_utilities.dart' show formatDateRange;
 import '../../../../domain/models/expense.dart';
 import '../../../../domain/models/trip.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_icons.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/app_typography.dart';
@@ -73,7 +72,7 @@ class TripDashboardHeader extends ConsumerWidget {
             : const TripStatus(TripPhase.active);
 
         final statusColor = switch (status.phase) {
-          TripPhase.active => AppColors.calmTeal,
+          TripPhase.active => context.tokens.primaryAccent,
           TripPhase.upcoming => const Color(0xFFF0AE5C),
           TripPhase.ended => Colors.white70,
           TripPhase.unknown => Colors.white70,

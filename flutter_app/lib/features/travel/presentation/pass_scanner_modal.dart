@@ -132,7 +132,11 @@ class _PassScannerModalState extends State<PassScannerModal> {
                         Text(
                           [pass.origin, pass.destination].whereType<String>().join(' → '),
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.calmTeal),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: context.tokens.primaryAccent,
+                          ),
                         ),
                       ],
                       const SizedBox(height: 16),
@@ -241,14 +245,14 @@ class _PassScannerModalState extends State<PassScannerModal> {
                                 icon: Icon(
                                   _copied ? Icons.check : Icons.copy,
                                   size: 16,
-                                  color: _copied ? tokens.colorSuccess : AppColors.calmTeal,
+                                  color: _copied ? tokens.colorSuccess : context.tokens.primaryAccent,
                                 ),
                                 label: Text(
                                   _copied ? 'Copied' : 'Copy',
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
-                                    color: _copied ? tokens.colorSuccess : AppColors.calmTeal,
+                                    color: _copied ? tokens.colorSuccess : context.tokens.primaryAccent,
                                   ),
                                 ),
                                 onPressed: () => _copy(refCode),
@@ -272,7 +276,7 @@ class _PassScannerModalState extends State<PassScannerModal> {
               child: FilledButton(
                 key: const Key('scanner-done'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.calmNightDeep,
+                  backgroundColor: context.tokens.heroDeep,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(52),
                   shape: const StadiumBorder(),

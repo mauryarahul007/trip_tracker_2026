@@ -98,6 +98,7 @@ export type FeatureFlagKey =
   | 'enableTripGetStarted'
   | 'enableCompassNav'
   | 'enableCalmPassportUi'
+  | 'enableHorizonUi'
   | 'enableNavPolish'
   | 'enableNotchNav'
   | 'enableDynamicColor'

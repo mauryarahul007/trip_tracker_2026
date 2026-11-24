@@ -10,6 +10,7 @@ import '../../../shared/theme/app_typography.dart';
 import '../../trips/application/trips_providers.dart';
 import '../../../core/platform/motion.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/theme/app_tokens.dart';
 
 /// Whether the login shows the boarding-gate design.
 ///
@@ -50,12 +51,12 @@ class BoardingBackdrop extends ConsumerWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        const DecoratedBox(
+        DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [AppColors.calmTeal, AppColors.heroNavy, AppColors.calmNightDeep],
+              colors: [context.tokens.primaryAccent, context.tokens.heroMid, context.tokens.heroDeep],
             ),
           ),
         ),
@@ -179,7 +180,7 @@ class GateCodeField extends StatelessWidget {
               child: Container(
                 height: 50,
                 padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(color: AppColors.calmNight, borderRadius: BorderRadius.circular(13)),
+                decoration: BoxDecoration(color: context.tokens.heroMid, borderRadius: BorderRadius.circular(13)),
                 child: Row(
                   children: [
                     Text(

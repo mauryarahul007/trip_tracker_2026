@@ -453,7 +453,7 @@ class _ActivityRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final type = item.data?['type'] as String?;
-    final meta = notificationMeta(type);
+    final meta = notificationMeta(type, context.tokens);
     final headline = getNotificationHeadline(type);
     return Padding(
       padding: EdgeInsets.only(bottom: dense ? 4 : 8),

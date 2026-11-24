@@ -18,7 +18,6 @@ import '../../../expenses/application/expenses_providers.dart' show tripMembersP
 import '../../application/trips_providers.dart';
 import 'trip_card.dart' show tripHeadline;
 import '../../../../core/platform/motion.dart';
-import '../../../../shared/theme/app_colors.dart';
 
 /// Trips as a deck of full-bleed photo cards, every trip in any state.
 ///
@@ -339,7 +338,7 @@ class _StackCard extends ConsumerWidget {
     final dotColor = switch (status.phase) {
       TripPhase.active => t.colorSuccess,
       TripPhase.upcoming => t.colorWarning,
-      _ => AppColors.calmDarkTealLight,
+      _ => context.tokens.accentOnDarkLight,
     };
     return Semantics(
       container: true,
@@ -355,10 +354,10 @@ class _StackCard extends ConsumerWidget {
               offset: const Offset(0, 12),
             ),
           ],
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppColors.calmNight, AppColors.calmNightDeep],
+            colors: [context.tokens.heroMid, context.tokens.heroDeep],
           ),
         ),
         clipBehavior: Clip.antiAlias,
@@ -595,7 +594,7 @@ class _Chip extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
     decoration: BoxDecoration(
-      color: AppColors.calmNightDeep.withValues(alpha: 0.62),
+      color: context.tokens.heroDeep.withValues(alpha: 0.62),
       borderRadius: BorderRadius.circular(99),
       border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
     ),
@@ -627,7 +626,7 @@ class _Crew extends ConsumerWidget {
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.calmNightDeep, width: 2),
+                  border: Border.all(color: context.tokens.heroDeep, width: 2),
                 ),
                 child: AppAvatar(name: shown[i], size: 34),
               ),

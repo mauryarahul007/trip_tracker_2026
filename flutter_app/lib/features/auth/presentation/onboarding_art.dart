@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../shared/theme/app_colors.dart';
 import '../../../shared/theme/app_tokens.dart';
 
 /// Which onboarding slide the drawing is for.
@@ -28,7 +27,7 @@ class OnboardingArt extends StatelessWidget {
             kind,
             ink: t.textPrimary,
             action: t.primaryAccent,
-            accent: AppColors.calmRunway,
+            accent: context.tokens.accentOrange,
             paper: t.bgSurface,
           ),
         ),

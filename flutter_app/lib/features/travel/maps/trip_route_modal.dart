@@ -9,7 +9,6 @@ import '../places/place_suggest_service.dart';
 import 'trip_map_hero.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_surface.dart' show AppCard;
-import '../../../shared/theme/app_colors.dart';
 
 class TripRouteModal extends ConsumerStatefulWidget {
   final Trip trip;
@@ -216,11 +215,11 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                   final s = _suggestions[i];
                   return ListTile(
                     dense: true,
-                    leading: const Icon(Icons.place_outlined, size: 18, color: AppColors.calmMute),
+                    leading: Icon(Icons.place_outlined, size: 18, color: context.tokens.textMuted),
                     title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                     subtitle: s.detail.isNotEmpty ? Text(s.detail, style: const TextStyle(fontSize: 11)) : null,
                     trailing: s.source == SuggestionSource.local
-                        ? const Text('Offline', style: TextStyle(fontSize: 10, color: AppColors.calmTeal))
+                        ? Text('Offline', style: TextStyle(fontSize: 10, color: context.tokens.primaryAccent))
                         : null,
                     onTap: () => _addStop(s.name),
                   );
@@ -231,11 +230,11 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
           // Reorderable / Manageable Stops List
           Expanded(
             child: _stops.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
                       'No route stops defined yet.\nAdd cities to plan your itinerary route.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.calmMute, fontSize: 13),
+                      style: TextStyle(color: context.tokens.textMuted, fontSize: 13),
                     ),
                   )
                 : ListView.builder(
@@ -245,7 +244,9 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                       final stop = _stops[index];
                       final isOrigin = index == 0;
                       final isDest = index == _stops.length - 1 && _stops.length > 1;
-                      final color = isOrigin ? AppColors.calmOwed : (isDest ? AppColors.calmOwe : AppColors.calmTeal);
+                      final color = isOrigin
+                          ? context.tokens.colorSuccess
+                          : (isDest ? context.tokens.colorDanger : context.tokens.primaryAccent);
 
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
@@ -262,14 +263,14 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                             ),
                             title: Text(stop.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                             subtitle: isOrigin
-                                ? const Text(
+                                ? Text(
                                     'Origin / Departure',
-                                    style: TextStyle(fontSize: 11, color: AppColors.calmOwed),
+                                    style: TextStyle(fontSize: 11, color: context.tokens.colorSuccess),
                                   )
                                 : (isDest
-                                      ? const Text(
+                                      ? Text(
                                           'Final Destination',
-                                          style: TextStyle(fontSize: 11, color: AppColors.calmOwe),
+                                          style: TextStyle(fontSize: 11, color: context.tokens.colorDanger),
                                         )
                                       : null),
                             trailing: Row(
@@ -288,7 +289,7 @@ class _TripRouteModalState extends ConsumerState<TripRouteModal> {
                                     tooltip: 'Move Down',
                                   ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.calmOwe),
+                                  icon: Icon(Icons.delete_outline, size: 18, color: context.tokens.colorDanger),
                                   onPressed: () => _removeStop(index),
                                   tooltip: 'Remove Stop',
                                 ),

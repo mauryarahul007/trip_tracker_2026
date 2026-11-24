@@ -443,7 +443,7 @@ class TripHeroCard extends ConsumerWidget {
       button: true,
       label: '${trip.name}. $headline${moneyText == null ? '' : '. $moneyText'}',
       child: Material(
-        color: AppColors.heroNavyDeep,
+        color: context.tokens.heroDeep,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(t.radiusLg)),
         child: InkWell(
@@ -452,13 +452,13 @@ class TripHeroCard extends ConsumerWidget {
           onLongPress: onLongPress,
           child: Stack(
             children: [
-              const Positioned.fill(
+              Positioned.fill(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [AppColors.heroNavyDeep, AppColors.heroNavy, AppColors.heroTeal],
+                      colors: [context.tokens.heroDeep, context.tokens.heroMid, context.tokens.heroEnd],
                     ),
                   ),
                 ),
@@ -553,7 +553,7 @@ class TripHeroCard extends ConsumerWidget {
                       const SizedBox(height: 12),
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: _Avatars(avatarNames, size: 26, ring: AppColors.heroNavy),
+                        child: _Avatars(avatarNames, size: 26, ring: context.tokens.heroMid),
                       ),
                     ],
                   ],
@@ -607,7 +607,7 @@ class TripTile extends ConsumerWidget {
       button: true,
       label: '${trip.name}. $headline${moneyText == null ? '' : '. $moneyText'}',
       child: Material(
-        color: AppColors.heroNavyDeep,
+        color: context.tokens.heroDeep,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(t.radiusLg)),
         child: InkWell(
@@ -620,12 +620,12 @@ class TripTile extends ConsumerWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                const DecoratedBox(
+                DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [AppColors.heroNavy, AppColors.heroTeal],
+                      colors: [context.tokens.heroMid, context.tokens.heroEnd],
                     ),
                   ),
                 ),
@@ -727,7 +727,7 @@ class TripTile extends ConsumerWidget {
                       if (avatarNames.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
-                          child: _Avatars(avatarNames, size: 20, ring: AppColors.heroNavy),
+                          child: _Avatars(avatarNames, size: 20, ring: context.tokens.heroMid),
                         ),
                     ],
                   ),
@@ -981,7 +981,7 @@ class _CalmHero extends StatelessWidget {
       button: true,
       label: '${trip.name}. $headline${moneyText == null ? '' : '. $moneyText'}',
       child: Material(
-        color: AppColors.calmNight,
+        color: context.tokens.heroMid,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -1021,12 +1021,12 @@ class _CalmHero extends StatelessWidget {
                           dest.toUpperCase(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: AppTypography.fontMono,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0.9,
-                            color: AppColors.calmDarkMute,
+                            color: context.tokens.mutedOnDark,
                           ),
                         ),
                       ),
@@ -1054,7 +1054,7 @@ class _CalmHero extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 14),
-                if (avatarNames.isNotEmpty) _Avatars(avatarNames, size: 28, ring: AppColors.calmNight),
+                if (avatarNames.isNotEmpty) _Avatars(avatarNames, size: 28, ring: context.tokens.heroMid),
                 if (moneyText != null) ...[
                   const SizedBox(height: 14),
                   _Dash(color: Colors.white.withValues(alpha: 0.18)),
