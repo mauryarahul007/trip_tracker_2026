@@ -25,7 +25,6 @@
 | **[FEAT-002](#feat-002)** | `ui-ux` | Test | `mauryarahul007@gmail.com` | 💡 Requested |
 | **[FEAT-024](#feat-024)** | `admin` | CI pipeline for lint, build, and test on push/PR | `claude-cli` | 💡 Requested |
 | **[FEAT-167](#feat-167)** | `ui-ux` | Automatic Android APK build from main (Flutter merged into main) | `claude-cli` | 💡 Requested |
-| **[FEAT-210](#feat-210)** | `ui-ux` | Horizon look for the Flutter app (colours, shapes, bars, all screens) | `agent` | 🟡 In Progress |
 
 ---
 
@@ -61,10 +60,10 @@ Automatic Android APK build from main (Flutter merged into main)
 
 ### FEAT-210: Horizon look for the Flutter app (colours, shapes, bars, all screens)
 
-- **Category**: `ui-ux` | **Status**: `in_progress`
+- **Category**: `ui-ux` | **Status**: `shipped`
 - **Requested By**: `agent` on 11/24/2026 (native)
 
-Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blue action, sunset accent, night-navy hero, new category tints, new shapes, 5-slot bottom bars and all 55 screens from design/horizon. Ships in phases; OFF keeps Calm Passport. HORIZON-UI. Phase 1 d917630 (v3.94.0), phase 2 3eb97c6 (v3.95.0), phase 3a f8a2536 (v3.96.0), phase 3b 230c235 (v3.97.0), phase 3c 35f41ed (v3.98.0), follow-ups c993b7e (v3.99.0: per-person balances, header avatars, cover colours).
+Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blue action, sunset accent, night-navy hero, new category tints, new shapes, 5-slot bottom bars and all 55 screens from design/horizon. Ships in phases; OFF keeps Calm Passport. HORIZON-UI. Phase 1 d917630 (v3.94.0), phase 2 3eb97c6 (v3.95.0), phase 3a f8a2536 (v3.96.0), phase 3b 230c235 (v3.97.0), phase 3c 35f41ed (v3.98.0), follow-ups c993b7e (v3.99.0: per-person balances, header avatars, cover colours). Shipped: all phases merged to main (PRs #19-#24).
 
 ---
 
@@ -72,6 +71,7 @@ Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blu
 
 | ID | Title | Category | Requested By | Shipped By | Note |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| **FEAT-210** | Horizon look for the Flutter app (colours, shapes, bars, all screens) | `ui-ux` | `agent` | `agent` | All phases merged to main via PRs #19-#24 (v3.94.0-v3.99.1). |
 | **FEAT-001** | Feature Additions Tracker | `admin` | `claude-cli` | `claude-cli` | Parallel system to the Bug Ledger. Migration 0063, featureApi.ts, feature.mjs CLI, FeatureRequestModal.tsx (Settings > Suggest a Feature), AdminFeaturesPage.tsx (Ops Deck Features tab) with flag-linking. Commit 1bf95d6. |
 | **FEAT-003** | Refresh button on Features tab | `admin` | `claude-cli` | `claude-cli` | reloadFleetData now returns a Promise so the button can await + spinner instead of requiring a full page reload. Commit 228c582. |
 | **FEAT-004** | Flight-themed 3D aerodynamic jetliner coachmark tooltip for expense logging | `ui-ux` | `antigravity` | `antigravity` | Shipped |

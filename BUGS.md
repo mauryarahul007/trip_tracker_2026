@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **344** | All recorded bugs across sessions |
+| **Total Tracked** | **346** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **317** | Verified & closed |
+| **✅ Resolved** | **319** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -31,6 +31,8 @@
 
 | ID | Title | Category | Severity | Found By | Resolved By | Fix Note |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **BUG-351** | Flutter overflows and small touch targets on Notes, Spend and Balances | `ui-ux` | `low` | `agent` | `agent` | Expanded/FittedBox labels, 48px targets, scale-only dock. Commit 1e32a4c. |
+| **BUG-350** | Flutter trip sheet stopped halfway on a slow handle drag | `ui-ux` | `medium` | `agent` | `agent` | Scrim stays in the tree so the drag is not cancelled. Commit 1e32a4c. |
 | **BUG-349** | Flutter boarding login hid Staff toggle behind barcode long-press | `ui-ux` | `medium` | `human` | `agent` | Restored permanent Staff › bottom-right on boarding login. Commit c15f274. |
 | **BUG-012** | Member deletion left orphaned split IDs corrupting settlement balance math | `splits-math` | `high` | `human` | `antigravity` | Added automated exclusion of deleted members in App.tsx and settlement engine, redistributing equal shares automatically. |
 | **BUG-009** | iOS build failure due to Capacitor SPM Swift API mismatch on Xcode 16 | `general` | `critical` | `antigravity` | `antigravity` | Pinned capacitor-swift-pm to 8.2.0, committed Package.resolved, and created scripts/align-spm-versions.mjs. |
