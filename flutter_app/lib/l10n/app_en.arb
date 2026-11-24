@@ -1418,5 +1418,14 @@
   "@horizonRowYouOwe": {"placeholders": {"amount": {"type": "String"}}},
   "horizonRowYouLent": "you lent {amount}",
   "@horizonRowYouLent": {"placeholders": {"amount": {"type": "String"}}},
-  "horizonRowNotInvolved": "not involved"
+  "horizonRowNotInvolved": "not involved",
+  "horizonByPerson": "By person",
+  "horizonPersonOwesYou": "owes you",
+  "horizonPersonYouOwe": "you owe",
+  "horizonTripCount": "{count, plural, =1{1 trip} other{{count} trips}}",
+  "@horizonTripCount": {"placeholders": {"count": {"type": "int"}}},
+  "horizonCoverColour": "Cover colour",
+  "horizonCoverColourHint": "Shows on this phone only",
+  "horizonToneName": "{tone, select, mint{Mint} butter{Butter} peach{Peach} sky{Sky} lilac{Lilac} other{Automatic}}",
+  "@horizonToneName": {"placeholders": {"tone": {"type": "String"}}}
 }

@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-24 | 3.99.0 | HORIZON-UI | [Horizon follow-ups: by person, header avatars, cover colour (Flutter)](#horizon-ui--horizon-follow-ups-by-person-header-avatars-cover-colour-flutter) |
 | 2026-11-24 | 3.98.0 | HORIZON-UI | [Horizon look, phase 3c: Account and shared states (Flutter)](#horizon-ui--horizon-look-phase-3c-account-and-shared-states-flutter) |
 | 2026-11-24 | 3.97.0 | HORIZON-UI | [Horizon look, phase 3b: trip Balances and Spend (Flutter)](#horizon-ui--horizon-look-phase-3b-trip-balances-and-spend-flutter) |
 | 2026-11-24 | 3.96.0 | HORIZON-UI | [Horizon look, phase 3a: Start and Home (Flutter)](#horizon-ui--horizon-look-phase-3a-start-and-home-flutter) |
@@ -4495,6 +4496,35 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## HORIZON-UI — Horizon follow-ups: by person, header avatars, cover colour (Flutter)
+
+**Shipped:** v3.99.0. Flutter-only. Same flag `enableHorizonUi` (Core pack, default ON).
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| By-person list, header avatars, cover colour picker | `enableHorizonUi` | ON (Core) |
+
+### Prep
+Flutter app signed in. Two trips that share one other member (linked account), with expenses so that person owes you in one trip and you owe them in the other. A third trip in another currency with the same person.
+
+### Steps
+1. Home, tap the balance hero to open All balances. A "By person" section lists each person once per currency.
+2. The shared person's amount is the sum of both trips: green with a plus when they owe you, red with a minus when you owe them. Under the name, the trip count.
+3. The other-currency trip shows that person on a separate row in that currency, never blended.
+4. Open any trip with two or more members. The header shows up to three small avatars and a "+N" chip for the rest.
+5. On a very narrow phone (under 360 pt wide) the avatars are left out so the title has room.
+6. Tap the centre Add on Home to create a trip. Under Money, "Cover colour" shows five swatches. Tap Mint: it gets a check. Tap it again: back to automatic.
+7. Pick Peach and create the trip. Back on Home, the trip's no-photo tile and its row use the peach tint.
+8. On another phone signed in to the same account, the trip keeps its automatic colour (the choice is device-only).
+
+### Negative checks
+- `enableHorizonUi` OFF: no By person section, no header avatars, no Cover colour row; trip colours are the automatic ones.
+- A trip with a cover photo still shows the photo; the colour only tints the no-photo tile.
+
+### Pass
+- All three match the Horizon mockups, and amounts match each trip's own settle-up payments.
 
 ## HORIZON-UI — Horizon look, phase 3c: Account and shared states (Flutter)
 

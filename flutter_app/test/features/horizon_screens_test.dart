@@ -7,9 +7,13 @@ import 'package:trip_tracker/app/router.dart';
 import 'package:trip_tracker/domain/logic/cross_trip_balances.dart';
 import 'package:trip_tracker/domain/logic/expense_list_logic.dart';
 import 'package:trip_tracker/domain/models/expense.dart';
+import 'package:trip_tracker/domain/models/member.dart';
+import 'package:trip_tracker/domain/models/trip.dart';
+import 'package:trip_tracker/features/trips/application/trips_providers.dart';
 import 'package:trip_tracker/features/auth/presentation/splash_screen.dart';
 import 'package:trip_tracker/features/settings/presentation/settings_widgets.dart';
 import 'package:trip_tracker/features/trips/presentation/widgets/horizon_home_hero.dart';
+import 'package:trip_tracker/features/trips/presentation/widgets/trip_card.dart' show tripTone;
 import 'package:trip_tracker/shared/widgets/empty_state.dart';
 import 'package:trip_tracker/l10n/app_localizations.dart';
 import 'package:trip_tracker/shared/theme/app_theme.dart';
@@ -203,6 +207,91 @@ void main() {
       await tester.pumpWidget(_host(empty, horizon: false));
       await tester.pumpAndSettle(); // the theme change animates
       expect(find.byKey(const Key('empty-icon-tile')), findsNothing);
+    });
+  });
+
+  group('Horizon follow-ups: by person, header avatars, cover colour (flag enableHorizonUi)', () {
+    Trip trip(String id, String cur) => Trip(
+      id: id,
+      name: 'Trip $id',
+      startDate: '2026-11-20',
+      endDate: '2026-11-25',
+      baseCurrency: cur,
+      ownerId: 'u1',
+      joinCode: 'ABC',
+      memberIds: ['${id}me', '${id}ben'],
+      createdAt: 0,
+      updatedAt: 0,
+    );
+    Expense paid(String trip, String cur, String by, double amount, List<String> split) => Expense(
+      id: 'e$trip',
+      tripId: trip,
+      title: 'x',
+      amount: amount,
+      currency: cur,
+      category: 'food',
+      splitMode: 'equal',
+      createdAt: 0,
+      updatedAt: 0,
+      paidBy: by,
+      splitMemberIds: split,
+      resolvedShares: {for (final m in split) m: amount / split.length},
+      date: '2026-11-21',
+    );
+
+    test('personNets sums one person across trips and keeps currencies apart', () {
+      final nets = personNets(
+        userId: 'u1',
+        trips: [trip('a', 'INR'), trip('b', 'INR'), trip('c', 'EUR')],
+        membersByTrip: {
+          for (final id in ['a', 'b', 'c'])
+            id: [
+              Member(id: '${id}me', name: 'Asha', linkedUserId: 'u1'),
+              Member(id: '${id}ben', name: 'Ben', linkedUserId: 'u2'),
+            ],
+        },
+        expensesByTrip: {
+          'a': [paid('a', 'INR', 'ame', 200, ['ame', 'aben'])], // Ben owes me 100
+          'b': [paid('b', 'INR', 'bben', 60, ['bme', 'bben'])], // I owe Ben 30
+          'c': [paid('c', 'EUR', 'cme', 40, ['cme', 'cben'])], // Ben owes me EUR 20
+        },
+      );
+      expect(nets.map((n) => (n.currency, n.net)), [('INR', 70.0), ('EUR', 20.0)]);
+      expect(nets.first.name, 'Ben');
+      expect(nets.first.trips, unorderedEquals(['Trip a', 'Trip b']));
+      expect(personNets(userId: null, trips: const [], membersByTrip: const {}, expensesByTrip: const {}), isEmpty);
+    });
+
+    testApp('Balances lists who owes you, by person', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableHorizonUi'});
+      final s = await seedTrip(tester);
+      await addExpense(tester, s, amount: 90);
+      await go(tester, '/balances');
+      expect(find.byKey(const Key('horizon-by-person')), findsOneWidget);
+      expect(find.textContaining('owes you'), findsWidgets);
+    });
+
+    testApp('trip header shows the crew avatars with Horizon only', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableHorizonUi'});
+      final s = await seedTrip(tester);
+      await go(tester, '/trip/${s.tripId}');
+      expect(find.byKey(const Key('trip-header-avatars')), findsOneWidget);
+    });
+
+    testApp('header avatars are absent with the flag off', (tester) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await go(tester, '/trip/${s.tripId}');
+      expect(find.byKey(const Key('trip-header-avatars')), findsNothing);
+    });
+
+    testApp('trip colours are remembered on the device and feed the trip tone', (tester) async {
+      final app = await pumpApp(tester, user: asha, flagsOn: {'enableHorizonUi'});
+      containerOf(tester).read(tripColorsProvider.notifier).set('t1', 'mint');
+      expect(app.prefs.getStringList('trips.colors'), ['t1=mint']);
+      expect(containerOf(tester).read(tripColorsProvider), {'t1': 'mint'});
+      expect(tripTone('t1', 'mint'), BentoTone.mint);
+      expect(tripTone('t1', 'bogus'), tripTone('t1')); // an unknown name falls back to the automatic colour
     });
   });
 }

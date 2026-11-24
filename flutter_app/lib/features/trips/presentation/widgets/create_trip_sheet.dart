@@ -16,7 +16,7 @@ import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/section_label.dart';
-import '../../application/trips_providers.dart' show tripsProvider;
+import '../../application/trips_providers.dart' show tripsProvider, tripColorsProvider;
 import 'destination_field.dart';
 import '../../../../shared/widgets/discard_guard.dart';
 
@@ -54,6 +54,7 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
   bool _nameTouched = false;
   bool _busy = false;
   String? _template; // a starter kit id (flag `enableTripTemplates`)
+  BentoTone? _cover; // Horizon cover colour, kept on this device only
   String? _nameError;
   String? _dateError;
 
@@ -126,6 +127,9 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
           creatorName: user.displayName ?? user.email?.split('@').first ?? 'Me',
           destination: destination.isEmpty ? null : destination,
         );
+    if (_cover != null && context.mounted && context.tokens.horizon) {
+      ref.read(tripColorsProvider.notifier).set(id, _cover!.name);
+    }
     if (_template != null && (ref.read(flagProvider(('enableTripTemplates', null))).value ?? true)) {
       await _applyTemplate(id, tripTemplateById(_template));
     }
@@ -242,6 +246,10 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
                   _currencyTouched = true;
                 }),
               ),
+              if (context.tokens.horizon) ...[
+                const SizedBox(height: 16),
+                _CoverPicker(value: _cover, onChanged: (v) => setState(() => _cover = v)),
+              ],
               const SizedBox(height: 20),
               AppButton(
                 label: l10n.actionCreateTrip,
@@ -253,6 +261,61 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Horizon cover colour swatches (flag `enableHorizonUi`). Tap one to pick it, tap it again to go back to the
+/// automatic colour. Saved on this device only: the trip itself has no colour field.
+class _CoverPicker extends StatelessWidget {
+  const _CoverPicker({required this.value, required this.onChanged});
+
+  final BentoTone? value;
+  final ValueChanged<BentoTone?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final l10n = context.l10n;
+    return Column(
+      key: const Key('cover-picker'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionLabel(l10n.horizonCoverColour),
+        Wrap(
+          spacing: 10,
+          runSpacing: 8,
+          children: [
+            for (final tone in BentoTone.values)
+              Semantics(
+                button: true,
+                selected: value == tone,
+                label: l10n.horizonToneName(tone.name),
+                child: InkResponse(
+                  key: Key('cover-${tone.name}'),
+                  onTap: () => onChanged(value == tone ? null : tone),
+                  radius: 26,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: t.tones[tone].accent,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: value == tone ? t.textPrimary : Colors.transparent,
+                        width: 3,
+                      ),
+                    ),
+                    child: value == tone ? const Icon(Icons.check_rounded, color: Colors.white, size: 22) : null,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(l10n.horizonCoverColourHint, style: TextStyle(fontSize: 12, color: t.textSecondary)),
+      ],
     );
   }
 }

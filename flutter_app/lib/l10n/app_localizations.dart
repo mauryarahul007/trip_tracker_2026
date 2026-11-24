@@ -5340,6 +5340,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'not involved'**
   String get horizonRowNotInvolved;
+
+  /// No description provided for @horizonByPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'By person'**
+  String get horizonByPerson;
+
+  /// No description provided for @horizonPersonOwesYou.
+  ///
+  /// In en, this message translates to:
+  /// **'owes you'**
+  String get horizonPersonOwesYou;
+
+  /// No description provided for @horizonPersonYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'you owe'**
+  String get horizonPersonYouOwe;
+
+  /// No description provided for @horizonTripCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 trip} other{{count} trips}}'**
+  String horizonTripCount(int count);
+
+  /// No description provided for @horizonCoverColour.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover colour'**
+  String get horizonCoverColour;
+
+  /// No description provided for @horizonCoverColourHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows on this phone only'**
+  String get horizonCoverColourHint;
+
+  /// No description provided for @horizonToneName.
+  ///
+  /// In en, this message translates to:
+  /// **'{tone, select, mint{Mint} butter{Butter} peach{Peach} sky{Sky} lilac{Lilac} other{Automatic}}'**
+  String horizonToneName(String tone);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

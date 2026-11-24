@@ -72,6 +72,28 @@ void main() {
       expect(find.text('My Trips'), findsNothing);
     });
 
+    testApp('Horizon: a picked cover colour is kept for the new trip', (tester) async {
+      await pumpApp(tester, user: asha, overrides: [picker], flagsOn: {'enableHorizonUi'});
+      await tester.tap(find.byKey(const Key('dock-center')));
+      await settle(tester);
+      await tester.enterText(find.byType(TextField).at(1), 'Goa Weekend');
+      await tester.tap(find.byIcon(Icons.date_range_rounded));
+      await settle(tester);
+      await tester.ensureVisible(find.byKey(const Key('cover-mint')));
+      await tester.tap(find.byKey(const Key('cover-mint')));
+      await settle(tester);
+      await tester.tap(find.widgetWithText(AppButton, 'Create Trip').last);
+      await settle(tester, rounds: 12);
+      expect(containerOf(tester).read(tripColorsProvider).values, ['mint']);
+    });
+
+    testApp('Calm create sheet has no cover colour picker', (tester) async {
+      await pumpApp(tester, user: asha);
+      await tester.tap(find.byKey(const Key('dock-center')));
+      await settle(tester);
+      expect(find.byKey(const Key('cover-picker')), findsNothing);
+    });
+
     testApp('destination autocomplete: suggests, picks, sets name and currency', (tester) async {
       await pumpApp(tester, user: asha, overrides: [picker]);
       await tester.tap(find.byKey(const Key('dock-center'))); // the dock's centre button opens create trip

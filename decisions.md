@@ -5945,3 +5945,14 @@ This document logs all meaningful technical decisions, library choices, design p
   - Ops Deck and the other settings pages take the Horizon look from the phase 1-2 theme; no layout change.
 * **Trade-offs Accepted:**
   - Per-person balances, create-trip cover colours and the trip header avatars need new data or wider changes, so they are left for a follow-up.
+
+## 298. Horizon follow-ups: per-person balances, trip header avatars, cover colours (v3.99.0)
+* **Context:** Phase 3c left three mockup parts for later: who owes whom across trips, the crew avatars in the trip header, and a cover colour on create trip.
+* **Decision:**
+  - `personNets()` in `cross_trip_balances.dart` sums each trip's own settle-up transfers that involve me, per person and currency. People match by linked account, else by name. All balances shows it as "By person" with Horizon.
+  - `TripDashboardHeader` shows a small avatar stack (3 plus a "+N" chip) with Horizon, hidden under 360 pt width.
+  - The create sheet offers five tone swatches with Horizon. The choice is saved per device in SharedPreferences (`trips.colors`), like pinned trips, and feeds `tripTone()` for rows and the no-photo tile tint.
+* **Trade-offs Accepted:**
+  - The cover colour is device-only: the Trip model and Supabase have no colour column, and adding one needs a migration on both apps.
+  - Name matching can merge two different people with the same name who have no linked account.
+
