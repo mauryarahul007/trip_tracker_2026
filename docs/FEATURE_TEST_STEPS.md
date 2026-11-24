@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-25 | 3.102.0 | HORIZON-TRIP | [Horizon trip screens: header, Balances, Spend and Hub (Flutter)](#horizon-trip--horizon-trip-screens-header-balances-spend-and-hub-flutter) |
 | 2026-11-25 | 3.101.0 | HORIZON-HOME | [Horizon Trips home is the only view after sign-in (Flutter)](#horizon-home--horizon-trips-home-is-the-only-view-after-sign-in-flutter) |
 | 2026-11-25 | 3.100.0 | MEAL-NUDGE | [Meal-time expense nudges on Spend (Flutter)](#meal-nudge--meal-time-expense-nudges-on-spend-flutter) |
 | 2026-11-24 | 3.99.1 | FLUTTER-FIXES | [Trip sheet drag and small layout / accessibility fixes (Flutter)](#flutter-fixes--trip-sheet-drag-and-small-layout--accessibility-fixes-flutter) |
@@ -4499,6 +4500,41 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## HORIZON-TRIP — Horizon trip screens: header, Balances, Spend and Hub (Flutter)
+
+**Shipped:** v3.102.0. Flutter-only. Matches the Trip Balances, Spend and Hub mockups in design/horizon.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Horizon trip header, Balances, Spend, Hub and shared polish | `enableHorizonUi` | ON (Core) |
+
+### Prep
+Flutter app signed in. A live trip (dates include today) with 3+ members, a budget, and several expenses across two days and categories, some paid by others.
+
+### Steps
+1. Home dock reads Trips, Balances, Alerts, Me. Avatars show one letter on a coloured circle.
+2. Open the trip: the header shows the trip name over "Day N of M · destination", no chevron, and one round bell on the right.
+3. Trip tabs use list, balance and grid icons.
+4. Balances: the hero eyebrow reads "Your position", then a Budget pace card ("x% used · day N of M", left per day, a pill). Over budget turns it orange.
+5. Below it, "Settle plan · N" rows show who pays whom. Settle up opens the transfer list in a sheet; tapping a row opens the settle flow.
+6. Without a budget, Budget pace offers "Set a budget".
+7. Spend: day headers read "TODAY · TUE 24 NOV" etc.; each day is one rounded card with dividers between rows; days are always open.
+8. The chip row shows "All · N" and the top three categories. Tapping a category filters; the search icon opens a search box; Filters opens the filter sheet.
+9. Hub: a mint route card at the top (tap shows the map), then a tinted 2-column grid: Plans, People, Receipts, Insights, Invite, Tools. Insights opens the trip insights page.
+10. Below the grid: Live, Trip settings, Edit trip, App settings rows.
+11. Switches across the app use a white thumb on a blue track.
+
+### Negative checks
+- No attention bar, today card, next-action card or transfer list on Horizon Balances.
+- No collapse arrows on Horizon Spend days. No "More" tile on the Horizon Hub.
+- `enableHorizonUi` OFF: Calm header, Balances, Spend and Hub return unchanged.
+
+### Pass
+- Header, Balances, Spend and Hub match the mockups; every action still opens its flow.
+
+---
 
 ## HORIZON-HOME — Horizon Trips home is the only view after sign-in (Flutter)
 

@@ -27,6 +27,7 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/bento_tile.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/theme/category_icons.dart' show categoryGlyph;
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/pull_to_refresh.dart';
 import '../../../shared/widgets/ask_text.dart';
@@ -100,6 +101,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
   /// First paint is summary + day list. Voice, the category runway and the relation chips appear once the user
   /// opens Filters (or while a filter is active) and fold away again on Clear filters.
   bool _showAdvanced = false;
+
+  /// Horizon Spend: the search field opens from the search icon beside the chips.
+  bool _horizonSearch = false;
 
   void _onScroll() {
     final away = _scroll.hasClients && _scroll.offset > 500;
@@ -469,8 +473,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         defaultFeatureFlags['enableCategoryVectorIcons'] ??
         true;
     final settleFromSpendOn = _flag(ref, 'enableSettleFromSpend', id);
+    // Horizon (enableHorizonUi): plain day labels and one card per day, as in the Spend mockup.
+    final horizonSpend = tokens.horizon && tidyOn && !wide;
     final justSaved = _flag(ref, 'enableSaveConfirmation', id) ? ref.watch(justSavedExpenseProvider) : null;
-    Widget rowFor(Expense e, {required bool lastInGroup}) {
+    Widget rowFor(Expense e, {required bool lastInGroup, bool firstInGroup = false}) {
       if (wide) {
         return _TableRow(
           expense: e,
@@ -511,10 +517,14 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
         settleLabel: settleTransfer == null
             ? null
             : l10n.rowSettleFromSpend(formatMoney(context, settleTransfer.amount, trip.baseCurrency)),
+        groupFirst: horizonSpend ? firstInGroup : null,
+        groupLast: horizonSpend ? lastInGroup : null,
       );
       // Bento: each expense is a rounded tile tinted by its category.
       final body = Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        padding: horizonSpend
+            ? EdgeInsets.fromLTRB(16, 0, 16, lastInGroup ? 8 : 0)
+            : const EdgeInsets.fromLTRB(16, 0, 16, 8),
         child: compactActive
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(tokens.radiusMd),
@@ -595,7 +605,12 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
           delegate: _DayHeader(
             textScale: MediaQuery.textScalerOf(context).scale(1),
             date: key,
-            label: isSettlement ? _settlementDateLabel(g.date) : _dayLabel(g.date, trip.startDate, l10n.expDayN),
+            label: isSettlement
+                ? _settlementDateLabel(g.date)
+                : horizonSpend
+                ? _horizonDayLabel(g.date, _today(ref), l10n.horizonToday)
+                : _dayLabel(g.date, trip.startDate, l10n.expDayN),
+            horizon: horizonSpend,
             total: isSettlement
                 ? '${formatMoney(context, g.total, trip.baseCurrency)} settled'
                 : formatMoney(context, g.total, trip.baseCurrency),
@@ -635,7 +650,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
               onTap: () => _openDetail(e),
             );
           }
-          final row = rowFor(e, lastInGroup: i == g.expenses.length - 1);
+          final row = rowFor(e, lastInGroup: i == g.expenses.length - 1, firstInGroup: i == 0);
           return !isSettlement && i == 0 && g.date == _today(ref) ? KeyedSubtree(key: _todayKey, child: row) : row;
         },
       );
@@ -649,20 +664,40 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
 
     final advancedOn = _showAdvanced || filters.hasActive;
 
-    final header = SliverToBoxAdapter(
+    // Horizon (enableHorizonUi): one chip row (All · N and the three busiest categories), filter and search icons.
+    final horizonCats = () {
+      final counts = <String, int>{};
+      for (final e in active) {
+        if (isActualExpense(e) && e.deletedAt == null) counts[e.category] = (counts[e.category] ?? 0) + 1;
+      }
+      final ranked = [
+        for (final c in categories)
+          if ((counts[c.id] ?? 0) > 0) c,
+      ]..sort((a, b) => (counts[b.id] ?? 0).compareTo(counts[a.id] ?? 0));
+      return ranked.take(3).toList();
+    }();
+    final allCount = active.where((e) => isActualExpense(e) && e.deletedAt == null).length;
+    Widget horizonChip(String key, Widget? icon, String label, bool selected, VoidCallback onTap) => Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        key: Key(key),
+        avatar: icon,
+        showCheckmark: false,
+        label: Text(label),
+        selected: selected,
+        onSelected: (_) => onTap(),
+      ),
+    );
+    final horizonHeader = SliverToBoxAdapter(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (ref.watch(compassFlagProvider((compassSpendFlag, id))) || context.tokens.calm)
-            CompassSpendSummary(tripId: id),
-          if (ref.watch(compassFlagProvider((compassSpendFlag, id)))) CompassActiveFilters(tripId: id),
           MealNudgeCard(tripId: id),
-          if ((sync != null && !sync.idle) || chips.isNotEmpty)
+          if ((sync != null && !sync.idle) || conflicts.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: Wrap(
                 spacing: 8,
-                runSpacing: 4,
                 children: [
                   if (sync != null && !sync.idle)
                     ActionChip(
@@ -680,230 +715,80 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                         builder: (_) => ConflictSheet(tripId: id),
                       ),
                     ),
-                  for (final c in chips)
-                    ActionChip(key: Key('chip-${c.id}'), label: Text(chipLabel(c)), onPressed: () => chipTap(c)),
                 ],
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+          SizedBox(
+            key: const Key('horizon-spend-chips'),
+            height: 52,
             child: Row(
               children: [
                 Expanded(
-                  child: AppTextField(
-                    controller: _search,
-                    hint: l10n.expSearchHint,
-                    prefixIcon: const Icon(AppIcons.search),
-                    onChanged: _onSearch,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
+                    children: [
+                      horizonChip(
+                        'runway-all',
+                        null,
+                        '${l10n.expAll} · $allCount',
+                        filters.categoryId.isEmpty,
+                        () => _setFilters(filters.copyWith(categoryId: '')),
+                      ),
+                      for (final c in horizonCats)
+                        horizonChip(
+                          'runway-${c.id}',
+                          categoryGlyph(
+                            c,
+                            16,
+                            filters.categoryId == c.id ? tokens.primaryAccent : tokens.textSecondary,
+                            vector: vectorIconsOn,
+                          ),
+                          c.name.split(' ').first,
+                          filters.categoryId == c.id,
+                          () => _setFilters(filters.copyWith(categoryId: filters.categoryId == c.id ? '' : c.id)),
+                        ),
+                    ],
                   ),
                 ),
-                if (advancedOn && _flag(ref, 'enableVoiceInput', id))
-                  Padding(
-                    padding: const EdgeInsets.only(right: 4),
-                    child: ActionChip(
-                      key: const Key('voice-add'),
-                      avatar: Icon(Icons.mic_rounded, size: 18, color: context.tokens.colorDanger),
-                      label: const Text('Voice'),
-                      onPressed: () => AppSheet.show<void>(
-                        context: context,
-                        title: 'Voice expense',
-                        builder: (_) => QuickAddSheet(tripId: id, autoListen: true),
-                      ),
-                    ),
-                  ),
                 IconButton(
-                  key: const Key('open-filters'),
-                  tooltip: l10n.expFilters,
-                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                  icon: Badge(isLabelVisible: filters.hasActive, child: const Icon(AppIcons.filter)),
-                  onPressed: () {
-                    setState(() => _showAdvanced = true);
-                    unawaited(_openFilters());
-                  },
+                  key: const Key('horizon-spend-search'),
+                  tooltip: l10n.expSearchHint,
+                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                  icon: Icon(_horizonSearch ? Icons.search_off_rounded : AppIcons.search, size: 20),
+                  onPressed: () => setState(() {
+                    _horizonSearch = !_horizonSearch;
+                    if (!_horizonSearch && _search.text.isNotEmpty) {
+                      _search.clear();
+                      _onSearch('');
+                    }
+                  }),
                 ),
-                PopupMenuButton<String>(
-                  key: const Key('tab-menu'),
-                  tooltip: l10n.rowEdit,
-                  icon: const Icon(AppIcons.more),
-                  onSelected: (v) {
-                    if (v == 'bin') context.push('/trip/$id/recycle-bin');
-                    if (v == 'receipts') context.push('/trip/$id/receipts');
-                    if (v == 'categories') context.push('/trip/$id/categories');
-                    if (v == 'tools') {
-                      AppSheet.show<void>(
-                        context: context,
-                        builder: (_) => TripToolsSheet(tripId: id),
-                      );
-                    }
-                    if (v == 'quick') {
-                      AppSheet.show<void>(
-                        context: context,
-                        builder: (_) => QuickAddSheet(tripId: id),
-                      );
-                    }
-                    if (v == 'compact') _toggleCompact();
-                    if (v == 'expand') {
-                      setState(() {
-                        if (allExpanded) {
-                          _expandedDays
-                            ..removeAll(expenseKeys)
-                            ..removeAll(settlementKeys);
-                        } else {
-                          _expandedDays
-                            ..addAll(expenseKeys)
-                            ..addAll(settlementKeys);
-                        }
-                      });
-                    }
-                  },
-                  itemBuilder: (_) => [
-                    PopupMenuItem(value: 'expand', child: Text(allExpanded ? l10n.expCollapseAll : l10n.expExpandAll)),
-                    PopupMenuItem(value: 'quick', child: Text(l10n.toolsQuickAdd)),
-                    PopupMenuItem(value: 'categories', child: Text(l10n.expCategories)),
-                    PopupMenuItem(value: 'tools', child: Text(l10n.expTools)),
-                    if (_flag(ref, 'enableCompactLedgerView', id))
-                      PopupMenuItem(value: 'compact', child: Text(l10n.expCompactView)),
-                    if (receiptsOn)
-                      PopupMenuItem(
-                        value: 'receipts',
-                        key: const Key('menu-receipts'),
-                        child: Text(l10n.receiptsTitle),
-                      ),
-                    if (binOn) PopupMenuItem(value: 'bin', child: Text(l10n.expRecycleBin)),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: IconButton(
+                    key: const Key('open-filters'),
+                    tooltip: l10n.expFilters,
+                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    icon: Badge(
+                      isLabelVisible: filters.hasActive,
+                      child: const Icon(Icons.filter_alt_outlined, size: 20),
+                    ),
+                    onPressed: () => unawaited(_openFilters()),
+                  ),
                 ),
               ],
             ),
           ),
-          if (sectionChipsOn)
-            SizedBox(
-              key: const Key('spend-section-chips'),
-              height: 48,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                // No vertical padding: each chip's touch area is the full 48 px row.
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  for (final s in _SpendSection.values)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: _RunwayChip(
-                        key: Key('spend-section-${s.name}'),
-                        label: switch (s) {
-                          _SpendSection.all => l10n.expAll,
-                          _SpendSection.expenses => 'Expenses',
-                          _SpendSection.refunds => 'Refunds',
-                          _SpendSection.settlements => l10n.expSettlements,
-                        },
-                        selected: _section == s,
-                        onTap: () {
-                          setState(() => _section = s);
-                          final next = switch (s) {
-                            _SpendSection.expenses => filters.copyWith(entryKind: EntryKind.expense),
-                            _SpendSection.refunds => filters.copyWith(entryKind: EntryKind.refund),
-                            _SpendSection.all || _SpendSection.settlements => filters.copyWith(clearEntryKind: true),
-                          };
-                          _setFilters(next);
-                        },
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          if (advancedOn && categories.isNotEmpty && _section != _SpendSection.settlements)
-            SizedBox(
-              key: const Key('category-runway'),
-              height: 52,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
-                children: [
-                  _RunwayChip(
-                    key: const Key('runway-all'),
-                    label: l10n.expAllExpenses,
-                    selected: filters.categoryId.isEmpty,
-                    onTap: () => _setFilters(filters.copyWith(categoryId: '')),
-                  ),
-                  for (final c in categories)
-                    _RunwayChip(
-                      key: Key('runway-${c.id}'),
-                      label: c.name,
-                      selected: filters.categoryId == c.id,
-                      onTap: () => _setFilters(filters.copyWith(categoryId: filters.categoryId == c.id ? '' : c.id)),
-                    ),
-                ],
-              ),
-            ),
-          if (advancedOn && quickChips && myMember != null)
+          if (_horizonSearch || _search.text.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-              child: Wrap(
-                spacing: 8,
-                children: [
-                  ChoiceChip(
-                    label: Text(l10n.expAll),
-                    selected: filters.relation == null,
-                    onSelected: (_) => _setFilters(filters.copyWith(clearRelation: true)),
-                  ),
-                  ChoiceChip(
-                    label: Text(l10n.expPaidByMe),
-                    selected: filters.relation == ExpenseRelation.paidByMe,
-                    onSelected: (_) => _setFilters(filters.copyWith(relation: ExpenseRelation.paidByMe)),
-                  ),
-                  ChoiceChip(
-                    label: Text(l10n.expInvolvesMe),
-                    selected: filters.relation == ExpenseRelation.involvesMe,
-                    onSelected: (_) => _setFilters(filters.copyWith(relation: ExpenseRelation.involvesMe)),
-                  ),
-                  if (personalOn)
-                    FilterChip(
-                      key: const Key('chip-personal'),
-                      label: Text(l10n.expPersonalChip),
-                      selected: filters.onlyPersonal,
-                      onSelected: (on) => _setFilters(filters.copyWith(onlyPersonal: on)),
-                    ),
-                ],
-              ),
-            ),
-          if (saved.isNotEmpty || (savedOn && filters.hasActive))
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-              child: Wrap(
-                spacing: 8,
-                children: [
-                  for (final f in saved)
-                    Tooltip(
-                      message: l10n.filterSavedTip,
-                      child: GestureDetector(
-                        onLongPress: () => ref.read(savedFiltersProvider(id).notifier).remove(f.name),
-                        child: ActionChip(
-                          key: Key('saved-filter-${f.name}'),
-                          avatar: const Icon(Icons.bookmark_rounded, size: 16),
-                          label: Text(f.name),
-                          materialTapTargetSize: MaterialTapTargetSize.padded,
-                          onPressed: () {
-                            unawaited(AppHaptics.selection());
-                            _search.text = f.filters.query;
-                            _setFilters(f.filters);
-                          },
-                        ),
-                      ),
-                    ),
-                  if (savedOn && filters.hasActive)
-                    ActionChip(
-                      key: const Key('save-filter'),
-                      avatar: const Icon(Icons.bookmark_add_outlined, size: 16),
-                      label: Text(l10n.filterSave),
-                      materialTapTargetSize: MaterialTapTargetSize.padded,
-                      onPressed: () async {
-                        final name = await askText(context, l10n.filterSavePrompt);
-                        if (name != null) {
-                          unawaited(AppHaptics.success());
-                          ref.read(savedFiltersProvider(id).notifier).add(name, filters);
-                        }
-                      },
-                    ),
-                ],
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+              child: AppTextField(
+                controller: _search,
+                hint: l10n.expSearchHint,
+                autofocus: _search.text.isEmpty,
+                prefixIcon: const Icon(AppIcons.search),
+                onChanged: _onSearch,
               ),
             ),
           if (filters.hasActive)
@@ -916,16 +801,300 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
                   ref.read(expenseFiltersProvider(id).notifier).clear();
                   setState(() {
                     _visible = _pageSize;
-                    _showAdvanced = false;
+                    _horizonSearch = false;
                   });
                 },
                 child: Text(l10n.expClearFilters),
               ),
             ),
-          const SizedBox(height: 4),
         ],
       ),
     );
+
+    final header = horizonSpend
+        ? horizonHeader
+        : SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (ref.watch(compassFlagProvider((compassSpendFlag, id))) || context.tokens.calm)
+                  CompassSpendSummary(tripId: id),
+                if (ref.watch(compassFlagProvider((compassSpendFlag, id)))) CompassActiveFilters(tripId: id),
+                MealNudgeCard(tripId: id),
+                if ((sync != null && !sync.idle) || chips.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        if (sync != null && !sync.idle)
+                          ActionChip(
+                            key: const Key('strip-sync'),
+                            avatar: const Icon(AppIcons.sync, size: 16),
+                            label: Text(l10n.syncPending(sync.pending)),
+                            onPressed: () => unawaited(ref.read(refreshTripsProvider)()),
+                          ),
+                        if (conflicts.isNotEmpty)
+                          ActionChip(
+                            key: const Key('open-conflicts'),
+                            label: Text(l10n.conflictTitle),
+                            onPressed: () => AppSheet.show<void>(
+                              context: context,
+                              builder: (_) => ConflictSheet(tripId: id),
+                            ),
+                          ),
+                        for (final c in chips)
+                          ActionChip(key: Key('chip-${c.id}'), label: Text(chipLabel(c)), onPressed: () => chipTap(c)),
+                      ],
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: AppTextField(
+                          controller: _search,
+                          hint: l10n.expSearchHint,
+                          prefixIcon: const Icon(AppIcons.search),
+                          onChanged: _onSearch,
+                        ),
+                      ),
+                      if (advancedOn && _flag(ref, 'enableVoiceInput', id))
+                        Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: ActionChip(
+                            key: const Key('voice-add'),
+                            avatar: Icon(Icons.mic_rounded, size: 18, color: context.tokens.colorDanger),
+                            label: const Text('Voice'),
+                            onPressed: () => AppSheet.show<void>(
+                              context: context,
+                              title: 'Voice expense',
+                              builder: (_) => QuickAddSheet(tripId: id, autoListen: true),
+                            ),
+                          ),
+                        ),
+                      IconButton(
+                        key: const Key('open-filters'),
+                        tooltip: l10n.expFilters,
+                        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                        icon: Badge(isLabelVisible: filters.hasActive, child: const Icon(AppIcons.filter)),
+                        onPressed: () {
+                          setState(() => _showAdvanced = true);
+                          unawaited(_openFilters());
+                        },
+                      ),
+                      PopupMenuButton<String>(
+                        key: const Key('tab-menu'),
+                        tooltip: l10n.rowEdit,
+                        icon: const Icon(AppIcons.more),
+                        onSelected: (v) {
+                          if (v == 'bin') context.push('/trip/$id/recycle-bin');
+                          if (v == 'receipts') context.push('/trip/$id/receipts');
+                          if (v == 'categories') context.push('/trip/$id/categories');
+                          if (v == 'tools') {
+                            AppSheet.show<void>(
+                              context: context,
+                              builder: (_) => TripToolsSheet(tripId: id),
+                            );
+                          }
+                          if (v == 'quick') {
+                            AppSheet.show<void>(
+                              context: context,
+                              builder: (_) => QuickAddSheet(tripId: id),
+                            );
+                          }
+                          if (v == 'compact') _toggleCompact();
+                          if (v == 'expand') {
+                            setState(() {
+                              if (allExpanded) {
+                                _expandedDays
+                                  ..removeAll(expenseKeys)
+                                  ..removeAll(settlementKeys);
+                              } else {
+                                _expandedDays
+                                  ..addAll(expenseKeys)
+                                  ..addAll(settlementKeys);
+                              }
+                            });
+                          }
+                        },
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: 'expand',
+                            child: Text(allExpanded ? l10n.expCollapseAll : l10n.expExpandAll),
+                          ),
+                          PopupMenuItem(value: 'quick', child: Text(l10n.toolsQuickAdd)),
+                          PopupMenuItem(value: 'categories', child: Text(l10n.expCategories)),
+                          PopupMenuItem(value: 'tools', child: Text(l10n.expTools)),
+                          if (_flag(ref, 'enableCompactLedgerView', id))
+                            PopupMenuItem(value: 'compact', child: Text(l10n.expCompactView)),
+                          if (receiptsOn)
+                            PopupMenuItem(
+                              value: 'receipts',
+                              key: const Key('menu-receipts'),
+                              child: Text(l10n.receiptsTitle),
+                            ),
+                          if (binOn) PopupMenuItem(value: 'bin', child: Text(l10n.expRecycleBin)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (sectionChipsOn)
+                  SizedBox(
+                    key: const Key('spend-section-chips'),
+                    height: 48,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      // No vertical padding: each chip's touch area is the full 48 px row.
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      children: [
+                        for (final s in _SpendSection.values)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: _RunwayChip(
+                              key: Key('spend-section-${s.name}'),
+                              label: switch (s) {
+                                _SpendSection.all => l10n.expAll,
+                                _SpendSection.expenses => 'Expenses',
+                                _SpendSection.refunds => 'Refunds',
+                                _SpendSection.settlements => l10n.expSettlements,
+                              },
+                              selected: _section == s,
+                              onTap: () {
+                                setState(() => _section = s);
+                                final next = switch (s) {
+                                  _SpendSection.expenses => filters.copyWith(entryKind: EntryKind.expense),
+                                  _SpendSection.refunds => filters.copyWith(entryKind: EntryKind.refund),
+                                  _SpendSection.all ||
+                                  _SpendSection.settlements => filters.copyWith(clearEntryKind: true),
+                                };
+                                _setFilters(next);
+                              },
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                if (advancedOn && categories.isNotEmpty && _section != _SpendSection.settlements)
+                  SizedBox(
+                    key: const Key('category-runway'),
+                    height: 52,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
+                      children: [
+                        _RunwayChip(
+                          key: const Key('runway-all'),
+                          label: l10n.expAllExpenses,
+                          selected: filters.categoryId.isEmpty,
+                          onTap: () => _setFilters(filters.copyWith(categoryId: '')),
+                        ),
+                        for (final c in categories)
+                          _RunwayChip(
+                            key: Key('runway-${c.id}'),
+                            label: c.name,
+                            selected: filters.categoryId == c.id,
+                            onTap: () =>
+                                _setFilters(filters.copyWith(categoryId: filters.categoryId == c.id ? '' : c.id)),
+                          ),
+                      ],
+                    ),
+                  ),
+                if (advancedOn && quickChips && myMember != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                    child: Wrap(
+                      spacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: Text(l10n.expAll),
+                          selected: filters.relation == null,
+                          onSelected: (_) => _setFilters(filters.copyWith(clearRelation: true)),
+                        ),
+                        ChoiceChip(
+                          label: Text(l10n.expPaidByMe),
+                          selected: filters.relation == ExpenseRelation.paidByMe,
+                          onSelected: (_) => _setFilters(filters.copyWith(relation: ExpenseRelation.paidByMe)),
+                        ),
+                        ChoiceChip(
+                          label: Text(l10n.expInvolvesMe),
+                          selected: filters.relation == ExpenseRelation.involvesMe,
+                          onSelected: (_) => _setFilters(filters.copyWith(relation: ExpenseRelation.involvesMe)),
+                        ),
+                        if (personalOn)
+                          FilterChip(
+                            key: const Key('chip-personal'),
+                            label: Text(l10n.expPersonalChip),
+                            selected: filters.onlyPersonal,
+                            onSelected: (on) => _setFilters(filters.copyWith(onlyPersonal: on)),
+                          ),
+                      ],
+                    ),
+                  ),
+                if (saved.isNotEmpty || (savedOn && filters.hasActive))
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                    child: Wrap(
+                      spacing: 8,
+                      children: [
+                        for (final f in saved)
+                          Tooltip(
+                            message: l10n.filterSavedTip,
+                            child: GestureDetector(
+                              onLongPress: () => ref.read(savedFiltersProvider(id).notifier).remove(f.name),
+                              child: ActionChip(
+                                key: Key('saved-filter-${f.name}'),
+                                avatar: const Icon(Icons.bookmark_rounded, size: 16),
+                                label: Text(f.name),
+                                materialTapTargetSize: MaterialTapTargetSize.padded,
+                                onPressed: () {
+                                  unawaited(AppHaptics.selection());
+                                  _search.text = f.filters.query;
+                                  _setFilters(f.filters);
+                                },
+                              ),
+                            ),
+                          ),
+                        if (savedOn && filters.hasActive)
+                          ActionChip(
+                            key: const Key('save-filter'),
+                            avatar: const Icon(Icons.bookmark_add_outlined, size: 16),
+                            label: Text(l10n.filterSave),
+                            materialTapTargetSize: MaterialTapTargetSize.padded,
+                            onPressed: () async {
+                              final name = await askText(context, l10n.filterSavePrompt);
+                              if (name != null) {
+                                unawaited(AppHaptics.success());
+                                ref.read(savedFiltersProvider(id).notifier).add(name, filters);
+                              }
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                if (filters.hasActive)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      key: const Key('clear-filters'),
+                      onPressed: () {
+                        _search.clear();
+                        ref.read(expenseFiltersProvider(id).notifier).clear();
+                        setState(() {
+                          _visible = _pageSize;
+                          _showAdvanced = false;
+                        });
+                      },
+                      child: Text(l10n.expClearFilters),
+                    ),
+                  ),
+                const SizedBox(height: 4),
+              ],
+            ),
+          );
 
     final coachEmptyOn = _flag(ref, 'enableCoachEmptyStates', id);
     final Widget empty = active.isEmpty
@@ -982,7 +1151,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
               if (shown.isEmpty)
                 SliverToBoxAdapter(child: empty)
               else ...[
-                ...section(dayGroups, collapsible: true),
+                ...section(dayGroups, collapsible: !horizonSpend),
                 if (settlementGroups.isNotEmpty) ...[
                   SliverToBoxAdapter(
                     child: Padding(
@@ -1212,6 +1381,15 @@ String _dayLabel(String date, String tripStart, String Function(int) dayN) {
   return n >= 1 ? '$base · ${dayN(n)}' : base;
 }
 
+/// Horizon day label: "TODAY · THU 21 NOV", or "WED 20 NOV" for other days.
+String _horizonDayLabel(String date, String today, String todayWord) {
+  final d = DateTime.tryParse(date);
+  if (d == null) return date;
+  const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+  final base = '${days[d.weekday - 1]} ${d.day} ${_months[d.month - 1]}';
+  return date == today ? '${todayWord.toUpperCase()} · $base' : base;
+}
+
 String _settlementDateLabel(String date) {
   final d = DateTime.tryParse(date);
   if (d == null) return date;
@@ -1236,9 +1414,13 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
     required this.border,
     this.countText = '',
     this.tidy = false,
+    this.horizon = false,
   });
 
   final bool tidy;
+
+  /// Horizon: a plain mono label ("TODAY · THU 21 NOV") over the day's card, no total, no folding.
+  final bool horizon;
   final double textScale; // the header has a fixed height, so it grows with the user's text size
   final Color surface;
   final Color border;
@@ -1255,7 +1437,7 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
   final Color textColor;
   final Color mutedColor;
 
-  double get _h => (tidy ? 64.0 : 48.0) + (textScale - 1).clamp(0.0, 1.0) * 40;
+  double get _h => (horizon ? 40.0 : (tidy ? 64.0 : 48.0)) + (textScale - 1).clamp(0.0, 1.0) * 40;
 
   @override
   double get minExtent => _h;
@@ -1333,8 +1515,36 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
     ),
   );
 
+  Widget _horizonHeader() => Material(
+    color: background,
+    child: Semantics(
+      label: semantics,
+      child: Padding(
+        key: Key('day-$date'),
+        padding: const EdgeInsets.fromLTRB(20, 14, 16, 8),
+        child: Align(
+          alignment: Alignment.bottomLeft,
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: AppTypography.fontMono,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
+              color: mutedColor,
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => tidy
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => horizon
+      ? _horizonHeader()
+      : tidy
       ? _tidyHeader(context)
       : Material(
           color: background,
@@ -1380,6 +1590,7 @@ class _DayHeader extends SliverPersistentHeaderDelegate {
       old.count != count ||
       old.expanded != expanded ||
       old.tidy != tidy ||
+      old.horizon != horizon ||
       old.textScale != textScale ||
       old.background != background;
 }

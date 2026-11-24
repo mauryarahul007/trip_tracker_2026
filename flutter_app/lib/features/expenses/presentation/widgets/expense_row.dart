@@ -39,6 +39,8 @@ class ExpenseRow extends StatefulWidget {
     this.refunded = false,
     this.onSettle,
     this.settleLabel,
+    this.groupFirst,
+    this.groupLast,
     super.key,
   });
 
@@ -68,6 +70,11 @@ class ExpenseRow extends StatefulWidget {
   /// Quiet Settle shortcut (flag `enableSettleFromSpend`); set only when money is still open on this expense's pair.
   final VoidCallback? onSettle;
   final String? settleLabel;
+
+  /// Horizon (enableHorizonUi): the row is one slice of a day card. [groupFirst] rounds the top corners,
+  /// [groupLast] the bottom ones; rows after the first get a divider. Null = a standalone card.
+  final bool? groupFirst;
+  final bool? groupLast;
 
   @override
   State<ExpenseRow> createState() => _ExpenseRowState();
@@ -309,22 +316,33 @@ class _ExpenseRowState extends State<ExpenseRow> {
     final shareLine = myShare != null ? l10n.rowYourShare(formatMoney(context, myShare, base)) : null;
     final backLine = hasBack ? l10n.rowGetBack(formatMoney(context, getBack, base)) : null;
     final tile = review.needsReview ? tokens.colorWarning : accent;
+    final grouped = tokens.horizon && widget.groupFirst != null;
+    const r = Radius.circular(18);
     return Semantics(
       container: true,
       child: Material(
         color: tokens.bgSurface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(tokens.radiusMd),
-          side: BorderSide(color: review.needsReview ? tokens.colorWarning : tokens.borderColor),
-        ),
+        shape: grouped
+            ? RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(
+                  top: widget.groupFirst! ? r : Radius.zero,
+                  bottom: widget.groupLast! ? r : Radius.zero,
+                ),
+              )
+            : RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(tokens.radiusMd),
+                side: BorderSide(color: review.needsReview ? tokens.colorWarning : tokens.borderColor),
+              ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: widget.onTap,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+            padding: grouped ? const EdgeInsets.fromLTRB(14, 0, 14, 0) : const EdgeInsets.fromLTRB(12, 12, 14, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (grouped && !widget.groupFirst!) Divider(height: 1, indent: 52, color: tokens.borderColor),
+                if (grouped) const SizedBox(height: 12),
                 Row(
                   children: [
                     Container(
@@ -415,7 +433,8 @@ class _ExpenseRowState extends State<ExpenseRow> {
                     style: TextStyle(fontSize: 12, color: tokens.colorWarning, height: 1.3),
                   ),
                 ],
-                if (widget.onSettle != null) _settleAction(tokens),
+                if (widget.onSettle != null && !tokens.horizon) _settleAction(tokens),
+                if (grouped) const SizedBox(height: 12),
               ],
             ),
           ),
@@ -435,7 +454,7 @@ class _ExpenseRowState extends State<ExpenseRow> {
         minimumSize: const Size(48, 40),
         padding: const EdgeInsets.symmetric(horizontal: 8),
         foregroundColor: tokens.primaryAccent,
-        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+        textStyle: const TextStyle(fontFamily: AppTypography.fontBody, fontSize: 13, fontWeight: FontWeight.w700),
       ),
       child: Text(widget.settleLabel ?? context.l10n.ledSettle),
     ),

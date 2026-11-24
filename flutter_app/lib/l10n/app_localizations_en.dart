@@ -3140,6 +3140,85 @@ class AppLocalizationsEn extends AppLocalizations {
   String get horizonTryDemoLink => 'demo trip';
 
   @override
+  String get horizonBudgetPace => 'Budget pace';
+
+  @override
+  String get horizonYourPosition => 'Your position';
+
+  @override
+  String get horizonHubInsights => 'Insights';
+
+  @override
+  String get horizonHubInsightsSub => 'Where the money went';
+
+  @override
+  String get horizonHubRoute => 'Route map';
+
+  @override
+  String get horizonHubRouteShowing => 'Route map · showing';
+
+  @override
+  String get horizonToday => 'Today';
+
+  @override
+  String get horizonSetBudget => 'Set a budget';
+
+  @override
+  String get horizonSetBudgetHint => 'See how fast the trip is spending.';
+
+  @override
+  String horizonBudgetUsed(int percent, int day, int total) {
+    return '$percent% used, day $day/$total';
+  }
+
+  @override
+  String horizonBudgetUsedNoDay(int percent) {
+    return '$percent% used';
+  }
+
+  @override
+  String horizonBudgetLeft(String left, String perDay) {
+    return '$left left · about $perDay a day';
+  }
+
+  @override
+  String horizonBudgetLeftOnly(String left) {
+    return '$left left';
+  }
+
+  @override
+  String horizonBudgetOver(String over) {
+    return '$over over budget';
+  }
+
+  @override
+  String horizonSettlePlan(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payments',
+      one: '1 payment',
+      zero: 'all square',
+    );
+    return 'Settle plan · $_temp0';
+  }
+
+  @override
+  String get horizonSettleUp => 'Settle up';
+
+  @override
+  String get horizonYou => 'You';
+
+  @override
+  String get horizonPlanOwesYou => 'Owes you';
+
+  @override
+  String get horizonPlanYouPay => 'You pay';
+
+  @override
+  String get horizonPlanNotYou => 'Not you';
+
+  @override
   String get horizonCoverColour => 'Cover colour';
 
   @override

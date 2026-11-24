@@ -5497,6 +5497,126 @@ abstract class AppLocalizations {
   /// **'demo trip'**
   String get horizonTryDemoLink;
 
+  /// No description provided for @horizonBudgetPace.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget pace'**
+  String get horizonBudgetPace;
+
+  /// No description provided for @horizonYourPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Your position'**
+  String get horizonYourPosition;
+
+  /// No description provided for @horizonHubInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights'**
+  String get horizonHubInsights;
+
+  /// No description provided for @horizonHubInsightsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Where the money went'**
+  String get horizonHubInsightsSub;
+
+  /// No description provided for @horizonHubRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Route map'**
+  String get horizonHubRoute;
+
+  /// No description provided for @horizonHubRouteShowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Route map · showing'**
+  String get horizonHubRouteShowing;
+
+  /// No description provided for @horizonToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get horizonToday;
+
+  /// No description provided for @horizonSetBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a budget'**
+  String get horizonSetBudget;
+
+  /// No description provided for @horizonSetBudgetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'See how fast the trip is spending.'**
+  String get horizonSetBudgetHint;
+
+  /// No description provided for @horizonBudgetUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% used, day {day}/{total}'**
+  String horizonBudgetUsed(int percent, int day, int total);
+
+  /// No description provided for @horizonBudgetUsedNoDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% used'**
+  String horizonBudgetUsedNoDay(int percent);
+
+  /// No description provided for @horizonBudgetLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{left} left · about {perDay} a day'**
+  String horizonBudgetLeft(String left, String perDay);
+
+  /// No description provided for @horizonBudgetLeftOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'{left} left'**
+  String horizonBudgetLeftOnly(String left);
+
+  /// No description provided for @horizonBudgetOver.
+  ///
+  /// In en, this message translates to:
+  /// **'{over} over budget'**
+  String horizonBudgetOver(String over);
+
+  /// No description provided for @horizonSettlePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle plan · {count, plural, =0{all square} =1{1 payment} other{{count} payments}}'**
+  String horizonSettlePlan(int count);
+
+  /// No description provided for @horizonSettleUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle up'**
+  String get horizonSettleUp;
+
+  /// No description provided for @horizonYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get horizonYou;
+
+  /// No description provided for @horizonPlanOwesYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Owes you'**
+  String get horizonPlanOwesYou;
+
+  /// No description provided for @horizonPlanYouPay.
+  ///
+  /// In en, this message translates to:
+  /// **'You pay'**
+  String get horizonPlanYouPay;
+
+  /// No description provided for @horizonPlanNotYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Not you'**
+  String get horizonPlanNotYou;
+
   /// No description provided for @horizonCoverColour.
   ///
   /// In en, this message translates to:

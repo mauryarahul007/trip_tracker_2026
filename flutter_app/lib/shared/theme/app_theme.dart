@@ -38,6 +38,8 @@ ChipThemeData _chipTheme(AppTokens t) {
 /// Horizon chips: soft 8px squares on the second surface; the selected chip takes the blue tint with blue-ink text.
 ChipThemeData _horizonChipTheme(AppTokens t) {
   final label = TextStyle(
+    // Chips do not inherit the theme's body font; without this they fall back to the platform font.
+    fontFamily: AppTypography.fontBody,
     color: WidgetStateColor.resolveWith((s) => s.contains(WidgetState.selected) ? t.primaryAccent : t.textSecondary),
     fontSize: 13,
     fontWeight: FontWeight.w600,
@@ -116,6 +118,16 @@ ThemeData _build(AppTokens t, Brightness brightness) {
       },
     ),
     extensions: [t],
+    // Horizon (enableHorizonUi) switches: blue track when on, light grey track when off, white thumb, no outline.
+    switchTheme: t.horizon
+        ? SwitchThemeData(
+            thumbColor: const WidgetStatePropertyAll(Colors.white),
+            trackColor: WidgetStateProperty.resolveWith(
+              (s) => s.contains(WidgetState.selected) ? t.primaryAccent : t.borderColor,
+            ),
+            trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+          )
+        : null,
     // Web header is a teal gradient with light text; AppBar stays transparent over [AppGradientHeader].
     appBarTheme: AppBarTheme(
       backgroundColor: t.bgPage,
@@ -161,14 +173,14 @@ ThemeData _build(AppTokens t, Brightness brightness) {
         side: BorderSide(color: t.borderColor),
         shape: t.horizon ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)) : const StadiumBorder(),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        textStyle: const TextStyle(fontWeight: FontWeight.w600),
+        textStyle: const TextStyle(fontFamily: AppTypography.fontBody, fontWeight: FontWeight.w600),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: t.actionInk,
         shape: t.horizon ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)) : const StadiumBorder(),
-        textStyle: const TextStyle(fontWeight: FontWeight.w600),
+        textStyle: const TextStyle(fontFamily: AppTypography.fontBody, fontWeight: FontWeight.w600),
       ),
     ),
     // Ink FAB: the single primary action per screen.

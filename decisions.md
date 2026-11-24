@@ -5983,3 +5983,15 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Sort by name is not offered on the Horizon home; trips keep date order within each section. Live-card spend uses the trip's base currency.
 
+## 302. Horizon trip screens: header, Balances, Spend and Hub (v3.102.0)
+* **Context:** An audit of the 55 Horizon mockups against the app found most trip screens kept their Calm layouts with only new colours. The user asked for the design to be carried across the whole Flutter app.
+* **Decision:**
+  - Shared polish: chips, text and outlined buttons and avatars use the body font (they fell back to the platform font); Horizon switches; one-letter avatars on the Horizon palette; dock "Me"; trip tab icons; `TripHeaderVariant.horizon` (title, "Day N of M · destination", round bell only).
+  - Balances: `HorizonBudgetPace` and `HorizonSettlePlan` (Settle up opens the transfer rows in a sheet). The Calm attention bar, today card, next action, progress and transfer list are not built under Horizon.
+  - Spend: grouped day cards with "TODAY · TUE 24 NOV" headers, always open; an "All · N" plus top-3 category chip row, a search toggle and Filters.
+  - Hub: `HorizonRouteCard` (toggles the map), a tinted 2-column grid (Plans, People, Receipts, Insights, Invite, Tools) and a row list.
+  - Reuses `enableHorizonUi` (same surface). Look-only; no data or sync changes.
+* **Trade-offs Accepted:**
+  - Horizon Spend days cannot be collapsed. The Hub no longer folds tiles under More.
+  - Remaining screens (Add expense, Split, People, Plans, account pages, sheets, states) follow in later steps.
+

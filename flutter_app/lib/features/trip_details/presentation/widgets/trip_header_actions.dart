@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../data/providers.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_icons.dart';
+import '../../../../shared/theme/app_tokens.dart';
 import '../../../expenses/application/expenses_providers.dart';
 import '../../../notifications/presentation/notification_bell.dart';
 import '../../../trips/presentation/widgets/sync_chip.dart';
@@ -12,7 +13,10 @@ import '../../application/trip_nav.dart';
 
 /// Which trip top bar to build. Compass nav (`enableCompassNav`) shows sync and the bell only; the clean bar
 /// (`enableCleanTopBar`) adds one More menu; legacy is the older row of separate buttons.
-enum TripHeaderVariant { compass, clean, legacy }
+///
+/// Horizon (`enableHorizonUi`) shows only the bell in a round outline, as in the mockups; trip actions open from
+/// the trip name.
+enum TripHeaderVariant { horizon, compass, clean, legacy }
 
 /// The trip app bar's action buttons for [variant]. [onMenu] handles the menu values: share, map, edit-trip,
 /// trip-settings, app-settings and location.
@@ -35,6 +39,20 @@ List<Widget> tripHeaderActions(
   );
 
   switch (variant) {
+    case TripHeaderVariant.horizon:
+      return [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, right: 4),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: context.tokens.bgSurface,
+              border: Border.all(color: context.tokens.borderColor),
+            ),
+            child: bell,
+          ),
+        ),
+      ];
     case TripHeaderVariant.compass:
       return [sync, bell];
     case TripHeaderVariant.clean:

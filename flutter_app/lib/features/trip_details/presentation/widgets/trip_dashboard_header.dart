@@ -105,6 +105,15 @@ class TripDashboardHeader extends ConsumerWidget {
           '${counts.$2} expense${counts.$2 == 1 ? '' : 's'}',
         ].join('  ·  ');
 
+        // Horizon (enableHorizonUi): "Day 4 of 7 · Goa" under the trip name.
+        final horizonSub = [
+          if (status.phase == TripPhase.active && status.totalDays > 0)
+            'Day ${status.dayNumber} of ${status.totalDays}'
+          else if (dateText.isNotEmpty)
+            dateText,
+          if ((trip?.destination ?? '').trim().isNotEmpty) trip!.destination!.trim(),
+        ].join(' · ');
+
         final actionsOn = ref.watch(flagProvider(('enableTripHeaderActions', trip?.id))).value ?? true;
         final switchOn = ref.watch(flagProvider(('enableTripSwitcher', trip?.id))).value ?? true;
         final allTrips = ref.watch(allTripsProvider).value ?? const <Trip>[];
@@ -183,32 +192,41 @@ class TripDashboardHeader extends ConsumerWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Flexible(
-                                      child: AppMotion.hero(
-                                        context: context,
-                                        tag: 'trip-title-${trip?.id ?? ""}',
-                                        child: Material(
-                                          type: MaterialType.transparency,
-                                          child: Text(
-                                            trip?.name ?? '',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: AppTypography.tripTitle(color: titleColor, fontSize: titleFontSize)
-                                                .copyWith(
-                                                  shadows: clampedProgress < 0.5
-                                                      ? [
-                                                          Shadow(
-                                                            color: Colors.black.withValues(alpha: 0.6),
-                                                            blurRadius: 4,
-                                                            offset: const Offset(0, 1),
-                                                          ),
-                                                        ]
-                                                      : null,
+                                      child: t.horizon
+                                          ? _HorizonTitle(
+                                              name: trip?.name ?? '',
+                                              subtitle: horizonSub,
+                                              color: titleColor,
+                                            )
+                                          : AppMotion.hero(
+                                              context: context,
+                                              tag: 'trip-title-${trip?.id ?? ""}',
+                                              child: Material(
+                                                type: MaterialType.transparency,
+                                                child: Text(
+                                                  trip?.name ?? '',
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style:
+                                                      AppTypography.tripTitle(
+                                                        color: titleColor,
+                                                        fontSize: titleFontSize,
+                                                      ).copyWith(
+                                                        shadows: clampedProgress < 0.5
+                                                            ? [
+                                                                Shadow(
+                                                                  color: Colors.black.withValues(alpha: 0.6),
+                                                                  blurRadius: 4,
+                                                                  offset: const Offset(0, 1),
+                                                                ),
+                                                              ]
+                                                            : null,
+                                                      ),
                                                 ),
-                                          ),
-                                        ),
-                                      ),
+                                              ),
+                                            ),
                                     ),
-                                    if (showArrow) ...[
+                                    if (showArrow && !t.horizon) ...[
                                       const SizedBox(width: 4),
                                       Icon(
                                         Icons.expand_more_rounded,
@@ -330,6 +348,46 @@ class TripDashboardHeader extends ConsumerWidget {
 }
 
 /// Up to three overlapping member avatars, then a "+N" chip (Horizon trip header).
+/// Horizon trip title: the name with a small "Day 4 of 7 · Goa" line under it.
+class _HorizonTitle extends StatelessWidget {
+  const _HorizonTitle({required this.name, required this.subtitle, required this.color});
+  final String name;
+  final String subtitle;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Column(
+      key: const Key('trip-title-horizon'),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.tripTitle(color: color, fontSize: 18),
+        ),
+        if (subtitle.isNotEmpty)
+          Text(
+            subtitle,
+            key: const Key('trip-title-subtitle'),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: AppTypography.fontBody,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0,
+              color: Color.lerp(color, t.textSecondary, 0.6),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _AvatarStack extends StatelessWidget {
   const _AvatarStack({required this.names});
   final List<String> names;

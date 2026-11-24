@@ -48,6 +48,7 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
 import 'conflict_sheet.dart';
+import 'widgets/horizon_ledger.dart';
 import 'widgets/horizon_position_hero.dart';
 import 'widgets/balance_bars.dart';
 import 'widgets/compass_balance_widgets.dart';
@@ -1034,11 +1035,101 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           )
         : null;
     // The Summary in two lists so a wide screen can show them side by side (flag `enableSummaryTwoPane`).
+    // Horizon (enableHorizonUi): Budget pace and the settle plan sit right under the position hero.
+    final List<Widget> horizonBelowHero;
+    if (tokens.horizon) {
+      final hs = tripStatus(trip.startDate, trip.endDate, nowDt);
+      final used = budget > 0 ? (totals.totalSpent * 100 / budget).round() : 0;
+      final dayShare = hs.totalDays > 0 ? hs.dayNumber / hs.totalDays : 0.0;
+      final over = budget > 0 && totals.totalSpent > budget;
+      final ahead = budget > 0 && hs.phase == TripPhase.active && totals.totalSpent / budget > dayShare + 0.05;
+      String who(String node, String label) => isMe(node) ? l10n.horizonYou : label;
+      Future<void> settleSheet() => AppSheet.show<void>(
+        context: context,
+        title: l10n.horizonSettleUp,
+        builder: (sheetCtx) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final (i, t) in transfers.indexed)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: CompassTransferRow(
+                  key: Key('plan-pay-$i'),
+                  from: who(t.from, t.fromLabel),
+                  to: who(t.to, t.toLabel),
+                  amount: formatMoney(context, t.amount, cur),
+                  actionLabel: l10n.ledSettle,
+                  primary: isMe(t.from),
+                  onAction: () {
+                    Navigator.of(sheetCtx).pop();
+                    unawaited(_settle(context, t));
+                  },
+                ),
+              ),
+          ],
+        ),
+      );
+      horizonBelowHero = [
+        if (budgetOn)
+          HorizonBudgetPace(
+            budget: budget > 0,
+            fraction: budget > 0 ? totals.totalSpent / budget : 0,
+            pill: budget <= 0
+                ? ''
+                : hs.phase == TripPhase.active && hs.totalDays > 0
+                ? l10n.horizonBudgetUsed(used, hs.dayNumber, hs.totalDays)
+                : l10n.horizonBudgetUsedNoDay(used),
+            caption: budget <= 0
+                ? l10n.horizonSetBudgetHint
+                : over
+                ? l10n.horizonBudgetOver(formatMoney(context, totals.totalSpent - budget, cur))
+                : daysLeft > 0 && hs.phase == TripPhase.active
+                ? l10n.horizonBudgetLeft(
+                    formatMoney(context, budget - totals.totalSpent, cur),
+                    formatMoney(context, allowance ?? 0, cur),
+                  )
+                : l10n.horizonBudgetLeftOnly(formatMoney(context, budget - totals.totalSpent, cur)),
+            warn: over || ahead,
+            onTap: () => _editBudget(context, budget),
+          ),
+        HorizonSettlePlan(
+          onSettleUp: transfers.isEmpty ? null : () => unawaited(settleSheet()),
+          empty: EmptyState(
+            plain: true,
+            key: const Key('all-settled'),
+            icon: Icons.check_circle_outline,
+            title: l10n.ledAllSettled,
+            subtitle: l10n.ledAllSettledHint,
+          ),
+          rows: [
+            for (final t in transfers)
+              HorizonPlanRow(
+                fromName: t.fromLabel,
+                title: '${who(t.from, t.fromLabel)} → ${who(t.to, t.toLabel)}',
+                subtitle: isMe(t.to)
+                    ? l10n.horizonPlanOwesYou
+                    : isMe(t.from)
+                    ? l10n.horizonPlanYouPay
+                    : l10n.horizonPlanNotYou,
+                amount: formatMoney(context, t.amount, cur),
+                sign: isMe(t.to)
+                    ? 1
+                    : isMe(t.from)
+                    ? -1
+                    : 0,
+                onTap: () => unawaited(_settle(context, t)),
+              ),
+          ],
+        ),
+      ];
+    } else {
+      horizonBelowHero = const [];
+    }
     final topChildren = <Widget>[
       const LastSyncedCaption(),
-      if (upgradesOn && !(calm && tripSettled))
+      if (upgradesOn && !(calm && tripSettled) && !tokens.horizon)
         SummaryAttentionBar(tripId: id, onTransfers: () => setState(() => _open.add('transfers'))),
-      if (todayOn)
+      if (todayOn && !tokens.horizon)
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: BentoTile(
@@ -1169,7 +1260,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           ),
         ),
       if (celebration != null && !compactSummaryOn) celebration,
-      if (nextOn && (nextPay != null || owedToMe.isNotEmpty))
+      if (nextOn && !tokens.horizon && (nextPay != null || owedToMe.isNotEmpty))
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: BentoTile(
@@ -1213,11 +1304,11 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
       // or to the settle-up status with enableSettleStatusPass).
       if (tokens.horizon)
         HorizonPositionHero(
-          eyebrow: heroLabel,
+          eyebrow: iAmIn && !iAmSquare && myGroup == null ? l10n.horizonYourPosition : heroLabel,
           amount:
               '${!iAmIn || iAmSquare ? '' : (heroBalance > 0 ? '+' : '−')}'
               '${formatMoney(context, heroBalance.abs(), cur)}',
-          caption: '',
+          caption: !iAmIn || iAmSquare ? '' : (heroBalance > 0 ? l10n.horizonOwedToYou : l10n.horizonYouOwe),
           tone: !iAmIn || iAmSquare ? 0 : (heroBalance > 0 ? 1 : -1),
           stats: [
             if (iAmIn) ...[
@@ -1469,7 +1560,9 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
           ),
         ),
       // Settlement progress, like a goal: how much of what was owed is already paid.
-      if (progressTotal > 0.005 && !(calm && tripSettled))
+      if (tokens.horizon)
+        ...horizonBelowHero
+      else if (progressTotal > 0.005 && !(calm && tripSettled))
         Padding(
           key: const Key('settle-progress'),
           padding: const EdgeInsets.only(bottom: 20),
@@ -1499,127 +1592,128 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             ),
           ),
         ),
-      // 2. Who pays whom, and how it is worked out.
-      section(
-        'transfers',
-        l10n.ledWhoPays,
-        subtitle: allEven ? l10n.ledAllSettled : l10n.ledProgressLeft(transfers.length),
-        [
-          if (balanceBarsOn && !allEven)
-            BalanceBars(balances: result.balances, format: (v) => formatMoney(context, v, cur)),
-          if (canToggle)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: SegmentedButton<bool>(
-                key: const Key('simplify-toggle'),
-                showSelectedIcon: false,
-                segments: [
-                  ButtonSegment(value: true, label: Text(l10n.ledModeFewest, maxLines: 1)),
-                  ButtonSegment(value: false, label: Text(l10n.ledModePerPerson, maxLines: 1)),
-                ],
-                selected: {trip.simplifyDebts},
-                onSelectionChanged: (v) => ref.read(tripRepositoryProvider).setSimplifyDebts(id, v.first),
-              ),
-            ),
-          if (counts != null && counts.direct > 0)
-            Padding(
-              key: const Key('simplify-counts'),
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                counts.simplified == counts.direct
-                    ? l10n.ledCountsSame(counts.direct)
-                    : l10n.ledCountsSaves(counts.simplified, counts.direct),
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: tokens.textSecondary),
-              ),
-            ),
-          if (upgradesOn && counts != null)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                key: const Key('how-it-works'),
-                onPressed: () => AppSheet.show<void>(
-                  context: context,
-                  title: 'How it works',
-                  builder: (_) => HowSettlementsWorkSheet(simplified: counts.simplified, direct: counts.direct),
-                ),
-                icon: const Icon(Icons.help_outline_rounded, size: 18),
-                label: const Text('How it works'),
-                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-              ),
-            ),
-          if (settleAllOn)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: AppButton(
-                key: const Key('settle-all'),
-                label: l10n.ledSettleAll(
-                  myPays.length,
-                  formatMoney(context, myPays.fold<double>(0, (a, t) => a + t.amount), cur),
-                ),
-                onPressed: () => _settleAll(context, myPays, cur),
-              ),
-            ),
-          if (allEven)
-            EmptyState(
-              plain: true,
-              key: const Key('all-settled'),
-              icon: Icons.check_circle_outline,
-              title: l10n.ledAllSettled,
-              subtitle: l10n.ledAllSettledHint,
-            )
-          else
-            for (final (i, t) in transfers.indexed) ...[
+      // 2. Who pays whom, and how it is worked out. Horizon shows the settle plan under the hero instead.
+      if (!tokens.horizon)
+        section(
+          'transfers',
+          l10n.ledWhoPays,
+          subtitle: allEven ? l10n.ledAllSettled : l10n.ledProgressLeft(transfers.length),
+          [
+            if (balanceBarsOn && !allEven)
+              BalanceBars(balances: result.balances, format: (v) => formatMoney(context, v, cur)),
+            if (canToggle)
               Padding(
-                key: Key('transfer-$i'),
-                padding: EdgeInsets.only(bottom: upgradesOn ? 0 : 14),
-                child: compassMoney
-                    ? CompassTransferRow(
-                        from: t.fromLabel,
-                        to: t.toLabel,
-                        amount: formatMoney(context, t.amount, cur),
-                        actionLabel: l10n.ledSettle,
-                        actionKey: Key('settle-$i'),
-                        primary: isMe(t.from),
-                        onAction: () => _settle(context, t),
-                      )
-                    : LuggageStubTile(
-                        tone: isMe(t.from) ? BentoTone.peach : (isMe(t.to) ? BentoTone.mint : toneFor(t.from)),
-                        badge: isMe(t.from) ? l10n.ledYouPay : (isMe(t.to) ? l10n.ledPaysYou : null),
-                        fromName: t.fromLabel,
-                        toName: t.toLabel,
-                        fromLabel: l10n.ledFrom,
-                        toLabel: l10n.ledTo,
-                        caption: l10n.ledTransfer(t.fromLabel, t.toLabel),
-                        amountText: formatMoney(context, t.amount, cur),
-                        settleLabel: l10n.ledSettle,
-                        settleKey: Key('settle-$i'),
-                        onSettle: () => _settle(context, t),
-                      ),
-              ),
-              if (upgradesOn)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: TransferExtras(
-                    onCustom: () => _settle(context, t, focusAmount: true),
-                    onRemind: isMe(t.from)
-                        ? null
-                        : () => ref
-                              .read(shareServiceProvider)
-                              .share(
-                                reminderMessage(
-                                  from: t.fromLabel,
-                                  to: t.toLabel,
-                                  amount: formatMoney(context, t.amount, cur),
-                                  trip: trip.name,
-                                ),
-                                subject: 'Settle up: ${trip.name}',
-                              ),
-                  ),
+                padding: const EdgeInsets.only(bottom: 10),
+                child: SegmentedButton<bool>(
+                  key: const Key('simplify-toggle'),
+                  showSelectedIcon: false,
+                  segments: [
+                    ButtonSegment(value: true, label: Text(l10n.ledModeFewest, maxLines: 1)),
+                    ButtonSegment(value: false, label: Text(l10n.ledModePerPerson, maxLines: 1)),
+                  ],
+                  selected: {trip.simplifyDebts},
+                  onSelectionChanged: (v) => ref.read(tripRepositoryProvider).setSimplifyDebts(id, v.first),
                 ),
-            ],
-        ],
-        bare: true,
-      ),
+              ),
+            if (counts != null && counts.direct > 0)
+              Padding(
+                key: const Key('simplify-counts'),
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  counts.simplified == counts.direct
+                      ? l10n.ledCountsSame(counts.direct)
+                      : l10n.ledCountsSaves(counts.simplified, counts.direct),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: tokens.textSecondary),
+                ),
+              ),
+            if (upgradesOn && counts != null)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  key: const Key('how-it-works'),
+                  onPressed: () => AppSheet.show<void>(
+                    context: context,
+                    title: 'How it works',
+                    builder: (_) => HowSettlementsWorkSheet(simplified: counts.simplified, direct: counts.direct),
+                  ),
+                  icon: const Icon(Icons.help_outline_rounded, size: 18),
+                  label: const Text('How it works'),
+                  style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                ),
+              ),
+            if (settleAllOn)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: AppButton(
+                  key: const Key('settle-all'),
+                  label: l10n.ledSettleAll(
+                    myPays.length,
+                    formatMoney(context, myPays.fold<double>(0, (a, t) => a + t.amount), cur),
+                  ),
+                  onPressed: () => _settleAll(context, myPays, cur),
+                ),
+              ),
+            if (allEven)
+              EmptyState(
+                plain: true,
+                key: const Key('all-settled'),
+                icon: Icons.check_circle_outline,
+                title: l10n.ledAllSettled,
+                subtitle: l10n.ledAllSettledHint,
+              )
+            else
+              for (final (i, t) in transfers.indexed) ...[
+                Padding(
+                  key: Key('transfer-$i'),
+                  padding: EdgeInsets.only(bottom: upgradesOn ? 0 : 14),
+                  child: compassMoney
+                      ? CompassTransferRow(
+                          from: t.fromLabel,
+                          to: t.toLabel,
+                          amount: formatMoney(context, t.amount, cur),
+                          actionLabel: l10n.ledSettle,
+                          actionKey: Key('settle-$i'),
+                          primary: isMe(t.from),
+                          onAction: () => _settle(context, t),
+                        )
+                      : LuggageStubTile(
+                          tone: isMe(t.from) ? BentoTone.peach : (isMe(t.to) ? BentoTone.mint : toneFor(t.from)),
+                          badge: isMe(t.from) ? l10n.ledYouPay : (isMe(t.to) ? l10n.ledPaysYou : null),
+                          fromName: t.fromLabel,
+                          toName: t.toLabel,
+                          fromLabel: l10n.ledFrom,
+                          toLabel: l10n.ledTo,
+                          caption: l10n.ledTransfer(t.fromLabel, t.toLabel),
+                          amountText: formatMoney(context, t.amount, cur),
+                          settleLabel: l10n.ledSettle,
+                          settleKey: Key('settle-$i'),
+                          onSettle: () => _settle(context, t),
+                        ),
+                ),
+                if (upgradesOn)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: TransferExtras(
+                      onCustom: () => _settle(context, t, focusAmount: true),
+                      onRemind: isMe(t.from)
+                          ? null
+                          : () => ref
+                                .read(shareServiceProvider)
+                                .share(
+                                  reminderMessage(
+                                    from: t.fromLabel,
+                                    to: t.toLabel,
+                                    amount: formatMoney(context, t.amount, cur),
+                                    trip: trip.name,
+                                  ),
+                                  subject: 'Settle up: ${trip.name}',
+                                ),
+                    ),
+                  ),
+              ],
+          ],
+          bare: true,
+        ),
       if (celebration != null && compactSummaryOn) celebration,
       // 3. Trip analytics: totals, where the money went, who paid, and each person's balance.
       section(
@@ -2002,7 +2096,7 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
                   : const SizedBox.shrink(),
             ),
           ),
-        if (compassMoney && myPays.isNotEmpty)
+        if (compassMoney && myPays.isNotEmpty && !tokens.horizon)
           Positioned(
             left: 12,
             right: 12,

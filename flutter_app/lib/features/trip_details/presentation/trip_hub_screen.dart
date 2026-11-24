@@ -25,6 +25,7 @@ import '../../trips/application/trips_providers.dart';
 import '../../trips/presentation/widgets/share_trip_sheet.dart';
 import '../application/trip_nav.dart';
 import '../domain/trip_tabs.dart';
+import 'widgets/horizon_hub.dart';
 
 enum _HubHaptic { selection, medium, light }
 
@@ -256,6 +257,99 @@ class TripHubScreen extends ConsumerWidget {
           break;
       }
       tile.onTap();
+    }
+
+    if (t.horizon) {
+      _HubTile byKey(String k) => tiles.firstWhere((x) => x.key == k);
+      final grid = <(_HubTile, BentoTone?)>[
+        if (hasNotes) (byKey(t.calm ? 'hub-plans' : 'hub-notes'), BentoTone.sky),
+        (byKey('hub-people'), BentoTone.lilac),
+        (byKey('hub-receipts'), BentoTone.peach),
+        (
+          _HubTile(
+            'hub-insights',
+            Icons.bar_chart_rounded,
+            l10n.horizonHubInsights,
+            l10n.horizonHubInsightsSub,
+            () => context.push('/trip/$tripId/insights'),
+          ),
+          BentoTone.mint,
+        ),
+        (byKey('hub-invite'), BentoTone.butter),
+        (byKey('hub-tools'), null),
+      ];
+      final rows = [byKey('hub-live'), byKey('hub-settings'), byKey('hub-edit'), byKey('hub-app-settings')];
+      return ListView(
+        key: const Key('trip-hub'),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+        children: [
+          HorizonRouteCard(
+            key: const Key('hub-map'),
+            label: mapOpen ? l10n.horizonHubRouteShowing : l10n.horizonHubRoute,
+            onTap: () {
+              AppHaptics.light();
+              ref.read(tripMapOpenProvider(tripId).notifier).toggle();
+            },
+          ),
+          const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, c) {
+              final w = (c.maxWidth - 10) / 2;
+              return Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (final (tile, tone) in grid)
+                    SizedBox(
+                      width: w,
+                      child: HorizonHubTile(
+                        key: Key(tile.key),
+                        icon: tile.icon,
+                        title: tile.title,
+                        subtitle: tile.subtitle,
+                        tone: tone,
+                        onTap: () => triggerTileTap(tile),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          Material(
+            color: t.bgSurface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: BorderSide(color: t.borderColor),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (final (i, r) in rows.indexed) ...[
+                  if (i > 0) Divider(height: 1, indent: 64, color: t.borderColor),
+                  ListTile(
+                    key: Key(r.key),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                    leading: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(color: t.bgSurfaceHover, borderRadius: BorderRadius.circular(10)),
+                      child: Icon(r.icon, size: 20, color: t.textSecondary),
+                    ),
+                    title: Text(
+                      r.title,
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: t.textPrimary),
+                    ),
+                    subtitle: Text(r.subtitle, style: TextStyle(fontSize: 12, color: t.textSecondary)),
+                    trailing: Icon(Icons.chevron_right_rounded, color: t.textMuted),
+                    onTap: () => triggerTileTap(r),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      );
     }
 
     return ListView(
