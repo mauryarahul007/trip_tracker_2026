@@ -5936,3 +5936,12 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - The boarding-receipt row style (tidy flag OFF) keeps its Calm lines.
   - Remaining Trip mockups (settle sheet, hub, itinerary, chat cards) follow in later 3b/3c commits.
+
+## 297. Horizon look for the Flutter app, phase 3c: Account and shared states (v3.98.0)
+* **Context:** The Account mockups ask for a visual theme picker; the States mockups for a slim offline banner and a calmer empty / error look. The Ops Deck mockups only restate the tokens.
+* **Decision:**
+  - `HorizonThemePicker` (Light, Dark, System tiles) replaces the theme segmented row when `tokens.horizon`; same `themeModePrefProvider` values.
+  - `EmptyState` draws a tinted rounded tile, a 26pt title and no dot grid with Horizon; `OfflineBanner` becomes an inset butter pill.
+  - Ops Deck and the other settings pages take the Horizon look from the phase 1-2 theme; no layout change.
+* **Trade-offs Accepted:**
+  - Per-person balances, create-trip cover colours and the trip header avatars need new data or wider changes, so they are left for a follow-up.

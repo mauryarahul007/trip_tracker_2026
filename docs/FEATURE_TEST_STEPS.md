@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-24 | 3.98.0 | HORIZON-UI | [Horizon look, phase 3c: Account and shared states (Flutter)](#horizon-ui--horizon-look-phase-3c-account-and-shared-states-flutter) |
 | 2026-11-24 | 3.97.0 | HORIZON-UI | [Horizon look, phase 3b: trip Balances and Spend (Flutter)](#horizon-ui--horizon-look-phase-3b-trip-balances-and-spend-flutter) |
 | 2026-11-24 | 3.96.0 | HORIZON-UI | [Horizon look, phase 3a: Start and Home (Flutter)](#horizon-ui--horizon-look-phase-3a-start-and-home-flutter) |
 | 2026-11-24 | 3.95.0 | HORIZON-UI | [Horizon look, phase 2: shared parts and bottom bars (Flutter)](#horizon-ui--horizon-look-phase-2-shared-parts-and-bottom-bars-flutter) |
@@ -4494,6 +4495,33 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## HORIZON-UI — Horizon look, phase 3c: Account and shared states (Flutter)
+
+**Shipped:** v3.98.0. Flutter-only. Same flag `enableHorizonUi` (Core pack, default ON).
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Theme tiles, empty/error look, offline banner | `enableHorizonUi` | ON (Core) |
+
+### Prep
+Flutter app signed in. A way to go offline (airplane mode). A new account with no trips.
+
+### Steps
+1. Me / Settings: Appearance shows three tiles, Light, Dark and System. The current one has a blue outline.
+2. Tap Dark: the app turns dark at once and the Dark tile is outlined. Tap System: it follows the phone.
+3. No trips yet: the empty screen has a soft blue rounded tile with the icon, a bigger title, and no dot pattern behind it.
+4. Any other empty or error screen that has an icon (for example All balances with no trips): same tile and bigger title.
+5. Turn on airplane mode: a slim rounded butter-yellow banner reads that you are offline, inset from the screen edges.
+6. Ops Deck (superadmin): tiles, chips and buttons use the Horizon colours and shapes from phases 1 and 2.
+
+### Negative checks
+- `enableHorizonUi` OFF: the segmented Light / Dark / Auto row, the gradient circle with the dot grid, and the full-width offline strip return.
+- The theme choice saved with one look stays the same after switching the flag.
+
+### Pass
+- Settings, empty, error and offline screens match the Account and States mockups.
 
 ## HORIZON-UI — Horizon look, phase 3b: trip Balances and Spend (Flutter)
 

@@ -27,22 +27,34 @@ class OfflineBanner extends ConsumerWidget {
           : Container(
               key: const ValueKey('offline_banner'),
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: tokens.warningColor.withValues(alpha: 0.15),
-                border: Border(bottom: BorderSide(color: tokens.warningColor.withValues(alpha: 0.4), width: 1)),
-              ),
+              // Horizon: a slim rounded butter-tinted pill inset from the edges, not a full-width strip.
+              margin: tokens.horizon ? const EdgeInsets.fromLTRB(16, 6, 16, 6) : null,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: tokens.horizon ? 10 : 8),
+              decoration: tokens.horizon
+                  ? BoxDecoration(color: tokens.tones.butter.bg, borderRadius: BorderRadius.circular(12))
+                  : BoxDecoration(
+                      color: tokens.warningColor.withValues(alpha: 0.15),
+                      border: Border(bottom: BorderSide(color: tokens.warningColor.withValues(alpha: 0.4), width: 1)),
+                    ),
               child: SafeArea(
                 top: false,
                 bottom: false,
                 child: Row(
                   children: [
-                    Icon(AppIcons.offline, size: 16, color: tokens.warningColor),
+                    Icon(
+                      AppIcons.offline,
+                      size: 16,
+                      color: tokens.horizon ? tokens.tones.butter.accent : tokens.warningColor,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         customMessage ?? 'You are offline. Changes will sync when reconnected.',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: tokens.warningColor),
+                        style: TextStyle(
+                          fontSize: tokens.horizon ? 13 : 12,
+                          fontWeight: tokens.horizon ? FontWeight.w600 : FontWeight.w500,
+                          color: tokens.horizon ? tokens.tones.butter.accent : tokens.warningColor,
+                        ),
                       ),
                     ),
                   ],
