@@ -5365,6 +5365,138 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 trip} other{{count} trips}}'**
   String horizonTripCount(int count);
 
+  /// No description provided for @horizonGet.
+  ///
+  /// In en, this message translates to:
+  /// **'Get {amount}'**
+  String horizonGet(String amount);
+
+  /// No description provided for @horizonPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay {amount}'**
+  String horizonPay(String amount);
+
+  /// No description provided for @horizonLiveNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Live now'**
+  String get horizonLiveNow;
+
+  /// No description provided for @horizonSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get horizonSeeAll;
+
+  /// No description provided for @horizonShowLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get horizonShowLess;
+
+  /// No description provided for @horizonUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get horizonUpcoming;
+
+  /// No description provided for @horizonPastTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'Past trips'**
+  String get horizonPastTrips;
+
+  /// No description provided for @horizonDayOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Day {day}/{total}'**
+  String horizonDayOf(int day, int total);
+
+  /// No description provided for @horizonSpentOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{spent} of {budget}'**
+  String horizonSpentOf(String spent, String budget);
+
+  /// No description provided for @horizonSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} spent'**
+  String horizonSpent(String amount);
+
+  /// No description provided for @horizonSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {when}'**
+  String horizonSynced(String when);
+
+  /// No description provided for @horizonPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 person} other{{count} people}}'**
+  String horizonPeople(int count);
+
+  /// No description provided for @horizonInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Starts today} =1{Starts tomorrow} other{In {count} days}}'**
+  String horizonInDays(int count);
+
+  /// No description provided for @horizonSettledLower.
+  ///
+  /// In en, this message translates to:
+  /// **'settled'**
+  String get horizonSettledLower;
+
+  /// No description provided for @horizonSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled'**
+  String get horizonSettled;
+
+  /// No description provided for @horizonYourTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'Your trips'**
+  String get horizonYourTrips;
+
+  /// No description provided for @horizonEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where to first?'**
+  String get horizonEmptyTitle;
+
+  /// No description provided for @horizonEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a trip and invite your crew, or join one with a 6-letter code.'**
+  String get horizonEmptyBody;
+
+  /// No description provided for @horizonStartTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a trip'**
+  String get horizonStartTrip;
+
+  /// No description provided for @horizonJoinWithCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Join with code'**
+  String get horizonJoinWithCode;
+
+  /// No description provided for @horizonTryDemoPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'or try a '**
+  String get horizonTryDemoPrefix;
+
+  /// No description provided for @horizonTryDemoLink.
+  ///
+  /// In en, this message translates to:
+  /// **'demo trip'**
+  String get horizonTryDemoLink;
+
   /// No description provided for @horizonCoverColour.
   ///
   /// In en, this message translates to:

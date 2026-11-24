@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.101.0', '2026-11-25', [
+    'New Trips home: a greeting, your balance across trips with Get and Pay, four quick actions, the trip happening now with its spend and progress, then upcoming and past trips. The swipe-card and grid views are gone (Flutter).',
+  ]),
   ChangelogEntry('3.100.0', '2026-11-25', [
     'Meal reminders on Spend: during a trip, a small card asks "Added breakfast?" from 10 AM, lunch from 3 PM and dinner from 8 PM when nothing like it is logged yet. One tap adds it; "Not today" hides it (Flutter).',
   ]),
@@ -57,12 +60,5 @@ const List<ChangelogEntry> changelogEntries = [
     'Speed Dial Bento Sheet: Tapping the action button presents a 4-action capsule (Quick Add, Detailed Expense, Scan Receipt, Settle Up) with haptics (Flutter).',
     'Fintech Rolling Odometer Metrics: Rolling number animations on spend summaries, balance cards, and total spend stats (Flutter & Web).',
     'Empty State Spend Accelerators: Interactive empty cards with quick starter action chips on zero-expense trips (Flutter & Web).',
-  ]),
-  ChangelogEntry('3.90.0', '2026-11-03', [
-    'Desktop Side Inspector: clicking an expense on widescreen displays docks an inspector panel on the right without blocking modal backdrops (Web).',
-    'Receipt Tools: High-contrast filter for faded thermal receipts and 2x zoom toggle on expense review (Web).',
-    'Timeline Hotkey: Press "T" to toggle between Ledger List and Travel Timeline views in Desktop Command Center (Web).',
-    'Settlement Vouchers: mint voucher cards with exchange indicators, confirmed status badges, and role amounts (Flutter).',
-    'Calibrated Sticky Day Headers: single-day expansion stays pinned while multi-day expansion scrolls smoothly without stacking (Flutter).',
   ]),
 ];

@@ -5974,3 +5974,12 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Uses the phone clock, not the destination's time zone. There is no push notification; the card shows only when Spend is open.
 
+## 301. Horizon Trips home is the only view after sign-in (v3.101.0)
+* **Context:** The user asked for the "Trips home" mockup exactly, and for the card stack and list/grid views to go.
+* **Decision:**
+  - With `enableHorizonUi` ON, `TripsScreen` renders `_horizonHome()`: greeting app bar with round search and bell, balance hero with Get/Pay pills, four quick actions, then Live now (`HorizonLiveTripCard`), Upcoming and Past trips (`HorizonTripListRow`), search hits and the archived fold.
+  - `cards` and `grid` are forced off under Horizon, and the view/layout/sort controls and filter chips are not built. No trips shows `_horizonEmpty()` ("Where to first?").
+  - Reuses `enableHorizonUi` (same surface); no new flag. Flag OFF keeps the Calm list, stack and grid untouched.
+* **Trade-offs Accepted:**
+  - Sort by name is not offered on the Horizon home; trips keep date order within each section. Live-card spend uses the trip's base currency.
+

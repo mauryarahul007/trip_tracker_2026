@@ -51,10 +51,23 @@ class HorizonGreeting extends StatelessWidget {
 /// Horizon Trips home balance hero: "Across N trips", the net position in big mono digits, owed in green, owe in
 /// red. More than one currency shows a count instead of blending them. Tapping opens All balances.
 class HorizonBalanceHero extends StatelessWidget {
-  const HorizonBalanceHero({super.key, required this.nets, required this.tripCount, required this.onTap});
+  const HorizonBalanceHero({
+    super.key,
+    required this.nets,
+    required this.tripCount,
+    required this.onTap,
+    this.getText,
+    this.payText,
+  });
   final List<CrossTripNet> nets;
   final int tripCount;
   final VoidCallback onTap;
+
+  /// "₹4,476": what others owe you across trips, shown as "↓ Get ₹4,476". Null hides both pills.
+  final String? getText;
+
+  /// "₹0": what you owe across trips, shown as "↑ Pay ₹0".
+  final String? payText;
 
   @override
   Widget build(BuildContext context) {
@@ -151,6 +164,25 @@ class HorizonBalanceHero extends StatelessWidget {
                             ),
                         ],
                       ),
+                      if (getText != null && payText != null) ...[
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          children: [
+                            _HeroPill(
+                              key: const Key('horizon-hero-get'),
+                              icon: Icons.arrow_downward_rounded,
+                              label: l10n.horizonGet(getText!),
+                            ),
+                            _HeroPill(
+                              key: const Key('horizon-hero-pay'),
+                              icon: Icons.arrow_upward_rounded,
+                              label: l10n.horizonPay(payText!),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -158,6 +190,31 @@ class HorizonBalanceHero extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _HeroPill extends StatelessWidget {
+  const _HeroPill({super.key, required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Colors.white),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+          ),
+        ],
       ),
     );
   }

@@ -53,7 +53,16 @@ import '../../expenses/application/money_providers.dart' show allTripsProvider;
 import '../../trip_details/application/prefetch_trip.dart';
 import '../../trip_details/application/trip_nav.dart' show openSearchHit;
 import '../application/trips_providers.dart';
+import 'widgets/horizon_home.dart';
 import 'widgets/horizon_home_hero.dart';
+import 'widgets/trip_card.dart' show tripTone;
+import '../../../domain/logic/expense_list_logic.dart' show computeTotals;
+import '../../../domain/logic/trip_utilities.dart' show formatRelativeTime;
+import '../../expenses/application/trip_budget.dart' show tripBudgetProvider;
+import '../../notifications/presentation/notification_bell.dart';
+
+import 'package:intl/intl.dart' show DateFormat;
+
 import 'widgets/home_dock.dart';
 import '../application/sample_trip.dart';
 import 'widgets/first_run_tour.dart';
@@ -92,6 +101,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
 
   /// Board 03 filter chips: all, active, upcoming, past.
   String _filter = 'all';
+
+  /// Horizon home: every trip happening now, not only the first ("See all").
+  bool _liveExpanded = false;
 
   /// The trip on top of the card stack, whose photo is blurred into the background.
   Trip? _stackTop;
@@ -359,7 +371,35 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     );
     final t = context.tokens;
     if (t.horizon) {
-      return HorizonBalanceHero(nets: nets, tripCount: live.length, onTap: () => context.go('/balances'));
+      String? getText;
+      String? payText;
+      if (nets.length == 1) {
+        final positions = tripNetPositions(
+          userId: ref.read(authStateProvider).userId,
+          trips: live,
+          membersByTrip: _membersByTrip,
+          expensesByTrip: _expensesByTrip,
+          groupsByTrip: _groupsByTrip,
+        ).where((p) => p.currency == nets.first.currency);
+        var get = 0.0;
+        var pay = 0.0;
+        for (final p in positions) {
+          if (p.net > 0) {
+            get += p.net;
+          } else {
+            pay -= p.net;
+          }
+        }
+        getText = formatMoney(context, get, nets.first.currency);
+        payText = formatMoney(context, pay, nets.first.currency);
+      }
+      return HorizonBalanceHero(
+        nets: nets,
+        tripCount: live.length,
+        onTap: () => context.go('/balances'),
+        getText: getText,
+        payText: payText,
+      );
     }
     final String text;
     final Color color;
@@ -406,6 +446,325 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Horizon home: my net on a trip (null when I am not on it).
+  ({double? net, String currency}) _horizonNet(Trip t) {
+    final pos = myTripNet(
+      ref.read(authStateProvider).userId,
+      t,
+      _membersByTrip[t.id] ?? const <Member>[],
+      _expensesByTrip[t.id] ?? const <Expense>[],
+      _groupsByTrip[t.id] ?? const <Group>[],
+    );
+    return (net: pos.net, currency: pos.currency);
+  }
+
+  List<String> _horizonNames(Trip t) => [
+    for (final m in _membersByTrip[t.id] ?? const <Member>[])
+      if (!m.archived) m.name,
+  ];
+
+  BentoTone _horizonTone(Trip t) => tripTone(t.id, ref.watch(tripColorsProvider)[t.id]);
+
+  String _currencyOf(Trip t) => t.baseCurrency.isEmpty ? 'INR' : t.baseCurrency;
+
+  /// The trip happening now: day of trip, spent of budget, my position, crew and last sync.
+  Widget _horizonLive(Trip t, bool isOwner) {
+    final l10n = context.l10n;
+    final tokens = context.tokens;
+    final status = tripStatus(t.startDate, t.endDate, _now);
+    final cur = _currencyOf(t);
+    final spent = computeTotals(
+      _expensesByTrip[t.id] ?? const <Expense>[],
+      visibleMemberCount: _horizonNames(t).length,
+      categories: ref.watch(tripCategoriesProvider(t.id)),
+    ).totalSpent;
+    final budget = ref.watch(tripBudgetProvider(t.id));
+    final net = _horizonNet(t);
+    final n = net.net;
+    final synced = ref.watch(lastSyncedProvider);
+    return HorizonLiveTripCard(
+      tripId: t.id,
+      name: t.name,
+      dayLabel: status.totalDays > 0 ? l10n.horizonDayOf(status.dayNumber, status.totalDays) : '',
+      spentLabel: budget > 0
+          ? l10n.horizonSpentOf(formatMoney(context, spent, cur), formatMoney(context, budget, cur))
+          : l10n.horizonSpent(formatMoney(context, spent, cur)),
+      progress: budget > 0
+          ? spent / budget
+          : status.totalDays <= 0
+          ? 0
+          : status.dayNumber / status.totalDays,
+      tone: _horizonTone(t),
+      onTap: () => _open(t),
+      onLongPress: () => _tripMenu(t, isOwner),
+      moneyText: n == null || n.abs() < 0.01
+          ? null
+          : n > 0
+          ? '+${formatMoney(context, n, net.currency)}'
+          : '−${formatMoney(context, -n, net.currency)}',
+      moneyColor: n != null && n > 0 ? tokens.colorSuccess : tokens.colorDanger,
+      names: _horizonNames(t),
+      footer: synced == null ? null : l10n.horizonSynced(formatRelativeTime(synced.millisecondsSinceEpoch)),
+    );
+  }
+
+  /// An upcoming or past trip: icon tile, one fact line, total, and a Settled / money pill for past trips.
+  Widget _horizonRow(Trip t, bool isOwner) {
+    final l10n = context.l10n;
+    final tokens = context.tokens;
+    final status = tripStatus(t.startDate, t.endDate, _now);
+    final people = _horizonNames(t).length;
+    final start = DateTime.tryParse(t.startDate);
+    final net = _horizonNet(t);
+    final n = net.net;
+    final settled = n != null && n.abs() < 0.01;
+    final past = status.phase != TripPhase.upcoming;
+    final cur = _currencyOf(t);
+    final spent = computeTotals(
+      _expensesByTrip[t.id] ?? const <Expense>[],
+      visibleMemberCount: people,
+      categories: ref.watch(tripCategoriesProvider(t.id)),
+    ).totalSpent;
+    final facts = [
+      if (!past) l10n.horizonInDays(status.daysUntilStart),
+      if (past && start != null) DateFormat.MMM(Localizations.localeOf(context).toString()).format(start),
+      if (people > 0) l10n.horizonPeople(people),
+      if (past && settled) l10n.horizonSettledLower,
+    ];
+    String? pill;
+    Color? pillColor;
+    if (past && n != null) {
+      if (settled) {
+        pill = l10n.horizonSettled;
+        pillColor = tokens.colorSuccess;
+      } else if (n > 0) {
+        pill = '+${formatMoney(context, n, net.currency)}';
+        pillColor = tokens.colorSuccess;
+      } else {
+        pill = '−${formatMoney(context, -n, net.currency)}';
+        pillColor = tokens.colorDanger;
+      }
+    }
+    return HorizonTripListRow(
+      tripId: t.id,
+      name: t.name,
+      subtitle: facts.join(' · '),
+      tone: _horizonTone(t),
+      onTap: () => _open(t),
+      onLongPress: () => _tripMenu(t, isOwner),
+      total: spent > 0 ? formatMoney(context, spent, cur) : null,
+      pill: pill,
+      pillColor: pillColor,
+    );
+  }
+
+  /// Horizon home ("Trips home" mockup): balance hero, quick actions, Live now, Upcoming, Past trips.
+  Widget _horizonHome({
+    required List<Trip> active,
+    required List<Trip> archived,
+    required List<SearchHit> hits,
+    required bool Function(Trip) owner,
+    required Widget? overview,
+  }) {
+    final l10n = context.l10n;
+    final tokens = context.tokens;
+    final live = [
+      for (final t in active)
+        if (_sectionOf(t) == TripSection.now) t,
+    ];
+    final upcoming = [
+      for (final t in active)
+        if (_sectionOf(t) == TripSection.upcoming) t,
+    ];
+    final past = [
+      for (final t in active)
+        if (_sectionOf(t) == TripSection.past) t,
+    ];
+    final heroId = live.firstOrNull?.id;
+    final shownLive = _liveExpanded ? live : live.take(1).toList();
+    return CustomScrollView(
+      key: const Key('horizon-home'),
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
+          sliver: SliverList.list(
+            children: [
+              ?overview,
+              HorizonQuickActions(
+                actions: [
+                  HorizonQuickAction('new', BentoTone.sky, AppIcons.add, l10n.horizonActionNewTrip, _create),
+                  HorizonQuickAction(
+                    'join',
+                    BentoTone.peach,
+                    Icons.confirmation_number_outlined,
+                    l10n.horizonActionJoin,
+                    () => showJoinCodeSheet(context),
+                  ),
+                  HorizonQuickAction(
+                    'quick-add',
+                    BentoTone.mint,
+                    Icons.bolt_rounded,
+                    l10n.horizonActionQuickAdd,
+                    () => heroId != null
+                        ? context.push('/trip/$heroId/expenses/new')
+                        : active.isNotEmpty
+                        ? context.push('/trip/${active.first.id}/expenses/new')
+                        : _create(),
+                  ),
+                  HorizonQuickAction(
+                    'settle',
+                    BentoTone.lilac,
+                    Icons.balance_rounded,
+                    l10n.horizonActionSettle,
+                    () => context.go('/balances'),
+                  ),
+                ],
+              ),
+              if (live.isNotEmpty) ...[
+                HorizonSectionTitle(
+                  l10n.horizonLiveNow,
+                  action: live.length > 1 ? (_liveExpanded ? l10n.horizonShowLess : l10n.horizonSeeAll) : null,
+                  onAction: () => setState(() => _liveExpanded = !_liveExpanded),
+                ),
+                for (final t in shownLive) _horizonLive(t, owner(t)),
+              ],
+              if (upcoming.isNotEmpty) ...[
+                HorizonSectionTitle(l10n.horizonUpcoming),
+                for (final t in upcoming) _horizonRow(t, owner(t)),
+              ],
+              if (past.isNotEmpty) ...[
+                HorizonSectionTitle(l10n.horizonPastTrips),
+                for (final t in past) _horizonRow(t, owner(t)),
+              ],
+              if (hits.isNotEmpty) ...[
+                SectionLabel(l10n.searchHitsTitle(hits.length)),
+                Column(
+                  key: const Key('search-hits'),
+                  children: [
+                    for (final h in hits)
+                      ListTile(
+                        key: Key('hit-${h.kind.name}-${h.tripId}-${h.title}'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          h.kind == HitKind.expense ? Icons.receipt_long_outlined : Icons.sticky_note_2_outlined,
+                        ),
+                        title: Text(h.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        subtitle: Text(
+                          [h.tripName, if (h.detail.isNotEmpty) h.detail].join(' · '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: h.amount == null
+                            ? null
+                            : Text(
+                                formatMoney(context, h.amount!, h.currency ?? 'INR'),
+                                style: const TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                        onTap: () => _openHit(h),
+                      ),
+                  ],
+                ),
+              ],
+              if (archived.isNotEmpty)
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  title: Text(
+                    l10n.tripsArchivedSection(archived.length),
+                    style: TextStyle(color: tokens.textSecondary),
+                  ),
+                  children: [for (final t in archived) _horizonRow(t, owner(t))],
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Horizon first run: "Where to first?", Start a trip, Join with code, or try a demo trip.
+  Widget _horizonEmpty(bool canDemo) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    return ListView(
+      key: const Key('horizon-empty'),
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 96),
+      children: [
+        Center(
+          child: Container(
+            width: 190,
+            height: 190,
+            decoration: BoxDecoration(shape: BoxShape.circle, color: t.tones[BentoTone.sky].bg),
+            alignment: Alignment.center,
+            child: Transform.rotate(
+              angle: -0.12,
+              child: Container(
+                width: 112,
+                height: 112,
+                decoration: BoxDecoration(color: t.primaryAccent, borderRadius: BorderRadius.circular(28)),
+                child: const Icon(Icons.near_me_outlined, size: 52, color: Colors.white),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 28),
+        Text(
+          l10n.horizonEmptyTitle,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: AppTypography.fontTitle,
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+            color: t.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          l10n.horizonEmptyBody,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 15, height: 1.5, color: t.textSecondary),
+        ),
+        const SizedBox(height: 24),
+        AppButton(
+          key: const Key('horizon-empty-start'),
+          label: l10n.horizonStartTrip,
+          icon: AppIcons.add,
+          onPressed: _create,
+        ),
+        const SizedBox(height: 12),
+        AppButton(
+          key: const Key('horizon-empty-join'),
+          label: l10n.horizonJoinWithCode,
+          icon: Icons.confirmation_number_outlined,
+          variant: AppButtonVariant.secondary,
+          onPressed: () => showJoinCodeSheet(context),
+        ),
+        if (canDemo) ...[
+          const SizedBox(height: 12),
+          Center(
+            child: TextButton(
+              key: const Key('try-sample-trip'),
+              onPressed: _trySample,
+              child: Text.rich(
+                TextSpan(
+                  text: l10n.horizonTryDemoPrefix,
+                  style: TextStyle(fontSize: 13, color: t.textSecondary),
+                  children: [
+                    TextSpan(
+                      text: l10n.horizonTryDemoLink,
+                      style: TextStyle(decoration: TextDecoration.underline, color: t.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -479,7 +838,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     final stackOn =
         ref.watch(flagProvider(('enableTripCardStack', null))).value ??
         (defaultFeatureFlags['enableTripCardStack'] ?? true);
-    final cards = stackOn && ref.watch(tripsViewProvider) == TripsView.cards;
+    final cards = !tokens.horizon && stackOn && ref.watch(tripsViewProvider) == TripsView.cards;
     _moneyOn = _flagOn('enableTripListMoney');
     final sectionsOn = _flagOn('enableTripListSections');
     final overviewOn = _flagOn('enableTripsOverview');
@@ -491,8 +850,8 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     final pinnedOn = _flagOn('enableTripPins');
     final pinnedIds = pinnedOn ? ref.watch(pinnedTripsProvider) : const <String>{};
     final query = ref.watch(tripSearchProvider);
-    final grid = gridOn && ref.watch(tripsLayoutProvider) == TripsLayout.grid;
-    if (_moneyOn || overviewOn || searchOn) {
+    final grid = !tokens.horizon && gridOn && ref.watch(tripsLayoutProvider) == TripsLayout.grid;
+    if (_moneyOn || overviewOn || searchOn || tokens.horizon) {
       _membersByTrip = {};
       for (final m in ref.watch(allMembersProvider).value ?? const <Member>[]) {
         final id = m.tripId;
@@ -521,6 +880,40 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
           safeTop: cards ? false : null,
           appBar: cards
               ? null
+              : tokens.horizon
+              ? AppBar(
+                  key: const Key('horizon-app-bar'),
+                  toolbarHeight: 72,
+                  titleSpacing: 16,
+                  title: auth.isAuthenticated && (lists.value?.total ?? 1) > 0
+                      ? HorizonGreeting(name: auth.user?.displayName ?? auth.userEmail ?? '', now: _now)
+                      : Text(
+                          l10n.horizonYourTrips,
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontTitle,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: tokens.textPrimary,
+                          ),
+                        ),
+                  actions: [
+                    if ((lists.value?.total ?? 1) > 0)
+                      _CircleAction(
+                        child: IconButton(
+                          key: const Key('trips-search-toggle'),
+                          tooltip: l10n.tripsSearchHint,
+                          icon: Icon(_searchOpen ? Icons.search_off_rounded : AppIcons.search, size: 22),
+                          onPressed: () => setState(() {
+                            _searchOpen = !_searchOpen;
+                            if (!_searchOpen) ref.read(tripSearchProvider.notifier).set('');
+                          }),
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    const _CircleAction(child: NotificationBell()),
+                    const SizedBox(width: 12),
+                  ],
+                )
               : AppBar(
                   title: Text(l10n.tripsTitle),
                   actions: [
@@ -676,7 +1069,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                           onChanged: ref.read(tripSearchProvider.notifier).set,
                         ),
                       ),
-                    if (cards)
+                    if (tokens.horizon)
+                      const SizedBox.shrink()
+                    else if (cards)
                       _FilterPills(
                         selected: _filter,
                         counts: _phaseCounts(lists.value?.active ?? const []),
@@ -816,6 +1211,9 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                   ],
                                 );
                               }
+                              if (data.total == 0 && tokens.horizon) {
+                                return _horizonEmpty(_flagOn('enableFirstRunTour') && auth.isAuthenticated);
+                              }
                               if (data.total == 0) {
                                 return ListView(
                                   physics: const AlwaysScrollableScrollPhysics(),
@@ -865,6 +1263,22 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                 );
                               }
                               bool owner(Trip t) => t.ownerId == auth.userId;
+                              if (tokens.horizon) {
+                                return _horizonHome(
+                                  active: [
+                                    for (final t in active)
+                                      if (pinnedIds.contains(t.id)) t,
+                                    for (final t in active)
+                                      if (!pinnedIds.contains(t.id)) t,
+                                  ],
+                                  archived: archived,
+                                  hits: hits,
+                                  owner: owner,
+                                  overview: overviewOn
+                                      ? _overviewLine(data.active.where((t) => !_hidden.contains(t.id)).toList())
+                                      : null,
+                                );
+                              }
                               if (cards) {
                                 // Every trip, any state: current ones first, archived ones at the back.
                                 return TripCardStack(
@@ -1438,4 +1852,23 @@ class _SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_SectionHeaderDelegate old) =>
       old.label != label || old.count != count || old.folded != folded || old.background != background;
+}
+
+/// Horizon app bar action: an icon button inside a thin round outline (search, bell).
+class _CircleAction extends StatelessWidget {
+  const _CircleAction({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: t.bgSurface,
+        border: Border.all(color: t.borderColor),
+      ),
+      child: child,
+    );
+  }
 }
