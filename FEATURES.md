@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **209** |
+| **Total Tracked** | **210** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **206** |
+| **✅ Shipped** | **207** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -71,6 +71,7 @@ Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blu
 
 | ID | Title | Category | Requested By | Shipped By | Note |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| **FEAT-211** | Meal-time expense nudges on Spend (Flutter) | `ui-ux` | `human` | `agent` | Flag enableMealNudges (Trip). Commit ff346f2 (v3.100.0). |
 | **FEAT-210** | Horizon look for the Flutter app (colours, shapes, bars, all screens) | `ui-ux` | `agent` | `agent` | All phases merged to main via PRs #19-#24 (v3.94.0-v3.99.1). |
 | **FEAT-001** | Feature Additions Tracker | `admin` | `claude-cli` | `claude-cli` | Parallel system to the Bug Ledger. Migration 0063, featureApi.ts, feature.mjs CLI, FeatureRequestModal.tsx (Settings > Suggest a Feature), AdminFeaturesPage.tsx (Ops Deck Features tab) with flag-linking. Commit 1bf95d6. |
 | **FEAT-003** | Refresh button on Features tab | `admin` | `claude-cli` | `claude-cli` | reloadFleetData now returns a Promise so the button can await + spinner instead of requiring a full page reload. Commit 228c582. |
