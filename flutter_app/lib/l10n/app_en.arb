@@ -1509,5 +1509,20 @@
   "horizonWhoPaid": "Who paid?",
   "horizonAddingTo": "to {trip}",
   "@horizonAddingTo": {"placeholders": {"trip": {"type": "String"}}},
-  "horizonQuickAddWhich": "Add to which trip?"
+  "horizonQuickAddWhich": "Add to which trip?",
+  "horizonPeopleMembers": "Members · {count}",
+  "@horizonPeopleMembers": {"placeholders": {"count": {"type": "int"}}},
+  "horizonPeopleGroups": "Groups · {count}",
+  "@horizonPeopleGroups": {"placeholders": {"count": {"type": "int"}}},
+  "horizonPeoplePaid": "paid {amount}",
+  "@horizonPeoplePaid": {"placeholders": {"amount": {"type": "String"}}},
+  "horizonPeopleSettled": "settled",
+  "horizonPeopleAdd": "Add a person",
+  "horizonPeopleInvite": "Invite with link",
+  "horizonCatCount": "{count, plural, =0{No expenses} =1{1 expense} other{{count} expenses}}",
+  "@horizonCatCount": {"placeholders": {"count": {"type": "int"}}},
+  "horizonCatYourOwn": "Your own",
+  "horizonChecklistTitle": "Packing and bookings",
+  "horizonBinBanner": "Deleted items are gone for good after 24 hours.",
+  "horizonRestore": "Restore"
 }

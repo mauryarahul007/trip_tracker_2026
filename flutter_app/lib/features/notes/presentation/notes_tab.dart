@@ -437,61 +437,114 @@ class _NotesTabState extends ConsumerState<NotesTab> {
       key: const Key('checklist'),
       padding: EdgeInsets.fromLTRB(16, 4, 16, _flag('enableContextFab') ? 88 : 32), // clear of the floating Add
       children: [
-        BentoTile(
-          tone: BentoTone.mint,
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 64,
-                height: 64,
-                child: Stack(
-                  alignment: Alignment.center,
+        if (t.horizon)
+          // Horizon ("Plans, checklist" mockup): title and count over one progress bar.
+          Container(
+            key: const Key('checklist-progress-horizon'),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            decoration: BoxDecoration(
+              color: t.bgSurface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: t.borderColor),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
                   children: [
-                    SizedBox.expand(
-                      child: CircularProgressIndicator(
-                        key: const Key('checklist-ring'),
-                        value: items.isEmpty ? 0 : done / items.length,
-                        strokeWidth: 6,
-                        strokeCap: StrokeCap.round,
-                        backgroundColor: t.textPrimary.withValues(alpha: 0.12),
-                        color: t.textPrimary,
+                    Expanded(
+                      child: Text(
+                        items.isNotEmpty && done == items.length ? l10n.notesAllDone : l10n.horizonChecklistTitle,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontBody,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: t.textPrimary,
+                        ),
                       ),
                     ),
-                    // Percent inside the ring (short, always fits); the exact count is spelled out beside it.
-                    if (items.isNotEmpty && done == items.length)
-                      Icon(Icons.check_rounded, color: t.textPrimary, size: 28)
-                    else
+                    Text(
+                      '$done/${items.length}',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontMono,
+                        fontFeatures: AppTypography.tabularFigures,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: t.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(99),
+                  child: LinearProgressIndicator(
+                    key: const Key('checklist-ring'),
+                    value: items.isEmpty ? 0 : done / items.length,
+                    minHeight: 8,
+                    backgroundColor: t.tones[BentoTone.mint].bg,
+                    color: t.colorSuccess,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          BentoTile(
+            tone: BentoTone.mint,
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox.expand(
+                        child: CircularProgressIndicator(
+                          key: const Key('checklist-ring'),
+                          value: items.isEmpty ? 0 : done / items.length,
+                          strokeWidth: 6,
+                          strokeCap: StrokeCap.round,
+                          backgroundColor: t.textPrimary.withValues(alpha: 0.12),
+                          color: t.textPrimary,
+                        ),
+                      ),
+                      // Percent inside the ring (short, always fits); the exact count is spelled out beside it.
+                      if (items.isNotEmpty && done == items.length)
+                        Icon(Icons.check_rounded, color: t.textPrimary, size: 28)
+                      else
+                        Text(
+                          '${items.isEmpty ? 0 : (done * 100 / items.length).floor()}%',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        '${items.isEmpty ? 0 : (done * 100 / items.length).floor()}%',
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                        l10n.notesProgress(done, items.length),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                       ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        items.isNotEmpty && done == items.length
+                            ? l10n.notesAllDone
+                            : l10n.notesLeft(items.length - done),
+                        style: TextStyle(fontSize: 13, color: t.textPrimary.withValues(alpha: 0.7)),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.notesProgress(done, items.length),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      items.isNotEmpty && done == items.length
-                          ? l10n.notesAllDone
-                          : l10n.notesLeft(items.length - done),
-                      style: TextStyle(fontSize: 13, color: t.textPrimary.withValues(alpha: 0.7)),
-                    ),
-                  ],
-                ),
-              ),
-              if (dest != null && dest.isNotEmpty) WeatherBadge(destination: dest),
-            ],
+                if (dest != null && dest.isNotEmpty) WeatherBadge(destination: dest),
+              ],
+            ),
           ),
-        ),
         const SizedBox(height: 12),
         // Add sits right under the progress, not at the end of a long list. With the floating Add item button on
         // screen there is no second one here.

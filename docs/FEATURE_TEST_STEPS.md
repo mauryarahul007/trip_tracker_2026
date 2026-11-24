@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-25 | 3.104.0 | HORIZON-PAGES | [Horizon trip pages: People, Activity, Insights, Categories, Checklist, Recycle bin (Flutter)](#horizon-pages--horizon-trip-pages-people-activity-insights-categories-checklist-recycle-bin-flutter) |
 | 2026-11-25 | 3.103.0 | HORIZON-ADD | [Horizon Add expense, itinerary timeline and Quick add picker (Flutter)](#horizon-add--horizon-add-expense-itinerary-timeline-and-quick-add-picker-flutter) |
 | 2026-11-25 | 3.102.0 | HORIZON-TRIP | [Horizon trip screens: header, Balances, Spend and Hub (Flutter)](#horizon-trip--horizon-trip-screens-header-balances-spend-and-hub-flutter) |
 | 2026-11-25 | 3.101.0 | HORIZON-HOME | [Horizon Trips home is the only view after sign-in (Flutter)](#horizon-home--horizon-trips-home-is-the-only-view-after-sign-in-flutter) |
@@ -4501,6 +4502,37 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## HORIZON-PAGES — Horizon trip pages: People, Activity, Insights, Categories, Checklist, Recycle bin (Flutter)
+
+**Shipped:** v3.104.0. Flutter-only. Matches the People, Plans checklist, Activity, Insights, Receipts, Categories and Recycle bin mockups.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| All layouts below | `enableHorizonUi` | ON (Core) |
+
+### Prep
+A trip with 3+ members, several expenses in 2+ categories paid by different people, a custom category, a deleted expense, and checklist items.
+
+### Steps
+1. Hub › People: "Members · N | Groups · N" switch. Each person shows role · paid ₹X and a green +/red − net (or "settled"); you show as "You".
+2. "Add a person" and "Invite with link" rows sit under the list and open their flows. Tap Groups: groups list and Add group.
+3. Hub › Activity: each row reads what happened first (e.g. "Villa Siolim — ₹21,000"), then "Expense added · 2h ago".
+4. Hub › Insights: a donut of categories with the total in the middle and shares on the right, then a tip ("Stay is ₹X a day, N% of the trip so far").
+5. With the budget flag on and no budget: "Set Budget" text is readable.
+6. Trip settings › Categories: + in the top bar adds one; each category shows "N expenses"; custom ones are under YOUR OWN with ⋮ (Rename, Delete).
+7. Plans › Checklist: "Packing and bookings  done/total" with a green bar.
+8. Recycle bin: each deleted expense has a small Restore pill and ⋮ (Delete forever).
+9. Receipts (with photos): title reads "Receipts · N".
+
+### Negative checks
+- `enableHorizonUi` OFF: Add person/Invite buttons, older Activity rows, Insights hero and By category bars, the Add category button, the checklist ring and the full-width Restore button return unchanged.
+
+### Pass
+- Each page matches its mockup and every action still works.
+
+---
 
 ## HORIZON-ADD — Horizon Add expense, itinerary timeline and Quick add picker (Flutter)
 

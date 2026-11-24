@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.104.0',
+    date: '2026-11-25',
+    changes: [
+      'People shows what each person paid and their net, with a Members and Groups switch and clear Add a person and Invite rows (Flutter).',
+      'Insights opens with a category donut and a daily tip; Activity rows lead with what happened; Categories show expense counts with your own ones listed apart; the checklist has a simple progress bar; the recycle bin has a Restore button on each row (Flutter).',
+      'Fixed: the Set Budget button on Insights showed unreadable text (Flutter).',
+    ],
+  },
+  {
     version: '3.103.0',
     date: '2026-11-25',
     changes: [

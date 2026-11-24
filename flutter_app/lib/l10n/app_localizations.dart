@@ -5742,6 +5742,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add to which trip?'**
   String get horizonQuickAddWhich;
+
+  /// No description provided for @horizonPeopleMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Members · {count}'**
+  String horizonPeopleMembers(int count);
+
+  /// No description provided for @horizonPeopleGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups · {count}'**
+  String horizonPeopleGroups(int count);
+
+  /// No description provided for @horizonPeoplePaid.
+  ///
+  /// In en, this message translates to:
+  /// **'paid {amount}'**
+  String horizonPeoplePaid(String amount);
+
+  /// No description provided for @horizonPeopleSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'settled'**
+  String get horizonPeopleSettled;
+
+  /// No description provided for @horizonPeopleAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a person'**
+  String get horizonPeopleAdd;
+
+  /// No description provided for @horizonPeopleInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite with link'**
+  String get horizonPeopleInvite;
+
+  /// No description provided for @horizonCatCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No expenses} =1{1 expense} other{{count} expenses}}'**
+  String horizonCatCount(int count);
+
+  /// No description provided for @horizonCatYourOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own'**
+  String get horizonCatYourOwn;
+
+  /// No description provided for @horizonChecklistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Packing and bookings'**
+  String get horizonChecklistTitle;
+
+  /// No description provided for @horizonBinBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted items are gone for good after 24 hours.'**
+  String get horizonBinBanner;
+
+  /// No description provided for @horizonRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get horizonRestore;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

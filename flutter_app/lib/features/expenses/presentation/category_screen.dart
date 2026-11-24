@@ -7,6 +7,9 @@ import '../../../shared/theme/category_icons.dart';
 import '../../../domain/logic/flag_defaults.g.dart' show defaultFeatureFlags;
 import '../../../domain/models/category.dart';
 import '../../../l10n/l10n_ext.dart';
+import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
+import '../../../shared/widgets/section_label.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -27,6 +30,7 @@ class CategoryScreen extends ConsumerWidget {
         ref.watch(flagProvider(('enableCategoryVectorIcons', tripId))).value ??
         defaultFeatureFlags['enableCategoryVectorIcons'] ??
         true;
+    if (context.tokens.horizon && !reorder) return _horizon(context, ref, cats, isAdmin, vectorIcons);
     return AppScaffold(
       appBar: AppBar(title: Text(l10n.catTitle)),
       body: Column(
@@ -57,6 +61,103 @@ class CategoryScreen extends ConsumerWidget {
                     children: [for (final c in cats) _tile(context, ref, c, isAdmin, vectorIcons: vectorIcons)],
                   ),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// Horizon ("Categories" mockup): + in the bar, built-in categories in one card with their expense counts, then
+  /// "Your own" custom categories with a ⋮ menu (rename, delete).
+  Widget _horizon(BuildContext context, WidgetRef ref, List<Category> cats, bool isAdmin, bool vectorIcons) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final expenses = ref.watch(tripExpensesProvider(tripId)).value ?? const [];
+    final counts = <String, int>{};
+    for (final e in expenses) {
+      if (!e.isSettlement) counts[e.category] = (counts[e.category] ?? 0) + 1;
+    }
+    Widget card(List<Category> list) => Material(
+      color: t.bgSurface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: t.borderColor),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (final (i, c) in list.indexed) ...[
+            if (i > 0) Divider(height: 1, indent: 66, color: t.borderColor),
+            ListTile(
+              key: Key('cat-${c.id}'),
+              visualDensity: VisualDensity.compact,
+              contentPadding: const EdgeInsets.fromLTRB(14, 2, 4, 2),
+              leading: Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Color(categoryColorArgb(c.id)).withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: categoryGlyph(c, 20, Color(categoryColorArgb(c.id)), vector: vectorIcons),
+              ),
+              title: Text(
+                c.name,
+                style: const TextStyle(fontFamily: AppTypography.fontBody, fontWeight: FontWeight.w700),
+              ),
+              subtitle: Text(
+                l10n.horizonCatCount(counts[c.id] ?? 0),
+                style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 12, color: t.textSecondary),
+              ),
+              trailing: isAdmin && c.isCustom
+                  ? PopupMenuButton<String>(
+                      key: Key('cat-menu-${c.id}'),
+                      icon: const Icon(Icons.more_vert_rounded),
+                      onSelected: (v) => v == 'rename' ? _rename(context, ref, c) : _delete(context, ref, c),
+                      itemBuilder: (_) => [
+                        PopupMenuItem(key: Key('cat-rename-${c.id}'), value: 'rename', child: const Text('Rename')),
+                        PopupMenuItem(key: Key('cat-delete-${c.id}'), value: 'delete', child: const Text('Delete')),
+                      ],
+                    )
+                  : null,
+            ),
+          ],
+        ],
+      ),
+    );
+    final builtIn = [
+      for (final c in cats)
+        if (!c.isCustom) c,
+    ];
+    final custom = [
+      for (final c in cats)
+        if (c.isCustom) c,
+    ];
+    return AppScaffold(
+      appBar: AppBar(
+        title: Text(l10n.catTitle),
+        actions: [
+          if (isAdmin)
+            IconButton(
+              key: const Key('cat-add'),
+              tooltip: l10n.catAdd,
+              icon: const Icon(Icons.add_rounded),
+              onPressed: () => _add(context, ref),
+            ),
+        ],
+      ),
+      body: ListView(
+        key: const Key('cat-list'),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        children: [
+          if (builtIn.isNotEmpty) card(builtIn),
+          if (custom.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 20, bottom: 8),
+              child: Text(l10n.horizonCatYourOwn.toUpperCase(), style: sectionLabelStyle(context)),
+            ),
+            card(custom),
+          ],
         ],
       ),
     );

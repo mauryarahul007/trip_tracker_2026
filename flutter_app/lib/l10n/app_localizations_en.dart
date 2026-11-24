@@ -3312,4 +3312,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get horizonQuickAddWhich => 'Add to which trip?';
+
+  @override
+  String horizonPeopleMembers(int count) {
+    return 'Members · $count';
+  }
+
+  @override
+  String horizonPeopleGroups(int count) {
+    return 'Groups · $count';
+  }
+
+  @override
+  String horizonPeoplePaid(String amount) {
+    return 'paid $amount';
+  }
+
+  @override
+  String get horizonPeopleSettled => 'settled';
+
+  @override
+  String get horizonPeopleAdd => 'Add a person';
+
+  @override
+  String get horizonPeopleInvite => 'Invite with link';
+
+  @override
+  String horizonCatCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses',
+      one: '1 expense',
+      zero: 'No expenses',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get horizonCatYourOwn => 'Your own';
+
+  @override
+  String get horizonChecklistTitle => 'Packing and bookings';
+
+  @override
+  String get horizonBinBanner => 'Deleted items are gone for good after 24 hours.';
+
+  @override
+  String get horizonRestore => 'Restore';
 }

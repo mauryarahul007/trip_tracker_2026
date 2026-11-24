@@ -3403,5 +3403,21 @@
     "shippedAt": "2026-11-25T00:00:00.000Z",
     "shippedBy": "agent",
     "shippedNote": "Commit 499b176 (v3.103.0)."
+  },
+  {
+    "id": "FEAT-215",
+    "title": "Horizon trip pages: People, Activity, Insights, Categories, Checklist, Recycle bin (Flutter)",
+    "description": "Under Core flag enableHorizonUi: People (Members/Groups segment, paid and net per person, Add a person and Invite rows), Activity rows lead with the event, Insights category donut and tip, Categories card with counts and a Your own section, checklist progress bar, recycle bin Restore pill, Receipts count in the title. HORIZON-PAGES.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "human",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-25T00:00:00.000Z",
+    "updatedAt": "2026-11-25T00:00:00.000Z",
+    "shippedAt": "2026-11-25T00:00:00.000Z",
+    "shippedBy": "agent",
+    "shippedNote": "Commit c17ae3b (v3.104.0)."
   }
 ]

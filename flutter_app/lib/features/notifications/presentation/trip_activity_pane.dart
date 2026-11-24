@@ -18,6 +18,7 @@ import '../../../domain/models/member.dart';
 import '../../../domain/models/notification_item.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../chat/application/chat_providers.dart';
@@ -409,7 +410,15 @@ class _ActivityDaySticky extends SliverPersistentHeaderDelegate {
           padding: const EdgeInsets.fromLTRB(20, 6, 16, 2),
           child: Text(
             label.toUpperCase(),
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.6, color: foreground),
+            style: context.tokens.horizon
+                ? TextStyle(
+                    fontFamily: AppTypography.fontMono,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.0,
+                    color: foreground,
+                  )
+                : TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.6, color: foreground),
           ),
         ),
       ),
@@ -468,7 +477,7 @@ class _ActivityRow extends StatelessWidget {
           child: Material(
             color: selected ? t.primaryAccent.withValues(alpha: 0.08) : t.bgSurface,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(t.horizon ? 16 : 20),
               side: BorderSide(
                 color: selected ? t.primaryAccent : (item.read ? t.borderColor : meta.color.withValues(alpha: 0.6)),
                 width: selected ? 1.5 : 1.0,
@@ -510,23 +519,48 @@ class _ActivityRow extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            headline,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: item.read ? FontWeight.w600 : FontWeight.w800,
-                              color: t.textPrimary,
+                          if (t.horizon) ...[
+                            // Horizon ("Activity" mockup): what happened first, then the kind and when.
+                            Text(
+                              renderNotificationBody(item),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontBody,
+                                fontSize: 14,
+                                fontWeight: item.read ? FontWeight.w600 : FontWeight.w800,
+                                color: t.textPrimary,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            renderNotificationBody(item),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 13, color: t.textSecondary),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(formatRelativeTime(item.createdAt), style: TextStyle(fontSize: 12, color: t.textMuted)),
+                            const SizedBox(height: 2),
+                            Text(
+                              '$headline · ${formatRelativeTime(item.createdAt)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 12, color: t.textMuted),
+                            ),
+                          ] else ...[
+                            Text(
+                              headline,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: item.read ? FontWeight.w600 : FontWeight.w800,
+                                color: t.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              renderNotificationBody(item),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 13, color: t.textSecondary),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              formatRelativeTime(item.createdAt),
+                              style: TextStyle(fontSize: 12, color: t.textMuted),
+                            ),
+                          ],
                           if (confirmable != null)
                             Padding(
                               padding: const EdgeInsets.only(top: 8),

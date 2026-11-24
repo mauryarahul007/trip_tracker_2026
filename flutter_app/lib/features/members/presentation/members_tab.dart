@@ -44,6 +44,8 @@ class MembersTab extends ConsumerStatefulWidget {
 class _MembersTabState extends ConsumerState<MembersTab> {
   String get tripId => widget.tripId;
   var _query = '';
+  // Horizon People: Members or Groups segment.
+  var _horizonGroups = false;
 
   @override
   Widget build(BuildContext context) {
@@ -90,6 +92,19 @@ class _MembersTabState extends ConsumerState<MembersTab> {
       settlement?.balances ?? const <MemberBalance>[],
       ref.watch(tripGroupsProvider(tripId)).value ?? const <Group>[],
     );
+
+    if (context.tokens.horizon && active.isNotEmpty) {
+      return _horizonBody(
+        context,
+        active: shown,
+        archived: archived,
+        groups: groups,
+        balances: balances,
+        canManage: canManage,
+        currency: trip?.baseCurrency ?? 'INR',
+        searchable: tidy && active.length > 8,
+      );
+    }
 
     final list = ListView(
       key: const Key('tab-members'),
@@ -205,6 +220,221 @@ class _MembersTabState extends ConsumerState<MembersTab> {
   }
 
   static TextStyle _sectionStyle(BuildContext context) => sectionLabelStyle(context);
+
+  /// Horizon People ("People" mockup): Members · N / Groups · N segment, one card of people with what each paid
+  /// and their net on the right, then "Add a person" and "Invite with link" rows.
+  Widget _horizonBody(
+    BuildContext context, {
+    required List<Member> active,
+    required List<Member> archived,
+    required List<Group> groups,
+    required Map<String, double> balances,
+    required bool canManage,
+    required String currency,
+    required bool searchable,
+  }) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final me = ref.watch(myMemberIdProvider(tripId));
+    final trip = ref.watch(tripProvider(tripId)).value;
+    final expenses = ref.watch(tripExpensesProvider(tripId)).value ?? const [];
+    final paid = <String, double>{};
+    for (final e in expenses) {
+      if (e.isSettlement || e.currency != currency) continue;
+      final shares = e.paidByShares;
+      if (shares != null && shares.isNotEmpty) {
+        shares.forEach((id, v) => paid[id] = (paid[id] ?? 0) + v);
+      } else {
+        paid[e.paidBy] = (paid[e.paidBy] ?? 0) + e.amount;
+      }
+    }
+    void invite() => AppSheet.show<void>(
+      context: context,
+      title: l10n.inviteSheetTitle,
+      builder: (_) => ShareTripSheet(tripId: tripId),
+    );
+    Widget card(List<Widget> rows) => Material(
+      color: t.bgSurface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: t.borderColor),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (final (i, r) in rows.indexed) ...[if (i > 0) Divider(height: 1, indent: 64, color: t.borderColor), r],
+        ],
+      ),
+    );
+    Widget person(Member m) {
+      final role = getMemberRole(trip, m.id);
+      final bal = balances[m.id] ?? 0;
+      final p = paid[m.id] ?? 0;
+      final sub = [
+        _roleLabel(l10n, role),
+        if (p >= 0.005) l10n.horizonPeoplePaid(formatMoney(context, p, currency)),
+      ].join(' · ');
+      final settled = bal.abs() < 0.005;
+      return InkWell(
+        key: Key('member-${m.id}'),
+        onTap: canManage ? () => _actions(context, ref, m, role) : null,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          child: Row(
+            children: [
+              AppAvatar(name: m.name, avatarUrl: m.avatarUrl, size: 38),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      m.id == me ? l10n.horizonYou : m.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontBody,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: m.archived ? t.textMuted : t.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      sub,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 12, color: t.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                settled
+                    ? l10n.horizonPeopleSettled
+                    : '${bal > 0 ? '+' : '−'}${formatMoney(context, bal.abs(), currency)}',
+                key: Key('member-balance-${m.id}'),
+                style: TextStyle(
+                  fontFamily: AppTypography.fontMono,
+                  fontFeatures: AppTypography.tabularFigures,
+                  fontSize: settled ? 12 : 14,
+                  fontWeight: FontWeight.w700,
+                  color: settled ? t.textMuted : (bal > 0 ? t.colorSuccess : t.colorDanger),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    Widget action(String key, IconData icon, String label, VoidCallback onTap) => Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Material(
+        color: t.primaryAccentLight,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          key: Key(key),
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: SizedBox(
+            height: 50,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 20, color: t.primaryAccent),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontBody,
+                    fontWeight: FontWeight.w700,
+                    color: t.primaryAccent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final segment = SegmentedButton<bool>(
+      key: const Key('people-segment'),
+      showSelectedIcon: false,
+      style: SegmentedButton.styleFrom(
+        textStyle: const TextStyle(fontFamily: AppTypography.fontBody, fontWeight: FontWeight.w700),
+      ),
+      segments: [
+        ButtonSegment(value: false, label: Text(l10n.horizonPeopleMembers(active.length))),
+        ButtonSegment(
+          value: true,
+          label: Text(l10n.horizonPeopleGroups(groups.length), key: const Key('people-groups')),
+        ),
+      ],
+      selected: {_horizonGroups},
+      onSelectionChanged: (v) => setState(() => _horizonGroups = v.first),
+    );
+
+    return ListView(
+      key: const Key('tab-members'),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
+      children: [
+        segment,
+        const SizedBox(height: 14),
+        if (!_horizonGroups) ...[
+          if (searchable)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: TextField(
+                key: const Key('member-search'),
+                onChanged: (v) => setState(() => _query = v),
+                decoration: InputDecoration(
+                  hintText: l10n.memSearchHint,
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  isDense: true,
+                ),
+              ),
+            ),
+          if (active.isNotEmpty) card([for (final m in active) person(m)]),
+          action('member-add', Icons.person_add_alt_1_outlined, l10n.horizonPeopleAdd, () => _add(context, ref)),
+          action('member-invite', Icons.link_rounded, l10n.horizonPeopleInvite, invite),
+          if (archived.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 20, bottom: 8),
+              child: Text(l10n.memArchived, style: _sectionStyle(context)),
+            ),
+            card([for (final m in archived) person(m)]),
+          ],
+        ] else ...[
+          if (groups.isNotEmpty)
+            card([
+              for (final g in groups)
+                ListTile(
+                  key: Key('group-${g.id}'),
+                  leading: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: t.tones[BentoTone.lilac].bg,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.groups_2_outlined, size: 20, color: t.tones[BentoTone.lilac].accent),
+                  ),
+                  title: Text(
+                    g.name,
+                    style: const TextStyle(fontFamily: AppTypography.fontBody, fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: Text(l10n.memGroupMembers(g.memberIds.length)),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => _openGroup(context, ref, g, active),
+                ),
+            ]),
+          action('member-group-add', Icons.group_add_outlined, l10n.memAddGroup, () => _addGroup(context, ref, active)),
+        ],
+      ],
+    );
+  }
 
   Widget _row(
     BuildContext context,

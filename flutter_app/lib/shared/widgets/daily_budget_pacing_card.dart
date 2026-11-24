@@ -7,6 +7,7 @@ import '../../domain/models/expense.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_icons.dart';
 import '../theme/app_tokens.dart';
+import '../theme/app_typography.dart';
 
 class DailyBudgetPacingCard extends StatelessWidget {
   const DailyBudgetPacingCard({
@@ -122,7 +123,11 @@ class DailyBudgetPacingCard extends StatelessWidget {
                   label: const Text('Set Budget'),
                   style: TextButton.styleFrom(
                     minimumSize: const Size(48, 48), // full touch target
-                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    textStyle: const TextStyle(
+                      fontFamily: AppTypography.fontBody,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
