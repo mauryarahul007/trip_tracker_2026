@@ -175,7 +175,7 @@ class _NotesTabState extends ConsumerState<NotesTab> {
               backgroundColor: context.tokens.bgSurface,
               selectedBackgroundColor: context.tokens.primaryAccent.withValues(alpha: 0.18),
               selectedForegroundColor: context.tokens.textPrimary,
-              textStyle: const TextStyle(fontWeight: FontWeight.w700),
+              textStyle: const TextStyle(fontFamily: AppTypography.fontBody, fontWeight: FontWeight.w700),
             ),
             selected: {_pane},
             onSelectionChanged: (s) => setState(() => _pane = s.first),

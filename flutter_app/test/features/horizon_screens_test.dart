@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trip_tracker/app/router.dart';
+import 'package:trip_tracker/data/local/app_database.dart';
 import 'package:trip_tracker/domain/logic/cross_trip_balances.dart';
 import 'package:trip_tracker/domain/logic/expense_list_logic.dart';
 import 'package:trip_tracker/domain/models/expense.dart';
@@ -165,6 +166,80 @@ void main() {
       await settle(tester, rounds: 14);
       // Horizon Spend keeps every day open, so there is nothing to expand.
       expect(tester.widget<Text>(find.byKey(const Key('row-impact')).first).data, 'you lent ₹60.00');
+    });
+
+    testApp('Add expense opens amount-first: pad, chips, Save each', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableHorizonUi'});
+      final s = await seedTrip(tester);
+      await go(tester, '/trip/${s.tripId}/expenses/new');
+      expect(find.byKey(const Key('horizon-amount-first')), findsOneWidget);
+      expect(find.text('New expense'), findsOneWidget);
+      for (final k in ['2', '4', '0', '0']) {
+        await tester.tap(find.byKey(Key('pad-$k')));
+      }
+      await tester.tap(find.byKey(const Key('pad-back')));
+      await tester.tap(find.byKey(const Key('pad-0')));
+      await settle(tester, rounds: 2);
+      expect(tester.widget<Text>(find.byKey(const Key('horizon-amount'))).data, '₹2,400');
+      expect(find.text('Equal · 3'), findsOneWidget);
+      expect(find.text('You paid'), findsOneWidget);
+      expect(find.text('Save · ₹800.00 each'), findsOneWidget);
+
+      // Payer chip opens the members sheet.
+      await tester.tap(find.byKey(const Key('horizon-chip-payer')));
+      await settle(tester);
+      await tester.tap(find.byKey(Key('horizon-payer-${s.ben}')));
+      await settle(tester);
+      expect(find.text('Ben paid'), findsOneWidget);
+
+      await tester.enterText(find.byKey(const Key('title-field')), 'Beach shack lunch');
+      await tester.tap(find.byKey(const Key('save')));
+      await settle(tester, rounds: 14);
+      final c = containerOf(tester);
+      final db = c.read(appDatabaseProvider);
+      final rows = await real(tester, () => db.select(db.expensesTable).get());
+      expect(rows.single.title, 'Beach shack lunch');
+      expect(rows.single.amount, 2400);
+      expect(rows.single.paidByMemberId, s.ben);
+    });
+
+    testApp('Add expense names the trip it goes to', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableHorizonUi'});
+      final s = await seedTrip(tester);
+      await go(tester, '/trip/${s.tripId}/expenses/new');
+      expect(tester.widget<Text>(find.byKey(const Key('form-trip-name'))).data, 'to Goa Weekend');
+    });
+
+    testApp('Quick add with no live trip asks which trip', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableHorizonUi'});
+      final s = await seedTrip(tester); // Oct 2026 trip: past, not live
+      containerOf(tester).read(routerProvider).go('/');
+      await settle(tester, rounds: 10);
+      await tester.tap(find.byKey(const Key('horizon-action-quick-add')));
+      await settle(tester);
+      expect(find.text('Add to which trip?'), findsOneWidget);
+      await tester.tap(find.byKey(Key('quick-add-trip-${s.tripId}')));
+      await settle(tester, rounds: 10);
+      expect(find.byKey(const Key('horizon-amount-first')), findsOneWidget);
+      expect(find.text('to Goa Weekend'), findsOneWidget);
+    });
+
+    testApp('More details opens the full form; flag off keeps the old form', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableHorizonUi'});
+      final s = await seedTrip(tester);
+      await go(tester, '/trip/${s.tripId}/expenses/new');
+      await tester.tap(find.byKey(const Key('horizon-more-details')));
+      await settle(tester);
+      expect(find.byKey(const Key('horizon-amount-first')), findsNothing);
+      expect(find.byKey(const Key('amount-field')), findsOneWidget);
+    });
+
+    testApp('flag off: the add form has no amount-first pad', (tester) async {
+      await pumpApp(tester, user: asha);
+      final s = await seedTrip(tester);
+      await go(tester, '/trip/${s.tripId}/expenses/new');
+      expect(find.byKey(const Key('horizon-amount-first')), findsNothing);
+      expect(find.byKey(const Key('amount-field')), findsOneWidget);
     });
 
     testApp('flag off keeps the Calm boarding pass', (tester) async {

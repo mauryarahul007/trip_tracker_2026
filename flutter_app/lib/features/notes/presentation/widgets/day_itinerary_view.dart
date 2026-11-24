@@ -17,6 +17,7 @@ import '../../../../shared/widgets/empty_state.dart';
 import '../../../expenses/application/expenses_providers.dart';
 import '../../../trip_details/application/trip_nav.dart';
 import '../../application/itinerary_providers.dart';
+import 'horizon_itinerary.dart';
 import 'itinerary_activity_sheet.dart';
 
 const _categoryEmojis = {
@@ -81,6 +82,16 @@ class _DayItineraryViewState extends ConsumerState<DayItineraryView> {
             );
           },
         ),
+      );
+    }
+
+    if (tokens.horizon) {
+      return HorizonItineraryDays(
+        tripId: widget.tripId,
+        days: days,
+        currency: currency,
+        tripStartDate: trip?.startDate,
+        tripEndDate: trip?.endDate,
       );
     }
 

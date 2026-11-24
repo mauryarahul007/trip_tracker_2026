@@ -3261,4 +3261,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mealNudgeNotToday => 'Not today';
+
+  @override
+  String get horizonWhatFor => 'What for?';
+
+  @override
+  String get horizonNewExpense => 'New expense';
+
+  @override
+  String get horizonRepeatLast => 'Repeat last';
+
+  @override
+  String horizonSaveEach(String amount) {
+    return 'Save · $amount each';
+  }
+
+  @override
+  String get horizonYouPaid => 'You paid';
+
+  @override
+  String horizonNamePaid(String name) {
+    return '$name paid';
+  }
+
+  @override
+  String horizonEqualCount(int count) {
+    return 'Equal · $count';
+  }
+
+  @override
+  String horizonLeftToAssign(String amount) {
+    return '$amount left to assign';
+  }
+
+  @override
+  String horizonOverAssigned(String amount) {
+    return '$amount too much assigned';
+  }
+
+  @override
+  String get horizonPickCategory => 'Category';
+
+  @override
+  String get horizonWhoPaid => 'Who paid?';
+
+  @override
+  String horizonAddingTo(String trip) {
+    return 'to $trip';
+  }
+
+  @override
+  String get horizonQuickAddWhich => 'Add to which trip?';
 }

@@ -71,6 +71,7 @@ Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blu
 
 | ID | Title | Category | Requested By | Shipped By | Note |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| **FEAT-214** | Horizon Add expense, itinerary timeline and Quick add trip picker (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit PENDING (v3.103.0). |
 | **FEAT-213** | Horizon trip screens: header, Balances, Spend and Hub (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit 82accd3 (v3.102.0). |
 | **FEAT-212** | Horizon Trips home is the only view after sign-in (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit c1b991c (v3.101.0). |
 | **FEAT-211** | Meal-time expense nudges on Spend (Flutter) | `ui-ux` | `human` | `agent` | Flag enableMealNudges (Trip). Commit ff346f2 (v3.100.0). |

@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.103.0',
+    date: '2026-11-25',
+    changes: [
+      'Add expense opens on the amount: a big number pad, "What for?", and quick chips for category, who paid, the split and a receipt. Save shows each person\'s share. "More details" opens the full form (Flutter).',
+      'Itinerary redesign: pick a day from a date strip, see stops on a timeline with the next one highlighted, and tap a stop for directions, add bill, done, edit or delete. The day\'s bills fold into one Spent row (Flutter).',
+      'Quick add on Trips home asks which trip when none is happening today, and the add screen shows which trip the expense goes to (Flutter).',
+    ],
+  },
+  {
     version: '3.102.0',
     date: '2026-11-25',
     changes: [

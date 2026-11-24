@@ -8,6 +8,11 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.103.0', '2026-11-25', [
+    'Add expense opens on the amount: a big number pad, "What for?", and quick chips for category, who paid, the split and a receipt. Save shows each person\'s share. "More details" opens the full form (Flutter).',
+    'Itinerary redesign: pick a day from a date strip, see stops on a timeline with the next one highlighted, and tap a stop for directions, add bill, done, edit or delete. The day\'s bills fold into one Spent row (Flutter).',
+    'Quick add on Trips home asks which trip when none is happening today, and the add screen shows which trip the expense goes to (Flutter).',
+  ]),
   ChangelogEntry('3.102.0', '2026-11-25', [
     'Trip screens now follow the new look: a cleaner trip header with "Day N of M", a budget pace card and a short settle plan on Balances, day-grouped Spend with category chips and search, and a tinted Hub grid with a route card and Insights (Flutter).',
   ]),
@@ -53,10 +58,5 @@ const List<ChangelogEntry> changelogEntries = [
     'Daily Budget Pacing Dial & Velocity Forecaster: Set planned trip budgets on-device with daily burn tracking, remaining allowances, and forecast variance (Web & Flutter).',
     'Enhanced Line-Item Bill Splitter: Live member share breakdowns with pro-rata tax/tip allocation, per-person item badges, and 1-tap "All" / "Clear" shortcuts (Web & Flutter).',
     'Flutter UX & Ledger Enhancements: S1-S5 upgrades across money formatting, empty states, visual polish, and search filters.',
-  ]),
-  ChangelogEntry('3.91.1', '2026-11-04', [
-    'Settlement FAB direct workflow: Tapping "Record settlement" in the Floating Action Button menu directly launches the payment composer instead of navigating to shell branches (Flutter).',
-    'Smart debt picker: Automatically opens the settlement sheet if one balance exists, or displays open balances if multiple debts exist (Flutter).',
-    'Modular settlement sheet: Extracted and consolidated settlement sheet logic, eliminating redundant code (Flutter).',
   ]),
 ];

@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-25 | 3.103.0 | HORIZON-ADD | [Horizon Add expense, itinerary timeline and Quick add picker (Flutter)](#horizon-add--horizon-add-expense-itinerary-timeline-and-quick-add-picker-flutter) |
 | 2026-11-25 | 3.102.0 | HORIZON-TRIP | [Horizon trip screens: header, Balances, Spend and Hub (Flutter)](#horizon-trip--horizon-trip-screens-header-balances-spend-and-hub-flutter) |
 | 2026-11-25 | 3.101.0 | HORIZON-HOME | [Horizon Trips home is the only view after sign-in (Flutter)](#horizon-home--horizon-trips-home-is-the-only-view-after-sign-in-flutter) |
 | 2026-11-25 | 3.100.0 | MEAL-NUDGE | [Meal-time expense nudges on Spend (Flutter)](#meal-nudge--meal-time-expense-nudges-on-spend-flutter) |
@@ -4500,6 +4501,42 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## HORIZON-ADD — Horizon Add expense, itinerary timeline and Quick add picker (Flutter)
+
+**Shipped:** v3.103.0. Flutter-only. Matches "Add expense, amount", "Add expense, split" and "Itinerary day" mockups.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Amount-first add, split chip, itinerary timeline, Quick add picker | `enableHorizonUi` | ON (Core) |
+| Itinerary pane exists | `enableItineraryPlanner` | as configured |
+
+### Prep
+A live trip with 3+ members and a past or upcoming trip. Some itinerary stops on today, with and without times, one with a place and a cost.
+
+### Steps
+1. In a trip, tap +: "New expense" with "to <trip>" under it, "Repeat last" on the right, a big amount, "What for?", chips, a number pad and Save.
+2. Type 2400 on the pad: the amount reads ₹2,400; backspace removes a digit. Save reads "Save · ₹800 each" for 3 people.
+3. Tap the category chip: pick another category. Tap "You paid": pick another member; the chip reads "<Name> paid".
+4. Tap the Equal · N chip or "More details": the full form opens with the amount and title kept.
+5. In the full form, choose Exact and enter shares that don't add up: a warning chip reads "₹X left to assign".
+6. Save from the amount screen: the expense appears in Spend with the right payer.
+7. Repeat last fills the last expense in one tap.
+8. Plans › Itinerary: the date strip opens on today; tap other days. Each shows "Day N · Weekday D Mon", stops count and done count.
+9. Stops without a time sit under ANYTIME; timed stops show their time on the left with a line. The next upcoming stop today is outlined blue with NEXT UP.
+10. Tap a stop: Directions (when it has a place), Add bill for this (opens the form titled with the stop), Mark done (stop fades with a tick), Edit, Delete (asks first).
+11. A day with bills shows "Spent ₹X · N bills"; tap to list them. An empty day shows "Nothing planned for …" with Add a stop.
+12. Trips home with no live trip: Quick add asks "Add to which trip?"; pick one and the form says "to <trip>".
+
+### Negative checks
+- Editing an expense opens the full form, not the pad.
+- `enableHorizonUi` OFF: the yellow amount form, the All Days itinerary list and Quick add to the first trip return unchanged.
+
+### Pass
+- The add flow and itinerary match the mockups and every action still works.
+
+---
 
 ## HORIZON-TRIP — Horizon trip screens: header, Balances, Spend and Hub (Flutter)
 
