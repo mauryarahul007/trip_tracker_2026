@@ -71,7 +71,7 @@ Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blu
 
 | ID | Title | Category | Requested By | Shipped By | Note |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **FEAT-213** | Horizon trip screens: header, Balances, Spend and Hub (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit PENDING (v3.102.0). |
+| **FEAT-213** | Horizon trip screens: header, Balances, Spend and Hub (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit 82accd3 (v3.102.0). |
 | **FEAT-212** | Horizon Trips home is the only view after sign-in (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit c1b991c (v3.101.0). |
 | **FEAT-211** | Meal-time expense nudges on Spend (Flutter) | `ui-ux` | `human` | `agent` | Flag enableMealNudges (Trip). Commit ff346f2 (v3.100.0). |
 | **FEAT-210** | Horizon look for the Flutter app (colours, shapes, bars, all screens) | `ui-ux` | `agent` | `agent` | All phases merged to main via PRs #19-#24 (v3.94.0-v3.99.1). |
