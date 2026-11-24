@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.100.0', '2026-11-25', [
+    'Meal reminders on Spend: during a trip, a small card asks "Added breakfast?" from 10 AM, lunch from 3 PM and dinner from 8 PM when nothing like it is logged yet. One tap adds it; "Not today" hides it (Flutter).',
+  ]),
   ChangelogEntry('3.99.1', '2026-11-24', [
     'Fixed: dragging the trip sheet slowly by its handle could stop halfway instead of opening fully (Flutter).',
     'Fixed: small layout and accessibility issues: the empty-day itinerary row and Notes tab labels no longer overflow, the Spend chips and Set Budget button have full-size touch targets, and the bottom bar keeps readable labels while scrolling (Flutter).',
@@ -61,10 +64,5 @@ const List<ChangelogEntry> changelogEntries = [
     'Timeline Hotkey: Press "T" to toggle between Ledger List and Travel Timeline views in Desktop Command Center (Web).',
     'Settlement Vouchers: mint voucher cards with exchange indicators, confirmed status badges, and role amounts (Flutter).',
     'Calibrated Sticky Day Headers: single-day expansion stays pinned while multi-day expansion scrolls smoothly without stacking (Flutter).',
-  ]),
-  ChangelogEntry('3.89.2', '2026-11-03', [
-    'Spend tab scrolling fix: unpinned day headers and flattened sliver groupings so settlements and all expenses remain fully visible when "Expand all days" is selected (Flutter).',
-    'Resolved settlement header text overflow on narrow device viewports (Flutter).',
-    'Increased bottom clearance spacer to 200px to guarantee comfortable clearance over the floating action button and bottom navigation bar (Flutter).',
   ]),
 ];

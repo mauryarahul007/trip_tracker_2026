@@ -131,6 +131,7 @@ export type FeatureFlagKey =
   | 'enablePartialSettleCoach'
   | 'enableLiveLocationStaleAge'
   | 'enableSearchDeepLink'
+  | 'enableMealNudges'
   | 'enableSettingsDataHub'
   | 'enableTripHeaderActions'
   | 'enableSummaryUpgrades'

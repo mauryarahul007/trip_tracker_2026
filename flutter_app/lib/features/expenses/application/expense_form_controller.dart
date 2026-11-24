@@ -770,6 +770,18 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
     _set(state.copyWith(title: c.title, category: c.categoryId, clearAutoCategory: true, bump: true));
   }
 
+  /// Meal nudge on Spend (flag `enableMealNudges`): title the new expense with the meal and pick its category.
+  void applyMeal(String title) => applyChip(
+    PredictiveQuickChip(
+      id: 'meal',
+      label: title,
+      title: title,
+      icon: '',
+      categoryId: inferCategoryId(title, _categories),
+      categoryNameHint: '',
+    ),
+  );
+
   Expense? get lastExpense => latestNonSettlementExpense(_expenses, tripId: tripId);
 
   /// "Same as last time": copies title, amount, category, payer and split; date becomes today.

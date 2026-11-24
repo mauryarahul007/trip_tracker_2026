@@ -107,6 +107,7 @@ const _compassFlags = [
   'enableHorizonUi', // Horizon redesign; the older tests assert the Calm layouts, Horizon tests opt in
   'enableCompactSummary', // folds Trip numbers and settle extras; the older Summary tests expect them open
   'enableItineraryPlanner', // opens Notes on the Itinerary pane; the older Notes tests start on the checklist
+  'enableMealNudges', // time-of-day card on Spend; its own tests opt in with a fixed clock
 ];
 
 /// Boots the real app with every platform/backend seam faked.

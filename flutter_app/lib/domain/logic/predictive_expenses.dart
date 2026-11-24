@@ -344,3 +344,40 @@ List<PredictiveQuickChip> getPredictiveQuickChips(
 
   return result.take(6).toList();
 }
+
+/// A meal the Spend tab can nudge about (flag `enableMealNudges`).
+enum MealSlot { breakfast, lunch, dinner }
+
+const _mealWords = {
+  MealSlot.breakfast: ['breakfast', 'brunch', 'nashta'],
+  MealSlot.lunch: ['lunch', 'brunch', 'thali'],
+  MealSlot.dinner: ['dinner', 'supper'],
+};
+
+/// Hours (local, inclusive start, exclusive end) in which a plain food expense counts as that meal.
+const _mealHours = {MealSlot.breakfast: (5, 12), MealSlot.lunch: (12, 17), MealSlot.dinner: (17, 24)};
+
+/// Which meal to ask about at [now]: breakfast from 10 AM, lunch from 3 PM, dinner from 8 PM; none before 10 AM.
+MealSlot? mealSlotAt(DateTime now) {
+  if (now.hour >= 20) return MealSlot.dinner;
+  if (now.hour >= 15) return MealSlot.lunch;
+  if (now.hour >= 10) return MealSlot.breakfast;
+  return null;
+}
+
+/// True when [expenses] already hold [slot] for the day of [now]: a title naming the meal, or a food expense
+/// ([isFood] decides by category id) created in the meal's hours. Settlements and deleted rows never count.
+bool mealLogged(MealSlot slot, List<Expense> expenses, DateTime now, bool Function(String categoryId) isFood) {
+  final day =
+      '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-'
+      '${now.day.toString().padLeft(2, '0')}';
+  final (from, to) = _mealHours[slot]!;
+  for (final e in expenses) {
+    if (e.deletedAt != null || e.isSettlement || e.date != day) continue;
+    final title = e.title.toLowerCase();
+    if (_mealWords[slot]!.any(title.contains)) return true;
+    final made = DateTime.fromMillisecondsSinceEpoch(e.createdAt);
+    if (isFood(e.category) && made.hour >= from && made.hour < to) return true;
+  }
+  return false;
+}

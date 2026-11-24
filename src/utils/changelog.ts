@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.100.0',
+    date: '2026-11-25',
+    changes: [
+      'Meal reminders on Spend: during a trip, a small card asks "Added breakfast?" from 10 AM, lunch from 3 PM and dinner from 8 PM when nothing like it is logged yet. One tap adds it; "Not today" hides it (Flutter).',
+    ],
+  },
+  {
     version: '3.99.1',
     date: '2026-11-24',
     changes: [

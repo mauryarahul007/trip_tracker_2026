@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/auth_state.dart';
 import '../../../core/platform/haptics.dart';
 import '../../../core/clock.dart';
+import 'widgets/meal_nudge_card.dart';
 import '../../../core/format/money.dart';
 import '../../../domain/logic/expense_form_logic.dart';
 import '../../../domain/logic/flag_defaults.g.dart' show defaultFeatureFlags;
@@ -655,6 +656,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
           if (ref.watch(compassFlagProvider((compassSpendFlag, id))) || context.tokens.calm)
             CompassSpendSummary(tripId: id),
           if (ref.watch(compassFlagProvider((compassSpendFlag, id)))) CompassActiveFilters(tripId: id),
+          MealNudgeCard(tripId: id),
           if ((sync != null && !sync.idle) || chips.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
