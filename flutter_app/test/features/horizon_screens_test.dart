@@ -163,10 +163,7 @@ void main() {
       await addExpense(tester, s, amount: 90);
       containerOf(tester).read(routerProvider).go('/trip/${s.tripId}/expenses');
       await settle(tester, rounds: 14);
-      await tester.tap(find.byKey(const Key('tab-menu')));
-      await settle(tester);
-      await tester.tap(find.text('Expand all days'));
-      await settle(tester);
+      // Horizon Spend keeps every day open, so there is nothing to expand.
       expect(tester.widget<Text>(find.byKey(const Key('row-impact')).first).data, 'you lent ₹60.00');
     });
 

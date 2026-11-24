@@ -42,6 +42,15 @@ bool isWideHome(BuildContext context) => MediaQuery.sizeOf(context).width >= kSi
 /// Compass/legacy label variants stay retired so Superadmin nav experiments do not confuse travelers.
 List<AppNavItem> _homeItems(BuildContext context) {
   final l10n = context.l10n;
+  if (context.tokens.horizon) {
+    // Horizon mockups: Trips (house), Balances (scale), Alerts, Me.
+    return [
+      AppNavItem(icon: Icons.home_outlined, label: l10n.navTrips),
+      AppNavItem(icon: Icons.balance_rounded, label: l10n.navBalances),
+      AppNavItem(icon: AppIcons.bell, label: l10n.navAlerts),
+      AppNavItem(icon: Icons.person_outline_rounded, label: l10n.navMe),
+    ];
+  }
   return [
     AppNavItem(icon: Icons.flight_rounded, label: l10n.navTrips),
     AppNavItem(icon: Icons.swap_horiz_rounded, label: l10n.navBalances),

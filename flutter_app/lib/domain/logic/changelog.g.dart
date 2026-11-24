@@ -8,6 +8,9 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.102.0', '2026-11-25', [
+    'Trip screens now follow the new look: a cleaner trip header with "Day N of M", a budget pace card and a short settle plan on Balances, day-grouped Spend with category chips and search, and a tinted Hub grid with a route card and Insights (Flutter).',
+  ]),
   ChangelogEntry('3.101.0', '2026-11-25', [
     'New Trips home: a greeting, your balance across trips with Get and Pay, four quick actions, the trip happening now with its spend and progress, then upcoming and past trips. The swipe-card and grid views are gone (Flutter).',
   ]),
@@ -55,10 +58,5 @@ const List<ChangelogEntry> changelogEntries = [
     'Settlement FAB direct workflow: Tapping "Record settlement" in the Floating Action Button menu directly launches the payment composer instead of navigating to shell branches (Flutter).',
     'Smart debt picker: Automatically opens the settlement sheet if one balance exists, or displays open balances if multiple debts exist (Flutter).',
     'Modular settlement sheet: Extracted and consolidated settlement sheet logic, eliminating redundant code (Flutter).',
-  ]),
-  ChangelogEntry('3.91.0', '2026-11-03', [
-    'Speed Dial Bento Sheet: Tapping the action button presents a 4-action capsule (Quick Add, Detailed Expense, Scan Receipt, Settle Up) with haptics (Flutter).',
-    'Fintech Rolling Odometer Metrics: Rolling number animations on spend summaries, balance cards, and total spend stats (Flutter & Web).',
-    'Empty State Spend Accelerators: Interactive empty cards with quick starter action chips on zero-expense trips (Flutter & Web).',
   ]),
 ];

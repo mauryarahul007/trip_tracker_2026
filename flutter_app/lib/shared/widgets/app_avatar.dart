@@ -3,6 +3,8 @@ import 'cached_photo.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_tokens.dart';
+import '../theme/app_typography.dart';
 
 const List<Color> _avatarPalette = [
   AppColors.calmTeal, // skyline blue
@@ -17,6 +19,17 @@ const List<Color> _avatarPalette = [
   Color(0xFF6B7FA0), // dusty blue
 ];
 
+/// Horizon avatar fills (flag `enableHorizonUi`): the saturated blue, rust, teal, violet and amber of the mockups.
+const List<Color> _horizonAvatarPalette = [
+  Color(0xFF2950E8), // Horizon blue
+  Color(0xFFC2410C), // rust
+  Color(0xFF0F766E), // teal
+  Color(0xFF7C3AED), // violet
+  Color(0xFFB45309), // amber
+  Color(0xFF0E7490), // sea
+  Color(0xFFBE185D), // berry
+];
+
 class AppAvatar extends StatelessWidget {
   final String name;
   final String? avatarUrl;
@@ -24,14 +37,17 @@ class AppAvatar extends StatelessWidget {
 
   const AppAvatar({super.key, required this.name, this.avatarUrl, this.size = 36.0});
 
-  static Color colorForName(String name) {
+  static Color colorForName(String name) => _avatarPalette[colorForNameIndex(name) % _avatarPalette.length];
+
+  /// Stable non-negative hash of the name, shared by the Calm and Horizon palettes.
+  static int colorForNameIndex(String name) {
     final normalized = name.trim().toLowerCase();
     int hash = 0;
     for (int i = 0; i < normalized.length; i++) {
       hash = (hash << 5) - hash + normalized.codeUnitAt(i);
       hash &= 0xFFFFFFFF; // 32-bit int
     }
-    return _avatarPalette[hash.abs() % _avatarPalette.length];
+    return hash.abs();
   }
 
   static String initialsForName(String nameOrEmail) {
@@ -56,11 +72,11 @@ class AppAvatar extends StatelessWidget {
           width: size,
           height: size,
           fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => _buildInitials(),
+          errorBuilder: (_, _, _) => _buildInitials(context),
         ),
       );
     } else {
-      avatar = _buildInitials();
+      avatar = _buildInitials(context);
     }
     // Screen readers say the person's name once, not the initials or the photo.
     return Semantics(label: name, image: true, excludeSemantics: true, child: avatar);
@@ -77,9 +93,14 @@ class AppAvatar extends StatelessWidget {
     return ratio(bg, Colors.white) >= ratio(bg, dark) ? Colors.white : dark;
   }
 
-  Widget _buildInitials() {
-    final bgColor = colorForName(name);
-    final initials = initialsForName(name);
+  Widget _buildInitials(BuildContext context) {
+    // Horizon (enableHorizonUi): one letter, as in the mockups.
+    final horizon = context.tokens.horizon;
+    final full = initialsForName(name);
+    final initials = horizon && full.isNotEmpty ? full.substring(0, 1) : full;
+    final bgColor = horizon
+        ? _horizonAvatarPalette[colorForNameIndex(name) % _horizonAvatarPalette.length]
+        : colorForName(name);
 
     return Container(
       width: size,
@@ -90,7 +111,8 @@ class AppAvatar extends StatelessWidget {
         initials,
         style: TextStyle(
           color: textColorFor(bgColor),
-          fontSize: size * 0.4,
+          fontFamily: AppTypography.fontBody,
+          fontSize: horizon ? size * 0.42 : size * 0.4,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.5,
         ),

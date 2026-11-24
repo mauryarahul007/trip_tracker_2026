@@ -93,6 +93,14 @@ IconData calmTabIcon(TripNavTab tab) => switch (tab) {
   _ => tripTabIcon(tab),
 };
 
+/// Horizon dock icons (flag `enableHorizonUi`): scale for Balances, list for Spend, as in the mockups.
+IconData horizonTabIcon(TripNavTab tab) => switch (tab) {
+  TripNavTab.expenses => Icons.format_list_bulleted_rounded,
+  TripNavTab.ledger => Icons.balance_rounded,
+  TripNavTab.hub => Icons.grid_view_outlined,
+  _ => calmTabIcon(tab),
+};
+
 /// Filled twin of [calmTabIcon], shown while the tab is selected (flag `enableNavPolish`).
 IconData calmTabIconFilled(TripNavTab tab) => switch (tab) {
   TripNavTab.expenses => Icons.receipt_long_rounded,
@@ -331,8 +339,12 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
     final navItems = [
       for (final t in dock)
         AppNavItem(
-          icon: calm ? calmTabIcon(t) : tripTabIcon(t),
-          selectedIcon: polish && calm ? calmTabIconFilled(t) : null,
+          icon: horizon
+              ? horizonTabIcon(t)
+              : calm
+              ? calmTabIcon(t)
+              : tripTabIcon(t),
+          selectedIcon: horizon ? null : (polish && calm ? calmTabIconFilled(t) : null),
           count: !polish
               ? 0
               : t == TripNavTab.activity
@@ -354,7 +366,9 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
       context,
       ref,
       tripId: widget.tripId,
-      variant: compass || calm
+      variant: horizon
+          ? TripHeaderVariant.horizon
+          : compass || calm
           ? TripHeaderVariant.compass
           : cleanBar
           ? TripHeaderVariant.clean

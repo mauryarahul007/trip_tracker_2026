@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.102.0',
+    date: '2026-11-25',
+    changes: [
+      'Trip screens now follow the new look: a cleaner trip header with "Day N of M", a budget pace card and a short settle plan on Balances, day-grouped Spend with category chips and search, and a tinted Hub grid with a route card and Insights (Flutter).',
+    ],
+  },
+  {
     version: '3.101.0',
     date: '2026-11-25',
     changes: [
