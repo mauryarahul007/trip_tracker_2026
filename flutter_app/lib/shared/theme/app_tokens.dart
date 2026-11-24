@@ -66,6 +66,20 @@ class BentoTones {
     sky: BentoTint.of(AppColors.amoledTileSky),
     lilac: BentoTint.of(AppColors.amoledTileLilac),
   );
+  static final BentoTones horizonLight = BentoTones(
+    mint: BentoTint.of(AppColors.horizonTileMint),
+    butter: BentoTint.of(AppColors.horizonTileButter),
+    peach: BentoTint.of(AppColors.horizonTilePeach),
+    sky: BentoTint.of(AppColors.horizonTileSky),
+    lilac: BentoTint.of(AppColors.horizonTileLilac),
+  );
+  static final BentoTones horizonDark = BentoTones(
+    mint: BentoTint.of(AppColors.horizonDarkTileMint),
+    butter: BentoTint.of(AppColors.horizonDarkTileButter),
+    peach: BentoTint.of(AppColors.horizonDarkTilePeach),
+    sky: BentoTint.of(AppColors.horizonDarkTileSky),
+    lilac: BentoTint.of(AppColors.horizonDarkTileLilac),
+  );
 }
 
 @immutable
@@ -121,6 +135,10 @@ class AppTokens extends ThemeExtension<AppTokens> {
   /// Always true: Calm Passport is the single app theme. Kept so shared widgets that branch on it keep compiling.
   final bool calm;
 
+  /// Horizon look (flag `enableHorizonUi`): blue action, sunset accent, navy hero. Shared widgets branch on it for
+  /// shape and layout; colours come from the token values themselves.
+  final bool horizon;
+
   // Curves
   final Curve easeSpring;
   final Curve easeDecel;
@@ -160,7 +178,21 @@ class AppTokens extends ThemeExtension<AppTokens> {
     this.easeDecel = const Cubic(0.16, 1.0, 0.3, 1.0),
     this.easeBounce = const Cubic(0.34, 1.4, 0.64, 1.0),
     this.calm = true,
+    this.horizon = false,
   });
+
+  // Dark hero surfaces (trip headers, ticket cards, login sheet) and the colours that sit on them. These stay dark in
+  // every theme; Horizon swaps the night-green set for night navy and the teal for Horizon blue.
+  Color get heroDeep => horizon ? const Color(0xFF0B1230) : AppColors.calmNightDeep;
+  Color get heroMid => horizon ? AppColors.horizonHero : AppColors.calmNight;
+  Color get heroEnd => horizon ? AppColors.horizonHero2 : AppColors.calmTeal;
+  List<Color> get heroColors => [heroDeep, heroMid, heroEnd];
+  Color get accentOnDark => horizon ? AppColors.horizonDarkBlue : AppColors.calmDarkTeal;
+  Color get accentOnDarkLight => horizon ? AppColors.horizonDarkBlueInk : AppColors.calmDarkTealLight;
+  Color get mutedOnDark => horizon ? AppColors.horizonDarkMute : AppColors.calmDarkMute;
+  Color get oweOnDark => horizon ? AppColors.horizonDarkOwe : AppColors.calmDarkOwe;
+  Color get owedOnDark => horizon ? AppColors.horizonDarkOwed : AppColors.calmDarkOwed;
+  Color get inkOnLight => horizon ? AppColors.horizonInk : AppColors.calmInk;
 
   LinearGradient get headerGradient =>
       LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [headerStart, headerEnd]);
@@ -321,6 +353,76 @@ class AppTokens extends ThemeExtension<AppTokens> {
     headerEnd: const Color(0xFF000000),
   );
 
+  /// Horizon light (flag `enableHorizonUi`): cool grey ground, white cards, one Horizon blue action, navy hero.
+  static final AppTokens horizonLight = AppTokens(
+    bgPage: AppColors.horizonGround,
+    bgApp: AppColors.horizonGround,
+    bgSurface: const Color(0xFFFFFFFF),
+    bgSurfaceHover: AppColors.horizonSurface2,
+    borderColor: AppColors.horizonLine,
+    borderFocus: const Color(0x592950E8),
+    primaryAccent: AppColors.horizonBlue,
+    primaryAccentLight: AppColors.horizonBlueTint,
+    secondaryAccent: AppColors.horizonInk,
+    accentOrange: AppColors.horizonSunset,
+    colorSuccess: AppColors.horizonOwed,
+    colorDanger: AppColors.horizonOwe,
+    colorWarning: AppColors.horizonWarn,
+    textPrimary: AppColors.horizonInk,
+    textSecondary: AppColors.horizonInk2,
+    textMuted: AppColors.horizonMute,
+    tones: BentoTones.horizonLight,
+    ctaBg: AppColors.horizonBlue,
+    ctaFg: const Color(0xFFFFFFFF),
+    shadowBase: AppColors.horizonInk,
+    headerStart: AppColors.horizonHero,
+    headerEnd: AppColors.horizonHero2,
+    radiusSm: 12,
+    radiusMd: 16,
+    radiusLg: 20,
+    horizon: true,
+  );
+
+  /// Horizon dark: deep navy ground, lifted navy cards, light blue action under dark ink.
+  static final AppTokens horizonDark = AppTokens(
+    bgPage: AppColors.horizonDarkGround,
+    bgApp: AppColors.horizonDarkGround,
+    bgSurface: AppColors.horizonDarkSurface,
+    bgSurfaceHover: AppColors.horizonDarkSurface2,
+    borderColor: AppColors.horizonDarkLine,
+    borderFocus: const Color(0x667D9BFF),
+    primaryAccent: AppColors.horizonDarkBlue,
+    primaryAccentLight: AppColors.horizonDarkBlueTint,
+    secondaryAccent: AppColors.horizonDarkInk,
+    accentOrange: AppColors.horizonDarkSunset,
+    colorSuccess: AppColors.horizonDarkOwed,
+    colorDanger: AppColors.horizonDarkOwe,
+    colorWarning: AppColors.horizonDarkWarn,
+    textPrimary: AppColors.horizonDarkInk,
+    textSecondary: AppColors.horizonDarkInk2,
+    textMuted: AppColors.horizonDarkMute,
+    tones: BentoTones.horizonDark,
+    ctaBg: AppColors.horizonDarkBlue,
+    ctaFg: AppColors.horizonDarkGround,
+    shadowBase: const Color(0xFF000000),
+    headerStart: AppColors.horizonDarkHero,
+    headerEnd: AppColors.horizonDarkGround,
+    radiusSm: 12,
+    radiusMd: 16,
+    radiusLg: 20,
+    horizon: true,
+  );
+
+  /// Horizon on pure black: the dark set with a black ground.
+  static final AppTokens horizonAmoled = horizonDark.copyWith(
+    bgPage: AppColors.amoledBgPage,
+    bgApp: AppColors.amoledBgApp,
+    bgSurface: const Color(0xFF0B0F1A),
+    bgSurfaceHover: const Color(0xFF131A2B),
+    borderColor: const Color(0xFF1C2438),
+    headerEnd: const Color(0xFF000000),
+  );
+
   @override
   AppTokens copyWith({
     Color? bgPage,
@@ -356,6 +458,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     Curve? easeDecel,
     Curve? easeBounce,
     bool? calm,
+    bool? horizon,
   }) {
     return AppTokens(
       bgPage: bgPage ?? this.bgPage,
@@ -391,6 +494,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
       easeDecel: easeDecel ?? this.easeDecel,
       easeBounce: easeBounce ?? this.easeBounce,
       calm: calm ?? this.calm,
+      horizon: horizon ?? this.horizon,
     );
   }
 
@@ -431,6 +535,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
       easeDecel: easeDecel,
       easeBounce: easeBounce,
       calm: t < 0.5 ? calm : other.calm,
+      horizon: t < 0.5 ? horizon : other.horizon,
     );
   }
 }

@@ -17,7 +17,6 @@ import '../../../../shared/widgets/app_sheet.dart';
 import '../../../trip_details/application/trip_nav.dart' show tripProvider;
 import '../../application/expenses_providers.dart';
 import '../closeout_sheet.dart';
-import '../../../../shared/theme/app_colors.dart';
 
 /// Attention chips and the "dates ended" banner at the top of the Summary (flag `enableSummaryUpgrades`).
 class SummaryAttentionBar extends ConsumerWidget {
@@ -228,8 +227,10 @@ class PassBack extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.fromLTRB(20, 14, 14, 14),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: [AppColors.heroNavyDeep, AppColors.heroNavy, AppColors.heroTeal]),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [context.tokens.heroDeep, context.tokens.heroMid, context.tokens.heroEnd],
+                ),
               ),
               child: Row(
                 children: [
@@ -664,8 +665,10 @@ class SettleStatusBack extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.fromLTRB(20, 14, 14, 14),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: [AppColors.heroNavyDeep, AppColors.heroNavy, AppColors.heroTeal]),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [context.tokens.heroDeep, context.tokens.heroMid, context.tokens.heroEnd],
+                ),
               ),
               child: Row(
                 children: [

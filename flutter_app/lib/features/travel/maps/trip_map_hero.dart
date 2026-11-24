@@ -5,6 +5,7 @@ import '../../../core/platform/map_gateway.dart';
 import '../../../domain/models/trip.dart';
 import 'road_route_service.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/theme/app_tokens.dart';
 
 class TripMapHero extends ConsumerStatefulWidget {
   final Trip trip;
@@ -70,7 +71,9 @@ class _TripMapHeroState extends ConsumerState<TripMapHero> {
       final s = valid[i];
       final isFirst = i == 0;
       final isLast = i == valid.length - 1;
-      final color = isFirst ? AppColors.calmOwed : (isLast ? AppColors.calmOwe : AppColors.calmTeal);
+      final color = isFirst
+          ? context.tokens.colorSuccess
+          : (isLast ? context.tokens.colorDanger : context.tokens.primaryAccent);
 
       markers.add(
         MapMarker(
@@ -92,7 +95,7 @@ class _TripMapHeroState extends ConsumerState<TripMapHero> {
         MapRouteLine(
           id: 'route_glow',
           coordinates: points,
-          color: AppColors.calmTeal.withValues(alpha: 0.6),
+          color: context.tokens.primaryAccent.withValues(alpha: 0.6),
           strokeWidth: 6.0,
           glow: true,
         ),

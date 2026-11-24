@@ -31,7 +31,6 @@ import '../../travel/presentation/live_location_chat_banner.dart';
 import '../../travel/presentation/live_location_share_modal.dart';
 import '../application/chat_providers.dart';
 import '../../../core/platform/motion.dart';
-import '../../../shared/theme/app_colors.dart';
 
 class ChatPane extends ConsumerStatefulWidget {
   const ChatPane({required this.tripId, super.key});
@@ -761,7 +760,7 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     final isExpense = expenseId != null || (m.eventKind?.contains('expense') ?? false);
     final isSettlement = m.eventKind?.contains('settle') ?? false;
 
-    final tintColor = isRefund ? t.colorSuccess : (isSettlement ? AppColors.calmOwed : t.primaryAccent);
+    final tintColor = isRefund ? t.colorSuccess : (isSettlement ? context.tokens.colorSuccess : t.primaryAccent);
     final iconEmoji = isRefund ? '↩️' : (isSettlement ? '🤝' : (isExpense ? '🧾' : '📌'));
     final badgeLabel = isRefund ? 'Refund' : (isSettlement ? 'Settlement' : (isExpense ? 'Expense' : 'Event'));
 

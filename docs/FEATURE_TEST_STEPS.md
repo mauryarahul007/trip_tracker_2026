@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-24 | 3.94.0 | HORIZON-UI | [Horizon look, phase 1: colours and theme (Flutter)](#horizon-ui--horizon-look-phase-1-colours-and-theme-flutter) |
 | 2026-11-21 | 3.93.1 | FLUTTER-UX-10 | [Flutter UX polish 10: motion, skeletons, images, nav](#flutter-ux-10--flutter-ux-polish-10-motion-skeletons-images-nav) |
 | 2026-11-12 | 3.91.7 | FLUTTER-ENH-S5 | [Flutter enhancements S5: Join / live / search](#flutter-enh-s5--flutter-enhancements-s5-join--live--search) |
 | 2026-11-12 | 3.91.7 | FLUTTER-ENH-S4 | [Flutter enhancements S4: Logic features](#flutter-enh-s4--flutter-enhancements-s4-logic-features) |
@@ -4491,3 +4492,32 @@ Join screen signed-out; a live location share token; Trips search with expense a
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
 
+## HORIZON-UI — Horizon look, phase 1: colours and theme (Flutter)
+
+**Shipped:** v3.94.0. Flutter-only. New flag `enableHorizonUi` (Core pack, default ON). Mockups: `design/horizon/horizon-mockups.html`. Later phases (shapes, bottom bars, screen layouts) add steps under this same id.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Horizon colours in light, dark, pure black and high contrast | `enableHorizonUi` | ON (Core) |
+
+### Prep
+Flutter app signed in, with one trip that has expenses, one settled trip, at least one notification and a pass. Ops Deck access to flip the flag.
+
+### Steps
+1. Flag ON, light theme: page ground is cool grey (#F5F6FA), cards white, main buttons and links Horizon blue (#2950E8), not teal.
+2. Open a trip: the dark trip header and ticket cards are night navy (#14204A), not night green.
+3. Owed amounts are green with a plus sign; owe amounts are red with a minus sign.
+4. Category tiles (Hub, Insights) use the new tints: food peach, stay soft blue, transport mint, fun lilac, shopping butter.
+5. Settings > Appearance > Dark: ground is deep navy (#0A0E1A), buttons light blue (#7D9BFF) with dark text.
+6. Turn on Pure black (if available): ground is black, cards deep navy.
+7. Turn on High contrast: text is darker or lighter as before, on Horizon surfaces.
+8. Login screen, app lock, trip map pins, notification icons, route modal and error screen all show blue or navy, not teal or night green.
+
+### Negative checks
+- `enableHorizonUi` OFF in Ops Deck, then restart the app: the Calm look comes back exactly (paper #F4F3EE, teal buttons, night-green trip header).
+- The web app does not change with the flag either way.
+- No balance, split, total or sync result changes between ON and OFF.
+
+### Pass
+- Every screen reads clearly in light and dark; no leftover teal on Horizon; OFF restores Calm with no other difference.

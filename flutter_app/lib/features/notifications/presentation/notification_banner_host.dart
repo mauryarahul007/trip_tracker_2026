@@ -107,7 +107,7 @@ class _Banner extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     final type = item.data?['type'] as String?;
-    final meta = notificationMeta(type);
+    final meta = notificationMeta(type, context.tokens);
     final headline = getNotificationHeadline(type);
     final body = renderNotificationBody(item);
     return Semantics(

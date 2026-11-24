@@ -2161,13 +2161,13 @@ class _PassBanner extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 150),
       child: Stack(
         children: [
-          const Positioned.fill(
+          Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.heroNavyDeep, AppColors.heroNavy, AppColors.heroTeal],
+                  colors: [context.tokens.heroDeep, context.tokens.heroMid, context.tokens.heroEnd],
                 ),
               ),
             ),

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../places/place_image_service.dart';
 import '../../../core/platform/motion.dart';
-import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/cached_photo.dart';
+import '../../../shared/theme/app_tokens.dart';
 
 class TripPhotoHero extends StatefulWidget {
   final String? destination;
@@ -88,7 +88,7 @@ class _TripPhotoHeroState extends State<TripPhotoHero> {
           height: widget.height,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: AppColors.calmInk,
+            color: context.tokens.inkOnLight,
             image: _resolvedUrl != null
                 ? DecorationImage(
                     image: cachedPhotoSized(

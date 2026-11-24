@@ -38,7 +38,6 @@ import 'widgets/edit_trip_sheet.dart';
 import 'widgets/trip_header_actions.dart';
 import 'widgets/trip_actions_sheet.dart';
 import '../../../core/network/connectivity_provider.dart';
-import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/cached_photo.dart';
 import '../../trips/application/sync_wording.dart';
 import '../../trips/application/trip_accent.dart';
@@ -756,8 +755,10 @@ class _TripStrip extends ConsumerWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              const DecoratedBox(
-                decoration: BoxDecoration(gradient: LinearGradient(colors: [AppColors.heroNavy, AppColors.heroTeal])),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [context.tokens.heroMid, context.tokens.heroEnd]),
+                ),
               ),
               AppMotion.hero(
                 context: context,

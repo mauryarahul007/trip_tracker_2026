@@ -3,7 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../shared/theme/app_colors.dart';
+import '../../shared/theme/app_tokens.dart';
 
 class MapMarker {
   final String id;
@@ -200,7 +200,7 @@ class _LiveFlutterMapState extends State<_LiveFlutterMap> {
                     onTap: m.onTap,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: m.color ?? AppColors.calmTeal,
+                        color: m.color ?? context.tokens.primaryAccent,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
                         boxShadow: [
@@ -250,13 +250,13 @@ class FakeMapGateway implements MapGateway {
 
     return Container(
       key: key ?? const Key('fake_map_canvas'),
-      color: AppColors.calmLine,
+      color: context.tokens.borderColor,
       child: Stack(
         children: [
           Center(
             child: Text(
               'FakeMap [${initialLat.toStringAsFixed(2)}, ${initialLng.toStringAsFixed(2)}] @ ${initialZoom}x',
-              style: const TextStyle(fontSize: 10, color: AppColors.calmMute),
+              style: TextStyle(fontSize: 10, color: context.tokens.textMuted),
             ),
           ),
           for (final route in routes) SizedBox(key: Key('map_route_${route.id}')),
@@ -269,7 +269,10 @@ class FakeMapGateway implements MapGateway {
                 onTap: marker.onTap,
                 child: Container(
                   padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(color: marker.color ?? AppColors.calmTeal, shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                    color: marker.color ?? context.tokens.primaryAccent,
+                    shape: BoxShape.circle,
+                  ),
                   child: Text(
                     marker.icon ?? marker.label ?? '📍',
                     style: const TextStyle(fontSize: 12, color: Colors.white),

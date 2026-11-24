@@ -262,10 +262,10 @@ class _HeroTotal extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.heroNavyDeep, AppColors.heroNavy, AppColors.heroTeal],
+          colors: [context.tokens.heroDeep, context.tokens.heroMid, context.tokens.heroEnd],
         ),
       ),
       child: Column(

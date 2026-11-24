@@ -9,7 +9,6 @@ import '../../../../l10n/l10n_ext.dart';
 import '../../../../domain/logic/expense_list_logic.dart';
 import '../../../../domain/logic/trip_list_money.dart';
 import '../../../../domain/models/expense.dart';
-import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/app_typography.dart';
 import '../../../../shared/theme/compass.dart';
@@ -169,13 +168,16 @@ class _CalmHeroPair extends StatelessWidget {
             Expanded(
               flex: 11,
               child: DecoratedBox(
-                decoration: BoxDecoration(color: AppColors.calmNight, borderRadius: BorderRadius.circular(24)),
+                decoration: BoxDecoration(color: context.tokens.heroMid, borderRadius: BorderRadius.circular(24)),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(l10n.summaryGroupSpend.toUpperCase(), style: mono.copyWith(color: AppColors.calmDarkMute)),
+                      Text(
+                        l10n.summaryGroupSpend.toUpperCase(),
+                        style: mono.copyWith(color: context.tokens.mutedOnDark),
+                      ),
                       const SizedBox(height: 6),
                       FittedBox(
                         fit: BoxFit.scaleDown,
@@ -190,9 +192,9 @@ class _CalmHeroPair extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         l10n.summaryPerPerson(perPerson),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12.5,
-                          color: AppColors.calmDarkTeal,
+                          color: context.tokens.accentOnDark,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

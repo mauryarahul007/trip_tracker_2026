@@ -13,6 +13,7 @@ const guestJoinFlag = 'enableGuestJoin';
 const compassMeFlag = 'enableCompassMe';
 const compassWebFlag = 'enableCompassWeb';
 const calmPassportFlag = 'enableCalmPassportUi';
+const horizonUiFlag = 'enableHorizonUi';
 const navPolishFlag = 'enableNavPolish';
 const notchNavFlag = 'enableNotchNav';
 
@@ -38,3 +39,6 @@ final compassNavProvider = Provider<bool>((ref) => ref.watch(compassFlagProvider
 /// Calm Passport layout (flag `enableCalmPassportUi`): floating dock, 5-tab trip bar. The colours are Calm either
 /// way; this only picks the layout. Per-trip overrides use [compassFlagProvider] with the trip id.
 final calmPassportProvider = Provider<bool>((ref) => ref.watch(compassFlagProvider((calmPassportFlag, null))));
+
+/// Horizon look (flag `enableHorizonUi`): blue action, sunset accent, navy hero, new shapes. OFF keeps Calm Passport.
+final horizonUiProvider = Provider<bool>((ref) => ref.watch(compassFlagProvider((horizonUiFlag, null))));

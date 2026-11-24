@@ -4,7 +4,6 @@ import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_not
 import 'package:flutter/material.dart';
 
 import '../../core/platform/motion.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
 
 class AppNavItem {
@@ -226,7 +225,7 @@ class _NotchDockState extends State<_NotchDock> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final idle = t.textMuted;
-    final active = Theme.of(context).brightness == Brightness.dark ? AppColors.calmInk : Colors.white;
+    final active = Theme.of(context).brightness == Brightness.dark ? context.tokens.inkOnLight : Colors.white;
     final mq = MediaQuery.of(context);
     final width = mq.size.width <= _maxBarWidth ? mq.size.width : _maxBarWidth;
     final selectedIndex = _clamped(widget.currentIndex);
@@ -610,7 +609,7 @@ class _TileItem extends StatelessWidget {
     // Selected: the teal pill (bright teal with ink in dark, deep teal with white in light).
     final dark = Theme.of(context).brightness == Brightness.dark;
     final teal = t.primaryAccent;
-    final color = selected ? (dark ? AppColors.calmInk : Colors.white) : t.textMuted;
+    final color = selected ? (dark ? context.tokens.inkOnLight : Colors.white) : t.textMuted;
     return Semantics(
       button: true,
       selected: selected,

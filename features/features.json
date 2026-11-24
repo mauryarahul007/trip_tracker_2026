@@ -3323,5 +3323,18 @@
     "shippedAt": "2026-11-21T11:01:12.560Z",
     "shippedBy": "agent",
     "shippedNote": "Shipped in 8026442 (v3.93.1): FLUTTER-UX-10"
+  },
+  {
+    "id": "FEAT-210",
+    "title": "Horizon look for the Flutter app (colours, shapes, bars, all screens)",
+    "description": "Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blue action, sunset accent, night-navy hero, new category tints, new shapes, 5-slot bottom bars and all 55 screens from design/horizon. Ships in phases; OFF keeps Calm Passport. HORIZON-UI.",
+    "category": "ui-ux",
+    "status": "in_progress",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-24T16:05:06.897Z",
+    "updatedAt": "2026-11-24T16:05:06.970Z"
   }
 ]

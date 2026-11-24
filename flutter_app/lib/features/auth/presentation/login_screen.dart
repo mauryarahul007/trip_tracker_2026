@@ -20,7 +20,6 @@ import '../application/social_sign_in.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../../expenses/presentation/widgets/settle_ticket.dart' show TicketBarcode;
 import 'boarding_login_widgets.dart';
-import '../../../shared/theme/app_colors.dart';
 
 /// Whether the superadmin "signup_gate" is closing new sign-ins.
 final signInsPausedProvider = FutureProvider.autoDispose<bool>(
@@ -119,14 +118,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     Widget chip(IconData icon, String label) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.calmNightDeep.withValues(alpha: 0.62),
+        color: context.tokens.heroDeep.withValues(alpha: 0.62),
         borderRadius: BorderRadius.circular(99),
         border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 15, color: AppColors.calmRunway),
+          Icon(icon, size: 15, color: context.tokens.accentOrange),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
@@ -149,26 +148,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
-                color: AppColors.calmNightDeep.withValues(alpha: 0.62),
+                color: context.tokens.heroDeep.withValues(alpha: 0.62),
                 borderRadius: BorderRadius.circular(99),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.wb_sunny_rounded, size: 14, color: AppColors.calmRunway),
+                  Icon(Icons.wb_sunny_rounded, size: 14, color: context.tokens.accentOrange),
                   const SizedBox(width: 7),
                   Flexible(
                     child: Text(
                       l10n.loginEdition.toUpperCase(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: AppTypography.fontMono,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.4,
-                        color: AppColors.calmDarkTealLight,
+                        color: context.tokens.accentOnDarkLight,
                       ),
                     ),
                   ),
@@ -272,9 +271,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 14),
                   if (paused)
-                    _Banner(key: const Key('paused-banner'), text: l10n.authSignInsPaused, color: AppColors.calmRunway),
+                    _Banner(
+                      key: const Key('paused-banner'),
+                      text: l10n.authSignInsPaused,
+                      color: context.tokens.accentOrange,
+                    ),
                   if (_error != null)
-                    _Banner(key: const Key('error-banner'), text: _error!, color: AppColors.calmDarkOwe),
+                    _Banner(key: const Key('error-banner'), text: _error!, color: context.tokens.oweOnDark),
                   if (_detail != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -313,10 +316,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                         ),
                         onPressed: () => context.push('/terms'),
-                        child: Text(
-                          l10n.authTerms,
-                          style: const TextStyle(color: AppColors.calmDarkTeal, fontSize: 12),
-                        ),
+                        child: Text(l10n.authTerms, style: TextStyle(color: context.tokens.accentOnDark, fontSize: 12)),
                       ),
                       TextButton(
                         style: TextButton.styleFrom(
@@ -326,7 +326,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         onPressed: () => context.push('/privacy'),
                         child: Text(
                           l10n.authPrivacy,
-                          style: const TextStyle(color: AppColors.calmDarkTeal, fontSize: 12),
+                          style: TextStyle(color: context.tokens.accentOnDark, fontSize: 12),
                         ),
                       ),
                     ],
@@ -784,7 +784,7 @@ class _BoardButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = dark ? Colors.white : AppColors.calmInk;
+    final fg = dark ? Colors.white : context.tokens.inkOnLight;
     return Opacity(
       opacity: onPressed == null && !busy ? 0.5 : 1,
       child: Material(

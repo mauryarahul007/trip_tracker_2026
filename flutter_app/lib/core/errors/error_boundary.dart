@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../logging/app_logger.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/theme/app_tokens.dart';
 
 /// Global error boundary catching uncaught exceptions across zones,
 /// framework callbacks, and rendering trees.
@@ -93,7 +94,7 @@ class _DefaultErrorViewState extends State<_DefaultErrorView> {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.calmNightDeep,
+      color: context.tokens.heroDeep,
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -106,14 +107,14 @@ class _DefaultErrorViewState extends State<_DefaultErrorView> {
                 style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Your trips and expenses are still on this device. Try again, or leave and come back if it keeps happening.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.calmDarkMute, fontSize: 15, height: 1.4),
+                style: TextStyle(color: context.tokens.mutedOnDark, fontSize: 15, height: 1.4),
               ),
               if (_copied) ...[
                 const SizedBox(height: 12),
-                const Text('Report copied', style: TextStyle(color: AppColors.calmOwed, fontSize: 13)),
+                Text('Report copied', style: TextStyle(color: context.tokens.colorSuccess, fontSize: 13)),
               ],
               const SizedBox(height: 24),
               ElevatedButton(

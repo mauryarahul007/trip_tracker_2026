@@ -416,7 +416,7 @@ class _Row extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final type = item.data?['type'] as String?;
-    final meta = notificationMeta(type);
+    final meta = notificationMeta(type, context.tokens);
     final headline = getNotificationHeadline(type);
     return Dismissible(
       key: ValueKey('dismiss-${item.id}'),

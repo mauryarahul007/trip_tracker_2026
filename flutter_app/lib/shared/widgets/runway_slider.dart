@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 
 import '../../core/platform/haptics.dart';
-import '../theme/app_colors.dart';
 import '../../core/platform/motion.dart';
+import '../../shared/theme/app_tokens.dart';
 
 /// An airport-style two-way slider: a plane on a runway.
 ///
@@ -87,7 +87,7 @@ class _RunwaySliderState extends State<RunwaySlider> with SingleTickerProviderSt
         width: widget.width,
         height: RunwaySlider.height,
         decoration: BoxDecoration(
-          color: AppColors.calmNightDeep.withValues(alpha: 0.9),
+          color: context.tokens.heroDeep.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(99),
           border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
           boxShadow: [
@@ -138,14 +138,16 @@ class _RunwaySliderState extends State<RunwaySlider> with SingleTickerProviderSt
                   height: RunwaySlider._thumb,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
+                    gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [Colors.white, AppColors.calmPaperHover],
+                      colors: [Colors.white, context.tokens.bgSurfaceHover],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: (_armed ? AppColors.calmRunway : AppColors.calmDarkTeal).withValues(alpha: 0.55),
+                        color: (_armed ? context.tokens.accentOrange : context.tokens.accentOnDark).withValues(
+                          alpha: 0.55,
+                        ),
                         blurRadius: 16,
                       ),
                     ],
@@ -153,7 +155,7 @@ class _RunwaySliderState extends State<RunwaySlider> with SingleTickerProviderSt
                   child: Transform.rotate(
                     // Nose points the way it is going; straight up while it waits on the centre line.
                     angle: _dx.abs() < 0.05 ? 0 : (_dx > 0 ? math.pi / 2 : -math.pi / 2),
-                    child: const Icon(Icons.flight_rounded, color: AppColors.calmNightDeep, size: 28),
+                    child: Icon(Icons.flight_rounded, color: context.tokens.heroDeep, size: 28),
                   ),
                 ),
               ),
