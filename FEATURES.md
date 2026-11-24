@@ -12,8 +12,8 @@
 | **Total Tracked** | **209** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
-| **🟡 In Progress** | **1** |
-| **✅ Shipped** | **205** |
+| **🟡 In Progress** | **0** |
+| **✅ Shipped** | **206** |
 | **⚪ Won't Do** | **0** |
 
 ---
