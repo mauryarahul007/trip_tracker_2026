@@ -106,7 +106,7 @@ class TripRow extends ConsumerWidget {
     final active = status.phase == TripPhase.active;
     final over = trip.archived || status.phase == TripPhase.ended;
     final cover = ref.watch(tripCoverProvider(tripCoverKey(trip))).value;
-    final tone = t.tones[tripTone(trip.id)];
+    final tone = t.tones[tripTone(trip.id, ref.watch(tripColorsProvider)[trip.id])];
     final sub = _subtitle(trip);
     final progress = status.totalDays <= 0 ? 0.0 : (status.dayNumber / status.totalDays).clamp(0.0, 1.0);
 
@@ -121,6 +121,7 @@ class TripRow extends ConsumerWidget {
         pending: pending,
         onTap: onTap,
         onLongPress: onLongPress,
+        chosenTone: ref.watch(tripColorsProvider)[trip.id],
       );
     }
 
@@ -597,6 +598,8 @@ class TripTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
+    final picked = ref.watch(tripColorsProvider)[trip.id];
+    final chosen = t.horizon && picked != null ? tripTone(trip.id, picked) : null;
     final status = tripStatus(trip.startDate, trip.endDate, now);
     final headline = trip.archived ? context.l10n.tripBadgeArchived : tripHeadline(context, status);
     final cover = ref.watch(tripCoverProvider(tripCoverKey(trip))).value;
@@ -625,7 +628,12 @@ class TripTile extends ConsumerWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [context.tokens.heroMid, context.tokens.heroEnd],
+                      colors: [
+                        // A cover colour picked at create time tints the no-photo tile (Horizon).
+                        if (chosen != null) Color.lerp(context.tokens.heroMid, t.tones[chosen].accent, 0.6)!
+                        else context.tokens.heroMid,
+                        context.tokens.heroEnd,
+                      ],
                     ),
                   ),
                 ),
@@ -811,11 +819,13 @@ class _CalmTripRow extends StatelessWidget {
     this.moneyText,
     this.moneyColor,
     this.pending = false,
+    this.chosenTone,
   });
 
   final Trip trip;
   final String sub;
   final String headline;
+  final String? chosenTone;
   final bool over;
   final String? moneyText;
   final Color? moneyColor;
@@ -826,7 +836,7 @@ class _CalmTripRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    final tone = t.tones[tripTone(trip.id)];
+    final tone = t.tones[tripTone(trip.id, chosenTone)];
     final start = DateTime.tryParse(trip.startDate);
     final facts = [if (headline.isNotEmpty) headline, if (sub.isNotEmpty) sub].join(' · ');
     return Semantics(

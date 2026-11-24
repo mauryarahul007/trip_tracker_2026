@@ -15,6 +15,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/app_icons.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/app_typography.dart';
+import '../../../../shared/widgets/app_avatar.dart';
 import '../../../expenses/application/expenses_providers.dart' show tripExpensesProvider, visibleMembersProvider;
 import '../../../expenses/application/money_providers.dart' show allTripsProvider;
 
@@ -89,6 +90,7 @@ class TripDashboardHeader extends ConsumerWidget {
             ? formatDateRange(trip!.startDate, trip!.endDate)
             : '';
 
+        final crew = ref.watch(visibleMembersProvider(trip?.id ?? ''));
         final counts = (
           ref.watch(visibleMembersProvider(trip?.id ?? '')).length,
           [
@@ -243,6 +245,13 @@ class TripDashboardHeader extends ConsumerWidget {
                     ),
                   ),
                   actions: [
+                    // Horizon: the crew sits in the header as a small avatar stack (left out on very narrow phones,
+                    // where the title needs the room).
+                    if (t.horizon && crew.length > 1 && MediaQuery.sizeOf(context).width >= 360)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: _AvatarStack(names: [for (final m in crew) m.name]),
+                      ),
                     Theme(
                       data: Theme.of(context).copyWith(iconTheme: IconThemeData(color: iconColor, size: 20)),
                       child: Row(mainAxisSize: MainAxisSize.min, children: actions),
@@ -315,6 +324,63 @@ class TripDashboardHeader extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Up to three overlapping member avatars, then a "+N" chip (Horizon trip header).
+class _AvatarStack extends StatelessWidget {
+  const _AvatarStack({required this.names});
+  final List<String> names;
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 26.0, step = 18.0;
+    final shown = names.take(3).toList();
+    final extra = names.length - shown.length;
+    final count = shown.length + (extra > 0 ? 1 : 0);
+    final t = context.tokens;
+    return Semantics(
+      label: '${names.length} people',
+      excludeSemantics: true,
+      child: SizedBox(
+        key: const Key('trip-header-avatars'),
+        width: size + step * (count - 1),
+        height: size,
+        child: Stack(
+          children: [
+            for (final (i, n) in shown.indexed)
+              Positioned(
+                left: step * i,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: t.bgPage, width: 1.5),
+                  ),
+                  child: AppAvatar(name: n, size: size - 3),
+                ),
+              ),
+            if (extra > 0)
+              Positioned(
+                left: step * shown.length,
+                child: Container(
+                  width: size,
+                  height: size,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: t.bgSurfaceHover,
+                    border: Border.all(color: t.bgPage, width: 1.5),
+                  ),
+                  child: Text(
+                    '+$extra',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: t.textPrimary),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

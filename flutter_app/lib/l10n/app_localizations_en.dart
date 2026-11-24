@@ -3033,4 +3033,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get horizonRowNotInvolved => 'not involved';
+
+  @override
+  String get horizonByPerson => 'By person';
+
+  @override
+  String get horizonPersonOwesYou => 'owes you';
+
+  @override
+  String get horizonPersonYouOwe => 'you owe';
+
+  @override
+  String horizonTripCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count trips', one: '1 trip');
+    return '$_temp0';
+  }
+
+  @override
+  String get horizonCoverColour => 'Cover colour';
+
+  @override
+  String get horizonCoverColourHint => 'Shows on this phone only';
+
+  @override
+  String horizonToneName(String tone) {
+    String _temp0 = intl.Intl.selectLogic(tone, {
+      'mint': 'Mint',
+      'butter': 'Butter',
+      'peach': 'Peach',
+      'sky': 'Sky',
+      'lilac': 'Lilac',
+      'other': 'Automatic',
+    });
+    return '$_temp0';
+  }
 }

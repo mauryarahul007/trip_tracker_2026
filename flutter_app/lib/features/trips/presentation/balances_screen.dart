@@ -15,6 +15,7 @@ import '../../../domain/models/trip.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
+import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_surface.dart';
@@ -188,6 +189,17 @@ class BalancesScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  if (tokens.horizon)
+                    ..._horizonPeople(
+                      context,
+                      personNets(
+                        userId: userId,
+                        trips: trips,
+                        membersByTrip: members,
+                        expensesByTrip: expenses,
+                        groupsByTrip: groups,
+                      ),
+                    ),
                   Eyebrow(l10n.tripsTitle),
                   const SizedBox(height: 8),
                   for (final t in trips)
@@ -353,4 +365,81 @@ Widget? _horizonStats(BuildContext context, List<TripNetPosition> positions) {
       ],
     ),
   );
+}
+
+/// Horizon "By person" list: each person's net with me across every trip (green "owes you", red "you owe"),
+/// matched across trips and never blending currencies. Nothing when everyone is square.
+List<Widget> _horizonPeople(BuildContext context, List<PersonNet> people) {
+  if (people.isEmpty) return const [];
+  final t = context.tokens;
+  final l10n = context.l10n;
+  return [
+    Eyebrow(l10n.horizonByPerson),
+    const SizedBox(height: 8),
+    Container(
+      key: const Key('horizon-by-person'),
+      decoration: BoxDecoration(
+        color: t.bgSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: t.cardEdge),
+      ),
+      child: Column(
+        children: [
+          for (final (i, p) in people.indexed) ...[
+            if (i > 0) Divider(height: 1, indent: 64, color: t.borderColor),
+            Padding(
+              key: Key('person-${p.key}'),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  AppAvatar(name: p.name, size: 38),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          p.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: t.textPrimary),
+                        ),
+                        Text(
+                          p.trips.length == 1 ? p.trips.first : l10n.horizonTripCount(p.trips.length),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 13, color: t.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${p.net > 0 ? '+' : '−'}${formatMoney(context, p.net.abs(), p.currency)}',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontMono,
+                          fontFeatures: AppTypography.tabularFigures,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: p.net > 0 ? t.colorSuccess : t.colorDanger,
+                        ),
+                      ),
+                      Text(
+                        p.net > 0 ? l10n.horizonPersonOwesYou : l10n.horizonPersonYouOwe,
+                        style: TextStyle(fontSize: 12, color: t.textSecondary),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    ),
+    const SizedBox(height: 20),
+  ];
 }

@@ -58,6 +58,25 @@ class PinnedTrips extends Notifier<Set<String>> {
 
 final pinnedTripsProvider = NotifierProvider<PinnedTrips, Set<String>>(PinnedTrips.new);
 
+/// Cover colour picked for a trip when it was made (Horizon create sheet), kept on this device only.
+/// Maps trip id to a BentoTone name; a trip with no entry keeps its automatic colour.
+class TripColors extends Notifier<Map<String, String>> {
+  static const _key = 'trips.colors';
+
+  @override
+  Map<String, String> build() => {
+    for (final e in ref.read(sharedPreferencesProvider).getStringList(_key) ?? const <String>[])
+      if (e.contains('=')) e.substring(0, e.indexOf('=')): e.substring(e.indexOf('=') + 1),
+  };
+
+  void set(String tripId, String tone) {
+    state = {...state, tripId: tone};
+    ref.read(sharedPreferencesProvider).setStringList(_key, [for (final e in state.entries) '${e.key}=${e.value}']);
+  }
+}
+
+final tripColorsProvider = NotifierProvider<TripColors, Map<String, String>>(TripColors.new);
+
 enum TripsLayout { grid, list }
 
 /// Photo-tile grid or compact rows for the Trips list, remembered on the device. The grid is the default.
