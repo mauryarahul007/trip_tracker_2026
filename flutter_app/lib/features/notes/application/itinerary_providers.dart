@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -62,7 +63,8 @@ class TripItineraryNotifier extends Notifier<List<ItineraryItem>> {
     return item;
   }
 
-  Future<void> update(String id, {
+  Future<void> update(
+    String id, {
     String? title,
     String? date,
     String? time,

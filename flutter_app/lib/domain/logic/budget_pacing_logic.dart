@@ -1,12 +1,7 @@
 import '../models/expense.dart';
 import 'refunds.dart';
 
-enum BudgetPacingStatus {
-  onTrack,
-  warning,
-  overBudget,
-  noBudget,
-}
+enum BudgetPacingStatus { onTrack, warning, overBudget, noBudget }
 
 class BudgetPacingResult {
   const BudgetPacingResult({

@@ -70,10 +70,7 @@ void main() {
       expect(find.text('owed to you'), findsOneWidget);
 
       await tester.pumpWidget(
-        _host(
-          HorizonBalanceHero(nets: const [CrossTripNet('INR', -900)], tripCount: 1, onTap: () {}),
-          horizon: true,
-        ),
+        _host(HorizonBalanceHero(nets: const [CrossTripNet('INR', -900)], tripCount: 1, onTap: () {}), horizon: true),
       );
       final owe = tester.widget<Text>(find.byKey(const Key('horizon-hero-amount')));
       expect(owe.data, startsWith('−'));
@@ -187,9 +184,7 @@ void main() {
   group('Horizon phase 3c: Account and States (flag enableHorizonUi)', () {
     testWidgets('theme picker: three tiles, the chosen one selected, taps report the mode', (tester) async {
       String? picked;
-      await tester.pumpWidget(
-        _host(HorizonThemePicker(value: 'dark', onChanged: (v) => picked = v), horizon: true),
-      );
+      await tester.pumpWidget(_host(HorizonThemePicker(value: 'dark', onChanged: (v) => picked = v), horizon: true));
       expect(find.text('Light'), findsOneWidget);
       expect(find.text('System'), findsOneWidget);
       expect(
@@ -251,9 +246,15 @@ void main() {
             ],
         },
         expensesByTrip: {
-          'a': [paid('a', 'INR', 'ame', 200, ['ame', 'aben'])], // Ben owes me 100
-          'b': [paid('b', 'INR', 'bben', 60, ['bme', 'bben'])], // I owe Ben 30
-          'c': [paid('c', 'EUR', 'cme', 40, ['cme', 'cben'])], // Ben owes me EUR 20
+          'a': [
+            paid('a', 'INR', 'ame', 200, ['ame', 'aben']),
+          ], // Ben owes me 100
+          'b': [
+            paid('b', 'INR', 'bben', 60, ['bme', 'bben']),
+          ], // I owe Ben 30
+          'c': [
+            paid('c', 'EUR', 'cme', 40, ['cme', 'cben']),
+          ], // Ben owes me EUR 20
         },
       );
       expect(nets.map((n) => (n.currency, n.net)), [('INR', 70.0), ('EUR', 20.0)]);

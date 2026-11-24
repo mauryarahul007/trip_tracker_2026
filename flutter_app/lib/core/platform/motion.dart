@@ -34,8 +34,7 @@ class AppMotion {
       (reduce || MediaQuery.disableAnimationsOf(context)) ? Duration.zero : d;
 
   /// True when press scale, sheet drag, and Heroes should run for this frame.
-  static bool shouldAnimate(BuildContext context) =>
-      polish && !reduce && !MediaQuery.disableAnimationsOf(context);
+  static bool shouldAnimate(BuildContext context) => polish && !reduce && !MediaQuery.disableAnimationsOf(context);
 
   /// Trip card → header morph. Skipped when polish / reduce-motion says stay still (avoids a half-flight morph).
   static Widget hero({required String tag, required Widget child, required BuildContext context}) {

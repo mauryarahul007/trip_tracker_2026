@@ -92,7 +92,9 @@ class _Body extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 960),
             child: SafeArea(
               child: days.isEmpty
-                  ? const Center(child: EmptyState(plain: true, title: 'Add some expenses to see insights.', subtitle: ''))
+                  ? const Center(
+                      child: EmptyState(plain: true, title: 'Add some expenses to see insights.', subtitle: ''),
+                    )
                   : ListView(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                       children: [

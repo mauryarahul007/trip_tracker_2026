@@ -41,7 +41,12 @@ void main() {
   });
 
   test('Horizon dock drops Activity and keeps Chat', () {
-    expect(horizonDockTabs(chatEnabled: true), [TripNavTab.ledger, TripNavTab.expenses, TripNavTab.chat, TripNavTab.hub]);
+    expect(horizonDockTabs(chatEnabled: true), [
+      TripNavTab.ledger,
+      TripNavTab.expenses,
+      TripNavTab.chat,
+      TripNavTab.hub,
+    ]);
     expect(horizonDockTabs(chatEnabled: false), [TripNavTab.ledger, TripNavTab.expenses, TripNavTab.hub]);
     expect(horizonDockTabFor(TripNavTab.activity), TripNavTab.hub);
   });

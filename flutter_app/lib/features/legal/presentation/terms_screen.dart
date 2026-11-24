@@ -15,13 +15,11 @@ class TermsScreen extends StatelessWidget {
         LegalSection(body: 'By using Trip Tracker, you agree to these Terms. Please read them carefully.'),
         LegalSection(
           heading: 'Acceptable Use',
-          body:
-              'You agree to use Trip Tracker only for lawful group budgeting, travel expense coordination, and communication. You are solely responsible for all content uploaded to your trips.',
+          body: 'You agree to use Trip Tracker only for lawful group budgeting, travel expense coordination, and communication. You are solely responsible for all content uploaded to your trips.',
         ),
         LegalSection(
           heading: 'Disclaimers',
-          body:
-              'Trip Tracker is provided "as is". Currency conversion rates are provided for estimation purposes and should not be relied upon for formal financial transactions.',
+          body: 'Trip Tracker is provided "as is". Currency conversion rates are provided for estimation purposes and should not be relied upon for formal financial transactions.',
         ),
       ],
     );

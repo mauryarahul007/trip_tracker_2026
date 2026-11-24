@@ -238,7 +238,10 @@ class TripRow extends ConsumerWidget {
                                     textAlign: TextAlign.end,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: AppTypography.moneyInline(fontSize: 13, color: moneyColor ?? t.textSecondary),
+                                    style: AppTypography.moneyInline(
+                                      fontSize: 13,
+                                      color: moneyColor ?? t.textSecondary,
+                                    ),
                                   ),
                                 ),
                               Icon(Icons.chevron_right_rounded, color: t.textMuted),
@@ -510,7 +513,7 @@ class TripHeroCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 22),
                     AppMotion.hero(
-                                      context: context,
+                      context: context,
                       tag: 'trip-title-${trip.id}',
                       child: Material(
                         type: MaterialType.transparency,
@@ -630,8 +633,10 @@ class TripTile extends ConsumerWidget {
                       end: Alignment.bottomRight,
                       colors: [
                         // A cover colour picked at create time tints the no-photo tile (Horizon).
-                        if (chosen != null) Color.lerp(context.tokens.heroMid, t.tones[chosen].accent, 0.6)!
-                        else context.tokens.heroMid,
+                        if (chosen != null)
+                          Color.lerp(context.tokens.heroMid, t.tones[chosen].accent, 0.6)!
+                        else
+                          context.tokens.heroMid,
                         context.tokens.heroEnd,
                       ],
                     ),
@@ -702,7 +707,7 @@ class TripTile extends ConsumerWidget {
                       ),
                       const Spacer(),
                       AppMotion.hero(
-                                      context: context,
+                        context: context,
                         tag: 'trip-title-${trip.id}',
                         child: Material(
                           type: MaterialType.transparency,
@@ -898,7 +903,7 @@ class _CalmTripRow extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         AppMotion.hero(
-                                      context: context,
+                          context: context,
                           tag: 'trip-title-${trip.id}',
                           child: Material(
                             type: MaterialType.transparency,
@@ -984,9 +989,7 @@ class _CalmHero extends StatelessWidget {
     const teal = AppColors.calmDarkTeal;
     final dest = (trip.destination ?? '').trim();
     final l10n = context.l10n;
-    final eyebrow = status.totalDays > 0
-        ? l10n.tripLiveNowDay(status.dayNumber, status.totalDays)
-        : l10n.tripLiveNow;
+    final eyebrow = status.totalDays > 0 ? l10n.tripLiveNowDay(status.dayNumber, status.totalDays) : l10n.tripLiveNow;
     return Semantics(
       button: true,
       label: '${trip.name}. $headline${moneyText == null ? '' : '. $moneyText'}',
@@ -1044,7 +1047,7 @@ class _CalmHero extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 AppMotion.hero(
-                                      context: context,
+                  context: context,
                   tag: 'trip-title-${trip.id}',
                   child: Material(
                     type: MaterialType.transparency,

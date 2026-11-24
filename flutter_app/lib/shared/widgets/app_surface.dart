@@ -77,7 +77,12 @@ class AppCard extends StatelessWidget {
         color: color ?? t.bgSurface,
         borderRadius: t.horizon ? null : r,
         // Horizon cards carry one 1px line so white cards read on the grey ground.
-        shape: t.horizon ? RoundedRectangleBorder(borderRadius: r, side: BorderSide(color: t.cardEdge)) : null,
+        shape: t.horizon
+            ? RoundedRectangleBorder(
+                borderRadius: r,
+                side: BorderSide(color: t.cardEdge),
+              )
+            : null,
         clipBehavior: Clip.antiAlias,
         child: onTap == null ? body : InkWell(onTap: onTap, child: body),
       ),

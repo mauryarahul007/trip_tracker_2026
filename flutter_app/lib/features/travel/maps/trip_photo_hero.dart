@@ -91,11 +91,7 @@ class _TripPhotoHeroState extends State<TripPhotoHero> {
             color: context.tokens.inkOnLight,
             image: _resolvedUrl != null
                 ? DecorationImage(
-                    image: cachedPhotoSized(
-                      context,
-                      _resolvedUrl!,
-                      logicalWidth: MediaQuery.sizeOf(context).width,
-                    ),
+                    image: cachedPhotoSized(context, _resolvedUrl!, logicalWidth: MediaQuery.sizeOf(context).width),
                     fit: BoxFit.cover,
                     onError: (_, _) {},
                     colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.35), BlendMode.darken),

@@ -350,16 +350,8 @@ class _FormBodyState extends ConsumerState<_FormBody> {
     // Split controls. Compact form keeps Everyone / Only payer / Everyone-but-payer and the member rows in
     // view (Equal path); mode switch, payer-half preset and group chips fold under "More split options".
     final basicPresets = <Widget>[
-      ActionChip(
-        key: const Key('preset-everyone'),
-        label: Text(l10n.formEveryone),
-        onPressed: c.presetEveryone,
-      ),
-      ActionChip(
-        key: const Key('preset-only-payer'),
-        label: Text(l10n.formOnlyPayer),
-        onPressed: c.presetOnlyPayer,
-      ),
+      ActionChip(key: const Key('preset-everyone'), label: Text(l10n.formEveryone), onPressed: c.presetEveryone),
+      ActionChip(key: const Key('preset-only-payer'), label: Text(l10n.formOnlyPayer), onPressed: c.presetOnlyPayer),
       ActionChip(
         key: const Key('preset-exclude-payer'),
         label: Text(l10n.formExcludePayer),
@@ -368,11 +360,7 @@ class _FormBodyState extends ConsumerState<_FormBody> {
     ];
     final advancedPresets = <Widget>[
       if (flags.advancedSplits)
-        ActionChip(
-          key: const Key('preset-half'),
-          label: Text(l10n.formPayerHalf),
-          onPressed: c.presetPayerHalf,
-        ),
+        ActionChip(key: const Key('preset-half'), label: Text(l10n.formPayerHalf), onPressed: c.presetPayerHalf),
       for (final g in groups.where((g) => g.memberIds.length > 1))
         FilterChip(
           key: Key('group-${g.id}'),
@@ -820,11 +808,7 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 if (foldSplitExtras) ...[
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 4,
-                                    children: basicPresets,
-                                  ),
+                                  Wrap(spacing: 8, runSpacing: 4, children: basicPresets),
                                   ExpansionTile(
                                     key: const Key('more-split-options'),
                                     controller: _splitMoreCtl,
@@ -843,11 +827,7 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                                     ],
                                   ),
                                 ] else ...[
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 4,
-                                    children: [...basicPresets, ...advancedPresets],
-                                  ),
+                                  Wrap(spacing: 8, runSpacing: 4, children: [...basicPresets, ...advancedPresets]),
                                   const SizedBox(height: 8),
                                   modeButton,
                                 ],
@@ -1132,11 +1112,7 @@ class _MemberRow extends StatelessWidget {
                 : Text(
                     equalShareLabel!,
                     key: Key('equal-share-${member.id}'),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: tokens.primaryAccent,
-                    ),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tokens.primaryAccent),
                   ),
           ),
         ),
@@ -1216,7 +1192,10 @@ class _Itemized extends StatelessWidget {
                         onTap: () => controller.updateItem(item.id, assigned: [for (final m in members) m.id]),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                          child: Text('All', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: tokens.primaryAccent)),
+                          child: Text(
+                            'All',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: tokens.primaryAccent),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -1326,7 +1305,10 @@ class _Itemized extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text(formatMoney(context, total, currency), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: tokens.primaryAccent)),
+                        Text(
+                          formatMoney(context, total, currency),
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: tokens.primaryAccent),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),

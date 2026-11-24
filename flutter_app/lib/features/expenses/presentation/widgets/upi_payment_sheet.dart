@@ -313,9 +313,7 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
     final tokens = context.tokens;
     final valid = _isCurrentHandleValid();
     final railDef = paymentRailDefs[_activeRail]!;
-    final upiUri = (_activeRail == PaymentRail.upi && valid)
-        ? generateUpiUri(_buildUpiDetails())
-        : '';
+    final upiUri = (_activeRail == PaymentRail.upi && valid) ? generateUpiUri(_buildUpiDetails()) : '';
 
     return SingleChildScrollView(
       key: const Key('upi-payment-sheet'),
@@ -442,12 +440,17 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                _activeRail == PaymentRail.upi ? "Receiver's UPI ID / VPA" :
-                _activeRail == PaymentRail.revolut ? "Receiver's Revolut Tag" :
-                _activeRail == PaymentRail.venmo ? "Receiver's Venmo Handle" :
-                _activeRail == PaymentRail.cashapp ? "Receiver's \$Cashtag" :
-                _activeRail == PaymentRail.paypal ? "Receiver's PayPal.me Handle" :
-                "Receiver's IBAN / Bank Details",
+                _activeRail == PaymentRail.upi
+                    ? "Receiver's UPI ID / VPA"
+                    : _activeRail == PaymentRail.revolut
+                    ? "Receiver's Revolut Tag"
+                    : _activeRail == PaymentRail.venmo
+                    ? "Receiver's Venmo Handle"
+                    : _activeRail == PaymentRail.cashapp
+                    ? "Receiver's \$Cashtag"
+                    : _activeRail == PaymentRail.paypal
+                    ? "Receiver's PayPal.me Handle"
+                    : "Receiver's IBAN / Bank Details",
                 style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: tokens.textSecondary),
               ),
               if (valid)
@@ -468,12 +471,17 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
             key: const Key('upi-id-input'),
             controller: _handleController,
             decoration: InputDecoration(
-              hintText: _activeRail == PaymentRail.upi ? 'e.g. mobile@paytm or name@okhdfcbank' :
-                        _activeRail == PaymentRail.revolut ? 'e.g. alex or revolut.me/alex' :
-                        _activeRail == PaymentRail.venmo ? 'e.g. alex or @alex' :
-                        _activeRail == PaymentRail.cashapp ? r'e.g. $alex or alex' :
-                        _activeRail == PaymentRail.paypal ? 'e.g. alex or paypal.me/alex' :
-                        'e.g. GB29NWBK60161331926819',
+              hintText: _activeRail == PaymentRail.upi
+                  ? 'e.g. mobile@paytm or name@okhdfcbank'
+                  : _activeRail == PaymentRail.revolut
+                  ? 'e.g. alex or revolut.me/alex'
+                  : _activeRail == PaymentRail.venmo
+                  ? 'e.g. alex or @alex'
+                  : _activeRail == PaymentRail.cashapp
+                  ? r'e.g. $alex or alex'
+                  : _activeRail == PaymentRail.paypal
+                  ? 'e.g. alex or paypal.me/alex'
+                  : 'e.g. GB29NWBK60161331926819',
               filled: true,
               fillColor: tokens.bgSurface,
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -659,11 +667,7 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
                       currency: widget.currency,
                       note: widget.tripName ?? 'Trip Settlement',
                     ),
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontMono,
-                      fontSize: 11,
-                      color: tokens.textPrimary,
-                    ),
+                    style: TextStyle(fontFamily: AppTypography.fontMono, fontSize: 11, color: tokens.textPrimary),
                   ),
                 ),
                 const SizedBox(height: 12),

@@ -134,15 +134,16 @@ void main() {
   });
 
   group('sync chip', () {
-    testApp('shows the pending count and is inert without the inspector flag', (tester) async {
+    // The chip shows on the card-stack home only (the list home has the header sync button instead).
+    testApp('a healthy queue is a small icon with the count; no review sheet without issues', (tester) async {
       await pumpApp(
         tester,
         user: asha,
+        prefsExtra: {'trips_view_mode': 'cards'},
         overrides: [syncStatusProvider.overrideWith((ref) => Stream.value(const SyncStatus(pending: 3)))],
       );
-      expect(find.text('Syncing 3 changes'), findsOneWidget);
-      await tester.tap(find.text('Syncing 3 changes'));
-      await settle(tester);
+      expect(find.byKey(const Key('sync-chip-icon')), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const Key('sync-chip-count')), matching: find.text('3')), findsOneWidget);
       expect(find.text('Sync queue'), findsNothing);
     });
 
@@ -151,6 +152,7 @@ void main() {
         tester,
         user: asha,
         flagsOn: {'enableSyncQueueInspector'},
+        prefsExtra: {'trips_view_mode': 'cards'},
         overrides: [
           syncStatusProvider.overrideWith((ref) => Stream.value(const SyncStatus(pending: 1, issues: 1))),
           syncItemsProvider.overrideWith(

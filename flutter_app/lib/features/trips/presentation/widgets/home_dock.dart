@@ -76,7 +76,6 @@ Widget? buildHomeDock(BuildContext context, WidgetRef ref, HomeTab current, {boo
   );
 }
 
-
 /// Desktop shell (board 08): on wide windows the four top-level screens get the same left rail
 /// as the trip workspace, with a New trip button on top. Narrow windows get [body] unchanged.
 ///

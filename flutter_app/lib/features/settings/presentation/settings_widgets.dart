@@ -40,12 +40,7 @@ class SettingsHeader extends StatelessWidget {
 /// WhatsApp / M3-style grouped card. When [segmented] is true (flag `enableSettingsSegmentedLists`),
 /// first/last rows clip to matching corner radii so ink highlights match WhatsApp settings.
 class SettingsSection extends StatelessWidget {
-  const SettingsSection({
-    required this.title,
-    required this.children,
-    this.segmented = true,
-    super.key,
-  });
+  const SettingsSection({required this.title, required this.children, this.segmented = true, super.key});
 
   final String title;
   final List<Widget> children;
@@ -62,12 +57,7 @@ class SettingsSection extends StatelessWidget {
         for (var i = 0; i < children.length; i++) ...[
           if (i > 0) Divider(height: 1, indent: 68, color: tokens.borderColor.withValues(alpha: 0.6)),
           if (segmented)
-            _SegmentedRowShell(
-              isFirst: i == 0,
-              isLast: i == children.length - 1,
-              radius: radius,
-              child: children[i],
-            )
+            _SegmentedRowShell(isFirst: i == 0, isLast: i == children.length - 1, radius: radius, child: children[i])
           else
             children[i],
         ],
@@ -96,12 +86,7 @@ class SettingsSection extends StatelessWidget {
 }
 
 class _SegmentedRowShell extends StatelessWidget {
-  const _SegmentedRowShell({
-    required this.isFirst,
-    required this.isLast,
-    required this.radius,
-    required this.child,
-  });
+  const _SegmentedRowShell({required this.isFirst, required this.isLast, required this.radius, required this.child});
   final bool isFirst;
   final bool isLast;
   final double radius;
@@ -124,12 +109,7 @@ class _SegmentedRowShell extends StatelessWidget {
 
 /// Profile strip at the top of Settings / You — avatar, name, quiet status line.
 class SettingsProfileHeader extends StatelessWidget {
-  const SettingsProfileHeader({
-    required this.name,
-    required this.subtitle,
-    required this.onTap,
-    super.key,
-  });
+  const SettingsProfileHeader({required this.name, required this.subtitle, required this.onTap, super.key});
 
   final String name;
   final String subtitle;
@@ -386,10 +366,7 @@ class HorizonThemePicker extends StatelessWidget {
                   color: t.bgSurface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
-                    side: BorderSide(
-                      color: v == value ? t.primaryAccent : t.borderColor,
-                      width: v == value ? 2 : 1,
-                    ),
+                    side: BorderSide(color: v == value ? t.primaryAccent : t.borderColor, width: v == value ? 2 : 1),
                   ),
                   child: InkWell(
                     key: Key('theme-$v'),

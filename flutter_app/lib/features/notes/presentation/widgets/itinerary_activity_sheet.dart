@@ -97,9 +97,7 @@ class _ItineraryActivitySheetState extends ConsumerState<ItineraryActivitySheet>
     final first = widget.tripStartDate != null
         ? DateTime.tryParse(widget.tripStartDate!) ?? DateTime(2020)
         : DateTime(2020);
-    final last = widget.tripEndDate != null
-        ? DateTime.tryParse(widget.tripEndDate!) ?? DateTime(2035)
-        : DateTime(2035);
+    final last = widget.tripEndDate != null ? DateTime.tryParse(widget.tripEndDate!) ?? DateTime(2035) : DateTime(2035);
 
     final picked = await showDatePicker(
       context: context,
@@ -124,8 +122,7 @@ class _ItineraryActivitySheetState extends ConsumerState<ItineraryActivitySheet>
       initialTime: TimeOfDay(hour: curHour, minute: curMin),
     );
     if (picked != null) {
-      final formatted =
-          '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+      final formatted = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
       setState(() => _timeController.text = formatted);
     }
   }
@@ -240,10 +237,7 @@ class _ItineraryActivitySheetState extends ConsumerState<ItineraryActivitySheet>
                   onTap: _busy ? null : _pickDate,
                   borderRadius: BorderRadius.circular(tokens.radiusSm),
                   child: IgnorePointer(
-                    child: AppTextField(
-                      controller: _dateController,
-                      label: 'Date',
-                    ),
+                    child: AppTextField(controller: _dateController, label: 'Date'),
                   ),
                 ),
               ),
@@ -253,10 +247,7 @@ class _ItineraryActivitySheetState extends ConsumerState<ItineraryActivitySheet>
                   onTap: _busy ? null : _pickTime,
                   borderRadius: BorderRadius.circular(tokens.radiusSm),
                   child: IgnorePointer(
-                    child: AppTextField(
-                      controller: _timeController,
-                      label: 'Time (optional)',
-                    ),
+                    child: AppTextField(controller: _timeController, label: 'Time (optional)'),
                   ),
                 ),
               ),
@@ -311,10 +302,7 @@ class _ItineraryActivitySheetState extends ConsumerState<ItineraryActivitySheet>
                 ),
                 const Spacer(),
               ],
-              TextButton(
-                onPressed: _busy ? null : () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
+              TextButton(onPressed: _busy ? null : () => Navigator.of(context).pop(), child: const Text('Cancel')),
               const SizedBox(width: 8),
               AppButton(
                 label: widget.initialItem != null ? 'Update' : 'Add to Day',

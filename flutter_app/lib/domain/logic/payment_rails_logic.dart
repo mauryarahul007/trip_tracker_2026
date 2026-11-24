@@ -1,11 +1,4 @@
-enum PaymentRail {
-  upi,
-  revolut,
-  venmo,
-  cashapp,
-  paypal,
-  iban,
-}
+enum PaymentRail { upi, revolut, venmo, cashapp, paypal, iban }
 
 class PaymentRailDef {
   final PaymentRail id;
@@ -92,11 +85,7 @@ class PaymentLinkResult {
   final bool isDeepLink;
   final String? copyText;
 
-  const PaymentLinkResult({
-    required this.url,
-    this.isDeepLink = false,
-    this.copyText,
-  });
+  const PaymentLinkResult({required this.url, this.isDeepLink = false, this.copyText});
 }
 
 PaymentLinkResult buildPaymentLink({
@@ -115,16 +104,19 @@ PaymentLinkResult buildPaymentLink({
     case PaymentRail.upi:
       final encodedName = Uri.encodeComponent(payeeName.trim());
       final encodedNote = Uri.encodeComponent(note.trim());
-      final uri = 'upi://pay?pa=${Uri.encodeComponent(clean)}&pn=$encodedName&am=$formattedAmount&cu=INR&tn=$encodedNote';
+      final uri =
+          'upi://pay?pa=${Uri.encodeComponent(clean)}&pn=$encodedName&am=$formattedAmount&cu=INR&tn=$encodedNote';
       return PaymentLinkResult(url: uri, isDeepLink: true);
 
     case PaymentRail.revolut:
-      final revolutUrl = 'https://revolut.me/${Uri.encodeComponent(clean)}?amount=$formattedAmount&currency=${Uri.encodeComponent(upperCurr)}';
+      final revolutUrl =
+          'https://revolut.me/${Uri.encodeComponent(clean)}?amount=$formattedAmount&currency=${Uri.encodeComponent(upperCurr)}';
       return PaymentLinkResult(url: revolutUrl, isDeepLink: false);
 
     case PaymentRail.venmo:
       final encodedNote = Uri.encodeComponent(note);
-      final venmoUri = 'venmo://paycharge?txn=pay&recipients=${Uri.encodeComponent(clean)}&amount=$formattedAmount&note=$encodedNote';
+      final venmoUri =
+          'venmo://paycharge?txn=pay&recipients=${Uri.encodeComponent(clean)}&amount=$formattedAmount&note=$encodedNote';
       return PaymentLinkResult(url: venmoUri, isDeepLink: true);
 
     case PaymentRail.cashapp:

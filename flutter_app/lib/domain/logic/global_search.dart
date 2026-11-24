@@ -72,7 +72,9 @@ List<SearchHit> searchHits(
   for (final t in trips) {
     for (final n in t.notes) {
       if (n.title.toLowerCase().contains(q) || n.content.toLowerCase().contains(q)) {
-        hits.add(SearchHit(kind: HitKind.note, tripId: t.id, tripName: t.name, title: n.title, detail: '', itemId: n.id));
+        hits.add(
+          SearchHit(kind: HitKind.note, tripId: t.id, tripName: t.name, title: n.title, detail: '', itemId: n.id),
+        );
       }
     }
   }

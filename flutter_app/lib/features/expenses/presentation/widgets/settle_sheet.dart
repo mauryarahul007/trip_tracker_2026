@@ -497,7 +497,9 @@ class SettleSheetState extends ConsumerState<SettleSheet> {
                             Expanded(
                               child: AppButton(
                                 key: const Key('settle-upi-apps'),
-                                label: (globalRailsOn && widget.currency.toUpperCase() != 'INR') ? 'Pay Rails' : 'Apps & QR',
+                                label: (globalRailsOn && widget.currency.toUpperCase() != 'INR')
+                                    ? 'Pay Rails'
+                                    : 'Apps & QR',
                                 icon: Icons.qr_code_2_rounded,
                                 variant: AppButtonVariant.secondary,
                                 onPressed: _openUpiSheet,
@@ -613,8 +615,7 @@ Future<void> showSettleSheet({
 Transfer? openTransferBetween(SettlementResult? result, String? me, String other) {
   if (result == null || me == null || me.isEmpty || other.isEmpty || other == me) return null;
   for (final t in result.transfers) {
-    final pair =
-        (t.fromMemberId == me && t.toMemberId == other) || (t.fromMemberId == other && t.toMemberId == me);
+    final pair = (t.fromMemberId == me && t.toMemberId == other) || (t.fromMemberId == other && t.toMemberId == me);
     if (pair && t.amount >= 0.01) return t;
   }
   return null;

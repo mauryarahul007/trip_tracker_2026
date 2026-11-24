@@ -224,14 +224,14 @@ class TripContentSheetState extends State<TripContentSheet> with TickerProviderS
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Darkening scrim over the map as the sheet pulls up
-        if (progress > 0.01)
-          Positioned.fill(
-            child: IgnorePointer(
-              ignoring: progress < 0.8,
-              child: Container(color: Colors.black.withValues(alpha: progress * 0.45)),
-            ),
+        // Darkening scrim over the map as the sheet pulls up. It always stays in the tree: inserting it mid-drag
+        // shifted the sheet's slot in this Stack, rebuilt its handle and cancelled the drag, leaving it half open.
+        Positioned.fill(
+          child: IgnorePointer(
+            ignoring: progress < 0.8,
+            child: ColoredBox(color: Colors.black.withValues(alpha: progress > 0.01 ? progress * 0.45 : 0)),
           ),
+        ),
 
         // Draggable sheet card
         Positioned(

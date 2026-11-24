@@ -192,7 +192,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 children: [
                   if (widget.tripId != null) ...[
                     chip(const Key('filter-this-trip'), 'This trip', _thisTrip, () => setState(() => _thisTrip = true)),
-                    chip(const Key('filter-all-trips'), 'All trips', !_thisTrip, () => setState(() => _thisTrip = false)),
+                    chip(
+                      const Key('filter-all-trips'),
+                      'All trips',
+                      !_thisTrip,
+                      () => setState(() => _thisTrip = false),
+                    ),
                   ],
                   if (groupingOn) ...[
                     chip(const Key('filter-kind-all'), 'All', !_moneyOnly, () => setState(() => _moneyOnly = false)),
@@ -293,11 +298,7 @@ class _NotificationsScroll extends StatelessWidget {
         slivers.add(
           SliverPersistentHeader(
             pinned: true,
-            delegate: _DayStickyHeader(
-              label: label,
-              background: tokens.bgPage,
-              foreground: tokens.textMuted,
-            ),
+            delegate: _DayStickyHeader(label: label, background: tokens.bgPage, foreground: tokens.textMuted),
           ),
         );
       }
@@ -305,39 +306,36 @@ class _NotificationsScroll extends StatelessWidget {
       final rows = folded ? [lead] : g;
       slivers.add(
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, i) {
-              if (i < rows.length) {
-                final n = rows[i];
-                return _Row(
-                  key: ValueKey('notif-${n.id}'),
-                  item: n,
-                  tokens: tokens,
-                  dense: dense,
-                  polish: polish,
-                  confirmable: actionsOn && n.data?['type'] == 'settlement_confirmation_requested'
-                      ? settlementToConfirm(
-                          tripId: n.tripId,
-                          expenseTitle: n.data?['expenseTitle'] as String?,
-                          userId: userId,
-                          expenses: allExpenses,
-                          members: allMembers,
-                        )
-                      : null,
-                  onConfirm: (e) => onConfirm(n, e),
-                  onTap: () => onOpen(n),
-                  onToggleRead: () => onToggleRead(n),
-                  onDelete: () => onDelete(n),
-                );
-              }
-              return TextButton(
-                key: Key('group-toggle-${lead.id}'),
-                onPressed: () => onToggleGroup(lead.id, folded),
-                child: Text(folded ? 'Show ${g.length - 1} more' : 'Show less'),
+          delegate: SliverChildBuilderDelegate((context, i) {
+            if (i < rows.length) {
+              final n = rows[i];
+              return _Row(
+                key: ValueKey('notif-${n.id}'),
+                item: n,
+                tokens: tokens,
+                dense: dense,
+                polish: polish,
+                confirmable: actionsOn && n.data?['type'] == 'settlement_confirmation_requested'
+                    ? settlementToConfirm(
+                        tripId: n.tripId,
+                        expenseTitle: n.data?['expenseTitle'] as String?,
+                        userId: userId,
+                        expenses: allExpenses,
+                        members: allMembers,
+                      )
+                    : null,
+                onConfirm: (e) => onConfirm(n, e),
+                onTap: () => onOpen(n),
+                onToggleRead: () => onToggleRead(n),
+                onDelete: () => onDelete(n),
               );
-            },
-            childCount: rows.length + (g.length > 1 ? 1 : 0),
-          ),
+            }
+            return TextButton(
+              key: Key('group-toggle-${lead.id}'),
+              onPressed: () => onToggleGroup(lead.id, folded),
+              child: Text(folded ? 'Show ${g.length - 1} more' : 'Show less'),
+            );
+          }, childCount: rows.length + (g.length > 1 ? 1 : 0)),
         ),
       );
     }
@@ -368,12 +366,7 @@ class _DayStickyHeader extends SliverPersistentHeaderDelegate {
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 2),
           child: Text(
             label.toUpperCase(),
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.6,
-              color: foreground,
-            ),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.6, color: foreground),
           ),
         ),
       ),
@@ -443,31 +436,31 @@ class _Row extends StatelessWidget {
                 onToggleRead: onToggleRead,
               )
             else
-            ListTile(
-              dense: dense,
-              visualDensity: dense ? VisualDensity.compact : VisualDensity.standard,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: dense ? 0 : 4),
-              onTap: onTap,
-              leading: CircleAvatar(
-                radius: dense ? 16 : 20,
-                backgroundColor: meta.color.withValues(alpha: 0.15),
-                child: Icon(meta.icon, size: dense ? 16 : 18, color: meta.color),
+              ListTile(
+                dense: dense,
+                visualDensity: dense ? VisualDensity.compact : VisualDensity.standard,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: dense ? 0 : 4),
+                onTap: onTap,
+                leading: CircleAvatar(
+                  radius: dense ? 16 : 20,
+                  backgroundColor: meta.color.withValues(alpha: 0.15),
+                  child: Icon(meta.icon, size: dense ? 16 : 18, color: meta.color),
+                ),
+                title: Text(headline, style: TextStyle(fontWeight: item.read ? FontWeight.w500 : FontWeight.w800)),
+                subtitle: Text(
+                  dense
+                      ? '${renderNotificationBody(item)} · ${formatRelativeTime(item.createdAt)}'
+                      : '${renderNotificationBody(item)}\n${formatRelativeTime(item.createdAt)}',
+                  maxLines: dense ? 2 : 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                isThreeLine: !dense,
+                trailing: IconButton(
+                  tooltip: item.read ? 'Mark as unread' : 'Mark as read',
+                  onPressed: onToggleRead,
+                  icon: Icon(item.read ? Icons.mark_email_unread_outlined : Icons.mark_email_read_outlined, size: 20),
+                ),
               ),
-              title: Text(headline, style: TextStyle(fontWeight: item.read ? FontWeight.w500 : FontWeight.w800)),
-              subtitle: Text(
-                dense
-                    ? '${renderNotificationBody(item)} · ${formatRelativeTime(item.createdAt)}'
-                    : '${renderNotificationBody(item)}\n${formatRelativeTime(item.createdAt)}',
-                maxLines: dense ? 2 : 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-              isThreeLine: !dense,
-              trailing: IconButton(
-                tooltip: item.read ? 'Mark as unread' : 'Mark as read',
-                onPressed: onToggleRead,
-                icon: Icon(item.read ? Icons.mark_email_unread_outlined : Icons.mark_email_read_outlined, size: 20),
-              ),
-            ),
             if (confirmable != null)
               Padding(
                 padding: EdgeInsets.fromLTRB(polish ? 62 : (dense ? 56 : 72), 0, 16, dense ? 4 : 8),
@@ -601,10 +594,7 @@ class _PolishedBody extends StatelessWidget {
                     style: TextStyle(fontSize: 13, height: 1.3, color: tokens.textSecondary),
                   ),
                   const SizedBox(height: 3),
-                  Text(
-                    formatRelativeTime(item.createdAt),
-                    style: TextStyle(fontSize: 11.5, color: tokens.textMuted),
-                  ),
+                  Text(formatRelativeTime(item.createdAt), style: TextStyle(fontSize: 11.5, color: tokens.textMuted)),
                 ],
               ),
             ),

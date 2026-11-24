@@ -8,16 +8,63 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
-  ChangelogEntry('3.99.0', '2026-11-24', ['Horizon All balances now lists who owes you and whom you owe, person by person, across all your trips (Flutter).', 'Horizon trip header shows small avatars of the trip crew (Flutter).', 'Horizon create trip: pick a cover colour for the new trip, kept on this phone (Flutter).']),
-  ChangelogEntry('3.98.0', '2026-11-24', ['Horizon Settings: pick Light, Dark or System from three big tiles (Flutter).', 'Horizon empty and error screens use a soft tinted icon tile on a plain background; the offline notice is a slim rounded banner (Flutter).']),
-  ChangelogEntry('3.97.0', '2026-11-24', ['Horizon trip Balances: your position leads in big type on a night-navy card, with what you paid, your share and the trip total under it (Flutter).', 'Horizon Spend rows now say what each expense means for you: "you owe", "you lent" or "not involved" (Flutter).']),
-  ChangelogEntry('3.96.0', '2026-11-24', ['Horizon look for the Flutter app: a new blue and night-navy colour scheme with a sunset accent, in light, dark and pure black.', 'New bottom bars with a raised Add button in the centre; the trip bar is now Balances, Spend, Add, Chat and Hub.', 'Redesigned splash, onboarding, sign-in and Trips home: your balance across all trips up top, with New trip, Join code, Quick add and Settle one tap away.']),
-  ChangelogEntry('3.93.0', '2026-11-13', ['Global Payment Rails: 1-tap debt settlement via Revolut, Venmo, Cash App, PayPal, and bank wire IBAN instructions alongside Indian UPI (Web & Flutter).', 'Smart Currency Auto-Routing: Automatically prioritizes settlement rails matching trip base currency with prefilled transfer amounts and recipient tags.', 'Visual Itinerary Modal Polish: Upgraded activity popups to solid high-contrast surfaces and added Itinerary view tabs to Notes & Plans on both Web and Flutter.']),
-  ChangelogEntry('3.92.0', '2026-11-13', ['Day-by-Day Visual Itinerary Planner: Unified chronological timeline merging scheduled activities, transit passes, and daily expenses with Google Maps directions (Web & Flutter).', 'Daily Budget Pacing Dial & Velocity Forecaster: Set planned trip budgets on-device with daily burn tracking, remaining allowances, and forecast variance (Web & Flutter).', 'Enhanced Line-Item Bill Splitter: Live member share breakdowns with pro-rata tax/tip allocation, per-person item badges, and 1-tap "All" / "Clear" shortcuts (Web & Flutter).']),
-  ChangelogEntry('3.91.7', '2026-11-13', ['Daily Budget Pacing Dial & Velocity Forecaster: Set planned trip budgets on-device with daily burn tracking, remaining allowances, and forecast variance (Web & Flutter).', 'Enhanced Line-Item Bill Splitter: Live member share breakdowns with pro-rata tax/tip allocation, per-person item badges, and 1-tap "All" / "Clear" shortcuts (Web & Flutter).', 'Flutter UX & Ledger Enhancements: S1-S5 upgrades across money formatting, empty states, visual polish, and search filters.']),
-  ChangelogEntry('3.91.1', '2026-11-04', ['Settlement FAB direct workflow: Tapping "Record settlement" in the Floating Action Button menu directly launches the payment composer instead of navigating to shell branches (Flutter).', 'Smart debt picker: Automatically opens the settlement sheet if one balance exists, or displays open balances if multiple debts exist (Flutter).', 'Modular settlement sheet: Extracted and consolidated settlement sheet logic, eliminating redundant code (Flutter).']),
-  ChangelogEntry('3.91.0', '2026-11-03', ['Speed Dial Bento Sheet: Tapping the action button presents a 4-action capsule (Quick Add, Detailed Expense, Scan Receipt, Settle Up) with haptics (Flutter).', 'Fintech Rolling Odometer Metrics: Rolling number animations on spend summaries, balance cards, and total spend stats (Flutter & Web).', 'Empty State Spend Accelerators: Interactive empty cards with quick starter action chips on zero-expense trips (Flutter & Web).']),
-  ChangelogEntry('3.90.0', '2026-11-03', ['Desktop Side Inspector: clicking an expense on widescreen displays docks an inspector panel on the right without blocking modal backdrops (Web).', 'Receipt Tools: High-contrast filter for faded thermal receipts and 2x zoom toggle on expense review (Web).', 'Timeline Hotkey: Press "T" to toggle between Ledger List and Travel Timeline views in Desktop Command Center (Web).', 'Settlement Vouchers: mint voucher cards with exchange indicators, confirmed status badges, and role amounts (Flutter).', 'Calibrated Sticky Day Headers: single-day expansion stays pinned while multi-day expansion scrolls smoothly without stacking (Flutter).']),
-  ChangelogEntry('3.89.2', '2026-11-03', ['Spend tab scrolling fix: unpinned day headers and flattened sliver groupings so settlements and all expenses remain fully visible when "Expand all days" is selected (Flutter).', 'Resolved settlement header text overflow on narrow device viewports (Flutter).', 'Increased bottom clearance spacer to 200px to guarantee comfortable clearance over the floating action button and bottom navigation bar (Flutter).']),
-  ChangelogEntry('3.89.1', '2026-11-03', ['Settlements section on Spend tab: settled amounts, count pill, and dedicated day cards now appear when scrolling down (Flutter).', 'Fixed a duplicate key collision when settlements and regular expenses occur on the same date (Flutter).', 'Increased bottom scroll clearance so settlements and action buttons are not obscured by navigation bars (Flutter).']),
+  ChangelogEntry('3.99.1', '2026-11-24', [
+    'Fixed: dragging the trip sheet slowly by its handle could stop halfway instead of opening fully (Flutter).',
+    'Fixed: small layout and accessibility issues: the empty-day itinerary row and Notes tab labels no longer overflow, the Spend chips and Set Budget button have full-size touch targets, and the bottom bar keeps readable labels while scrolling (Flutter).',
+  ]),
+  ChangelogEntry('3.99.0', '2026-11-24', [
+    'Horizon All balances now lists who owes you and whom you owe, person by person, across all your trips (Flutter).',
+    'Horizon trip header shows small avatars of the trip crew (Flutter).',
+    'Horizon create trip: pick a cover colour for the new trip, kept on this phone (Flutter).',
+  ]),
+  ChangelogEntry('3.98.0', '2026-11-24', [
+    'Horizon Settings: pick Light, Dark or System from three big tiles (Flutter).',
+    'Horizon empty and error screens use a soft tinted icon tile on a plain background; the offline notice is a slim rounded banner (Flutter).',
+  ]),
+  ChangelogEntry('3.97.0', '2026-11-24', [
+    'Horizon trip Balances: your position leads in big type on a night-navy card, with what you paid, your share and the trip total under it (Flutter).',
+    'Horizon Spend rows now say what each expense means for you: "you owe", "you lent" or "not involved" (Flutter).',
+  ]),
+  ChangelogEntry('3.96.0', '2026-11-24', [
+    'Horizon look for the Flutter app: a new blue and night-navy colour scheme with a sunset accent, in light, dark and pure black.',
+    'New bottom bars with a raised Add button in the centre; the trip bar is now Balances, Spend, Add, Chat and Hub.',
+    'Redesigned splash, onboarding, sign-in and Trips home: your balance across all trips up top, with New trip, Join code, Quick add and Settle one tap away.',
+  ]),
+  ChangelogEntry('3.93.0', '2026-11-13', [
+    'Global Payment Rails: 1-tap debt settlement via Revolut, Venmo, Cash App, PayPal, and bank wire IBAN instructions alongside Indian UPI (Web & Flutter).',
+    'Smart Currency Auto-Routing: Automatically prioritizes settlement rails matching trip base currency with prefilled transfer amounts and recipient tags.',
+    'Visual Itinerary Modal Polish: Upgraded activity popups to solid high-contrast surfaces and added Itinerary view tabs to Notes & Plans on both Web and Flutter.',
+  ]),
+  ChangelogEntry('3.92.0', '2026-11-13', [
+    'Day-by-Day Visual Itinerary Planner: Unified chronological timeline merging scheduled activities, transit passes, and daily expenses with Google Maps directions (Web & Flutter).',
+    'Daily Budget Pacing Dial & Velocity Forecaster: Set planned trip budgets on-device with daily burn tracking, remaining allowances, and forecast variance (Web & Flutter).',
+    'Enhanced Line-Item Bill Splitter: Live member share breakdowns with pro-rata tax/tip allocation, per-person item badges, and 1-tap "All" / "Clear" shortcuts (Web & Flutter).',
+  ]),
+  ChangelogEntry('3.91.7', '2026-11-13', [
+    'Daily Budget Pacing Dial & Velocity Forecaster: Set planned trip budgets on-device with daily burn tracking, remaining allowances, and forecast variance (Web & Flutter).',
+    'Enhanced Line-Item Bill Splitter: Live member share breakdowns with pro-rata tax/tip allocation, per-person item badges, and 1-tap "All" / "Clear" shortcuts (Web & Flutter).',
+    'Flutter UX & Ledger Enhancements: S1-S5 upgrades across money formatting, empty states, visual polish, and search filters.',
+  ]),
+  ChangelogEntry('3.91.1', '2026-11-04', [
+    'Settlement FAB direct workflow: Tapping "Record settlement" in the Floating Action Button menu directly launches the payment composer instead of navigating to shell branches (Flutter).',
+    'Smart debt picker: Automatically opens the settlement sheet if one balance exists, or displays open balances if multiple debts exist (Flutter).',
+    'Modular settlement sheet: Extracted and consolidated settlement sheet logic, eliminating redundant code (Flutter).',
+  ]),
+  ChangelogEntry('3.91.0', '2026-11-03', [
+    'Speed Dial Bento Sheet: Tapping the action button presents a 4-action capsule (Quick Add, Detailed Expense, Scan Receipt, Settle Up) with haptics (Flutter).',
+    'Fintech Rolling Odometer Metrics: Rolling number animations on spend summaries, balance cards, and total spend stats (Flutter & Web).',
+    'Empty State Spend Accelerators: Interactive empty cards with quick starter action chips on zero-expense trips (Flutter & Web).',
+  ]),
+  ChangelogEntry('3.90.0', '2026-11-03', [
+    'Desktop Side Inspector: clicking an expense on widescreen displays docks an inspector panel on the right without blocking modal backdrops (Web).',
+    'Receipt Tools: High-contrast filter for faded thermal receipts and 2x zoom toggle on expense review (Web).',
+    'Timeline Hotkey: Press "T" to toggle between Ledger List and Travel Timeline views in Desktop Command Center (Web).',
+    'Settlement Vouchers: mint voucher cards with exchange indicators, confirmed status badges, and role amounts (Flutter).',
+    'Calibrated Sticky Day Headers: single-day expansion stays pinned while multi-day expansion scrolls smoothly without stacking (Flutter).',
+  ]),
+  ChangelogEntry('3.89.2', '2026-11-03', [
+    'Spend tab scrolling fix: unpinned day headers and flattened sliver groupings so settlements and all expenses remain fully visible when "Expand all days" is selected (Flutter).',
+    'Resolved settlement header text overflow on narrow device viewports (Flutter).',
+    'Increased bottom clearance spacer to 200px to guarantee comfortable clearance over the floating action button and bottom navigation bar (Flutter).',
+  ]),
 ];

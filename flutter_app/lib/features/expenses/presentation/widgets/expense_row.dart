@@ -392,16 +392,16 @@ class _ExpenseRowState extends State<ExpenseRow> {
                         if (tokens.horizon && !_isRefund)
                           ?_horizonImpact(context, e, base)
                         else ...[
-                        if (shareLine != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(shareLine, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
-                          ),
-                        if (backLine != null)
-                          Text(
-                            backLine,
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tokens.colorSuccess),
-                          ),
+                          if (shareLine != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(shareLine, style: TextStyle(fontSize: 12, color: tokens.textMuted)),
+                            ),
+                          if (backLine != null)
+                            Text(
+                              backLine,
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tokens.colorSuccess),
+                            ),
                         ],
                       ],
                     ),

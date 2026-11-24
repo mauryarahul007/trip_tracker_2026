@@ -78,10 +78,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           children: [
             Icon(AppIcons.check, size: 48, color: tokens.successColor),
             const SizedBox(height: 16),
-            Text(
-              l10n.resetCheckEmail,
-              style: AppTypography.tripTitle(color: tokens.textPrimary, fontSize: 24),
-            ),
+            Text(l10n.resetCheckEmail, style: AppTypography.tripTitle(color: tokens.textPrimary, fontSize: 24)),
             const SizedBox(height: 8),
             _FeedbackBanner(message: l10n.resetSentTo(_email.text.trim())),
             const SizedBox(height: 24),

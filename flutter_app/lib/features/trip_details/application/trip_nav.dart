@@ -44,7 +44,9 @@ final dockTabsProvider = Provider.family<List<TripNavTab>, String>((ref, tripId)
     if (!ref.watch(compassFlagProvider((compassNavFlag, tripId)))) return ref.watch(visibleTabsProvider(tripId));
     return compassDockTabs();
   }
-  if (ref.watch(compassFlagProvider((horizonUiFlag, tripId)))) return horizonDockTabs(chatEnabled: flag('enableTripChat'));
+  if (ref.watch(compassFlagProvider((horizonUiFlag, tripId)))) {
+    return horizonDockTabs(chatEnabled: flag('enableTripChat'));
+  }
   return calmDockTabs(chatEnabled: flag('enableTripChat'));
 });
 

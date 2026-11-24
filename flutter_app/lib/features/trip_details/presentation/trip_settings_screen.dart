@@ -238,10 +238,10 @@ class _ApprovalThresholdSheetState extends State<ApprovalThresholdSheet> {
             controller: _c,
             autofocus: true,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: AppTypography.moneyDisplay(fontSize: 28, color: tk.textPrimary).copyWith(
-              fontWeight: FontWeight.w800,
-              fontFeatures: AppTypography.tabularFigures,
-            ),
+            style: AppTypography.moneyDisplay(
+              fontSize: 28,
+              color: tk.textPrimary,
+            ).copyWith(fontWeight: FontWeight.w800, fontFeatures: AppTypography.tabularFigures),
             decoration: InputDecoration(
               prefixText: '${getCurrencySymbol(widget.currency)} ',
               suffixText: widget.currency,
@@ -253,10 +253,7 @@ class _ApprovalThresholdSheetState extends State<ApprovalThresholdSheet> {
           Text(
             preview,
             key: const Key('threshold-preview'),
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: invalid ? tk.colorDanger : tk.textSecondary,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w600, color: invalid ? tk.colorDanger : tk.textSecondary),
           ),
           const SizedBox(height: 16),
           AppButton(

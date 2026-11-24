@@ -27,7 +27,10 @@ class HorizonGreeting extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(hello, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: t.textSecondary)),
+        Text(
+          hello,
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: t.textSecondary),
+        ),
         if (first.isNotEmpty)
           Text(
             first,

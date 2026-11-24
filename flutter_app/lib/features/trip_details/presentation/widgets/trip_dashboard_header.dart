@@ -192,17 +192,18 @@ class TripDashboardHeader extends ConsumerWidget {
                                             trip?.name ?? '',
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: AppTypography.tripTitle(color: titleColor, fontSize: titleFontSize).copyWith(
-                                              shadows: clampedProgress < 0.5
-                                                  ? [
-                                                      Shadow(
-                                                        color: Colors.black.withValues(alpha: 0.6),
-                                                        blurRadius: 4,
-                                                        offset: const Offset(0, 1),
-                                                      ),
-                                                    ]
-                                                  : null,
-                                            ),
+                                            style: AppTypography.tripTitle(color: titleColor, fontSize: titleFontSize)
+                                                .copyWith(
+                                                  shadows: clampedProgress < 0.5
+                                                      ? [
+                                                          Shadow(
+                                                            color: Colors.black.withValues(alpha: 0.6),
+                                                            blurRadius: 4,
+                                                            offset: const Offset(0, 1),
+                                                          ),
+                                                        ]
+                                                      : null,
+                                                ),
                                           ),
                                         ),
                                       ),

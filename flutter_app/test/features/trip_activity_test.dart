@@ -192,6 +192,8 @@ void main() {
       expect(key('action-trip-more'), findsNothing);
       await tester.tap(find.descendant(of: key('calm-dock'), matching: find.text('Trip')));
       await settle(tester, rounds: 14);
+      await tester.tap(key('hub-more')); // everything but the four daily tiles sits under More
+      await settle(tester, rounds: 4);
       for (final k in [
         'hub-edit',
         'hub-map',

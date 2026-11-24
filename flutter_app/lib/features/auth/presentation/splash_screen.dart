@@ -108,9 +108,7 @@ class _HorizonSplash extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: t.primaryAccent,
                             borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(color: t.primaryAccent.withValues(alpha: 0.5), blurRadius: 32),
-                            ],
+                            boxShadow: [BoxShadow(color: t.primaryAccent.withValues(alpha: 0.5), blurRadius: 32)],
                           ),
                           child: const Icon(Icons.explore_outlined, size: 44, color: Colors.white),
                         ),

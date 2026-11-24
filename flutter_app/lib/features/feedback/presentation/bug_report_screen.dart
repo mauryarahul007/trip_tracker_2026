@@ -227,8 +227,5 @@ class _BugReportScreenState extends ConsumerState<BugReportScreen> {
 
 Widget _chipLabel(BuildContext context, String text) => Padding(
   padding: const EdgeInsets.only(bottom: 8),
-  child: Text(
-    text.toUpperCase(),
-    style: AppTypography.eyebrowMono(color: context.tokens.textMuted, fontSize: 10.5),
-  ),
+  child: Text(text.toUpperCase(), style: AppTypography.eyebrowMono(color: context.tokens.textMuted, fontSize: 10.5)),
 );

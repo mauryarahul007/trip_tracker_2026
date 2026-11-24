@@ -209,7 +209,9 @@ ThemeData _build(AppTokens t, Brightness brightness) {
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: t.bgSurface,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(t.horizon ? 24 : t.radiusLg))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(t.horizon ? 24 : t.radiusLg)),
+      ),
     ),
     snackBarTheme: t.horizon
         ? SnackBarThemeData(

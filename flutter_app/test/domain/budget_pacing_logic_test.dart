@@ -20,7 +20,7 @@ Expense makeTestExpense({
     paidBy: 'm1',
     splitMode: 'equal',
     splitMemberIds: const ['m1'],
-    resolvedShares: { 'm1': amount },
+    resolvedShares: {'m1': amount},
     isSettlement: isSettlement,
     createdAt: DateTime.now().millisecondsSinceEpoch,
     updatedAt: DateTime.now().millisecondsSinceEpoch,
@@ -30,12 +30,7 @@ Expense makeTestExpense({
 void main() {
   group('budget_pacing_logic', () {
     test('handles no budget gracefully', () {
-      final res = calculateBudgetPacing(
-        startDate: '2026-11-10',
-        endDate: '2026-11-15',
-        budget: 0,
-        expenses: const [],
-      );
+      final res = calculateBudgetPacing(startDate: '2026-11-10', endDate: '2026-11-15', budget: 0, expenses: const []);
 
       expect(res.hasBudget, false);
       expect(res.status, BudgetPacingStatus.noBudget);
@@ -94,9 +89,7 @@ void main() {
     });
 
     test('detects overBudget when total spent exceeds budget', () {
-      final expenses = [
-        makeTestExpense(id: 'e1', amount: 55000, date: '2026-11-11'),
-      ];
+      final expenses = [makeTestExpense(id: 'e1', amount: 55000, date: '2026-11-11')];
 
       final now = DateTime.utc(2026, 11, 12);
       final res = calculateBudgetPacing(

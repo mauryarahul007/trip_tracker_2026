@@ -12,6 +12,7 @@ import '../../settings/presentation/settings_widgets.dart';
 import '../../trips/application/trips_providers.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_surface.dart' show AppCard;
+
 /// Support view: app and sync state, recent (scrubbed) logs, share/copy.
 class DiagnosticsScreen extends ConsumerWidget {
   const DiagnosticsScreen({super.key});
@@ -93,11 +94,10 @@ class DiagnosticsScreen extends ConsumerWidget {
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Color.alphaBlend(
-                    context.tokens.textPrimary.withValues(alpha: 0.06),
-                    context.tokens.bgSurface,
+                  color: Color.alphaBlend(context.tokens.textPrimary.withValues(alpha: 0.06), context.tokens.bgSurface),
+                  border: Border.symmetric(
+                    horizontal: BorderSide(color: context.tokens.textMuted.withValues(alpha: 0.25)),
                   ),
-                  border: Border.symmetric(horizontal: BorderSide(color: context.tokens.textMuted.withValues(alpha: 0.25))),
                 ),
                 padding: const EdgeInsets.all(14),
                 child: SelectableText(

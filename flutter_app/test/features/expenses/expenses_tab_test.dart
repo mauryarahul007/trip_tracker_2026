@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trip_tracker/features/expenses/presentation/widgets/settle_ticket.dart' show TicketBarcode;
@@ -175,7 +176,7 @@ void main() {
     await tester.tap(find.text('Expand all days'));
     await settle(tester);
     expect(find.text('Taxi'), findsOneWidget);
-    expect(find.text('Settlements'), findsOneWidget);
+    expect(find.text('Settlements'), findsWidgets); // the section header (a filter chip shares the word)
     expect(find.text('Settlement: Ben → Asha'), findsOneWidget);
     expect(find.textContaining('settled'), findsWidgets);
     expect(find.byKey(const Key('day-settlement:2026-10-06')), findsOneWidget);
@@ -566,7 +567,7 @@ void main() {
       await settle(tester);
       expect(find.text('Beach lunch'), findsOneWidget);
       expect(find.text('Taxi to airport'), findsNothing);
-      await tester.tap(find.text('All'));
+      await tester.tap(find.widgetWithText(ChoiceChip, 'All'));
       await settle(tester);
       expect(find.text('Taxi to airport'), findsOneWidget);
     });
@@ -699,7 +700,12 @@ void main() {
       await openExpenses(tester, s);
       await tester.tap(find.byKey(const Key('tab-menu')));
       await settle(tester);
-      await tester.tap(find.text('Expand all days'));
+      // A list of only settlements opens already expanded: the menu then offers "Collapse all days".
+      if (find.text('Expand all days').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Expand all days'));
+      } else {
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape); // close the menu
+      }
       await settle(tester);
       await tester.tap(find.text(title));
       await settle(tester, rounds: 10);

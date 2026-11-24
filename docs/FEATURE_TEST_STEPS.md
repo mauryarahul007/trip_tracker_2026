@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-24 | 3.99.1 | FLUTTER-FIXES | [Trip sheet drag and small layout / accessibility fixes (Flutter)](#flutter-fixes--trip-sheet-drag-and-small-layout--accessibility-fixes-flutter) |
 | 2026-11-24 | 3.99.0 | HORIZON-UI | [Horizon follow-ups: by person, header avatars, cover colour (Flutter)](#horizon-ui--horizon-follow-ups-by-person-header-avatars-cover-colour-flutter) |
 | 2026-11-24 | 3.98.0 | HORIZON-UI | [Horizon look, phase 3c: Account and shared states (Flutter)](#horizon-ui--horizon-look-phase-3c-account-and-shared-states-flutter) |
 | 2026-11-24 | 3.97.0 | HORIZON-UI | [Horizon look, phase 3b: trip Balances and Spend (Flutter)](#horizon-ui--horizon-look-phase-3b-trip-balances-and-spend-flutter) |
@@ -4496,6 +4497,26 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## FLUTTER-FIXES — Trip sheet drag and small layout / accessibility fixes (Flutter)
+
+**Shipped:** v3.99.1. Flutter-only. No new flag: these are fixes to existing screens.
+
+### Prep
+Flutter app signed in, a trip with a few expenses and at least one day with no activities.
+
+### Steps
+1. Open a trip whose sheet starts half open (route map visible). Drag the sheet's handle up slowly, over about a second. On release it snaps fully open; it never stays halfway.
+2. Drag it back down slowly: it snaps to the half-open peek.
+3. Notes, Itinerary pane: a day with nothing logged shows "No activities or bills logged for this day" and "+ Activity" on one row with no yellow-black overflow stripe, also at large text.
+4. Notes with many passes on a narrow phone: the pane labels ("Passes (12)" etc.) shrink to fit instead of overflowing.
+5. Spend: the All / Expenses / Refunds / Settlements chips respond to a tap anywhere in their 48 px row.
+6. Balances with no budget: "Set Budget" is a full-size button.
+7. Scroll a long list so the bottom bar shrinks: its labels stay as dark as before (no fade).
+8. Trip hub (Compass nav), "More": tapping the More header shows its ink ripple.
+
+### Pass
+- No overflow stripes, the sheet always finishes its snap, and all touch targets are at least 48 px.
 
 ## HORIZON-UI — Horizon follow-ups: by person, header avatars, cover colour (Flutter)
 

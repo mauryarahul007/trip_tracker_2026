@@ -68,10 +68,7 @@ class SyncChip extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
         child: ActionChip(
           avatar: Icon(AppIcons.alert, size: 16, color: color),
-          label: Text(
-            l10n.syncLineIssue(status.issues),
-            style: TextStyle(color: color, fontSize: 12),
-          ),
+          label: Text(l10n.syncLineIssue(status.issues), style: TextStyle(color: color, fontSize: 12)),
           side: BorderSide(color: color.withValues(alpha: 0.4)),
           backgroundColor: color.withValues(alpha: 0.08),
           onPressed: onPressed,

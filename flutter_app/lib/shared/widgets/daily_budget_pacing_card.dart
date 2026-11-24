@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/format/money.dart';
 import '../../core/platform/motion.dart';
 import '../../domain/logic/budget_pacing_logic.dart';
@@ -66,13 +67,7 @@ class DailyBudgetPacingCard extends StatelessWidget {
         color: tokens.bgSurface,
         borderRadius: BorderRadius.circular(tokens.radiusLg),
         border: Border.all(color: tokens.borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -83,10 +78,7 @@ class DailyBudgetPacingCard extends StatelessWidget {
               Container(
                 width: 32,
                 height: 32,
-                decoration: BoxDecoration(
-                  color: tokens.bgSurfaceHover,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: tokens.bgSurfaceHover, shape: BoxShape.circle),
                 child: Icon(AppIcons.ledger, size: 17, color: tokens.primaryAccent),
               ),
               const SizedBox(width: 8),
@@ -96,11 +88,7 @@ class DailyBudgetPacingCard extends StatelessWidget {
                   children: [
                     Text(
                       'Daily Budget Pacing',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.textPrimary,
-                      ),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: tokens.textPrimary),
                     ),
                     if (pacing.hasBudget)
                       Text(
@@ -113,17 +101,10 @@ class DailyBudgetPacingCard extends StatelessWidget {
               if (pacing.hasBudget) ...[
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: statusBg,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
+                  decoration: BoxDecoration(color: statusBg, borderRadius: BorderRadius.circular(999)),
                   child: Text(
                     statusLabel,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: statusColor,
-                    ),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: statusColor),
                   ),
                 ),
                 if (onSetBudget != null)
@@ -140,7 +121,7 @@ class DailyBudgetPacingCard extends StatelessWidget {
                   icon: const Icon(AppIcons.add, size: 14),
                   label: const Text('Set Budget'),
                   style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
+                    minimumSize: const Size(48, 48), // full touch target
                     textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -161,11 +142,7 @@ class DailyBudgetPacingCard extends StatelessWidget {
                       const TextSpan(text: "Today's spend: "),
                       TextSpan(
                         text: formatMoney(context, pacing.todaySpent, currency),
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: tokens.textPrimary,
-                        ),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: tokens.textPrimary),
                       ),
                     ],
                   ),
@@ -177,11 +154,7 @@ class DailyBudgetPacingCard extends StatelessWidget {
                       const TextSpan(text: 'Daily target: '),
                       TextSpan(
                         text: formatMoney(context, pacing.adjustedDailyAllowance, currency),
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: tokens.primaryAccent,
-                        ),
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: tokens.primaryAccent),
                       ),
                     ],
                   ),
@@ -217,10 +190,24 @@ class DailyBudgetPacingCard extends StatelessWidget {
                   Expanded(
                     child: Column(
                       children: [
-                        Text('TOTAL SPENT', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: tokens.textMuted, letterSpacing: 0.4)),
+                        Text(
+                          'TOTAL SPENT',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            color: tokens.textMuted,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
                         const SizedBox(height: 2),
-                        Text(formatMoney(context, pacing.totalSpent, currency), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: tokens.textPrimary)),
-                        Text('${pacing.budgetUsedPercent}% used', style: TextStyle(fontSize: 9.5, color: tokens.textMuted)),
+                        Text(
+                          formatMoney(context, pacing.totalSpent, currency),
+                          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: tokens.textPrimary),
+                        ),
+                        Text(
+                          '${pacing.budgetUsedPercent}% used',
+                          style: TextStyle(fontSize: 9.5, color: tokens.textMuted),
+                        ),
                       ],
                     ),
                   ),
@@ -228,10 +215,24 @@ class DailyBudgetPacingCard extends StatelessWidget {
                   Expanded(
                     child: Column(
                       children: [
-                        Text('REMAINING', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: tokens.textMuted, letterSpacing: 0.4)),
+                        Text(
+                          'REMAINING',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            color: tokens.textMuted,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
                         const SizedBox(height: 2),
-                        Text(formatMoney(context, pacing.remainingBudget, currency), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: statusColor)),
-                        Text('of ${formatMoney(context, pacing.totalBudget, currency)}', style: TextStyle(fontSize: 9.5, color: tokens.textMuted)),
+                        Text(
+                          formatMoney(context, pacing.remainingBudget, currency),
+                          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: statusColor),
+                        ),
+                        Text(
+                          'of ${formatMoney(context, pacing.totalBudget, currency)}',
+                          style: TextStyle(fontSize: 9.5, color: tokens.textMuted),
+                        ),
                       ],
                     ),
                   ),
@@ -239,7 +240,15 @@ class DailyBudgetPacingCard extends StatelessWidget {
                   Expanded(
                     child: Column(
                       children: [
-                        Text('BURN RATE', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: tokens.textMuted, letterSpacing: 0.4)),
+                        Text(
+                          'BURN RATE',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            color: tokens.textMuted,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
                         const SizedBox(height: 2),
                         Text(
                           pacing.isOngoing && pacing.todayBurnRatio > 0
@@ -247,7 +256,10 @@ class DailyBudgetPacingCard extends StatelessWidget {
                               : '${formatMoney(context, pacing.plannedDailyBudget, currency)}/d',
                           style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: tokens.textPrimary),
                         ),
-                        Text(pacing.isOngoing ? 'today pace' : 'planned', style: TextStyle(fontSize: 9.5, color: tokens.textMuted)),
+                        Text(
+                          pacing.isOngoing ? 'today pace' : 'planned',
+                          style: TextStyle(fontSize: 9.5, color: tokens.textMuted),
+                        ),
                       ],
                     ),
                   ),

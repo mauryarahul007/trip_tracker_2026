@@ -20,7 +20,9 @@ void main() {
   const bentoOff = {'enableCompassNav', 'enableCompassSpend', 'enableCompassMoney'};
 
   group('TripHubScreen Material 3 Bento Grid', () {
-    testApp('with enableBentoHub ON: renders BentoTile widgets with staggered entrance and all action keys', (tester) async {
+    testApp('with enableBentoHub ON: renders BentoTile widgets with staggered entrance and all action keys', (
+      tester,
+    ) async {
       await pumpApp(tester, user: asha, flagsOn: bentoOn);
       final s = await seedTrip(tester);
       await goTo(tester, '/trip/${s.tripId}/ledger');
@@ -71,8 +73,10 @@ void main() {
       // When flag is OFF, BentoEntrance should not be rendered
       expect(find.byType(BentoEntrance), findsNothing);
 
-      // Standard hub keys remain intact
+      // Standard hub keys remain intact; the route map sits under More.
       expect(key('hub-people'), findsOneWidget);
+      await tester.tap(key('hub-more'));
+      await settle(tester, rounds: 4);
       expect(key('hub-map'), findsOneWidget);
     });
   });
