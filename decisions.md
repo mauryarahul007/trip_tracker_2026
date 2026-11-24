@@ -6018,3 +6018,13 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Left out: "Couples count as 2" and "Most trips like this spend…" (no data). People paid ignores foreign-currency expenses.
 
+## 305. Horizon All balances, Alerts, Me, states and sheets (v3.105.0)
+* **Context:** Steps 5 and 6 of carrying the Horizon mockups into the Flutter app, shipped together.
+* **Decision:**
+  - All balances: `_HorizonPeopleFiltered` (All / Owed to you / You owe segment) with a Settle CTA or an "all even" line replaces the mint card.
+  - Alerts: filter chips in a track (chip width fixed for both flag states), Mark all read text button, "Alerts" title. Me: "Me" title, " · N trips", Edit pill, Appearance before This trip.
+  - States: butter "Queued" pill for pending-sync rows, body font on the offline banner, navy `UndoSnackbar` with "Undo", and `HorizonTripMissing` when `tripProvider` resolves to null (reads the account-wide flag, since per-trip flags need the trip).
+  - Sheets: expense detail share chip, flat Filters header and footer, UPI amount in money format without the eyebrow, Quick add "Add to <trip>", conflict title names the expense when there is one.
+  - Reuses `enableHorizonUi`.
+* **Trade-offs Accepted:**
+  - Left out: multi-transfer Settle sheet, Close out checklist, side-by-side conflict cards, Invite QR layout, Import preview counts, Live location sheet. The current flows differ and need behaviour changes, not a restyle.

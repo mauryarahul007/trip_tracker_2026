@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'widgets/horizon_trip_missing.dart';
+
 import '../../../app/auth_state.dart';
 import '../../../core/env/app_env.dart';
 import '../../../core/clock.dart';
@@ -292,7 +294,8 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final tabs = ref.watch(visibleTabsProvider(widget.tripId));
-    final trip = ref.watch(tripProvider(widget.tripId)).value;
+    final tripAsync = ref.watch(tripProvider(widget.tripId));
+    final trip = tripAsync.value;
     final currentTab = TripNavTab.values[widget.navigationShell.currentIndex];
     final activeIndex = tabs.indexOf(currentTab);
 
@@ -312,6 +315,14 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
     final compass = !calm && ref.watch(compassFlagProvider((compassNavFlag, widget.tripId)));
     // Horizon (enableHorizonUi): the Add button sits in the middle of the dock on every tab instead of floating.
     final horizon = calm && ref.watch(compassFlagProvider((horizonUiFlag, widget.tripId)));
+    // Horizon: a link to a trip this device does not have gets a real "can't find" page, not an empty shell.
+    // Per-trip flags can't resolve without the trip, so this reads the account-wide Horizon flag.
+    if (tripAsync.hasValue &&
+        !tripAsync.isLoading &&
+        trip == null &&
+        ref.watch(compassFlagProvider((horizonUiFlag, null)))) {
+      return const HorizonTripMissing();
+    }
     final mapExpanded = ref.watch(tripMapOpenProvider(widget.tripId));
     ref.watch(allTripsProvider);
     ref.listen(tripMapOpenProvider(widget.tripId), (_, open) {

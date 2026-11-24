@@ -38,7 +38,16 @@ class ConflictSheet extends ConsumerWidget {
             children: [
               Icon(Icons.sync_problem_rounded, color: tokens.colorWarning),
               const SizedBox(width: 10),
-              Text(l10n.conflictTitle, style: Theme.of(context).textTheme.titleLarge),
+              // Horizon names the expense when there is just one: 'Two versions of "Scuba"'.
+              Expanded(
+                child: Text(
+                  tokens.horizon && conflicts.length == 1
+                      ? l10n.horizonConflictTitle(conflicts.first.local.title)
+                      : l10n.conflictTitle,
+                  key: const Key('conflict-title'),
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),

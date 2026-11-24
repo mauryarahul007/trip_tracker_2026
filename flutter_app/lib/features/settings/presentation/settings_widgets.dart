@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../shared/theme/app_typography.dart';
+import '../../../l10n/l10n_ext.dart';
+
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/app_avatar.dart';
 import '../../../shared/widgets/section_label.dart';
@@ -158,7 +161,24 @@ class SettingsProfileHeader extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded, color: t.textMuted),
+                // Horizon ("Me" mockup): a small Edit pill instead of the chevron.
+                if (t.horizon)
+                  Container(
+                    key: const Key('settings-profile-edit'),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(color: t.primaryAccentLight, borderRadius: BorderRadius.circular(99)),
+                    child: Text(
+                      context.l10n.horizonEdit,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontBody,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: t.primaryAccent,
+                      ),
+                    ),
+                  )
+                else
+                  Icon(Icons.chevron_right_rounded, color: t.textMuted),
               ],
             ),
           ),

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../../../core/format/money.dart';
 import '../../../../core/platform/external_launcher.dart';
 import '../../../../core/platform/haptics.dart';
 import '../../../../domain/logic/payment_rails_logic.dart';
@@ -329,16 +330,18 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '1-TAP SETTLEMENT RAILS',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontMono,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
-                      color: tokens.primaryAccent,
+                  // Horizon drops the mono eyebrow: the sheet title says enough.
+                  if (!tokens.horizon)
+                    Text(
+                      '1-TAP SETTLEMENT RAILS',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontMono,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: tokens.primaryAccent,
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 2),
                   Text(
                     'Pay ${widget.toName}',
@@ -365,25 +368,31 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
             decoration: BoxDecoration(
-              color: tokens.bgSurface,
+              color: tokens.horizon ? tokens.bgSurfaceHover : tokens.bgSurface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: tokens.borderColor),
+              border: tokens.horizon ? null : Border.all(color: tokens.borderColor),
             ),
             child: Column(
               children: [
+                if (!tokens.horizon) ...[
+                  Text(
+                    'Amount to Transfer',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tokens.textSecondary),
+                  ),
+                  const SizedBox(height: 4),
+                ],
+                // Horizon: the locked amount, big and in the trip's money format ("₹1,250.00").
                 Text(
-                  'Amount to Transfer',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tokens.textSecondary),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${widget.currency} ${widget.amount.toStringAsFixed(2)}',
+                  tokens.horizon
+                      ? formatMoney(context, widget.amount, widget.currency)
+                      : '${widget.currency} ${widget.amount.toStringAsFixed(2)}',
                   key: const Key('upi-amount-display'),
                   style: TextStyle(
                     fontFamily: AppTypography.fontTitle,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w900,
-                    color: tokens.colorSuccess,
+                    fontSize: tokens.horizon ? 34 : 26,
+                    fontWeight: tokens.horizon ? FontWeight.w800 : FontWeight.w900,
+                    fontFeatures: tokens.horizon ? AppTypography.tabularFigures : null,
+                    color: tokens.horizon ? tokens.textPrimary : tokens.colorSuccess,
                   ),
                 ),
                 const SizedBox(height: 2),

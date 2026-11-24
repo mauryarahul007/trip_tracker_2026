@@ -102,6 +102,34 @@ class _ExpenseRowState extends State<ExpenseRow> {
         child: _badge(Icons.sync_problem_rounded, tokens.colorDanger, l10n.rowSyncFailed),
       );
     }
+    if (tokens.horizon) {
+      // Horizon: a small butter "Queued" pill, so offline adds read as waiting, not broken.
+      final tone = tokens.tones.butter;
+      return Semantics(
+        label: l10n.rowSyncPending,
+        child: Container(
+          key: const Key('row-queued'),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(color: tone.bg, borderRadius: BorderRadius.circular(999)),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.cloud_upload_outlined, size: 11, color: tone.accent),
+              const SizedBox(width: 3),
+              Text(
+                l10n.horizonQueued,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontBody,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: tone.accent,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return _badge(Icons.sync_rounded, tokens.textMuted, l10n.rowSyncPending);
   }
 

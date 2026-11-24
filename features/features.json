@@ -3419,5 +3419,21 @@
     "shippedAt": "2026-11-25T00:00:00.000Z",
     "shippedBy": "agent",
     "shippedNote": "Commit c17ae3b (v3.104.0)."
+  },
+  {
+    "id": "FEAT-216",
+    "title": "Horizon All balances, Alerts, Me, states and sheets (Flutter)",
+    "description": "Under Core flag enableHorizonUi: All balances Owed/Owe filter with a Settle CTA, Alerts Mark all read, Me title, trip count and Edit pill, Queued tag on unsynced rows, navy undo toast, missing-trip page, expense detail share chip, Quick add names the trip, conflict title names the expense, cleaner Filters and UPI sheets. HORIZON-STATES.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "human",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-25T00:00:00.000Z",
+    "updatedAt": "2026-11-25T00:00:00.000Z",
+    "shippedAt": "2026-11-25T00:00:00.000Z",
+    "shippedBy": "agent",
+    "shippedNote": "Commit PENDING (v3.105.0)."
   }
 ]

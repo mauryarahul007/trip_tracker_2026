@@ -8,6 +8,11 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.105.0', '2026-11-25', [
+    'All balances filters by Owed to you or You owe, Alerts has a Mark all read button, and Me shows your trip count with an Edit button (Flutter).',
+    'Expenses waiting to sync show a Queued tag, the undo toast is dark navy, and a link to a missing trip shows a clear page with Back to my trips and Join with a code (Flutter).',
+    'Expense details show what you owe or lent, Quick add names the trip on its button, sync conflicts name the expense, and the Filters and UPI sheets are cleaner (Flutter).',
+  ]),
   ChangelogEntry('3.104.0', '2026-11-25', [
     'People shows what each person paid and their net, with a Members and Groups switch and clear Add a person and Invite rows (Flutter).',
     'Insights opens with a category donut and a daily tip; Activity rows lead with what happened; Categories show expense counts with your own ones listed apart; the checklist has a simple progress bar; the recycle bin has a Restore button on each row (Flutter).',
@@ -53,10 +58,5 @@ const List<ChangelogEntry> changelogEntries = [
     'Global Payment Rails: 1-tap debt settlement via Revolut, Venmo, Cash App, PayPal, and bank wire IBAN instructions alongside Indian UPI (Web & Flutter).',
     'Smart Currency Auto-Routing: Automatically prioritizes settlement rails matching trip base currency with prefilled transfer amounts and recipient tags.',
     'Visual Itinerary Modal Polish: Upgraded activity popups to solid high-contrast surfaces and added Itinerary view tabs to Notes & Plans on both Web and Flutter.',
-  ]),
-  ChangelogEntry('3.92.0', '2026-11-13', [
-    'Day-by-Day Visual Itinerary Planner: Unified chronological timeline merging scheduled activities, transit passes, and daily expenses with Google Maps directions (Web & Flutter).',
-    'Daily Budget Pacing Dial & Velocity Forecaster: Set planned trip budgets on-device with daily burn tracking, remaining allowances, and forecast variance (Web & Flutter).',
-    'Enhanced Line-Item Bill Splitter: Live member share breakdowns with pro-rata tax/tip allocation, per-person item badges, and 1-tap "All" / "Clear" shortcuts (Web & Flutter).',
   ]),
 ];

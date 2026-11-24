@@ -1,6 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+
+import '../../../l10n/l10n_ext.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -641,9 +644,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final tripId = latestTripId(ref.watch(tripsProvider).value ?? const [], ref.watch(nowProvider)());
     final tokens = context.tokens;
     final profileName = auth.user?.displayName ?? 'Traveler';
-    final profileSub = auth.userEmail?.trim().isNotEmpty == true
+    final baseSub = auth.userEmail?.trim().isNotEmpty == true
         ? auth.userEmail!
         : (isLocal ? 'Saved on this device only' : 'Signed in');
+    final tripCount = (ref.watch(tripsProvider).value ?? const <Trip>[]).where((t) => !t.archived).length;
+    // Horizon: "rahul@example.com · 3 trips", like the mockup.
+    final profileSub = tokens.horizon && tripCount > 0
+        ? '$baseSub · ${context.l10n.horizonTripsCount(tripCount)}'
+        : baseSub;
 
     final horizon = ref.watch(horizonNavProvider);
     return wrapHomeBody(
@@ -653,7 +661,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       AppScaffold(
         backgroundColor: tokens.bgSurface,
         appBar: AppBar(
-          title: Text(horizon ? 'You' : 'Settings'),
+          title: Text(horizon ? context.l10n.horizonMeTitle : 'Settings'),
           // Under the Horizon dock this is a top-level tab, so there is nothing to go back to.
           automaticallyImplyLeading: false,
           leading: horizon
@@ -751,7 +759,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                 ] else ...[
-                  if (tripId != null)
+                  // Horizon puts Appearance first (theme picker on top, as in the mockup).
+                  if (tripId != null && !tokens.horizon)
                     SettingsSection(title: 'This Trip', segmented: segmented, children: _tripRows(ref, tripId)),
                   SettingsSection(
                     title: 'Appearance',
@@ -767,6 +776,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ],
                   ),
+                  if (tripId != null && tokens.horizon)
+                    SettingsSection(title: 'This Trip', segmented: segmented, children: _tripRows(ref, tripId)),
                   SettingsSection(title: 'Notifications', segmented: segmented, children: _notificationRows(ref)),
                   if (biometricFlag)
                     SettingsSection(title: 'Privacy and security', segmented: segmented, children: _securityRows(ref)),
