@@ -5382,6 +5382,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{tone, select, mint{Mint} butter{Butter} peach{Peach} sky{Sky} lilac{Lilac} other{Automatic}}'**
   String horizonToneName(String tone);
+
+  /// No description provided for @mealNudgeQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'{meal, select, breakfast{Added breakfast?} lunch{Added lunch?} other{Added dinner?}}'**
+  String mealNudgeQuestion(String meal);
+
+  /// No description provided for @mealNudgeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{meal, select, breakfast{Breakfast} lunch{Lunch} other{Dinner}}'**
+  String mealNudgeTitle(String meal);
+
+  /// No description provided for @mealNudgeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing logged for it today yet.'**
+  String get mealNudgeBody;
+
+  /// No description provided for @mealNudgeAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get mealNudgeAdd;
+
+  /// No description provided for @mealNudgeNotToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Not today'**
+  String get mealNudgeNotToday;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

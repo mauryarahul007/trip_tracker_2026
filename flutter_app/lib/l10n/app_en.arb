@@ -1427,5 +1427,12 @@
   "horizonCoverColour": "Cover colour",
   "horizonCoverColourHint": "Shows on this phone only",
   "horizonToneName": "{tone, select, mint{Mint} butter{Butter} peach{Peach} sky{Sky} lilac{Lilac} other{Automatic}}",
-  "@horizonToneName": {"placeholders": {"tone": {"type": "String"}}}
+  "@horizonToneName": {"placeholders": {"tone": {"type": "String"}}},
+  "mealNudgeQuestion": "{meal, select, breakfast{Added breakfast?} lunch{Added lunch?} other{Added dinner?}}",
+  "@mealNudgeQuestion": {"placeholders": {"meal": {"type": "String"}}},
+  "mealNudgeTitle": "{meal, select, breakfast{Breakfast} lunch{Lunch} other{Dinner}}",
+  "@mealNudgeTitle": {"placeholders": {"meal": {"type": "String"}}},
+  "mealNudgeBody": "Nothing logged for it today yet.",
+  "mealNudgeAdd": "Add",
+  "mealNudgeNotToday": "Not today"
 }

@@ -176,6 +176,7 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
       'enableNotificationInboxPolish',
       'enablePartialSettleCoach',
       'enableSearchDeepLink',
+      'enableMealNudges',
     ],
   },
   {
@@ -1303,6 +1304,15 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     pack: 'trip',
     defaultEnabledForUsers: true,
   },
+  enableMealNudges: {
+    key: 'enableMealNudges',
+    label: 'Meal-time Expense Nudges (Flutter)',
+    description:
+      'Flutter app: ON: during a trip that is happening now, Spend shows one small card asking "Added breakfast?" from 10 AM, "Added lunch?" from 3 PM and "Added dinner?" from 8 PM, only when nothing like that meal is logged for today. Add opens a new expense pre-filled with the meal; Not today hides that meal for the day on this phone. OFF: no card. Uses the phone clock, sends no notification, and never adds an expense by itself.',
+    category: 'core',
+    pack: 'trip',
+    defaultEnabledForUsers: true,
+  },
   enableLiveLocationStaleAge: {
     key: 'enableLiveLocationStaleAge',
     label: 'Live Location Stale Age (Flutter)',
@@ -2277,6 +2287,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableNotificationInboxPolish: true,
   enablePartialSettleCoach: true,
   enableSearchDeepLink: true,
+  enableMealNudges: true,
   enableLiveLocationStaleAge: true,
   enableLastSyncedCaption: true,
   enableTripSwitcher: true,

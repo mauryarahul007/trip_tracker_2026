@@ -3339,5 +3339,21 @@
     "shippedAt": "2026-11-24T18:35:00.000Z",
     "shippedBy": "agent",
     "shippedNote": "Horizon look in all phases, merged to main via PRs #19-#24 (v3.94.0-v3.99.1)."
+  },
+  {
+    "id": "FEAT-211",
+    "title": "Meal-time expense nudges on Spend (Flutter)",
+    "description": "Trip-pack flag enableMealNudges (default ON): during an active trip Spend asks Added breakfast? from 10 AM, lunch from 3 PM, dinner from 8 PM when that meal is not logged today; Add pre-fills the expense, Not today hides it on the device. MEAL-NUDGE.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "human",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-24T19:00:00.000Z",
+    "updatedAt": "2026-11-24T19:00:00.000Z",
+    "shippedAt": "2026-11-24T19:00:00.000Z",
+    "shippedBy": "agent",
+    "shippedNote": "Commit ff346f2 (v3.100.0)."
   }
 ]

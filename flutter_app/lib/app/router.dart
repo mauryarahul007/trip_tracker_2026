@@ -191,6 +191,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                               tripId: state.pathParameters['id']!,
                               // "Clone last" from the Add dial: open with the last expense already copied in.
                               cloneLast: state.uri.queryParameters['clone'] == '1',
+                              mealTitle: state.uri.queryParameters['meal'],
                             ),
                           ),
                           GoRoute(

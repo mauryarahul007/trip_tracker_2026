@@ -3067,4 +3067,29 @@ class AppLocalizationsEn extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String mealNudgeQuestion(String meal) {
+    String _temp0 = intl.Intl.selectLogic(meal, {
+      'breakfast': 'Added breakfast?',
+      'lunch': 'Added lunch?',
+      'other': 'Added dinner?',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String mealNudgeTitle(String meal) {
+    String _temp0 = intl.Intl.selectLogic(meal, {'breakfast': 'Breakfast', 'lunch': 'Lunch', 'other': 'Dinner'});
+    return '$_temp0';
+  }
+
+  @override
+  String get mealNudgeBody => 'Nothing logged for it today yet.';
+
+  @override
+  String get mealNudgeAdd => 'Add';
+
+  @override
+  String get mealNudgeNotToday => 'Not today';
 }

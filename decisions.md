@@ -5965,3 +5965,12 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Ignoring `deprecated_member_use` also hides other deprecations until that migration happens.
 
+## 300. Meal-time expense nudges on Spend (v3.100.0)
+* **Context:** Travelers forget to log meals. The add form already offers time-of-day chips, but only once you open it.
+* **Decision:**
+  - `mealSlotAt()` picks breakfast from 10:00, lunch from 15:00 and dinner from 20:00 (none before 10). `mealLogged()` counts a title with the meal word, or a food-category expense created in the meal's hours, on today's date.
+  - `MealNudgeCard` sits at the top of Spend during an active trip only. Add pushes `/expenses/new?meal=<Meal>`, and the form calls `applyMeal()`, which titles the expense and infers its category. Not today saves `meal.nudge.<trip>.<y-m-d>.<slot>` in SharedPreferences.
+  - New flag `enableMealNudges`, Trip pack, default ON. Flutter-only for now.
+* **Trade-offs Accepted:**
+  - Uses the phone clock, not the destination's time zone. There is no push notification; the card shows only when Spend is open.
+

@@ -166,6 +166,7 @@
     "enableNotificationInboxPolish": true,
     "enablePartialSettleCoach": true,
     "enableSearchDeepLink": true,
+    "enableMealNudges": true,
     "enableLiveLocationStaleAge": true,
     "enableLastSyncedCaption": true,
     "enableTripSwitcher": true,
@@ -390,6 +391,7 @@
     "enableNotificationInboxPolish": true,
     "enablePartialSettleCoach": true,
     "enableSearchDeepLink": true,
+    "enableMealNudges": true,
     "enableLiveLocationStaleAge": true,
     "enableLastSyncedCaption": true,
     "enableTripSwitcher": true,
@@ -610,7 +612,8 @@
         "enableTripsAppBarDiet",
         "enableNotificationInboxPolish",
         "enablePartialSettleCoach",
-        "enableSearchDeepLink"
+        "enableSearchDeepLink",
+        "enableMealNudges"
       ]
     },
     {

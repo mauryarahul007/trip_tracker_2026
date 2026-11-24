@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-25 | 3.100.0 | MEAL-NUDGE | [Meal-time expense nudges on Spend (Flutter)](#meal-nudge--meal-time-expense-nudges-on-spend-flutter) |
 | 2026-11-24 | 3.99.1 | FLUTTER-FIXES | [Trip sheet drag and small layout / accessibility fixes (Flutter)](#flutter-fixes--trip-sheet-drag-and-small-layout--accessibility-fixes-flutter) |
 | 2026-11-24 | 3.99.0 | HORIZON-UI | [Horizon follow-ups: by person, header avatars, cover colour (Flutter)](#horizon-ui--horizon-follow-ups-by-person-header-avatars-cover-colour-flutter) |
 | 2026-11-24 | 3.98.0 | HORIZON-UI | [Horizon look, phase 3c: Account and shared states (Flutter)](#horizon-ui--horizon-look-phase-3c-account-and-shared-states-flutter) |
@@ -4497,6 +4498,35 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## MEAL-NUDGE — Meal-time expense nudges on Spend (Flutter)
+
+**Shipped:** v3.100.0. Flutter-only.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Breakfast / lunch / dinner card on Spend | `enableMealNudges` | ON (Trip) |
+
+### Prep
+Flutter app signed in. A trip whose dates include today. Set the phone clock (or wait) for each time below.
+
+### Steps
+1. Before 10 AM, open the trip's Spend tab: no meal card.
+2. After 10 AM with no breakfast logged today: a yellow card reads "Added breakfast?" with "Not today" and "Add".
+3. Tap Add: a new expense opens titled "Breakfast" with the food category. Save it with any amount.
+4. Back on Spend: the card is gone (breakfast is logged).
+5. After 3 PM: "Added lunch?" shows. Tap Not today: it disappears, and stays gone after closing and reopening the app.
+6. After 8 PM: "Added dinner?" shows unless a dinner (or a food expense made after 5 PM) is already logged today.
+7. A food expense with any title made in the meal's hours (for example "Idli" at 8 AM) also counts as that meal.
+
+### Negative checks
+- `enableMealNudges` OFF: no card at any time.
+- A trip that has ended or not started yet: no card.
+- No notification is sent; nothing is added without tapping Add and saving.
+
+### Pass
+- The card appears only for the current meal, only when it is missing today, and Add pre-fills the meal.
 
 ## FLUTTER-FIXES — Trip sheet drag and small layout / accessibility fixes (Flutter)
 

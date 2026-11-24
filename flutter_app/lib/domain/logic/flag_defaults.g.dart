@@ -107,6 +107,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableLiveLocationShare': false,
   'enableLiveLocationStaleAge': true,
   'enableMapCollapsedByDefault': true,
+  'enableMealNudges': true,
   'enableMemberLastSeen': false,
   'enableMemberMoneyRow': true,
   'enableMotionPolish': true,
@@ -755,6 +756,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'Collapse Map by Default',
     pack: 'trip',
     description: 'Open a trip with the content sheet covering the map. Swipe down to peek the route.',
+  ),
+  'enableMealNudges': (
+    label: 'Meal-time Expense Nudges (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: during a trip that is happening now, Spend shows one small card asking "Added breakfast?" from 10 AM, "Added lunch?" from 3 PM and "Added dinner?" from 8 PM, only when nothing like that meal is logged for today. Add opens a new expense pre-filled with the meal; Not today hides that meal for the day on this phone. OFF: no card. Uses the phone clock, sends no notification, and never adds an expense by itself.',
   ),
   'enableMemberLastSeen': (
     label: 'Member Last Seen',
@@ -1554,6 +1560,7 @@ const Map<String, List<String>> consumerPacks = {
     'enableNotificationInboxPolish',
     'enablePartialSettleCoach',
     'enableSearchDeepLink',
+    'enableMealNudges',
   ],
   'travel': [
     'enableTravelPasses',

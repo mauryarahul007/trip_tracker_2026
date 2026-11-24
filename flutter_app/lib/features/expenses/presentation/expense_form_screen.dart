@@ -53,12 +53,15 @@ String _fmt(BuildContext c, double v, String code) => formatMoney(c, v, code);
 /// Add / edit an expense. Waits for trip, members, expenses and flags so the
 /// form never starts with the wrong controls.
 class ExpenseFormScreen extends ConsumerWidget {
-  const ExpenseFormScreen({required this.tripId, this.expenseId, this.cloneLast = false, super.key});
+  const ExpenseFormScreen({required this.tripId, this.expenseId, this.cloneLast = false, this.mealTitle, super.key});
   final String tripId;
   final String? expenseId;
 
   /// Open a new expense with the trip's last expense already copied in (the Add dial's "Clone last").
   final bool cloneLast;
+
+  /// From the Spend meal nudge: open a new expense titled with this meal ("Breakfast", "Lunch", "Dinner").
+  final String? mealTitle;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -71,7 +74,7 @@ class ExpenseFormScreen extends ConsumerWidget {
     // Desktop (board 08): the form floats as a centred card instead of a stretched page.
     final wide = MediaQuery.sizeOf(context).width >= 900;
     final form = ready
-        ? _FormBody(args: ExpenseFormArgs(tripId, expenseId), cloneLast: cloneLast)
+        ? _FormBody(args: ExpenseFormArgs(tripId, expenseId), cloneLast: cloneLast, mealTitle: mealTitle)
         : const SkeletonPage(shape: SkeletonShape.form, rows: 3);
     return AppScaffold(
       maxContentWidth: wide ? 760 : 960,
@@ -97,9 +100,10 @@ class ExpenseFormScreen extends ConsumerWidget {
 }
 
 class _FormBody extends ConsumerStatefulWidget {
-  const _FormBody({required this.args, this.cloneLast = false});
+  const _FormBody({required this.args, this.cloneLast = false, this.mealTitle});
   final ExpenseFormArgs args;
   final bool cloneLast;
+  final String? mealTitle;
 
   @override
   ConsumerState<_FormBody> createState() => _FormBodyState();
@@ -136,6 +140,12 @@ class _FormBodyState extends ConsumerState<_FormBody> {
       // Provider state can't change while the tree builds; the form's own listener then fills the text fields.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _c.flags.cloneLast) _c.applyLast();
+      });
+    }
+    final meal = widget.mealTitle;
+    if (meal != null && meal.isNotEmpty && args.editingId == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _c.applyMeal(meal);
       });
     }
   }
