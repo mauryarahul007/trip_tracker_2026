@@ -77,7 +77,9 @@ class _AppButtonState extends State<AppButton> {
       case AppButtonVariant.secondary:
         bg = tokens.bgSurface;
         fg = tokens.textPrimary;
-        border = BorderSide(color: tokens.textPrimary, width: 1.5);
+        border = tokens.horizon
+            ? BorderSide(color: tokens.borderColor)
+            : BorderSide(color: tokens.textPrimary, width: 1.5);
         break;
       case AppButtonVariant.danger:
         bg = tokens.colorDanger;
@@ -131,8 +133,11 @@ class _AppButtonState extends State<AppButton> {
         disabledBackgroundColor: bg.withValues(alpha: 0.5),
         disabledForegroundColor: fg.withValues(alpha: 0.5),
         shadowColor: Colors.transparent,
-        shape: StadiumBorder(side: border),
-        padding: EdgeInsets.symmetric(horizontal: 22, vertical: tokens.spaceMd),
+        // Horizon (enableHorizonUi): 14px rounded rectangle, 52 tall; Calm keeps the pill.
+        shape: tokens.horizon
+            ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: border)
+            : StadiumBorder(side: border),
+        padding: EdgeInsets.symmetric(horizontal: 22, vertical: tokens.horizon ? 15 : tokens.spaceMd),
         elevation: 0,
       ),
       child: content,

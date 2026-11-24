@@ -74,7 +74,10 @@ class AppBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!_useDock) return _M3Bar(this);
-    final canNotch = notch && items.length >= 2 && items.length <= 5 && (centerAction == null || context.tokens.calm);
+    final t = context.tokens;
+    // Horizon (enableHorizonUi) draws the centre Add button inside the dock; Calm floats it over the content.
+    final drawCenter = centerAction != null && (!t.calm || t.horizon);
+    final canNotch = notch && items.length >= 2 && items.length <= 5 && !drawCenter;
     final Widget dock = canNotch
         ? _NotchDock(items: items, currentIndex: currentIndex, onTap: onTap, labelInBubble: polish)
         : _Dock(
@@ -82,7 +85,7 @@ class AppBottomNav extends StatelessWidget {
             currentIndex: currentIndex,
             onTap: onTap,
             polish: polish,
-            centerAction: context.tokens.calm ? null : centerAction,
+            centerAction: drawCenter ? centerAction : null,
             centerLabel: centerLabel,
           );
     if (!compressed) return dock;
@@ -384,6 +387,35 @@ class _DockCenter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    if (t.horizon) {
+      // Horizon: a 52px rounded square in the action blue, lifted a little above the bar.
+      return Semantics(
+        button: true,
+        label: label,
+        child: Transform.translate(
+          offset: const Offset(0, -10),
+          child: Container(
+            width: 52,
+            height: 52,
+            margin: const EdgeInsets.symmetric(horizontal: 5),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [BoxShadow(color: t.primaryAccent.withValues(alpha: 0.45), blurRadius: 16, offset: const Offset(0, 6))],
+            ),
+            child: Material(
+              color: t.ctaBg,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                key: const Key('dock-center'),
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(16),
+                child: ExcludeSemantics(child: Icon(Icons.add_rounded, color: t.ctaFg, size: 28)),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return Semantics(
       button: true,
       label: label,

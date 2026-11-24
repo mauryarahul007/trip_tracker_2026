@@ -194,6 +194,15 @@ class AppTokens extends ThemeExtension<AppTokens> {
   Color get owedOnDark => horizon ? AppColors.horizonDarkOwed : AppColors.calmDarkOwed;
   Color get inkOnLight => horizon ? AppColors.horizonInk : AppColors.calmInk;
 
+  /// Action colour for text and icons on tinted chips and links (Horizon uses the deeper blue ink).
+  Color get actionInk => horizon ? (_isDark ? AppColors.horizonDarkBlueInk : AppColors.horizonBlueInk) : primaryAccent;
+
+  /// Action colour on an inverse (ink) surface such as a snackbar.
+  Color get actionOnInverse => _isDark ? AppColors.horizonBlue : AppColors.horizonDarkBlue;
+
+  /// Horizon: one consistent card edge (1px line). Calm keeps its softer 60% line.
+  Color get cardEdge => horizon ? borderColor : borderColor.withValues(alpha: 0.6);
+
   LinearGradient get headerGradient =>
       LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [headerStart, headerEnd]);
 

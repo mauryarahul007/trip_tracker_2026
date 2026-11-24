@@ -60,6 +60,29 @@ List<TripNavTab> calmPagerTabs({required bool chatEnabled, required bool showNot
   TripNavTab.members,
 ]);
 
+/// Horizon trip dock (flag `enableHorizonUi`): Balances, Spend, the centre Add button, Chat, Hub. Activity opens
+/// from the header bell, Plans from the Hub and People from the header; Chat drops out when trip chat is off.
+List<TripNavTab> horizonDockTabs({required bool chatEnabled}) => List.unmodifiable([
+  TripNavTab.ledger,
+  TripNavTab.expenses,
+  if (chatEnabled) TripNavTab.chat,
+  TripNavTab.hub,
+]);
+
+/// Every Horizon pager page: the dock, then Plans, People and Activity so their links keep working.
+List<TripNavTab> horizonPagerTabs({required bool chatEnabled, required bool showNotesTab}) => List.unmodifiable([
+  ...horizonDockTabs(chatEnabled: chatEnabled),
+  if (showNotesTab) TripNavTab.notes,
+  TripNavTab.members,
+  TripNavTab.activity,
+]);
+
+/// Horizon dock item for [current]: Plans, People and Activity light up Hub.
+TripNavTab horizonDockTabFor(TripNavTab current) =>
+    current == TripNavTab.members || current == TripNavTab.notes || current == TripNavTab.activity
+    ? TripNavTab.hub
+    : current;
+
 /// Calm Passport dock item for [current]: Plans and People light up Hub.
 TripNavTab calmDockTabFor(TripNavTab current) =>
     current == TripNavTab.members || current == TripNavTab.notes ? TripNavTab.hub : current;

@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-24 | 3.95.0 | HORIZON-UI | [Horizon look, phase 2: shared parts and bottom bars (Flutter)](#horizon-ui--horizon-look-phase-2-shared-parts-and-bottom-bars-flutter) |
 | 2026-11-24 | 3.94.0 | HORIZON-UI | [Horizon look, phase 1: colours and theme (Flutter)](#horizon-ui--horizon-look-phase-1-colours-and-theme-flutter) |
 | 2026-11-21 | 3.93.1 | FLUTTER-UX-10 | [Flutter UX polish 10: motion, skeletons, images, nav](#flutter-ux-10--flutter-ux-polish-10-motion-skeletons-images-nav) |
 | 2026-11-12 | 3.91.7 | FLUTTER-ENH-S5 | [Flutter enhancements S5: Join / live / search](#flutter-enh-s5--flutter-enhancements-s5-join--live--search) |
@@ -4491,6 +4492,41 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## HORIZON-UI — Horizon look, phase 2: shared parts and bottom bars (Flutter)
+
+**Shipped:** v3.95.0. Flutter-only. Same flag `enableHorizonUi` (Core pack, default ON). Builds on phase 1 below.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Horizon shapes and both bottom bars | `enableHorizonUi` | ON (Core) |
+| Chat item in the trip bar | `enableTripChat` | per registry |
+
+### Prep
+Flutter app signed in, one trip with expenses and at least one notification. Ops Deck access to flip the flag.
+
+### Steps
+1. Trips home: the bottom bar has a raised blue rounded-square Add button in the centre. No separate floating Add button sits above it.
+2. Tap the centre Add: the new-trip flow opens.
+3. Open a trip: the bar reads Balances, Spend, Add (centre, raised), Chat, Hub. Activity is not in the bar.
+4. Tap the bell in the trip header: Activity opens. The Hub item stays lit.
+5. Open Hub, then Plans or People: the Hub item stays lit.
+6. Tap the centre Add inside a trip: the add-expense flow opens.
+7. Trip chat OFF for this trip: the bar shows Balances, Spend, Add, Hub.
+8. Main buttons have 14px corners; secondary buttons have a thin grey border.
+9. Cards have a thin 1px edge; category chips are filled, with blue tint when selected.
+10. Text fields have 12px corners; bottom sheets have 24px top corners.
+11. Trigger a snackbar (delete then undo an expense): it floats above the bar, dark ink, blue action text.
+12. Repeat steps 1, 3 and 9 in dark theme: shapes match, colours are the dark Horizon set.
+
+### Negative checks
+- `enableHorizonUi` OFF, restart: the Calm bars return, with Activity in the trip bar and the floating Add button. Calm shapes return.
+- Deep links to Activity, Plans and People still open the right page with the flag ON.
+- No balance, split, total or sync result changes between ON and OFF.
+
+### Pass
+- Both bars show the centre Add button, every trip page is still reachable, and OFF restores Calm with no other difference.
 
 ## HORIZON-UI — Horizon look, phase 1: colours and theme (Flutter)
 

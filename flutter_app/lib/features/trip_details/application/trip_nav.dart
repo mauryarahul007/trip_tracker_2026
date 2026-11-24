@@ -25,6 +25,12 @@ final visibleTabsProvider = Provider.family<List<TripNavTab>, String>((ref, trip
   if (ref.watch(legacyNavAllowedProvider) && !ref.watch(compassFlagProvider((calmPassportFlag, tripId)))) {
     return _legacyTabs(ref, tripId, flag);
   }
+  if (ref.watch(compassFlagProvider((horizonUiFlag, tripId)))) {
+    return horizonPagerTabs(
+      chatEnabled: flag('enableTripChat'),
+      showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses'),
+    );
+  }
   return calmPagerTabs(
     chatEnabled: flag('enableTripChat'),
     showNotesTab: flag('enableNotesAndChecklist') || flag('enableTravelPasses'),
@@ -38,6 +44,7 @@ final dockTabsProvider = Provider.family<List<TripNavTab>, String>((ref, tripId)
     if (!ref.watch(compassFlagProvider((compassNavFlag, tripId)))) return ref.watch(visibleTabsProvider(tripId));
     return compassDockTabs();
   }
+  if (ref.watch(compassFlagProvider((horizonUiFlag, tripId)))) return horizonDockTabs(chatEnabled: flag('enableTripChat'));
   return calmDockTabs(chatEnabled: flag('enableTripChat'));
 });
 

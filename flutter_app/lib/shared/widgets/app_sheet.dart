@@ -36,7 +36,7 @@ class AppSheet extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: tokens.bgSurface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(tokens.radiusLg)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(tokens.horizon ? 24 : tokens.radiusLg)),
             boxShadow: [
               BoxShadow(color: tokens.shadowBase.withValues(alpha: 0.22), blurRadius: 40, offset: const Offset(0, -10)),
             ],

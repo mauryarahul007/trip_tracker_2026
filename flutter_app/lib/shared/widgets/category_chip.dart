@@ -14,16 +14,21 @@ class CategoryChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.tokens;
 
-    final bg = isSelected ? tokens.primaryAccent.withValues(alpha: 0.1) : tokens.bgSurface;
-    final border = isSelected ? tokens.primaryAccent : tokens.borderColor;
-    final textColor = isSelected ? tokens.primaryAccent : tokens.textPrimary;
+    // Horizon (enableHorizonUi): filled 8px chips, the selected one takes the blue tint; no outline.
+    final h = tokens.horizon;
+    final bg = isSelected
+        ? (h ? tokens.primaryAccentLight : tokens.primaryAccent.withValues(alpha: 0.1))
+        : (h ? tokens.bgSurfaceHover : tokens.bgSurface);
+    final border = h ? bg : (isSelected ? tokens.primaryAccent : tokens.borderColor);
+    final textColor = isSelected ? tokens.actionInk : (h ? tokens.textSecondary : tokens.textPrimary);
+    final radius = h ? 8.0 : tokens.radiusFull;
 
     final Widget chipContent = Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(tokens.radiusFull),
-        border: Border.all(color: border, width: isSelected ? 1.5 : 1.0),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: border, width: isSelected && !h ? 1.5 : 1.0),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -50,7 +55,7 @@ class CategoryChip extends StatelessWidget {
       button: true,
       selected: isSelected,
       label: label,
-      child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(tokens.radiusFull), child: chipContent),
+      child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(radius), child: chipContent),
     );
   }
 }

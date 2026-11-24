@@ -302,6 +302,8 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
     final startFull = wide || mapCollapsedByDefault;
     final calm = ref.watch(compassFlagProvider((calmPassportFlag, widget.tripId)));
     final compass = !calm && ref.watch(compassFlagProvider((compassNavFlag, widget.tripId)));
+    // Horizon (enableHorizonUi): the Add button sits in the middle of the dock on every tab instead of floating.
+    final horizon = calm && ref.watch(compassFlagProvider((horizonUiFlag, widget.tripId)));
     final mapExpanded = ref.watch(tripMapOpenProvider(widget.tripId));
     ref.watch(allTripsProvider);
     ref.listen(tripMapOpenProvider(widget.tripId), (_, open) {
@@ -314,7 +316,9 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
     final dial = ref.watch(flagProvider(('enableQuickAddSpeedDial', widget.tripId))).value ?? true;
     final dock = ref.watch(dockTabsProvider(widget.tripId));
     final dockActive = dock.indexOf(
-      calm
+      horizon
+          ? horizonDockTabFor(currentTab)
+          : calm
           ? calmDockTabFor(currentTab)
           : compass
           ? compassDockTabFor(currentTab)
@@ -477,7 +481,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
         ),
         // Calm Passport: one floating Add expense button over the content, Balances and Spend only —
         // other tabs have their own primary action (Add person on Members, Plans' own add per pane).
-        floatingActionButton: calm && (currentTab == TripNavTab.ledger || currentTab == TripNavTab.expenses)
+        floatingActionButton: calm && !horizon && (currentTab == TripNavTab.ledger || currentTab == TripNavTab.expenses)
             ? CalmAddButton(
                 label: l10n.expAdd,
                 onTap: () => unawaited(startAddExpense(context, ref, widget.tripId, dial: dial)),
@@ -495,7 +499,7 @@ class _TripShellScreenState extends ConsumerState<TripShellScreen> {
                   currentIndex: dockActive < 0 ? 0 : dockActive,
                   onTap: (i) => _goTab(dock[i].index, polish: polish),
                   items: navItems,
-                  centerAction: compass
+                  centerAction: compass || horizon
                       ? () => unawaited(startAddExpense(context, ref, widget.tripId, dial: dial))
                       : null,
                   centerLabel: l10n.expAdd,
