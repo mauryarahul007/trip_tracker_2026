@@ -3020,4 +3020,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get horizonActionSettle => 'Settle';
+
+  @override
+  String horizonRowYouOwe(String amount) {
+    return 'you owe $amount';
+  }
+
+  @override
+  String horizonRowYouLent(String amount) {
+    return 'you lent $amount';
+  }
+
+  @override
+  String get horizonRowNotInvolved => 'not involved';
 }

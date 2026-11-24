@@ -48,6 +48,7 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
 import 'conflict_sheet.dart';
+import 'widgets/horizon_position_hero.dart';
 import 'widgets/balance_bars.dart';
 import 'widgets/compass_balance_widgets.dart';
 import '../../../core/flags/compass_flags.dart';
@@ -1210,6 +1211,31 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         ),
       // 1. Hero boarding pass: what is owed, stamped SETTLED or NOT SETTLED (flips to You paid / Your share,
       // or to the settle-up status with enableSettleStatusPass).
+      if (tokens.horizon)
+        HorizonPositionHero(
+          eyebrow: heroLabel,
+          amount:
+              '${!iAmIn || iAmSquare ? '' : (heroBalance > 0 ? '+' : '−')}'
+              '${formatMoney(context, heroBalance.abs(), cur)}',
+          caption: '',
+          tone: !iAmIn || iAmSquare ? 0 : (heroBalance > 0 ? 1 : -1),
+          stats: [
+            if (iAmIn) ...[
+              (l10n.ledYouPaid, formatMoney(context, spend.paid[mine] ?? 0.0, cur)),
+              (l10n.ledYourShare, formatMoney(context, spend.share[mine] ?? 0.0, cur)),
+            ],
+            (l10n.expTotalSpent, formatMoney(context, totals.totalSpent, cur)),
+          ],
+          onTap: iAmIn && _flag(ref, 'enableBalanceExplainer', id)
+              ? () => _showBalanceExplainer(
+                  context,
+                  l10n,
+                  cur,
+                  myBalanceLines(ref.read(tripExpensesProvider(id)).value ?? const <Expense>[], mine),
+                )
+              : null,
+        )
+      else
       Padding(
         key: const Key('sticky-balance'),
         padding: const EdgeInsets.only(bottom: 20),
@@ -1402,7 +1428,10 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
         ),
       ),
       // Your money: what I still receive and what I still pay (people on the trip only).
-      if (iAmIn && !flipOn && _flag(ref, 'enableYouPaidVsShare', id))
+      // Horizon puts You paid / Your share inside the position hero.
+      if (tokens.horizon)
+        const SizedBox.shrink()
+      else if (iAmIn && !flipOn && _flag(ref, 'enableYouPaidVsShare', id))
         _paidVsShareStrip(
           context: context,
           tokens: tokens,

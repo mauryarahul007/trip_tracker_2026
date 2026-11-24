@@ -5322,6 +5322,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settle'**
   String get horizonActionSettle;
+
+  /// No description provided for @horizonRowYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'you owe {amount}'**
+  String horizonRowYouOwe(String amount);
+
+  /// No description provided for @horizonRowYouLent.
+  ///
+  /// In en, this message translates to:
+  /// **'you lent {amount}'**
+  String horizonRowYouLent(String amount);
+
+  /// No description provided for @horizonRowNotInvolved.
+  ///
+  /// In en, this message translates to:
+  /// **'not involved'**
+  String get horizonRowNotInvolved;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

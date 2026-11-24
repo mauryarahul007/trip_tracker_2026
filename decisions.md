@@ -5926,3 +5926,13 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - The mockup's per-person balances list and the create-trip cover colours need new data, so they wait; the current by-trip list stays.
   - Sign-in keeps Google-first with no email password field for travellers, as today.
+
+## 296. Horizon look for the Flutter app, phase 3b: trip Balances and Spend (v3.97.0)
+* **Context:** The Horizon mockups' Trip section opens on "Your position" and says on every Spend row what the expense means for you.
+* **Decision:**
+  - `HorizonPositionHero` replaces the Calm boarding pass on Balances when `tokens.horizon`: same `heroBalance` / `heroLabel` numbers, plus You paid, Your share and Total spent. The paid-vs-share strip is folded into it.
+  - New pure helper `rowImpact` (paid minus share, multi-payer aware) drives the tidy Spend row line: "you lent", "you owe" or "not involved".
+  - Widget tests now start with Horizon OFF (`pump_app.dart`), like the Compass flags before it; Horizon tests opt in with `flagsOn`.
+* **Trade-offs Accepted:**
+  - The boarding-receipt row style (tidy flag OFF) keeps its Calm lines.
+  - Remaining Trip mockups (settle sheet, hub, itinerary, chat cards) follow in later 3b/3c commits.

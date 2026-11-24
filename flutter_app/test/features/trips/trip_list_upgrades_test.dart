@@ -77,7 +77,7 @@ void main() {
 
   testApp('overview line sums your position across trips and opens balances; off with its flag', (tester) async {
     // The Calm overview line; Horizon replaces it with the balance hero (next test).
-    await pumpApp(tester, user: asha, flagsOff: {'enableHorizonUi'});
+    await pumpApp(tester, user: asha);
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 90);
     await home(tester);
@@ -88,7 +88,7 @@ void main() {
   });
 
   testApp('Horizon: the balance hero shows the same position, with quick actions under it', (tester) async {
-    await pumpApp(tester, user: asha);
+    await pumpApp(tester, user: asha, flagsOn: {'enableHorizonUi'});
     final s = await seedTrip(tester);
     await addExpense(tester, s, amount: 90);
     await home(tester);
