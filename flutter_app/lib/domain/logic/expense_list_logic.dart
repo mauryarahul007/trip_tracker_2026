@@ -285,6 +285,17 @@ double? myShareToShow(Expense e, String? myMemberId) {
   return (share != null && (share - e.amount).abs() > 0.01) ? share : null;
 }
 
+/// What one expense means for me (Horizon Spend rows): what I lent (paid beyond my share), what I owe (share beyond
+/// what I paid), or that I am not on it. [net] is paid minus share; [involved] is false when I neither paid nor share.
+({double net, bool involved}) rowImpact(Expense e, String? me) {
+  if (me == null) return (net: 0.0, involved: false);
+  final share = e.resolvedShares[me] ?? 0.0;
+  final multi = e.paidByShares;
+  final paid = multi != null && multi.isNotEmpty ? (multi[me] ?? 0.0) : (e.paidBy == me ? e.amount : 0.0);
+  final involved = share.abs() > 0.005 || paid.abs() > 0.005;
+  return (net: double.parse((paid - share).toStringAsFixed(2)), involved: involved);
+}
+
 class AttentionChip {
   const AttentionChip(this.id, this.label, {this.count = 0});
   final String id; // owe | owed | disputes | invites | closeout

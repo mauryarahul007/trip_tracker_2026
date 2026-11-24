@@ -1413,5 +1413,10 @@
   "horizonActionNewTrip": "New trip",
   "horizonActionJoin": "Join code",
   "horizonActionQuickAdd": "Quick add",
-  "horizonActionSettle": "Settle"
+  "horizonActionSettle": "Settle",
+  "horizonRowYouOwe": "you owe {amount}",
+  "@horizonRowYouOwe": {"placeholders": {"amount": {"type": "String"}}},
+  "horizonRowYouLent": "you lent {amount}",
+  "@horizonRowYouLent": {"placeholders": {"amount": {"type": "String"}}},
+  "horizonRowNotInvolved": "not involved"
 }

@@ -10,7 +10,12 @@ import '../support/seed.dart';
 void main() {
   testApp('the shipped app has one trip navigation whatever the retired nav flags say', (tester) async {
     // pumpApp turns Compass and Calm off; with legacy nav not allowed (the real app) they must not matter.
-    await pumpApp(tester, user: asha, legacyNav: false, flagsOn: {'enableChatFirstNav', 'enableTripChat'});
+    await pumpApp(
+      tester,
+      user: asha,
+      legacyNav: false,
+      flagsOn: {'enableChatFirstNav', 'enableTripChat', 'enableHorizonUi'},
+    );
     final s = await seedTrip(tester);
     final c = containerOf(tester);
     final dock = c.read(dockTabsProvider(s.tripId));

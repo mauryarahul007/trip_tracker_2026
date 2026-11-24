@@ -117,6 +117,32 @@ class _ExpenseRowState extends State<ExpenseRow> {
 
   /// Boarding-receipt layout (non-compact): category icon, "Paid by X · Split with N", amount,
   /// then a perforated footer with the personal-share pill and a micro barcode.
+  /// Horizon Spend row line: "you owe ₹1,250" in red, "you lent ₹840" in green, or a muted "not involved".
+  /// Null when I come out even on the expense, or when I am not a member of the trip.
+  Widget? _horizonImpact(BuildContext context, Expense e, String base) {
+    final me = widget.myMemberId;
+    if (me == null || !isActualExpense(e)) return null;
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final impact = rowImpact(e, me);
+    final (String text, Color color) = !impact.involved
+        ? (l10n.horizonRowNotInvolved, t.textMuted)
+        : impact.net > 0.005
+        ? (l10n.horizonRowYouLent(formatMoney(context, impact.net, base)), t.colorSuccess)
+        : impact.net < -0.005
+        ? (l10n.horizonRowYouOwe(formatMoney(context, -impact.net, base)), t.colorDanger)
+        : ('', t.textMuted);
+    if (text.isEmpty) return null;
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Text(
+        text,
+        key: const Key('row-impact'),
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+      ),
+    );
+  }
+
   Widget _receipt(
     BuildContext context,
     ExpenseReview review,
@@ -363,6 +389,9 @@ class _ExpenseRowState extends State<ExpenseRow> {
                             if (isForeign) _currencyToggle(tokens, l10n, e, base, showingForeign),
                           ],
                         ),
+                        if (tokens.horizon && !_isRefund)
+                          ?_horizonImpact(context, e, base)
+                        else ...[
                         if (shareLine != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 2),
@@ -373,6 +402,7 @@ class _ExpenseRowState extends State<ExpenseRow> {
                             backLine,
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tokens.colorSuccess),
                           ),
+                        ],
                       ],
                     ),
                   ],

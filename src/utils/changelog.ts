@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.97.0',
+    date: '2026-11-24',
+    changes: [
+      'Horizon trip Balances: your position leads in big type on a night-navy card, with what you paid, your share and the trip total under it (Flutter).',
+      'Horizon Spend rows now say what each expense means for you: "you owe", "you lent" or "not involved" (Flutter).',
+    ],
+  },
+  {
     version: '3.96.0',
     date: '2026-11-24',
     changes: [

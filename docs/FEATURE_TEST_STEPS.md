@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-24 | 3.97.0 | HORIZON-UI | [Horizon look, phase 3b: trip Balances and Spend (Flutter)](#horizon-ui--horizon-look-phase-3b-trip-balances-and-spend-flutter) |
 | 2026-11-24 | 3.96.0 | HORIZON-UI | [Horizon look, phase 3a: Start and Home (Flutter)](#horizon-ui--horizon-look-phase-3a-start-and-home-flutter) |
 | 2026-11-24 | 3.95.0 | HORIZON-UI | [Horizon look, phase 2: shared parts and bottom bars (Flutter)](#horizon-ui--horizon-look-phase-2-shared-parts-and-bottom-bars-flutter) |
 | 2026-11-24 | 3.94.0 | HORIZON-UI | [Horizon look, phase 1: colours and theme (Flutter)](#horizon-ui--horizon-look-phase-1-colours-and-theme-flutter) |
@@ -4493,6 +4494,36 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## HORIZON-UI — Horizon look, phase 3b: trip Balances and Spend (Flutter)
+
+**Shipped:** v3.97.0. Flutter-only. Same flag `enableHorizonUi` (Core pack, default ON).
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Horizon position hero and Spend row line | `enableHorizonUi` | ON (Core) |
+| Tap the hero for "How this worked" | `enableBalanceExplainer` | per registry |
+
+### Prep
+A trip with you and two others. You paid ₹90 split three ways; someone else paid ₹300 split with you; a third expense you are not on.
+
+### Steps
+1. Open the trip: Balances shows a night-navy card. The eyebrow says your position ("YOU ARE OWED" or "YOU OWE"), the amount is big and mono.
+2. Owed: green with a plus. Owe: red with a minus. Square: white, no sign.
+3. Under the amount: You paid, Your share and Total spent. The separate paid / share strip below is gone.
+4. Tap the card (explainer flag on): "How this worked" opens.
+5. Not a member of the trip (viewer): the card shows what is still outstanding on the trip, with only Total spent under it.
+6. Spend tab, expand the days: your ₹90 row says "you lent ₹60.00" in green.
+7. The ₹300 row says "you owe ₹150.00" in red.
+8. The expense you are not on says "not involved" in grey. Settlements and refunds show no such line.
+
+### Negative checks
+- `enableHorizonUi` OFF: the boarding pass (flip card, stamp, barcode) and the "your share / you get back" row lines return.
+- No balance, split or total changes between ON and OFF: the hero numbers match the Calm pass.
+
+### Pass
+- Balances leads with your position; every Spend row tells you what it means for you.
 
 ## HORIZON-UI — Horizon look, phase 3a: Start and Home (Flutter)
 
