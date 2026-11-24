@@ -8,7 +8,9 @@ import 'package:trip_tracker/domain/logic/cross_trip_balances.dart';
 import 'package:trip_tracker/domain/logic/expense_list_logic.dart';
 import 'package:trip_tracker/domain/models/expense.dart';
 import 'package:trip_tracker/features/auth/presentation/splash_screen.dart';
+import 'package:trip_tracker/features/settings/presentation/settings_widgets.dart';
 import 'package:trip_tracker/features/trips/presentation/widgets/horizon_home_hero.dart';
+import 'package:trip_tracker/shared/widgets/empty_state.dart';
 import 'package:trip_tracker/l10n/app_localizations.dart';
 import 'package:trip_tracker/shared/theme/app_theme.dart';
 import 'package:trip_tracker/shared/theme/app_tokens.dart';
@@ -175,6 +177,32 @@ void main() {
       await settle(tester);
       expect(find.byKey(const Key('horizon-position')), findsNothing);
       expect(find.byKey(const Key('sticky-balance')), findsOneWidget);
+    });
+  });
+
+  group('Horizon phase 3c: Account and States (flag enableHorizonUi)', () {
+    testWidgets('theme picker: three tiles, the chosen one selected, taps report the mode', (tester) async {
+      String? picked;
+      await tester.pumpWidget(
+        _host(HorizonThemePicker(value: 'dark', onChanged: (v) => picked = v), horizon: true),
+      );
+      expect(find.text('Light'), findsOneWidget);
+      expect(find.text('System'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is Semantics && w.properties.selected == true && w.properties.label == 'Dark'),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('theme-system')));
+      expect(picked, 'system');
+    });
+
+    testWidgets('empty state uses the tinted tile with Horizon, the gradient circle without', (tester) async {
+      const empty = EmptyState(icon: Icons.explore_outlined, title: 'We can not find this trip', subtitle: 'x');
+      await tester.pumpWidget(_host(empty, horizon: true));
+      expect(find.byKey(const Key('empty-icon-tile')), findsOneWidget);
+      await tester.pumpWidget(_host(empty, horizon: false));
+      await tester.pumpAndSettle(); // the theme change animates
+      expect(find.byKey(const Key('empty-icon-tile')), findsNothing);
     });
   });
 }

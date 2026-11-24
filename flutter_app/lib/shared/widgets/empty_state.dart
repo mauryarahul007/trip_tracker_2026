@@ -49,8 +49,10 @@ class EmptyState extends StatelessWidget {
       );
     }
 
+    final horizon = tokens.horizon;
     return CustomPaint(
-      painter: _DotsPainter(tokens.textMuted.withValues(alpha: 0.22)),
+      // Horizon: plain ground, no dot grid.
+      painter: horizon ? null : _DotsPainter(tokens.textMuted.withValues(alpha: 0.22)),
       child: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
@@ -59,6 +61,15 @@ class EmptyState extends StatelessWidget {
             children: [
               if (emoji != null)
                 Text(emoji!, style: const TextStyle(fontSize: 48))
+              else if (icon != null && horizon)
+                // Horizon: a soft tinted rounded square, icon in the action colour.
+                Container(
+                  key: const Key('empty-icon-tile'),
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(color: tokens.tones.sky.bg, borderRadius: BorderRadius.circular(28)),
+                  child: Icon(icon, size: 44, color: tokens.primaryAccent),
+                )
               else if (icon != null)
                 Container(
                   width: 88,
@@ -86,7 +97,7 @@ class EmptyState extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: AppTypography.fontTitle,
-                  fontSize: 22,
+                  fontSize: horizon ? 26 : 22,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.4,
                   color: tokens.textPrimary,

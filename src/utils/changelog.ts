@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.98.0',
+    date: '2026-11-24',
+    changes: [
+      'Horizon Settings: pick Light, Dark or System from three big tiles (Flutter).',
+      'Horizon empty and error screens use a soft tinted icon tile on a plain background; the offline notice is a slim rounded banner (Flutter).',
+    ],
+  },
+  {
     version: '3.97.0',
     date: '2026-11-24',
     changes: [

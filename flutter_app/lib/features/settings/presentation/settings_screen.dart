@@ -243,6 +243,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   List<Widget> _appearanceRows(WidgetRef r) {
     final themeMode = r.watch(themeModePrefProvider);
     return [
+      if (context.tokens.horizon)
+        HorizonThemePicker(
+          value: themeMode,
+          onChanged: (v) => r.read(themeModePrefProvider.notifier).set(v),
+        )
+      else
       SettingsSegmentedTile<String>(
         key: const Key('settings-theme'),
         icon: Icons.wb_sunny_outlined,

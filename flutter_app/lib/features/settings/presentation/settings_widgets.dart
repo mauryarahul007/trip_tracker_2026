@@ -353,3 +353,74 @@ class SettingsBadge extends StatelessWidget {
     );
   }
 }
+
+/// Horizon appearance picker (flag `enableHorizonUi`): three big tiles, Light, Dark and System, the chosen one
+/// outlined in the action colour. Same values as the segmented row it replaces.
+class HorizonThemePicker extends StatelessWidget {
+  const HorizonThemePicker({super.key, required this.value, required this.onChanged});
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    const options = [
+      ('light', 'Light', Icons.wb_sunny_outlined),
+      ('dark', 'Dark', Icons.nightlight_outlined),
+      ('system', 'System', Icons.smartphone_rounded),
+    ];
+    return Padding(
+      key: const Key('settings-theme'),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      child: Row(
+        children: [
+          for (final (i, (v, label, icon)) in options.indexed) ...[
+            if (i > 0) const SizedBox(width: 10),
+            Expanded(
+              child: Semantics(
+                selected: v == value,
+                button: true,
+                label: label,
+                excludeSemantics: true,
+                child: Material(
+                  color: t.bgSurface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    side: BorderSide(
+                      color: v == value ? t.primaryAccent : t.borderColor,
+                      width: v == value ? 2 : 1,
+                    ),
+                  ),
+                  child: InkWell(
+                    key: Key('theme-$v'),
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () => onChanged(v),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: Column(
+                        children: [
+                          Icon(icon, size: 22, color: v == value ? t.actionInk : t.textSecondary),
+                          const SizedBox(height: 6),
+                          Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: v == value ? t.actionInk : t.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
