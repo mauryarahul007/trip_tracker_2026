@@ -2287,6 +2287,42 @@ abstract class AppLocalizations {
   /// **'Pending sync'**
   String get rowSyncPending;
 
+  /// No description provided for @horizonQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get horizonQueued;
+
+  /// No description provided for @horizonTripMissingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We can\'t find this trip'**
+  String get horizonTripMissingTitle;
+
+  /// No description provided for @horizonTripMissingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It may have been deleted, or you were removed from it. Ask a friend for a fresh code.'**
+  String get horizonTripMissingBody;
+
+  /// No description provided for @horizonTripMissingHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to my trips'**
+  String get horizonTripMissingHome;
+
+  /// No description provided for @horizonUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get horizonUndo;
+
+  /// No description provided for @horizonConflictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Two versions of \"{title}\"'**
+  String horizonConflictTitle(String title);
+
   /// No description provided for @rowSyncFailed.
   ///
   /// In en, this message translates to:
@@ -4327,6 +4363,12 @@ abstract class AppLocalizations {
   /// **'Add expense'**
   String get quickAddConfirm;
 
+  /// No description provided for @horizonAddTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to {trip}'**
+  String horizonAddTo(String trip);
+
   /// No description provided for @quickAddFallback.
   ///
   /// In en, this message translates to:
@@ -5808,6 +5850,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore'**
   String get horizonRestore;
+
+  /// No description provided for @horizonMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get horizonMarkAllRead;
+
+  /// No description provided for @horizonMeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get horizonMeTitle;
+
+  /// No description provided for @horizonEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get horizonEdit;
+
+  /// No description provided for @horizonTripsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 trip} other{{count} trips}}'**
+  String horizonTripsCount(int count);
+
+  /// No description provided for @horizonFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get horizonFilterAll;
+
+  /// No description provided for @horizonFilterOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'Owed to you'**
+  String get horizonFilterOwed;
+
+  /// No description provided for @horizonFilterOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe'**
+  String get horizonFilterOwe;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

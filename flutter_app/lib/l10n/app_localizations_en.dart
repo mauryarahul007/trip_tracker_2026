@@ -1267,6 +1267,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rowSyncPending => 'Pending sync';
 
   @override
+  String get horizonQueued => 'Queued';
+
+  @override
+  String get horizonTripMissingTitle => 'We can\'t find this trip';
+
+  @override
+  String get horizonTripMissingBody =>
+      'It may have been deleted, or you were removed from it. Ask a friend for a fresh code.';
+
+  @override
+  String get horizonTripMissingHome => 'Back to my trips';
+
+  @override
+  String get horizonUndo => 'Undo';
+
+  @override
+  String horizonConflictTitle(String title) {
+    return 'Two versions of \"$title\"';
+  }
+
+  @override
   String get rowSyncFailed => 'Sync failed. Tap to retry.';
 
   @override
@@ -2468,6 +2489,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickAddConfirm => 'Add expense';
 
   @override
+  String horizonAddTo(String trip) {
+    return 'Add to $trip';
+  }
+
+  @override
   String get quickAddFallback => 'Expense';
 
   @override
@@ -3360,4 +3386,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get horizonRestore => 'Restore';
+
+  @override
+  String get horizonMarkAllRead => 'Mark all read';
+
+  @override
+  String get horizonMeTitle => 'Me';
+
+  @override
+  String get horizonEdit => 'Edit';
+
+  @override
+  String horizonTripsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count trips', one: '1 trip');
+    return '$_temp0';
+  }
+
+  @override
+  String get horizonFilterAll => 'All';
+
+  @override
+  String get horizonFilterOwed => 'Owed to you';
+
+  @override
+  String get horizonFilterOwe => 'You owe';
 }

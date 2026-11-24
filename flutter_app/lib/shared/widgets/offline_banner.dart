@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/network/connectivity_provider.dart';
 import '../theme/app_icons.dart';
+import '../theme/app_typography.dart';
 import '../theme/app_tokens.dart';
 
 /// An animated banner that automatically appears when network connectivity is lost.
@@ -51,6 +52,7 @@ class OfflineBanner extends ConsumerWidget {
                       child: Text(
                         customMessage ?? 'You are offline. Changes will sync when reconnected.',
                         style: TextStyle(
+                          fontFamily: AppTypography.fontBody,
                           fontSize: tokens.horizon ? 13 : 12,
                           fontWeight: tokens.horizon ? FontWeight.w600 : FontWeight.w500,
                           color: tokens.horizon ? tokens.tones.butter.accent : tokens.warningColor,

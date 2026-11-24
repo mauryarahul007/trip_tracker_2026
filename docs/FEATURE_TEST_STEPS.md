@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-25 | 3.105.0 | HORIZON-STATES | [Horizon All balances, Alerts, Me, states and sheets (Flutter)](#horizon-states--horizon-all-balances-alerts-me-states-and-sheets-flutter) |
 | 2026-11-25 | 3.104.0 | HORIZON-PAGES | [Horizon trip pages: People, Activity, Insights, Categories, Checklist, Recycle bin (Flutter)](#horizon-pages--horizon-trip-pages-people-activity-insights-categories-checklist-recycle-bin-flutter) |
 | 2026-11-25 | 3.103.0 | HORIZON-ADD | [Horizon Add expense, itinerary timeline and Quick add picker (Flutter)](#horizon-add--horizon-add-expense-itinerary-timeline-and-quick-add-picker-flutter) |
 | 2026-11-25 | 3.102.0 | HORIZON-TRIP | [Horizon trip screens: header, Balances, Spend and Hub (Flutter)](#horizon-trip--horizon-trip-screens-header-balances-spend-and-hub-flutter) |
@@ -4502,6 +4503,37 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## HORIZON-STATES — Horizon All balances, Alerts, Me, states and sheets (Flutter)
+
+**Shipped:** v3.105.0. Flutter-only. Matches the All balances, Alerts, Me and States mockups plus the sheet mockups.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| All layouts below | `enableHorizonUi` | ON (Core) |
+
+### Prep
+Two trips where you owe in one and are owed in the other; a few notifications; airplane mode available.
+
+### Steps
+1. Balances tab: All / Owed to you / You owe switch filters the people list. With a debt, a Settle button sits under it; with none, an "all even" line.
+2. Alerts: title "Alerts", filter chips sit in a grey track and size to their text; "Mark all read" clears unread dots.
+3. Me: title "Me", profile line ends with "· N trips", an Edit pill opens the profile.
+4. Turn on airplane mode and add an expense: the offline pill shows at the top and the row has a yellow "Queued" tag. Reconnect: the tag goes.
+5. Delete an expense on Spend: a dark navy toast with "Undo" appears; Undo restores it.
+6. Open a link to a trip you were removed from (or a made-up /trip/xyz): "We can't find this trip" with Back to my trips and Join with a code.
+7. Tap an expense you are on: under the amount a green "You lent ₹X ↓" or red "You owe ₹X ↑" chip.
+8. Spend › filter: plain "Filters" title and a flat footer. Pay by UPI: big ₹ amount, no "1-TAP SETTLEMENT RAILS" label.
+9. Quick add: button reads "Add to <trip name>". Sync conflict with one expense: title 'Two versions of "<title>"'.
+
+### Negative checks
+- `enableHorizonUi` OFF: mint All balances card, old Alerts chips and title, "Settings" title, the sync icon on rows, teal UNDO snackbar, blue Filters band, "Add expense" on Quick add and "Sync conflict" title return unchanged. A missing trip shows the old empty shell.
+
+### Pass
+- Each screen and sheet matches its mockup and every action still works.
+
+---
 
 ## HORIZON-PAGES — Horizon trip pages: People, Activity, Insights, Categories, Checklist, Recycle bin (Flutter)
 

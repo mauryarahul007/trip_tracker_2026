@@ -54,6 +54,41 @@ class ExpenseDetailSheet extends ConsumerWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
+  /// Horizon: what this expense means for me, as a tinted chip under the amount ("You owe ₹1,250 ↑").
+  Widget? _horizonShareChip(BuildContext context, WidgetRef ref, Expense e, String base) {
+    final me = ref.watch(myMemberIdProvider(tripId));
+    if (me == null || !isActualExpense(e)) return null;
+    final impact = rowImpact(e, me);
+    if (!impact.involved || impact.net.abs() < 0.005) return null;
+    final t = context.tokens;
+    final l10n = context.l10n;
+    final lent = impact.net > 0;
+    final color = lent ? t.colorSuccess : t.colorDanger;
+    final text = lent
+        ? '${l10n.horizonRowYouLent(formatMoney(context, impact.net, base))} ↓'
+        : '${l10n.horizonRowYouOwe(formatMoney(context, -impact.net, base))} ↑';
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          key: const Key('detail-share-chip'),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)),
+          child: Text(
+            text[0].toUpperCase() + text.substring(1),
+            style: TextStyle(
+              fontFamily: AppTypography.fontBody,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _run(BuildContext context, Future<void> Function() action) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
@@ -233,6 +268,7 @@ class ExpenseDetailSheet extends ConsumerWidget {
                         color: isRefund(e) ? tokens.colorSuccess : tokens.textPrimary,
                       ),
                     ),
+                    if (tokens.horizon) ?_horizonShareChip(context, ref, e, base),
                   ],
                 ),
               ),

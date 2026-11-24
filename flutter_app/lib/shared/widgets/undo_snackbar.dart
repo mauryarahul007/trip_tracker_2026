@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../core/platform/feedback.dart';
 
+import '../../l10n/l10n_ext.dart';
 import '../theme/app_tokens.dart';
+import '../theme/app_typography.dart';
 
 class UndoSnackbar {
   static ScaffoldFeatureController<SnackBar, SnackBarClosedReason> show({
@@ -19,16 +21,22 @@ class UndoSnackbar {
         duration: duration,
         persist: false, // snackbars with an action persist by default; the undo window must end
         behavior: SnackBarBehavior.floating,
-        backgroundColor: tokens.secondaryAccent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(tokens.radiusMd)),
+        // Horizon: the navy hero toast with a light-blue Undo (mockup "Saved toast").
+        backgroundColor: tokens.horizon ? tokens.heroMid : tokens.secondaryAccent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(tokens.horizon ? 14 : tokens.radiusMd)),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         content: Text(
           message,
-          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontFamily: tokens.horizon ? AppTypography.fontBody : null,
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: tokens.horizon ? FontWeight.w600 : FontWeight.w500,
+          ),
         ),
         action: SnackBarAction(
-          label: 'UNDO',
-          textColor: tokens.primaryAccentLight,
+          label: tokens.horizon ? context.l10n.horizonUndo : 'UNDO',
+          textColor: tokens.horizon ? const Color(0xFF9DB4FF) : tokens.primaryAccentLight,
           onPressed: () {
             AppFeedback.tap();
             onUndo();

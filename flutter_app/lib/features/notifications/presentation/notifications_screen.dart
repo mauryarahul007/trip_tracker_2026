@@ -19,6 +19,7 @@ import '../../../domain/models/notification_item.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -167,14 +168,22 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         // Per-trip view (opened from inside a trip) keeps its back arrow and no dock.
         bottomNavigationBar: widget.tripId == null ? buildHomeDock(context, ref, HomeTab.activity) : null,
         appBar: AppBar(
-          title: const Text('Notifications'),
+          // Horizon ("Alerts" mockup): the tab's own name and a plain "Mark all read".
+          title: Text(context.tokens.horizon && widget.tripId == null ? context.l10n.navAlerts : 'Notifications'),
           actions: [
-            IconButton(
-              key: const Key('notifications-mark-all'),
-              tooltip: 'Mark all as read',
-              onPressed: unread == 0 || userId == null ? null : () => repo.markAllRead(userId, tripId: _scope),
-              icon: const Icon(Icons.done_all_rounded),
-            ),
+            if (context.tokens.horizon)
+              TextButton(
+                key: const Key('notifications-mark-all'),
+                onPressed: unread == 0 || userId == null ? null : () => repo.markAllRead(userId, tripId: _scope),
+                child: Text(context.l10n.horizonMarkAllRead),
+              )
+            else
+              IconButton(
+                key: const Key('notifications-mark-all'),
+                tooltip: 'Mark all as read',
+                onPressed: unread == 0 || userId == null ? null : () => repo.markAllRead(userId, tripId: _scope),
+                icon: const Icon(Icons.done_all_rounded),
+              ),
             IconButton(
               key: const Key('notifications-clear'),
               tooltip: 'Clear notifications',
@@ -187,23 +196,41 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              child: Wrap(
-                spacing: 8,
-                children: [
-                  if (widget.tripId != null) ...[
-                    chip(const Key('filter-this-trip'), 'This trip', _thisTrip, () => setState(() => _thisTrip = true)),
-                    chip(
-                      const Key('filter-all-trips'),
-                      'All trips',
-                      !_thisTrip,
-                      () => setState(() => _thisTrip = false),
-                    ),
+              child: Container(
+                // Horizon: the filters sit in one segmented track, like the mockup.
+                padding: context.tokens.horizon ? const EdgeInsets.all(4) : EdgeInsets.zero,
+                decoration: context.tokens.horizon
+                    ? BoxDecoration(color: context.tokens.bgSurfaceHover, borderRadius: BorderRadius.circular(14))
+                    : null,
+                width: double.infinity,
+                child: Wrap(
+                  spacing: context.tokens.horizon ? 4 : 8,
+                  children: [
+                    if (widget.tripId != null) ...[
+                      chip(
+                        const Key('filter-this-trip'),
+                        'This trip',
+                        _thisTrip,
+                        () => setState(() => _thisTrip = true),
+                      ),
+                      chip(
+                        const Key('filter-all-trips'),
+                        'All trips',
+                        !_thisTrip,
+                        () => setState(() => _thisTrip = false),
+                      ),
+                    ],
+                    if (groupingOn) ...[
+                      chip(const Key('filter-kind-all'), 'All', !_moneyOnly, () => setState(() => _moneyOnly = false)),
+                      chip(
+                        const Key('filter-kind-money'),
+                        'Money',
+                        _moneyOnly,
+                        () => setState(() => _moneyOnly = true),
+                      ),
+                    ],
                   ],
-                  if (groupingOn) ...[
-                    chip(const Key('filter-kind-all'), 'All', !_moneyOnly, () => setState(() => _moneyOnly = false)),
-                    chip(const Key('filter-kind-money'), 'Money', _moneyOnly, () => setState(() => _moneyOnly = true)),
-                  ],
-                ],
+                ),
               ),
             ),
             Expanded(
@@ -500,18 +527,27 @@ class _QuietChip extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
           child: Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
-              color: selected ? t.primaryAccent.withValues(alpha: 0.12) : Colors.transparent,
-              borderRadius: BorderRadius.circular(99),
+              color: selected
+                  ? (t.horizon ? t.bgSurface : t.primaryAccent.withValues(alpha: 0.12))
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(t.horizon ? 10 : 99),
+              boxShadow: selected && t.horizon
+                  ? [BoxShadow(color: t.shadowBase.withValues(alpha: 0.08), blurRadius: 6, offset: const Offset(0, 1))]
+                  : null,
             ),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                color: selected ? t.textPrimary : t.textMuted,
+            // Sized to the label: a centred Container would stretch each chip across the row.
+            child: Center(
+              widthFactor: 1,
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontBody,
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: selected ? t.textPrimary : t.textMuted,
+                ),
               ),
             ),
           ),

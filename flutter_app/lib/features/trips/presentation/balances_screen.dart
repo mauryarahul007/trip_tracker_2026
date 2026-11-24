@@ -95,104 +95,10 @@ class BalancesScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
                 children: [
                   if (tokens.horizon) ?_horizonStats(context, positions),
-                  BentoTile(
-                    tone: BentoTone.mint,
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        BentoTile.eyebrow(context, BentoTone.mint, l10n.ledAcrossTrips),
-                        const SizedBox(height: 12),
-                        if (total.isEmpty)
-                          Text(
-                            l10n.ledAllSettled,
-                            key: const Key('balances-even'),
-                            style: TextStyle(
-                              fontFamily: AppTypography.fontTitle,
-                              fontSize: 28,
-                              fontWeight: FontWeight.w800,
-                              color: tokens.textPrimary,
-                            ),
-                          )
-                        else
-                          for (final n in total) _NetRow(n, light: true),
-                        if (debt != null) ...[
-                          const SizedBox(height: 12),
-                          Text.rich(
-                            key: const Key('balances-largest-debt'),
-                            TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: l10n.balLargestDebt(debt.tripName),
-                                  style: TextStyle(fontWeight: FontWeight.w600, color: tokens.textSecondary),
-                                ),
-                                TextSpan(
-                                  text: ' -${formatMoney(context, debt.net.abs(), debt.currency)}',
-                                  style: TextStyle(
-                                    fontFamily: AppTypography.fontMono,
-                                    fontFeatures: AppTypography.tabularFigures,
-                                    fontWeight: FontWeight.w800,
-                                    color: tokens.colorDanger,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          AppButton(
-                            key: const Key('balances-owe-cta'),
-                            label: l10n.balSettleLargest,
-                            icon: Icons.swap_horiz_rounded,
-                            onPressed: () => unawaited(
-                              showSettlementChooserOrSheet(context: context, ref: ref, tripId: debt.tripId),
-                            ),
-                          ),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: TextButton(
-                              key: const Key('balances-owe-open'),
-                              onPressed: () => context.push('/trip/${debt.tripId}/ledger'),
-                              child: Text(l10n.balOpenTripBalances(debt.tripName)),
-                            ),
-                          ),
-                        ] else if (owedTo != null) ...[
-                          const SizedBox(height: 12),
-                          Text.rich(
-                            key: const Key('balances-largest-owed'),
-                            TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: l10n.balLargestOwed(owedTo.tripName),
-                                  style: TextStyle(fontWeight: FontWeight.w600, color: tokens.textSecondary),
-                                ),
-                                TextSpan(
-                                  text: ' +${formatMoney(context, owedTo.net, owedTo.currency)}',
-                                  style: TextStyle(
-                                    fontFamily: AppTypography.fontMono,
-                                    fontFeatures: AppTypography.tabularFigures,
-                                    fontWeight: FontWeight.w800,
-                                    color: tokens.colorSuccess,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          AppButton(
-                            key: const Key('balances-owed-cta'),
-                            label: l10n.balOpenTripBalances(owedTo.tripName),
-                            variant: AppButtonVariant.secondary,
-                            onPressed: () => context.push('/trip/${owedTo.tripId}/ledger'),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  if (tokens.horizon)
-                    ..._horizonPeople(
-                      context,
-                      personNets(
+                  if (tokens.horizon) ...[
+                    // Horizon ("All balances" mockup): filter + by person, then one settle action.
+                    _HorizonPeopleFiltered(
+                      people: personNets(
                         userId: userId,
                         trips: trips,
                         membersByTrip: members,
@@ -200,6 +106,121 @@ class BalancesScreen extends ConsumerWidget {
                         groupsByTrip: groups,
                       ),
                     ),
+                    if (debt != null)
+                      AppButton(
+                        key: const Key('balances-owe-cta'),
+                        label: l10n.balSettleLargest,
+                        icon: Icons.swap_horiz_rounded,
+                        isFullWidth: true,
+                        onPressed: () =>
+                            unawaited(showSettlementChooserOrSheet(context: context, ref: ref, tripId: debt.tripId)),
+                      )
+                    else if (total.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          l10n.ledAllSettled,
+                          key: const Key('balances-even'),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontFamily: AppTypography.fontBody, color: tokens.textSecondary),
+                        ),
+                      ),
+                    const SizedBox(height: 20),
+                  ] else
+                    BentoTile(
+                      tone: BentoTone.mint,
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          BentoTile.eyebrow(context, BentoTone.mint, l10n.ledAcrossTrips),
+                          const SizedBox(height: 12),
+                          if (total.isEmpty)
+                            Text(
+                              l10n.ledAllSettled,
+                              key: const Key('balances-even'),
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontTitle,
+                                fontSize: 28,
+                                fontWeight: FontWeight.w800,
+                                color: tokens.textPrimary,
+                              ),
+                            )
+                          else
+                            for (final n in total) _NetRow(n, light: true),
+                          if (debt != null) ...[
+                            const SizedBox(height: 12),
+                            Text.rich(
+                              key: const Key('balances-largest-debt'),
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: l10n.balLargestDebt(debt.tripName),
+                                    style: TextStyle(fontWeight: FontWeight.w600, color: tokens.textSecondary),
+                                  ),
+                                  TextSpan(
+                                    text: ' -${formatMoney(context, debt.net.abs(), debt.currency)}',
+                                    style: TextStyle(
+                                      fontFamily: AppTypography.fontMono,
+                                      fontFeatures: AppTypography.tabularFigures,
+                                      fontWeight: FontWeight.w800,
+                                      color: tokens.colorDanger,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            AppButton(
+                              key: const Key('balances-owe-cta'),
+                              label: l10n.balSettleLargest,
+                              icon: Icons.swap_horiz_rounded,
+                              onPressed: () => unawaited(
+                                showSettlementChooserOrSheet(context: context, ref: ref, tripId: debt.tripId),
+                              ),
+                            ),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton(
+                                key: const Key('balances-owe-open'),
+                                onPressed: () => context.push('/trip/${debt.tripId}/ledger'),
+                                child: Text(l10n.balOpenTripBalances(debt.tripName)),
+                              ),
+                            ),
+                          ] else if (owedTo != null) ...[
+                            const SizedBox(height: 12),
+                            Text.rich(
+                              key: const Key('balances-largest-owed'),
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: l10n.balLargestOwed(owedTo.tripName),
+                                    style: TextStyle(fontWeight: FontWeight.w600, color: tokens.textSecondary),
+                                  ),
+                                  TextSpan(
+                                    text: ' +${formatMoney(context, owedTo.net, owedTo.currency)}',
+                                    style: TextStyle(
+                                      fontFamily: AppTypography.fontMono,
+                                      fontFeatures: AppTypography.tabularFigures,
+                                      fontWeight: FontWeight.w800,
+                                      color: tokens.colorSuccess,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            AppButton(
+                              key: const Key('balances-owed-cta'),
+                              label: l10n.balOpenTripBalances(owedTo.tripName),
+                              variant: AppButtonVariant.secondary,
+                              onPressed: () => context.push('/trip/${owedTo.tripId}/ledger'),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  if (!tokens.horizon) const SizedBox(height: 20),
                   Eyebrow(l10n.tripsTitle),
                   const SizedBox(height: 8),
                   for (final t in trips)
@@ -371,6 +392,60 @@ Widget? _horizonStats(BuildContext context, List<TripNetPosition> positions) {
 
 /// Horizon "By person" list: each person's net with me across every trip (green "owes you", red "you owe"),
 /// matched across trips and never blending currencies. Nothing when everyone is square.
+/// All / Owed to you / You owe over the by-person list.
+class _HorizonPeopleFiltered extends StatefulWidget {
+  const _HorizonPeopleFiltered({required this.people});
+  final List<PersonNet> people;
+
+  @override
+  State<_HorizonPeopleFiltered> createState() => _HorizonPeopleFilteredState();
+}
+
+class _HorizonPeopleFilteredState extends State<_HorizonPeopleFiltered> {
+  var _filter = 0; // 0 all, 1 owed to you, 2 you owe
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    if (widget.people.isEmpty) return const SizedBox.shrink();
+    final shown = [
+      for (final p in widget.people)
+        if (_filter == 0 || (_filter == 1 && p.net > 0) || (_filter == 2 && p.net < 0)) p,
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SegmentedButton<int>(
+          key: const Key('balances-filter'),
+          showSelectedIcon: false,
+          style: SegmentedButton.styleFrom(
+            textStyle: const TextStyle(fontFamily: AppTypography.fontBody, fontWeight: FontWeight.w700),
+          ),
+          segments: [
+            ButtonSegment(value: 0, label: Text(l10n.horizonFilterAll)),
+            ButtonSegment(value: 1, label: Text(l10n.horizonFilterOwed, key: const Key('balances-filter-owed'))),
+            ButtonSegment(value: 2, label: Text(l10n.horizonFilterOwe, key: const Key('balances-filter-owe'))),
+          ],
+          selected: {_filter},
+          onSelectionChanged: (v) => setState(() => _filter = v.first),
+        ),
+        const SizedBox(height: 14),
+        if (shown.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Text(
+              l10n.ledAllSettled,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontFamily: AppTypography.fontBody, color: context.tokens.textSecondary),
+            ),
+          )
+        else
+          ..._horizonPeople(context, shown),
+      ],
+    );
+  }
+}
+
 List<Widget> _horizonPeople(BuildContext context, List<PersonNet> people) {
   if (people.isEmpty) return const [];
   final t = context.tokens;
@@ -404,7 +479,12 @@ List<Widget> _horizonPeople(BuildContext context, List<PersonNet> people) {
                           p.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: t.textPrimary),
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontBody,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: t.textPrimary,
+                          ),
                         ),
                         Text(
                           p.trips.length == 1 ? p.trips.first : l10n.horizonTripCount(p.trips.length),

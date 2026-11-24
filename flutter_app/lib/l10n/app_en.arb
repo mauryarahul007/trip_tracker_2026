@@ -647,6 +647,13 @@
   "rowPendingApproval": "Pending approval",
   "rowPendingApprovalTip": "Pending approval — excluded from balances until a second member approves it",
   "rowSyncPending": "Pending sync",
+  "horizonQueued": "Queued",
+  "horizonTripMissingTitle": "We can't find this trip",
+  "horizonTripMissingBody": "It may have been deleted, or you were removed from it. Ask a friend for a fresh code.",
+  "horizonTripMissingHome": "Back to my trips",
+  "horizonUndo": "Undo",
+  "horizonConflictTitle": "Two versions of \"{title}\"",
+  "@horizonConflictTitle": {"placeholders": {"title": {"type": "String"}}},
   "rowSyncFailed": "Sync failed. Tap to retry.",
   "rowConflict": "Sync conflict",
   "rowEdit": "Edit",
@@ -1217,6 +1224,8 @@
   "quickAddHint": "e.g. lunch 240",
   "quickAddEmpty": "Type an amount to add.",
   "quickAddConfirm": "Add expense",
+  "horizonAddTo": "Add to {trip}",
+  "@horizonAddTo": {"placeholders": {"trip": {"type": "String"}}},
   "quickAddFallback": "Expense",
   "importDone": "Imported {count} expenses",
   "@importDone": {
@@ -1524,5 +1533,13 @@
   "horizonCatYourOwn": "Your own",
   "horizonChecklistTitle": "Packing and bookings",
   "horizonBinBanner": "Deleted items are gone for good after 24 hours.",
-  "horizonRestore": "Restore"
+  "horizonRestore": "Restore",
+  "horizonMarkAllRead": "Mark all read",
+  "horizonMeTitle": "Me",
+  "horizonEdit": "Edit",
+  "horizonTripsCount": "{count, plural, =1{1 trip} other{{count} trips}}",
+  "@horizonTripsCount": {"placeholders": {"count": {"type": "int"}}},
+  "horizonFilterAll": "All",
+  "horizonFilterOwed": "Owed to you",
+  "horizonFilterOwe": "You owe"
 }

@@ -124,8 +124,9 @@ class _ExpenseFilterSheetState extends ConsumerState<ExpenseFilterSheet> {
     return Column(
       children: [
         // Branded header with a close button, like the web filters page.
+        // Horizon: a plain sheet title on the surface, like every other sheet, not a blue band.
         Container(
-          color: t.primaryAccent,
+          color: t.horizon ? null : t.primaryAccent,
           padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
           child: Row(
             children: [
@@ -135,16 +136,16 @@ class _ExpenseFilterSheetState extends ConsumerState<ExpenseFilterSheet> {
                   key: const Key('filters-title'),
                   style: TextStyle(
                     fontFamily: AppTypography.fontTitle,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: t.ctaFg,
+                    fontSize: t.horizon ? 20 : 22,
+                    fontWeight: t.horizon ? FontWeight.w700 : FontWeight.w800,
+                    color: t.horizon ? t.textPrimary : t.ctaFg,
                   ),
                 ),
               ),
               IconButton(
                 key: const Key('filters-close'),
                 tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-                icon: Icon(Icons.close_rounded, color: t.ctaFg),
+                icon: Icon(Icons.close_rounded, color: t.horizon ? t.textSecondary : t.ctaFg),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
@@ -271,9 +272,11 @@ class _ExpenseFilterSheetState extends ConsumerState<ExpenseFilterSheet> {
           ),
         ),
         // Pinned footer: Clear all beside the live result count.
+        // Horizon: a flat footer on a hairline instead of a raised bar.
         Material(
           color: t.bgSurface,
-          elevation: 6,
+          elevation: t.horizon ? 0 : 6,
+          shape: t.horizon ? Border(top: BorderSide(color: t.borderColor)) : null,
           child: SafeArea(
             top: false,
             child: Padding(

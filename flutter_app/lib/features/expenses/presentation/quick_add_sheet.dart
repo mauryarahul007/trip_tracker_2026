@@ -260,7 +260,11 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
           const SizedBox(height: 12),
           AppButton(
             key: const Key('quick-add-save'),
-            label: l10n.quickAddConfirm,
+            // Horizon names the trip on the button, so an add from Home never lands somewhere unexpected.
+            label: () {
+              final name = context.tokens.horizon ? ref.watch(tripProvider(widget.tripId)).value?.name : null;
+              return name == null || name.isEmpty ? l10n.quickAddConfirm : l10n.horizonAddTo(name);
+            }(),
             isLoading: _busy,
             onPressed: _busy ? null : _save,
           ),

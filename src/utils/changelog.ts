@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.105.0',
+    date: '2026-11-25',
+    changes: [
+      'All balances filters by Owed to you or You owe, Alerts has a Mark all read button, and Me shows your trip count with an Edit button (Flutter).',
+      'Expenses waiting to sync show a Queued tag, the undo toast is dark navy, and a link to a missing trip shows a clear page with Back to my trips and Join with a code (Flutter).',
+      'Expense details show what you owe or lent, Quick add names the trip on its button, sync conflicts name the expense, and the Filters and UPI sheets are cleaner (Flutter).',
+    ],
+  },
+  {
     version: '3.104.0',
     date: '2026-11-25',
     changes: [
