@@ -9,10 +9,10 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **208** |
+| **Total Tracked** | **209** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
-| **🟡 In Progress** | **0** |
+| **🟡 In Progress** | **1** |
 | **✅ Shipped** | **205** |
 | **⚪ Won't Do** | **0** |
 
@@ -25,6 +25,7 @@
 | **[FEAT-002](#feat-002)** | `ui-ux` | Test | `mauryarahul007@gmail.com` | 💡 Requested |
 | **[FEAT-024](#feat-024)** | `admin` | CI pipeline for lint, build, and test on push/PR | `claude-cli` | 💡 Requested |
 | **[FEAT-167](#feat-167)** | `ui-ux` | Automatic Android APK build from main (Flutter merged into main) | `claude-cli` | 💡 Requested |
+| **[FEAT-210](#feat-210)** | `ui-ux` | Horizon look for the Flutter app (colours, shapes, bars, all screens) | `agent` | 🟡 In Progress |
 
 ---
 
@@ -33,7 +34,7 @@
 ### FEAT-002: Test
 
 - **Category**: `ui-ux` | **Status**: `requested`
-- **Requested By**: `mauryarahul007@gmail.com` on 21/8/2026 (web)
+- **Requested By**: `mauryarahul007@gmail.com` on 8/21/2026 (web)
 - **Route**: `#nav-3`
 
 Test
@@ -43,7 +44,7 @@ Test
 ### FEAT-024: CI pipeline for lint, build, and test on push/PR
 
 - **Category**: `admin` | **Status**: `requested`
-- **Requested By**: `claude-cli` on 1/9/2026 (web)
+- **Requested By**: `claude-cli` on 9/1/2026 (web)
 
 CI pipeline for lint, build, and test on push/PR
 
@@ -52,9 +53,18 @@ CI pipeline for lint, build, and test on push/PR
 ### FEAT-167: Automatic Android APK build from main (Flutter merged into main)
 
 - **Category**: `ui-ux` | **Status**: `requested`
-- **Requested By**: `claude-cli` on 19/10/2026 (web)
+- **Requested By**: `claude-cli` on 10/19/2026 (web)
 
 Automatic Android APK build from main (Flutter merged into main)
+
+---
+
+### FEAT-210: Horizon look for the Flutter app (colours, shapes, bars, all screens)
+
+- **Category**: `ui-ux` | **Status**: `in_progress`
+- **Requested By**: `agent` on 11/24/2026 (native)
+
+Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blue action, sunset accent, night-navy hero, new category tints, new shapes, 5-slot bottom bars and all 55 screens from design/horizon. Ships in phases; OFF keeps Calm Passport. HORIZON-UI.
 
 ---
 
