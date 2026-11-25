@@ -109,6 +109,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableLiveLocationStaleAge': true,
   'enableMapCollapsedByDefault': true,
   'enableMealNudges': true,
+  'enableMemberDelete': true,
   'enableMemberLastSeen': false,
   'enableMemberMoneyRow': true,
   'enableMemberWeights': true,
@@ -770,6 +771,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'Meal-time Expense Nudges (Flutter)',
     pack: 'trip',
     description: 'Flutter app: ON: during a trip that is happening now, Spend shows one small card asking "Added breakfast?" from 10 AM, "Added lunch?" from 3 PM and "Added dinner?" from 8 PM, only when nothing like that meal is logged for today. Add opens a new expense pre-filled with the meal; Not today hides that meal for the day on this phone. OFF: no card. Uses the phone clock, sends no notification, and never adds an expense by itself.',
+  ),
+  'enableMemberDelete': (
+    label: 'Delete a Member (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: an organiser taps a member on People and gets Delete under Archive. A member with no expenses (never paid, never in a split) is removed for good after a confirm, and any "pays for" / extra-people setting that names them is cleared. A member who is on any expense cannot be deleted: the app says so and offers Archive instead, so balances never change. The trip owner and yourself cannot be deleted. OFF: no Delete in the member sheet; Archive / Restore work as before. Does not change the web app, which has its own delete.',
   ),
   'enableMemberLastSeen': (
     label: 'Member Last Seen',
@@ -1539,6 +1545,7 @@ const Map<String, List<String>> consumerPacks = {
     'enableRemindEveryone',
     'enableReminderStatus',
     'enableMemberWeights',
+    'enableMemberDelete',
     'enableCloseoutPrompt',
     'enableGlobalSearch',
     'enableSmartExpenseDefaults',

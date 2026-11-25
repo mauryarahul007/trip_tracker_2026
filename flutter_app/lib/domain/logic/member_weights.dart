@@ -75,3 +75,12 @@ String coversSummary({
   }
   return [for (final e in byPayer.entries) '${nameOf(e.key)} pays for ${e.value.join(' and ')}'].join(', ');
 }
+
+/// [selected] plus every member covered by someone in it (when the covered member is still in the trip,
+/// listed in [memberIds]). A new expense counts a partner as present whenever whoever pays for them is.
+Set<String> withCoveredPartners(Set<String> selected, Map<String, String> covers, Set<String> memberIds) => {
+  ...selected,
+  for (final e in covers.entries)
+    if (selected.contains(e.value) && memberIds.contains(e.key) && e.key != e.value && !covers.containsKey(e.value))
+      e.key,
+};

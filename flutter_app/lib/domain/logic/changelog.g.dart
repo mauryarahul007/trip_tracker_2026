@@ -8,6 +8,10 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.113.0', '2026-11-25', [
+    'Pays for: a new expense now always covers your partner when you are on it, even if the last split left them out, so it opens as Shares with you counting as 2 (Flutter).',
+    'Organisers can delete a member from People. Someone on no expense is removed after a confirm; someone on any expense can only be archived, so balances never change (Flutter).',
+  ]),
   ChangelogEntry('3.112.0', '2026-11-25', [
     'Pays for now works on every way of adding an expense: Quick add leaves your partner out and charges you both shares too (Flutter).',
     'If your partner is ticked into a split (a saved draft, a remembered split, or by hand), a "<you> pays for <partner> · Apply" chip fixes it in one tap (Flutter).',
@@ -58,8 +62,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.102.0', '2026-11-25', [
     'Trip screens now follow the new look: a cleaner trip header with "Day N of M", a budget pace card and a short settle plan on Balances, day-grouped Spend with category chips and search, and a tinted Hub grid with a route card and Insights (Flutter).',
-  ]),
-  ChangelogEntry('3.101.0', '2026-11-25', [
-    'New Trips home: a greeting, your balance across trips with Get and Pay, four quick actions, the trip happening now with its spend and progress, then upcoming and past trips. The swipe-card and grid views are gone (Flutter).',
   ]),
 ];

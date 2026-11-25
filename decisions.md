@@ -6118,3 +6118,12 @@ This document logs all meaningful technical decisions, library choices, design p
   - Apply on a Shares split resets hand-typed shares to the pays-for weights.
   - Editing a saved expense shows the chip but never changes it without a tap.
 
+## 313. Pays-for default and delete a member (v3.113.0)
+* **Context:** On v3.112.0 the user's form opened "Equal · 2": a remembered split had left the partner out, so pays-for saw nothing to apply. The user also could not delete a member in the Flutter app (only Archive existed).
+* **Decision:**
+  - New `withCoveredPartners` (member_weights.dart): on a new expense, a covered member counts as present whenever their payer is in the split, before `applyCoversToSplit`. Same flag `enableMemberWeights`.
+  - New flag `enableMemberDelete` (Trip, ON; flag count 228): member sheet gets Delete (not for yourself or the trip owner). `memberOnAnyExpense` (member_roles.dart) blocks deleting anyone on an expense (payer, split, multi-payer, split config, itemized line) and offers Archive instead. Deleting clears pays-for covers and extra-people weights naming them, then calls the existing `deleteMember` (groups dissolve/rename as before).
+* **Trade-offs Accepted:**
+  - If the partner really is not on an expense, the payer must switch it to Equal by hand.
+  - No redistribution of expenses on delete (the web does that); Flutter only deletes members with no expenses.
+
