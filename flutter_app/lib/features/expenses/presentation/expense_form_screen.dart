@@ -932,6 +932,16 @@ class _FormBodyState extends ConsumerState<_FormBody> {
                                   const SizedBox(height: 8),
                                   modeButton,
                                 ],
+                                if (c.pendingCovers != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: ActionChip(
+                                      key: const Key('apply-covers'),
+                                      avatar: const Icon(Icons.favorite_border_rounded, size: 16),
+                                      label: Text('${c.coversLabel(_nameIn(members))} · Apply'),
+                                      onPressed: c.applyMemberCovers,
+                                    ),
+                                  ),
                                 const SizedBox(height: 8),
                                 for (final m in members)
                                   _MemberRow(
@@ -1229,6 +1239,8 @@ class _FormBodyState extends ConsumerState<_FormBody> {
             canFinish: count > 0 && !off,
             finishLabel: l10n.horizonSplitDone,
             onReset: c.presetEveryone,
+            coversNote: c.pendingCovers == null ? null : c.coversLabel(_nameIn(members)),
+            onApplyCovers: c.applyMemberCovers,
             onFinish: () => Navigator.of(ctx).pop(),
             onBack: () => Navigator.of(ctx).maybePop(),
           );
@@ -1309,6 +1321,13 @@ class _FormBodyState extends ConsumerState<_FormBody> {
             : l10n.formSplitBetween,
         s.splitMode == 'itemized' ? _openHorizonDetails : _openHorizonSplit,
       ),
+      if (c.pendingCovers != null)
+        HorizonFormChip(
+          'horizon-chip-covers',
+          const Icon(Icons.favorite_border_rounded, size: 16),
+          '${c.coversLabel(_nameIn(members))} · Apply',
+          c.applyMemberCovers,
+        ),
       if (c.flags.receiptUpload)
         HorizonFormChip(
           'horizon-chip-receipt',
@@ -1379,6 +1398,10 @@ class _FormBodyState extends ConsumerState<_FormBody> {
       ],
     ),
   );
+
+  /// Member id -> name for the "pays for" Apply chip.
+  String Function(String id) _nameIn(List<Member> members) =>
+      (id) => members.where((m) => m.id == id).firstOrNull?.name ?? id;
 
   /// The web keeps the picker in the original category order unless reorder is enabled.
   List<Category> _unordered(List<Category> c) => c;

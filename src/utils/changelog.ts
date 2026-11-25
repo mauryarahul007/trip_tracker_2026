@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.112.0',
+    date: '2026-11-25',
+    changes: [
+      'Pays for now works on every way of adding an expense: Quick add leaves your partner out and charges you both shares too (Flutter).',
+      'If your partner is ticked into a split (a saved draft, a remembered split, or by hand), a "<you> pays for <partner> · Apply" chip fixes it in one tap (Flutter).',
+    ],
+  },
+  {
     version: '3.111.0',
     date: '2026-11-25',
     changes: [

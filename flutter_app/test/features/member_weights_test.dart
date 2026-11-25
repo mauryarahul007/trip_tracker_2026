@@ -134,6 +134,89 @@ void main() {
       expect(old.splitMode, 'equal');
     });
 
+    test('Apply on a Shares split restarts from pays-for', () {
+      final w = applyCoversToSplit(
+        mode: 'custom',
+        selected: {'r', 'p', 'o'},
+        config: const {'r': 1, 'p': 2, 'o': 1},
+        weights: const {},
+        covers: const {'p': 'r'},
+      )!;
+      expect(w.selected, {'r', 'o'});
+      expect(w.weights, {'r': 2.0, 'o': 1.0});
+      expect(
+        applyCoversToSplit(
+          mode: 'exact',
+          selected: {'r', 'p'},
+          config: const {},
+          weights: const {},
+          covers: const {'p': 'r'},
+        ),
+        isNull,
+      );
+      expect(
+        coversSummary(
+          selected: {'r', 'p', 'o'},
+          covers: const {'p': 'r'},
+          nameOf: (id) => id == 'r' ? 'Rahul' : 'Anita',
+        ),
+        'Rahul pays for Anita',
+      );
+      expect(coversSummary(selected: {'p', 'o'}, covers: const {'p': 'r'}, nameOf: (id) => id), isEmpty);
+    });
+
+    testApp('form: Apply chip shows when the partner is back in, and takes them out', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableMemberWeights'});
+      final s = await seedTrip(tester);
+      await real(
+        tester,
+        () => containerOf(tester).read(tripRepositoryProvider).setMemberCovers(s.tripId, {s.cara: s.me}),
+      );
+      await openForm(tester, s);
+      expect(key('apply-covers'), findsNothing);
+      await tester.ensureVisible(key('split-${s.cara}'));
+      await tester.tap(key('split-${s.cara}'));
+      await settle(tester, rounds: 4);
+      expect(key('apply-covers'), findsOneWidget);
+      expect(find.textContaining('Asha pays for Cara'), findsOneWidget);
+      await tester.tap(key('apply-covers'));
+      await settle(tester, rounds: 4);
+      expect(key('apply-covers'), findsNothing);
+      await tester.enterText(key('amount-field'), '300');
+      await settle(tester, rounds: 2);
+      await tester.enterText(key('title-field'), 'Dinner');
+      await settle(tester, rounds: 2);
+      await tester.ensureVisible(key('save'));
+      await tester.tap(key('save'));
+      await settle(tester, rounds: 14);
+      final e = (await expensesOf(tester, s)).single;
+      expect(e.resolvedShares[s.me], 200);
+      expect(e.resolvedShares[s.cara] ?? 0, 0);
+    });
+
+    testApp('quick add leaves the covered partner out too', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableMemberWeights'});
+      final s = await seedTrip(tester);
+      await real(
+        tester,
+        () => containerOf(tester).read(tripRepositoryProvider).setMemberCovers(s.tripId, {s.cara: s.me}),
+      );
+      await openTab(tester, s, 'expenses');
+      await tester.tap(key('tab-menu'));
+      await settle(tester);
+      await tester.tap(find.text('Quick add'));
+      await settle(tester, rounds: 4);
+      await tester.enterText(key('quick-add-text'), 'lunch 300');
+      await settle(tester, rounds: 2);
+      await tester.tap(key('quick-add-save'));
+      await settle(tester, rounds: 10);
+      final e = (await expensesOf(tester, s)).single;
+      expect(e.splitMode, 'custom');
+      expect(e.resolvedShares[s.me], 200);
+      expect(e.resolvedShares[s.ben], 100);
+      expect(e.resolvedShares[s.cara] ?? 0, 0);
+    });
+
     testApp('flag off: no Counts as setting and new expenses stay equal', (tester) async {
       await pumpApp(tester, user: asha);
       final s = await seedTrip(tester);

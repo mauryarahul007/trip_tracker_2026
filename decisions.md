@@ -6106,3 +6106,15 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Only one level: a payer cannot also be covered, and a covered member cannot pay for others.
   - Saved expenses are not rewritten; the partner's old shares stay.
+
+## 312. Pays for on every add path (v3.112.0)
+* **Context:** After v3.111.0 the user set "Pays for" on People but could not get it applied while creating expenses. Only a fresh full-form expense with an equal start used it; Quick add, a restored draft and a remembered Shares split skipped it.
+* **Decision:**
+  - Quick add (`quick_add_sheet.dart`) runs `weightedDefaultSplit` on save when `enableMemberWeights` is on, saving a Shares split.
+  - New `applyCoversToSplit` (domain/logic/member_weights.dart): equal splits, and Shares splits with a covered member in alongside their payer, restart from `weightedDefaultSplit`. Exact, % and itemized are left alone. The form uses it after a remembered split too.
+  - Apply chip "<payer> pays for <partner> · Apply" (`apply-covers` classic, `horizon-chip-covers` amount-first, `horizon-apply-covers` split view) whenever the current split still charges a covered member; `ExpenseFormController.applyMemberCovers`.
+  - Same flag `enableMemberWeights` (Trip, ON). No migration.
+* **Trade-offs Accepted:**
+  - Apply on a Shares split resets hand-typed shares to the pays-for weights.
+  - Editing a saved expense shows the chip but never changes it without a tap.
+
