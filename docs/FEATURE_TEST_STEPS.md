@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-25 | 3.109.0 | HORIZON-REMINDERS | [Reminders and join preview (Flutter)](#horizon-reminders--reminders-and-join-preview-flutter) |
 | 2026-11-25 | 3.108.0 | HORIZON-ACCOUNT | [Horizon home and account (Flutter)](#horizon-account--horizon-home-and-account-flutter) |
 | 2026-11-25 | 3.107.0 | HORIZON-TRIP-PAGES | [Horizon trip pages and sheets (Flutter)](#horizon-trip-pages--horizon-trip-pages-and-sheets-flutter) |
 | 2026-11-25 | 3.106.0 | HORIZON-MONEY | [Horizon money flows: Split page, Quick add, Settle up, UPI (Flutter)](#horizon-money--horizon-money-flows-split-page-quick-add-settle-up-upi-flutter) |
@@ -4506,6 +4507,39 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## HORIZON-REMINDERS — Reminders and join preview (Flutter)
+
+**Shipped:** v3.109.0. Flutter-only.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Trip card in the Join with code sheet | `enableJoinCodePreview` | ON (Core) |
+| Remind everyone on All balances | `enableRemindEveryone` | ON (Trip) |
+| "Reminded 2d ago" on settle rows | `enableReminderStatus` | ON (Trip) |
+| All balances layout | `enableHorizonUi` | ON (Core) |
+
+### Prep
+A trip code from another account's trip (e.g. GOA7MX). A trip where two people owe you.
+
+### Steps
+1. Trips home › Join code: type the code. When the 6th character is in, a card shows the trip name, "N people · dates · first names" with a green tick. Join trip still opens the join page.
+2. Type a code no trip uses (e.g. ZZZ999): the card reads "No trip uses this code. Check it with the organiser."
+3. Copy a code, open Join code: it pastes and the card appears without typing.
+4. Balances (All balances): below By person, "Remind everyone (2)". Tap it: the share sheet opens with one message listing each person and amount. With one person owing, the button reads "Remind <name>". Under "You owe" the button is hidden.
+5. After step 4, each of those rows reads "<trip> · Reminded today".
+6. Open the trip › Settle up: tap Remind on a payment to you: the share sheet opens and the row then shows "Reminded today". Come back the next day: "Reminded yesterday", later "Reminded 3d ago".
+
+### Negative checks
+- `enableJoinCodePreview` OFF: no card in the Join sheet and no lookup happens.
+- `enableRemindEveryone` OFF: no Remind everyone button; per-payment Remind still works.
+- `enableReminderStatus` OFF: no "Reminded…" lines, and reminders sent while off are not recorded.
+
+### Pass
+- Each flag shows and hides only its own piece, and nothing is sent without the share sheet.
+
+---
 
 ## HORIZON-ACCOUNT — Horizon home and account (Flutter)
 

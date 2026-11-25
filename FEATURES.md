@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **213** |
+| **Total Tracked** | **214** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **210** |
+| **✅ Shipped** | **211** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -71,6 +71,7 @@ Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blu
 
 | ID | Title | Category | Requested By | Shipped By | Note |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| **FEAT-220** | Reminders and join preview (Flutter) | `ui-ux` | `human` | `agent` | Flags enableJoinCodePreview (Core), enableRemindEveryone, enableReminderStatus (Trip). Commit PENDING (v3.109.0). |
 | **FEAT-219** | Horizon home and account (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit 9f689aa (v3.108.0). |
 | **FEAT-218** | Horizon trip pages and sheets (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit d0ea575 (v3.107.0). |
 | **FEAT-217** | Horizon money flows: Split page, Quick add, Settle up, UPI (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit 7b4ffa7 (v3.106.0). |

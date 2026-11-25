@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.109.0',
+    date: '2026-11-25',
+    changes: [
+      'Join with code shows the trip name, dates and people as soon as the 6-character code is in, or says when no trip uses it (Flutter).',
+      'All balances has a Remind everyone button that shares one message listing who owes you what (Flutter).',
+      'After you remind someone, their row reads "Reminded today" or "Reminded 2d ago" on All balances and in Settle up (Flutter).',
+    ],
+  },
+  {
     version: '3.108.0',
     date: '2026-11-25',
     changes: [

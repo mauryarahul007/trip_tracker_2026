@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/format/money.dart';
+import '../../../../data/providers.dart' show flagProvider;
+import '../../application/reminder_log.dart';
 import '../../../../domain/logic/settlement.dart';
 import '../../../../domain/models/member.dart';
 import '../../../../l10n/l10n_ext.dart';
@@ -24,7 +27,7 @@ bool horizonUpiReady(Transfer t, Map<String, Member> members) => (members[t.toMe
 /// Horizon (flag `enableHorizonUi`) Settle up sheet body: "N payments clear the whole trip", then one card per
 /// payment. Payments that involve me get Remind (money coming to me) and Mark paid; the rest are listed dimmed
 /// and open the same record sheet on tap.
-class HorizonSettleList extends StatelessWidget {
+class HorizonSettleList extends ConsumerWidget {
   const HorizonSettleList({
     required this.transfers,
     required this.members,
@@ -45,10 +48,12 @@ class HorizonSettleList extends StatelessWidget {
   final ValueChanged<Transfer>? onRemind;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     final l10n = context.l10n;
     final rows = horizonSettleOrder(transfers, me);
+    final statusOn = ref.watch(flagProvider(('enableReminderStatus', null))).value ?? false;
+    final log = statusOn ? ref.watch(reminderLogProvider) : const <String, int>{};
     String name(String id, String label) => id == me ? l10n.horizonYou : (members[id]?.name ?? label);
     return Padding(
       key: const Key('horizon-settle-list'),
@@ -62,13 +67,24 @@ class HorizonSettleList extends StatelessWidget {
             style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 14, color: t.textSecondary),
           ),
           const SizedBox(height: 12),
-          for (final (i, tr) in rows.indexed) ...[if (i > 0) const SizedBox(height: 10), _card(context, i, tr, name)],
+          for (final (i, tr) in rows.indexed) ...[
+            if (i > 0) const SizedBox(height: 10),
+            _card(context, ref, i, tr, name, log),
+          ],
         ],
       ),
     );
   }
 
-  Widget _card(BuildContext context, int i, Transfer tr, String Function(String, String) name) {
+  Widget _card(
+    BuildContext context,
+    WidgetRef ref,
+    int i,
+    Transfer tr,
+    String Function(String, String) name,
+    Map<String, int> log,
+  ) {
+    final payer = members[tr.fromMemberId]?.name ?? tr.fromLabel;
     final t = context.tokens;
     final l10n = context.l10n;
     final toMe = me != null && tr.toMemberId == me;
@@ -119,6 +135,12 @@ class HorizonSettleList extends StatelessWidget {
                         color: t.textPrimary,
                       ),
                     ),
+                    if (toMe && remindedLabel(log, payer) != null)
+                      Text(
+                        remindedLabel(log, payer)!,
+                        key: Key('settle-reminded-$i'),
+                        style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 12, color: t.textMuted),
+                      ),
                     if (mine && (upi ?? '').isNotEmpty)
                       Text(
                         upi!,
@@ -150,7 +172,10 @@ class HorizonSettleList extends StatelessWidget {
                       Key('settle-remind-$i'),
                       Icons.notifications_none_rounded,
                       l10n.horizonRemind,
-                      () => onRemind!(tr),
+                      () {
+                        onRemind!(tr);
+                        ref.read(reminderLogProvider.notifier).record([payer]);
+                      },
                       primary: false,
                     ),
                   ),

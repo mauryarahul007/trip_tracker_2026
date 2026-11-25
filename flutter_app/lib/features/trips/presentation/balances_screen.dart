@@ -7,7 +7,9 @@ import 'package:go_router/go_router.dart';
 import '../../../app/auth_state.dart';
 import '../../../core/format/money.dart';
 import '../../../data/providers.dart';
+import '../../../core/platform/share_service.dart';
 import '../../../domain/logic/cross_trip_balances.dart';
+import '../../expenses/application/reminder_log.dart';
 import '../../../domain/models/expense.dart';
 import '../../../domain/models/group.dart';
 import '../../../domain/models/member.dart';
@@ -393,21 +395,41 @@ Widget? _horizonStats(BuildContext context, List<TripNetPosition> positions) {
 /// Horizon "By person" list: each person's net with me across every trip (green "owes you", red "you owe"),
 /// matched across trips and never blending currencies. Nothing when everyone is square.
 /// All / Owed to you / You owe over the by-person list.
-class _HorizonPeopleFiltered extends StatefulWidget {
+class _HorizonPeopleFiltered extends ConsumerStatefulWidget {
   const _HorizonPeopleFiltered({required this.people});
   final List<PersonNet> people;
 
   @override
-  State<_HorizonPeopleFiltered> createState() => _HorizonPeopleFilteredState();
+  ConsumerState<_HorizonPeopleFiltered> createState() => _HorizonPeopleFilteredState();
 }
 
-class _HorizonPeopleFilteredState extends State<_HorizonPeopleFiltered> {
+class _HorizonPeopleFilteredState extends ConsumerState<_HorizonPeopleFiltered> {
+  /// Flag `enableRemindEveryone`: one share message to everyone who owes me.
+  void _remindAll(List<PersonNet> owed) {
+    unawaited(
+      ref
+          .read(shareServiceProvider)
+          .share(
+            remindEveryoneMessage([for (final p in owed) (p.name, formatMoney(context, p.net, p.currency))]),
+            subject: 'Settle up reminder',
+          ),
+    );
+    unawaited(ref.read(reminderLogProvider.notifier).record([for (final p in owed) p.name]));
+  }
+
   var _filter = 0; // 0 all, 1 owed to you, 2 you owe
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     if (widget.people.isEmpty) return const SizedBox.shrink();
+    final remindAllOn = ref.watch(flagProvider(('enableRemindEveryone', null))).value ?? false;
+    final statusOn = ref.watch(flagProvider(('enableReminderStatus', null))).value ?? false;
+    final log = statusOn ? ref.watch(reminderLogProvider) : const <String, int>{};
+    final owed = [
+      for (final p in widget.people)
+        if (p.net > 0) p,
+    ];
     final shown = [
       for (final p in widget.people)
         if (_filter == 0 || (_filter == 1 && p.net > 0) || (_filter == 2 && p.net < 0)) p,
@@ -440,13 +462,28 @@ class _HorizonPeopleFilteredState extends State<_HorizonPeopleFiltered> {
             ),
           )
         else
-          ..._horizonPeople(context, shown),
+          ..._horizonPeople(context, shown, log),
+        if (remindAllOn && owed.isNotEmpty && _filter != 2)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: OutlinedButton.icon(
+              key: const Key('balances-remind-all'),
+              onPressed: () => _remindAll(owed),
+              icon: const Icon(Icons.notifications_none_rounded, size: 18),
+              label: Text(owed.length == 1 ? 'Remind ${owed.first.name}' : 'Remind everyone (${owed.length})'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(46),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                textStyle: const TextStyle(fontFamily: AppTypography.fontBody, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
       ],
     );
   }
 }
 
-List<Widget> _horizonPeople(BuildContext context, List<PersonNet> people) {
+List<Widget> _horizonPeople(BuildContext context, List<PersonNet> people, [Map<String, int> log = const {}]) {
   if (people.isEmpty) return const [];
   final t = context.tokens;
   final l10n = context.l10n;
@@ -487,7 +524,10 @@ List<Widget> _horizonPeople(BuildContext context, List<PersonNet> people) {
                           ),
                         ),
                         Text(
-                          p.trips.length == 1 ? p.trips.first : l10n.horizonTripCount(p.trips.length),
+                          [
+                            p.trips.length == 1 ? p.trips.first : l10n.horizonTripCount(p.trips.length),
+                            if (p.net > 0) ?remindedLabel(log, p.name),
+                          ].join(' · '),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: 13, color: t.textSecondary),
