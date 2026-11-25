@@ -55,6 +55,7 @@ abstract class TripRepository {
   Future<void> setFxConfig(String id, TripFxConfig config);
   Future<void> setSplitExclusionDefaults(String id, Map<String, List<String>> defaults);
   Future<void> setMemberWeights(String id, Map<String, double> weights);
+  Future<void> setMemberCovers(String id, Map<String, String> covers);
 
   /// Organizer / contributor / viewer. Owner/admin write (trips.member_roles).
   Future<void> setMemberRole(String id, String memberId, String role);

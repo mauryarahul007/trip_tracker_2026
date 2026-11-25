@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trip_tracker/data/providers.dart';
+import 'package:trip_tracker/domain/logic/member_weights.dart';
 import 'package:trip_tracker/domain/logic/split_resolver.dart';
 import 'package:trip_tracker/domain/logic/trip_collab_merge.dart';
 import 'package:trip_tracker/domain/models/trip.dart';
@@ -46,6 +47,25 @@ void main() {
       expect(shares, {'a': 200.0, 'b': 100.0, 'c': 100.0});
     });
 
+    test('a covered partner is left out and the payer carries both shares', () {
+      final w = weightedDefaultSplit(selected: {'r', 'p', 'o'}, weights: const {}, covers: const {'p': 'r'})!;
+      expect(w.selected, {'r', 'o'});
+      expect(w.weights, {'r': 2.0, 'o': 1.0});
+      // Payer not on the expense: the partner is charged normally.
+      expect(weightedDefaultSplit(selected: {'p', 'o'}, weights: const {}, covers: const {'p': 'r'}), isNull);
+      // Extra people not in the trip add on top.
+      final x = weightedDefaultSplit(selected: {'r', 'p', 'o'}, weights: const {'r': 2}, covers: const {'p': 'r'})!;
+      expect(x.weights['r'], 3.0);
+      expect(
+        memberWeightNote(memberId: 'p', weights: const {}, covers: const {'p': 'r'}, nameOf: (_) => 'Rahul'),
+        'Paid for by Rahul',
+      );
+      expect(
+        memberWeightNote(memberId: 'r', weights: const {}, covers: const {'p': 'r'}, nameOf: (_) => 'Rahul'),
+        'Counts as 2',
+      );
+    });
+
     test('memberWeights survives JSON and a collab merge', () {
       const t = Trip(
         id: 't',
@@ -58,24 +78,44 @@ void main() {
         createdAt: 0,
         updatedAt: 0,
         memberWeights: {'m1': 2},
+        memberCovers: {'m2': 'm1'},
       );
       final back = Trip.fromJson(t.toJson());
       expect(back.memberWeights, {'m1': 2.0});
+      expect(back.memberCovers, {'m2': 'm1'});
       expect(Trip.fromJson(t.copyWith(memberWeights: const {}).toJson()).memberWeights, isEmpty);
       expect(applyRemoteTrip(t.copyWith(memberWeights: const {}), t).memberWeights, {'m1': 2.0});
     });
 
-    testApp('People: an organiser sets Counts as 2 and the row says so', (tester) async {
+    testApp('People: I pay for Cara, so I count as 2 and she is paid for', (tester) async {
       await pumpApp(tester, user: asha, flagsOn: {'enableMemberWeights'});
       final s = await seedTrip(tester);
       await openTab(tester, s, 'members');
-      await tester.tap(key('member-actions-${s.ben}'));
+      await tester.tap(key('member-actions-${s.me}'));
       await settle(tester, rounds: 4);
-      await tester.ensureVisible(key('member-weight-${s.ben}-2'));
-      await tester.tap(key('member-weight-${s.ben}-2'));
+      await tester.ensureVisible(key('member-covers-${s.me}-${s.cara}'));
+      await tester.tap(key('member-covers-${s.me}-${s.cara}'));
       await settle(tester, rounds: 8);
-      expect(containerOf(tester).read(tripProvider(s.tripId)).value?.memberWeights, {s.ben: 2.0});
+      expect(containerOf(tester).read(tripProvider(s.tripId)).value?.memberCovers, {s.cara: s.me});
       expect(find.textContaining('Counts as 2'), findsOneWidget);
+      expect(find.textContaining('Paid for by Asha'), findsOneWidget);
+    });
+
+    testApp('a new expense leaves the covered partner out and charges the payer twice', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableMemberWeights'});
+      final s = await seedTrip(tester);
+      final oldId = await addExpense(tester, s, amount: 90);
+      await real(
+        tester,
+        () => containerOf(tester).read(tripRepositoryProvider).setMemberCovers(s.tripId, {s.cara: s.me}),
+      );
+      await addFood(tester, s, '300');
+      final all = await expensesOf(tester, s);
+      final fresh = all.firstWhere((e) => e.id != oldId);
+      expect(fresh.resolvedShares[s.me], 200);
+      expect(fresh.resolvedShares[s.ben], 100);
+      expect(fresh.resolvedShares[s.cara] ?? 0, 0);
+      expect(all.firstWhere((e) => e.id == oldId).resolvedShares[s.cara], 30);
     });
 
     testApp('a new expense splits by the weights; old ones keep their split', (tester) async {
@@ -101,7 +141,7 @@ void main() {
       await openTab(tester, s, 'members');
       await tester.tap(key('member-actions-${s.ben}'));
       await settle(tester, rounds: 4);
-      expect(key('member-weight-${s.ben}-2'), findsNothing);
+      expect(key('member-covers-${s.ben}-${s.cara}'), findsNothing);
       Navigator.of(tester.element(key('member-rename-${s.ben}'))).pop();
       await settle(tester, rounds: 4);
       await addFood(tester, s, '300');

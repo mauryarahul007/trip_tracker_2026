@@ -28,6 +28,7 @@ import '../../../domain/models/member.dart';
 import '../../../domain/models/trip.dart';
 import '../../trip_details/application/trip_nav.dart';
 import 'expenses_providers.dart';
+import '../../../domain/logic/member_weights.dart';
 import '../../../core/logging/app_logger.dart';
 
 /// Which screen is being edited: a new expense in [tripId], or [editingId].
@@ -399,19 +400,22 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
         }
       }
     }
-    // Couples count as 2: an equal start becomes a Shares split with the trip's member weights (new expenses only).
+    // Couples count as 2: an equal start becomes a Shares split with the trip's weights; a member someone else
+    // pays for is left out while their payer is in the split (new expenses only).
     if (flags.memberWeights && base0.splitMode == 'equal' && !base0.draftRestored) {
-      final weighted = {
-        for (final m in members)
-          if ((base0.selected[m.id] ?? false) && (trip.memberWeights[m.id] ?? 1) > 1) m.id: trip.memberWeights[m.id]!,
-      };
-      if (weighted.isNotEmpty) {
+      final w = weightedDefaultSplit(
+        selected: {
+          for (final e in base0.selected.entries)
+            if (e.value) e.key,
+        },
+        weights: trip.memberWeights,
+        covers: trip.memberCovers,
+      );
+      if (w != null) {
         base0 = base0.copyWith(
           splitMode: 'custom',
-          splitConfig: {
-            for (final m in members)
-              if (base0.selected[m.id] ?? false) m.id: _numText(weighted[m.id] ?? 1),
-          },
+          selected: {for (final m in members) m.id: w.selected.contains(m.id)},
+          splitConfig: {for (final e in w.weights.entries) e.key: _numText(e.value)},
         );
       }
     }

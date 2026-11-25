@@ -10,6 +10,7 @@ import '../../../shared/widgets/undo_snackbar.dart';
 import '../../../data/supabase/supabase_gateway.dart';
 import '../../../core/flags/compass_flags.dart';
 import '../../../domain/logic/member_roles.dart';
+import '../../../domain/logic/member_weights.dart';
 import '../../../domain/logic/settlement.dart';
 import '../../../domain/models/group.dart';
 import '../../../domain/models/member.dart';
@@ -626,11 +627,112 @@ class _MembersTabState extends ConsumerState<MembersTab> {
     );
   }
 
-  /// Flag `enableMemberWeights`: "Counts as 2" for a member who stands for more than one person, else null.
+  /// Flag `enableMemberWeights`: "Counts as 2" for a payer, "Paid for by Rahul" for someone covered, else null.
   String? _weightNote(WidgetRef ref, String memberId) {
     if (!(ref.watch(flagProvider(('enableMemberWeights', tripId))).value ?? false)) return null;
-    final w = ref.watch(tripProvider(tripId)).value?.memberWeights[memberId] ?? 1;
-    return w > 1 ? 'Counts as ${w.round()}' : null;
+    final trip = ref.watch(tripProvider(tripId)).value;
+    if (trip == null) return null;
+    final names = {for (final x in ref.watch(tripMembersProvider(tripId)).value ?? const <Member>[]) x.id: x.name};
+    return memberWeightNote(
+      memberId: memberId,
+      weights: trip.memberWeights,
+      covers: trip.memberCovers,
+      nameOf: (id) => names[id] ?? 'someone',
+    );
+  }
+
+  /// Couples count as 2: "Pays for" (other trip members whose share this member carries) and extra people who
+  /// are not in the trip. Each tap saves and closes the sheet.
+  List<Widget> _weightControls(BuildContext sheetCtx, WidgetRef ref, Member m) {
+    final trip = ref.read(tripProvider(tripId)).value;
+    if (trip == null) return const [];
+    final covers = trip.memberCovers;
+    final coveredBy = covers[m.id];
+    final others = [
+      for (final o in ref.read(tripMembersProvider(tripId)).value ?? const <Member>[])
+        // Not themselves, not archived, not someone who pays for others, not covered by a third person.
+        if (o.id != m.id && !o.archived && !covers.values.contains(o.id) && (covers[o.id] ?? m.id) == m.id) o,
+    ];
+    final muted = TextStyle(fontFamily: AppTypography.fontBody, fontSize: 12, color: sheetCtx.tokens.textMuted);
+    void saveCovers(Map<String, String> next) {
+      Navigator.of(sheetCtx).pop();
+      unawaited(ref.read(tripRepositoryProvider).setMemberCovers(tripId, next));
+    }
+
+    if (coveredBy != null) {
+      final payer = (ref.read(tripMembersProvider(tripId)).value ?? const <Member>[])
+          .where((x) => x.id == coveredBy)
+          .firstOrNull;
+      return [
+        const SizedBox(height: 16),
+        Text('Paid for by ${payer?.name ?? 'someone'}', style: _sectionStyle(sheetCtx)),
+        const SizedBox(height: 2),
+        Text('New expenses charge their share to ${payer?.name ?? 'them'}.', style: muted),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton(
+            key: Key('member-uncover-${m.id}'),
+            onPressed: () => saveCovers({...covers}..remove(m.id)),
+            child: const Text('Charge them on their own'),
+          ),
+        ),
+      ];
+    }
+    final extra = ((trip.memberWeights[m.id] ?? 1) - 1).round().clamp(0, 3);
+    return [
+      const SizedBox(height: 16),
+      Text('Pays for', style: _sectionStyle(sheetCtx)),
+      const SizedBox(height: 2),
+      Text('Like a couple: their share moves to ${m.name} on new expenses, so ${m.name} counts as 2.', style: muted),
+      const SizedBox(height: 8),
+      if (others.isEmpty)
+        Text('No one else to pick.', style: muted)
+      else
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            for (final o in others)
+              FilterChip(
+                key: Key('member-covers-${m.id}-${o.id}'),
+                showCheckmark: true,
+                shape: const StadiumBorder(),
+                label: Text(o.name),
+                selected: covers[o.id] == m.id,
+                onSelected: (on) {
+                  final next = {...covers}..remove(o.id);
+                  if (on) next[o.id] = m.id;
+                  saveCovers(next);
+                },
+              ),
+          ],
+        ),
+      const SizedBox(height: 14),
+      Text('People not in the trip', style: _sectionStyle(sheetCtx)),
+      const SizedBox(height: 2),
+      Text('Someone ${m.name} pays for who has no place in the trip, like a child.', style: muted),
+      const SizedBox(height: 8),
+      Wrap(
+        spacing: 8,
+        children: [
+          for (final n in const [0, 1, 2, 3])
+            ChoiceChip(
+              key: Key('member-extra-${m.id}-$n'),
+              showCheckmark: false,
+              shape: const StadiumBorder(),
+              label: Text(n == 0 ? 'None' : '+$n'),
+              selected: extra == n,
+              onSelected: (_) {
+                Navigator.of(sheetCtx).pop();
+                final next = {...trip.memberWeights}..remove(m.id);
+                if (n > 0) next[m.id] = n + 1.0;
+                unawaited(ref.read(tripRepositoryProvider).setMemberWeights(tripId, next));
+              },
+            ),
+        ],
+      ),
+    ];
   }
 
   /// Board 07 "Member actions": role chips, rename, archive / restore in one sheet.
@@ -686,37 +788,8 @@ class _MembersTabState extends ConsumerState<MembersTab> {
                   ),
               ],
             ),
-            if (ref.read(flagProvider(('enableMemberWeights', tripId))).value ?? false) ...[
-              const SizedBox(height: 16),
-              Text('Counts as', style: _sectionStyle(sheetCtx)),
-              const SizedBox(height: 2),
-              Text(
-                'People this member pays for, like a couple. New expenses split by these shares.',
-                style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 12, color: sheetCtx.tokens.textMuted),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (final n in const [1, 2, 3, 4])
-                    ChoiceChip(
-                      key: Key('member-weight-${m.id}-$n'),
-                      showCheckmark: false,
-                      shape: const StadiumBorder(),
-                      label: Text('$n'),
-                      selected: (ref.read(tripProvider(tripId)).value?.memberWeights[m.id] ?? 1).round() == n,
-                      onSelected: (_) {
-                        Navigator.of(sheetCtx).pop();
-                        final trip = ref.read(tripProvider(tripId)).value;
-                        if (trip == null) return;
-                        final next = {...trip.memberWeights}..remove(m.id);
-                        if (n > 1) next[m.id] = n.toDouble();
-                        unawaited(ref.read(tripRepositoryProvider).setMemberWeights(tripId, next));
-                      },
-                    ),
-                ],
-              ),
-            ],
+            if (ref.read(flagProvider(('enableMemberWeights', tripId))).value ?? false)
+              ..._weightControls(sheetCtx, ref, m),
             const SizedBox(height: 12),
             ListTile(
               key: Key('member-rename-${m.id}'),

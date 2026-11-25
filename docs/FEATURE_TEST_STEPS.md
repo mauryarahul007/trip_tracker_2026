@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-25 | 3.111.0 | MEMBER-COVERS | [Couples count as 2: pays for (Flutter)](#member-covers--couples-count-as-2-pays-for-flutter) |
 | 2026-11-25 | 3.110.0 | MEMBER-WEIGHTS | [Couples count as 2 (Flutter)](#member-weights--couples-count-as-2-flutter) |
 | 2026-11-25 | 3.109.0 | HORIZON-REMINDERS | [Reminders and join preview (Flutter)](#horizon-reminders--reminders-and-join-preview-flutter) |
 | 2026-11-25 | 3.108.0 | HORIZON-ACCOUNT | [Horizon home and account (Flutter)](#horizon-account--horizon-home-and-account-flutter) |
@@ -4508,6 +4509,35 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## MEMBER-COVERS — Couples count as 2: pays for (Flutter)
+
+**Shipped:** v3.111.0. Flutter-only. Needs migrations 0122 and 0123 on Supabase. Replaces the "Counts as 1-4" chips from MEMBER-WEIGHTS.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Pays for, People not in the trip, weighted default split | `enableMemberWeights` | ON (Trip) |
+
+### Prep
+A trip you organise with you, your partner (e.g. Priya) and Rohan, and one old equal expense.
+
+### Steps
+1. Trip › People: tap yourself. The sheet shows Role, "Pays for" with Priya and Rohan chips, and "People not in the trip" (None, +1, +2, +3).
+2. Tap Priya: the sheet closes. Your row reads "… · Counts as 2", Priya's reads "… · Paid for by <you>".
+3. Add expense ₹300 you paid: Priya is unticked, the chip reads "Shares · 2". Save. Details show you ₹200, Rohan ₹100, Priya ₹0.
+4. Add an expense where you are unticked (e.g. Priya and Rohan only): Priya is charged normally (₹150 / ₹150 on ₹300).
+5. Tap Priya on People: the sheet says "Paid for by <you>" with "Charge them on their own". Tap it: both rows go back to normal and new expenses split equally.
+6. Tap yourself › People not in the trip › +1: your row reads "Counts as 2" and new expenses give you two shares with Priya charged normally. With Priya also picked, you count as 3.
+7. The old equal expense never changes. A second phone in the same trip shows the same rows after refresh.
+
+### Negative checks
+- `enableMemberWeights` OFF: no Pays for / People not in the trip, no row notes, and new expenses start equal even with covers saved.
+
+### Pass
+- The payer carries the partner's share only on new expenses with both of them in it, and shares always add up to the amount.
+
+---
 
 ## MEMBER-WEIGHTS — Couples count as 2 (Flutter)
 

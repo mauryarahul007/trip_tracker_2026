@@ -30,6 +30,7 @@ export function applyRemoteTrip(local: Trip, remote: Trip, keepLocalCollab: bool
     memberRoles: remote.memberRoles,
     splitExclusionDefaults: remote.splitExclusionDefaults,
     memberWeights: remote.memberWeights,
+    memberCovers: remote.memberCovers,
     categoryOrder: remote.categoryOrder,
     simplifyDebts: remote.simplifyDebts,
     checklist: keepLocalCollab ? local.checklist : remote.checklist,

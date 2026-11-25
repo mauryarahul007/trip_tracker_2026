@@ -8,6 +8,10 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.111.0', '2026-11-25', [
+    'Couples count as 2 now works like a couple: on People, pick who a member pays for (e.g. your partner). New expenses leave your partner out and charge you both shares, so ₹300 between you, your partner and Rohan is ₹200 / ₹0 / ₹100 (Flutter).',
+    'Your partner\'s row reads "Paid for by <you>" and yours "Counts as 2"; if you are not on an expense, your partner is charged normally. Extra people not in the trip can still be added as +1 to +3 (Flutter).',
+  ]),
   ChangelogEntry('3.110.0', '2026-11-25', [
     'Couples count as 2: on People, an organiser can set how many people a member stands for (1 to 4), and the row reads "Counts as 2" (Flutter).',
     'New expenses in that trip start as a Shares split using those counts, so ₹400 between a couple and two others is ₹200 / ₹100 / ₹100; saved expenses are unchanged (Flutter).',
@@ -56,9 +60,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.100.0', '2026-11-25', [
     'Meal reminders on Spend: during a trip, a small card asks "Added breakfast?" from 10 AM, lunch from 3 PM and dinner from 8 PM when nothing like it is logged yet. One tap adds it; "Not today" hides it (Flutter).',
-  ]),
-  ChangelogEntry('3.99.1', '2026-11-24', [
-    'Fixed: dragging the trip sheet slowly by its handle could stop halfway instead of opening fully (Flutter).',
-    'Fixed: small layout and accessibility issues: the empty-day itinerary row and Notes tab labels no longer overflow, the Spend chips and Set Budget button have full-size touch targets, and the bottom bar keeps readable labels while scrolling (Flutter).',
   ]),
 ];
