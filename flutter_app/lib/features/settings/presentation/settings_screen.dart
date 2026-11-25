@@ -776,12 +776,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ],
                   ),
-                  if (tripId != null && tokens.horizon)
-                    SettingsSection(title: 'This Trip', segmented: segmented, children: _tripRows(ref, tripId)),
-                  SettingsSection(title: 'Notifications', segmented: segmented, children: _notificationRows(ref)),
-                  if (biometricFlag)
-                    SettingsSection(title: 'Privacy and security', segmented: segmented, children: _securityRows(ref)),
-                  SettingsSection(title: 'Data', segmented: segmented, children: _dataSectionRows(ref)),
+                  if (tokens.horizon) ...[
+                    // Horizon ("Me" mockup): notifications, default currency and the lock in one card under
+                    // Appearance, then storage and archive, with no section headers.
+                    SettingsSection(
+                      key: const Key('settings-me-card'),
+                      title: '',
+                      segmented: segmented,
+                      children: [
+                        // The Alerts tab is the inbox under Horizon, so only the preferences row stays here.
+                        ..._notificationRows(ref).where((w) => w.key != const Key('settings-inbox')),
+                        ..._displayRows(ref).where((w) => w.key == const Key('settings-currency')),
+                        if (biometricFlag) ..._securityRows(ref),
+                      ],
+                    ),
+                    SettingsSection(title: '', segmented: segmented, children: _dataSectionRows(ref)),
+                    if (tripId != null)
+                      SettingsSection(title: 'This Trip', segmented: segmented, children: _tripRows(ref, tripId)),
+                  ] else ...[
+                    SettingsSection(title: 'Notifications', segmented: segmented, children: _notificationRows(ref)),
+                    if (biometricFlag)
+                      SettingsSection(
+                        title: 'Privacy and security',
+                        segmented: segmented,
+                        children: _securityRows(ref),
+                      ),
+                    SettingsSection(title: 'Data', segmented: segmented, children: _dataSectionRows(ref)),
+                  ],
                   SettingsSection(
                     title: 'Help & About',
                     segmented: segmented,

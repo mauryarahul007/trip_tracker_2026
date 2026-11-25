@@ -14,6 +14,9 @@ import '../../../../domain/logic/trip_utilities.dart' show formatDateRange, gues
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/theme/app_tokens.dart';
+import '../../../../shared/theme/app_typography.dart';
+import '../../../expenses/application/trip_budget.dart';
+import '../../../../domain/logic/currency.dart' show getCurrencySymbol;
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/section_label.dart';
 import '../../application/trips_providers.dart' show tripsProvider, tripColorsProvider;
@@ -48,6 +51,7 @@ class CreateTripSheet extends ConsumerStatefulWidget {
 class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
   final _name = TextEditingController();
   final _destination = TextEditingController();
+  final _budget = TextEditingController(); // Horizon: optional, kept on this device like Set budget
   DateTimeRange? _range;
   String _currency = 'INR';
   bool _currencyTouched = false;
@@ -75,6 +79,7 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
   void dispose() {
     _name.dispose();
     _destination.dispose();
+    _budget.dispose();
     super.dispose();
   }
 
@@ -131,6 +136,8 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
     if (_cover != null) {
       ref.read(tripColorsProvider.notifier).set(id, _cover!.name);
     }
+    final budget = double.tryParse(_budget.text.trim().replaceAll(',', ''));
+    if (budget != null && budget > 0) await ref.read(tripBudgetProvider(id).notifier).set(budget);
     if (_template != null && (ref.read(flagProvider(('enableTripTemplates', null))).value ?? true)) {
       await _applyTemplate(id, tripTemplateById(_template));
     }
@@ -158,10 +165,176 @@ class _CreateTripSheetState extends ConsumerState<CreateTripSheet> {
     _ => context.l10n.templateGroupStay,
   };
 
+  static const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  String _short(DateTime d) => '${d.day} ${_months[d.month - 1]}';
+
+  InputDecoration _boxDecoration(String label, {String? error, String? prefix}) {
+    final t = context.tokens;
+    OutlineInputBorder b(Color c, [double w = 1]) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: c, width: w),
+    );
+    return InputDecoration(
+      labelText: label,
+      floatingLabelBehavior: FloatingLabelBehavior.always,
+      errorText: error,
+      prefixText: prefix,
+      filled: true,
+      fillColor: t.bgSurface,
+      border: b(t.borderColor),
+      enabledBorder: b(t.borderColor),
+      focusedBorder: b(t.primaryAccent, 2),
+      labelStyle: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 14, color: t.textSecondary),
+      contentPadding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+    );
+  }
+
+  Widget _dateBox(Key key, String label, DateTime? d) {
+    final t = context.tokens;
+    return InkWell(
+      key: key,
+      borderRadius: BorderRadius.circular(14),
+      onTap: _pickDates,
+      child: InputDecorator(
+        decoration: _boxDecoration(label),
+        child: Text(
+          d == null ? '—' : _short(d),
+          style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 16, color: t.textPrimary),
+        ),
+      ),
+    );
+  }
+
+  /// Horizon ("New trip" mockup): Trip name, Starts / Ends, Currency and Budget side by side, cover colours and
+  /// "Create and invite". Destination and templates stay, under the form.
+  Widget _horizon(BuildContext context, bool templatesOn) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final body = TextStyle(fontFamily: AppTypography.fontBody, fontSize: 16, color: t.textPrimary);
+    return DiscardGuard(
+      controllers: [_name, _destination],
+      initial: const ['', ''],
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+        child: SingleChildScrollView(
+          key: const Key('horizon-create-trip'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                key: const Key('create-trip-name'),
+                controller: _name,
+                style: body,
+                textInputAction: TextInputAction.next,
+                decoration: _boxDecoration(
+                  l10n.fieldTripName,
+                  error: _nameError,
+                ).copyWith(hintText: l10n.fieldTripNameHint),
+                onChanged: (v) => _nameTouched = v.trim().isNotEmpty,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(child: _dateBox(const Key('create-trip-starts'), l10n.horizonStarts, _range?.start)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _dateBox(const Key('create-trip-ends'), l10n.horizonEnds, _range?.end)),
+                ],
+              ),
+              if (_dateError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, left: 4),
+                  child: Text(_dateError!, style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12)),
+                ),
+              const SizedBox(height: 10),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      key: const Key('create-trip-currency'),
+                      isExpanded: true,
+                      initialValue: _currency,
+                      style: body,
+                      borderRadius: BorderRadius.circular(14),
+                      decoration: _boxDecoration(l10n.fieldCurrency),
+                      items: [
+                        for (final c in defaultExchangeRates.keys)
+                          DropdownMenuItem(value: c, child: Text('${getCurrencySymbol(c)} $c')),
+                      ],
+                      onChanged: (v) => setState(() {
+                        _currency = v ?? _currency;
+                        _currencyTouched = true;
+                      }),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      key: const Key('create-trip-budget'),
+                      controller: _budget,
+                      style: body.copyWith(fontFamily: AppTypography.fontMono),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: _boxDecoration(l10n.horizonBudgetOptional, prefix: getCurrencySymbol(_currency)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              _CoverPicker(value: _cover, onChanged: (v) => setState(() => _cover = v)),
+              const SizedBox(height: 16),
+              AppButton(
+                key: const Key('create-trip-submit'),
+                label: l10n.horizonCreateAndInvite,
+                isLoading: _busy,
+                isFullWidth: true,
+                onPressed: _busy ? null : _submit,
+              ),
+              const SizedBox(height: 18),
+              SectionLabel(l10n.createTripSectionWhere),
+              DestinationField(
+                controller: _destination,
+                label: l10n.fieldDestination,
+                enabled: ref.watch(flagProvider(('enableDestinationAutocomplete', null))).value ?? true,
+                pastDestinations: [
+                  for (final t in ref.watch(tripsProvider).value ?? const <Trip>[])
+                    if ((t.destination ?? '').trim().isNotEmpty) t.destination!.trim(),
+                ],
+                onChanged: _onDestinationChanged,
+                onPicked: _onPlacePicked,
+              ),
+              if (templatesOn) ...[
+                const SizedBox(height: 14),
+                Text(l10n.templateTitle, style: const TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    for (final tp in tripTemplates)
+                      ChoiceChip(
+                        key: Key('template-${tp.id}'),
+                        showCheckmark: false,
+                        shape: const StadiumBorder(),
+                        label: Text(_templateLabel(tp.id)),
+                        selected: _template == tp.id,
+                        onSelected: (on) => setState(() => _template = on ? tp.id : null),
+                      ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final templatesOn = ref.watch(flagProvider(('enableTripTemplates', null))).value ?? true;
+    if (context.tokens.horizon) return _horizon(context, templatesOn);
     return DiscardGuard(
       controllers: [_name, _destination],
       initial: const ['', ''],
@@ -282,7 +455,7 @@ class _CoverPicker extends StatelessWidget {
       key: const Key('cover-picker'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionLabel(l10n.horizonCoverColour),
+        SectionLabel(t.horizon ? l10n.horizonCover : l10n.horizonCoverColour),
         Wrap(
           spacing: 10,
           runSpacing: 8,

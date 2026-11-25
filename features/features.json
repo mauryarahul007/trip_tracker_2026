@@ -3467,5 +3467,21 @@
     "shippedAt": "2026-11-25T00:00:00.000Z",
     "shippedBy": "agent",
     "shippedNote": "Commit d0ea575 (v3.107.0)."
+  },
+  {
+    "id": "FEAT-219",
+    "title": "Horizon home and account (Flutter)",
+    "description": "Under Core flag enableHorizonUi: Create trip with Starts/Ends, Currency and Budget, cover colours and Create and invite; Join with code auto-paste; Me first card; Storage usage bar with Data saver; Diagnostics Sync/Queue cards with Copy log; Legal section list; Delete account Cancel/Delete side by side. HORIZON-ACCOUNT.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "human",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-25T00:00:00.000Z",
+    "updatedAt": "2026-11-25T00:00:00.000Z",
+    "shippedAt": "2026-11-25T00:00:00.000Z",
+    "shippedBy": "agent",
+    "shippedNote": "Commit PENDING (v3.108.0)."
   }
 ]

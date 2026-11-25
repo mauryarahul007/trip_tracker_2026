@@ -1650,5 +1650,14 @@
   "@horizonActEdited": {"placeholders": {"title": {"type": "String"}}},
   "horizonActRestored": "{title} was restored",
   "@horizonActRestored": {"placeholders": {"title": {"type": "String"}}},
-  "horizonTripTools": "Trip tools"
+  "horizonTripTools": "Trip tools",
+  "horizonStarts": "Starts",
+  "horizonEnds": "Ends",
+  "horizonBudgetOptional": "Budget (optional)",
+  "horizonCreateAndInvite": "Create and invite",
+  "horizonCover": "Cover",
+  "horizonJoinTitle": "Join a trip",
+  "horizonJoinHint": "Ask the organiser for the 6-letter code.",
+  "horizonJoinPasted": "Pasted the code you copied.",
+  "horizonJoinTrip": "Join trip"
 }

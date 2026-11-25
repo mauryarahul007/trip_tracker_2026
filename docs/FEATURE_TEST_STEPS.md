@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-25 | 3.108.0 | HORIZON-ACCOUNT | [Horizon home and account (Flutter)](#horizon-account--horizon-home-and-account-flutter) |
 | 2026-11-25 | 3.107.0 | HORIZON-TRIP-PAGES | [Horizon trip pages and sheets (Flutter)](#horizon-trip-pages--horizon-trip-pages-and-sheets-flutter) |
 | 2026-11-25 | 3.106.0 | HORIZON-MONEY | [Horizon money flows: Split page, Quick add, Settle up, UPI (Flutter)](#horizon-money--horizon-money-flows-split-page-quick-add-settle-up-upi-flutter) |
 | 2026-11-25 | 3.105.0 | HORIZON-STATES | [Horizon All balances, Alerts, Me, states and sheets (Flutter)](#horizon-states--horizon-all-balances-alerts-me-states-and-sheets-flutter) |
@@ -4505,6 +4506,39 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## HORIZON-ACCOUNT — Horizon home and account (Flutter)
+
+**Shipped:** v3.108.0. Flutter-only. Matches the Create trip, Join with code, Me, Storage, Diagnostics, Legal and Delete account mockups.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| All layouts below | `enableHorizonUi` | ON (Core) |
+| Fingerprint lock row on Me | biometric lock flag | per pack |
+| Data saver switch on Storage | `enableDataSaverMode` | per pack |
+
+### Prep
+Signed in, at least one trip. Copy a trip code (e.g. GOA7MX) or a /join/ link to the clipboard before step 4.
+
+### Steps
+1. Trips home › New trip: Trip name, Starts / Ends, Currency beside Budget (optional), Cover colours, a blue "Create and invite" button, then Where and the templates.
+2. Tap Starts: the date range picker opens; both boxes fill in. Pick EUR: the Budget prefix changes to €.
+3. Enter a name and a budget, tap Create and invite: the trip opens and the Invite sheet shows on top. The trip's budget shows where budgets appear.
+4. With a code on the clipboard, open Join with code: the title reads "Join a trip", the six boxes are filled and the hint says "Pasted the code you copied." Join trip opens the join page. With nothing on the clipboard the boxes are empty and the hint says "Ask the organiser for the 6-letter code."
+5. Me: below Appearance, one card holds Notifications, Default currency and Fingerprint lock (if on).
+6. Me › Storage and data: an "On this phone" card with the total, a coloured bar and a legend; Data saver switch and Clear cache ("Frees X. Your trips stay.").
+7. Me › Diagnostics: Sync (Healthy / Needs attention / Syncing) and Queue cards, Sync and App rows, the log, and Copy log (toast "Log copied").
+8. Me › Privacy policy and Terms: a card lists each section; tapping one scrolls to it. "Read the full document online" still works.
+9. Me › Delete account: Cancel and Delete side by side; Delete stays greyed until DELETE is typed.
+
+### Negative checks
+- `enableHorizonUi` OFF: the old create-trip form, join sheet without auto-paste, settings sections, storage and diagnostics pages, legal pages without the section list, and the full-width delete button return unchanged.
+
+### Pass
+- Each screen matches its mockup and every action still works.
+
+---
 
 ## HORIZON-TRIP-PAGES — Horizon trip pages and sheets (Flutter)
 

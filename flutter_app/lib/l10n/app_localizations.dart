@@ -6372,6 +6372,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Trip tools'**
   String get horizonTripTools;
+
+  /// No description provided for @horizonStarts.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts'**
+  String get horizonStarts;
+
+  /// No description provided for @horizonEnds.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends'**
+  String get horizonEnds;
+
+  /// No description provided for @horizonBudgetOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget (optional)'**
+  String get horizonBudgetOptional;
+
+  /// No description provided for @horizonCreateAndInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Create and invite'**
+  String get horizonCreateAndInvite;
+
+  /// No description provided for @horizonCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover'**
+  String get horizonCover;
+
+  /// No description provided for @horizonJoinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a trip'**
+  String get horizonJoinTitle;
+
+  /// No description provided for @horizonJoinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the organiser for the 6-letter code.'**
+  String get horizonJoinHint;
+
+  /// No description provided for @horizonJoinPasted.
+  ///
+  /// In en, this message translates to:
+  /// **'Pasted the code you copied.'**
+  String get horizonJoinPasted;
+
+  /// No description provided for @horizonJoinTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Join trip'**
+  String get horizonJoinTrip;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

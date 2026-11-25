@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.108.0',
+    date: '2026-11-25',
+    changes: [
+      'New trip asks for Starts and Ends, Currency beside an optional Budget and a cover colour, and "Create and invite" opens the invite sheet; Join with code fills in a code you already copied (Flutter).',
+      'Me opens with one card for Notifications, Default currency and Fingerprint lock; Storage shows a usage bar with Data saver and Clear cache (Flutter).',
+      'Diagnostics shows Sync and Queue cards with a Copy log button, legal pages open with a list of sections, and Delete account puts Cancel and Delete side by side (Flutter).',
+    ],
+  },
+  {
     version: '3.107.0',
     date: '2026-11-25',
     changes: [

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/l10n_ext.dart';
@@ -9,10 +10,18 @@ import '../../../../shared/theme/app_typography.dart';
 
 final _codeShape = RegExp(r'^[A-Za-z0-9]{6}$');
 
+/// A trip code found in copied text: the code itself, or the code at the end of a /join/ link.
+String? joinCodeFromClipboard(String? text) {
+  final t = (text ?? '').trim();
+  if (_codeShape.hasMatch(t)) return t.toUpperCase();
+  final m = RegExp(r'/join/([A-Za-z0-9]{6})\b').firstMatch(t);
+  return m?.group(1)?.toUpperCase();
+}
+
 /// Manual invite-code entry (also the fallback when no QR scanner is available).
 Future<void> showJoinCodeSheet(BuildContext context) => AppSheet.show<void>(
   context: context,
-  title: context.l10n.joinEnterCodeTitle,
+  title: context.tokens.horizon ? context.l10n.horizonJoinTitle : context.l10n.joinEnterCodeTitle,
   builder: (_) => const _JoinCodeForm(),
 );
 
@@ -26,6 +35,23 @@ class _JoinCodeForm extends StatefulWidget {
 class _JoinCodeFormState extends State<_JoinCodeForm> {
   final _controller = TextEditingController();
   String? _error;
+  bool _pasted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Horizon: fill in a trip code that is already on the clipboard (a pasted invite or link).
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || !context.tokens.horizon) return;
+      final data = await Clipboard.getData(Clipboard.kTextPlain).catchError((_) => null);
+      final code = joinCodeFromClipboard(data?.text);
+      if (code == null || !mounted || _controller.text.isNotEmpty) return;
+      setState(() {
+        _controller.text = code;
+        _pasted = true;
+      });
+    });
+  }
 
   @override
   void dispose() {
@@ -52,6 +78,14 @@ class _JoinCodeFormState extends State<_JoinCodeForm> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (context.tokens.horizon) ...[
+            Text(
+              _pasted ? l10n.horizonJoinPasted : l10n.horizonJoinHint,
+              key: const Key('join-hint'),
+              style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 14, color: context.tokens.textSecondary),
+            ),
+            const SizedBox(height: 12),
+          ],
           // Six frosted boxes (board 02) over one invisible field, so paste, autofill and the
           // keyboard behave exactly as with a normal text field.
           Stack(
@@ -110,7 +144,10 @@ class _JoinCodeFormState extends State<_JoinCodeForm> {
                     filled: false,
                     counterText: '',
                   ),
-                  onChanged: (_) => setState(() => _error = null),
+                  onChanged: (_) => setState(() {
+                    _error = null;
+                    _pasted = false;
+                  }),
                   onSubmitted: (_) => _go(),
                 ),
               ),
@@ -126,7 +163,12 @@ class _JoinCodeFormState extends State<_JoinCodeForm> {
               ),
             ),
           const SizedBox(height: 16),
-          AppButton(label: l10n.joinEnterCodeAction, isFullWidth: true, onPressed: _go),
+          AppButton(
+            key: const Key('join-code-go'),
+            label: context.tokens.horizon ? l10n.horizonJoinTrip : l10n.joinEnterCodeAction,
+            isFullWidth: true,
+            onPressed: _go,
+          ),
         ],
       ),
     );
