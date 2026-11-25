@@ -1078,7 +1078,7 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
   enableMemberWeights: {
     key: 'enableMemberWeights',
     label: 'Couples Count as 2 (Flutter)',
-    description: 'Flutter app: ON: an organiser can tap a member on People and set "Counts as" 1 to 4 (a couple = 2); the member row then says "Counts as 2", and every NEW expense in that trip starts as a Shares split with those weights (e.g. 400 between a couple and two singles = 200 / 100 / 100). OFF: the setting is hidden and new expenses start as a plain equal split again, even if weights were saved. It never changes expenses already saved or the balance maths, and expenses added on the web still start as an equal split.',
+    description: 'Flutter app: ON: an organiser taps a member on People and picks who they pay for (e.g. Rahul pays for his wife Priya) and/or extra people not in the trip (+1 to +3). Rows read "Counts as 2" and "Paid for by Rahul". Every NEW expense with both of them in it leaves Priya out and charges Rahul two shares (e.g. 300 between Rahul, Priya and Rohan = 200 / 0 / 100); if Rahul is not on the expense, Priya is charged normally. OFF: the settings are hidden and new expenses start as a plain equal split again, even if they were saved. It never changes expenses already saved or the balance maths, and expenses added on the web still start as an equal split.',
     category: 'core',
     pack: 'trip',
     defaultEnabledForUsers: true,

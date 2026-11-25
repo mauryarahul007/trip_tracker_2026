@@ -33,6 +33,7 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     memberRoles: row.member_roles ? (row.member_roles as unknown as Record<string, import('../types').MemberRole>) : undefined,
     splitExclusionDefaults: row.split_exclusion_defaults ? (row.split_exclusion_defaults as unknown as Record<string, string[]>) : undefined,
     memberWeights: row.member_weights ? (row.member_weights as unknown as Record<string, number>) : undefined,
+    memberCovers: row.member_covers ? (row.member_covers as unknown as Record<string, string>) : undefined,
     categoryOrder: Array.isArray(row.category_order) ? row.category_order : undefined,
     simplifyDebts: (row as any).simplify_debts !== undefined ? Boolean((row as any).simplify_debts) : true,
     shareToken: (row as any).share_token ?? null,

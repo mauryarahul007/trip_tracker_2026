@@ -229,6 +229,15 @@ class DriftTripRepository extends _DriftRepo implements TripRepository {
   }
 
   @override
+  Future<void> setMemberCovers(String id, Map<String, String> covers) {
+    final clean = {
+      for (final e in covers.entries)
+        if (e.key != e.value) e.key: e.value,
+    };
+    return _columnPatch(id, {'memberCovers': clean}, {'member_covers': clean});
+  }
+
+  @override
   Future<void> setFxConfig(String id, TripFxConfig config) => write(() async {
     if (await _patchTrip(id, {'fxConfig': config.toJson()}) == null) return;
     await outbox.enqueue(OutboxType.setTripCollabField, {

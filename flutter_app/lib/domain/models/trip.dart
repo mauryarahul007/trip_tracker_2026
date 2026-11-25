@@ -53,6 +53,10 @@ class Trip {
   /// Flag `enableMemberWeights`: memberId -> how many people that member stands for (a couple = 2).
   /// Missing means 1. Only the default split of new expenses reads it.
   final Map<String, double> memberWeights;
+
+  /// Flag `enableMemberWeights`: coveredMemberId -> payerMemberId ("Rahul pays for Priya"). On a new expense
+  /// with both of them in it, the covered member is left out and the payer carries their share.
+  final Map<String, String> memberCovers;
   final List<String>? categoryOrder;
   final bool simplifyDebts;
   final bool archived;
@@ -88,6 +92,7 @@ class Trip {
     this.memberRoles = const {},
     this.splitExclusionDefaults = const {},
     this.memberWeights = const {},
+    this.memberCovers = const {},
     this.categoryOrder,
     this.simplifyDebts = true,
     this.archived = false,
@@ -124,6 +129,7 @@ class Trip {
     Map<String, String>? memberRoles,
     Map<String, List<String>>? splitExclusionDefaults,
     Map<String, double>? memberWeights,
+    Map<String, String>? memberCovers,
     List<String>? categoryOrder,
     bool? simplifyDebts,
     bool? archived,
@@ -159,6 +165,7 @@ class Trip {
       memberRoles: memberRoles ?? this.memberRoles,
       splitExclusionDefaults: splitExclusionDefaults ?? this.splitExclusionDefaults,
       memberWeights: memberWeights ?? this.memberWeights,
+      memberCovers: memberCovers ?? this.memberCovers,
       categoryOrder: categoryOrder ?? this.categoryOrder,
       simplifyDebts: simplifyDebts ?? this.simplifyDebts,
       archived: archived ?? this.archived,
@@ -197,6 +204,7 @@ class Trip {
       'memberRoles': memberRoles,
       'splitExclusionDefaults': splitExclusionDefaults,
       if (memberWeights.isNotEmpty) 'memberWeights': memberWeights,
+      if (memberCovers.isNotEmpty) 'memberCovers': memberCovers,
       if (categoryOrder != null) 'categoryOrder': categoryOrder,
       'simplifyDebts': simplifyDebts,
       'archived': archived,
@@ -241,6 +249,8 @@ class Trip {
       memberWeights:
           (json['memberWeights'] as Map<String, dynamic>?)?.map((k, v) => MapEntry(k, (v as num).toDouble())) ??
           const {},
+      memberCovers:
+          (json['memberCovers'] as Map<String, dynamic>?)?.map((k, v) => MapEntry(k, v.toString())) ?? const {},
       categoryOrder: (json['categoryOrder'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
       simplifyDebts: json['simplifyDebts'] as bool? ?? true,
       archived: json['archived'] as bool? ?? false,

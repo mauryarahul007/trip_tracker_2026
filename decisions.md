@@ -6095,3 +6095,14 @@ This document logs all meaningful technical decisions, library choices, design p
   - The migration must run before anyone sets a weight; until then the trip patch fails on the server and the weight stays on that phone.
   - Expenses added on the web still start equal.
   - A remembered default split other than equal wins over the weights.
+
+## 311. Couples count as 2: pays for (v3.111.0)
+* **Context:** On testing v3.110.0 the user explained the intent: when both partners are trip members and one "counts as 2", the other must not be charged; the first carries both shares. v3.110.0 only added weight to one member.
+* **Decision:**
+  - New trip field `memberCovers` (coveredMemberId -> payerMemberId), column `trips.member_covers jsonb default '{}'` (migration 0123), written via `setMemberCovers` (`updateTripState` patch). Web types and `tripApi` read it.
+  - `weightedDefaultSplit` (domain/logic/member_weights.dart): on a new expense, a covered member whose payer is also in the split is unticked and the payer's weight rises by one per covered member; extra people not in the trip still come from `memberWeights` (stored as 1 + extras). Payer not on the expense: the partner is charged normally.
+  - Member sheet: "Pays for" chips (other active members who neither pay for someone nor are covered by another), "People not in the trip" None/+1/+2/+3; a covered member's sheet says "Paid for by X" with "Charge them on their own". Rows read "Counts as N" / "Paid for by X".
+  - Same flag `enableMemberWeights` (Trip, ON).
+* **Trade-offs Accepted:**
+  - Only one level: a payer cannot also be covered, and a covered member cannot pay for others.
+  - Saved expenses are not rewritten; the partner's old shares stay.
