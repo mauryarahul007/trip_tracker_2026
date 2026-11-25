@@ -192,6 +192,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                               // "Clone last" from the Add dial: open with the last expense already copied in.
                               cloneLast: state.uri.queryParameters['clone'] == '1',
                               mealTitle: state.uri.queryParameters['meal'],
+                              // Horizon Quick add's Change split / Scan bill: carry the typed text over.
+                              quickText: state.uri.queryParameters['quick'],
+                              then: state.uri.queryParameters['then'],
                             ),
                           ),
                           GoRoute(

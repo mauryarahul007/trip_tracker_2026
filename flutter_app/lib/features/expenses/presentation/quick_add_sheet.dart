@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/auth_state.dart';
 import '../../../core/clock.dart';
+import '../../../core/format/money.dart';
 import '../../../core/platform/haptics.dart';
 import '../../../core/platform/speech_recognition_gateway.dart';
 import '../../../data/providers.dart';
@@ -14,6 +16,9 @@ import '../../../domain/logic/flag_defaults.g.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
+import '../../../shared/theme/category_icons.dart';
+import '../../../shared/widgets/bento_tile.dart' show toneFor;
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_surface.dart' show AppCard, Eyebrow;
 import '../../../shared/widgets/app_text_field.dart';
@@ -153,6 +158,146 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
     }
   }
 
+  /// Horizon: what Quick add understood, as the expense row it will become, then chips to change the trip-side
+  /// details on the full form (split, receipt).
+  List<Widget> _horizonPreview(BuildContext context, ParsedQuickExpense p) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final trip = ref.watch(tripProvider(widget.tripId)).value;
+    final cats = ref.watch(tripCategoriesProvider(widget.tripId));
+    final members = ref.watch(visibleMembersProvider(widget.tripId));
+    final mine = ref.watch(myMemberIdProvider(widget.tripId));
+    final cat = cats.where((c) => c.id == (p.categoryId ?? 'cat-misc')).firstOrNull;
+    final tone = t.tones[toneFor(cat?.id ?? 'cat-misc')];
+    final payerId = p.paidById ?? mine;
+    final payerName = members.where((m) => m.id == payerId).firstOrNull?.name;
+    final count = p.splitMemberIds?.length ?? members.length;
+    final today = todayDateString(ref.read(nowProvider)());
+    final sub = [
+      payerId == mine ? l10n.horizonYouPaid : l10n.horizonNamePaid(payerName ?? p.paidByName ?? ''),
+      l10n.horizonEqualCount(count),
+      if (p.date == null || p.date == today) l10n.horizonToday else p.date!,
+    ].join(' · ');
+    void openForm(String then) {
+      final router = GoRouter.of(context);
+      Navigator.of(context).pop();
+      router.push(
+        Uri(
+          path: '/trip/${widget.tripId}/expenses/new',
+          queryParameters: {'quick': _text.text, 'then': then},
+        ).toString(),
+      );
+    }
+
+    // The trip chip only names the trip; a plain Chip keeps it from looking disabled.
+    Widget chip(Key key, Widget? icon, String label, VoidCallback? onTap) => onTap == null
+        ? Chip(
+            key: key,
+            label: Text(label),
+            backgroundColor: t.bgSurfaceHover,
+            side: BorderSide.none,
+            labelStyle: TextStyle(
+              fontFamily: AppTypography.fontBody,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: t.textSecondary,
+            ),
+          )
+        : ActionChip(
+            key: key,
+            avatar: icon,
+            label: Text(label),
+            backgroundColor: t.bgSurfaceHover,
+            side: BorderSide.none,
+            labelStyle: TextStyle(
+              fontFamily: AppTypography.fontBody,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: t.textSecondary,
+            ),
+            onPressed: onTap,
+          );
+    return [
+      Container(
+        key: const Key('quick-add-preview'),
+        margin: const EdgeInsets.only(top: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: t.bgSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: t.borderColor),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(color: tone.bg, borderRadius: BorderRadius.circular(12)),
+              child: Center(child: categoryGlyph(cat, 20, tone.accent, vector: true)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    p.title.isEmpty ? l10n.quickAddFallback : p.title,
+                    key: const Key('quick-add-preview-title'),
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontBody,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: t.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    sub,
+                    key: const Key('quick-add-preview-sub'),
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 12.5, color: t.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              formatMoney(context, p.amount!, p.currency ?? trip?.baseCurrency ?? 'INR'),
+              key: const Key('quick-add-preview-amount'),
+              style: TextStyle(
+                fontFamily: AppTypography.fontMono,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: t.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            if (trip != null) chip(const Key('quick-add-trip'), null, trip.name, null),
+            chip(
+              const Key('quick-add-split'),
+              const Icon(Icons.call_split_rounded, size: 16),
+              l10n.horizonChangeSplit,
+              () => openForm('split'),
+            ),
+            chip(
+              const Key('quick-add-scan'),
+              const Icon(Icons.photo_camera_outlined, size: 16),
+              l10n.horizonScanBill,
+              () => openForm('scan'),
+            ),
+          ],
+        ),
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -168,18 +313,42 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.toolsQuickAdd, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            l10n.toolsQuickAdd,
+            style: tokens.horizon
+                ? TextStyle(
+                    fontFamily: AppTypography.fontTitle,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.textPrimary,
+                  )
+                : Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: AppTextField(
-                  key: const Key('quick-add-text'),
-                  controller: _text,
-                  label: l10n.quickAddHint,
-                  onChanged: _parse,
-                ),
+                // Horizon: "Type it like a message" over the box, the example as the hint.
+                child: tokens.horizon
+                    ? TextField(
+                        key: const Key('quick-add-text'),
+                        controller: _text,
+                        autofocus: !widget.autoListen,
+                        textCapitalization: TextCapitalization.sentences,
+                        decoration: InputDecoration(
+                          labelText: l10n.horizonQuickLabel,
+                          hintText: l10n.horizonQuickHint,
+                          floatingLabelBehavior: FloatingLabelBehavior.always,
+                        ),
+                        onChanged: _parse,
+                      )
+                    : AppTextField(
+                        key: const Key('quick-add-text'),
+                        controller: _text,
+                        label: l10n.quickAddHint,
+                        onChanged: _parse,
+                      ),
               ),
               if (voiceEnabled) ...[
                 const SizedBox(width: 8),
@@ -222,7 +391,8 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                 ],
               ),
             ),
-          if (p != null && p.amount != null)
+          if (tokens.horizon && p != null && p.amount != null) ..._horizonPreview(context, p),
+          if (!tokens.horizon && p != null && p.amount != null)
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: AppCard(

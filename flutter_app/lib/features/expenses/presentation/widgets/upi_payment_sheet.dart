@@ -309,12 +309,40 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
     }
   }
 
+  /// Horizon quick pay folds the rails, handle box, QR and links under "More ways to pay".
+  List<Widget> _foldIf(bool fold, AppTokens tokens, List<Widget> children) => !fold
+      ? children
+      : [
+          Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              key: const Key('upi-more'),
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: const EdgeInsets.only(bottom: 8),
+              expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+              title: Text(
+                'More ways to pay',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontBody,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: tokens.textSecondary,
+                ),
+              ),
+              children: children,
+            ),
+          ),
+        ];
+
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     final valid = _isCurrentHandleValid();
     final railDef = paymentRailDefs[_activeRail]!;
     final upiUri = (_activeRail == PaymentRail.upi && valid) ? generateUpiUri(_buildUpiDetails()) : '';
+
+    // Horizon: with a UPI id already saved, lead with the app icons and fold the other rails away.
+    final quick = tokens.horizon && widget.initialUpiId.trim().contains('@');
 
     return SingleChildScrollView(
       key: const Key('upi-payment-sheet'),
@@ -405,262 +433,386 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
           ),
           const SizedBox(height: 14),
 
-          // Payment Rails Horizontal Segment Chips
-          Text(
-            'CHOOSE PAYMENT RAIL',
-            style: TextStyle(
-              fontFamily: AppTypography.fontMono,
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.8,
-              color: tokens.textMuted,
+          // Horizon quick pay: the payee's UPI id is known, so the apps come first and the rest folds away.
+          if (quick) ...[
+            const SizedBox(height: 2),
+            Text(
+              '${_handleController.text.trim()} · "${widget.tripName ?? 'Trip Settlement'}"',
+              key: const Key('upi-quick-to'),
+              textAlign: TextAlign.center,
+              style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 12.5, color: tokens.textSecondary),
             ),
-          ),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
+            const SizedBox(height: 14),
+            Row(
               children: [
-                for (final rail in PaymentRail.values) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ChoiceChip(
-                      key: Key('rail-chip-${rail.name}'),
-                      selected: _activeRail == rail,
-                      avatar: Text(paymentRailDefs[rail]!.emoji, style: const TextStyle(fontSize: 13)),
-                      label: Text(
-                        paymentRailDefs[rail]!.name,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: _activeRail == rail ? FontWeight.w700 : FontWeight.w500,
-                        ),
-                      ),
-                      onSelected: (_) => _onSwitchRail(rail),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // Receiver Handle Input Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _activeRail == PaymentRail.upi
-                    ? "Receiver's UPI ID / VPA"
-                    : _activeRail == PaymentRail.revolut
-                    ? "Receiver's Revolut Tag"
-                    : _activeRail == PaymentRail.venmo
-                    ? "Receiver's Venmo Handle"
-                    : _activeRail == PaymentRail.cashapp
-                    ? "Receiver's \$Cashtag"
-                    : _activeRail == PaymentRail.paypal
-                    ? "Receiver's PayPal.me Handle"
-                    : "Receiver's IBAN / Bank Details",
-                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: tokens.textSecondary),
-              ),
-              if (valid)
-                TextButton.icon(
-                  key: const Key('upi-copy-id-btn'),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
-                  icon: Icon(_copiedHandle ? Icons.check_rounded : Icons.copy_rounded, size: 13),
-                  label: Text(_copiedHandle ? 'Copied' : 'Copy', style: const TextStyle(fontSize: 11.5)),
-                  onPressed: _copyHandle,
-                ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          TextField(
-            key: const Key('upi-id-input'),
-            controller: _handleController,
-            decoration: InputDecoration(
-              hintText: _activeRail == PaymentRail.upi
-                  ? 'e.g. mobile@paytm or name@okhdfcbank'
-                  : _activeRail == PaymentRail.revolut
-                  ? 'e.g. alex or revolut.me/alex'
-                  : _activeRail == PaymentRail.venmo
-                  ? 'e.g. alex or @alex'
-                  : _activeRail == PaymentRail.cashapp
-                  ? r'e.g. $alex or alex'
-                  : _activeRail == PaymentRail.paypal
-                  ? 'e.g. alex or paypal.me/alex'
-                  : 'e.g. GB29NWBK60161331926819',
-              filled: true,
-              fillColor: tokens.bgSurface,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: tokens.borderColor),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: tokens.borderColor),
-              ),
-            ),
-            onChanged: (val) {
-              setState(() => _error = null);
-              _saveCurrentHandle(val);
-            },
-          ),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(_error!, style: TextStyle(fontSize: 11.5, color: tokens.colorDanger)),
-            ),
-          const SizedBox(height: 14),
-
-          // Rail Specific Content
-          if (_activeRail == PaymentRail.upi) ...[
-            // Dynamic QR Code View / Toggle
-            if (valid) ...[
-              OutlinedButton.icon(
-                key: const Key('upi-toggle-qr-btn'),
-                style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                ),
-                icon: Icon(_showQr ? Icons.qr_code_scanner_rounded : Icons.qr_code_2_rounded, size: 18),
-                label: Text(_showQr ? 'Hide Dynamic QR' : 'Show Dynamic UPI QR Code'),
-                onPressed: () {
-                  AppHaptics.light();
-                  setState(() => _showQr = !_showQr);
-                },
-              ),
-              if (_showQr) ...[
-                const SizedBox(height: 12),
-                Center(
-                  child: Container(
-                    key: const Key('upi-qr-card'),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
-                      boxShadow: tokens.shadowSm,
-                    ),
-                    child: Column(
-                      children: [
-                        QrImageView(
-                          data: upiUri,
-                          size: 190,
-                          backgroundColor: Colors.white,
-                          eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF0F172A)),
-                          dataModuleStyle: const QrDataModuleStyle(
-                            dataModuleShape: QrDataModuleShape.square,
-                            color: Color(0xFF0F172A),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Scan with any UPI app to pay',
-                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 14),
-            ],
-
-            // App Launch Grid
-            if (valid) ...[
-              Text(
-                'PAY VIA UPI APP',
-                style: TextStyle(
-                  fontFamily: AppTypography.fontMono,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.8,
-                  color: tokens.textMuted,
-                ),
-              ),
-              const SizedBox(height: 8),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 3.0,
-                children: [
-                  for (final app in popularUpiApps)
-                    ElevatedButton(
-                      key: Key('upi-app-${app.id}'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: tokens.bgSurface,
-                        foregroundColor: tokens.textPrimary,
-                        elevation: 0,
-                        side: BorderSide(color: tokens.borderColor),
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: () => _launchUpiApp(app.scheme),
-                      child: Row(
-                        children: [
-                          Text(app.emoji, style: const TextStyle(fontSize: 16)),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              app.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+                for (final app in [popularUpiApps[1], popularUpiApps[0], popularUpiApps[2], popularUpiApps[4]])
+                  Expanded(
+                    child: InkWell(
+                      key: Key('upi-quick-${app.id}'),
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: () => _launchUpiApp(app.scheme),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(color: app.color, borderRadius: BorderRadius.circular(14)),
+                              child: const Icon(Icons.account_balance_wallet_outlined, color: Colors.white),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 6),
+                            Text(
+                              app.id == 'generic' ? 'Other' : (app.id == 'gpay' ? 'GPay' : app.name),
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontBody,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: tokens.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              key: const Key('upi-come-back'),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(color: tokens.bgSurfaceHover, borderRadius: BorderRadius.circular(12)),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 16, color: tokens.textSecondary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "After paying, come back. We'll ask you to confirm.",
+                      style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 13, color: tokens.textSecondary),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 10),
-              Center(
-                child: TextButton.icon(
-                  key: const Key('upi-copy-link-btn'),
-                  icon: Icon(_copiedLink ? Icons.check_rounded : Icons.link_rounded, size: 14),
-                  label: Text(
-                    _copiedLink ? 'Copied Payment Link!' : 'Copy Full Payment Link',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  onPressed: _copyPaymentLink,
-                ),
+            ),
+            const SizedBox(height: 12),
+            AppButton(
+              key: const Key('upi-open-app'),
+              label: 'Open UPI app',
+              isFullWidth: true,
+              onPressed: () => _launchUpiApp('upi'),
+            ),
+            const SizedBox(height: 4),
+          ],
+          ..._foldIf(quick, tokens, [
+            // Payment Rails Horizontal Segment Chips
+            Text(
+              'CHOOSE PAYMENT RAIL',
+              style: TextStyle(
+                fontFamily: AppTypography.fontMono,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.8,
+                color: tokens.textMuted,
               ),
-            ],
-          ] else ...[
-            // Global Rails View (Revolut, Venmo, Cash App, PayPal, IBAN)
-            if (valid) ...[
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: tokens.bgSurface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: tokens.borderColor),
-                ),
-                child: Row(
-                  children: [
-                    Text(railDef.emoji, style: const TextStyle(fontSize: 20)),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(railDef.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                          Text(railDef.tagline, style: TextStyle(fontSize: 11.5, color: tokens.textSecondary)),
-                        ],
+            ),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final rail in PaymentRail.values) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: ChoiceChip(
+                        key: Key('rail-chip-${rail.name}'),
+                        selected: _activeRail == rail,
+                        avatar: Text(paymentRailDefs[rail]!.emoji, style: const TextStyle(fontSize: 13)),
+                        label: Text(
+                          paymentRailDefs[rail]!.name,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: _activeRail == rail ? FontWeight.w700 : FontWeight.w500,
+                          ),
+                        ),
+                        onSelected: (_) => _onSwitchRail(rail),
                       ),
                     ),
                   ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Receiver Handle Input Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _activeRail == PaymentRail.upi
+                      ? "Receiver's UPI ID / VPA"
+                      : _activeRail == PaymentRail.revolut
+                      ? "Receiver's Revolut Tag"
+                      : _activeRail == PaymentRail.venmo
+                      ? "Receiver's Venmo Handle"
+                      : _activeRail == PaymentRail.cashapp
+                      ? "Receiver's \$Cashtag"
+                      : _activeRail == PaymentRail.paypal
+                      ? "Receiver's PayPal.me Handle"
+                      : "Receiver's IBAN / Bank Details",
+                  style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: tokens.textSecondary),
+                ),
+                if (valid)
+                  TextButton.icon(
+                    key: const Key('upi-copy-id-btn'),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    icon: Icon(_copiedHandle ? Icons.check_rounded : Icons.copy_rounded, size: 13),
+                    label: Text(_copiedHandle ? 'Copied' : 'Copy', style: const TextStyle(fontSize: 11.5)),
+                    onPressed: _copyHandle,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            TextField(
+              key: const Key('upi-id-input'),
+              controller: _handleController,
+              decoration: InputDecoration(
+                hintText: _activeRail == PaymentRail.upi
+                    ? 'e.g. mobile@paytm or name@okhdfcbank'
+                    : _activeRail == PaymentRail.revolut
+                    ? 'e.g. alex or revolut.me/alex'
+                    : _activeRail == PaymentRail.venmo
+                    ? 'e.g. alex or @alex'
+                    : _activeRail == PaymentRail.cashapp
+                    ? r'e.g. $alex or alex'
+                    : _activeRail == PaymentRail.paypal
+                    ? 'e.g. alex or paypal.me/alex'
+                    : 'e.g. GB29NWBK60161331926819',
+                filled: true,
+                fillColor: tokens.bgSurface,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: tokens.borderColor),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: tokens.borderColor),
                 ),
               ),
-              const SizedBox(height: 12),
+              onChanged: (val) {
+                setState(() => _error = null);
+                _saveCurrentHandle(val);
+              },
+            ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(_error!, style: TextStyle(fontSize: 11.5, color: tokens.colorDanger)),
+              ),
+            const SizedBox(height: 14),
 
-              if (_activeRail == PaymentRail.iban) ...[
+            // Rail Specific Content
+            if (_activeRail == PaymentRail.upi) ...[
+              // Dynamic QR Code View / Toggle
+              if (valid) ...[
+                OutlinedButton.icon(
+                  key: const Key('upi-toggle-qr-btn'),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  icon: Icon(_showQr ? Icons.qr_code_scanner_rounded : Icons.qr_code_2_rounded, size: 18),
+                  label: Text(_showQr ? 'Hide Dynamic QR' : 'Show Dynamic UPI QR Code'),
+                  onPressed: () {
+                    AppHaptics.light();
+                    setState(() => _showQr = !_showQr);
+                  },
+                ),
+                if (_showQr) ...[
+                  const SizedBox(height: 12),
+                  Center(
+                    child: Container(
+                      key: const Key('upi-qr-card'),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+                        boxShadow: tokens.shadowSm,
+                      ),
+                      child: Column(
+                        children: [
+                          QrImageView(
+                            data: upiUri,
+                            size: 190,
+                            backgroundColor: Colors.white,
+                            eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF0F172A)),
+                            dataModuleStyle: const QrDataModuleStyle(
+                              dataModuleShape: QrDataModuleShape.square,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Scan with any UPI app to pay',
+                            style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 14),
+              ],
+
+              // App Launch Grid
+              if (valid) ...[
+                Text(
+                  'PAY VIA UPI APP',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontMono,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                    color: tokens.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 3.0,
+                  children: [
+                    for (final app in popularUpiApps)
+                      ElevatedButton(
+                        key: Key('upi-app-${app.id}'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: tokens.bgSurface,
+                          foregroundColor: tokens.textPrimary,
+                          elevation: 0,
+                          side: BorderSide(color: tokens.borderColor),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () => _launchUpiApp(app.scheme),
+                        child: Row(
+                          children: [
+                            Text(app.emoji, style: const TextStyle(fontSize: 16)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                app.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Center(
+                  child: TextButton.icon(
+                    key: const Key('upi-copy-link-btn'),
+                    icon: Icon(_copiedLink ? Icons.check_rounded : Icons.link_rounded, size: 14),
+                    label: Text(
+                      _copiedLink ? 'Copied Payment Link!' : 'Copy Full Payment Link',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    onPressed: _copyPaymentLink,
+                  ),
+                ),
+              ],
+            ] else ...[
+              // Global Rails View (Revolut, Venmo, Cash App, PayPal, IBAN)
+              if (valid) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: tokens.bgSurface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: tokens.borderColor),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(railDef.emoji, style: const TextStyle(fontSize: 20)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(railDef.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                            Text(railDef.tagline, style: TextStyle(fontSize: 11.5, color: tokens.textSecondary)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                if (_activeRail == PaymentRail.iban) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: tokens.bgSurface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: tokens.borderColor),
+                    ),
+                    child: Text(
+                      formatIbanCopyText(
+                        payeeName: widget.toName,
+                        iban: cleanPaymentHandle(PaymentRail.iban, _handleController.text.trim()),
+                        amount: widget.amount,
+                        currency: widget.currency,
+                        note: widget.tripName ?? 'Trip Settlement',
+                      ),
+                      style: TextStyle(fontFamily: AppTypography.fontMono, fontSize: 11, color: tokens.textPrimary),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  AppButton(
+                    key: const Key('iban-copy-details-btn'),
+                    label: _copiedLink ? '✓ Wire Details Copied!' : '📋 Copy Full Wire Details',
+                    variant: AppButtonVariant.primary,
+                    onPressed: _copyPaymentLink,
+                  ),
+                ] else ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: AppButton(
+                          key: Key('launch-rail-${_activeRail.name}'),
+                          label: 'Open ${railDef.name}',
+                          variant: AppButtonVariant.primary,
+                          onPressed: _launchPaymentLink,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: AppButton(
+                          key: const Key('copy-rail-link-btn'),
+                          label: _copiedLink ? 'Copied' : 'Copy Link',
+                          variant: AppButtonVariant.secondary,
+                          onPressed: _copyPaymentLink,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ] else ...[
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -669,82 +821,31 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
                     border: Border.all(color: tokens.borderColor),
                   ),
                   child: Text(
-                    formatIbanCopyText(
-                      payeeName: widget.toName,
-                      iban: cleanPaymentHandle(PaymentRail.iban, _handleController.text.trim()),
-                      amount: widget.amount,
-                      currency: widget.currency,
-                      note: widget.tripName ?? 'Trip Settlement',
-                    ),
-                    style: TextStyle(fontFamily: AppTypography.fontMono, fontSize: 11, color: tokens.textPrimary),
+                    "Enter ${widget.toName}'s ${railDef.name} handle above to generate the payment link.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: tokens.textSecondary),
                   ),
                 ),
-                const SizedBox(height: 12),
-                AppButton(
-                  key: const Key('iban-copy-details-btn'),
-                  label: _copiedLink ? '✓ Wire Details Copied!' : '📋 Copy Full Wire Details',
-                  variant: AppButtonVariant.primary,
-                  onPressed: _copyPaymentLink,
-                ),
-              ] else ...[
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: AppButton(
-                        key: Key('launch-rail-${_activeRail.name}'),
-                        label: 'Open ${railDef.name}',
-                        variant: AppButtonVariant.primary,
-                        onPressed: _launchPaymentLink,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 2,
-                      child: AppButton(
-                        key: const Key('copy-rail-link-btn'),
-                        label: _copiedLink ? 'Copied' : 'Copy Link',
-                        variant: AppButtonVariant.secondary,
-                        onPressed: _copyPaymentLink,
-                      ),
-                    ),
-                  ],
-                ),
               ],
-            ] else ...[
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: tokens.bgSurface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: tokens.borderColor),
-                ),
-                child: Text(
-                  "Enter ${widget.toName}'s ${railDef.name} handle above to generate the payment link.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: tokens.textSecondary),
-                ),
-              ),
             ],
-          ],
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          // Non-Custodial Disclaimer
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: tokens.bgSurface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: tokens.borderColor),
+            // Non-Custodial Disclaimer
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: tokens.bgSurface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: tokens.borderColor),
+              ),
+              child: Text(
+                '🛡️ Non-Custodial: Trip Tracker never holds funds. All transfers happen directly within your personal banking or payment apps.',
+                style: TextStyle(fontSize: 11, color: tokens.textMuted, height: 1.35),
+              ),
             ),
-            child: Text(
-              '🛡️ Non-Custodial: Trip Tracker never holds funds. All transfers happen directly within your personal banking or payment apps.',
-              style: TextStyle(fontSize: 11, color: tokens.textMuted, height: 1.35),
-            ),
-          ),
-          const SizedBox(height: 14),
-
+            const SizedBox(height: 14),
+          ]),
           // Mark as Settled Button
           AppButton(
             key: const Key('upi-confirm-settled-btn'),

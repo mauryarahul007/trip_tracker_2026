@@ -3435,5 +3435,21 @@
     "shippedAt": "2026-11-25T00:00:00.000Z",
     "shippedBy": "agent",
     "shippedNote": "Commit 2277219 (v3.105.0)."
+  },
+  {
+    "id": "FEAT-217",
+    "title": "Horizon money flows: Split page, Quick add, Settle up, UPI (Flutter)",
+    "description": "Under Core flag enableHorizonUi: Split page with Equal/Shares/Exact/% and left to assign, keypad under the chips, Quick add message box with preview and Change split / Scan bill, Settle up list with Remind and Mark paid, UPI apps first when a UPI id is saved. HORIZON-MONEY.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "human",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-25T00:00:00.000Z",
+    "updatedAt": "2026-11-25T00:00:00.000Z",
+    "shippedAt": "2026-11-25T00:00:00.000Z",
+    "shippedBy": "agent",
+    "shippedNote": "Commit PENDING (v3.106.0)."
   }
 ]

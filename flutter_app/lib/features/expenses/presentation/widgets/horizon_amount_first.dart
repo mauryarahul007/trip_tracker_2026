@@ -126,6 +126,7 @@ class HorizonAmountFirst extends StatelessWidget {
     return Column(
       key: const Key('horizon-amount-first'),
       children: [
+        // The keypad sits right under the chips, as in the mockup; spare height falls below it, above Save.
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -179,7 +180,11 @@ class HorizonAmountFirst extends StatelessWidget {
                   key: const Key('title-field'),
                   controller: titleController,
                   textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(labelText: l10n.horizonWhatFor, hintText: l10n.formWhatHint),
+                  decoration: InputDecoration(
+                    labelText: l10n.horizonWhatFor,
+                    hintText: l10n.formWhatHint,
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                  ),
                   onChanged: onTitleChanged,
                 ),
                 const SizedBox(height: 12),
@@ -212,28 +217,28 @@ class HorizonAmountFirst extends StatelessWidget {
                     child: Text(l10n.formMoreDetails),
                   ),
                 ),
+                Padding(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      for (final row in const [
+                        ['1', '2', '3'],
+                        ['4', '5', '6'],
+                        ['7', '8', '9'],
+                      ])
+                        Row(children: [for (final k in row) key(k)]),
+                      Row(
+                        children: [
+                          key('.'),
+                          key('0'),
+                          key('back', child: Icon(Icons.backspace_outlined, color: t.textPrimary)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(11, 0, 11, 0),
-          child: Column(
-            children: [
-              for (final row in const [
-                ['1', '2', '3'],
-                ['4', '5', '6'],
-                ['7', '8', '9'],
-              ])
-                Row(children: [for (final k in row) key(k)]),
-              Row(
-                children: [
-                  key('.'),
-                  key('0'),
-                  key('back', child: Icon(Icons.backspace_outlined, color: t.textPrimary)),
-                ],
-              ),
-            ],
           ),
         ),
         SafeArea(

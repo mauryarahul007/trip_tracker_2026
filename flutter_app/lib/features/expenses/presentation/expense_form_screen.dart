@@ -10,6 +10,7 @@ import '../../../core/platform/feedback.dart';
 import '../../notifications/presentation/push_prompt.dart';
 import 'widgets/amount_keypad.dart';
 import 'widgets/horizon_amount_first.dart';
+import 'widgets/horizon_split_view.dart';
 import '../../../shared/theme/category_icons.dart' show categoryGlyph;
 import '../../../shared/widgets/app_avatar.dart';
 
@@ -53,10 +54,24 @@ import 'widgets/form_sheets.dart';
 
 String _fmt(BuildContext c, double v, String code) => formatMoney(c, v, code);
 
+/// Money without ".00" on whole amounts ("₹2,400"), for titles.
+String _fmtWhole(BuildContext c, double v, String code) {
+  final s = formatMoney(c, v, code);
+  return v % 1 == 0 && s.endsWith('.00') ? s.substring(0, s.length - 3) : s;
+}
+
 /// Add / edit an expense. Waits for trip, members, expenses and flags so the
 /// form never starts with the wrong controls.
 class ExpenseFormScreen extends ConsumerWidget {
-  const ExpenseFormScreen({required this.tripId, this.expenseId, this.cloneLast = false, this.mealTitle, super.key});
+  const ExpenseFormScreen({
+    required this.tripId,
+    this.expenseId,
+    this.cloneLast = false,
+    this.mealTitle,
+    this.quickText,
+    this.then,
+    super.key,
+  });
   final String tripId;
   final String? expenseId;
 
@@ -65,6 +80,12 @@ class ExpenseFormScreen extends ConsumerWidget {
 
   /// From the Spend meal nudge: open a new expense titled with this meal ("Breakfast", "Lunch", "Dinner").
   final String? mealTitle;
+
+  /// From Quick add (Horizon): open a new expense already filled from this "lunch 2400 asha" text.
+  final String? quickText;
+
+  /// From Quick add (Horizon): what to open next, 'split' (the split page) or 'scan' (the receipt camera).
+  final String? then;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -78,7 +99,13 @@ class ExpenseFormScreen extends ConsumerWidget {
     final wide = MediaQuery.sizeOf(context).width >= 900;
     final horizon = context.tokens.horizon;
     final form = ready
-        ? _FormBody(args: ExpenseFormArgs(tripId, expenseId), cloneLast: cloneLast, mealTitle: mealTitle)
+        ? _FormBody(
+            args: ExpenseFormArgs(tripId, expenseId),
+            cloneLast: cloneLast,
+            mealTitle: mealTitle,
+            quickText: quickText,
+            then: then,
+          )
         : const SkeletonPage(shape: SkeletonShape.form, rows: 3);
     return AppScaffold(
       maxContentWidth: wide ? 760 : 960,
@@ -135,10 +162,12 @@ class ExpenseFormScreen extends ConsumerWidget {
 }
 
 class _FormBody extends ConsumerStatefulWidget {
-  const _FormBody({required this.args, this.cloneLast = false, this.mealTitle});
+  const _FormBody({required this.args, this.cloneLast = false, this.mealTitle, this.quickText, this.then});
   final ExpenseFormArgs args;
   final bool cloneLast;
   final String? mealTitle;
+  final String? quickText;
+  final String? then;
 
   @override
   ConsumerState<_FormBody> createState() => _FormBodyState();
@@ -183,6 +212,18 @@ class _FormBodyState extends ConsumerState<_FormBody> {
     if (meal != null && meal.isNotEmpty && args.editingId == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _c.applyMeal(meal);
+      });
+    }
+    final quick = widget.quickText;
+    if (quick != null && quick.trim().isNotEmpty && args.editingId == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _c.quickFill(quick);
+        if (widget.then == 'split') {
+          unawaited(_openHorizonSplit());
+        } else if (widget.then == 'scan') {
+          unawaited(_c.pickReceipt(ReceiptSource.camera));
+        }
       });
     }
   }
@@ -1135,6 +1176,67 @@ class _FormBodyState extends ConsumerState<_FormBody> {
     _docked = false;
   });
 
+  /// Horizon: the split chip opens its own page (Equal / Shares / Exact / %) over the amount pad. The page reads and
+  /// writes this form's split state, so saving from the pad stores exactly what the full form would.
+  Future<void> _openHorizonSplit() => Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (_) => Consumer(
+        builder: (ctx, ref, _) {
+          final l10n = ctx.l10n;
+          final s = ref.watch(expenseFormProvider(args));
+          final c = _c;
+          final flags = c.flags;
+          final members = ref.watch(visibleMembersProvider(args.tripId));
+          final input = c.toInput();
+          final status = splitConfigStatus(input);
+          final amountVal = c.evaluatedAmount;
+          final count = s.selected.values.where((v) => v).length;
+          final equalShare = s.splitMode == 'equal' && amountVal != null && count > 0 ? amountVal / count : null;
+          final modes = <(String, String)>[
+            ('equal', l10n.formModeEqual),
+            if (flags.advancedSplits || {'custom', 'exact', 'percentage'}.contains(s.splitMode)) ...[
+              ('custom', l10n.formModeShares),
+              ('exact', l10n.formModeExact),
+              ('percentage', l10n.formModePercent),
+            ],
+          ];
+          final off = (s.splitMode == 'exact' || s.splitMode == 'percentage') && !status.matches;
+          String? warning;
+          if (off) {
+            final target = status.target ?? 0;
+            final gap = (target - status.sum).abs();
+            final gapText = s.splitMode == 'percentage'
+                ? '${gap.toStringAsFixed(gap % 1 == 0 ? 0 : 1)}%'
+                : _fmt(ctx, gap, s.currency);
+            warning = target >= status.sum ? l10n.horizonLeftToAssign(gapText) : l10n.horizonOverAssigned(gapText);
+          }
+          final amountShown = (amountVal ?? 0) > 0 ? _fmtWhole(ctx, amountVal!, s.currency) : '';
+          return HorizonSplitView(
+            title: amountShown.isEmpty ? l10n.formSplitBetween : l10n.horizonSplitTitle(amountShown),
+            modes: modes,
+            mode: s.splitMode,
+            onMode: c.setSplitMode,
+            members: members,
+            selected: s.selected,
+            config: s.splitConfig,
+            epoch: s.epoch,
+            symbol: getCurrencySymbol(s.currency),
+            shareLabel: (_) => equalShare == null ? null : _fmt(ctx, equalShare, s.currency),
+            meMemberId: ref.watch(myMemberIdProvider(args.tripId)),
+            onToggle: c.toggleMember,
+            onConfig: c.setSplitConfig,
+            warning: warning,
+            canFinish: count > 0 && !off,
+            finishLabel: l10n.horizonSplitDone,
+            onReset: c.presetEveryone,
+            onFinish: () => Navigator.of(ctx).pop(),
+            onBack: () => Navigator.of(ctx).maybePop(),
+          );
+        },
+      ),
+    ),
+  );
+
   /// Horizon number pad: digits, one ".", two decimals at most, and backspace.
   void _horizonKey(String k) {
     var v = _amount.text;
@@ -1196,8 +1298,16 @@ class _FormBodyState extends ConsumerState<_FormBody> {
       HorizonFormChip(
         'horizon-chip-split',
         const Icon(Icons.call_split_rounded, size: 16),
-        s.splitMode == 'equal' ? l10n.horizonEqualCount(splitCount) : l10n.formSplitBetween,
-        _openHorizonDetails,
+        s.splitMode == 'equal'
+            ? l10n.horizonEqualCount(splitCount)
+            : s.splitMode == 'custom'
+            ? l10n.horizonSplitChip(l10n.formModeShares, splitCount)
+            : s.splitMode == 'exact'
+            ? l10n.horizonSplitChip(l10n.formModeExact, splitCount)
+            : s.splitMode == 'percentage'
+            ? l10n.horizonSplitChip('%', splitCount)
+            : l10n.formSplitBetween,
+        s.splitMode == 'itemized' ? _openHorizonDetails : _openHorizonSplit,
       ),
       if (c.flags.receiptUpload)
         HorizonFormChip(

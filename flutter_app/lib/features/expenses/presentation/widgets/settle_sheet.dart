@@ -35,6 +35,9 @@ import '../../application/money_providers.dart' show saveUpiId;
 import '../../application/expenses_providers.dart';
 import 'settlement_card.dart' show renderSettlementPng;
 import 'upi_payment_sheet.dart';
+import 'horizon_settle_list.dart';
+import 'summary_extras.dart' show reminderMessage;
+import '../../../../domain/models/member.dart';
 
 /// Shows a snackbar after recording a settlement, with an optional undo action.
 ///
@@ -668,18 +671,40 @@ Future<void> showSettlementChooserOrSheet({
     return;
   }
 
-  if (transfers.length == 1) {
+  final myId = ref.read(myMemberIdProvider(tripId));
+  final horizon = context.tokens.horizon;
+  if (transfers.length == 1 && !horizon) {
     await showSettleSheet(context: context, tripId: tripId, transfer: transfers.first, currency: cur);
     return;
   }
 
-  // Multiple debts: open chooser
-  final myId = ref.read(myMemberIdProvider(tripId));
+  // Multiple debts (or Horizon, which always lists the plan): open chooser
   if (!context.mounted) return;
+  final members = {for (final m in ref.read(tripMembersProvider(tripId)).value ?? const <Member>[]) m.id: m};
+  final share = ref.read(shareServiceProvider);
   final chosen = await AppSheet.show<Transfer>(
     context: context,
-    title: 'Record a settlement',
-    builder: (ctx) => _OpenDebtsList(tripId: tripId, transfers: transfers, myMemberId: myId, currency: cur),
+    title: horizon ? context.l10n.horizonSettleUp : 'Record a settlement',
+    builder: (ctx) => horizon
+        ? HorizonSettleList(
+            transfers: transfers,
+            members: members,
+            me: myId,
+            currency: cur,
+            onMarkPaid: (t) => Navigator.of(ctx).pop(t),
+            onRemind: (t) => unawaited(
+              share.share(
+                reminderMessage(
+                  from: t.fromLabel,
+                  to: t.toLabel,
+                  amount: formatMoney(ctx, t.amount, cur),
+                  trip: trip?.name ?? '',
+                ),
+                subject: 'Settle up: ${trip?.name ?? ''}',
+              ),
+            ),
+          )
+        : _OpenDebtsList(tripId: tripId, transfers: transfers, myMemberId: myId, currency: cur),
   );
 
   if (chosen != null && context.mounted) {

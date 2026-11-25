@@ -8,6 +8,11 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.106.0', '2026-11-25', [
+    'Add expense opens a Split page from the split chip: Equal, Shares, Exact or %, one row per person, and a "left to assign" bar until the amounts add up (Flutter).',
+    'Quick add reads like a message ("lunch 2400"), previews the expense, and can jump to Change split or Scan bill (Flutter).',
+    'Settle up lists every payment that clears the trip, with Remind and Mark paid; Pay by UPI leads with PhonePe, GPay and Paytm when a UPI id is saved (Flutter).',
+  ]),
   ChangelogEntry('3.105.0', '2026-11-25', [
     'All balances filters by Owed to you or You owe, Alerts has a Mark all read button, and Me shows your trip count with an Edit button (Flutter).',
     'Expenses waiting to sync show a Queued tag, the undo toast is dark navy, and a link to a missing trip shows a clear page with Back to my trips and Join with a code (Flutter).',
@@ -53,10 +58,5 @@ const List<ChangelogEntry> changelogEntries = [
     'Horizon look for the Flutter app: a new blue and night-navy colour scheme with a sunset accent, in light, dark and pure black.',
     'New bottom bars with a raised Add button in the centre; the trip bar is now Balances, Spend, Add, Chat and Hub.',
     'Redesigned splash, onboarding, sign-in and Trips home: your balance across all trips up top, with New trip, Join code, Quick add and Settle one tap away.',
-  ]),
-  ChangelogEntry('3.93.0', '2026-11-13', [
-    'Global Payment Rails: 1-tap debt settlement via Revolut, Venmo, Cash App, PayPal, and bank wire IBAN instructions alongside Indian UPI (Web & Flutter).',
-    'Smart Currency Auto-Routing: Automatically prioritizes settlement rails matching trip base currency with prefilled transfer amounts and recipient tags.',
-    'Visual Itinerary Modal Polish: Upgraded activity popups to solid high-contrast surfaces and added Itinerary view tabs to Notes & Plans on both Web and Flutter.',
   ]),
 ];

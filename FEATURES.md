@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **210** |
+| **Total Tracked** | **211** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **207** |
+| **✅ Shipped** | **208** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -71,6 +71,7 @@ Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blu
 
 | ID | Title | Category | Requested By | Shipped By | Note |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| **FEAT-217** | Horizon money flows: Split page, Quick add, Settle up, UPI (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit PENDING (v3.106.0). |
 | **FEAT-216** | Horizon All balances, Alerts, Me, states and sheets (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit 2277219 (v3.105.0). |
 | **FEAT-215** | Horizon trip pages: People, Activity, Insights, Categories, Checklist, Recycle bin (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit c17ae3b (v3.104.0). |
 | **FEAT-214** | Horizon Add expense, itinerary timeline and Quick add trip picker (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit 499b176 (v3.103.0). |
