@@ -6,6 +6,7 @@ import '../../../core/format/money.dart';
 import '../../../data/providers.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_surface.dart' show HeroSurface, SurfaceKind;
 import '../../travel/presentation/passport_stamp.dart';
@@ -27,6 +28,169 @@ class CloseoutSheet extends ConsumerStatefulWidget {
 class _CloseoutSheetState extends ConsumerState<CloseoutSheet> {
   bool _locked = false;
   bool _pulse = false;
+
+  Future<void> _close({required bool freeze, required bool pulseOn}) async {
+    await ref.read(tripRepositoryProvider).setTripState(widget.tripId, closed: true, frozen: freeze ? true : null);
+    if (!mounted) return;
+    setState(() => pulseOn ? _pulse = true : _locked = true);
+  }
+
+  /// Horizon ("Close out trip" mockup): a three-line checklist (settled, receipts, sync), the freeze note and one
+  /// Freeze and close button. Fix links go to Balances or Spend; nothing here blocks closing.
+  Widget _horizon(BuildContext context, String name, int open, double outstanding, String currency, bool pulseOn) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final expenses = ref.watch(tripExpensesProvider(widget.tripId)).value ?? const [];
+    final dirty = ref.watch(dirtyIdsProvider).value ?? const <String>{};
+    final noReceipt = expenses.where((e) => (e.receiptImage ?? '').isEmpty && (e.receiptPath ?? '').isEmpty).length;
+    final pending = expenses.where((e) => dirty.contains(e.id)).length;
+    void go(String path) {
+      Navigator.of(context).pop();
+      context.go(path);
+    }
+
+    Widget row(String key, bool ok, String title, String sub, {String? fix, VoidCallback? onFix}) => Padding(
+      key: Key(key),
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Icon(
+            ok ? Icons.check_rounded : Icons.warning_amber_rounded,
+            size: 22,
+            color: ok ? t.colorSuccess : t.colorWarning,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontBody,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: t.textPrimary,
+                  ),
+                ),
+                Text(
+                  sub,
+                  style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 13, color: t.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          if (fix != null)
+            TextButton(
+              key: Key('$key-fix'),
+              onPressed: onFix,
+              child: Text(
+                fix,
+                style: const TextStyle(fontFamily: AppTypography.fontBody, fontWeight: FontWeight.w700),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    final rows = [
+      if (open == 0)
+        row('closeout-settled', true, l10n.horizonCloseoutSettled, l10n.horizonCloseoutNothingToPay)
+      else
+        row(
+          'closeout-settled',
+          false,
+          l10n.horizonCloseoutOpen(open),
+          l10n.horizonCloseoutOutstanding(formatMoney(context, outstanding, currency)),
+          fix: l10n.horizonSettleAction,
+          onFix: () => go('/trip/${widget.tripId}/ledger'),
+        ),
+      if (noReceipt == 0)
+        row('closeout-receipts', true, l10n.horizonCloseoutReceiptsOk, l10n.horizonCloseoutOptional)
+      else
+        row(
+          'closeout-receipts',
+          false,
+          l10n.horizonCloseoutNoReceipt(noReceipt),
+          l10n.horizonCloseoutOptional,
+          fix: l10n.horizonFix,
+          onFix: () => go('/trip/${widget.tripId}/expenses'),
+        ),
+      if (pending == 0)
+        row('closeout-sync', true, l10n.horizonCloseoutSynced, l10n.horizonCloseoutOnServer(expenses.length))
+      else
+        row('closeout-sync', false, l10n.horizonCloseoutPending(pending), l10n.horizonCloseoutConnect),
+    ];
+
+    return Padding(
+      key: const Key('horizon-closeout'),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.horizonCloseoutTitle(name),
+            key: const Key('closeout-title'),
+            style: TextStyle(
+              fontFamily: AppTypography.fontTitle,
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: t.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            decoration: BoxDecoration(
+              color: t.bgSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: t.borderColor),
+            ),
+            child: Column(
+              children: [
+                for (var i = 0; i < rows.length; i++) ...[if (i > 0) Divider(height: 1, color: t.borderColor), rows[i]],
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            key: const Key('closeout-freeze-note'),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: t.primaryAccentLight, borderRadius: BorderRadius.circular(14)),
+            child: Row(
+              children: [
+                Icon(Icons.ac_unit_rounded, size: 20, color: t.primaryAccent),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l10n.horizonCloseoutFreezeNote,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontBody,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: t.primaryAccent,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          AppButton(
+            key: const Key('closeout-lock'),
+            label: l10n.horizonFreezeAndClose,
+            onPressed: () => _close(freeze: true, pulseOn: pulseOn),
+          ),
+          TextButton(
+            key: const Key('closeout-dismiss'),
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.closeoutNotNow),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +231,10 @@ class _CloseoutSheetState extends ConsumerState<CloseoutSheet> {
           ],
         ),
       );
+    }
+
+    if (context.tokens.horizon && !_locked) {
+      return _horizon(context, trip.name, transfers.length, outstanding, trip.baseCurrency, pulseOn);
     }
 
     return Padding(

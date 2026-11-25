@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/auth_state.dart';
+import '../../../core/format/money.dart';
+import '../../../shared/widgets/app_avatar.dart';
 import '../../../core/clock.dart';
 import '../../../data/providers.dart';
 import '../../../domain/logic/notification_actions.dart';
@@ -430,6 +432,38 @@ class _ActivityDaySticky extends SliverPersistentHeaderDelegate {
       old.label != label || old.background != background || old.foreground != foreground;
 }
 
+/// Horizon ("Trip activity" mockup) wording for expense rows: "Asha added Scuba" over "₹9,000 · 6:40 PM", with
+/// the person's avatar. Null for other kinds, which keep the stored body.
+({String title, String sub, String? actor})? _horizonLine(BuildContext context, NotificationItem item) {
+  final d = item.data ?? const <String, dynamic>{};
+  final type = d['type'] as String?;
+  final title = d['expenseTitle'] as String?;
+  if (type == null || title == null || title.isEmpty || !type.startsWith('expense_')) return null;
+  final l10n = context.l10n;
+  final actor = (d['actorName'] as String?)?.trim();
+  final who = actor == null || actor.isEmpty ? null : actor;
+  final text = switch (type) {
+    'expense_added' => who == null ? l10n.horizonActAdded(title) : l10n.horizonActAddedBy(who, title),
+    'expense_refunded' => who == null ? l10n.horizonActRefunded(title) : l10n.horizonActRefundedBy(who, title),
+    'expense_deleted' => who == null ? l10n.horizonActDeleted(title) : l10n.horizonActDeletedBy(who, title),
+    'expense_updated' => l10n.horizonActEdited(title),
+    'expense_restored' => l10n.horizonActRestored(title),
+    _ => null,
+  };
+  if (text == null) return null;
+  final at = DateTime.tryParse(item.createdAt)?.toLocal();
+  final now = DateTime.now();
+  final when = at == null
+      ? formatRelativeTime(item.createdAt)
+      : at.year == now.year && at.month == now.month && at.day == now.day
+      ? MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(at))
+      : formatRelativeTime(item.createdAt);
+  final amount = double.tryParse('${d['amount'] ?? ''}');
+  final cur = '${d['currency'] ?? ''}';
+  final sub = amount == null || cur.isEmpty ? when : '${formatMoney(context, amount, cur)} · $when';
+  return (title: text, sub: sub, actor: who);
+}
+
 class _ActivityRow extends StatelessWidget {
   const _ActivityRow({
     required this.item,
@@ -460,6 +494,7 @@ class _ActivityRow extends StatelessWidget {
     final type = item.data?['type'] as String?;
     final meta = notificationMeta(type, context.tokens);
     final headline = getNotificationHeadline(type);
+    final line = t.horizon ? _horizonLine(context, item) : null;
     return Padding(
       padding: EdgeInsets.only(bottom: dense ? 4 : 8),
       child: Dismissible(
@@ -505,15 +540,18 @@ class _ActivityRow extends StatelessWidget {
                           child: selected ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
                         ),
                       ),
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: meta.color.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(12),
+                    if (line?.actor != null)
+                      AppAvatar(key: const Key('activity-actor'), name: line!.actor!, size: 40)
+                    else
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: meta.color.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(meta.icon, size: 20, color: meta.color),
                       ),
-                      child: Icon(meta.icon, size: 20, color: meta.color),
-                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -522,7 +560,7 @@ class _ActivityRow extends StatelessWidget {
                           if (t.horizon) ...[
                             // Horizon ("Activity" mockup): what happened first, then the kind and when.
                             Text(
-                              renderNotificationBody(item),
+                              line?.title ?? renderNotificationBody(item),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -534,7 +572,7 @@ class _ActivityRow extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '$headline · ${formatRelativeTime(item.createdAt)}',
+                              line?.sub ?? '$headline · ${formatRelativeTime(item.createdAt)}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 12, color: t.textMuted),

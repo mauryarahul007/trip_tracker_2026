@@ -6040,3 +6040,18 @@ This document logs all meaningful technical decisions, library choices, design p
   - Reuses `enableHorizonUi`.
 * **Trade-offs Accepted:**
   - Left out: "Couples count as 2", home-currency conversion and "Last reminded" (no stored reminder time). These need behaviour changes.
+
+## 307. Horizon trip pages and sheets (v3.107.0)
+* **Context:** PR 3 of the Horizon gap fix plan: Trip settings, Close out, Invite, Sync conflict, Expense detail, Filter, Hub, Activity and Tools did not match their mockups.
+* **Decision:**
+  - Trip settings: rules card (Currency with foreign-currency count, Simplify, Approval, Geotag, Mute), Categories/Recycle bin card, Freeze/Archive/Close as tappable rows (Close opens Close out), red Delete trip card (owner only, confirm then delete). `SettingsSection` skips its header when the title is empty.
+  - Close out: checklist (open payments with Settle, expenses without a receipt with Fix, pending sync from `dirtyIdsProvider`), freeze note, "Freeze and close" sets closed and frozen.
+  - Invite: QR beside code with Copy; Can add expenses / View only switch (View only shows the existing read-only link block, extracted to `_viewOnlyBlock`); WhatsApp via `whatsapp://send` with share-sheet fallback; Copy link.
+  - Conflict: Yours / Theirs cards with edit times, first differing value large, theirs on a butter tint; Keep theirs is the filled button.
+  - Expense detail: `_HorizonDetail` with paid row, split row (tap for shares), receipt and map tiles, Edit / Delete; count switch, Activity, refund, dispute and the details table under More.
+  - Filter: icon category chips, payer avatars, date switch (This trip from trip dates), involves-me switch; type, paid-by-me and amount range under More filters.
+  - Hub: live subtitles (day and today's plans, member and group counts, top category share); Activity log rows carry `actorName` for adds, refunds and deletes (not edits, whose editor is not stored); Tools: rows plus a navy Trip Wrapped row.
+  - Reuses `enableHorizonUi`.
+* **Trade-offs Accepted:**
+  - "Freeze and close" now also freezes the trip; it can be unfrozen in Trip settings.
+  - Left out: People page header (share button) and the "Trip activity" title, which need trip header changes.

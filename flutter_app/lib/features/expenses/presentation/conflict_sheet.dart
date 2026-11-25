@@ -10,6 +10,7 @@ import '../../../domain/models/member.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_surface.dart' show Eyebrow;
 import '../application/expenses_providers.dart';
@@ -36,8 +37,10 @@ class ConflictSheet extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.sync_problem_rounded, color: tokens.colorWarning),
-              const SizedBox(width: 10),
+              if (!tokens.horizon) ...[
+                Icon(Icons.sync_problem_rounded, color: tokens.colorWarning),
+                const SizedBox(width: 10),
+              ],
               // Horizon names the expense when there is just one: 'Two versions of "Scuba"'.
               Expanded(
                 child: Text(
@@ -45,15 +48,28 @@ class ConflictSheet extends ConsumerWidget {
                       ? l10n.horizonConflictTitle(conflicts.first.local.title)
                       : l10n.conflictTitle,
                   key: const Key('conflict-title'),
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: tokens.horizon
+                      ? TextStyle(
+                          fontFamily: AppTypography.fontTitle,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: tokens.textPrimary,
+                        )
+                      : Theme.of(context).textTheme.titleLarge,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 4),
-          Text(l10n.conflictBody, style: TextStyle(color: tokens.textSecondary)),
+          Text(
+            tokens.horizon ? l10n.horizonConflictBody : l10n.conflictBody,
+            style: TextStyle(color: tokens.textSecondary),
+          ),
           const SizedBox(height: 12),
-          for (final c in conflicts) _row(context, ref, c, members, categories),
+          for (final c in conflicts)
+            tokens.horizon
+                ? _horizonRow(context, ref, c, members, categories, showTitle: conflicts.length > 1)
+                : _row(context, ref, c, members, categories),
         ],
       ),
     );
@@ -93,6 +109,161 @@ class ConflictSheet extends ConsumerWidget {
     ConflictFieldKey.paidBy => l10n.conflictFieldPaidBy,
     ConflictFieldKey.split => l10n.conflictFieldSplit,
   };
+
+  /// Horizon ("Sync conflict" mockup): two cards side by side, yours and theirs, each with its edit time and the
+  /// values that differ (the first one large, theirs on a butter tint), then Keep mine / Keep theirs.
+  Widget _horizonRow(
+    BuildContext context,
+    WidgetRef ref,
+    ExpenseConflict c,
+    Map<String, Member> members,
+    Map<String, String> categories, {
+    required bool showTitle,
+  }) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final fields = conflictFields(
+      c.local,
+      c.server,
+      money: (v, cur) => formatMoney(context, v, cur),
+      nameOf: (id) => members[id]?.name ?? id,
+      categoryOf: (id) => categories[id] ?? id,
+      splitOf: (mode, people) => l10n.horizonPeople(people),
+    );
+    final diff = fields.where((f) => f.differs).toList();
+    final split = fields.firstWhere((f) => f.key == ConflictFieldKey.split);
+    String time(int ms) =>
+        MaterialLocalizations.of(context)
+            .formatTimeOfDay(TimeOfDay.fromDateTime(DateTime.fromMillisecondsSinceEpoch(ms)));
+    Widget card(String key, String label, int at, bool theirs) {
+      String v(ConflictField f) => theirs ? f.server : f.local;
+      return Expanded(
+        child: Container(
+          key: Key(key),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: t.bgSurface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theirs ? t.borderColor : t.primaryAccent, width: theirs ? 1 : 2),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${label.toUpperCase()} · ${time(at)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontMono,
+                  fontSize: 11,
+                  letterSpacing: 0.8,
+                  fontWeight: FontWeight.w600,
+                  color: t.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              if (diff.isNotEmpty)
+                Container(
+                  padding: theirs ? const EdgeInsets.symmetric(horizontal: 4) : EdgeInsets.zero,
+                  decoration: theirs
+                      ? BoxDecoration(color: t.tones.butter.bg, borderRadius: BorderRadius.circular(6))
+                      : null,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      v(diff.first),
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontMono,
+                        fontFeatures: AppTypography.tabularFigures,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: t.textPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+              for (final f in diff.skip(1))
+                Text(
+                  '${_label(l10n, f.key)}: ${v(f)}',
+                  style: const TextStyle(fontFamily: AppTypography.fontBody, fontSize: 13, fontWeight: FontWeight.w700),
+                ),
+              if (!split.differs)
+                Text(
+                  v(split),
+                  style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 13, color: t.textSecondary),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    const style = TextStyle(fontFamily: AppTypography.fontBody, fontSize: 16, fontWeight: FontWeight.w700);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (showTitle)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(c.local.title, style: const TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                card('conflict-yours-${c.expenseId}', l10n.horizonYours, c.local.updatedAt, false),
+                const SizedBox(width: 10),
+                card('conflict-server-${c.expenseId}', l10n.horizonTheirs, c.server.updatedAt, true),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 52,
+                  child: OutlinedButton(
+                    key: Key('conflict-mine-${c.expenseId}'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: t.textPrimary,
+                      textStyle: style,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    onPressed: () => ref.read(conflictStoreProvider.notifier).dismiss(tripId, c.expenseId),
+                    child: Text(l10n.conflictKeepMine),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: SizedBox(
+                  height: 52,
+                  child: FilledButton(
+                    key: Key('conflict-theirs-${c.expenseId}'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: t.primaryAccent,
+                      foregroundColor: t.ctaFg,
+                      textStyle: style,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    onPressed: () async {
+                      await ref.read(expenseRepositoryProvider).adoptServerCopy(c.server);
+                      ref.read(conflictStoreProvider.notifier).dismiss(tripId, c.expenseId);
+                    },
+                    child: Text(l10n.conflictKeepTheirs),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _row(
     BuildContext context,

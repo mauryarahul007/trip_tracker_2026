@@ -332,6 +332,8 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
           members: ref.read(tripMembersProvider(id)).value ?? const <Member>[],
           categories: ref.read(tripCategoriesProvider(id)),
           myMemberId: ref.read(myMemberIdProvider(id)),
+          tripStart: ref.read(tripProvider(id)).value?.startDate ?? '',
+          tripEnd: ref.read(tripProvider(id)).value?.endDate ?? '',
           onApply: _setFilters,
         ),
       ),

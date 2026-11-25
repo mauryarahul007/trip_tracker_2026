@@ -72,7 +72,7 @@ class SettingsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SettingsHeader(title),
+          if (title.isNotEmpty) SettingsHeader(title),
           Material(
             color: tokens.bgSurface,
             clipBehavior: Clip.antiAlias,

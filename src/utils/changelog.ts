@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.107.0',
+    date: '2026-11-25',
+    changes: [
+      'Trip settings put the trip rules in one card, with Freeze, Archive and Close trip as rows and Delete trip at the end; Close out shows a short checklist and one Freeze and close button (Flutter).',
+      'Invite shows the code beside its QR with Copy, a Can add expenses / View only switch, WhatsApp and Copy link; a sync conflict shows your version and theirs side by side (Flutter).',
+      'Expense details lead with who paid and how it was split, with Edit and Delete up front and the rest under More; Filter spend has icon chips, payer avatars and Any / This trip / Today / Custom dates (Flutter).',
+      'Hub tiles show live facts like "Food is 38%", Activity reads "Asha added Scuba", and Trip tools ends with a Trip Wrapped row (Flutter).',
+    ],
+  },
+  {
     version: '3.106.0',
     date: '2026-11-25',
     changes: [

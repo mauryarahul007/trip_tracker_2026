@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-25 | 3.107.0 | HORIZON-TRIP-PAGES | [Horizon trip pages and sheets (Flutter)](#horizon-trip-pages--horizon-trip-pages-and-sheets-flutter) |
 | 2026-11-25 | 3.106.0 | HORIZON-MONEY | [Horizon money flows: Split page, Quick add, Settle up, UPI (Flutter)](#horizon-money--horizon-money-flows-split-page-quick-add-settle-up-upi-flutter) |
 | 2026-11-25 | 3.105.0 | HORIZON-STATES | [Horizon All balances, Alerts, Me, states and sheets (Flutter)](#horizon-states--horizon-all-balances-alerts-me-states-and-sheets-flutter) |
 | 2026-11-25 | 3.104.0 | HORIZON-PAGES | [Horizon trip pages: People, Activity, Insights, Categories, Checklist, Recycle bin (Flutter)](#horizon-pages--horizon-trip-pages-people-activity-insights-categories-checklist-recycle-bin-flutter) |
@@ -4504,6 +4505,39 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## HORIZON-TRIP-PAGES — Horizon trip pages and sheets (Flutter)
+
+**Shipped:** v3.107.0. Flutter-only. Matches the Trip settings, Close out, Invite, Sync conflict, Expense detail, Filter, Hub, Activity and Trip tools mockups.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| All layouts below | `enableHorizonUi` | ON (Core) |
+
+### Prep
+A trip you own with three people, a few expenses (one in another currency, one with a receipt and a place), and a join code (the trip has synced).
+
+### Steps
+1. Hub › Trip settings: one card with Currency ("INR, with EUR for 1 expense"), Simplify debts, Geotag, Mute; a card with Categories and Recycle bin; Trip state rows; red Delete trip ("Removes it for all 3 people").
+2. Tap Freeze trip: the row reads "Frozen. Tap to unfreeze"; Undo on the toast reverts. Tap Archive twice: it toggles.
+3. Tap Close trip: Close out opens with "N payments still open" (Settle), "N expenses without a receipt" (Fix) and the sync line, the freeze note and Freeze and close. Tap it: the trip is closed and frozen. Close trip in settings now reads "Closed. Tap to reopen".
+4. Delete trip: a confirm dialog; Delete returns you to Trips home and the trip is gone.
+5. Hub › Invite: QR beside the code with Copy; Can add expenses shows WhatsApp and Copy link; View only shows the read-only link controls. WhatsApp opens WhatsApp (or the share sheet when it is not installed).
+6. Make a sync conflict (edit the same expense offline on two phones): Yours and Theirs cards side by side, theirs value highlighted; Keep mine / Keep theirs work.
+7. Tap an expense: "<payer> paid" row, "Split equally · N people · ₹X each" (tap to see each share), receipt and map tiles when present, Edit and Delete. More shows the details, Count in trip totals, See in Activity, Record refund and Flag.
+8. Spend › filter: "Filter spend", icon chips, payer avatars, Any / This trip / Today / Custom (Custom shows the date fields), "Only ones that involve me", More filters (type, paid by me, amount range), Clear / Show N.
+9. Hub: Plans shows "Day N · K activities" on a live trip, People "N members", Insights "<category> is X%".
+10. Activity: expense rows read "Asha added <title>" with Asha's avatar and "₹amount · time".
+11. Hub › Tools: "Trip tools", export/backup/import/offline rows, Passport and calendar rows, and a navy Trip Wrapped row.
+
+### Negative checks
+- `enableHorizonUi` OFF: Trip settings switches, the old Close out (Review and settle / Lock anyway), the old invite, conflict table, expense detail, filters page, hub subtitles, activity rows and the gradient tool tiles return unchanged.
+
+### Pass
+- Each screen matches its mockup and every action still works.
+
+---
 
 ## HORIZON-MONEY — Horizon money flows: Split page, Quick add, Settle up, UPI (Flutter)
 

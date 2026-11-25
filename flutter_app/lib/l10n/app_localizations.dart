@@ -5988,6 +5988,390 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You owe'**
   String get horizonFilterOwe;
+
+  /// No description provided for @horizonCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get horizonCurrency;
+
+  /// No description provided for @horizonCurrencyMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'{base}, with {others} for {count, plural, =1{1 expense} other{{count} expenses}}'**
+  String horizonCurrencyMixed(String base, String others, int count);
+
+  /// No description provided for @horizonFewestPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Fewest payments'**
+  String get horizonFewestPayments;
+
+  /// No description provided for @horizonGeotagSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a place with each'**
+  String get horizonGeotagSub;
+
+  /// No description provided for @horizonFreezeSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock edits after settling'**
+  String get horizonFreezeSub;
+
+  /// No description provided for @horizonFrozenSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Frozen. Tap to unfreeze'**
+  String get horizonFrozenSub;
+
+  /// No description provided for @horizonArchivedSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived. Tap to show it again'**
+  String get horizonArchivedSub;
+
+  /// No description provided for @horizonCloseTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Close trip'**
+  String get horizonCloseTrip;
+
+  /// No description provided for @horizonCloseSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark settled and finished'**
+  String get horizonCloseSub;
+
+  /// No description provided for @horizonClosedSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed. Tap to reopen'**
+  String get horizonClosedSub;
+
+  /// No description provided for @horizonDeleteForPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes it for all {count} people'**
+  String horizonDeleteForPeople(int count);
+
+  /// No description provided for @horizonDeleteForAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes it for everyone'**
+  String get horizonDeleteForAll;
+
+  /// No description provided for @horizonCloseoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Close out {name}?'**
+  String horizonCloseoutTitle(String name);
+
+  /// No description provided for @horizonCloseoutSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone is settled'**
+  String get horizonCloseoutSettled;
+
+  /// No description provided for @horizonCloseoutNothingToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing left to pay'**
+  String get horizonCloseoutNothingToPay;
+
+  /// No description provided for @horizonCloseoutOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 payment still open} other{{count} payments still open}}'**
+  String horizonCloseoutOpen(int count);
+
+  /// No description provided for @horizonCloseoutOutstanding.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} outstanding'**
+  String horizonCloseoutOutstanding(String amount);
+
+  /// No description provided for @horizonSettleAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle'**
+  String get horizonSettleAction;
+
+  /// No description provided for @horizonFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix'**
+  String get horizonFix;
+
+  /// No description provided for @horizonCloseoutReceiptsOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Every expense has a receipt'**
+  String get horizonCloseoutReceiptsOk;
+
+  /// No description provided for @horizonCloseoutNoReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 expense without a receipt} other{{count} expenses without a receipt}}'**
+  String horizonCloseoutNoReceipt(int count);
+
+  /// No description provided for @horizonCloseoutOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get horizonCloseoutOptional;
+
+  /// No description provided for @horizonCloseoutSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending sync'**
+  String get horizonCloseoutSynced;
+
+  /// No description provided for @horizonCloseoutOnServer.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 expense on the server} other{All {count} expenses on the server}}'**
+  String horizonCloseoutOnServer(int count);
+
+  /// No description provided for @horizonCloseoutPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 expense waiting to sync} other{{count} expenses waiting to sync}}'**
+  String horizonCloseoutPending(int count);
+
+  /// No description provided for @horizonCloseoutConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the internet to finish'**
+  String get horizonCloseoutConnect;
+
+  /// No description provided for @horizonCloseoutFreezeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Freezing locks edits. You can unfreeze later.'**
+  String get horizonCloseoutFreezeNote;
+
+  /// No description provided for @horizonFreezeAndClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Freeze and close'**
+  String get horizonFreezeAndClose;
+
+  /// No description provided for @horizonTripCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip code'**
+  String get horizonTripCode;
+
+  /// No description provided for @horizonCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get horizonCopy;
+
+  /// No description provided for @horizonCanAddExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Can add expenses'**
+  String get horizonCanAddExpenses;
+
+  /// No description provided for @horizonViewOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'View only'**
+  String get horizonViewOnly;
+
+  /// No description provided for @horizonConflictBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This was edited here and on another device while offline. Pick the one to keep.'**
+  String get horizonConflictBody;
+
+  /// No description provided for @horizonYours.
+  ///
+  /// In en, this message translates to:
+  /// **'Yours'**
+  String get horizonYours;
+
+  /// No description provided for @horizonTheirs.
+  ///
+  /// In en, this message translates to:
+  /// **'Theirs'**
+  String get horizonTheirs;
+
+  /// No description provided for @horizonSplitEqually.
+  ///
+  /// In en, this message translates to:
+  /// **'Split equally'**
+  String get horizonSplitEqually;
+
+  /// No description provided for @horizonSplitCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Split by amount'**
+  String get horizonSplitCustom;
+
+  /// No description provided for @horizonPeopleEach.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 person · {each} each} other{{count} people · {each} each}}'**
+  String horizonPeopleEach(int count, String each);
+
+  /// No description provided for @horizonMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get horizonMore;
+
+  /// No description provided for @horizonFilterSpend.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter spend'**
+  String get horizonFilterSpend;
+
+  /// No description provided for @horizonDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Dates'**
+  String get horizonDates;
+
+  /// No description provided for @horizonThisTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'This trip'**
+  String get horizonThisTrip;
+
+  /// No description provided for @horizonCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get horizonCustom;
+
+  /// No description provided for @horizonInvolvesMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Only ones that involve me'**
+  String get horizonInvolvesMe;
+
+  /// No description provided for @horizonMoreFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'More filters'**
+  String get horizonMoreFilters;
+
+  /// No description provided for @horizonClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get horizonClear;
+
+  /// No description provided for @horizonShowN.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {count}'**
+  String horizonShowN(int count);
+
+  /// No description provided for @horizonHubTopCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is {pct}%'**
+  String horizonHubTopCategory(String name, int pct);
+
+  /// No description provided for @horizonHubDayPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Day {day} · nothing planned} =1{Day {day} · 1 activity} other{Day {day} · {count} activities}}'**
+  String horizonHubDayPlans(int day, int count);
+
+  /// No description provided for @horizonHubPlansCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 plan} other{{count} plans}}'**
+  String horizonHubPlansCount(int count);
+
+  /// No description provided for @horizonHubPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 member} other{{count} members}}'**
+  String horizonHubPeople(int count);
+
+  /// No description provided for @horizonHubPeopleGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} members · {groups, plural, =1{1 group} other{{groups} groups}}'**
+  String horizonHubPeopleGroups(int count, int groups);
+
+  /// No description provided for @horizonHubToolsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Export, wrapped'**
+  String get horizonHubToolsSub;
+
+  /// No description provided for @horizonHubSettingsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency, rules, freeze'**
+  String get horizonHubSettingsSub;
+
+  /// No description provided for @horizonPeopleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get horizonPeopleTitle;
+
+  /// No description provided for @horizonActAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} added'**
+  String horizonActAdded(String title);
+
+  /// No description provided for @horizonActAddedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} added {title}'**
+  String horizonActAddedBy(String name, String title);
+
+  /// No description provided for @horizonActRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund on {title}'**
+  String horizonActRefunded(String title);
+
+  /// No description provided for @horizonActRefundedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} refunded {title}'**
+  String horizonActRefundedBy(String name, String title);
+
+  /// No description provided for @horizonActDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} was deleted'**
+  String horizonActDeleted(String title);
+
+  /// No description provided for @horizonActDeletedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} deleted {title}'**
+  String horizonActDeletedBy(String name, String title);
+
+  /// No description provided for @horizonActEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} was edited'**
+  String horizonActEdited(String title);
+
+  /// No description provided for @horizonActRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} was restored'**
+  String horizonActRestored(String title);
+
+  /// No description provided for @horizonTripTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip tools'**
+  String get horizonTripTools;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
