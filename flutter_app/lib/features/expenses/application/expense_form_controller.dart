@@ -404,12 +404,14 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
     // pays for is left out while their payer is in the split (new expenses only).
     // A remembered Shares split from before "pays for" was set gets the same treatment.
     if (flags.memberWeights && !base0.draftRestored) {
+      final picked = {
+        for (final e in base0.selected.entries)
+          if (e.value) e.key,
+      };
       final w = applyCoversToSplit(
         mode: base0.splitMode,
-        selected: {
-          for (final e in base0.selected.entries)
-            if (e.value) e.key,
-        },
+        // A covered partner left out (e.g. by a remembered split) still rides along with their payer.
+        selected: withCoveredPartners(picked, trip.memberCovers, members.map((m) => m.id).toSet()),
         config: {for (final e in base0.splitConfig.entries) e.key: double.tryParse(e.value) ?? 0},
         weights: trip.memberWeights,
         covers: trip.memberCovers,

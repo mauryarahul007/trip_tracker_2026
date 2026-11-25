@@ -217,6 +217,40 @@ void main() {
       expect(e.resolvedShares[s.cara] ?? 0, 0);
     });
 
+    test('a partner left out still rides along with their payer', () {
+      expect(withCoveredPartners({'r', 'o'}, const {'p': 'r'}, {'r', 'p', 'o'}), {'r', 'p', 'o'});
+      expect(withCoveredPartners({'p', 'o'}, const {'p': 'r'}, {'r', 'p', 'o'}), {'p', 'o'});
+      expect(withCoveredPartners({'r'}, const {'p': 'r'}, {'r'}), {'r'});
+    });
+
+    testApp('a remembered split without the partner still charges the payer twice', (tester) async {
+      await pumpApp(tester, user: asha, flagsOn: {'enableMemberWeights', 'enableRememberDefaultSplit'});
+      final s = await seedTrip(tester);
+      await openForm(tester, s);
+      await tester.ensureVisible(key('split-${s.cara}'));
+      await tester.tap(key('split-${s.cara}'));
+      await settle(tester, rounds: 4);
+      await tester.enterText(key('amount-field'), '100');
+      await settle(tester, rounds: 2);
+      await tester.enterText(key('title-field'), 'Snack');
+      await settle(tester, rounds: 2);
+      await tester.ensureVisible(key('save'));
+      await tester.tap(key('save'));
+      await settle(tester, rounds: 14);
+      final oldId = (await expensesOf(tester, s)).single.id;
+      await openTab(tester, s, 'expenses');
+      await real(
+        tester,
+        () => containerOf(tester).read(tripRepositoryProvider).setMemberCovers(s.tripId, {s.cara: s.me}),
+      );
+      await addFood(tester, s, '300');
+      final fresh = (await expensesOf(tester, s)).firstWhere((e) => e.id != oldId);
+      expect(fresh.splitMode, 'custom');
+      expect(fresh.resolvedShares[s.me], 200);
+      expect(fresh.resolvedShares[s.ben], 100);
+      expect(fresh.resolvedShares[s.cara] ?? 0, 0);
+    });
+
     testApp('flag off: no Counts as setting and new expenses stay equal', (tester) async {
       await pumpApp(tester, user: asha);
       final s = await seedTrip(tester);

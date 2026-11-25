@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.113.0',
+    date: '2026-11-25',
+    changes: [
+      'Pays for: a new expense now always covers your partner when you are on it, even if the last split left them out, so it opens as Shares with you counting as 2 (Flutter).',
+      'Organisers can delete a member from People. Someone on no expense is removed after a confirm; someone on any expense can only be archived, so balances never change (Flutter).',
+    ],
+  },
+  {
     version: '3.112.0',
     date: '2026-11-25',
     changes: [

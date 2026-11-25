@@ -74,6 +74,7 @@ class _MembersTabState extends ConsumerState<MembersTab> {
         ref.watch(isTripAdminProvider(tripId)) ||
         canManageTrip(trip, ref.watch(myMemberIdProvider(tripId)), ref.watch(isTripAdminProvider(tripId)));
     final tidy = ref.watch(flagProvider(('enableTidyMembers', tripId))).value ?? true;
+    ref.watch(flagProvider(('enableMemberDelete', tripId))); // loaded for the member sheet's Delete
     final active = [
       for (final m in members)
         if (!m.archived) m,
@@ -811,6 +812,17 @@ class _MembersTabState extends ConsumerState<MembersTab> {
                 ref.read(memberRepositoryProvider).setArchived(m.id, !m.archived);
               },
             ),
+            if (_canDelete(ref, m))
+              ListTile(
+                key: Key('member-delete-${m.id}'),
+                contentPadding: EdgeInsets.zero,
+                leading: SettingsIcon(Icons.delete_outline_rounded, color: sheetCtx.tokens.colorDanger),
+                title: Text('Delete', style: TextStyle(color: sheetCtx.tokens.colorDanger)),
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  unawaited(_delete(context, ref, m));
+                },
+              ),
           ],
         ),
       ),
@@ -833,6 +845,73 @@ class _MembersTabState extends ConsumerState<MembersTab> {
     await ref
         .read(memberRepositoryProvider)
         .addMember(tripId, draft.name, email: draft.email, linkedUserId: draft.linkedUserId);
+  }
+
+  /// Flag `enableMemberDelete`: never yourself or the trip owner.
+  bool _canDelete(WidgetRef ref, Member m) {
+    if (!(ref.read(flagProvider(('enableMemberDelete', tripId))).value ?? false)) return false;
+    if (m.id == ref.read(myMemberIdProvider(tripId))) return false;
+    final owner = ref.read(tripProvider(tripId)).value?.ownerId;
+    return owner == null || m.linkedUserId != owner;
+  }
+
+  /// Deletes a member who is on no expense (after a confirm); anyone on an expense can only be archived, so
+  /// balances never move. Also clears any "pays for" / extra-people setting that names them.
+  Future<void> _delete(BuildContext context, WidgetRef ref, Member m) async {
+    final expenses = ref.read(tripExpensesProvider(tripId)).value ?? const [];
+    if (memberOnAnyExpense(m.id, expenses)) {
+      final archive = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          key: const Key('member-delete-blocked'),
+          title: Text("Can't delete ${m.name}"),
+          content: Text(
+            '${m.name} is on expenses in this trip. Deleting them would change everyone\'s balances. '
+            'Archive hides them from new expenses and keeps the history.',
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            if (!m.archived)
+              FilledButton(
+                key: const Key('member-delete-archive'),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Archive'),
+              ),
+          ],
+        ),
+      );
+      if (archive == true) await ref.read(memberRepositoryProvider).setArchived(m.id, true);
+      return;
+    }
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Delete ${m.name}?'),
+        content: Text(
+          '${m.name} is removed from this trip for good. They are on no expenses, so balances stay the same.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            key: const Key('member-delete-confirm'),
+            style: FilledButton.styleFrom(backgroundColor: context.tokens.colorDanger),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    final trip = ref.read(tripProvider(tripId)).value;
+    final trips = ref.read(tripRepositoryProvider);
+    if (trip != null) {
+      final covers = {...trip.memberCovers}..removeWhere((k, v) => k == m.id || v == m.id);
+      if (covers.length != trip.memberCovers.length) await trips.setMemberCovers(tripId, covers);
+      if (trip.memberWeights.containsKey(m.id)) {
+        await trips.setMemberWeights(tripId, {...trip.memberWeights}..remove(m.id));
+      }
+    }
+    await ref.read(memberRepositoryProvider).deleteMember(m.id);
   }
 
   Future<void> _rename(BuildContext context, WidgetRef ref, Member m) async {

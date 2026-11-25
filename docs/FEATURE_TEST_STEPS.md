@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-25 | 3.113.0 | MEMBER-DELETE | [Pays-for default and delete a member (Flutter)](#member-delete--pays-for-default-and-delete-a-member-flutter) |
 | 2026-11-25 | 3.112.0 | MEMBER-COVERS-APPLY | [Pays for: quick add and Apply chip (Flutter)](#member-covers-apply--pays-for-quick-add-and-apply-chip-flutter) |
 | 2026-11-25 | 3.111.0 | MEMBER-COVERS | [Couples count as 2: pays for (Flutter)](#member-covers--couples-count-as-2-pays-for-flutter) |
 | 2026-11-25 | 3.110.0 | MEMBER-WEIGHTS | [Couples count as 2 (Flutter)](#member-weights--couples-count-as-2-flutter) |
@@ -4510,6 +4511,36 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## MEMBER-DELETE — Pays-for default and delete a member (Flutter)
+
+**Shipped:** v3.113.0. Flutter-only. No migration.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Partner always covered on new expenses with the payer in | `enableMemberWeights` | ON (Trip) |
+| Delete in the member sheet | `enableMemberDelete` | ON (Trip) |
+
+### Prep
+A trip you organise with you, your partner (e.g. Upama, set "Paid for by You") and Suyog. Add one more person, Test, who is on no expense.
+
+### Steps
+1. Add an expense with Upama unticked on Equal and save (this becomes the remembered split).
+2. + › Add expense again: the split chip reads "Shares · 2" (You 2, Suyog 1, Upama unticked). Save ₹300: ₹200 / ₹100 / ₹0.
+3. People › tap Test › Delete › Delete: Test disappears. A second phone shows the same after refresh.
+4. People › tap Suyog › Delete: "Can't delete Suyog" explains they are on expenses; tap Archive: Suyog moves to Archived, balances unchanged.
+5. Tap yourself: no Delete. The trip owner (if someone else) has no Delete either.
+6. Set someone to pay for Test, then delete Test: the payer's row no longer says "Counts as 2".
+
+### Negative checks
+- `enableMemberDelete` OFF: no Delete in the member sheet; Archive / Restore unchanged.
+- `enableMemberWeights` OFF: new expenses start as a plain equal split.
+
+### Pass
+- Deleting never changes a balance; the partner is never charged on a new expense their payer is on.
+
+---
 
 ## MEMBER-COVERS-APPLY — Pays for: quick add and Apply chip (Flutter)
 

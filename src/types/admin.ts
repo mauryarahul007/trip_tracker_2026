@@ -103,6 +103,7 @@ export type FeatureFlagKey =
   | 'enableRemindEveryone'
   | 'enableReminderStatus'
   | 'enableMemberWeights'
+  | 'enableMemberDelete'
   | 'enableNavPolish'
   | 'enableNotchNav'
   | 'enableDynamicColor'

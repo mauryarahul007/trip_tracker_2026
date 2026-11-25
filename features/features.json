@@ -3547,5 +3547,21 @@
     "shippedAt": "2026-11-25T00:00:00.000Z",
     "shippedBy": "agent",
     "shippedNote": "Commit 3374f05 (v3.112.0)."
+  },
+  {
+    "id": "FEAT-224",
+    "title": "Pays-for default and delete a member (Flutter)",
+    "description": "enableMemberWeights: a new expense always covers the partner when the payer is in it. New flag enableMemberDelete (Trip, ON): organisers delete members who are on no expense; others get Archive. MEMBER-DELETE.",
+    "category": "core",
+    "status": "shipped",
+    "requestedBy": "human",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-25T00:00:00.000Z",
+    "updatedAt": "2026-11-25T00:00:00.000Z",
+    "shippedAt": "2026-11-25T00:00:00.000Z",
+    "shippedBy": "agent",
+    "shippedNote": "Commit PENDING (v3.113.0)."
   }
 ]

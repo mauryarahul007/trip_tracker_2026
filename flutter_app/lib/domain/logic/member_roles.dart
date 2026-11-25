@@ -55,3 +55,14 @@ bool canManageTrip(Trip? trip, String? memberId, [bool isTripAdmin = false]) {
   if (memberId == null) return isTripAdmin;
   return getMemberRole(trip, memberId) == 'organizer';
 }
+
+/// Delete a member (flag `enableMemberDelete`): true when any expense names them as payer, in the split, in a
+/// multi-payer share, in a split config, or on an itemized line. Such a member can only be archived.
+bool memberOnAnyExpense(String memberId, Iterable<Expense> expenses) => expenses.any(
+  (e) =>
+      e.paidBy == memberId ||
+      e.splitMemberIds.contains(memberId) ||
+      (e.paidByShares?.containsKey(memberId) ?? false) ||
+      (e.splitConfig?.containsKey(memberId) ?? false) ||
+      (e.itemizedConfig?.items.any((i) => i.assignedMemberIds.contains(memberId)) ?? false),
+);
