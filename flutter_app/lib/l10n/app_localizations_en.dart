@@ -2489,6 +2489,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickAddConfirm => 'Add expense';
 
   @override
+  String get horizonQuickLabel => 'Type it like a message';
+
+  @override
+  String get horizonQuickHint => 'lunch 2400 asha paid';
+
+  @override
+  String get horizonChangeSplit => 'Change split';
+
+  @override
+  String get horizonScanBill => 'Scan bill';
+
+  @override
   String horizonAddTo(String trip) {
     return 'Add to $trip';
   }
@@ -3233,6 +3245,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get horizonSettleUp => 'Settle up';
 
   @override
+  String horizonSettleClears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payments clear the whole trip.',
+      one: '1 payment clears the whole trip.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String horizonPaysYou(String name) {
+    return '$name pays you';
+  }
+
+  @override
+  String horizonYouPayName(String name) {
+    return 'You pay $name';
+  }
+
+  @override
+  String horizonPaysName(String from, String to) {
+    return '$from pays $to';
+  }
+
+  @override
+  String get horizonRemind => 'Remind';
+
+  @override
+  String get horizonMarkPaid => 'Mark paid';
+
+  @override
+  String get horizonPayNow => 'Pay';
+
+  @override
+  String get horizonUpiReady => 'UPI ready';
+
+  @override
   String get horizonYou => 'You';
 
   @override
@@ -3314,6 +3364,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String horizonEqualCount(int count) {
     return 'Equal · $count';
   }
+
+  @override
+  String horizonSplitTitle(String amount) {
+    return 'Split $amount';
+  }
+
+  @override
+  String horizonSplitChip(String mode, int count) {
+    return '$mode · $count';
+  }
+
+  @override
+  String get horizonSplitReset => 'Reset';
+
+  @override
+  String get horizonSplitDone => 'Done';
 
   @override
   String horizonLeftToAssign(String amount) {

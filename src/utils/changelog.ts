@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.106.0',
+    date: '2026-11-25',
+    changes: [
+      'Add expense opens a Split page from the split chip: Equal, Shares, Exact or %, one row per person, and a "left to assign" bar until the amounts add up (Flutter).',
+      'Quick add reads like a message ("lunch 2400"), previews the expense, and can jump to Change split or Scan bill (Flutter).',
+      'Settle up lists every payment that clears the trip, with Remind and Mark paid; Pay by UPI leads with PhonePe, GPay and Paytm when a UPI id is saved (Flutter).',
+    ],
+  },
+  {
     version: '3.105.0',
     date: '2026-11-25',
     changes: [

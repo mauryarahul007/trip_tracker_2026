@@ -4363,6 +4363,30 @@ abstract class AppLocalizations {
   /// **'Add expense'**
   String get quickAddConfirm;
 
+  /// No description provided for @horizonQuickLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type it like a message'**
+  String get horizonQuickLabel;
+
+  /// No description provided for @horizonQuickHint.
+  ///
+  /// In en, this message translates to:
+  /// **'lunch 2400 asha paid'**
+  String get horizonQuickHint;
+
+  /// No description provided for @horizonChangeSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Change split'**
+  String get horizonChangeSplit;
+
+  /// No description provided for @horizonScanBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan bill'**
+  String get horizonScanBill;
+
   /// No description provided for @horizonAddTo.
   ///
   /// In en, this message translates to:
@@ -5635,6 +5659,54 @@ abstract class AppLocalizations {
   /// **'Settle up'**
   String get horizonSettleUp;
 
+  /// No description provided for @horizonSettleClears.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 payment clears the whole trip.} other{{count} payments clear the whole trip.}}'**
+  String horizonSettleClears(int count);
+
+  /// No description provided for @horizonPaysYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} pays you'**
+  String horizonPaysYou(String name);
+
+  /// No description provided for @horizonYouPayName.
+  ///
+  /// In en, this message translates to:
+  /// **'You pay {name}'**
+  String horizonYouPayName(String name);
+
+  /// No description provided for @horizonPaysName.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} pays {to}'**
+  String horizonPaysName(String from, String to);
+
+  /// No description provided for @horizonRemind.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind'**
+  String get horizonRemind;
+
+  /// No description provided for @horizonMarkPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark paid'**
+  String get horizonMarkPaid;
+
+  /// No description provided for @horizonPayNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay'**
+  String get horizonPayNow;
+
+  /// No description provided for @horizonUpiReady.
+  ///
+  /// In en, this message translates to:
+  /// **'UPI ready'**
+  String get horizonUpiReady;
+
   /// No description provided for @horizonYou.
   ///
   /// In en, this message translates to:
@@ -5748,6 +5820,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Equal · {count}'**
   String horizonEqualCount(int count);
+
+  /// No description provided for @horizonSplitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Split {amount}'**
+  String horizonSplitTitle(String amount);
+
+  /// No description provided for @horizonSplitChip.
+  ///
+  /// In en, this message translates to:
+  /// **'{mode} · {count}'**
+  String horizonSplitChip(String mode, int count);
+
+  /// No description provided for @horizonSplitReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get horizonSplitReset;
+
+  /// No description provided for @horizonSplitDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get horizonSplitDone;
 
   /// No description provided for @horizonLeftToAssign.
   ///

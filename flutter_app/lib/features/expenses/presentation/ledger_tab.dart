@@ -49,6 +49,7 @@ import '../../trip_details/application/trip_nav.dart';
 import '../application/expenses_providers.dart';
 import 'conflict_sheet.dart';
 import 'widgets/horizon_ledger.dart';
+import 'widgets/horizon_settle_list.dart';
 import 'widgets/horizon_position_hero.dart';
 import 'widgets/balance_bars.dart';
 import 'widgets/compass_balance_widgets.dart';
@@ -1044,31 +1045,37 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
       final over = budget > 0 && totals.totalSpent > budget;
       final ahead = budget > 0 && hs.phase == TripPhase.active && totals.totalSpent / budget > dayShare + 0.05;
       String who(String node, String label) => isMe(node) ? l10n.horizonYou : label;
+      final memberMap = {for (final m in ref.watch(tripMembersProvider(id)).value ?? const <Member>[]) m.id: m};
+      void remind(Transfer t) => unawaited(
+        ref
+            .read(shareServiceProvider)
+            .share(
+              reminderMessage(
+                from: t.fromLabel,
+                to: t.toLabel,
+                amount: formatMoney(context, t.amount, cur),
+                trip: trip.name,
+              ),
+              subject: 'Settle up: ${trip.name}',
+            ),
+      );
+      // Horizon Settle up: every payment as a card, Remind on money owed to me, Mark paid opens the record sheet.
       Future<void> settleSheet() => AppSheet.show<void>(
         context: context,
         title: l10n.horizonSettleUp,
-        builder: (sheetCtx) => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final (i, t) in transfers.indexed)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: CompassTransferRow(
-                  key: Key('plan-pay-$i'),
-                  from: who(t.from, t.fromLabel),
-                  to: who(t.to, t.toLabel),
-                  amount: formatMoney(context, t.amount, cur),
-                  actionLabel: l10n.ledSettle,
-                  primary: isMe(t.from),
-                  onAction: () {
-                    Navigator.of(sheetCtx).pop();
-                    unawaited(_settle(context, t));
-                  },
-                ),
-              ),
-          ],
+        builder: (sheetCtx) => HorizonSettleList(
+          transfers: transfers,
+          members: memberMap,
+          me: mine,
+          currency: cur,
+          onRemind: remind,
+          onMarkPaid: (t) {
+            Navigator.of(sheetCtx).pop();
+            unawaited(_settle(context, t));
+          },
         ),
       );
+      final ordered = horizonSettleOrder(transfers, mine);
       horizonBelowHero = [
         if (budgetOn)
           HorizonBudgetPace(
@@ -1102,11 +1109,14 @@ class _LedgerTabState extends ConsumerState<LedgerTab> {
             subtitle: l10n.ledAllSettledHint,
           ),
           rows: [
-            for (final t in transfers)
+            for (final t in ordered)
               HorizonPlanRow(
                 fromName: t.fromLabel,
                 title: '${who(t.from, t.fromLabel)} → ${who(t.to, t.toLabel)}',
-                subtitle: isMe(t.to)
+                // "UPI ready" when the person being paid has a UPI id, so the payment is one tap away.
+                subtitle: (isMe(t.to) || isMe(t.from)) && horizonUpiReady(t, memberMap)
+                    ? l10n.horizonUpiReady
+                    : isMe(t.to)
                     ? l10n.horizonPlanOwesYou
                     : isMe(t.from)
                     ? l10n.horizonPlanYouPay

@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-25 | 3.106.0 | HORIZON-MONEY | [Horizon money flows: Split page, Quick add, Settle up, UPI (Flutter)](#horizon-money--horizon-money-flows-split-page-quick-add-settle-up-upi-flutter) |
 | 2026-11-25 | 3.105.0 | HORIZON-STATES | [Horizon All balances, Alerts, Me, states and sheets (Flutter)](#horizon-states--horizon-all-balances-alerts-me-states-and-sheets-flutter) |
 | 2026-11-25 | 3.104.0 | HORIZON-PAGES | [Horizon trip pages: People, Activity, Insights, Categories, Checklist, Recycle bin (Flutter)](#horizon-pages--horizon-trip-pages-people-activity-insights-categories-checklist-recycle-bin-flutter) |
 | 2026-11-25 | 3.103.0 | HORIZON-ADD | [Horizon Add expense, itinerary timeline and Quick add picker (Flutter)](#horizon-add--horizon-add-expense-itinerary-timeline-and-quick-add-picker-flutter) |
@@ -4503,6 +4504,39 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## HORIZON-MONEY — Horizon money flows: Split page, Quick add, Settle up, UPI (Flutter)
+
+**Shipped:** v3.106.0. Flutter-only. Matches the Add expense, Split, Quick add, Settle up and UPI mockups.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| All layouts below | `enableHorizonUi` | ON (Core) |
+| Shares, Exact and % on the Split page | `enableAdvancedSplits` | per pack |
+
+### Prep
+A trip with three people. One person (not you) has a UPI id saved. Add one expense you paid so someone owes you, and one someone else paid so you owe.
+
+### Steps
+1. Add expense: type 2400. The keypad sits right under the chips. Tap the split chip: a page titled "Split ₹2,400" opens with ₹800.00 per person.
+2. Untick one person: the other two show ₹1,200.00. Tap Done: the chip reads "Equal · 2".
+3. With advanced splits on, switch to Exact, enter 1000 and 1000: "₹400.00 left to assign" shows and Done is greyed. Enter 400 for the third: the bar goes, Done works, the chip reads "Exact · 3". Save: the expense keeps the exact amounts.
+4. Reset on the Split page ticks everyone again.
+5. Quick add: the box is labelled "Type it like a message". Type "lunch 2400": a preview card shows ₹2,400.00 and "You paid · Equal · 3 · Today", with the trip chip.
+6. Tap Change split: Add expense opens with the amount and title filled and the Split page on top. Tap Scan bill instead: the camera opens.
+7. Balances › Settle up: "N payments clear the whole trip." Payments to you come first with Remind and Mark paid; yours show Pay; others are dimmed and still tappable.
+8. Remind opens the share sheet with the reminder text. Mark paid opens the record sheet; after recording, the list closes.
+9. Balances plan rows show "UPI ready" when the payee has a UPI id.
+10. Pay someone with a UPI id: PhonePe, GPay, Paytm and Other lead, then a come-back note and Open UPI app. "More ways to pay" unfolds the old rails, QR and links. Pay someone without one: the full old layout shows.
+
+### Negative checks
+- `enableHorizonUi` OFF: the split chip opens the full form, Quick add keeps the old box with no preview or chips, Settle up with one payment opens the record sheet directly, and UPI shows the old full layout.
+
+### Pass
+- Each screen matches its mockup, and saved splits and settlements match what the full form records.
+
+---
 
 ## HORIZON-STATES — Horizon All balances, Alerts, Me, states and sheets (Flutter)
 

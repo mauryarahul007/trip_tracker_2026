@@ -6028,3 +6028,15 @@ This document logs all meaningful technical decisions, library choices, design p
   - Reuses `enableHorizonUi`.
 * **Trade-offs Accepted:**
   - Left out: multi-transfer Settle sheet, Close out checklist, side-by-side conflict cards, Invite QR layout, Import preview counts, Live location sheet. The current flows differ and need behaviour changes, not a restyle.
+
+## 306. Horizon money flows: Split page, Quick add, Settle up, UPI (v3.106.0)
+* **Context:** PRs 1 and 2 of the Horizon gap fix plan, shipped together. The audit found Add expense, Split, Quick add, Settle up and UPI did not match their mockups.
+* **Decision:**
+  - Split: new `HorizonSplitView` page pushed from the split chip. It reads and writes the expense form's own split state, so saving matches the full form. Chip label names the mode ("Exact · 3").
+  - Amount-first keypad sits inside the scroll column under the chips.
+  - Quick add: "Type it like a message" box, live preview card, Change split and Scan bill chips that open `/expenses/new?quick=…&then=split|scan`.
+  - Settle up: `HorizonSettleList` for any number of payments (payments to me first), Remind shares the reminder text, Mark paid opens the existing record sheet. Balances plan uses the same order and shows "UPI ready".
+  - UPI: with a saved UPI id, app icons, a come-back note and Open UPI app lead; the rails, QR and links fold under "More ways to pay".
+  - Reuses `enableHorizonUi`.
+* **Trade-offs Accepted:**
+  - Left out: "Couples count as 2", home-currency conversion and "Last reminded" (no stored reminder time). These need behaviour changes.
