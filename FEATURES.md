@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **214** |
+| **Total Tracked** | **215** |
 | **💡 Requested** | **3** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **211** |
+| **✅ Shipped** | **212** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -71,6 +71,7 @@ Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blu
 
 | ID | Title | Category | Requested By | Shipped By | Note |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| **FEAT-221** | Couples count as 2 (Flutter) | `fintech` | `human` | `agent` | Flag enableMemberWeights (Trip). Migration 0122. Commit PENDING (v3.110.0). |
 | **FEAT-220** | Reminders and join preview (Flutter) | `ui-ux` | `human` | `agent` | Flags enableJoinCodePreview (Core), enableRemindEveryone, enableReminderStatus (Trip). Commit 019160e (v3.109.0). |
 | **FEAT-219** | Horizon home and account (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit 9f689aa (v3.108.0). |
 | **FEAT-218** | Horizon trip pages and sheets (Flutter) | `ui-ux` | `human` | `agent` | Flag enableHorizonUi (Core). Commit d0ea575 (v3.107.0). |

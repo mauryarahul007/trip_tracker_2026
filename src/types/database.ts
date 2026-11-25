@@ -47,6 +47,7 @@ export interface Database {
           fx_config?: unknown;
           member_roles?: Record<string, string> | null;
           split_exclusion_defaults?: Record<string, string[]> | null;
+          member_weights?: Record<string, number> | null;
           category_order?: string[] | null;
           share_token: string | null;
           share_enabled: boolean;
@@ -79,6 +80,7 @@ export interface Database {
           fx_config?: unknown;
           member_roles?: Record<string, string> | null;
           split_exclusion_defaults?: Record<string, string[]> | null;
+          member_weights?: Record<string, number> | null;
           category_order?: string[] | null;
         };
         Update: Partial<{
@@ -97,6 +99,7 @@ export interface Database {
           fx_config?: unknown;
           member_roles?: Record<string, string> | null;
           split_exclusion_defaults?: Record<string, string[]> | null;
+          member_weights?: Record<string, number> | null;
           category_order?: string[] | null;
           share_token: string | null;
           share_enabled: boolean;

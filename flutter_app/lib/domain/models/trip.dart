@@ -49,6 +49,10 @@ class Trip {
   final List<String> adminMemberIds;
   final Map<String, String> memberRoles; // memberId -> 'organizer' | 'contributor' | 'viewer'
   final Map<String, List<String>> splitExclusionDefaults;
+
+  /// Flag `enableMemberWeights`: memberId -> how many people that member stands for (a couple = 2).
+  /// Missing means 1. Only the default split of new expenses reads it.
+  final Map<String, double> memberWeights;
   final List<String>? categoryOrder;
   final bool simplifyDebts;
   final bool archived;
@@ -83,6 +87,7 @@ class Trip {
     this.adminMemberIds = const [],
     this.memberRoles = const {},
     this.splitExclusionDefaults = const {},
+    this.memberWeights = const {},
     this.categoryOrder,
     this.simplifyDebts = true,
     this.archived = false,
@@ -118,6 +123,7 @@ class Trip {
     List<String>? adminMemberIds,
     Map<String, String>? memberRoles,
     Map<String, List<String>>? splitExclusionDefaults,
+    Map<String, double>? memberWeights,
     List<String>? categoryOrder,
     bool? simplifyDebts,
     bool? archived,
@@ -152,6 +158,7 @@ class Trip {
       adminMemberIds: adminMemberIds ?? this.adminMemberIds,
       memberRoles: memberRoles ?? this.memberRoles,
       splitExclusionDefaults: splitExclusionDefaults ?? this.splitExclusionDefaults,
+      memberWeights: memberWeights ?? this.memberWeights,
       categoryOrder: categoryOrder ?? this.categoryOrder,
       simplifyDebts: simplifyDebts ?? this.simplifyDebts,
       archived: archived ?? this.archived,
@@ -189,6 +196,7 @@ class Trip {
       'adminMemberIds': adminMemberIds,
       'memberRoles': memberRoles,
       'splitExclusionDefaults': splitExclusionDefaults,
+      if (memberWeights.isNotEmpty) 'memberWeights': memberWeights,
       if (categoryOrder != null) 'categoryOrder': categoryOrder,
       'simplifyDebts': simplifyDebts,
       'archived': archived,
@@ -229,6 +237,9 @@ class Trip {
           (json['splitExclusionDefaults'] as Map<String, dynamic>?)?.map(
             (k, v) => MapEntry(k, (v as List<dynamic>).map((e) => e.toString()).toList()),
           ) ??
+          const {},
+      memberWeights:
+          (json['memberWeights'] as Map<String, dynamic>?)?.map((k, v) => MapEntry(k, (v as num).toDouble())) ??
           const {},
       categoryOrder: (json['categoryOrder'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
       simplifyDebts: json['simplifyDebts'] as bool? ?? true,

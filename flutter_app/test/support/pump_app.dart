@@ -110,6 +110,7 @@ const _compassFlags = [
   'enableMealNudges', // time-of-day card on Spend; its own tests opt in with a fixed clock
   'enableJoinCodePreview', // trip card in the code sheet; its own tests opt in
   'enableRemindEveryone', // Remind everyone on the settle list; its own tests opt in
+  'enableMemberWeights', // couples count as 2; its own tests opt in
   'enableReminderStatus', // "Reminded 2d ago" on settle rows; its own tests opt in
 ];
 

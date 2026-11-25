@@ -8,6 +8,10 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.110.0', '2026-11-25', [
+    'Couples count as 2: on People, an organiser can set how many people a member stands for (1 to 4), and the row reads "Counts as 2" (Flutter).',
+    'New expenses in that trip start as a Shares split using those counts, so ₹400 between a couple and two others is ₹200 / ₹100 / ₹100; saved expenses are unchanged (Flutter).',
+  ]),
   ChangelogEntry('3.109.0', '2026-11-25', [
     'Join with code shows the trip name, dates and people as soon as the 6-character code is in, or says when no trip uses it (Flutter).',
     'All balances has a Remind everyone button that shares one message listing who owes you what (Flutter).',
@@ -56,10 +60,5 @@ const List<ChangelogEntry> changelogEntries = [
   ChangelogEntry('3.99.1', '2026-11-24', [
     'Fixed: dragging the trip sheet slowly by its handle could stop halfway instead of opening fully (Flutter).',
     'Fixed: small layout and accessibility issues: the empty-day itinerary row and Notes tab labels no longer overflow, the Spend chips and Set Budget button have full-size touch targets, and the bottom bar keeps readable labels while scrolling (Flutter).',
-  ]),
-  ChangelogEntry('3.99.0', '2026-11-24', [
-    'Horizon All balances now lists who owes you and whom you owe, person by person, across all your trips (Flutter).',
-    'Horizon trip header shows small avatars of the trip crew (Flutter).',
-    'Horizon create trip: pick a cover colour for the new trip, kept on this phone (Flutter).',
   ]),
 ];

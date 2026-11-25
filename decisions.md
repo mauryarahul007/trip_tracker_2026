@@ -6083,3 +6083,15 @@ This document logs all meaningful technical decisions, library choices, design p
   - Reminder status is keyed by name, so two different people with the same name share a status.
   - A reminder counts as sent when the share sheet opens, even if the traveler cancels it.
   - Not built (user chose items 1-3): bug-report screenshots, per-type notification switches, couples count as 2.
+
+## 310. Couples count as 2 (v3.110.0)
+* **Context:** Last open item from the Horizon brief ("Weighted shares, a couple counts as 2"). The user chose to build it here and to ship it ON.
+* **Decision:**
+  - New trip field `memberWeights` (memberId -> count, missing = 1), column `trips.member_weights jsonb default '{}'` (migration 0122), written with the existing `updateTripState` column patch (`setMemberWeights`), mapped in `row_mappers`, kept by `applyRemoteTrip`. Web types and `tripApi` read it; web does not write it.
+  - People › member sheet: "Counts as" 1-4 chips (organisers, who already get the sheet); rows show "Counts as N".
+  - Expense form: when `enableMemberWeights` is on and a new (non-draft) expense starts as equal, it becomes `splitMode: 'custom'` with the weights as `splitConfig`. Reuses `resolveShares` custom weights, so balance maths and stored expenses are unchanged.
+  - Flag `enableMemberWeights`, Trip pack, default ON (user's choice); in the pump_app default-off list.
+* **Trade-offs Accepted:**
+  - The migration must run before anyone sets a weight; until then the trip patch fails on the server and the weight stays on that phone.
+  - Expenses added on the web still start equal.
+  - A remembered default split other than equal wins over the weights.

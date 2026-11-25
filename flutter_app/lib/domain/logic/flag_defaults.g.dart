@@ -111,6 +111,7 @@ const Map<String, bool> defaultFeatureFlags = {
   'enableMealNudges': true,
   'enableMemberLastSeen': false,
   'enableMemberMoneyRow': true,
+  'enableMemberWeights': true,
   'enableMotionPolish': true,
   'enableMultiPayerExpenses': false,
   'enableMultiTripAnalytics': false,
@@ -779,6 +780,11 @@ const Map<String, ({String label, String pack, String description})> flagMeta = 
     label: 'Balances on the Members List',
     pack: 'trip',
     description: 'ON: each person on the Members tab shows their balance (owes / is owed / settled) and whether they have joined or are still invited, with a Remind button next to anyone who owes money that shares a pre-written reminder via the phone share sheet. OFF: the Members tab lists names and groups only; reminders stay on the Summary tab. Does not send anything automatically or change any balance.',
+  ),
+  'enableMemberWeights': (
+    label: 'Couples Count as 2 (Flutter)',
+    pack: 'trip',
+    description: 'Flutter app: ON: an organiser can tap a member on People and set "Counts as" 1 to 4 (a couple = 2); the member row then says "Counts as 2", and every NEW expense in that trip starts as a Shares split with those weights (e.g. 400 between a couple and two singles = 200 / 100 / 100). OFF: the setting is hidden and new expenses start as a plain equal split again, even if weights were saved. It never changes expenses already saved or the balance maths, and expenses added on the web still start as an equal split.',
   ),
   'enableMotionPolish': (
     label: 'Smooth Motion & Touch Feedback',
@@ -1532,6 +1538,7 @@ const Map<String, List<String>> consumerPacks = {
     'enableSettleNudge',
     'enableRemindEveryone',
     'enableReminderStatus',
+    'enableMemberWeights',
     'enableCloseoutPrompt',
     'enableGlobalSearch',
     'enableSmartExpenseDefaults',

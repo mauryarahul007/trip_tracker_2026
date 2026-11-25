@@ -36,6 +36,7 @@ Trip tripFromRow(Map<String, dynamic> r, {List<String> memberIds = const [], Lis
     'fxConfig': _map(r['fx_config']),
     'memberRoles': _map(r['member_roles']),
     'splitExclusionDefaults': _map(r['split_exclusion_defaults']),
+    'memberWeights': _map(r['member_weights']),
     'categoryOrder': r['category_order'] is List ? r['category_order'] : null,
     'simplifyDebts': r['simplify_debts'] == null ? true : r['simplify_debts'] == true,
     'shareToken': r['share_token'],

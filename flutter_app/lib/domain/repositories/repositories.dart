@@ -54,6 +54,7 @@ abstract class TripRepository {
   /// Per-trip FX overrides + markup. Any participant may write (collab RPC).
   Future<void> setFxConfig(String id, TripFxConfig config);
   Future<void> setSplitExclusionDefaults(String id, Map<String, List<String>> defaults);
+  Future<void> setMemberWeights(String id, Map<String, double> weights);
 
   /// Organizer / contributor / viewer. Owner/admin write (trips.member_roles).
   Future<void> setMemberRole(String id, String memberId, String role);
