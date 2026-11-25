@@ -108,6 +108,9 @@ const _compassFlags = [
   'enableCompactSummary', // folds Trip numbers and settle extras; the older Summary tests expect them open
   'enableItineraryPlanner', // opens Notes on the Itinerary pane; the older Notes tests start on the checklist
   'enableMealNudges', // time-of-day card on Spend; its own tests opt in with a fixed clock
+  'enableJoinCodePreview', // trip card in the code sheet; its own tests opt in
+  'enableRemindEveryone', // Remind everyone on the settle list; its own tests opt in
+  'enableReminderStatus', // "Reminded 2d ago" on settle rows; its own tests opt in
 ];
 
 /// Boots the real app with every platform/backend seam faked.

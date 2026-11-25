@@ -1,7 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../data/providers.dart';
+import '../../../../domain/logic/trip_utilities.dart' show formatDateRange;
+import '../../../../domain/models/join_share.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_sheet.dart';
@@ -25,17 +31,61 @@ Future<void> showJoinCodeSheet(BuildContext context) => AppSheet.show<void>(
   builder: (_) => const _JoinCodeForm(),
 );
 
-class _JoinCodeForm extends StatefulWidget {
+class _JoinCodeForm extends ConsumerStatefulWidget {
   const _JoinCodeForm();
 
   @override
-  State<_JoinCodeForm> createState() => _JoinCodeFormState();
+  ConsumerState<_JoinCodeForm> createState() => _JoinCodeFormState();
 }
 
-class _JoinCodeFormState extends State<_JoinCodeForm> {
+class _JoinCodeFormState extends ConsumerState<_JoinCodeForm> {
   final _controller = TextEditingController();
   String? _error;
   bool _pasted = false;
+
+  // Flag enableJoinCodePreview: the trip behind a full code, looked up once per code.
+  String? _previewCode;
+  JoinPreview? _preview;
+  bool _previewLoading = false;
+  bool _previewMissing = false;
+
+  bool get _previewOn => ref.read(flagProvider(('enableJoinCodePreview', null))).value ?? false;
+
+  Future<void> _lookup() async {
+    final code = _controller.text.trim().toUpperCase();
+    if (!_codeShape.hasMatch(code) || !_previewOn) {
+      if (_previewCode != null) {
+        setState(() {
+          _previewCode = null;
+          _preview = null;
+          _previewMissing = false;
+          _previewLoading = false;
+        });
+      }
+      return;
+    }
+    if (code == _previewCode) return;
+    setState(() {
+      _previewCode = code;
+      _preview = null;
+      _previewMissing = false;
+      _previewLoading = true;
+    });
+    JoinPreview? found;
+    try {
+      found = await ref.read(joinRepositoryProvider).preview(code);
+    } catch (_) {
+      // Offline or rate-limited: show nothing; the join page explains on Join trip.
+      if (mounted && _previewCode == code) setState(() => _previewLoading = false);
+      return;
+    }
+    if (!mounted || _previewCode != code) return;
+    setState(() {
+      _previewLoading = false;
+      _preview = found;
+      _previewMissing = found == null;
+    });
+  }
 
   @override
   void initState() {
@@ -50,6 +100,7 @@ class _JoinCodeFormState extends State<_JoinCodeForm> {
         _controller.text = code;
         _pasted = true;
       });
+      unawaited(_lookup());
     });
   }
 
@@ -72,6 +123,7 @@ class _JoinCodeFormState extends State<_JoinCodeForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    ref.watch(flagProvider(('enableJoinCodePreview', null))); // keeps the flag loaded for _lookup
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
       child: Column(
@@ -144,15 +196,19 @@ class _JoinCodeFormState extends State<_JoinCodeForm> {
                     filled: false,
                     counterText: '',
                   ),
-                  onChanged: (_) => setState(() {
-                    _error = null;
-                    _pasted = false;
-                  }),
+                  onChanged: (_) {
+                    setState(() {
+                      _error = null;
+                      _pasted = false;
+                    });
+                    unawaited(_lookup());
+                  },
                   onSubmitted: (_) => _go(),
                 ),
               ),
             ],
           ),
+          if (_previewLoading || _preview != null || _previewMissing) _previewCard(context),
           if (_error != null)
             Padding(
               padding: const EdgeInsets.only(top: 12),
@@ -171,6 +227,80 @@ class _JoinCodeFormState extends State<_JoinCodeForm> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _previewCard(BuildContext context) {
+    final t = context.tokens;
+    final p = _preview;
+    final Widget child;
+    if (_previewLoading) {
+      child = const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)));
+    } else if (p == null) {
+      child = Text(
+        'No trip uses this code. Check it with the organiser.',
+        key: const Key('join-preview-missing'),
+        style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 14, color: t.dangerColor),
+      );
+    } else {
+      final names = p.memberFirstNames;
+      final people = names.isEmpty
+          ? ''
+          : names.length <= 3
+          ? names.join(', ')
+          : '${names.take(3).join(', ')} +${names.length - 3}';
+      child = Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(color: t.primaryAccent, borderRadius: BorderRadius.circular(12)),
+            child: Icon(Icons.flight_takeoff_rounded, color: t.ctaFg, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  p.tripName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontBody,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: t.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  [
+                    if (names.isNotEmpty) '${names.length} ${names.length == 1 ? 'person' : 'people'}',
+                    if (p.startDate.isNotEmpty) formatDateRange(p.startDate, p.endDate),
+                    if (people.isNotEmpty) people,
+                  ].join(' · '),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 13, color: t.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.check_circle_rounded, color: t.colorSuccess, size: 22),
+        ],
+      );
+    }
+    return Container(
+      key: const Key('join-preview'),
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: t.bgSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: t.borderColor),
+      ),
+      child: child,
     );
   }
 }

@@ -3483,5 +3483,21 @@
     "shippedAt": "2026-11-25T00:00:00.000Z",
     "shippedBy": "agent",
     "shippedNote": "Commit 9f689aa (v3.108.0)."
+  },
+  {
+    "id": "FEAT-220",
+    "title": "Reminders and join preview (Flutter)",
+    "description": "Join with code trip preview (enableJoinCodePreview, Core), Remind everyone on All balances (enableRemindEveryone, Trip), Reminded Nd ago status on settle rows (enableReminderStatus, Trip). HORIZON-REMINDERS.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "human",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-25T00:00:00.000Z",
+    "updatedAt": "2026-11-25T00:00:00.000Z",
+    "shippedAt": "2026-11-25T00:00:00.000Z",
+    "shippedBy": "agent",
+    "shippedNote": "Commit 019160e (v3.109.0)."
   }
 ]

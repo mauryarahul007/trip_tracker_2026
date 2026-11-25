@@ -8,6 +8,11 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.109.0', '2026-11-25', [
+    'Join with code shows the trip name, dates and people as soon as the 6-character code is in, or says when no trip uses it (Flutter).',
+    'All balances has a Remind everyone button that shares one message listing who owes you what (Flutter).',
+    'After you remind someone, their row reads "Reminded today" or "Reminded 2d ago" on All balances and in Settle up (Flutter).',
+  ]),
   ChangelogEntry('3.108.0', '2026-11-25', [
     'New trip asks for Starts and Ends, Currency beside an optional Budget and a cover colour, and "Create and invite" opens the invite sheet; Join with code fills in a code you already copied (Flutter).',
     'Me opens with one card for Notifications, Default currency and Fingerprint lock; Storage shows a usage bar with Data saver and Clear cache (Flutter).',
@@ -56,9 +61,5 @@ const List<ChangelogEntry> changelogEntries = [
     'Horizon All balances now lists who owes you and whom you owe, person by person, across all your trips (Flutter).',
     'Horizon trip header shows small avatars of the trip crew (Flutter).',
     'Horizon create trip: pick a cover colour for the new trip, kept on this phone (Flutter).',
-  ]),
-  ChangelogEntry('3.98.0', '2026-11-24', [
-    'Horizon Settings: pick Light, Dark or System from three big tiles (Flutter).',
-    'Horizon empty and error screens use a soft tinted icon tile on a plain background; the offline notice is a slim rounded banner (Flutter).',
   ]),
 ];

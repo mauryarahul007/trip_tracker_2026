@@ -6071,3 +6071,15 @@ This document logs all meaningful technical decisions, library choices, design p
   - "Hide amounts" is not shown: the setting does not exist.
   - Report a problem has no Add screenshot box: reports cannot carry images yet; moved to PR 5 as new behaviour.
   - Diagnostics shows sync status, not a last-sync time, which SyncStatus does not record.
+
+## 309. Reminders and join preview (v3.109.0)
+* **Context:** PR 5 of the Horizon gap fix plan (new behaviour). The user picked items 1-3: Remind everyone, reminder status, join preview.
+* **Decision:**
+  - `enableJoinCodePreview` (Core, ON): the Join with code sheet calls the existing public `preview_trip_by_join_code` once per full code and shows name, dates and first names, or "No trip uses this code". It does not call `record_join_preview`, so invite-visit counts are unchanged. Errors (offline, lockout) show nothing; the join page explains on Join trip.
+  - `enableRemindEveryone` (Trip, ON): All balances shows "Remind everyone (N)" / "Remind <name>" when anyone owes me; one share-sheet message lists each person and amount.
+  - `enableReminderStatus` (Trip, ON): `reminderLogProvider` keeps the last reminder time per person name in SharedPreferences (`settle.reminded`); Settle up rows and All balances rows show "Reminded today / yesterday / Nd ago". Recording is skipped while the flag is off.
+  - The three flags are in the pump_app default-off list; their own tests opt in.
+* **Trade-offs Accepted:**
+  - Reminder status is keyed by name, so two different people with the same name share a status.
+  - A reminder counts as sent when the share sheet opens, even if the traveler cancels it.
+  - Not built (user chose items 1-3): bug-report screenshots, per-type notification switches, couples count as 2.
