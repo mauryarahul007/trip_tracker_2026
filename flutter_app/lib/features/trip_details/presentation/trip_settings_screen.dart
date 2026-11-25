@@ -16,8 +16,12 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/widgets/app_scaffold.dart';
+import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/undo_snackbar.dart';
+import '../../../core/settings/app_settings.dart' show geotagExpensesPrefProvider;
+import '../../expenses/application/expenses_providers.dart' show tripExpensesProvider, tripMembersProvider;
+import '../../expenses/presentation/closeout_sheet.dart';
 import '../../notifications/application/notification_prefs_providers.dart';
 import '../../settings/presentation/settings_widgets.dart';
 import '../application/trip_nav.dart';
@@ -56,6 +60,173 @@ class TripSettingsScreen extends ConsumerWidget {
     );
   }
 
+  /// Horizon ("Trip settings" mockup): one card of trip rules, a card for Categories and Recycle bin, Trip state as
+  /// tappable rows (Freeze, Archive, Close trip opens Close out) and a red Delete trip card at the end.
+  Widget _horizon(
+    BuildContext context,
+    WidgetRef ref,
+    Trip trip, {
+    required bool isOwner,
+    required bool muted,
+    required bool simplify,
+    required bool approval,
+  }) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final repo = ref.read(tripRepositoryProvider);
+    final base = trip.baseCurrency.isEmpty ? 'INR' : trip.baseCurrency;
+    final expenses = ref.watch(tripExpensesProvider(tripId)).value ?? const [];
+    final foreign = <String, int>{};
+    for (final e in expenses) {
+      if (e.currency.isNotEmpty && e.currency != base) foreign[e.currency] = (foreign[e.currency] ?? 0) + 1;
+    }
+    final currencySub = foreign.isEmpty
+        ? base
+        : l10n.horizonCurrencyMixed(base, foreign.keys.join(', '), foreign.values.fold(0, (a, b) => a + b));
+    final geotagFlag = ref.watch(flagProvider(('enableGeotagging', null))).value ?? true;
+    final people = ref.watch(tripMembersProvider(tripId)).value?.length ?? 0;
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 32),
+      children: [
+        SettingsSection(
+          title: '',
+          children: [
+            SettingsTile(
+              key: const Key('trip-currency'),
+              icon: Icons.account_balance_wallet_outlined,
+              title: l10n.horizonCurrency,
+              subtitle: currencySub,
+            ),
+            if (simplify)
+              SettingsSwitchTile(
+                key: const Key('trip-simplify'),
+                icon: Icons.balance_rounded,
+                title: 'Simplify debts',
+                subtitle: l10n.horizonFewestPayments,
+                value: trip.simplifyDebts,
+                onChanged: isOwner ? (v) => repo.setSimplifyDebts(tripId, v) : null,
+              ),
+            if (approval)
+              SettingsTile(
+                key: const Key('trip-approval'),
+                icon: Icons.verified_user_outlined,
+                title: l10n.approvalTitle,
+                subtitle: trip.approvalThreshold == null
+                    ? l10n.approvalOff
+                    : l10n.approvalOn(formatMoney(context, trip.approvalThreshold!, base)),
+                onTap: isOwner ? () => _threshold(context, ref, trip) : null,
+              ),
+            if (geotagFlag)
+              SettingsSwitchTile(
+                key: const Key('trip-geotag'),
+                icon: Icons.location_on_outlined,
+                title: 'Geotag expenses',
+                subtitle: l10n.horizonGeotagSub,
+                value: ref.watch(geotagExpensesPrefProvider),
+                onChanged: (v) => ref.read(geotagExpensesPrefProvider.notifier).set(v),
+              ),
+            SettingsSwitchTile(
+              key: const Key('trip-mute'),
+              icon: Icons.notifications_none_rounded,
+              title: 'Mute this trip',
+              value: muted,
+              onChanged: (v) async {
+                await ref.read(notificationPrefsRepositoryProvider).setTripMuted(tripId, v);
+                ref.invalidate(tripMutedProvider(tripId));
+              },
+            ),
+          ],
+        ),
+        SettingsSection(
+          title: '',
+          children: [
+            SettingsTile(
+              key: const Key('trip-categories'),
+              icon: Icons.sell_outlined,
+              title: 'Categories',
+              onTap: () => context.push('/trip/$tripId/categories'),
+            ),
+            SettingsTile(
+              key: const Key('trip-recycle'),
+              icon: Icons.delete_outline_rounded,
+              title: 'Recycle bin',
+              onTap: () => context.push('/trip/$tripId/recycle-bin'),
+            ),
+          ],
+        ),
+        if (isOwner) ...[
+          SettingsSection(
+            title: 'Trip state',
+            children: [
+              SettingsTile(
+                key: const Key('trip-freeze'),
+                icon: Icons.ac_unit_rounded,
+                title: 'Freeze trip',
+                subtitle: trip.frozen ? l10n.horizonFrozenSub : l10n.horizonFreezeSub,
+                onTap: () => _state(context, ref, trip.frozen ? 'Trip unfrozen' : 'Trip frozen', frozen: !trip.frozen),
+              ),
+              SettingsTile(
+                key: const Key('trip-archive'),
+                icon: Icons.inventory_2_outlined,
+                title: 'Archive',
+                subtitle: trip.archived ? l10n.horizonArchivedSub : 'Hide from the main list',
+                onTap: () => repo.setTripState(tripId, archived: !trip.archived),
+              ),
+              SettingsTile(
+                key: const Key('trip-close'),
+                icon: Icons.check_rounded,
+                title: l10n.horizonCloseTrip,
+                subtitle: trip.closed ? l10n.horizonClosedSub : l10n.horizonCloseSub,
+                onTap: trip.closed
+                    ? () => _state(context, ref, 'Trip reopened', closed: false)
+                    : () => AppSheet.show<void>(
+                        context: context,
+                        builder: (_) => CloseoutSheet(tripId: tripId),
+                      ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Material(
+              color: t.bgSurface,
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(t.radiusMd),
+                side: BorderSide(color: t.borderColor),
+              ),
+              child: SettingsTile(
+                key: const Key('trip-delete'),
+                icon: Icons.delete_outline_rounded,
+                danger: true,
+                title: l10n.tripDelete,
+                subtitle: people > 1 ? l10n.horizonDeleteForPeople(people) : l10n.horizonDeleteForAll,
+                trailing: const SizedBox.shrink(),
+                onTap: () => _delete(context, ref, trip),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref, Trip trip) async {
+    final l10n = context.l10n;
+    final ok = await ConfirmDialog.show(
+      context: context,
+      title: l10n.tripDeleteTitle,
+      message: l10n.tripDeleteBody(trip.name),
+      confirmLabel: l10n.actionDelete,
+      cancelLabel: l10n.actionCancel,
+      isDestructive: true,
+    );
+    if (!ok || !context.mounted) return;
+    final repo = ref.read(tripRepositoryProvider);
+    context.go('/');
+    await repo.deleteTrip(tripId);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trip = ref.watch(tripProvider(tripId)).value;
@@ -77,6 +248,8 @@ class TripSettingsScreen extends ConsumerWidget {
       ),
       body: trip == null
           ? const EmptyState(icon: AppIcons.settings, title: 'Trip not found', subtitle: 'It may have been deleted.')
+          : context.tokens.horizon
+          ? _horizon(context, ref, trip, isOwner: isOwner, muted: muted, simplify: simplifyFlag, approval: approvalFlag)
           : ListView(
               padding: const EdgeInsets.only(bottom: 32),
               children: [

@@ -15,6 +15,7 @@ import '../../../domain/logic/ics_export_service.dart';
 import '../../../domain/logic/imports_and_exports.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_tokens.dart';
+import '../../../shared/theme/app_typography.dart';
 import '../../travel/presentation/achievement_badge_modal.dart';
 import '../../travel/presentation/traveler_passport_modal.dart';
 import '../../travel/presentation/trip_wrapped_modal.dart';
@@ -210,6 +211,166 @@ class _TripToolsSheetState extends ConsumerState<TripToolsSheet> {
     });
   }
 
+  /// Horizon ("Trip tools" mockup): one card of export, backup, import and offline rows, extras (passport, badges,
+  /// calendar) in a second card, and Trip Wrapped as a navy row at the end.
+  Widget _horizon(
+    BuildContext context, {
+    required bool wrapped,
+    required bool passport,
+    required bool achievements,
+    required bool ics,
+    required bool splitwise,
+  }) {
+    final t = context.tokens;
+    final l10n = context.l10n;
+    final extras = <Widget>[
+      if (passport)
+        SettingsTile(
+          key: const Key('traveler-passport'),
+          icon: Icons.menu_book_rounded,
+          title: 'Traveler Passport',
+          subtitle: 'Your stamps',
+          onTap: _busy ? null : () => TravelerPassportModal.show(context),
+        ),
+      if (achievements)
+        SettingsTile(
+          key: const Key('trip-achievements'),
+          icon: Icons.emoji_events_outlined,
+          title: 'Achievements',
+          subtitle: 'Badges and pins',
+          onTap: _busy ? null : () => AchievementBadgeModal.show(context, tripId: widget.tripId),
+        ),
+      if (ics)
+        SettingsTile(
+          key: const Key('export-ics'),
+          icon: Icons.calendar_month_rounded,
+          title: 'Add to calendar',
+          subtitle: '.ics file',
+          onTap: _busy ? null : _exportIcs,
+        ),
+    ];
+    return SingleChildScrollView(
+      key: const Key('horizon-tools'),
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            child: Text(
+              l10n.horizonTripTools,
+              style: TextStyle(
+                fontFamily: AppTypography.fontTitle,
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: t.textPrimary,
+              ),
+            ),
+          ),
+          SettingsSection(
+            title: '',
+            children: [
+              SettingsTile(
+                key: const Key('export-csv'),
+                icon: Icons.download_rounded,
+                title: 'Export spreadsheet',
+                subtitle: 'CSV of all expenses',
+                onTap: _busy ? null : _exportCsv,
+              ),
+              SettingsTile(
+                key: const Key('export-json'),
+                icon: Icons.description_outlined,
+                title: 'Full trip as JSON',
+                subtitle: 'Backup to restore later',
+                onTap: _busy ? null : _exportJson,
+              ),
+              SettingsTile(
+                key: const Key('import-json'),
+                icon: Icons.upload_rounded,
+                title: l10n.toolsImportJson,
+                subtitle: 'Merges into this trip',
+                onTap: _busy ? null : _importJson,
+              ),
+              if (splitwise)
+                SettingsTile(
+                  key: const Key('import-splitwise'),
+                  icon: Icons.swap_horiz_rounded,
+                  title: 'Import a group',
+                  subtitle: 'Bring Splitwise or CSV across',
+                  onTap: _busy ? null : _importSplitwise,
+                ),
+              SettingsTile(
+                key: const Key('offline-snapshot'),
+                icon: Icons.cloud_off_rounded,
+                title: 'Offline snapshot',
+                subtitle: 'A copy for no-signal days',
+                onTap: _busy ? null : () => OfflineSnapshotModal.show(context, tripId: widget.tripId),
+              ),
+            ],
+          ),
+          if (extras.isNotEmpty) SettingsSection(title: '', children: extras),
+          if (wrapped)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Material(
+                color: t.heroMid,
+                borderRadius: BorderRadius.circular(t.radiusMd),
+                child: InkWell(
+                  key: const Key('trip-wrapped'),
+                  borderRadius: BorderRadius.circular(t.radiusMd),
+                  onTap: _busy ? null : () => TripWrappedModal.show(context, tripId: widget.tripId),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    child: Row(
+                      children: [
+                        Icon(Icons.star_border_rounded, color: Colors.white),
+                        SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Trip Wrapped',
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontBody,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                'Your trip story in 5 cards',
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontBody,
+                                  fontSize: 13,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.chevron_right_rounded, color: Colors.white70),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (_message != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Text(
+                _message!,
+                key: const Key('tools-message'),
+                style: TextStyle(color: t.textSecondary),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -268,6 +429,17 @@ class _TripToolsSheetState extends ConsumerState<TripToolsSheet> {
           onTap: _busy ? null : _exportIcs,
         ),
     ];
+
+    if (context.tokens.horizon) {
+      return _horizon(
+        context,
+        wrapped: wrapped,
+        passport: passport,
+        achievements: achievements,
+        ics: icsExport,
+        splitwise: splitwise,
+      );
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),

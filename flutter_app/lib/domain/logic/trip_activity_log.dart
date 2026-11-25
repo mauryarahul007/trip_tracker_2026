@@ -20,6 +20,10 @@ List<NotificationItem> buildTripActivityLog({
   required Iterable<NotificationItem> notifications,
 }) {
   final names = {for (final m in members) m.id: m.name};
+  final byUser = {
+    for (final m in members)
+      if ((m.linkedUserId ?? '').isNotEmpty) m.linkedUserId!: m.name,
+  };
   final seen = <String>{
     for (final n in notifications) '${n.data?['type']}|${n.data?['expenseTitle'] ?? n.data?['preview']}',
   };
@@ -41,8 +45,10 @@ List<NotificationItem> buildTripActivityLog({
     );
   }
 
-  Map<String, dynamic> money(Expense e, [String kind = 'expense']) => {
+  Map<String, dynamic> money(Expense e, [String kind = 'expense', String? actorUserId]) => {
     'expenseTitle': e.title,
+    if (byUser[actorUserId ?? e.createdByUserId] != null) 'actorName': byUser[actorUserId ?? e.createdByUserId],
+    if ((actorUserId ?? e.createdByUserId) != null) 'actorUserId': actorUserId ?? e.createdByUserId,
     'amount': '${e.amount}',
     'currency': e.currency,
     'targetKind': kind,
@@ -54,11 +60,21 @@ List<NotificationItem> buildTripActivityLog({
     final refund = e.refundOfExpenseId != null;
     add('add-${e.id}', refund ? 'expense_refunded' : 'expense_added', e.createdAt, money(e));
     if (!refund && !e.isSettlement && e.updatedAt - e.createdAt > _editGapMs) {
-      add('edit-${e.id}', 'expense_updated', e.updatedAt, money(e));
+      // Who edited is not stored, so edits carry no actor.
+      add(
+        'edit-${e.id}',
+        'expense_updated',
+        e.updatedAt,
+        money(e)
+          ..remove('actorName')
+          ..remove('actorUserId'),
+      );
     }
   }
   for (final e in recycled) {
-    if (e.tripId == tripId && e.deletedAt != null) add('del-${e.id}', 'expense_deleted', e.deletedAt!, money(e, 'bin'));
+    if (e.tripId == tripId && e.deletedAt != null) {
+      add('del-${e.id}', 'expense_deleted', e.deletedAt!, money(e, 'bin', e.deletedByUserId));
+    }
   }
   for (final m in messages) {
     if (m.tripId != tripId || m.deletedAt != null || (m.eventKind != null && m.eventKind != 'text')) continue;

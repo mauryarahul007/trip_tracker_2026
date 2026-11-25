@@ -3451,5 +3451,21 @@
     "shippedAt": "2026-11-25T00:00:00.000Z",
     "shippedBy": "agent",
     "shippedNote": "Commit 7b4ffa7 (v3.106.0)."
+  },
+  {
+    "id": "FEAT-218",
+    "title": "Horizon trip pages and sheets (Flutter)",
+    "description": "Under Core flag enableHorizonUi: Trip settings cards with Delete trip, Close out checklist with Freeze and close, Invite code beside QR with WhatsApp and View only switch, side-by-side sync conflict, Expense detail paid/split rows with More, Filter spend chips and date switch, live Hub facts, Activity sentences with avatars, Tools with a Trip Wrapped row. HORIZON-TRIP-PAGES.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "human",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-25T00:00:00.000Z",
+    "updatedAt": "2026-11-25T00:00:00.000Z",
+    "shippedAt": "2026-11-25T00:00:00.000Z",
+    "shippedBy": "agent",
+    "shippedNote": "Commit d0ea575 (v3.107.0)."
   }
 ]

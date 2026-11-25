@@ -25,6 +25,9 @@ import '../../../../domain/models/member.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/theme/app_typography.dart';
+import '../../../../shared/theme/category_icons.dart';
+import '../../../../shared/widgets/bento_tile.dart' show toneFor;
+import '../../../../core/platform/external_launcher.dart';
 import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../trip_details/application/trip_nav.dart';
@@ -158,6 +161,29 @@ class ExpenseDetailSheet extends ConsumerWidget {
     );
   }
 
+  Widget _banner(Key key, String text, Color color) => Container(
+    key: key,
+    padding: const EdgeInsets.all(10),
+    margin: const EdgeInsets.only(top: 10),
+    decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+    child: Text(
+      text,
+      style: TextStyle(color: color, fontWeight: FontWeight.w600),
+    ),
+  );
+
+  Widget _moreRow(Key key, IconData icon, String label, VoidCallback onTap) => ListTile(
+    key: key,
+    contentPadding: EdgeInsets.zero,
+    minTileHeight: 44,
+    leading: Icon(icon, size: 20),
+    title: Text(
+      label,
+      style: const TextStyle(fontFamily: AppTypography.fontBody, fontWeight: FontWeight.w600),
+    ),
+    onTap: onTap,
+  );
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -223,6 +249,138 @@ class ExpenseDetailSheet extends ConsumerWidget {
               .map((p) => '${members[p.key]?.name ?? l10n.rowRemovedMember} ${formatMoney(context, p.value, base)}')
               .join(', ')
         : members[e.paidBy]?.name ?? l10n.rowRemovedMember;
+
+    Future<void> recordRefund() async {
+      final amount = await _askRefund(context, refundable, members[e.paidBy]?.name ?? l10n.rowRemovedMember);
+      if (amount == null || !context.mounted) return;
+      unawaited(AppHaptics.selection());
+      await repo.add(
+        Expense(
+          id: const Uuid().v4(),
+          tripId: tripId,
+          title: 'Refund: ${e.title}',
+          amount: amount,
+          currency: e.currency,
+          category: e.category,
+          date: DateTime.now().toIso8601String().substring(0, 10),
+          paidBy: e.paidBy,
+          splitMode: 'exact',
+          splitMemberIds: [e.paidBy],
+          splitConfig: {e.paidBy: amount},
+          resolvedShares: {e.paidBy: amount},
+          refundOfExpenseId: e.id,
+          createdByUserId: uid,
+          createdAt: 0,
+          updatedAt: 0,
+        ),
+      );
+    }
+
+    Future<void> flagDispute() async {
+      final note = await _askNote(context);
+      if (note == null || !context.mounted) return;
+      await _run(
+        context,
+        () => repo.flagDispute(e.id, userId: uid!, note: note.isEmpty ? null : note, postChatCard: chatCards),
+      );
+    }
+
+    void seeActivity() {
+      ref.read(activityOnlyProvider.notifier).set(e.id);
+      Navigator.pop(context);
+      context.go('/trip/$tripId/activity');
+    }
+
+    if (tokens.horizon) {
+      return _HorizonDetail(
+        e: e,
+        base: base,
+        members: members,
+        categoryName: cat?.name,
+        payerNames: payerNames,
+        shareChip: _horizonShareChip(context, ref, e, base),
+        banners: [
+          if (e.disputedAt != null)
+            _banner(
+              const Key('detail-dispute-banner'),
+              (e.disputeNote ?? '').isEmpty ? l10n.detailDisputedNoNote : l10n.detailDisputedBy(e.disputeNote!),
+              tokens.colorWarning,
+            ),
+          if (e.approvalStatus == 'pending_approval')
+            _banner(const Key('detail-pending'), l10n.rowPendingApprovalTip, tokens.colorWarning),
+          if (e.isSettlement && e.settlementConfirmedAt != null)
+            _banner(const Key('detail-confirmed'), l10n.detailConfirmed, tokens.colorSuccess),
+          if (refunds.isNotEmpty)
+            _banner(
+              const Key('detail-refunds'),
+              'Refunded ${formatMoney(context, refunds.fold<double>(0, (s, r) => s + r.amount), e.currency)} to ${members[e.paidBy]?.name ?? l10n.rowRemovedMember}. Shares and balances already reflect it.',
+              tokens.colorSuccess,
+            ),
+        ],
+        primary: [
+          if (canConfirm)
+            AppButton(
+              label: l10n.detailConfirm,
+              isFullWidth: true,
+              onPressed: () => _run(context, () => repo.confirmSettlement(e.id, userId: uid)),
+            ),
+          if (canApprove)
+            AppButton(
+              label: l10n.detailApprove,
+              isFullWidth: true,
+              onPressed: () => _run(context, () => repo.approve(e.id, userId: uid)),
+            ),
+        ],
+        details: [
+          kv(l10n.detailDate, e.date),
+          kv(l10n.detailCategory, cat?.name ?? e.category),
+          kv(l10n.detailPaidBy, payerNames),
+          if (historyOn) ...[
+            kv(
+              l10n.historyAdded,
+              history.addedBy == null
+                  ? formatRelativeTime(history.addedAt)
+                  : l10n.historyAddedBy(history.addedBy!, formatRelativeTime(history.addedAt)),
+            ),
+            if (history.edited) kv(l10n.historyEdited, formatRelativeTime(history.editedAt)),
+          ],
+        ],
+        more: [
+          if (_flag(ref, 'enableExpenseExclusion', tripId) && canManage && !locked)
+            Material(
+              type: MaterialType.transparency,
+              child: SwitchListTile(
+                key: const Key('detail-count-switch'),
+                contentPadding: EdgeInsets.zero,
+                value: !e.excludeFromTotals,
+                onChanged: (counted) {
+                  unawaited(AppHaptics.selection());
+                  unawaited(repo.update(e.copyWith(excludeFromTotals: !counted)));
+                },
+                title: Text(l10n.detailCountTitle),
+                subtitle: Text(l10n.detailCountSub),
+              ),
+            ),
+          if (_flag(ref, 'enableTripActivityLog', tripId))
+            _moreRow(const Key('detail-see-activity'), Icons.history_rounded, 'See in Activity', seeActivity),
+          if (refundsOn && canManage && !locked && refundable > 0.005)
+            _moreRow(const Key('detail-refund'), Icons.undo_rounded, 'Record refund', recordRefund),
+          if (disputes && uid != null && !isRefund(e))
+            e.disputedAt == null
+                ? _moreRow(const Key('detail-flag'), Icons.flag_outlined, l10n.detailFlag, flagDispute)
+                : _moreRow(
+                    const Key('detail-resolve'),
+                    Icons.check_circle_outline_rounded,
+                    l10n.detailResolve,
+                    () => _run(context, () => repo.resolveDispute(e.id, userId: uid, postChatCard: chatCards)),
+                  ),
+        ],
+        canEdit: canManage && !locked,
+        canDelete: canManage,
+        onEdit: onEdit,
+        onDelete: onDelete,
+      );
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
@@ -440,11 +598,7 @@ class ExpenseDetailSheet extends ConsumerWidget {
               label: 'See in Activity',
               variant: AppButtonVariant.secondary,
               isFullWidth: true,
-              onPressed: () {
-                ref.read(activityOnlyProvider.notifier).set(e.id);
-                Navigator.pop(context);
-                context.go('/trip/$tripId/activity');
-              },
+              onPressed: seeActivity,
             ),
             const SizedBox(height: 8),
           ],
@@ -454,31 +608,7 @@ class ExpenseDetailSheet extends ConsumerWidget {
               label: 'Record refund',
               variant: AppButtonVariant.secondary,
               isFullWidth: true,
-              onPressed: () async {
-                final amount = await _askRefund(context, refundable, members[e.paidBy]?.name ?? l10n.rowRemovedMember);
-                if (amount == null || !context.mounted) return;
-                unawaited(AppHaptics.selection());
-                await repo.add(
-                  Expense(
-                    id: const Uuid().v4(),
-                    tripId: tripId,
-                    title: 'Refund: ${e.title}',
-                    amount: amount,
-                    currency: e.currency,
-                    category: e.category,
-                    date: DateTime.now().toIso8601String().substring(0, 10),
-                    paidBy: e.paidBy,
-                    splitMode: 'exact',
-                    splitMemberIds: [e.paidBy],
-                    splitConfig: {e.paidBy: amount},
-                    resolvedShares: {e.paidBy: amount},
-                    refundOfExpenseId: e.id,
-                    createdByUserId: uid,
-                    createdAt: 0,
-                    updatedAt: 0,
-                  ),
-                );
-              },
+              onPressed: recordRefund,
             ),
             const SizedBox(height: 8),
           ],
@@ -488,19 +618,7 @@ class ExpenseDetailSheet extends ConsumerWidget {
                     label: l10n.detailFlag,
                     variant: AppButtonVariant.secondary,
                     isFullWidth: true,
-                    onPressed: () async {
-                      final note = await _askNote(context);
-                      if (note == null || !context.mounted) return;
-                      await _run(
-                        context,
-                        () => repo.flagDispute(
-                          e.id,
-                          userId: uid,
-                          note: note.isEmpty ? null : note,
-                          postChatCard: chatCards,
-                        ),
-                      );
-                    },
+                    onPressed: flagDispute,
                   )
                 : AppButton(
                     label: l10n.detailResolve,
@@ -523,6 +641,355 @@ class ExpenseDetailSheet extends ConsumerWidget {
                 ),
               ],
             ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Horizon ("Expense detail" mockup): icon, title and date/place; big amount with what it means for me; a card with
+/// "Asha paid" and the split (tap to see each share); receipt and map tiles; Edit / Delete. Everything else
+/// (count in totals, activity, refund, dispute, the details table) sits under "More".
+class _HorizonDetail extends ConsumerStatefulWidget {
+  const _HorizonDetail({
+    required this.e,
+    required this.base,
+    required this.members,
+    required this.categoryName,
+    required this.payerNames,
+    required this.shareChip,
+    required this.banners,
+    required this.primary,
+    required this.details,
+    required this.more,
+    required this.canEdit,
+    required this.canDelete,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final Expense e;
+  final String base;
+  final Map<String, Member> members;
+  final String? categoryName;
+  final String payerNames;
+  final Widget? shareChip;
+  final List<Widget> banners;
+  final List<Widget> primary;
+  final List<Widget> details;
+  final List<Widget> more;
+  final bool canEdit;
+  final bool canDelete;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  ConsumerState<_HorizonDetail> createState() => _HorizonDetailState();
+}
+
+class _HorizonDetailState extends ConsumerState<_HorizonDetail> {
+  bool _shares = false;
+  bool _more = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final l10n = context.l10n;
+    final e = widget.e;
+    final tone = t.tones[toneFor(e.category)];
+    final icon = categoryVectorIcon(id: e.category, name: widget.categoryName) ?? Icons.sell_outlined;
+    final place = e.location?.placeName;
+    final sub = [e.date, if ((place ?? '').isNotEmpty) place!].join(' · ');
+    final n = e.splitMemberIds.length;
+    final equal = e.splitMode == 'equal' || e.splitMode == 'equalUnit';
+    final each = n == 0 ? 0.0 : e.amount / n;
+    final receipt = ref.watch(receiptPreviewProvider((e.id, e.receiptPath))).value;
+    final loc = e.location;
+    final hasMap = loc != null && (loc.lat != 0 || loc.lng != 0);
+    final money = TextStyle(
+      fontFamily: AppTypography.fontMono,
+      fontFeatures: AppTypography.tabularFigures,
+      fontWeight: FontWeight.w700,
+      color: t.textPrimary,
+    );
+    Widget label(String text, {double size = 15, FontWeight w = FontWeight.w700, Color? color}) => Text(
+      text,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontFamily: AppTypography.fontBody,
+        fontSize: size,
+        fontWeight: w,
+        color: color ?? t.textPrimary,
+      ),
+    );
+
+    Widget tile(Key key, BentoTint c, IconData i, VoidCallback onTap) => Expanded(
+      child: Material(
+        color: c.bg,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          key: key,
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: SizedBox(height: 64, child: Icon(i, color: c.accent)),
+        ),
+      ),
+    );
+
+    return SingleChildScrollView(
+      key: const Key('horizon-detail'),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(color: tone.bg, borderRadius: BorderRadius.circular(14)),
+                child: Icon(icon, color: tone.accent),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      e.title,
+                      key: const Key('detail-title'),
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontTitle,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: t.textPrimary,
+                      ),
+                    ),
+                    label(sub, size: 13, w: FontWeight.w400, color: t.textSecondary),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    isRefund(e)
+                        ? '−${formatMoney(context, e.amount, widget.base)}'
+                        : formatMoney(context, e.amount, widget.base),
+                    key: const Key('detail-amount'),
+                    style: money.copyWith(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w800,
+                      color: isRefund(e) ? t.colorSuccess : t.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+              ?widget.shareChip,
+            ],
+          ),
+          if (isRefund(e)) const Padding(padding: EdgeInsets.only(top: 4), child: RefundChip()),
+          if (e.currency != widget.base) label(e.currency, size: 12, w: FontWeight.w500, color: t.textMuted),
+          ...widget.banners,
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: t.bgSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: t.borderColor),
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  key: const Key('detail-paid-row'),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    children: [
+                      AppAvatar(name: widget.members[e.paidBy]?.name ?? '?', size: 30),
+                      const SizedBox(width: 12),
+                      Expanded(child: label(l10n.horizonNamePaid(widget.payerNames))),
+                      Text(formatMoney(context, e.amount, widget.base), style: money.copyWith(fontSize: 15)),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, color: t.borderColor),
+                InkWell(
+                  key: const Key('detail-split-row'),
+                  onTap: () => setState(() => _shares = !_shares),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 30.0 + 18 * (e.splitMemberIds.take(4).length - 1).clamp(0, 3),
+                          height: 30,
+                          child: Stack(
+                            children: [
+                              for (final (i, id) in e.splitMemberIds.take(4).indexed)
+                                Positioned(
+                                  left: 18.0 * i,
+                                  child: AppAvatar(name: widget.members[id]?.name ?? '?', size: 30),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              label(equal ? l10n.horizonSplitEqually : l10n.horizonSplitCustom),
+                              label(
+                                equal
+                                    ? l10n.horizonPeopleEach(n, formatMoney(context, each, widget.base))
+                                    : l10n.horizonPeople(n),
+                                size: 13,
+                                w: FontWeight.w400,
+                                color: t.textSecondary,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(_shares ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: t.textMuted),
+                      ],
+                    ),
+                  ),
+                ),
+                if (_shares)
+                  for (final id in e.splitMemberIds)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 42),
+                          Expanded(
+                            child: label(
+                              widget.members[id]?.name ?? l10n.rowRemovedMember,
+                              size: 14,
+                              w: FontWeight.w500,
+                              color: t.textSecondary,
+                            ),
+                          ),
+                          Text(
+                            formatMoney(context, e.resolvedShares[id] ?? 0, widget.base),
+                            key: Key('share-$id'),
+                            style: money.copyWith(fontSize: 14, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+              ],
+            ),
+          ),
+          if (receipt != null || hasMap) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                if (receipt != null)
+                  tile(
+                    const Key('detail-receipt-tile'),
+                    t.tones.peach,
+                    Icons.receipt_long_outlined,
+                    () => showReceiptPhotoViewer(
+                      context,
+                      previewPath: receipt,
+                      title: e.title,
+                      subtitle: '${e.date} · ${formatMoney(context, e.amount, e.currency)}',
+                    ),
+                  ),
+                if (receipt != null && hasMap) const SizedBox(width: 10),
+                if (hasMap)
+                  tile(
+                    const Key('detail-map-tile'),
+                    t.tones.mint,
+                    Icons.location_on_outlined,
+                    () => ref.read(externalLauncherProvider)(
+                      Uri.parse(
+                        'geo:${loc.lat},${loc.lng}?q=${loc.lat},${loc.lng}(${Uri.encodeComponent(place ?? e.title)})',
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+          for (final b in widget.primary) ...[const SizedBox(height: 10), b],
+          if (widget.canEdit || widget.canDelete) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                if (widget.canEdit)
+                  Expanded(
+                    child: SizedBox(
+                      height: 52,
+                      child: OutlinedButton(
+                        key: const Key('detail-edit'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: t.textPrimary,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          textStyle: const TextStyle(
+                            fontFamily: AppTypography.fontBody,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        onPressed: widget.onEdit,
+                        child: Text(l10n.rowEdit),
+                      ),
+                    ),
+                  ),
+                if (widget.canEdit && widget.canDelete) const SizedBox(width: 10),
+                if (widget.canDelete)
+                  Expanded(
+                    child: SizedBox(
+                      height: 52,
+                      child: FilledButton.icon(
+                        key: const Key('detail-delete'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: t.colorDanger.withValues(alpha: 0.12),
+                          foregroundColor: t.colorDanger,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          textStyle: const TextStyle(
+                            fontFamily: AppTypography.fontBody,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        onPressed: widget.onDelete,
+                        icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                        label: Text(l10n.rowDelete),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 4),
+          TextButton.icon(
+            key: const Key('detail-more'),
+            onPressed: () => setState(() => _more = !_more),
+            icon: Icon(_more ? Icons.expand_less_rounded : Icons.expand_more_rounded, size: 18),
+            label: Text(l10n.horizonMore),
+          ),
+          if (_more) ...[
+            Container(
+              padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+              decoration: BoxDecoration(
+                color: t.bgSurface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: t.borderColor),
+              ),
+              child: Column(children: widget.details),
+            ),
+            ...widget.more,
           ],
         ],
       ),

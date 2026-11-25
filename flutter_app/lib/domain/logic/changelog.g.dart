@@ -8,6 +8,12 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.107.0', '2026-11-25', [
+    'Trip settings put the trip rules in one card, with Freeze, Archive and Close trip as rows and Delete trip at the end; Close out shows a short checklist and one Freeze and close button (Flutter).',
+    'Invite shows the code beside its QR with Copy, a Can add expenses / View only switch, WhatsApp and Copy link; a sync conflict shows your version and theirs side by side (Flutter).',
+    'Expense details lead with who paid and how it was split, with Edit and Delete up front and the rest under More; Filter spend has icon chips, payer avatars and Any / This trip / Today / Custom dates (Flutter).',
+    'Hub tiles show live facts like "Food is 38%", Activity reads "Asha added Scuba", and Trip tools ends with a Trip Wrapped row (Flutter).',
+  ]),
   ChangelogEntry('3.106.0', '2026-11-25', [
     'Add expense opens a Split page from the split chip: Equal, Shares, Exact or %, one row per person, and a "left to assign" bar until the amounts add up (Flutter).',
     'Quick add reads like a message ("lunch 2400"), previews the expense, and can jump to Change split or Scan bill (Flutter).',
@@ -53,10 +59,5 @@ const List<ChangelogEntry> changelogEntries = [
   ChangelogEntry('3.97.0', '2026-11-24', [
     'Horizon trip Balances: your position leads in big type on a night-navy card, with what you paid, your share and the trip total under it (Flutter).',
     'Horizon Spend rows now say what each expense means for you: "you owe", "you lent" or "not involved" (Flutter).',
-  ]),
-  ChangelogEntry('3.96.0', '2026-11-24', [
-    'Horizon look for the Flutter app: a new blue and night-navy colour scheme with a sunset accent, in light, dark and pure black.',
-    'New bottom bars with a raised Add button in the centre; the trip bar is now Balances, Spend, Add, Chat and Hub.',
-    'Redesigned splash, onboarding, sign-in and Trips home: your balance across all trips up top, with New trip, Join code, Quick add and Settle one tap away.',
   ]),
 ];

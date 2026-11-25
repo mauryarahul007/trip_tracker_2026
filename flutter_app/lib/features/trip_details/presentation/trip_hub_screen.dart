@@ -1,6 +1,10 @@
 import '../../notifications/application/notification_prefs_providers.dart';
 import '../../chat/application/chat_providers.dart';
 import '../../../domain/models/expense.dart';
+import '../../../core/clock.dart';
+import '../../../domain/logic/expense_list_logic.dart' show isActualExpense;
+import '../../../domain/logic/trip_status.dart';
+import '../../notes/application/itinerary_providers.dart';
 import 'widgets/edit_trip_sheet.dart';
 
 import 'package:flutter/material.dart';
@@ -260,7 +264,54 @@ class TripHubScreen extends ConsumerWidget {
     }
 
     if (t.horizon) {
-      _HubTile byKey(String k) => tiles.firstWhere((x) => x.key == k);
+      // Live subtitles ("Day 4 · 3 activities", "Food is 38%") in place of the fixed descriptions.
+      final now = ref.read(nowProvider)();
+      final status = tripStatus(trip.startDate, trip.endDate, now);
+      final plans = ref.watch(tripItineraryProvider(tripId));
+      final todayKey =
+          '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final todayPlans = plans.where((p) => p.date == todayKey).length;
+      final spend = (ref.watch(tripExpensesProvider(tripId)).value ?? const <Expense>[])
+          .where((e) => isActualExpense(e) && !e.excludeFromTotals)
+          .toList();
+      final byCat = <String, double>{};
+      for (final e in spend) {
+        byCat[e.category] = (byCat[e.category] ?? 0) + e.amount;
+      }
+      final total = byCat.values.fold<double>(0, (a, b) => a + b);
+      String? topCat;
+      if (total > 0) {
+        final top = byCat.entries.reduce((a, b) => a.value >= b.value ? a : b);
+        final name = ref.watch(tripCategoriesProvider(tripId)).where((c) => c.id == top.key).firstOrNull?.name;
+        if (name != null) topCat = l10n.horizonHubTopCategory(name.split(' ').first, (top.value / total * 100).round());
+      }
+      final groups = ref.watch(tripGroupsProvider(tripId)).value?.length ?? 0;
+      final sub = <String, String>{
+        if (status.phase == TripPhase.active)
+          (t.calm ? 'hub-plans' : 'hub-notes'): l10n.horizonHubDayPlans(status.dayNumber, todayPlans)
+        else if (plans.isNotEmpty)
+          (t.calm ? 'hub-plans' : 'hub-notes'): l10n.horizonHubPlansCount(plans.length),
+        'hub-people': groups > 0 ? l10n.horizonHubPeopleGroups(members, groups) : l10n.horizonHubPeople(members),
+        'hub-insights': ?topCat,
+        'hub-tools': l10n.horizonHubToolsSub,
+        'hub-settings': l10n.horizonHubSettingsSub,
+      };
+      final title = <String, String>{'hub-people': l10n.horizonPeopleTitle};
+      _HubTile byKey(String k) {
+        final x = tiles.firstWhere((x) => x.key == k);
+        return _HubTile(
+          x.key,
+          x.icon,
+          title[k] ?? x.title,
+          sub[k] ?? x.subtitle,
+          x.onTap,
+          tone: x.tone,
+          eyebrow: x.eyebrow,
+          isWide: x.isWide,
+          hapticType: x.hapticType,
+        );
+      }
+
       final grid = <(_HubTile, BentoTone?)>[
         if (hasNotes) (byKey(t.calm ? 'hub-plans' : 'hub-notes'), BentoTone.sky),
         (byKey('hub-people'), BentoTone.lilac),
@@ -270,7 +321,7 @@ class TripHubScreen extends ConsumerWidget {
             'hub-insights',
             Icons.bar_chart_rounded,
             l10n.horizonHubInsights,
-            l10n.horizonHubInsightsSub,
+            topCat ?? l10n.horizonHubInsightsSub,
             () => context.push('/trip/$tripId/insights'),
           ),
           BentoTone.mint,

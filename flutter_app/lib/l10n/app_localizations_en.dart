@@ -3476,4 +3476,283 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get horizonFilterOwe => 'You owe';
+
+  @override
+  String get horizonCurrency => 'Currency';
+
+  @override
+  String horizonCurrencyMixed(String base, String others, int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count expenses', one: '1 expense');
+    return '$base, with $others for $_temp0';
+  }
+
+  @override
+  String get horizonFewestPayments => 'Fewest payments';
+
+  @override
+  String get horizonGeotagSub => 'Save a place with each';
+
+  @override
+  String get horizonFreezeSub => 'Lock edits after settling';
+
+  @override
+  String get horizonFrozenSub => 'Frozen. Tap to unfreeze';
+
+  @override
+  String get horizonArchivedSub => 'Archived. Tap to show it again';
+
+  @override
+  String get horizonCloseTrip => 'Close trip';
+
+  @override
+  String get horizonCloseSub => 'Mark settled and finished';
+
+  @override
+  String get horizonClosedSub => 'Closed. Tap to reopen';
+
+  @override
+  String horizonDeleteForPeople(int count) {
+    return 'Removes it for all $count people';
+  }
+
+  @override
+  String get horizonDeleteForAll => 'Removes it for everyone';
+
+  @override
+  String horizonCloseoutTitle(String name) {
+    return 'Close out $name?';
+  }
+
+  @override
+  String get horizonCloseoutSettled => 'Everyone is settled';
+
+  @override
+  String get horizonCloseoutNothingToPay => 'Nothing left to pay';
+
+  @override
+  String horizonCloseoutOpen(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payments still open',
+      one: '1 payment still open',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String horizonCloseoutOutstanding(String amount) {
+    return '$amount outstanding';
+  }
+
+  @override
+  String get horizonSettleAction => 'Settle';
+
+  @override
+  String get horizonFix => 'Fix';
+
+  @override
+  String get horizonCloseoutReceiptsOk => 'Every expense has a receipt';
+
+  @override
+  String horizonCloseoutNoReceipt(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses without a receipt',
+      one: '1 expense without a receipt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get horizonCloseoutOptional => 'Optional';
+
+  @override
+  String get horizonCloseoutSynced => 'No pending sync';
+
+  @override
+  String horizonCloseoutOnServer(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'All $count expenses on the server',
+      one: '1 expense on the server',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String horizonCloseoutPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses waiting to sync',
+      one: '1 expense waiting to sync',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get horizonCloseoutConnect => 'Connect to the internet to finish';
+
+  @override
+  String get horizonCloseoutFreezeNote => 'Freezing locks edits. You can unfreeze later.';
+
+  @override
+  String get horizonFreezeAndClose => 'Freeze and close';
+
+  @override
+  String get horizonTripCode => 'Trip code';
+
+  @override
+  String get horizonCopy => 'Copy';
+
+  @override
+  String get horizonCanAddExpenses => 'Can add expenses';
+
+  @override
+  String get horizonViewOnly => 'View only';
+
+  @override
+  String get horizonConflictBody => 'This was edited here and on another device while offline. Pick the one to keep.';
+
+  @override
+  String get horizonYours => 'Yours';
+
+  @override
+  String get horizonTheirs => 'Theirs';
+
+  @override
+  String get horizonSplitEqually => 'Split equally';
+
+  @override
+  String get horizonSplitCustom => 'Split by amount';
+
+  @override
+  String horizonPeopleEach(int count, String each) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people · $each each',
+      one: '1 person · $each each',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get horizonMore => 'More';
+
+  @override
+  String get horizonFilterSpend => 'Filter spend';
+
+  @override
+  String get horizonDates => 'Dates';
+
+  @override
+  String get horizonThisTrip => 'This trip';
+
+  @override
+  String get horizonCustom => 'Custom';
+
+  @override
+  String get horizonInvolvesMe => 'Only ones that involve me';
+
+  @override
+  String get horizonMoreFilters => 'More filters';
+
+  @override
+  String get horizonClear => 'Clear';
+
+  @override
+  String horizonShowN(int count) {
+    return 'Show $count';
+  }
+
+  @override
+  String horizonHubTopCategory(String name, int pct) {
+    return '$name is $pct%';
+  }
+
+  @override
+  String horizonHubDayPlans(int day, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Day $day · $count activities',
+      one: 'Day $day · 1 activity',
+      zero: 'Day $day · nothing planned',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String horizonHubPlansCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count plans', one: '1 plan');
+    return '$_temp0';
+  }
+
+  @override
+  String horizonHubPeople(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count members', one: '1 member');
+    return '$_temp0';
+  }
+
+  @override
+  String horizonHubPeopleGroups(int count, int groups) {
+    String _temp0 = intl.Intl.pluralLogic(groups, locale: localeName, other: '$groups groups', one: '1 group');
+    return '$count members · $_temp0';
+  }
+
+  @override
+  String get horizonHubToolsSub => 'Export, wrapped';
+
+  @override
+  String get horizonHubSettingsSub => 'Currency, rules, freeze';
+
+  @override
+  String get horizonPeopleTitle => 'People';
+
+  @override
+  String horizonActAdded(String title) {
+    return '$title added';
+  }
+
+  @override
+  String horizonActAddedBy(String name, String title) {
+    return '$name added $title';
+  }
+
+  @override
+  String horizonActRefunded(String title) {
+    return 'Refund on $title';
+  }
+
+  @override
+  String horizonActRefundedBy(String name, String title) {
+    return '$name refunded $title';
+  }
+
+  @override
+  String horizonActDeleted(String title) {
+    return '$title was deleted';
+  }
+
+  @override
+  String horizonActDeletedBy(String name, String title) {
+    return '$name deleted $title';
+  }
+
+  @override
+  String horizonActEdited(String title) {
+    return '$title was edited';
+  }
+
+  @override
+  String horizonActRestored(String title) {
+    return '$title was restored';
+  }
+
+  @override
+  String get horizonTripTools => 'Trip tools';
 }
