@@ -71,7 +71,7 @@ Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blu
 
 | ID | Title | Category | Requested By | Shipped By | Note |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **FEAT-223** | Pays for on every add path (Flutter) | `fintech` | `human` | `agent` | Flag enableMemberWeights (Trip). Quick add + Apply chip. Commit PENDING (v3.112.0). |
+| **FEAT-223** | Pays for on every add path (Flutter) | `fintech` | `human` | `agent` | Flag enableMemberWeights (Trip). Quick add + Apply chip. Commit 3374f05 (v3.112.0). |
 | **FEAT-222** | Couples count as 2: pays for (Flutter) | `fintech` | `human` | `agent` | Flag enableMemberWeights (Trip). Migration 0123. Commit 748c0ba (v3.111.0). |
 | **FEAT-221** | Couples count as 2 (Flutter) | `fintech` | `human` | `agent` | Flag enableMemberWeights (Trip). Migration 0122. Commit 3dbe4b9 (v3.110.0). |
 | **FEAT-220** | Reminders and join preview (Flutter) | `ui-ux` | `human` | `agent` | Flags enableJoinCodePreview (Core), enableRemindEveryone, enableReminderStatus (Trip). Commit 019160e (v3.109.0). |
