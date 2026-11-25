@@ -8,6 +8,11 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.108.0', '2026-11-25', [
+    'New trip asks for Starts and Ends, Currency beside an optional Budget and a cover colour, and "Create and invite" opens the invite sheet; Join with code fills in a code you already copied (Flutter).',
+    'Me opens with one card for Notifications, Default currency and Fingerprint lock; Storage shows a usage bar with Data saver and Clear cache (Flutter).',
+    'Diagnostics shows Sync and Queue cards with a Copy log button, legal pages open with a list of sections, and Delete account puts Cancel and Delete side by side (Flutter).',
+  ]),
   ChangelogEntry('3.107.0', '2026-11-25', [
     'Trip settings put the trip rules in one card, with Freeze, Archive and Close trip as rows and Delete trip at the end; Close out shows a short checklist and one Freeze and close button (Flutter).',
     'Invite shows the code beside its QR with Copy, a Can add expenses / View only switch, WhatsApp and Copy link; a sync conflict shows your version and theirs side by side (Flutter).',
@@ -55,9 +60,5 @@ const List<ChangelogEntry> changelogEntries = [
   ChangelogEntry('3.98.0', '2026-11-24', [
     'Horizon Settings: pick Light, Dark or System from three big tiles (Flutter).',
     'Horizon empty and error screens use a soft tinted icon tile on a plain background; the offline notice is a slim rounded banner (Flutter).',
-  ]),
-  ChangelogEntry('3.97.0', '2026-11-24', [
-    'Horizon trip Balances: your position leads in big type on a night-navy card, with what you paid, your share and the trip total under it (Flutter).',
-    'Horizon Spend rows now say what each expense means for you: "you owe", "you lent" or "not involved" (Flutter).',
   ]),
 ];

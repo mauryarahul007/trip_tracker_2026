@@ -76,13 +76,13 @@ void main() {
       await pumpApp(tester, user: asha, overrides: [picker], flagsOn: {'enableHorizonUi'});
       await tester.tap(find.byKey(const Key('dock-center')));
       await settle(tester);
-      await tester.enterText(find.byType(TextField).at(1), 'Goa Weekend');
-      await tester.tap(find.byIcon(Icons.date_range_rounded));
+      await tester.enterText(find.byKey(const Key('create-trip-name')), 'Goa Weekend');
+      await tester.tap(find.byKey(const Key('create-trip-starts')));
       await settle(tester);
       await tester.ensureVisible(find.byKey(const Key('cover-mint')));
       await tester.tap(find.byKey(const Key('cover-mint')));
       await settle(tester);
-      await tester.tap(find.widgetWithText(AppButton, 'Create Trip').last);
+      await tester.tap(find.byKey(const Key('create-trip-submit')));
       await settle(tester, rounds: 12);
       expect(containerOf(tester).read(tripColorsProvider).values, ['mint']);
     });

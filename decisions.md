@@ -6055,3 +6055,19 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - "Freeze and close" now also freezes the trip; it can be unfrozen in Trip settings.
   - Left out: People page header (share button) and the "Trip activity" title, which need trip header changes.
+
+## 308. Horizon home and account (v3.108.0)
+* **Context:** PR 4 of the Horizon gap fix plan: Create trip, Join with code, Me, Storage, Diagnostics, Legal and Delete account did not match their mockups.
+* **Decision:**
+  - Create trip: name, Starts / Ends boxes (open the date range picker), Currency beside an optional Budget (saved to the device-only `tripBudgetProvider`), cover colours, "Create and invite" (opens the invite sheet after the trip opens); Where and templates sit under the form.
+  - Join with code: `joinCodeFromClipboard` reads a bare 6-character code or the end of a /join/ link; the sheet fills it in on open and says "Pasted the code you copied."
+  - Me: first card holds Notifications, Default currency and Fingerprint lock (when its flag is on); no new settings added.
+  - Storage: usage card with a data/cache bar and legend, then Data saver (when its flag is on) and Clear cache.
+  - Diagnostics: Sync and Queue cards, Sync and App rows, the log block and a Copy log button.
+  - Legal: `LegalDocScreen` lists headed sections in a card; a tap scrolls to the section.
+  - Delete account: Cancel and Delete side by side.
+  - Reuses `enableHorizonUi`.
+* **Trade-offs Accepted:**
+  - "Hide amounts" is not shown: the setting does not exist.
+  - Report a problem has no Add screenshot box: reports cannot carry images yet; moved to PR 5 as new behaviour.
+  - Diagnostics shows sync status, not a last-sync time, which SyncStatus does not record.

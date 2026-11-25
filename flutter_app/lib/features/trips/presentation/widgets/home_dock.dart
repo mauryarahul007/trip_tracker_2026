@@ -12,6 +12,7 @@ import '../../../../shared/theme/app_tokens.dart';
 import '../../../../shared/widgets/app_bottom_nav.dart';
 import '../../../../shared/widgets/app_sheet.dart';
 import 'create_trip_sheet.dart';
+import 'share_trip_sheet.dart';
 
 enum HomeTab { trips, balances, activity, me }
 
@@ -32,7 +33,18 @@ Future<void> createTripFlow(BuildContext context) async {
     title: context.l10n.createTripTitle,
     builder: (_) => const CreateTripSheet(),
   );
-  if (id != null && context.mounted) unawaited(context.push('/trip/$id/ledger'));
+  if (id == null || !context.mounted) return;
+  unawaited(context.push('/trip/$id/ledger'));
+  // Horizon: the button reads "Create and invite", so the invite sheet opens on the new trip.
+  if (context.tokens.horizon) {
+    unawaited(
+      AppSheet.show<void>(
+        context: context,
+        title: context.l10n.inviteSheetTitle,
+        builder: (_) => ShareTripSheet(tripId: id),
+      ),
+    );
+  }
 }
 
 /// True when the window is wide enough for the desktop shell (left rail, no bottom dock).

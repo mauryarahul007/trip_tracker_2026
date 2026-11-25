@@ -138,19 +138,47 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 32),
-            AppButton(
-              label: 'Permanently Delete My Account',
-              variant: AppButtonVariant.danger,
-              isLoading: _isDeleting,
-              onPressed: _confirmed && !_isDeleting ? _handleDelete : null,
-              isFullWidth: true,
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              key: const Key('delete-keep'),
-              onPressed: () => context.pop(),
-              child: const Text('Keep my account'),
-            ),
+            if (tokens.horizon)
+              // Horizon (board 49): Cancel and Delete side by side.
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      key: const Key('delete-keep'),
+                      label: 'Cancel',
+                      variant: AppButtonVariant.secondary,
+                      isFullWidth: true,
+                      onPressed: () => context.pop(),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppButton(
+                      key: const Key('delete-submit'),
+                      label: 'Delete',
+                      variant: AppButtonVariant.danger,
+                      isLoading: _isDeleting,
+                      isFullWidth: true,
+                      onPressed: _confirmed && !_isDeleting ? _handleDelete : null,
+                    ),
+                  ),
+                ],
+              )
+            else ...[
+              AppButton(
+                label: 'Permanently Delete My Account',
+                variant: AppButtonVariant.danger,
+                isLoading: _isDeleting,
+                onPressed: _confirmed && !_isDeleting ? _handleDelete : null,
+                isFullWidth: true,
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                key: const Key('delete-keep'),
+                onPressed: () => context.pop(),
+                child: const Text('Keep my account'),
+              ),
+            ],
             const SizedBox(height: 8),
           ],
         ),

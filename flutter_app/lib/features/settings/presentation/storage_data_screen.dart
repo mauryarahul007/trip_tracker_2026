@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/flags/compass_flags.dart';
+import '../../../core/settings/app_settings.dart' show dataSaverPrefProvider;
+import '../../../data/providers.dart' show flagProvider;
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../../shared/theme/compass.dart';
@@ -14,9 +16,148 @@ import 'settings_widgets.dart';
 class StorageDataScreen extends ConsumerWidget {
   const StorageDataScreen({super.key});
 
+  Future<void> _clear(BuildContext context, WidgetRef ref) async {
+    final ok = await ConfirmDialog.show(
+      context: context,
+      title: 'Clear cache?',
+      message: 'Cached images and temporary files are removed. Your trips and expenses stay.',
+      confirmLabel: 'Clear',
+    );
+    if (!ok) return;
+    await ref.read(storageGatewayProvider).clearCache();
+    ref.invalidate(storageUsageProvider);
+  }
+
+  /// Horizon ("Storage and data" mockup): one usage card with a split bar and legend, then Data saver and
+  /// Clear cache in a card.
+  Widget _horizon(BuildContext context, WidgetRef ref, StorageUsage? usage) {
+    final t = context.tokens;
+    final total = usage == null || usage.totalBytes == 0 ? 1 : usage.totalBytes;
+    final saverOn = ref.watch(flagProvider(('enableDataSaverMode', null))).value ?? false;
+    Widget legend(Color c, String label) => Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 12, color: t.textSecondary),
+        ),
+      ],
+    );
+    return AppScaffold(
+      backgroundColor: t.bgPage,
+      appBar: AppBar(title: const Text('Storage and data')),
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 32),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Container(
+              key: const Key('storage-usage-card'),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: t.bgSurface,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: t.borderColor),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'On this phone',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontBody,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: t.textPrimary,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        usage == null ? '…' : formatBytes(usage.totalBytes),
+                        key: const Key('storage-total'),
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontMono,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: t.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(99),
+                    child: SizedBox(
+                      height: 10,
+                      child: usage == null
+                          ? ColoredBox(color: t.bgSurfaceHover)
+                          : Row(
+                              children: [
+                                Expanded(
+                                  flex: (usage.dataBytes * 1000 ~/ total).clamp(1, 1000),
+                                  child: ColoredBox(color: t.primaryAccent),
+                                ),
+                                Expanded(
+                                  flex: (usage.cacheBytes * 1000 ~/ total).clamp(1, 1000),
+                                  child: ColoredBox(color: t.tones.peach.accent),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 14,
+                    children: [
+                      legend(t.primaryAccent, 'Data ${usage == null ? '…' : formatBytes(usage.dataBytes)}'),
+                      legend(t.tones.peach.accent, 'Cache ${usage == null ? '…' : formatBytes(usage.cacheBytes)}'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SettingsSection(
+            title: '',
+            children: [
+              if (saverOn)
+                SettingsSwitchTile(
+                  key: const Key('storage-data-saver'),
+                  icon: Icons.data_saver_on_rounded,
+                  title: 'Data saver',
+                  subtitle: ref.watch(dataSaverPrefProvider) ? 'Map stays collapsed' : 'Map opens as usual',
+                  value: ref.watch(dataSaverPrefProvider),
+                  onChanged: (v) => ref.read(dataSaverPrefProvider.notifier).set(v),
+                ),
+              SettingsTile(
+                key: const Key('storage-clear-cache'),
+                icon: Icons.delete_outline_rounded,
+                title: 'Clear cache',
+                subtitle: usage == null
+                    ? 'Your trips stay'
+                    : 'Frees ${formatBytes(usage.cacheBytes)}. Your trips stay.',
+                onTap: () => _clear(context, ref),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final usage = ref.watch(storageUsageProvider);
+    if (context.tokens.horizon) return _horizon(context, ref, usage.value);
     return AppScaffold(
       backgroundColor: context.tokens.bgSurface,
       appBar: AppBar(title: const Text('Storage and Data')),

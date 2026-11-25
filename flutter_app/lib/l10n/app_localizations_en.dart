@@ -3755,4 +3755,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get horizonTripTools => 'Trip tools';
+
+  @override
+  String get horizonStarts => 'Starts';
+
+  @override
+  String get horizonEnds => 'Ends';
+
+  @override
+  String get horizonBudgetOptional => 'Budget (optional)';
+
+  @override
+  String get horizonCreateAndInvite => 'Create and invite';
+
+  @override
+  String get horizonCover => 'Cover';
+
+  @override
+  String get horizonJoinTitle => 'Join a trip';
+
+  @override
+  String get horizonJoinHint => 'Ask the organiser for the 6-letter code.';
+
+  @override
+  String get horizonJoinPasted => 'Pasted the code you copied.';
+
+  @override
+  String get horizonJoinTrip => 'Join trip';
 }
