@@ -71,7 +71,7 @@ Flutter-only redesign behind Core flag enableHorizonUi (default ON): Horizon blu
 
 | ID | Title | Category | Requested By | Shipped By | Note |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **FEAT-224** | Pays-for default and delete a member (Flutter) | `core` | `human` | `agent` | Flags enableMemberWeights, enableMemberDelete (Trip). Commit PENDING (v3.113.0). |
+| **FEAT-224** | Pays-for default and delete a member (Flutter) | `core` | `human` | `agent` | Flags enableMemberWeights, enableMemberDelete (Trip). Commit e251c2f (v3.113.0). |
 | **FEAT-223** | Pays for on every add path (Flutter) | `fintech` | `human` | `agent` | Flag enableMemberWeights (Trip). Quick add + Apply chip. Commit 3374f05 (v3.112.0). |
 | **FEAT-222** | Couples count as 2: pays for (Flutter) | `fintech` | `human` | `agent` | Flag enableMemberWeights (Trip). Migration 0123. Commit 748c0ba (v3.111.0). |
 | **FEAT-221** | Couples count as 2 (Flutter) | `fintech` | `human` | `agent` | Flag enableMemberWeights (Trip). Migration 0122. Commit 3dbe4b9 (v3.110.0). |
