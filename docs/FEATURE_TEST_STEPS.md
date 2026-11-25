@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-25 | 3.112.0 | MEMBER-COVERS-APPLY | [Pays for: quick add and Apply chip (Flutter)](#member-covers-apply--pays-for-quick-add-and-apply-chip-flutter) |
 | 2026-11-25 | 3.111.0 | MEMBER-COVERS | [Couples count as 2: pays for (Flutter)](#member-covers--couples-count-as-2-pays-for-flutter) |
 | 2026-11-25 | 3.110.0 | MEMBER-WEIGHTS | [Couples count as 2 (Flutter)](#member-weights--couples-count-as-2-flutter) |
 | 2026-11-25 | 3.109.0 | HORIZON-REMINDERS | [Reminders and join preview (Flutter)](#horizon-reminders--reminders-and-join-preview-flutter) |
@@ -4509,6 +4510,36 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## MEMBER-COVERS-APPLY — Pays for: quick add and Apply chip (Flutter)
+
+**Shipped:** v3.112.0. Flutter-only. Builds on MEMBER-COVERS (migration 0123).
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Quick add uses pays for; Apply chip on the split | `enableMemberWeights` | ON (Trip) |
+
+### Prep
+A trip with you, your partner (e.g. Priya) and Rohan. On People, set yourself to pay for Priya.
+
+### Steps
+1. Expenses › menu › Quick add: type "lunch 300", Save. Details show you ₹200, Rohan ₹100, Priya ₹0 (Shares).
+2. + › Add expense: Priya starts unticked, the split chip reads "Shares · 2". No Apply chip shows.
+3. Open the split (Horizon: tap the split chip; classic: the member list) and tick Priya back in. A card / chip reads "<you> pays for Priya · Apply".
+4. Tap Apply: Priya is unticked again, you count as 2, the chip disappears. Save ₹300: you ₹200, Rohan ₹100, Priya ₹0.
+5. Start an expense, leave it as a draft (back out), open Add expense again with the draft restored and Priya ticked: the Apply chip shows on the first screen. Tap it.
+6. Save a Shares split with Priya in (after removing pays for), set pays for again, then add an expense with "remember last split" on: Priya starts unticked.
+7. Pick Exact or %: no Apply chip (those modes are left alone).
+
+### Negative checks
+- `enableMemberWeights` OFF: quick add saves a plain equal split with Priya charged, and no Apply chip anywhere.
+- Your own expense without you in the split: Priya is charged normally, no chip.
+
+### Pass
+- Every add path (full form, quick add, restored draft, remembered split) can charge the payer for the partner, and only by default or a tap.
+
+---
 
 ## MEMBER-COVERS — Couples count as 2: pays for (Flutter)
 

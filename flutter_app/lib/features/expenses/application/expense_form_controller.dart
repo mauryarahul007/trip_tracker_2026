@@ -402,12 +402,15 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
     }
     // Couples count as 2: an equal start becomes a Shares split with the trip's weights; a member someone else
     // pays for is left out while their payer is in the split (new expenses only).
-    if (flags.memberWeights && base0.splitMode == 'equal' && !base0.draftRestored) {
-      final w = weightedDefaultSplit(
+    // A remembered Shares split from before "pays for" was set gets the same treatment.
+    if (flags.memberWeights && !base0.draftRestored) {
+      final w = applyCoversToSplit(
+        mode: base0.splitMode,
         selected: {
           for (final e in base0.selected.entries)
             if (e.value) e.key,
         },
+        config: {for (final e in base0.splitConfig.entries) e.key: double.tryParse(e.value) ?? 0},
         weights: trip.memberWeights,
         covers: trip.memberCovers,
       );
@@ -646,6 +649,45 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
 
   void setSplitConfig(String memberId, String v) =>
       _set(state.copyWith(splitConfig: {...state.splitConfig, memberId: v}, clearError: true));
+
+  /// Couples count as 2: the split's "pays for" change, or null when the chip has nothing to do.
+  ({Set<String> selected, Map<String, double> weights})? get pendingCovers {
+    if (!flags.memberWeights) return null;
+    final trip = ref.read(tripProvider(tripId)).value;
+    if (trip == null || trip.memberCovers.isEmpty) return null;
+    if (coversSummary(selected: _selectedIds, covers: trip.memberCovers, nameOf: (id) => id).isEmpty) return null;
+    return applyCoversToSplit(
+      mode: state.splitMode,
+      selected: _selectedIds,
+      config: {for (final e in state.splitConfig.entries) e.key: double.tryParse(e.value) ?? 0},
+      weights: trip.memberWeights,
+      covers: trip.memberCovers,
+    );
+  }
+
+  /// "Rahul pays for Anita" for the Apply chip.
+  String coversLabel(String Function(String id) nameOf) =>
+      coversSummary(selected: _selectedIds, covers: _trip.memberCovers, nameOf: nameOf);
+
+  /// The Apply chip: take covered members out and give their share to whoever pays for them.
+  void applyMemberCovers() {
+    final w = pendingCovers;
+    if (w == null) return;
+    _set(
+      state.copyWith(
+        splitMode: 'custom',
+        selected: {for (final m in _members) m.id: w.selected.contains(m.id)},
+        splitConfig: {for (final e in w.weights.entries) e.key: _numText(e.value)},
+        clearError: true,
+        bump: true,
+      ),
+    );
+  }
+
+  Set<String> get _selectedIds => {
+    for (final e in state.selected.entries)
+      if (e.value) e.key,
+  };
 
   // Presets (web: Equal for all / payer 50% / only payer / everyone but payer)
   void presetEveryone() => _set(

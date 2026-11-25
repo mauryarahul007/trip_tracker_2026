@@ -3531,5 +3531,21 @@
     "shippedAt": "2026-11-25T00:00:00.000Z",
     "shippedBy": "agent",
     "shippedNote": "Commit 748c0ba (v3.111.0)."
+  },
+  {
+    "id": "FEAT-223",
+    "title": "Pays for on every add path (Flutter)",
+    "description": "Flag enableMemberWeights (Trip, ON): Quick add applies pays for; remembered Shares splits get it; an Apply chip fixes any split that still charges a covered partner. MEMBER-COVERS-APPLY.",
+    "category": "fintech",
+    "status": "shipped",
+    "requestedBy": "human",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-25T00:00:00.000Z",
+    "updatedAt": "2026-11-25T00:00:00.000Z",
+    "shippedAt": "2026-11-25T00:00:00.000Z",
+    "shippedBy": "agent",
+    "shippedNote": "Commit PENDING (v3.112.0)."
   }
 ]

@@ -13,6 +13,7 @@ import '../../../data/providers.dart';
 import '../../../domain/logic/expense_form_logic.dart';
 import '../../../domain/logic/expense_quick_parser.dart';
 import '../../../domain/logic/flag_defaults.g.dart';
+import '../../../domain/logic/member_weights.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/theme/app_tokens.dart';
@@ -131,6 +132,28 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
     final members = ref.read(visibleMembersProvider(widget.tripId));
     if (trip == null || mine == null) return;
     setState(() => _busy = true);
+    var splitMode = 'equal';
+    var splitIds = p.splitMemberIds ?? [for (final m in members) m.id];
+    Map<String, double>? splitConfig;
+    // Couples count as 2: a member someone else pays for drops out and their payer carries the share.
+    final weightsOn =
+        ref.read(flagProvider(('enableMemberWeights', widget.tripId))).value ??
+        (defaultFeatureFlags['enableMemberWeights'] ?? true);
+    if (weightsOn) {
+      final w = weightedDefaultSplit(
+        selected: splitIds.toSet(),
+        weights: trip.memberWeights,
+        covers: trip.memberCovers,
+      );
+      if (w != null) {
+        splitMode = 'custom';
+        splitIds = [
+          for (final id in splitIds)
+            if (w.selected.contains(id)) id,
+        ];
+        splitConfig = w.weights;
+      }
+    }
     final r = await ref
         .read(expenseRepositoryProvider)
         .submit(
@@ -141,8 +164,9 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
             category: p.categoryId ?? 'cat-misc',
             date: p.date ?? todayDateString(ref.read(nowProvider)()),
             paidBy: p.paidById ?? mine,
-            splitMode: 'equal',
-            splitMemberIds: p.splitMemberIds ?? [for (final m in members) m.id],
+            splitMode: splitMode,
+            splitMemberIds: splitIds,
+            splitConfig: splitConfig,
           ),
           tripId: widget.tripId,
           userId: ref.read(authStateProvider).userId ?? '',
@@ -306,6 +330,8 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
     final voiceEnabled =
         ref.watch(flagProvider(('enableVoiceInput', widget.tripId))).value ??
         (defaultFeatureFlags['enableVoiceInput'] ?? true);
+    // Keep the couples flag loaded so _save reads its real value.
+    ref.watch(flagProvider(('enableMemberWeights', widget.tripId)));
 
     return Padding(
       padding: const EdgeInsets.all(16),

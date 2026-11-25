@@ -8,6 +8,10 @@ class ChangelogEntry {
 }
 
 const List<ChangelogEntry> changelogEntries = [
+  ChangelogEntry('3.112.0', '2026-11-25', [
+    'Pays for now works on every way of adding an expense: Quick add leaves your partner out and charges you both shares too (Flutter).',
+    'If your partner is ticked into a split (a saved draft, a remembered split, or by hand), a "<you> pays for <partner> · Apply" chip fixes it in one tap (Flutter).',
+  ]),
   ChangelogEntry('3.111.0', '2026-11-25', [
     'Couples count as 2 now works like a couple: on People, pick who a member pays for (e.g. your partner). New expenses leave your partner out and charge you both shares, so ₹300 between you, your partner and Rohan is ₹200 / ₹0 / ₹100 (Flutter).',
     'Your partner\'s row reads "Paid for by <you>" and yours "Counts as 2"; if you are not on an expense, your partner is charged normally. Extra people not in the trip can still be added as +1 to +3 (Flutter).',
@@ -57,8 +61,5 @@ const List<ChangelogEntry> changelogEntries = [
   ]),
   ChangelogEntry('3.101.0', '2026-11-25', [
     'New Trips home: a greeting, your balance across trips with Get and Pay, four quick actions, the trip happening now with its spend and progress, then upcoming and past trips. The swipe-card and grid views are gone (Flutter).',
-  ]),
-  ChangelogEntry('3.100.0', '2026-11-25', [
-    'Meal reminders on Spend: during a trip, a small card asks "Added breakfast?" from 10 AM, lunch from 3 PM and dinner from 8 PM when nothing like it is logged yet. One tap adds it; "Not today" hides it (Flutter).',
   ]),
 ];

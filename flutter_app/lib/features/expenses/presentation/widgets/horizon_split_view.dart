@@ -28,6 +28,8 @@ class HorizonSplitView extends StatelessWidget {
     required this.canFinish,
     required this.finishLabel,
     required this.onReset,
+    this.coversNote,
+    this.onApplyCovers,
     required this.onFinish,
     required this.onBack,
     super.key,
@@ -59,6 +61,10 @@ class HorizonSplitView extends StatelessWidget {
   final bool canFinish;
   final String finishLabel;
   final VoidCallback onReset;
+
+  /// Couples count as 2: "Rahul pays for Anita" when the split still charges a covered member; null hides it.
+  final String? coversNote;
+  final VoidCallback? onApplyCovers;
   final VoidCallback onFinish;
   final VoidCallback onBack;
 
@@ -135,6 +141,43 @@ class HorizonSplitView extends StatelessWidget {
                       ),
                     ),
                 ],
+              ),
+            ),
+          if (coversNote != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Material(
+                color: t.primaryAccent.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  key: const Key('horizon-apply-covers'),
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: onApplyCovers,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    child: Row(
+                      children: [
+                        Icon(Icons.favorite_border_rounded, size: 18, color: t.primaryAccent),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            coversNote!,
+                            style: TextStyle(fontFamily: AppTypography.fontBody, fontSize: 14, color: t.textPrimary),
+                          ),
+                        ),
+                        Text(
+                          'Apply',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontBody,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: t.primaryAccent,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           if (warning != null)
