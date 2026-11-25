@@ -152,6 +152,7 @@ export interface Trip {
   passes?: TravelPass[]; // Digital boarding passes, vouchers, and tickets
   fxConfig?: TripFxConfig; // Custom exchange rates & forex markup
   splitExclusionDefaults?: Record<string, string[]>; // categoryId -> memberIds excluded by default from that category's split
+  memberWeights?: Record<string, number>; // memberId -> people that member stands for (Flutter flag enableMemberWeights); read-only on web
   categoryOrder?: string[]; // manual category display order (category IDs); unlisted categories render after these, in insertion order
   simplifyDebts?: boolean; // true = greedy flow minimization (default), false = direct bilateral debts
   shareToken?: string | null; // public read-only link token, present once generated

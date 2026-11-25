@@ -102,6 +102,7 @@ export type FeatureFlagKey =
   | 'enableJoinCodePreview'
   | 'enableRemindEveryone'
   | 'enableReminderStatus'
+  | 'enableMemberWeights'
   | 'enableNavPolish'
   | 'enableNotchNav'
   | 'enableDynamicColor'

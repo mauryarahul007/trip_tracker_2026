@@ -3499,5 +3499,21 @@
     "shippedAt": "2026-11-25T00:00:00.000Z",
     "shippedBy": "agent",
     "shippedNote": "Commit 019160e (v3.109.0)."
+  },
+  {
+    "id": "FEAT-221",
+    "title": "Couples count as 2 (Flutter)",
+    "description": "Flag enableMemberWeights (Trip, ON): organisers set Counts as 1-4 per member on People; new expenses start as a Shares split with those weights. Migration 0122 adds trips.member_weights. MEMBER-WEIGHTS.",
+    "category": "fintech",
+    "status": "shipped",
+    "requestedBy": "human",
+    "environment": {
+      "platform": "native"
+    },
+    "createdAt": "2026-11-25T00:00:00.000Z",
+    "updatedAt": "2026-11-25T00:00:00.000Z",
+    "shippedAt": "2026-11-25T00:00:00.000Z",
+    "shippedBy": "agent",
+    "shippedNote": "Commit 3dbe4b9 (v3.110.0)."
   }
 ]

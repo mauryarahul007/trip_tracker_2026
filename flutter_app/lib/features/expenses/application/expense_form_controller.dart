@@ -64,6 +64,7 @@ class FormFlags {
   bool get dockedKeypad => amountKeypad && _f('enableDockedKeypad');
   bool get persistentDraft => _f('enablePersistentExpenseDraft');
   bool get exclusionDefaults => _f('enableSplitExclusionDefaults');
+  bool get memberWeights => _f('enableMemberWeights');
   bool get dateRangeMembership => _f('enableDateRangeMembership');
   bool get categoryReorder => _f('enableCategoryReorder');
   bool get compactForm => _f('enableCompactExpenseForm');
@@ -90,6 +91,7 @@ class FormFlags {
     'enableDockedKeypad',
     'enablePersistentExpenseDraft',
     'enableSplitExclusionDefaults',
+    'enableMemberWeights',
     'enableDateRangeMembership',
     'enableCategoryReorder',
     'enableCompactExpenseForm',
@@ -395,6 +397,22 @@ class ExpenseFormController extends Notifier<ExpenseFormState> {
             },
           );
         }
+      }
+    }
+    // Couples count as 2: an equal start becomes a Shares split with the trip's member weights (new expenses only).
+    if (flags.memberWeights && base0.splitMode == 'equal' && !base0.draftRestored) {
+      final weighted = {
+        for (final m in members)
+          if ((base0.selected[m.id] ?? false) && (trip.memberWeights[m.id] ?? 1) > 1) m.id: trip.memberWeights[m.id]!,
+      };
+      if (weighted.isNotEmpty) {
+        base0 = base0.copyWith(
+          splitMode: 'custom',
+          splitConfig: {
+            for (final m in members)
+              if (base0.selected[m.id] ?? false) m.id: _numText(weighted[m.id] ?? 1),
+          },
+        );
       }
     }
     // Smart defaults: start from the payer and category used last on this trip (on this device).

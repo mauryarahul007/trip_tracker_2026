@@ -220,6 +220,15 @@ class DriftTripRepository extends _DriftRepo implements TripRepository {
       _columnPatch(id, {'splitExclusionDefaults': defaults}, {'split_exclusion_defaults': defaults});
 
   @override
+  Future<void> setMemberWeights(String id, Map<String, double> weights) {
+    final clean = {
+      for (final e in weights.entries)
+        if (e.value > 1) e.key: e.value,
+    };
+    return _columnPatch(id, {'memberWeights': clean}, {'member_weights': clean});
+  }
+
+  @override
   Future<void> setFxConfig(String id, TripFxConfig config) => write(() async {
     if (await _patchTrip(id, {'fxConfig': config.toJson()}) == null) return;
     await outbox.enqueue(OutboxType.setTripCollabField, {

@@ -22,6 +22,7 @@ Trip applyRemoteTrip(Trip local, Trip remote, [bool keepLocalCollab = false]) {
     groupIds: remote.groupIds,
     memberRoles: remote.memberRoles,
     splitExclusionDefaults: remote.splitExclusionDefaults,
+    memberWeights: remote.memberWeights,
     categoryOrder: remote.categoryOrder,
     simplifyDebts: remote.simplifyDebts,
     checklist: keepLocalCollab ? local.checklist : remote.checklist,

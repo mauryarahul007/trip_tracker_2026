@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-11-25 | 3.110.0 | MEMBER-WEIGHTS | [Couples count as 2 (Flutter)](#member-weights--couples-count-as-2-flutter) |
 | 2026-11-25 | 3.109.0 | HORIZON-REMINDERS | [Reminders and join preview (Flutter)](#horizon-reminders--reminders-and-join-preview-flutter) |
 | 2026-11-25 | 3.108.0 | HORIZON-ACCOUNT | [Horizon home and account (Flutter)](#horizon-account--horizon-home-and-account-flutter) |
 | 2026-11-25 | 3.107.0 | HORIZON-TRIP-PAGES | [Horizon trip pages and sheets (Flutter)](#horizon-trip-pages--horizon-trip-pages-and-sheets-flutter) |
@@ -4507,6 +4508,36 @@ Join screen signed-out; a live location share token; Trips search with expense a
 
 ### Pass
 - Guest friction lower; live age honest; search lands on the right tab/id without changing balances.
+
+## MEMBER-WEIGHTS — Couples count as 2 (Flutter)
+
+**Shipped:** v3.110.0. Flutter-only. Needs migration `0122_trip_member_weights.sql` applied on Supabase first.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Counts as setting and weighted default split | `enableMemberWeights` | ON (Trip) |
+
+### Prep
+Migration 0122 applied. A trip you organise with three people (you, Rohan, Meera) and one old equal expense.
+
+### Steps
+1. Trip › People: tap Rohan. The sheet shows Role, then "Counts as" with 1, 2, 3, 4 (1 selected).
+2. Tap 2: the sheet closes and Rohan's row reads "Contributor · Counts as 2".
+3. On a second phone in the same trip, pull to refresh: Rohan also reads "Counts as 2" there.
+4. Add expense ₹400, You paid: the split chip reads "Shares · 3". Save. Details show Rohan ₹200, you ₹100, Meera ₹100.
+5. The old equal expense still splits equally.
+6. Untick Meera on a new expense: the split stays Shares over the two left (Rohan 2, you 1).
+7. Set Rohan back to 1: new expenses start as a plain equal split again.
+
+### Negative checks
+- `enableMemberWeights` OFF: no "Counts as" in the member sheet, no "Counts as 2" on rows, and new expenses start equal even with weights saved.
+- Expenses added on the web start equal (web does not read weights for defaults yet).
+
+### Pass
+- Weighted shares add up to the amount, old expenses never change, and the weight syncs between phones.
+
+---
 
 ## HORIZON-REMINDERS — Reminders and join preview (Flutter)
 

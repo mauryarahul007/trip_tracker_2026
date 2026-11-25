@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.110.0',
+    date: '2026-11-25',
+    changes: [
+      'Couples count as 2: on People, an organiser can set how many people a member stands for (1 to 4), and the row reads "Counts as 2" (Flutter).',
+      'New expenses in that trip start as a Shares split using those counts, so ₹400 between a couple and two others is ₹200 / ₹100 / ₹100; saved expenses are unchanged (Flutter).',
+    ],
+  },
+  {
     version: '3.109.0',
     date: '2026-11-25',
     changes: [
